@@ -1,0 +1,58 @@
+{
+  "private": true,
+  "name": "@focus-shift/zeiterfassung",
+  "scripts": {
+    "build": "concurrently 'npm:lint:*' 'npm:build:*' -c 'bgRed.bold,bgBlue.bold'",
+    "build:js": "rollup -c",
+    "build:css": "postcss src/main/css/**/*.css --base src/main/css --dir target/classes/static",
+    "dev": "concurrently 'npm:lint:ts -- --watch' 'npm:dev:*' -c 'bgRed.bold,bgBlue.bold'",
+    "dev:js": "npm run build:js -- -w",
+    "dev:css": "npm run build:css -- --watch",
+    "lint": "concurrently 'npm:lint:*'",
+    "lint:eslint": "eslint src/main/javascript",
+    "lint:svelte": "svelte-check",
+    "lint:ts": "tsc -noEmit",
+    "format": "prettier --write src/main/javascript"
+  },
+  "dependencies": {
+    "@duetds/date-picker": "1.4.0",
+    "@hotwired/turbo": "7.2.4",
+    "@rollup/plugin-commonjs": "23.0.2",
+    "@rollup/plugin-node-resolve": "15.0.1",
+    "@tsconfig/svelte": "3.0.0",
+    "@typescript-eslint/eslint-plugin": "5.43.0",
+    "@typescript-eslint/parser": "5.42.0",
+    "@ungap/custom-elements": "1.1.1",
+    "autoprefixer": "10.4.13",
+    "concurrently": "7.5.0",
+    "cssnano": "5.1.14",
+    "date-fns": "2.29.3",
+    "esbuild": "0.15.14",
+    "eslint": "8.26.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-import": "2.26.0",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-svelte3": "4.0.0",
+    "eslint-plugin-unicorn": "44.0.2",
+    "lint-staged": "13.0.3",
+    "postcss": "8.4.19",
+    "postcss-cli": "10.0.0",
+    "prettier": "2.7.1",
+    "prettier-plugin-svelte": "2.8.0",
+    "rimraf": "3.0.2",
+    "rollup": "2.79.1",
+    "rollup-plugin-esbuild": "4.10.1",
+    "rollup-plugin-postcss": "4.0.2",
+    "rollup-plugin-svelte": "7.1.0",
+    "svelte": "3.52.0",
+    "svelte-check": "2.9.2",
+    "svelte-preprocess": "4.10.7",
+    "tailwindcss": "3.2.4",
+    "typescript": "4.8.4"
+  },
+  "lint-staged": {
+    "*.{js,ts,svelte,html,svg,css}": [
+      "prettier --write"
+    ]
+  }
+}

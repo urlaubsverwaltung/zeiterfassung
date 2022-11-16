@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+  <head
+    th:replace="timeentries/_layout::head(~{::title}, ~{}, ~{::scriptsDeferred}, ~{})"
+  >
+    <title th:text="#{report.page.meta.title}">Zeiterfassung - Bericht</title>
+    <th:block th:fragment="scriptsDeferred">
+      <script type="module" src="" th:src="@{/assets/reports.js}"></script>
+    </th:block>
+  </head>
+  <body th:replace="timeentries/_layout::body(~{::content})">
+    <th:block th:fragment="content">
+      <main class="grow">
+        <div class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28">
+          <div class="px-4">
+            <div class="flex items-center">
+              <p class="mr-4" th:text="#{report.view.select}">Ansicht:</p>
+              <ul class="flex space-x-4">
+                <li>
+                  <a
+                    href="#"
+                    th:href="@{/report/week}"
+                    class="report-view-selection-link"
+                    th:aria-current="${weekAriaCurrent}"
+                    th:text="#{report.view.select.week}"
+                  >
+                    Woche
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    th:href="@{/report/month}"
+                    class="report-view-selection-link"
+                    th:aria-current="${monthAriaCurrent}"
+                    th:text="#{report.view.select.month}"
+                  >
+                    Monat
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="mt-8" th:insert="__${chartNavigationFragment}__"></div>
+            <div class="mt-8">
+              <div class="p-8 bg-gradient-to-b from-gray-100 rounded-t-3xl">
+                <div th:replace="__${chartFragment}__"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </th:block>
+  </body>
+</html>

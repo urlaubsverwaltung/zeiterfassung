@@ -1,0 +1,78 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+    <changeSet author="bseber" id="add-tenant-user-table">
+
+        <preConditions>
+            <not>
+                <tableExists tableName="tenant_user"/>
+            </not>
+        </preConditions>
+
+        <createSequence sequenceName="tenant_user_seq" incrementBy="50"/>
+
+        <createTable tableName="tenant_user">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_TENANT_USER"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(8)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uuid" type="VARCHAR(36)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="UC_TENANT_USER_UUID"/>
+            </column>
+            <column name="first_login_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_login_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="given_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="family_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseColumnNames="tenant_id" baseTableName="tenant_user" constraintName="FK_TENANT_USER_TENANT_ID"
+                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 referencedColumnNames="tenant_id" referencedTableName="tenant"/>
+
+    </changeSet>
+
+    <changeSet author="schneider" id="add-fk-from-time-entry-to-tenant-user">
+        <preConditions>
+            <tableExists tableName="time_entry"/>
+            <tableExists tableName="tenant_user"/>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="owner" baseTableName="time_entry" constraintName="FK_TENANT_ENTRY_OWNER"
+                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 referencedColumnNames="uuid" referencedTableName="tenant_user"/>
+    </changeSet>
+
+    <changeSet author="schneider" id="add-fk-from-time-clock-to-tenant-user">
+        <preConditions>
+            <tableExists tableName="time_clock"/>
+            <tableExists tableName="tenant_user"/>
+        </preConditions>
+        <addForeignKeyConstraint baseColumnNames="owner" baseTableName="time_clock" constraintName="FK_TENANT_CLOCK_OWNER"
+                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 referencedColumnNames="uuid" referencedTableName="tenant_user"/>
+    </changeSet>
+
+    <changeSet id="enable-row-level-security-on-tenant-user" author="grafjo">
+        <sql dbms="postgresql">
+            ALTER TABLE tenant_user ENABLE ROW LEVEL SECURITY;
+            DROP POLICY IF EXISTS tenant_user_tenant_isolation_policy ON tenant_user;
+            CREATE POLICY tenant_user_tenant_isolation_policy ON tenant_user
+                USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+  <head>
+    <title>Zeiterfassung - Bericht</title>
+  </head>
+  <body>
+    <form
+      th:if="${userReportFilterUrl != null}"
+      action="#"
+      th:action="${userReportFilterUrl}"
+      method="get"
+    >
+      <div class="relative">
+        <a
+          href="#report-user-selection"
+          class="flex items-center border border-gray-200 hover:border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded px-4 py-2 transition-colors duration-75"
+          is="z-report-user-select"
+        >
+          <th:block
+            th:switch="${allUsersSelected or !#lists.isEmpty(selectedUserIds)}"
+          >
+            <th:block th:case="true">
+              <svg
+                th:replace="icons/users.html::svg(className='w-4 h-4 mr-2 fill-amber-500')"
+              />
+            </th:block>
+            <th:block th:case="false">
+              <svg
+                th:replace="icons/users.html::svg(className='w-4 h-4 mr-2')"
+              />
+            </th:block>
+          </th:block>
+          <th:block th:text="#{report.filter.users}"> Personen </th:block>
+        </a>
+        <div id="report-user-selection" data-js-hidden>
+          <div class="w-48 overflow-y-auto" style="max-height: 10rem">
+            <div class="space-x-2 border-b border-b-gray-300 pb-2.5">
+              <input
+                type="checkbox"
+                name="everyone"
+                value=""
+                id="report-users-select-everyone"
+                th:checked="${allUsersSelected}"
+                is="z-checkbox-all-option"
+                data-name="user"
+              />
+              <label
+                for="report-users-select-everyone"
+                th:text="#{report.filter.users.all}"
+                >Alle</label
+              >
+            </div>
+            <ol class="mt-3">
+              <li
+                th:each="user : ${users}"
+                th:with="rnd=${#strings.randomAlphanumeric(6)}"
+                class="flex items-center space-x-2"
+              >
+                <input
+                  type="checkbox"
+                  name="user"
+                  th:value="${user.id}"
+                  id="user"
+                  th:id="|${rnd}-user|"
+                  th:checked="${allUsersSelected or user.selected}"
+                />
+                <label
+                  for="user"
+                  th:for="|${rnd}-user|"
+                  th:text="${user.fullName}"
+                ></label>
+              </li>
+            </ol>
+          </div>
+          <button
+            type="submit"
+            class="w-full mt-4 bg-blue-700 text-white font-medium rounded px-4 py-2"
+            th:text="#{report.filter.users.submit}"
+          >
+            Übernehmen
+          </button>
+        </div>
+      </div>
+    </form>
+  </body>
+</html>
