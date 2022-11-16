@@ -1,0 +1,29 @@
+version: '2.2'
+services:
+  postgres:
+    image: postgres:9.6
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: zeiterfassung
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_APP_USER: app_user
+      POSTGRES_APP_PASSWORD: app_password
+    volumes:
+        - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh:ro
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+        - '1025:1025'
+        - '8025:8025'
+  keycloak:
+    build: ./docker/keycloak
+    image: quay.io/keycloak/keycloak:20.0.1
+    environment:
+      KC_HTTP_PORT: 8090
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HOSTNAME_STRICT: 'false'
+      KC_HOSTNAME_STRICT_HTTPS: 'false'
+    ports:
+      - '8090:8090'

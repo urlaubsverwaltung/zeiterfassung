@@ -1,0 +1,16 @@
+/node_modules
+
+# maven
+/target/
+/node
+
+# Ignore IntelliJ IDEA project files
+.idea
+*.iml
+
+# Ignore vim swap files
+*.sw[o|p]
+*.sdsrc
+
+# maven wrapper
+!.mvn/wrapper/maven-wrapper.jar

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>avatar</title>
+  </head>
+  <body>
+    <img
+      th:fragment="avatar(fullName,width,height)"
+      th:with="fallbackAvatarUrl=@{/avatar (name=${fullName})}"
+      src="#"
+      th:src="@{/invalid-avatar-url}"
+      alt=""
+      class="rounded-full"
+      th:classappend="${className}"
+      th:width="${width == null ? '32px' : width}"
+      th:height="${height == null ? '32px' : height}"
+      th:data-fallback="${fallbackAvatarUrl}"
+      is="z-avatar"
+    />
+
+    <span
+      th:fragment="avatar-bordered(fullName,width,height)"
+      class="bg-gradient-to-br from-blue-50 to-blue-200 rounded-full p-1 inline-flex"
+    >
+      <img
+        src="#"
+        alt=""
+        th:replace="::avatar(${fullName},${width},${height})"
+      />
+    </span>
+  </body>
+</html>

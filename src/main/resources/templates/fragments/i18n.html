@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script th:fragment="common" th:inline="javascript">
+      window.zeiterfassung = window.zeiterfassung || {};
+      window.zeiterfassung.i18n = window.zeiterfassung.i18n || {};
+    </script>
+
+    <script th:fragment="time-entry" th:inline="javascript">
+      window.zeiterfassung = window.zeiterfassung || {};
+      window.zeiterfassung.i18n = window.zeiterfassung.i18n || {};
+      window.zeiterfassung.i18n["time-entry.date.label"] =
+        /*[[#{time-entry.date}]]*/ "";
+      window.zeiterfassung.i18n["time-entry.duration.label"] =
+        /*[[#{time-entry.duration}]]*/ "";
+      window.zeiterfassung.i18n["time-entry.delete"] =
+        /*[[#{time-entry.delete}]]*/ "";
+    </script>
+
+    <script th:fragment="time-slot-validation" th:inline="javascript">
+      window.zeiterfassung = window.zeiterfassung || {};
+      window.zeiterfassung.i18n = window.zeiterfassung.i18n || {};
+      window.zeiterfassung.i18n["time-entry.validation.duration.pattern"] =
+        /*[[#{time-entry.validation.duration.pattern}]]*/ "";
+      window.zeiterfassung.i18n[
+        "time-entry.validation.startOrDuration.required"
+      ] = /*[[#{time-entry.validation.startOrDuration.required}]]*/ "";
+      window.zeiterfassung.i18n[
+        "time-entry.validation.endOrDuration.required"
+      ] = /*[[#{time-entry.validation.endOrDuration.required}]]*/ "";
+      window.zeiterfassung.i18n["time-entry.validation.startOrEnd.required"] =
+        /*[[#{time-entry.validation.startOrEnd.required}]]*/ "";
+    </script>
+
+    <script th:fragment="date-picker" th:inline="javascript">
+      window.zeiterfassung = window.zeiterfassung || {};
+
+      window.zeiterfassung.i18n = window.zeiterfassung.i18n || {};
+      window.zeiterfassung.i18n["datepicker.today"] =
+        /*[[#{datepicker.today}]]*/ "";
+
+      window.zeiterfassung.datepicker = window.zeiterfassung.datepicker || {};
+      window.zeiterfassung.datepicker.localization = {
+        locale: "de",
+        buttonLabel: /*[[#{datepicker.buttonLabel}]]*/ "",
+        placeholder: /*[[#{datepicker.placeholder}]]*/ "",
+        selectedDateMessage: /*[[#{datepicker.selectedDateMessage}]]*/ "",
+        prevMonthLabel: /*[[#{datepicker.prevMonthLabel}]]*/ "",
+        nextMonthLabel: /*[[#{datepicker.nextMonthLabel}]]*/ "",
+        monthSelectLabel: /*[[#{datepicker.monthSelectLabel}]]*/ "",
+        yearSelectLabel: /*[[#{datepicker.yearSelectLabel}]]*/ "",
+        closeLabel: /*[[#{datepicker.closeLabel}]]*/ "",
+        calendarHeading: /*[[#{datepicker.calendarHeading}]]*/ "",
+        dayNames: [
+          /*[[#{SUNDAY}]]*/ "",
+          /*[[#{MONDAY}]]*/ "",
+          /*[[#{TUESDAY}]]*/ "",
+          /*[[#{WEDNESDAY}]]*/ "",
+          /*[[#{THURSDAY}]]*/ "",
+          /*[[#{FRIDAY}]]*/ "",
+          /*[[#{SATURDAY}]]*/ "",
+        ],
+        monthNames: [
+          /*[[#{month.january}]]*/ "",
+          /*[[#{month.february}]]*/ "",
+          /*[[#{month.march}]]*/ "",
+          /*[[#{month.april}]]*/ "",
+          /*[[#{month.may}]]*/ "",
+          /*[[#{month.june}]]*/ "",
+          /*[[#{month.july}]]*/ "",
+          /*[[#{month.august}]]*/ "",
+          /*[[#{month.september}]]*/ "",
+          /*[[#{month.october}]]*/ "",
+          /*[[#{month.november}]]*/ "",
+          /*[[#{month.december}]]*/ "",
+        ],
+        monthNamesShort: [
+          /*[[#{month.january.short}]]*/ "",
+          /*[[#{month.february.short}]]*/ "",
+          /*[[#{month.march.short}]]*/ "",
+          /*[[#{month.april.short}]]*/ "",
+          /*[[#{month.may.short}]]*/ "",
+          /*[[#{month.june.short}]]*/ "",
+          /*[[#{month.july.short}]]*/ "",
+          /*[[#{month.august.short}]]*/ "",
+          /*[[#{month.september.short}]]*/ "",
+          /*[[#{month.october.short}]]*/ "",
+          /*[[#{month.november.short}]]*/ "",
+          /*[[#{month.december.short}]]*/ "",
+        ],
+      };
+    </script>
+  </body>
+</html>

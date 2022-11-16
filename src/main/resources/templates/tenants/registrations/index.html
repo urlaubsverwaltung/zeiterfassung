@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+  <head>
+    <title>Zeiterfassung</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+  </head>
+
+  <body>
+    <h1>Tenant Registration Overview</h1>
+
+    <main>
+      <div>
+        <ul>
+          <li th:each="tenant: ${tenantRegistrations}">
+            <span th:text="${tenant}">unique tenant id</span>
+          </li>
+        </ul>
+      </div>
+      <div>
+        <a th:href="@{/tenants/registrations/form}">Register new tenant</a>
+      </div>
+    </main>
+  </body>
+</html>

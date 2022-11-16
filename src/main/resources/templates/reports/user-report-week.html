@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+  <head>
+    <title>Zeiterfassung - Bericht</title>
+  </head>
+  <body>
+    <div
+      th:fragment="chart-navigation"
+      class="flex flex-row gap-4 flex-wrap items-start"
+    >
+      <nav
+        class="flex items-center gap-1"
+        th:aria-label="#{report.time.pagination.navigation.aria-label}"
+      >
+        <a
+          href="#"
+          th:href="${userReportPreviousSectionUrl}"
+          class="bg-blue-700 text-white font-medium rounded px-4 py-2"
+        >
+          <svg th:replace="icons/chevron-left::svg(className='w-6 h-6')"></svg>
+          <span
+            class="sr-only"
+            th:text="#{report.week.navigation.button.previous}"
+            >vorige Woche</span
+          >
+        </a>
+        <a
+          href="#"
+          th:href="${userReportTodaySectionUrl}"
+          class="bg-blue-700 text-white font-medium rounded px-4 py-2"
+          th:text="#{report.month.navigation.button.today}"
+        >
+          Heute
+        </a>
+        <a
+          href="#"
+          th:href="${userReportNextSectionUrl}"
+          class="bg-blue-700 text-white font-medium rounded px-4 py-2"
+        >
+          <svg th:replace="icons/chevron-right::svg(className='w-6 h-6')"></svg>
+          <span class="sr-only" th:text="#{report.week.navigation.button.next}"
+            >nächste Woche</span
+          >
+        </a>
+      </nav>
+      <form th:replace="reports/_user-select::form" />
+      <a
+        href="#"
+        th:href="${userReportCsvDownloadUrl}"
+        download
+        class="sm:ml-auto inline-block border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
+        th:text="#{report.week.button.csv-download}"
+      >
+        CSV Download
+      </a>
+    </div>
+
+    <th:block th:fragment="chart">
+      <div class="relative flex flex-col">
+        <span
+          th:if="${isThisWeek}"
+          class="text-gray-400 text-sm absolute -top-3/4 flex items-center"
+        >
+          <svg
+            th:replace="icons/bookmark::svg(className='-ml-0.5 mr-1 w-3 h-3 fill-amber-300')"
+          />
+          <th:block th:text="#{report.week.current-week}">Diese Woche</th:block>
+        </span>
+        <span class="font-bold" th:text="${weekReport.yearMonthWeek}">
+          Dezember 2021, KW 42
+        </span>
+      </div>
+      <svg
+        th:with="
+      chartWidth=700,
+      chartHeight=300,
+      paddingTop=16,
+      paddingLeft=150,
+      paddingRight=150,
+      dayGap=30,
+      barWidth=${(chartWidth - 6*dayGap) / 7}
+    "
+        viewbox="0 0 1024 360"
+        width="100%"
+        preserveAspectRatio="xMidYMin meet"
+        class="mt-8 report-graph"
+      >
+        <g
+          th:each="hour : ${#numbers.sequence(0, weekReport.graphLegendMaxHour, 2)}"
+          th:with="y=${paddingTop + (chartHeight * (1 - (hour / weekReport.graphLegendMaxHour)))}"
+        >
+          <line
+            x1="0"
+            th:y1="${y}"
+            th:x2="${paddingLeft + paddingRight + chartWidth}"
+            th:y2="${y}"
+            class="report-graph-hour-line"
+          ></line>
+          <text
+            x="1024"
+            th:y="${y}"
+            text-anchor="end"
+            dominant-baseline="middle"
+            th:text="${hour + 'h'}"
+            class="report-graph-hour-text"
+          ></text>
+        </g>
+        <g
+          th:each="day, dayIt : ${weekReport.dayReports}"
+          th:with="
+        barHeight=${(chartHeight * (day.hoursWorked / weekReport.graphLegendMaxHour))},
+        top=${paddingTop + chartHeight - barHeight},
+        bottom=${paddingTop + chartHeight},
+        left=${paddingLeft + (dayIt.index * dayGap) + (dayIt.index * barWidth)},
+        radius=${barWidth/2}
+      "
+        >
+          <path
+            th:if="${day.hoursWorked != 0}"
+            th:with="radius=${(barHeight - radius) < 0 ? barHeight : radius}"
+            th:d="|M${left},${bottom} v${-1 * (barHeight - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${barHeight - radius} z|"
+            class="report-graph-day-bar"
+          />
+          <rect
+            th:if="${day.hoursWorked == 0}"
+            th:y="${top}"
+            th:x="${left}"
+            th:width="${barWidth}"
+            th:height="1"
+            class="report-graph-day-bar"
+          />
+          <text
+            th:y="${paddingTop + chartHeight + 6}"
+            th:x="${left + (barWidth/2)}"
+            text-anchor="middle"
+            dominant-baseline="text-before-edge"
+            th:text="${day.dayOfWeekFull}"
+            class="report-graph-day-text"
+          />
+          <text
+            th:y="${paddingTop + chartHeight + 24}"
+            th:x="${left + (barWidth/2)}"
+            text-anchor="middle"
+            dominant-baseline="text-before-edge"
+            th:text="${day.date}"
+            class="report-graph-date-text"
+          />
+        </g>
+        <g
+          th:with="y=${paddingTop + (chartHeight * (1 - (weekReport.averageHoursWorked / weekReport.graphLegendMaxHour)))}"
+        >
+          <line
+            x1="0"
+            th:y1="${y}"
+            th:x2="${chartWidth + paddingLeft + paddingRight}"
+            th:y2="${y}"
+            stroke-dasharray="6 2"
+            class="report-graph-avg-line"
+          />
+          <text
+            th:x="${0}"
+            th:y="${y}"
+            text-anchor="start"
+            dominant-baseline="text-after-edge"
+            class="report-graph-avg-text"
+          >
+            avg
+          </text>
+        </g>
+      </svg>
+    </th:block>
+  </body>
+</html>
