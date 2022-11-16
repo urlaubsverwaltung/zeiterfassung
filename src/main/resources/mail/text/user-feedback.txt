@@ -1,0 +1,7 @@
+Wir haben Feedback zur Zeiterfassung bekommen :party:
+
+Von:
+[(${sender})]
+
+Nachricht:
+[(${message})]

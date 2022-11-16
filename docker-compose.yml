@@ -1,0 +1,38 @@
+version: '2.2'
+services:
+  postgres:
+    image: postgres:9.6
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: zeiterfassung
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_APP_USER: app_user
+      POSTGRES_APP_PASSWORD: app_password
+    volumes:
+        - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh:ro
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+        - '1025:1025'
+        - '8025:8025'
+  keycloak:
+    image: registry.bitbordell.de/focus-shift/containers/keycloak:19.0.2-development-1
+    environment:
+      KC_HTTP_PORT: 8090
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_METRICS_ENABLED: 'true'
+      KC_HEALTH_ENABLED: 'true'
+      KC_HOSTNAME_STRICT: 'false'
+      KC_HOSTNAME_STRICT_HTTPS: 'false'
+    ports:
+      - '8090:8090'
+  rabbitmq:
+      image: rabbitmq:3.10-management
+      environment:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+      ports:
+          - '5672:5672'
+          - '15672:15672' # rabbit mq admin ui

@@ -1,0 +1,98 @@
+{
+  "realm" : "b0838c26",
+  "users" : [ {
+    "id" : "d9ae8496-0be7-4a3b-b1a7-5bb5a34eff39",
+    "createdTimestamp" : 1641675131423,
+    "username" : "jane",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Jane",
+    "lastName" : "Doe",
+    "email" : "jane.doe@example.org",
+    "credentials" : [ {
+      "id" : "24160640-cb27-4f51-95d9-4353e17b1bec",
+      "type" : "password",
+      "createdDate" : 1641675141497,
+      "secretData" : "{\"value\":\"5q9sk9BGQUAUOQrGLYjVWuySPhxOz2gcJrmN/04oj3SuOiASC46rgCo7TFdsj+DYKGGtmuZit4AnpGbCoRbn9g==\",\"salt\":\"HO2F+F5Is/PU0jMFIGswBg==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-b0838c26" ],
+    "notBefore" : 0,
+    "groups" : [ "/ZEITERFASSUNG_ACCESS" ]
+  }, {
+    "id" : "a59c65db-341c-474d-84ae-22327a41d64d",
+    "createdTimestamp" : 1641675104704,
+    "username" : "john",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "John",
+    "lastName" : "Doe",
+    "email" : "john.doe@example.org",
+    "credentials" : [ {
+      "id" : "1dd65c60-82d6-45c0-940a-9998cfe60ccc",
+      "type" : "password",
+      "createdDate" : 1641675113165,
+      "secretData" : "{\"value\":\"MV+hFKzOg70gn2YaXzEeRv0vn+hq5qZDbcgqgwjh0+72cYoBIiYqOAtw5v5frAznarhP6LxItujQFgIVzEE5FQ==\",\"salt\":\"xyRtcq/eICk904nRbbQEtQ==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-b0838c26" ],
+    "notBefore" : 0,
+    "groups" : [ "/ZEITERFASSUNG_ACCESS" ]
+  }, {
+    "id" : "e45a7238-8888-449a-8b45-f57176608fb0",
+    "createdTimestamp" : 1641675074574,
+    "username" : "marlene",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Marlene",
+    "lastName" : "Muster",
+    "email" : "marlene.muster@example.org",
+    "credentials" : [ {
+      "id" : "652f9fb5-9137-4788-b75b-bb012235027f",
+      "type" : "password",
+      "createdDate" : 1641675086181,
+      "secretData" : "{\"value\":\"PLgQry16+VLEJksya07J/x83WjsXay1H5STv9R/bam+M2BSTvECcJ36y4V41exTbZpiQub1ohdDITdZDRM5PAQ==\",\"salt\":\"hhhdaFkXy4Wxy2YpOOHQrQ==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-b0838c26" ],
+    "clientRoles" : {
+      "zeiterfassung" : [ "ZEITERFASSUNG_VIEW_REPORT_ALL" ]
+    },
+    "notBefore" : 0,
+    "groups" : [ "/ZEITERFASSUNG_ACCESS" ]
+  }, {
+    "id" : "3cf2f379-1ff4-4404-9a18-1f38cda24878",
+    "createdTimestamp" : 1641675163871,
+    "username" : "max",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Max",
+    "lastName" : "Muster",
+    "email" : "max.muster@example.org",
+    "credentials" : [ {
+      "id" : "76ff0bd4-c2a3-429a-960f-4fd6f7395a16",
+      "type" : "password",
+      "createdDate" : 1641675175250,
+      "secretData" : "{\"value\":\"1ERH1qnk9OkFsUQibqOatECoI+6cFM0uzhV3wqSRsixUm0PJ9TSBh0+2Z91YLd8dxYU6hq+aA56pDTVqEafvZg==\",\"salt\":\"8/ZE4OyZSTSYNzMVr9xSXg==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-b0838c26" ],
+    "clientRoles" : {
+      "zeiterfassung" : [ "ZEITERFASSUNG_VIEW_REPORT_ALL" ]
+    },
+    "notBefore" : 0,
+    "groups" : [ "/ZEITERFASSUNG_ACCESS" ]
+  } ]
+}

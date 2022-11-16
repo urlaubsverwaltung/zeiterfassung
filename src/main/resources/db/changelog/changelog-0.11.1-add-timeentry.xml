@@ -1,0 +1,59 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+    <changeSet author="grafjo" id="add-timeentry-table">
+
+        <preConditions>
+            <not>
+                <tableExists tableName="time_entry"/>
+            </not>
+        </preConditions>
+
+        <createSequence sequenceName="time_entry_seq" incrementBy="50"/>
+
+        <createTable tableName="time_entry">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_TIME_ENTRY"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(8)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="VARCHAR(255)"/>
+            <column name="start" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_zone_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_zone_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueDate="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseColumnNames="tenant_id" baseTableName="time_entry" constraintName="FK_TIME_ENTRY_TENANT_ID"
+                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 referencedColumnNames="tenant_id" referencedTableName="tenant"/>
+
+    </changeSet>
+
+    <changeSet id="enable-row-level-security-on-timeentry" author="grafjo">
+        <sql dbms="postgresql">
+            ALTER TABLE time_entry ENABLE ROW LEVEL SECURITY;
+            DROP POLICY IF EXISTS time_entry_tenant_isolation_policy ON time_entry;
+            CREATE POLICY time_entry_tenant_isolation_policy ON time_entry
+                USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

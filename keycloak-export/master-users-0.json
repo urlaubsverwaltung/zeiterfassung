@@ -1,0 +1,23 @@
+{
+  "realm" : "master",
+  "users" : [ {
+    "id" : "8140f5de-f070-4c95-b06e-12f01dfb732c",
+    "createdTimestamp" : 1638018388119,
+    "username" : "admin",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : false,
+    "credentials" : [ {
+      "id" : "7071471e-3c34-4ca9-8ecf-fffc6811e70d",
+      "type" : "password",
+      "createdDate" : 1638018388182,
+      "secretData" : "{\"value\":\"ghCxenzPPUnzXCqHm/MbSqYSfTj2BPt4KeQcWtVXtCZ5IVuJamWXnEz0I/LmtJ6qu+QO24yt/bjSCEqimjnDqA==\",\"salt\":\"0JffTIC7G+qsHnZOBm92dQ==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-master", "admin" ],
+    "notBefore" : 0,
+    "groups" : [ "/ZEITERFASSUNG_OPERATOR" ]
+  } ]
+}

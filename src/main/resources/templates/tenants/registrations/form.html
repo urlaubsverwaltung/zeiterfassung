@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+  <head>
+    <title>Zeiterfassung | Add new time entry</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+  </head>
+
+  <body>
+    <h1>Register new Tenant</h1>
+
+    <main>
+      <div>
+        <form
+          action="#"
+          th:action="@{/tenants/registrations}"
+          th:object="${tenantRegistration}"
+          method="post"
+        >
+          <div>
+            <fieldset>
+              <div>
+                <div>
+                  <label for="tenantId"> tenant id </label>
+                </div>
+                <div>
+                  <input
+                    id="tenantId"
+                    type="text"
+                    th:field="*{tenantId}"
+                    minlength="8"
+                    maxlength="8"
+                  />
+                </div>
+              </div>
+              <div>
+                <div>
+                  <label for="oidcClientSecret"> oidc client secret </label>
+                </div>
+                <div>
+                  <input
+                    id="oidcClientSecret"
+                    type="password"
+                    th:field="*{oidcClientSecret}"
+                    required
+                  />
+                </div>
+              </div>
+            </fieldset>
+            <div>
+              <button type="submit">Register</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </main>
+  </body>
+</html>
