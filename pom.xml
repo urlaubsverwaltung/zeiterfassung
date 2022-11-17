@@ -10,7 +10,7 @@
 
     <groupId>de.focus-shift</groupId>
     <artifactId>zeiterfassung</artifactId>
-    <version>0.13.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <name>Zeiterfassung</name>
     <description>TODO</description>
