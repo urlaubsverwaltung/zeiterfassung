@@ -423,7 +423,7 @@
 
   .time-week-header {
     @apply sticky;
-    @apply top-13;
+    @apply top-12;
     @apply z-10;
     @apply pt-3;
     @apply pb-6;
