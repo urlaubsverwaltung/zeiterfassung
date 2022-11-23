@@ -1,13 +1,12 @@
 package de.focusshift.zeiterfassung.tenantuser;
 
+import de.focusshift.zeiterfassung.security.SecurityRoles;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 class TenantUserServiceImpl implements TenantUserService {
@@ -29,12 +28,12 @@ class TenantUserServiceImpl implements TenantUserService {
     }
 
     @Override
-    public TenantUser createNewUser(UUID uuid, String givenName, String familyName, EMailAddress eMailAddress) {
+    public TenantUser createNewUser(UUID uuid, String givenName, String familyName, EMailAddress eMailAddress, Collection<SecurityRoles> authorities) {
 
         final Instant now = clock.instant();
 
         final TenantUserEntity tenantUserEntity =
-            new TenantUserEntity(null, uuid.toString(), now, now, givenName, familyName, eMailAddress.value());
+            new TenantUserEntity(null, uuid.toString(), now, now, givenName, familyName, eMailAddress.value(), distinct(authorities));
 
         final TenantUserEntity persisted = tenantUserRepository.save(tenantUserEntity);
 
@@ -53,7 +52,7 @@ class TenantUserServiceImpl implements TenantUserService {
             .orElseThrow(() -> new IllegalArgumentException(String.format("could not find user with id=%s", user.id())));
 
         final TenantUserEntity next =
-            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), now, user.givenName(), user.familyName(), user.eMail().value());
+            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), now, user.givenName(), user.familyName(), user.eMail().value(), distinct(user.authorities()));
 
         final TenantUserEntity persisted = tenantUserRepository.save(next);
 
@@ -79,6 +78,10 @@ class TenantUserServiceImpl implements TenantUserService {
         final String familyName = tenantUserEntity.getFamilyName();
         final EMailAddress eMail = new EMailAddress(tenantUserEntity.getEmail());
 
-        return new TenantUser(uuid, id, givenName, familyName, eMail);
+        return new TenantUser(uuid, id, givenName, familyName, eMail, Set.of());
+    }
+
+    private static <T> List<T> distinct(Collection<T> collection) {
+        return collection.stream().distinct().toList();
     }
 }

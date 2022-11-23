@@ -1,18 +1,16 @@
 package de.focusshift.zeiterfassung.tenantuser;
 
 import de.focusshift.zeiterfassung.multitenant.AbstractTenantAwareEntity;
+import de.focusshift.zeiterfassung.security.SecurityRoles;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
+import static javax.persistence.EnumType.STRING;
 import static javax.persistence.GenerationType.SEQUENCE;
 
 @Entity
@@ -53,15 +51,20 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
     @Size(max = 255)
     private String email;
 
+    @CollectionTable(name = "tenant_user_authorities", joinColumns = @JoinColumn(name = "tenant_user_id"))
+    @ElementCollection
+    @Enumerated(STRING)
+    private List<SecurityRoles> authorities;
+
     protected TenantUserEntity() {
-        this(null, null, null, null, null, null, null, null);
+        this(null, null, null, null, null, null, null, null, List.of());
     }
 
-    protected TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email) {
-        this(id, null, uuid, firstLoginAt, lastLoginAt, givenName, familyName, email);
+    protected TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, List<SecurityRoles> authorities) {
+        this(id, null, uuid, firstLoginAt, lastLoginAt, givenName, familyName, email, authorities);
     }
 
-    protected TenantUserEntity(Long id, String tenantId, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email) {
+    protected TenantUserEntity(Long id, String tenantId, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, List<SecurityRoles> authorities) {
         super(tenantId);
         this.id = id;
         this.uuid = uuid;
@@ -70,6 +73,7 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
         this.givenName = givenName;
         this.familyName = familyName;
         this.email = email;
+        this.authorities = authorities;
     }
 
     public Long getId() {
@@ -98,6 +102,10 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
 
     public String getEmail() {
         return email;
+    }
+
+    public List<SecurityRoles> getAuthorities() {
+        return authorities;
     }
 
     @Override
