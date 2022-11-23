@@ -1,4 +1,4 @@
-# Zeiterfassung [![Build Status](https://github.com/urlaubsverwaltung/zeiterfassung/workflows/Build/badge.svg)](https://github.com/urlaubsverwaltung/zeiterfassung/actions?query=workflow%3ABuild)
+# Zeiterfassung [![Build](https://github.com/urlaubsverwaltung/zeiterfassung/actions/workflows/build.yml/badge.svg)](https://github.com/urlaubsverwaltung/zeiterfassung/actions/workflows/build.yml)
 
 Ist bei euch die Zeiterfassung auch gerade ein großes Thema? Das trifft sich gut!
 
