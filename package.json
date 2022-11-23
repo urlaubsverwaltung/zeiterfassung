@@ -37,7 +37,7 @@
     "lint-staged": "13.0.3",
     "postcss": "8.4.19",
     "postcss-cli": "10.0.0",
-    "prettier": "2.7.1",
+    "prettier": "2.8.0",
     "prettier-plugin-svelte": "2.8.0",
     "rimraf": "3.0.2",
     "rollup": "2.79.1",
