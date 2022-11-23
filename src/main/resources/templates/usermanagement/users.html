@@ -8,7 +8,7 @@
       <main class="grow">
         <div class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28">
           <h1 class="sr-only">Personen</h1>
-          <div class="overflow-x-auto relative">
+          <div class="relative">
             <table class="w-full text-left text-gray-800">
               <caption class="p-8 pt-0 text-lg font-semibold text-left">
                 Personen
@@ -23,6 +23,7 @@
                   <th class="py-3 px-6 font-normal">Vorname</th>
                   <th class="py-3 px-6 font-normal">Nachname</th>
                   <th class="py-3 px-6 font-normal">E-Mail</th>
+                  <th class="py-3 px-6 font-normal">Aktionen</th>
                 </tr>
               </thead>
               <tbody>
@@ -39,6 +40,14 @@
                   <td class="py-3 px-6" th:text="${user.firstName}"></td>
                   <td class="py-3 px-6" th:text="${user.lastName}"></td>
                   <td class="py-3 px-6" th:text="${user.email}"></td>
+                  <td class="py-3 px-6">
+                    <a
+                      th:href="@{/users/{id}/account(id=${user.id})}"
+                      class="text-sm inline-block border border-blue-700 text-blue-700 font-medium rounded px-4 py-2 hover:bg-white"
+                    >
+                      Konto
+                    </a>
+                  </td>
                 </tr>
               </tbody>
             </table>

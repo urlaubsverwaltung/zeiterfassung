@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+  <head
+    th:replace="timeentries/_layout::head(~{::title}, ~{}, ~{::scripts}, ~{})"
+  >
+    <title>Zeiterfassung - Personen</title>
+    <th:block th:ref="scripts">
+      <script type="module" src="" th:src="@{/assets/users.js}"></script>
+    </th:block>
+  </head>
+  <body th:replace="timeentries/_layout::body(~{::content})">
+    <th:block th:fragment="content">
+      <main class="grow">
+        <div class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28">
+          Konto von Blubb
+        </div>
+      </main>
+    </th:block>
+  </body>
+</html>

@@ -4,6 +4,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
@@ -32,7 +33,13 @@ class UserManagementController {
         return "usermanagement/users";
     }
 
+    @GetMapping("/{id}/account")
+    String userAccount(@PathVariable("id") String id, Model model) {
+
+        return "usermanagement/user-account";
+    }
+
     static UserDto userToDto(User user) {
-        return new UserDto(user.givenName(), user.familyName(), user.givenName() + " " + user.familyName(), user.email().value());
+        return new UserDto(user.localId().value(), user.givenName(), user.familyName(), user.givenName() + " " + user.familyName(), user.email().value());
     }
 }
