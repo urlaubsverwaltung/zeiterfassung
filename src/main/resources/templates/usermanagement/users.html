@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+  <head th:replace="timeentries/_layout::head(~{::title}, ~{}, ~{}, ~{})">
+    <title>Zeiterfassung - Personen</title>
+  </head>
+  <body th:replace="timeentries/_layout::body(~{::content})">
+    <th:block th:fragment="content">
+      <main class="grow">
+        <div class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28">
+          <h1 class="sr-only">Personen</h1>
+          <div class="overflow-x-auto relative">
+            <table class="w-full text-left text-gray-800">
+              <caption class="p-8 pt-0 text-lg font-semibold text-left">
+                Personen
+                <p class="mt-1 text-gray-500 text-sm font-normal">
+                  Information: Es werden hier nur Personen angezeigt, welche
+                  sich mindestens einmal in der Zeiterfassung angemeldet haben.
+                </p>
+              </caption>
+              <thead class="text-xs text-gray-500 uppercase bg-gray-100">
+                <tr>
+                  <th class="py-3 px-6 font-normal"></th>
+                  <th class="py-3 px-6 font-normal">Vorname</th>
+                  <th class="py-3 px-6 font-normal">Nachname</th>
+                  <th class="py-3 px-6 font-normal">E-Mail</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  th:each="user : ${users}"
+                  class="bg-white border-blue-50 transition-colors hover:bg-zinc-50"
+                  th:classappend="${not userStat.last ? 'border-b' : ''}"
+                >
+                  <td class="py-3 px-6 w-16 text-blue-300">
+                    <span
+                      th:replace="fragments/avatar::avatar-bordered(fullName=${user.fullName},width='42',height='42')"
+                    ></span>
+                  </td>
+                  <td class="py-3 px-6" th:text="${user.firstName}"></td>
+                  <td class="py-3 px-6" th:text="${user.lastName}"></td>
+                  <td class="py-3 px-6" th:text="${user.email}"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </th:block>
+  </body>
+</html>
