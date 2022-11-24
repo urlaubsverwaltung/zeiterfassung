@@ -16,13 +16,9 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.annotation.Rollback;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,8 +42,8 @@ class TimeEntryRepositoryIT extends TestContainersBase {
         tenantService.create("ab143c2f");
         prepareSecurityContextWithTenantId("ab143c2f");
 
-        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"));
-        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"));
+        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
         final LocalDateTime anyDate = LocalDateTime.of(2022, 9, 24, 14, 0, 0, 0);
 
@@ -69,8 +65,8 @@ class TimeEntryRepositoryIT extends TestContainersBase {
         tenantService.create("ab143c2f");
         prepareSecurityContextWithTenantId("ab143c2f");
 
-        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"));
-        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"));
+        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
         final LocalDate periodFrom = LocalDate.of(2022, 1, 3);
         final LocalDate periodToExclusive = LocalDate.of(2022, 1, 10);
@@ -114,8 +110,8 @@ class TimeEntryRepositoryIT extends TestContainersBase {
         tenantService.create("ab143c2f");
         prepareSecurityContextWithTenantId("ab143c2f");
 
-        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"));
-        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"));
+        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
         final LocalDate periodFrom = LocalDate.of(2022, 1, 3);
         final LocalDate periodToExclusive = LocalDate.of(2022, 1, 10);
@@ -159,8 +155,8 @@ class TimeEntryRepositoryIT extends TestContainersBase {
         tenantService.create("ab143c2f");
         prepareSecurityContextWithTenantId("ab143c2f");
 
-        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"));
-        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"));
+        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
         final LocalDate periodFrom = LocalDate.of(2022, 1, 3);
         final LocalDate periodToExclusive = LocalDate.of(2022, 1, 10);
@@ -204,8 +200,8 @@ class TimeEntryRepositoryIT extends TestContainersBase {
         tenantService.create("ab143c2f");
         prepareSecurityContextWithTenantId("ab143c2f");
 
-        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"));
-        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"));
+        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
         final LocalDate periodFrom = LocalDate.of(2022, 1, 3);
         final LocalDate periodToExclusive = LocalDate.of(2022, 1, 10);
@@ -249,8 +245,8 @@ class TimeEntryRepositoryIT extends TestContainersBase {
         tenantService.create("ab143c2f");
         prepareSecurityContextWithTenantId("ab143c2f");
 
-        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"));
-        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"));
+        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
         final LocalDate periodFrom = LocalDate.of(2022, 1, 3);
         final LocalDate periodToExclusive = LocalDate.of(2022, 1, 10);

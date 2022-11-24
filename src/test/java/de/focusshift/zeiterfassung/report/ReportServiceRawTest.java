@@ -14,14 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.List;
+import java.util.Set;
 
 import static java.time.DayOfWeek.MONDAY;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -98,7 +93,7 @@ class ReportServiceRawTest {
             .thenReturn(List.of(firstTimeEntry, secondTimeEntry));
 
         when(userManagementService.findAllUsersByIds(List.of(new UserId("batman"))))
-            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"))));
+            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of())));
 
         final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, new UserId("batman"));
 
@@ -130,7 +125,7 @@ class ReportServiceRawTest {
             .thenReturn(List.of(morningTimeEntry, noonTimeEntry));
 
         when(userManagementService.findAllUsersByIds(List.of(new UserId("batman"))))
-            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"))));
+            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of())));
 
         final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, new UserId("batman"));
 
@@ -158,7 +153,7 @@ class ReportServiceRawTest {
             .thenReturn(List.of(timeEntry));
 
         when(userManagementService.findAllUsersByIds(List.of(new UserId("batman"))))
-            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"))));
+            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of())));
 
         final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, new UserId("batman"));
 
@@ -259,7 +254,7 @@ class ReportServiceRawTest {
             .thenReturn(List.of(w1_d1_TimeEntry, w1_d2_TimeEntry, w2_d1_TimeEntry, w2_d2_TimeEntry, w3_d1_TimeEntry, w3_d2_TimeEntry, w4_d1_TimeEntry, w4_d2_TimeEntry));
 
         when(userManagementService.findAllUsersByIds(List.of(batman)))
-            .thenReturn(List.of(new User(batman, new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"))));
+            .thenReturn(List.of(new User(batman, new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of())));
 
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), batman);
 

@@ -23,6 +23,7 @@
                   <th class="py-3 px-6 font-normal">Vorname</th>
                   <th class="py-3 px-6 font-normal">Nachname</th>
                   <th class="py-3 px-6 font-normal">E-Mail</th>
+                  <th class="py-3 px-6 font-normal">Berechtigungen</th>
                   <th class="py-3 px-6 font-normal">Aktionen</th>
                 </tr>
               </thead>
@@ -40,6 +41,46 @@
                   <td class="py-3 px-6" th:text="${user.firstName}"></td>
                   <td class="py-3 px-6" th:text="${user.lastName}"></td>
                   <td class="py-3 px-6" th:text="${user.email}"></td>
+                  <td class="py-3 px-6">
+                    <div class="flex flex-row items-center gap-2">
+                      <svg
+                        th:if="${user.authorities.user}"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        role="img"
+                      >
+                        <title>Benutzer</title>
+                        <path
+                          d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"
+                        ></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                      <svg
+                        th:if="${user.authorities.viewReportAll}"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        role="img"
+                      >
+                        <title>Berichte sehen</title>
+                        <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                        <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                      </svg>
+                    </div>
+                  </td>
                   <td class="py-3 px-6">
                     <a
                       th:href="@{/users/{id}/account(id=${user.id})}"
