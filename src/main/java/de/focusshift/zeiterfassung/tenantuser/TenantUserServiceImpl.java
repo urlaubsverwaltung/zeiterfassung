@@ -77,8 +77,9 @@ class TenantUserServiceImpl implements TenantUserService {
         final String givenName = tenantUserEntity.getGivenName();
         final String familyName = tenantUserEntity.getFamilyName();
         final EMailAddress eMail = new EMailAddress(tenantUserEntity.getEmail());
+        final HashSet<SecurityRoles> authorities = new HashSet<>(tenantUserEntity.getAuthorities());
 
-        return new TenantUser(uuid, id, givenName, familyName, eMail, Set.of());
+        return new TenantUser(uuid, id, givenName, familyName, eMail, authorities);
     }
 
     private static <T> List<T> distinct(Collection<T> collection) {

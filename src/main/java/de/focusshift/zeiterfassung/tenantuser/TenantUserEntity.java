@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.tenantuser;
 
 import de.focusshift.zeiterfassung.multitenant.AbstractTenantAwareEntity;
 import de.focusshift.zeiterfassung.security.SecurityRoles;
+import org.hibernate.annotations.LazyCollection;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -12,6 +13,7 @@ import java.util.Objects;
 
 import static javax.persistence.EnumType.STRING;
 import static javax.persistence.GenerationType.SEQUENCE;
+import static org.hibernate.annotations.LazyCollectionOption.FALSE;
 
 @Entity
 @Table(name = "tenant_user")
@@ -54,6 +56,7 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
     @CollectionTable(name = "tenant_user_authorities", joinColumns = @JoinColumn(name = "tenant_user_id"))
     @ElementCollection
     @Enumerated(STRING)
+    @LazyCollection(FALSE)
     private List<SecurityRoles> authorities;
 
     protected TenantUserEntity() {

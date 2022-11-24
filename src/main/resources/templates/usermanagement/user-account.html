@@ -12,7 +12,119 @@
     <th:block th:fragment="content">
       <main class="grow">
         <div class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28">
-          Konto von Blubb
+          <div>
+            <a
+              th:href="@{/users}"
+              class="text-sm transition-colors text-gray-500 hover:text-gray-900"
+              >⇠ Zurück zu Personen</a
+            >
+          </div>
+          <div class="grid grid-cols-2">
+            <div class="space-y-4">
+              <h1 class="mt-8 text-2xl">
+                Konto von
+                <th:block th:text="${userAccount.fullName}"></th:block>
+              </h1>
+              <div class="space-y-4">
+                <div class="text-blue-200">
+                  <span
+                    th:replace="fragments/avatar::avatar-bordered(fullName=${userAccount.fullName},width='82',height='82')"
+                  ></span>
+                </div>
+                <div>
+                  <a
+                    class="transition-opacity text-gray-900 text-opacity-80 hover:text-opacity-100 flex items-center gap-2"
+                    th:href="${'mailto:' + userAccount.email}"
+                  >
+                    <span
+                      class="translate-y-px"
+                      th:insert="icons/mail::svg(className='w-5 h-5')"
+                    ></span>
+                    <th:block th:text="${userAccount.email}"></th:block>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h2
+                class="mt-8 text-lg font-medium border-b border-blue-100 flex flex-row items-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  role="img"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path>
+                </svg>
+                Berechtigungen
+              </h2>
+              <form
+                th:action="@{/users/{id}/account/authorities (id=${userAccount.id})}"
+                method="post"
+                class="mt-4"
+                th:object="${userAccount.authorities}"
+              >
+                <ul>
+                  <li>
+                    <h3 class="sr-only">Berichte</h3>
+                    <ul class="authorities mt-2">
+                      <li
+                        class="authorities__item flex items-baseline gap-2 py-4 px-6 rounded-xl"
+                      >
+                        <input
+                          type="checkbox"
+                          name="viewReportAll"
+                          id="input-view-report-all"
+                          th:checked="${userAccount.authorities.viewReportAll}"
+                        />
+                        <label for="input-view-report-all" class="flex-1"
+                          >Darf Berichte aller Personen einsehen</label
+                        >
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+                <div class="mt-4">
+                  <button
+                    type="submit"
+                    class="bg-blue-700 text-white font-medium rounded px-4 py-2 flex flez-row items-center gap-3"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-5 h-5"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      role="img"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path
+                        d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                      ></path>
+                      <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                      <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Übernehmen
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </main>
     </th:block>
