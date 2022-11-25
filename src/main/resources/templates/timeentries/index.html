@@ -85,6 +85,7 @@
           </th:block>
         </turbo-frame>
         <div
+          th:if="${not noTimeEntriesYet}"
           class="mx-auto w-full max-w-screen-lg space-y-16"
           th:classappend="${timeEntryWeeksPage.totalTimeEntryElements eq 0 ? 'mb-8' : ''}"
         >
