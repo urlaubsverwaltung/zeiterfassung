@@ -9,10 +9,15 @@ export function useSticky(element: HTMLElement) {
 
   const observer = new IntersectionObserver(
     ([entry]) => {
+      // element is outside the viewport, intercepts the bottom.
+      // as we're only handling sticky-top elements -> this element is not be sticky anymore
+      const outOfScreen =
+        entry.target.getBoundingClientRect().bottom > window.innerHeight;
+
       for (const listener of listeners) {
         listener({
           element: entry.target,
-          sticky: entry.intersectionRatio < 1,
+          sticky: entry.intersectionRatio < 1 && !outOfScreen,
         });
       }
     },
