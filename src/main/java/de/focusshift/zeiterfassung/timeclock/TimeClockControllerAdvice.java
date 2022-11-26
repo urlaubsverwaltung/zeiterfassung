@@ -11,7 +11,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
-@ControllerAdvice(basePackages = {"de.focusshift.zeiterfassung.feedback", "de.focusshift.zeiterfassung.report", "de.focusshift.zeiterfassung.timeclock", "de.focusshift.zeiterfassung.timeentry"})
+@ControllerAdvice(basePackages = {
+    "de.focusshift.zeiterfassung.feedback",
+    "de.focusshift.zeiterfassung.report",
+    "de.focusshift.zeiterfassung.timeclock",
+    "de.focusshift.zeiterfassung.timeentry",
+    "de.focusshift.zeiterfassung.usermanagement"
+})
 class TimeClockControllerAdvice {
 
     private final TimeClockService timeClockService;
