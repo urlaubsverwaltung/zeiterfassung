@@ -1,7 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.security.SecurityRoles;
-import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,22 +17,18 @@ import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_EDIT_AUTH
 @RequestMapping("/users/{id}/account")
 class UserAccountController {
 
-    private final CurrentUserProvider currentUserProvider;
     private final UserManagementService userManagementService;
 
-    UserAccountController(CurrentUserProvider currentUserProvider, UserManagementService userManagementService) {
-        this.currentUserProvider = currentUserProvider;
+    UserAccountController(UserManagementService userManagementService) {
         this.userManagementService = userManagementService;
     }
 
     @GetMapping
     String userAccount(@PathVariable("id") String id, Model model) {
 
-        final User signedInUser = currentUserProvider.getCurrentUser();
         final User user = userById(id);
 
         model.addAttribute("userAccount", toUserAccountDto(user));
-        model.addAttribute("canEditAuthorities", signedInUser.hasAuthority(ZEITERFASSUNG_EDIT_AUTHORITIES));
 
         return "usermanagement/user-account";
     }
