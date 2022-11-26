@@ -7,4 +7,8 @@ import de.focusshift.zeiterfassung.user.UserId;
 import java.util.Set;
 
 public record User(UserId id, UserLocalId localId, String givenName, String familyName, EMailAddress email, Set<SecurityRoles> authorities) {
+
+    public boolean hasAuthority(SecurityRoles authority) {
+        return authorities().contains(authority);
+    }
 }

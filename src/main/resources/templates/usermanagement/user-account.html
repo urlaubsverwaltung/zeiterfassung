@@ -45,7 +45,7 @@
                 </div>
               </div>
             </div>
-            <div>
+            <div th:if="${canEditAuthorities}">
               <h2
                 class="mt-8 text-lg font-medium border-b border-blue-100 flex flex-row items-center gap-2"
               >
@@ -90,6 +90,24 @@
                         <label for="input-view-report-all" class="flex-1"
                           >Darf Berichte aller Personen einsehen</label
                         >
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <h3 class="sr-only">Berechtigungen</h3>
+                    <ul class="authorities mt-2">
+                      <li
+                        class="authorities__item flex items-baseline gap-2 py-4 px-6 rounded-xl"
+                      >
+                        <input
+                          type="checkbox"
+                          name="editAuthorities"
+                          id="input-edit-authorities"
+                          th:checked="${userAccount.authorities.editAuthorities}"
+                        />
+                        <label for="input-edit-authorities" class="flex-1">
+                          Darf Berechtigungen anderer Personen pflegen
+                        </label>
                       </li>
                     </ul>
                   </li>

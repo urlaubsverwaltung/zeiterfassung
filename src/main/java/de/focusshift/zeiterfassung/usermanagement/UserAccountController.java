@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.security.SecurityRoles;
+import de.focusshift.zeiterfassung.user.CurrentUserProvider;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -9,30 +11,35 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static de.focusshift.zeiterfassung.security.SecurityRoles.ZEITERFASSUNG_USER;
-import static de.focusshift.zeiterfassung.security.SecurityRoles.ZEITERFASSUNG_VIEW_REPORT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRoles.*;
+import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_EDIT_AUTHORITIES;
 
 @Controller
 @RequestMapping("/users/{id}/account")
 class UserAccountController {
 
+    private final CurrentUserProvider currentUserProvider;
     private final UserManagementService userManagementService;
 
-    UserAccountController(UserManagementService userManagementService) {
+    UserAccountController(CurrentUserProvider currentUserProvider, UserManagementService userManagementService) {
+        this.currentUserProvider = currentUserProvider;
         this.userManagementService = userManagementService;
     }
 
     @GetMapping
     String userAccount(@PathVariable("id") String id, Model model) {
 
+        final User signedInUser = currentUserProvider.getCurrentUser();
         final User user = userById(id);
 
         model.addAttribute("userAccount", toUserAccountDto(user));
+        model.addAttribute("canEditAuthorities", signedInUser.hasAuthority(ZEITERFASSUNG_EDIT_AUTHORITIES));
 
         return "usermanagement/user-account";
     }
 
     @PostMapping("/authorities")
+    @PreAuthorize(ALLOW_EDIT_AUTHORITIES)
     String userAuthorities(@PathVariable("id") String id, @ModelAttribute UserAccountAuthoritiesDto authoritiesDto, Model model) {
 
         final User user = userById(id);
@@ -53,6 +60,9 @@ class UserAccountController {
         if (authoritiesDto.isViewReportAll()) {
             authorities.add(ZEITERFASSUNG_VIEW_REPORT_ALL);
         }
+        if (authoritiesDto.isEditAuthorities()) {
+            authorities.add(ZEITERFASSUNG_EDIT_AUTHORITIES);
+        }
         return authorities;
     }
 
@@ -60,6 +70,7 @@ class UserAccountController {
         return UserAccountAuthoritiesDto.builder()
             .user(authorities.contains(ZEITERFASSUNG_USER))
             .viewReportAll(authorities.contains(ZEITERFASSUNG_VIEW_REPORT_ALL))
+            .editAuthorities(authorities.contains(ZEITERFASSUNG_EDIT_AUTHORITIES))
             .build();
     }
 

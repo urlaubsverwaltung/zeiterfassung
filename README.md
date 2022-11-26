@@ -152,11 +152,11 @@ users.
 
 As a user of a tenant can log in via `http://localhost:8060/`:
 
-| username            | password | role             |
-|---------------------|----------|------------------|
-| boss@example.org    | secret   | view_reports_all |
-| office@example.org  | secret   | view_reports_all |
-| user@example.org    | secret   |                  |
+| username            | password | role                               |
+|---------------------|----------|------------------------------------|
+| boss@example.org    | secret   | view_reports_all, edit_authorities |
+| office@example.org  | secret   | view_reports_all, edit_authorities |
+| user@example.org    | secret   |                                    |
 
 
 ### git hooks (optional)

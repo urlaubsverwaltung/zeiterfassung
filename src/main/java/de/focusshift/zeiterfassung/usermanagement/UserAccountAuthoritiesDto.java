@@ -4,6 +4,7 @@ class UserAccountAuthoritiesDto {
 
     private boolean user;
     private boolean viewReportAll;
+    private boolean editAuthorities;
 
     public boolean isUser() {
         return user;
@@ -21,6 +22,14 @@ class UserAccountAuthoritiesDto {
         this.viewReportAll = viewReportAll;
     }
 
+    public boolean isEditAuthorities() {
+        return editAuthorities;
+    }
+
+    public void setEditAuthorities(boolean editAuthorities) {
+        this.editAuthorities = editAuthorities;
+    }
+
     static Builder builder() {
         return new Builder();
     }
@@ -28,6 +37,7 @@ class UserAccountAuthoritiesDto {
     static class Builder {
         private boolean user;
         private boolean viewReportAll;
+        private boolean editAuthorities;
 
         public Builder user(boolean user) {
             this.user = user;
@@ -39,10 +49,16 @@ class UserAccountAuthoritiesDto {
             return this;
         }
 
+        public Builder editAuthorities(boolean editAuthorities) {
+            this.editAuthorities = editAuthorities;
+            return this;
+        }
+
         public UserAccountAuthoritiesDto build() {
             final UserAccountAuthoritiesDto authoritiesDto = new UserAccountAuthoritiesDto();
             authoritiesDto.setUser(user);
             authoritiesDto.setViewReportAll(viewReportAll);
+            authoritiesDto.setEditAuthorities(editAuthorities);
             return authoritiesDto;
         }
     }

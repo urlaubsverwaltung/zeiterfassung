@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.Collection;
 import java.util.List;
 
-import static de.focusshift.zeiterfassung.security.SecurityRoles.ZEITERFASSUNG_USER;
-import static de.focusshift.zeiterfassung.security.SecurityRoles.ZEITERFASSUNG_VIEW_REPORT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRoles.*;
 
 @Controller
 @RequestMapping("/users")
@@ -46,6 +45,7 @@ class UserManagementController {
         return UserAccountAuthoritiesDto.builder()
             .user(authorities.contains(ZEITERFASSUNG_USER))
             .viewReportAll(authorities.contains(ZEITERFASSUNG_VIEW_REPORT_ALL))
+            .editAuthorities(authorities.contains(ZEITERFASSUNG_EDIT_AUTHORITIES))
             .build();
     }
 
