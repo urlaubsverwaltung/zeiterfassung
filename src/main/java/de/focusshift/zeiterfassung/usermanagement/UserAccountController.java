@@ -15,6 +15,7 @@ import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_EDIT_AUTH
 
 @Controller
 @RequestMapping("/users/{id}/account")
+@PreAuthorize(ALLOW_EDIT_AUTHORITIES)
 class UserAccountController {
 
     private final UserManagementService userManagementService;
@@ -34,7 +35,6 @@ class UserAccountController {
     }
 
     @PostMapping("/authorities")
-    @PreAuthorize(ALLOW_EDIT_AUTHORITIES)
     String userAuthorities(@PathVariable("id") String id, @ModelAttribute UserAccountAuthoritiesDto authoritiesDto, Model model) {
 
         final User user = userById(id);

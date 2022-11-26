@@ -11,10 +11,11 @@ import java.util.Collection;
 import java.util.List;
 
 import static de.focusshift.zeiterfassung.security.SecurityRoles.*;
+import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_EDIT_AUTHORITIES;
 
 @Controller
 @RequestMapping("/users")
-@PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
+@PreAuthorize(ALLOW_EDIT_AUTHORITIES)
 class UserManagementController {
 
     private final UserManagementService userManagementService;

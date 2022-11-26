@@ -57,7 +57,7 @@
                       <th:block th:text="#{navigation.main.reports}"></th:block>
                     </a>
                   </li>
-                  <li>
+                  <li th:if="${allowed_editAuthorities}">
                     <a
                       href="#"
                       th:href="@{/users}"

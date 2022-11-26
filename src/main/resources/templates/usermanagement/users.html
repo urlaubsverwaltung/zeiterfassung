@@ -23,7 +23,12 @@
                   <th class="py-3 px-6 font-normal">Vorname</th>
                   <th class="py-3 px-6 font-normal">Nachname</th>
                   <th class="py-3 px-6 font-normal">E-Mail</th>
-                  <th class="py-3 px-6 font-normal">Berechtigungen</th>
+                  <th
+                    class="py-3 px-6 font-normal"
+                    th:if="${allowed_editAuthorities}"
+                  >
+                    Berechtigungen
+                  </th>
                   <th class="py-3 px-6 font-normal">Aktionen</th>
                 </tr>
               </thead>
@@ -41,7 +46,7 @@
                   <td class="py-3 px-6" th:text="${user.firstName}"></td>
                   <td class="py-3 px-6" th:text="${user.lastName}"></td>
                   <td class="py-3 px-6" th:text="${user.email}"></td>
-                  <td class="py-3 px-6">
+                  <td class="py-3 px-6" th:if="${allowed_editAuthorities}">
                     <div class="flex flex-row items-center gap-2">
                       <svg
                         th:if="${user.authorities.user}"
