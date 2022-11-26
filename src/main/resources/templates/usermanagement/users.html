@@ -8,7 +8,7 @@
       <main class="grow">
         <div class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28">
           <h1 class="sr-only">Personen</h1>
-          <div class="relative">
+          <div class="relative space-y-8">
             <table class="w-full text-left text-gray-800">
               <caption class="p-8 pt-0 text-lg font-semibold text-left">
                 Personen
@@ -34,7 +34,7 @@
               </thead>
               <tbody>
                 <tr
-                  th:each="user : ${users}"
+                  th:each="user : ${usersPagination.page.content}"
                   class="bg-white border-blue-50 transition-colors hover:bg-zinc-50"
                   th:classappend="${not userStat.last ? 'border-b' : ''}"
                 >
@@ -115,6 +115,11 @@
                 </tr>
               </tbody>
             </table>
+            <div class="px-6">
+              <nav
+                th:replace="fragments/pagination::pagination(${usersPagination}, #{users.pagination.navigation.aria-label})"
+              ></nav>
+            </div>
           </div>
         </div>
       </main>

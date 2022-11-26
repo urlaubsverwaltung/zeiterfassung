@@ -2,6 +2,9 @@ package de.focusshift.zeiterfassung.tenantuser;
 
 import de.focusshift.zeiterfassung.security.SecurityRoles;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -64,6 +67,14 @@ class TenantUserServiceImpl implements TenantUserService {
         return tenantUserRepository.findAll().stream()
             .map(TenantUserServiceImpl::entityToTenantUser)
             .toList();
+    }
+
+    @Override
+    public Page<TenantUser> findAllUsers(Pageable pageable) {
+        final Page<TenantUserEntity> page = tenantUserRepository.findAll(pageable);
+        final List<TenantUser> tenantUsers = page.stream().map(TenantUserServiceImpl::entityToTenantUser).toList();
+
+        return new PageImpl<>(tenantUsers, page.getPageable(), page.getTotalElements());
     }
 
     @Override

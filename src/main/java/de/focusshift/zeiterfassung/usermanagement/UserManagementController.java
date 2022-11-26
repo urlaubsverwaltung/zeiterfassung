@@ -1,6 +1,10 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.security.SecurityRoles;
+import de.focusshift.zeiterfassung.web.html.PaginationDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -9,9 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static de.focusshift.zeiterfassung.security.SecurityRoles.*;
 import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_EDIT_AUTHORITIES;
+import static de.focusshift.zeiterfassung.web.html.PaginationPageLinkBuilder.buildPageLinkPrefix;
+import static java.util.stream.Collectors.toList;
 
 @Controller
 @RequestMapping("/users")
@@ -25,14 +32,16 @@ class UserManagementController {
     }
 
     @GetMapping
-    String users(Model model) {
+    String users(Pageable pageable, Model model) {
 
-        List<UserDto> users = userManagementService.findAllUsers()
-            .stream()
-            .map(UserManagementController::userToDto)
-            .toList();
+        final Page<User> page = userManagementService.findAllUsers(pageable);
+        final List<UserDto> userDtos = page.map(UserManagementController::userToDto).toList();
+        final PageImpl<UserDto> dtoPage = new PageImpl<>(userDtos, page.getPageable(), page.getTotalElements());
 
-        model.addAttribute("users", users);
+        final String pageLinkPrefix = buildPageLinkPrefix(dtoPage.getPageable());
+        final PaginationDto<UserDto> usersPagination = new PaginationDto<>(dtoPage, pageLinkPrefix);
+        model.addAttribute("usersPagination", usersPagination);
+        model.addAttribute("paginationPageNumbers", IntStream.rangeClosed(1, dtoPage.getTotalPages()).boxed().collect(toList()));
 
         return "usermanagement/users";
     }

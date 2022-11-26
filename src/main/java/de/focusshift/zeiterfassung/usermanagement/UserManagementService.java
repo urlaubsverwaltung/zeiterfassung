@@ -2,6 +2,8 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.security.SecurityRoles;
 import de.focusshift.zeiterfassung.user.UserId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Collection;
 import java.util.List;
@@ -12,6 +14,8 @@ public interface UserManagementService {
     Optional<User> findUserById(UserId userId);
 
     List<User> findAllUsers();
+
+    Page<User> findAllUsers(Pageable pageable);
 
     List<User> findAllUsersByIds(List<UserId> ids);
 

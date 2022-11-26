@@ -5,6 +5,9 @@ import de.focusshift.zeiterfassung.tenantuser.TenantUser;
 import de.focusshift.zeiterfassung.tenantuser.TenantUserService;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -34,6 +37,14 @@ class UserManagementServiceImpl implements UserManagementService {
             .stream()
             .map(UserManagementServiceImpl::tenantUserToUser)
             .toList();
+    }
+
+    @Override
+    public Page<User> findAllUsers(Pageable pageable) {
+        final Page<TenantUser> page = tenantUserService.findAllUsers(pageable);
+        final List<User> users = page.map(UserManagementServiceImpl::tenantUserToUser).toList();
+
+        return new PageImpl<>(users, page.getPageable(), page.getTotalElements());
     }
 
     @Override
