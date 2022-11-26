@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.security.SecurityRoles;
 import de.focusshift.zeiterfassung.tenantuser.TenantUser;
 import de.focusshift.zeiterfassung.tenantuser.TenantUserService;
 import de.focusshift.zeiterfassung.user.UserId;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -15,9 +16,11 @@ import java.util.Optional;
 class UserManagementServiceImpl implements UserManagementService {
 
     private final TenantUserService tenantUserService;
+    private final ApplicationEventPublisher publisher;
 
-    UserManagementServiceImpl(TenantUserService tenantUserService) {
+    UserManagementServiceImpl(TenantUserService tenantUserService, ApplicationEventPublisher publisher) {
         this.tenantUserService = tenantUserService;
+        this.publisher = publisher;
     }
 
     @Override
@@ -50,10 +53,11 @@ class UserManagementServiceImpl implements UserManagementService {
             user.familyName(), user.email(), new HashSet<>(authorities));
 
         final TenantUser updatedTenantUser = tenantUserService.updateUser(tenantUser);
+        final User updatedUser = tenantUserToUser(updatedTenantUser);
 
-        // TODO propagate new info to keycloak
+        publisher.publishEvent(new UserAuthoritiesUpdatedEvent(updatedUser));
 
-        return tenantUserToUser(updatedTenantUser);
+        return updatedUser;
     }
 
     private static User tenantUserToUser(TenantUser tenantUser) {
