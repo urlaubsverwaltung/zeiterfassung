@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+  <head th:replace="timeentries/_layout::head(~{::title}, ~{}, ~{}, ~{})">
+    <title>Zeiterfassung</title>
+  </head>
+  <body th:replace="timeentries/_layout::body(~{::content})">
+    <th:block th:fragment="content">
+      <main class="grow flex justify-center">
+        <div
+          class="w-full max-w-screen-xl flex flex-col lg:flex-row lg:items-start lg:justify-between lg:mt-16"
+        >
+          <div class="px-8 xs:px-16 lg:w-4/5">
+            <h1
+              class="mt-4 xs:mt-8 lg:mt-24 flex flex-col sm:flex-row lg:flex-col sm:items-baseline sm:space-x-2 lg:space-x-0 font-medium text-3xl sm:text-4xl lg:text-5xl"
+            >
+              403
+              <span
+                class="sm:mt-2"
+                th:text="#{error.not-authorized.title}"
+              ></span>
+            </h1>
+            <p
+              class="mt-8 text-xl"
+              th:text="#{error.not-authorized.paragraph}"
+            ></p>
+            <div
+              class="mt-8 sm:mt-8 text-lg flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-2"
+              th:with="previousPageLink=${#request.getHeader('Referer')}"
+            >
+              <a
+                th:if="${not #strings.isEmpty(previousPageLink)}"
+                href="#"
+                th:href="${previousPageLink}"
+                class="border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
+                th:text="#{error.not-authorized.goto.previous}"
+              ></a>
+              <a
+                href="/"
+                class="border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
+                th:text="#{error.not-authorized.goto.start}"
+              ></a>
+            </div>
+          </div>
+          <img
+            src="/images/403_sloth.svg"
+            width="323"
+            height="407"
+            alt=""
+            class="mt-12 lg:mr-16"
+          />
+        </div>
+      </main>
+    </th:block>
+  </body>
+</html>
