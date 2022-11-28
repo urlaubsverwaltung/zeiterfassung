@@ -29,7 +29,7 @@ Wenn du mehr Informationen und Bilder über dieses Projekt sehen möchtest dann 
 
 ### Download
 
-The application is available as [Docker Image](https://github.com/urlaubsverwaltung/zeiterfassung/pkgs/container/zeiterfassung)
+The application is available as [Docker Image](https://github.com/urlaubsverwaltung/zeiterfassung/pkgs/container/zeiterfassung%2Fzeiterfassung)
 
 ### Configuration
 
