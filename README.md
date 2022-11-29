@@ -25,17 +25,20 @@ Wenn du mehr Informationen und Bilder über dieses Projekt sehen möchtest dann 
 ### Prerequisites
 
 * [JDK 17](https://adoptium.net)
-* [PostgreSQL 9.6+](https://www.postgresql.org/)
+* [Docker 20.10+](https://www.docker.com/)
+* [PostgreSQL 9.6+](#database)
+* [E-Mail-Server](#e-mail-server)
+* [Security Provider](#security-provider)
 
 ### Download
 
-The application is available as [Docker Image](https://github.com/urlaubsverwaltung/zeiterfassung/pkgs/container/zeiterfassung%2Fzeiterfassung)
+The application is available as [Docker Image](https://github.com/urlaubsverwaltung/zeiterfassung/pkgs/container/zeiterfassung%2Fzeiterfassung).
 
 ### Configuration
 
 The application has a [configuration file](https://github.com/urlaubsverwaltung/zeiterfassung/blob/main/src/main/resources/application.properties) in the `src/main/resources` directory. This includes certain basic settings 
 and default values. However, these alone are not sufficient to put the application into production. Specific 
-configurations such as the database settings and security provider must be stored in a separate configuration file or 
+configurations such as the database, e-mail server and security provider must be stored in a separate configuration file or
 handed via environment variables.
 
 The options available with Spring Boot for using your own configuration file or environment variables can be found in the 
@@ -43,7 +46,7 @@ The options available with Spring Boot for using your own configuration file or 
 
 #### Database
 
-The application uses a PostgresSQL database management system to store the data.
+The application uses a [PostgresSQL](https://www.postgresql.org/) database management system to store the data.
 Create a database in your PostgresSQL database management system with e.g. the name `zeiterfassung`.
 and a user with access rights for this database and configure it
 
@@ -74,6 +77,24 @@ spring.mail.password=$PASSWORD
 All other `spring.mail.*` configurations can be found in the [Spring Documentation E-Mail](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#io.email)
 be viewed.
 
+#### Security Provider
+
+As security provider OIDC-based security providers are possible to use (e.g. [Keycloak](https://www.keycloak.org/) or Microsoft Azure AD).
+To configure the security provider, the following configurations must be made.
+
+```properties
+spring.security.oauth2.client.registration.default.client-id=zeiterfassung
+spring.security.oauth2.client.registration.default.client-secret=$OIDC_CLIENT_SECRET
+spring.security.oauth2.client.registration.default.client-name=zeiterfassung
+spring.security.oauth2.client.registration.default.provider=default
+spring.security.oauth2.client.registration.default.scope=openid,profile,email,roles
+spring.security.oauth2.client.registration.default.authorization-grant-type=authorization_code
+spring.security.oauth2.client.registration.default.redirect-uri=$OIDC_REDIRECT_URI
+spring.security.oauth2.client.provider.default.issuer-uri=$OIDC_ISSUER_URI
+zeiterfassung.security.oidc.server-url=$OIDC_SERVER_URL
+zeiterfassung.security.oidc.login-form-url=$OIDC_LOGIN_FORM_URL
+```
+
 #### Logging
 
 Sollten beim Starten der Anwendung Probleme auftreten, lässt sich in der Konfigurationsdatei eine
@@ -95,6 +116,16 @@ works, can be found in the corresponding chapters of the Spring Boot documentati
 
 * [Linux Service](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment-service)
 * [Windows Service](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment-windows)
+
+### Run application
+
+To run the docker container e.g. with following command:
+
+```shell
+docker run -p 8080:8080 ghcr.io/urlaubsverwaltung/zeiterfassung/zeiterfassung:1.0.1
+```
+
+As part of a docker-compose Setup all configurations can be set in service definition
 
 ## Development
 
