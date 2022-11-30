@@ -28,7 +28,7 @@ Wenn du mehr Informationen und Bilder über dieses Projekt sehen möchtest dann 
 * [Docker 20.10+](https://www.docker.com/)
 * [PostgreSQL 9.6+](#database)
 * [E-Mail-Server](#e-mail-server)
-* [Security Provider](#security-provider)
+* [OpenID Connect identity provider](#openid-connect-identity-provider)
 
 ### Download
 
@@ -77,7 +77,7 @@ spring.mail.password=$PASSWORD
 All other `spring.mail.*` configurations can be found in the [Spring Documentation E-Mail](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#io.email)
 be viewed.
 
-#### Security Provider
+#### OpenID Connect identity provider
 
 As security provider OIDC-based security providers are possible to use (e.g. [Keycloak](https://www.keycloak.org/), Microsoft Azure AD or other 'OpenID Connect providers').
 To configure the security provider, the following configurations must be made.
@@ -94,6 +94,13 @@ spring.security.oauth2.client.provider.default.issuer-uri=$OIDC_ISSUER_URI
 zeiterfassung.security.oidc.server-url=$OIDC_SERVER_URL
 zeiterfassung.security.oidc.login-form-url=$OIDC_LOGIN_FORM_URL
 ```
+
+##### Permissions
+
+Zeiterfassung is using user permissions from oidc claim `groups` for mapping possible permissions:
+
+* `ZEITERFASSUNG_ACCESS`: General access to the application aund time tracking features
+* `ZEITERFASSUNG_PRIVILEGED`: Access to reports of other users
 
 #### Logging
 
