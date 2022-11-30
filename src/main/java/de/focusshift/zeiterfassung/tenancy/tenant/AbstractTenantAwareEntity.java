@@ -14,7 +14,7 @@ public abstract class AbstractTenantAwareEntity implements TenantAware, Serializ
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @Size(max = 8)
+    @Size(max = 255)
     @Column(name = "tenant_id")
     private String tenantId;
 

@@ -12,14 +12,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TenantIdTest {
 
     @Test
-    void ensureTrueForValidTenantId() {
+    void ensureTrueForUUIDBasedTenantId() {
         assertThat(new TenantId(UUID.randomUUID().toString().substring(0, 8)).valid()).isTrue();
     }
 
+    @Test
+    void ensureTrueForAnyStringTenantId() {
+        assertThat(new TenantId("Zeiterfassung").valid()).isTrue();
+    }
+
     @ParameterizedTest
-    @ValueSource(strings = {"", "  ", "fffffffff", "XXXXXXXX", "CD2FA1B-"})
+    @ValueSource(strings = {"", "  "})
     @NullSource
     void ensureFalseForValidTenantId(String brokenTenant) {
         assertThat(new TenantId(brokenTenant).valid()).isFalse();
+    }
+
+    @Test
+    void ensureFalseForTooLongTenantId() {
+        assertThat(new TenantId("x".repeat(256)).valid()).isFalse();
     }
 }
