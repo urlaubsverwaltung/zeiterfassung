@@ -2,15 +2,14 @@ package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
 
 @Component
 @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
-class JdbcClientRegistrationRepository implements EditableClientRegistrationRepository {
+class JdbcClientRegistrationRepository implements ClientRegistrationRepository {
 
     private final OidcClientEntityRepository oidcClientEntityRepository;
     private final OidcClientEntityToClientRegistrationConverter converter;
@@ -27,8 +26,7 @@ class JdbcClientRegistrationRepository implements EditableClientRegistrationRepo
         return converter.convert(byTenantId);
     }
 
-    @Override
-    public ClientRegistration addNewClient(String tenantId, String clientSecret) {
+    ClientRegistration addNewClient(String tenantId, String clientSecret) {
         if (!existsClient(tenantId)) {
             final OidcClientEntity oidcClientEntity = new OidcClientEntity();
             oidcClientEntity.setTenantId(tenantId);
@@ -39,21 +37,14 @@ class JdbcClientRegistrationRepository implements EditableClientRegistrationRepo
         return findByRegistrationId(tenantId);
     }
 
-    @Override
-    public void deleteExistingClient(String tenantId) {
+    void deleteExistingClient(String tenantId) {
         if (!existsClient(tenantId)) {
             return;
         }
         oidcClientEntityRepository.delete(oidcClientEntityRepository.findByTenantId(tenantId));
     }
 
-    @Override
-    public List<OidcClientEntity> findAll() {
-        return oidcClientEntityRepository.findAll();
-    }
-
-    @Override
-    public boolean existsClient(String tenantId) {
+    boolean existsClient(String tenantId) {
         return tenantId != null && oidcClientEntityRepository.findByTenantId(tenantId) != null;
     }
 }

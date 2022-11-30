@@ -17,10 +17,10 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class TenantLifecycleEventHandlerOidcClient {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
-    private final EditableClientRegistrationRepository editableClientRegistrationRepository;
+    private final JdbcClientRegistrationRepository jdbcClientRegistrationRepository;
 
-    TenantLifecycleEventHandlerOidcClient(EditableClientRegistrationRepository editableClientRegistrationRepository) {
-        this.editableClientRegistrationRepository = editableClientRegistrationRepository;
+    TenantLifecycleEventHandlerOidcClient(JdbcClientRegistrationRepository jdbcClientRegistrationRepository) {
+        this.jdbcClientRegistrationRepository = jdbcClientRegistrationRepository;
     }
 
     @Async
@@ -28,13 +28,13 @@ public class TenantLifecycleEventHandlerOidcClient {
     void handleTenantDisabledEvent(TenantDisabledEvent tenantDisabledEvent) {
         String tenantId = tenantDisabledEvent.tenant().tenantId();
 
-        if (!editableClientRegistrationRepository.existsClient(tenantId)) {
+        if (!jdbcClientRegistrationRepository.existsClient(tenantId)) {
             LOG.info("skip deleting oidc client for tenantId={} - already gone!", tenantId);
             return;
         }
 
         LOG.info("Deleting oidc client for tenantId={} ...!", tenantId);
-        editableClientRegistrationRepository.deleteExistingClient(tenantId);
+        jdbcClientRegistrationRepository.deleteExistingClient(tenantId);
         LOG.info("Finished deleting oidc client for tenantId={} ...!", tenantId);
     }
 
@@ -43,13 +43,13 @@ public class TenantLifecycleEventHandlerOidcClient {
     void handleTenantRegisteredEvent(TenantRegisteredEvent tenantRegisteredEvent) {
 
         final String tenantId = tenantRegisteredEvent.tenant().tenantId();
-        if (editableClientRegistrationRepository.existsClient(tenantId)) {
+        if (jdbcClientRegistrationRepository.existsClient(tenantId)) {
             LOG.info("skip registering oidc client registration for tenantId={} - already exists!", tenantId);
             return;
         }
 
         LOG.info("Registering new oidc client for tenantId={} ...!", tenantId);
-        editableClientRegistrationRepository.addNewClient(tenantId, tenantRegisteredEvent.oidcClientSecret());
+        jdbcClientRegistrationRepository.addNewClient(tenantId, tenantRegisteredEvent.oidcClientSecret());
         LOG.info("Finished registering new oidc client for tenantId={} ...!", tenantId);
     }
 }
