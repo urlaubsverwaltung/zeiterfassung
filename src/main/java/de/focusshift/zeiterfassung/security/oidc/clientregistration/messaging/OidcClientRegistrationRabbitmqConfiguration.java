@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.integration.oidc.clientregistration.messaging;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration.messaging;
 
 import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistrationService;
 import org.springframework.amqp.core.Binding;
@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConditionalOnBean(TenantRegistrationService.class)
-@ConditionalOnProperty(value = "zeiterfassung.integration.oidc.client-registration.enabled", havingValue = "true")
+@ConditionalOnProperty(value = "zeiterfassung.security.oidc.client-registration.rabbitmq.enabled", havingValue = "true")
 @EnableConfigurationProperties(OidcClientRegistrationRabbitmqConfigurationProperties.class)
 class OidcClientRegistrationRabbitmqConfiguration {
 
@@ -26,7 +26,7 @@ class OidcClientRegistrationRabbitmqConfiguration {
     }
 
     @Configuration
-    @ConditionalOnProperty(value = "zeiterfassung.rabbitmq.manage-topology", havingValue = "true")
+    @ConditionalOnProperty(value = "zeiterfassung.security.oidc.client-registration.rabbitmq.manage-topology", havingValue = "true")
     static class ManageTopologyConfiguration {
 
         private static final String RABBITMQ_WILDCARD_SELECTOR = "*";

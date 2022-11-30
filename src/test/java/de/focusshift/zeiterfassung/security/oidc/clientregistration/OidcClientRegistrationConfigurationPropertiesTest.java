@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.tenancy.registration.oidc;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class TenantRegistrationConfigurationPropertiesTest {
+class OidcClientRegistrationConfigurationPropertiesTest {
 
     private Validator validator;
 
@@ -26,10 +26,10 @@ class TenantRegistrationConfigurationPropertiesTest {
 
     @Test
     void ensureAllValuesHasToBeSet() {
-        final TenantRegistrationConfigurationProperties securityConfigurationProperties = new TenantRegistrationConfigurationProperties();
+        final OidcClientRegistrationConfigurationProperties securityConfigurationProperties = new OidcClientRegistrationConfigurationProperties();
         securityConfigurationProperties.setServerUrl(null);
         securityConfigurationProperties.setRedirectUriTemplate(null);
-        final Set<ConstraintViolation<TenantRegistrationConfigurationProperties>> violations = validator.validate(securityConfigurationProperties);
+        final Set<ConstraintViolation<OidcClientRegistrationConfigurationProperties>> violations = validator.validate(securityConfigurationProperties);
 
         assertThat(violations).hasSize(2);
     }
@@ -37,10 +37,10 @@ class TenantRegistrationConfigurationPropertiesTest {
     @ParameterizedTest
     @ValueSource(strings = {" ", "NotAUrl"})
     void ensuresServerUrlMustBeAUrlOrEmpty(String input) {
-        final TenantRegistrationConfigurationProperties securityConfigurationProperties = new TenantRegistrationConfigurationProperties();
+        final OidcClientRegistrationConfigurationProperties securityConfigurationProperties = new OidcClientRegistrationConfigurationProperties();
         securityConfigurationProperties.setServerUrl(input);
         securityConfigurationProperties.setRedirectUriTemplate("{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}");
-        final Set<ConstraintViolation<TenantRegistrationConfigurationProperties>> violations = validator.validate(securityConfigurationProperties);
+        final Set<ConstraintViolation<OidcClientRegistrationConfigurationProperties>> violations = validator.validate(securityConfigurationProperties);
 
         assertThat(violations).hasSize(1);
     }

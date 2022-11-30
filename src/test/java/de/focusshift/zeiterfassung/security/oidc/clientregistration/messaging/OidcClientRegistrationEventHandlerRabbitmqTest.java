@@ -1,8 +1,6 @@
-package de.focusshift.zeiterfassung.integration.oidc.clientregistration.messaging;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration.messaging;
 
 
-import de.focusshift.zeiterfassung.integration.oidc.clientregistration.OidcClientCreatedEventDTO;
-import de.focusshift.zeiterfassung.integration.oidc.clientregistration.OidcClientDeletedEventDTO;
 import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistration;
 import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistrationService;
 import org.junit.jupiter.api.BeforeEach;

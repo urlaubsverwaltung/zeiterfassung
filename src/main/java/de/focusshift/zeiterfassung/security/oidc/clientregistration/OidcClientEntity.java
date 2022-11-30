@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.tenancy.registration.oidc.persistent;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
 import de.focusshift.zeiterfassung.tenancy.configuration.multi.AdminAware;
 

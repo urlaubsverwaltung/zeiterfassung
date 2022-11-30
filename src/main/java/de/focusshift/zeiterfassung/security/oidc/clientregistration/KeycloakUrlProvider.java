@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.tenancy.registration.oidc;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -8,11 +8,11 @@ import static java.lang.String.format;
 
 @Component
 @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
-public class KeycloakUrlProvider {
+class KeycloakUrlProvider {
 
     private final String keycloakServerUrl;
 
-    public KeycloakUrlProvider(TenantRegistrationConfigurationProperties tenantRegistrationConfigurationProperties) {
+    KeycloakUrlProvider(OidcClientRegistrationConfigurationProperties tenantRegistrationConfigurationProperties) {
         this.keycloakServerUrl = tenantRegistrationConfigurationProperties.getServerUrl();
     }
 

@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.integration.oidc.clientregistration.messaging;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration.messaging;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -6,10 +6,12 @@ import org.springframework.validation.annotation.Validated;
 import javax.validation.constraints.NotEmpty;
 
 @Validated
-@ConfigurationProperties("zeiterfassung.integration.oidc.client-registration")
+@ConfigurationProperties("zeiterfassung.security.oidc.client.registration.rabbitmq")
 class OidcClientRegistrationRabbitmqConfigurationProperties {
 
-    private boolean enabled;
+    private boolean enabled = false;
+
+    private boolean manageTopology = false;
 
     @NotEmpty
     private String topic = "oidc_provider.topic";
@@ -26,6 +28,14 @@ class OidcClientRegistrationRabbitmqConfigurationProperties {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isManageTopology() {
+        return manageTopology;
+    }
+
+    public void setManageTopology(boolean manageTopology) {
+        this.manageTopology = manageTopology;
     }
 
     public String getTopic() {

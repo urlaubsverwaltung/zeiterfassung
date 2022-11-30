@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.tenancy.registration.oidc.persistent;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.repository.CrudRepository;

@@ -1,6 +1,5 @@
-package de.focusshift.zeiterfassung.tenancy.registration.oidc.persistent;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
-import de.focusshift.zeiterfassung.tenancy.registration.oidc.EditableClientRegistrationRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.stereotype.Component;
@@ -11,13 +10,13 @@ import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.
 
 @Component
 @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
-public class JdbcClientRegistrationRepository implements EditableClientRegistrationRepository {
+class JdbcClientRegistrationRepository implements EditableClientRegistrationRepository {
 
     private final OidcClientEntityRepository oidcClientEntityRepository;
     private final OidcClientEntityToClientRegistrationConverter converter;
 
-    public JdbcClientRegistrationRepository(OidcClientEntityRepository oidcClientEntityRepository,
-                                            OidcClientEntityToClientRegistrationConverter oidcClientEntityToClientRegistrationConverter) {
+    JdbcClientRegistrationRepository(OidcClientEntityRepository oidcClientEntityRepository,
+                                     OidcClientEntityToClientRegistrationConverter oidcClientEntityToClientRegistrationConverter) {
         this.converter = oidcClientEntityToClientRegistrationConverter;
         this.oidcClientEntityRepository = oidcClientEntityRepository;
     }

@@ -1,6 +1,5 @@
-package de.focusshift.zeiterfassung.tenancy.registration.oidc;
+package de.focusshift.zeiterfassung.security;
 
-import de.focusshift.zeiterfassung.security.SecurityConfigurationProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -28,7 +28,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-@SpringBootTest(properties = "zeiterfassung.tenant.registration.enabled=false")
+@SpringBootTest
 @Rollback(value = false)
 class TimeEntryRepositoryIT extends TestContainersBase {
 

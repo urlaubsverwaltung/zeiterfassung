@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.tenancy.registration.oidc;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
 import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegisteredEvent;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantDisabledEvent;
@@ -19,7 +19,7 @@ public class TenantLifecycleEventHandlerOidcClient {
     private static final Logger LOG = getLogger(lookup().lookupClass());
     private final EditableClientRegistrationRepository editableClientRegistrationRepository;
 
-    public TenantLifecycleEventHandlerOidcClient(EditableClientRegistrationRepository editableClientRegistrationRepository) {
+    TenantLifecycleEventHandlerOidcClient(EditableClientRegistrationRepository editableClientRegistrationRepository) {
         this.editableClientRegistrationRepository = editableClientRegistrationRepository;
     }
 

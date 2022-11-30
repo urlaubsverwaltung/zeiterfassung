@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.tenancy.registration.oidc;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
 import org.hibernate.validator.constraints.URL;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -7,14 +7,8 @@ import org.springframework.validation.annotation.Validated;
 import javax.validation.constraints.NotEmpty;
 
 @Validated
-@ConfigurationProperties("zeiterfassung.tenant.registration")
-public class TenantRegistrationConfigurationProperties {
-
-
-    /**
-     * to enable or disable the generation of tenants based on the oidc clients
-     */
-    private boolean enabled;
+@ConfigurationProperties("zeiterfassung.security.oidc.client.registration")
+public class OidcClientRegistrationConfigurationProperties {
 
     @URL
     @NotEmpty
@@ -22,14 +16,6 @@ public class TenantRegistrationConfigurationProperties {
 
     @NotEmpty
     private String redirectUriTemplate;
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
 
     public String getServerUrl() {
         return serverUrl;
@@ -46,5 +32,4 @@ public class TenantRegistrationConfigurationProperties {
     public void setRedirectUriTemplate(String redirectUriTemplate) {
         this.redirectUriTemplate = redirectUriTemplate;
     }
-
 }

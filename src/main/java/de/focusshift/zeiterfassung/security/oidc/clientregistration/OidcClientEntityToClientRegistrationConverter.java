@@ -1,6 +1,5 @@
-package de.focusshift.zeiterfassung.tenancy.registration.oidc.persistent;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
-import de.focusshift.zeiterfassung.tenancy.registration.oidc.ClientRegistrationFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;

@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.tenancy.configuration.multi;
 
 import com.zaxxer.hikari.HikariDataSource;
-import de.focusshift.zeiterfassung.tenancy.registration.oidc.persistent.OidcClientEntity;
+import de.focusshift.zeiterfassung.security.oidc.clientregistration.OidcClientEntity;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantEntity;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

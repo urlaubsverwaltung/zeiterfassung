@@ -1,6 +1,5 @@
-package de.focusshift.zeiterfassung.tenancy.registration.oidc;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
-import de.focusshift.zeiterfassung.tenancy.registration.oidc.persistent.OidcClientEntity;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 

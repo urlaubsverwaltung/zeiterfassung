@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.tenancy.registration.oidc;
+package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -12,13 +12,13 @@ import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.
 
 @Component
 @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
-@EnableConfigurationProperties(TenantRegistrationConfigurationProperties.class)
+@EnableConfigurationProperties(OidcClientRegistrationConfigurationProperties.class)
 public class ClientRegistrationFactory {
 
     private final KeycloakUrlProvider keycloakUrlProvider;
     private final String redirectUriTemplate;
 
-    public ClientRegistrationFactory(KeycloakUrlProvider keycloakUrlProvider, TenantRegistrationConfigurationProperties tenantRegistrationConfigurationProperties) {
+    ClientRegistrationFactory(KeycloakUrlProvider keycloakUrlProvider, OidcClientRegistrationConfigurationProperties tenantRegistrationConfigurationProperties) {
         this.keycloakUrlProvider = keycloakUrlProvider;
         this.redirectUriTemplate = tenantRegistrationConfigurationProperties.getRedirectUriTemplate();
     }
