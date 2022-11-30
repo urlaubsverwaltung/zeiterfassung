@@ -13,7 +13,7 @@ import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.
 @Component
 @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
 @EnableConfigurationProperties(OidcClientRegistrationConfigurationProperties.class)
-public class ClientRegistrationFactory {
+class ClientRegistrationFactory {
 
     private final KeycloakUrlProvider keycloakUrlProvider;
     private final String redirectUriTemplate;
@@ -23,7 +23,7 @@ public class ClientRegistrationFactory {
         this.redirectUriTemplate = tenantRegistrationConfigurationProperties.getRedirectUriTemplate();
     }
 
-    public ClientRegistration createClientRegistration(String tenantId, String clientSecret) {
+    ClientRegistration createClientRegistration(String tenantId, String clientSecret) {
 
         final String realmUrl = keycloakUrlProvider.keycloakTenantRealmUrl(tenantId);
         final String endsessionEndpoint = keycloakUrlProvider.logoutUri(tenantId);

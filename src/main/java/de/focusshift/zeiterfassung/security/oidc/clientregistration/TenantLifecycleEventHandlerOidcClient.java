@@ -14,7 +14,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 @Component
 @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
-public class TenantLifecycleEventHandlerOidcClient {
+class TenantLifecycleEventHandlerOidcClient {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
     private final JdbcClientRegistrationRepository jdbcClientRegistrationRepository;

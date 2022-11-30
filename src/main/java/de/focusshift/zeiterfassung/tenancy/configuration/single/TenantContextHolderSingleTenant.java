@@ -11,11 +11,11 @@ import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.
 
 @Component
 @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = SINGLE, matchIfMissing = true)
-public class TenantContextHolderSingleTenant implements TenantContextHolder {
+class TenantContextHolderSingleTenant implements TenantContextHolder {
 
     private final String defaultTenantId;
 
-    public TenantContextHolderSingleTenant(SingleTenantConfigurationProperties singleTenantConfigurationProperties) {
+    TenantContextHolderSingleTenant(SingleTenantConfigurationProperties singleTenantConfigurationProperties) {
         this.defaultTenantId = singleTenantConfigurationProperties.getDefaultTenantId();
     }
 

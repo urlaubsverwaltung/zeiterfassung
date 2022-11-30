@@ -18,11 +18,11 @@ import java.sql.Statement;
 
 import static java.lang.String.format;
 
-public class TenantAwareDataSource extends DelegatingDataSource {
+class TenantAwareDataSource extends DelegatingDataSource {
 
     private final TenantContextHolder tenantContextHolder;
 
-    public TenantAwareDataSource(DataSource targetDataSource, TenantContextHolder tenantContextHolder) {
+    TenantAwareDataSource(DataSource targetDataSource, TenantContextHolder tenantContextHolder) {
         super(targetDataSource);
         this.tenantContextHolder = tenantContextHolder;
     }

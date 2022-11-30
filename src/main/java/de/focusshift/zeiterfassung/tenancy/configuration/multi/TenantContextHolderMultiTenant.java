@@ -13,7 +13,7 @@ import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.
 
 @Component
 @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
-public class TenantContextHolderMultiTenant implements TenantContextHolder {
+class TenantContextHolderMultiTenant implements TenantContextHolder {
 
     public Optional<TenantId> getCurrentTenantId() {
         if (SecurityContextHolder.getContext().getAuthentication() instanceof final OAuth2AuthenticationToken oauthToken) {

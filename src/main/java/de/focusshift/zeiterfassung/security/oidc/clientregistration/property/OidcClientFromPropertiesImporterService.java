@@ -34,7 +34,7 @@ class OidcClientFromPropertiesImporterService {
 
     @Async
     @EventListener(ApplicationReadyEvent.class)
-    public void importOIDCClientsFromProperties() {
+    void importOIDCClientsFromProperties() {
 
         if (oAuth2ClientProperties.getRegistration().isEmpty()) {
             LOG.warn("No registrations in oAuth2ClientProperties - going to skip oidc client import!");
