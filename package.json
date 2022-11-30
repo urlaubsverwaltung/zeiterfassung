@@ -36,7 +36,7 @@
     "eslint-plugin-unicorn": "44.0.2",
     "lint-staged": "13.0.3",
     "postcss": "8.4.19",
-    "postcss-cli": "10.0.0",
+    "postcss-cli": "10.1.0",
     "prettier": "2.8.0",
     "prettier-plugin-svelte": "2.8.1",
     "rimraf": "3.0.2",
