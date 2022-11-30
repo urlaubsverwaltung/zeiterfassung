@@ -5,6 +5,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import esbuild from "rollup-plugin-esbuild";
 import svelte from "rollup-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
+import glob from "fast-glob";
 
 const paths = {
   src: "src/main/javascript",
@@ -14,11 +15,7 @@ const paths = {
 export default {
   input: {
     "custom-elements-polyfill": `@ungap/custom-elements`,
-    "date-fns-localized": `${paths.src}/bundles/date-fns-localized.ts`,
-    reports: `${paths.src}/bundles/reports.ts`,
-    "time-entries": `${paths.src}/bundles/time-entries.ts`,
-    turbo: `${paths.src}/bundles/turbo.ts`,
-    "user-common": `${paths.src}/bundles/user-common.ts`,
+    ...inputFiles(),
   },
   output: {
     dir: paths.dist,
@@ -54,3 +51,13 @@ export default {
     }),
   ],
 };
+
+function inputFiles() {
+  const files = glob.sync(`${paths.src}/bundles/*.ts`);
+  return Object.fromEntries(files.map((file) => [entryName(file), file]));
+}
+
+function entryName(file) {
+  const filename = file.slice(Math.max(0, file.lastIndexOf("/") + 1));
+  return filename.slice(0, Math.max(0, filename.lastIndexOf(".")));
+}
