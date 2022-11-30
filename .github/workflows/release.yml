@@ -40,6 +40,8 @@ jobs:
         with:
           name: Release Zeiterfassung ${{ steps.vars.outputs.version }}
           body_path: .chglog/${{ steps.vars.outputs.version }}.md
+          files: |
+              ./target/zeiterfassung-*.jar
       - name: Publish docker image to GitHub Container Registry
         run: >
           ./mvnw $MAVEN_CLI_OPTS
