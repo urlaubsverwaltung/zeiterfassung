@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 
 import java.util.List;
+import java.util.Set;
 
 import static de.focusshift.zeiterfassung.security.SecurityRoles.ZEITERFASSUNG_VIEW_REPORT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,7 +73,7 @@ class ReportPermissionServiceTest {
             .thenReturn(new TestingAuthenticationToken("", "", List.of()));
 
         when(currentUserProvider.getCurrentUser())
-            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress("")));
+            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()));
 
         final List<UserLocalId> actual = sut.filterUserLocalIdsByCurrentUserHasPermissionFor(
             List.of(new UserLocalId(1L), new UserLocalId(2L), new UserLocalId(3L)));
@@ -87,7 +88,7 @@ class ReportPermissionServiceTest {
             .thenReturn(new TestingAuthenticationToken("", "", List.of()));
 
         when(currentUserProvider.getCurrentUser())
-            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress("")));
+            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()));
 
         final List<UserLocalId> actual = sut.filterUserLocalIdsByCurrentUserHasPermissionFor(
             List.of(new UserLocalId(1L), new UserLocalId(3L)));
@@ -103,9 +104,9 @@ class ReportPermissionServiceTest {
 
         when(userManagementService.findAllUsers())
             .thenReturn(List.of(
-                new User(new UserId(""), new UserLocalId(1L), "", "", new EMailAddress("")),
-                new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress("")),
-                new User(new UserId(""), new UserLocalId(3L), "", "", new EMailAddress(""))
+                new User(new UserId(""), new UserLocalId(1L), "", "", new EMailAddress(""), Set.of()),
+                new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()),
+                new User(new UserId(""), new UserLocalId(3L), "", "", new EMailAddress(""), Set.of())
             ));
 
         assertThat(sut.findAllPermittedUserLocalIdsForCurrentUser())
@@ -119,7 +120,7 @@ class ReportPermissionServiceTest {
             .thenReturn(new TestingAuthenticationToken("", "", List.of()));
 
         when(currentUserProvider.getCurrentUser())
-            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress("")));
+            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()));
 
         assertThat(sut.findAllPermittedUserLocalIdsForCurrentUser()).containsOnly(new UserLocalId(2L));
     }
@@ -131,9 +132,9 @@ class ReportPermissionServiceTest {
             .thenReturn(new TestingAuthenticationToken("", "", List.of(ZEITERFASSUNG_VIEW_REPORT_ALL.authority())));
 
         final List<User> userList = List.of(
-            new User(new UserId(""), new UserLocalId(1L), "", "", new EMailAddress("")),
-            new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress("")),
-            new User(new UserId(""), new UserLocalId(3L), "", "", new EMailAddress(""))
+            new User(new UserId(""), new UserLocalId(1L), "", "", new EMailAddress(""), Set.of()),
+            new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()),
+            new User(new UserId(""), new UserLocalId(3L), "", "", new EMailAddress(""), Set.of())
         );
 
         when(userManagementService.findAllUsers()).thenReturn(userList);
@@ -148,9 +149,9 @@ class ReportPermissionServiceTest {
             .thenReturn(new TestingAuthenticationToken("", "", List.of()));
 
         when(currentUserProvider.getCurrentUser())
-            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress("")));
+            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()));
 
         assertThat(sut.findAllPermittedUsersForCurrentUser())
-            .containsOnly(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress("")));
+            .containsOnly(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()));
     }
 }

@@ -522,6 +522,18 @@
     top: 0;
     left: 0;
   }
+
+  .authorities {
+  }
+
+  .authorities__item {
+    @apply transition-colors;
+    @apply hover:bg-blue-50;
+  }
+
+  .authorities__item:has(input[type="checkbox"]:checked) {
+    @apply bg-blue-50;
+  }
 }
 
 @layer utilities {

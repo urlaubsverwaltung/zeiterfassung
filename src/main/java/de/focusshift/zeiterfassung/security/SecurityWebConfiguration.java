@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.actuate.health.HealthEndpoint;
@@ -15,6 +16,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 @Configuration
@@ -25,16 +27,21 @@ class SecurityWebConfiguration {
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
     private final OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler;
     private final OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService;
+    private final CurrentUserProvider currentUserProvider;
+    private final SessionService sessionService;
 
     @Autowired
     SecurityWebConfiguration(AuthenticationEntryPoint authenticationEntryPoint,
                              AuthenticationSuccessHandler authenticationSuccessHandler,
                              OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler,
-                             OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService) {
+                             OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService,
+                             CurrentUserProvider currentUserProvider, SessionService sessionService) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.authenticationSuccessHandler = authenticationSuccessHandler;
         this.oidcClientInitiatedLogoutSuccessHandler = oidcClientInitiatedLogoutSuccessHandler;
         this.oidcUserService = oidcUserService;
+        this.currentUserProvider = currentUserProvider;
+        this.sessionService = sessionService;
     }
 
     @Bean
@@ -65,6 +72,9 @@ class SecurityWebConfiguration {
 
         http.logout()
             .logoutSuccessHandler(oidcClientInitiatedLogoutSuccessHandler);
+
+        http
+            .addFilterAfter(new ReloadAuthenticationAuthoritiesFilter(currentUserProvider, sessionService), BasicAuthenticationFilter.class);
 
         //@formatter:on
         return http.build();

@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.tenantuser;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.lang.NonNull;
 
@@ -12,4 +14,6 @@ interface TenantUserRepository extends CrudRepository<TenantUserEntity, Long> {
 
     @NonNull
     List<TenantUserEntity> findAll();
+
+    Page<TenantUserEntity> findAll(Pageable pageable);
 }

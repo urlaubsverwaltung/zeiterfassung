@@ -1,0 +1,29 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+
+
+
+    <changeSet author="bseber" id="add-authorities-to-tenant-user">
+        <preConditions>
+            <tableExists tableName="tenant_user" />
+            <not>
+                <tableExists tableName="tenant_user_authorities" />
+            </not>
+        </preConditions>
+
+        <createTable tableName="tenant_user_authorities">
+            <column name="tenant_user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="authorities" type="VARCHAR(255)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="tenant_user_authorities" baseColumnNames="tenant_user_id"
+                                 referencedTableName="tenant_user" referencedColumnNames="id"
+                                 constraintName="FK_tenant_id" onDelete="CASCADE" onUpdate="NO ACTION" />
+    </changeSet>
+
+</databaseChangeLog>
