@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.multitenant;
+package de.focusshift.zeiterfassung.tenant;
 
 import org.springframework.stereotype.Component;
 
@@ -27,5 +27,4 @@ class TenantListener {
             tenantAware.setTenantId(tenantId);
         }
     }
-
 }

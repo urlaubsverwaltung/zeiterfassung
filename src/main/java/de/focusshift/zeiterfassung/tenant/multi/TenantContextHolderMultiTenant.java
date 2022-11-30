@@ -1,5 +1,7 @@
-package de.focusshift.zeiterfassung.multitenant;
+package de.focusshift.zeiterfassung.tenant.multi;
 
+import de.focusshift.zeiterfassung.tenant.TenantContextHolder;
+import de.focusshift.zeiterfassung.tenant.TenantId;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;

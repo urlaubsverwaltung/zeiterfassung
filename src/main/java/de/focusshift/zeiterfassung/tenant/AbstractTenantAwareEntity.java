@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.multitenant;
+package de.focusshift.zeiterfassung.tenant;
 
 import javax.persistence.Column;
 import javax.persistence.EntityListeners;

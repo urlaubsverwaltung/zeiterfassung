@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.tenant;
+package de.focusshift.zeiterfassung.tenant.single;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;

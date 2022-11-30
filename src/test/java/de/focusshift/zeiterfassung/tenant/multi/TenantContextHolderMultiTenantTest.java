@@ -1,6 +1,7 @@
-package de.focusshift.zeiterfassung.multitenant;
+package de.focusshift.zeiterfassung.tenant.multi;
 
 
+import de.focusshift.zeiterfassung.tenant.TenantId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;

@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.multitenant;
+package de.focusshift.zeiterfassung.tenant;
 
 import java.util.Optional;
 

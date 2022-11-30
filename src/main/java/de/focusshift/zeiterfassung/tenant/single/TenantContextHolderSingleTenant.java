@@ -1,6 +1,7 @@
-package de.focusshift.zeiterfassung.multitenant;
+package de.focusshift.zeiterfassung.tenant.single;
 
-import de.focusshift.zeiterfassung.tenant.SingleTenantConfigurationProperties;
+import de.focusshift.zeiterfassung.tenant.TenantContextHolder;
+import de.focusshift.zeiterfassung.tenant.TenantId;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 

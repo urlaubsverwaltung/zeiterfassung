@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.multitenant;
+package de.focusshift.zeiterfassung.tenant.multi;
 
 import org.springframework.data.domain.Persistable;
 

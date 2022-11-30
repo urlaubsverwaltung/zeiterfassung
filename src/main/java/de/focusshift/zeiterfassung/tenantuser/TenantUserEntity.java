@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.tenantuser;
 
-import de.focusshift.zeiterfassung.multitenant.AbstractTenantAwareEntity;
+import de.focusshift.zeiterfassung.tenant.AbstractTenantAwareEntity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

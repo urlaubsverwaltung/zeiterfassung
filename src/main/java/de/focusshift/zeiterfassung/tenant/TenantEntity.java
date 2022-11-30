@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.tenant;
 
-import de.focusshift.zeiterfassung.multitenant.AdminAware;
+import de.focusshift.zeiterfassung.tenant.multi.AdminAware;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -19,6 +19,10 @@ import static javax.persistence.GenerationType.SEQUENCE;
 @Entity
 @Table(name = "tenant")
 public class TenantEntity implements AdminAware<Long> {
+
+    enum TenantStatusEntity {
+        ACTIVE, DISABLED, ARCHIVED, DELETED;
+    }
 
     @Id
     @Column(name = "id", unique = true, nullable = false, updatable = false)
@@ -54,7 +58,6 @@ public class TenantEntity implements AdminAware<Long> {
         this.updatedAt = updatedAt;
         this.status = status;
     }
-
 
     @Override
     public Long getId() {
@@ -95,9 +98,5 @@ public class TenantEntity implements AdminAware<Long> {
 
     public void setStatus(TenantStatusEntity status) {
         this.status = status;
-    }
-
-    enum TenantStatusEntity {
-        ACTIVE, DISABLED, ARCHIVED, DELETED;
     }
 }

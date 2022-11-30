@@ -38,9 +38,7 @@ public class TenantRegistrationController {
 
     @PostMapping("/tenants/registrations")
     public String save(@ModelAttribute TenantRegistrationDTO tenantRegistration) {
-
         this.tenantRegistrationService.registerNewTenant(new TenantRegistration(tenantRegistration.getTenantId(), tenantRegistration.getOidcClientSecret()));
-
         return "tenants/registrations/successful.html";
     }
 }

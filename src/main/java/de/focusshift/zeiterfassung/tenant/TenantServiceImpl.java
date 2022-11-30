@@ -11,7 +11,6 @@ import java.util.Optional;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-
 @Service
 class TenantServiceImpl implements TenantService {
 
@@ -23,25 +22,6 @@ class TenantServiceImpl implements TenantService {
     TenantServiceImpl(TenantRepository tenantRepository, ApplicationEventPublisher applicationEventPublisher) {
         this.tenantRepository = tenantRepository;
         this.applicationEventPublisher = applicationEventPublisher;
-    }
-
-    private static Tenant toTenant(TenantEntity entity) {
-        return new Tenant(entity.getTenantId(), entity.getCreatedAt(), entity.getUpdatedAt(), TenantStatus.valueOf(entity.getStatus().name()));
-    }
-
-    private Tenant update(Tenant tenant) {
-        final String tenantId = tenant.tenantId();
-        final TenantEntity existing = tenantRepository.findByTenantId(tenantId)
-            .orElseThrow(() -> new IllegalArgumentException("could not find tenant with tenantId=%s".formatted(tenantId)));
-
-        final TenantEntity update = new TenantEntity(
-            existing.id,
-            tenantId,
-            existing.getCreatedAt(),
-            Instant.now(),
-            TenantEntity.TenantStatusEntity.valueOf(tenant.status().name())
-        );
-        return toTenant(tenantRepository.save(update));
     }
 
     @Override
@@ -85,5 +65,24 @@ class TenantServiceImpl implements TenantService {
     @Override
     public void delete(String tenantId) {
         tenantRepository.deleteByTenantId(tenantId);
+    }
+
+    private static Tenant toTenant(TenantEntity entity) {
+        return new Tenant(entity.getTenantId(), entity.getCreatedAt(), entity.getUpdatedAt(), TenantStatus.valueOf(entity.getStatus().name()));
+    }
+
+    private Tenant update(Tenant tenant) {
+        final String tenantId = tenant.tenantId();
+        final TenantEntity existing = tenantRepository.findByTenantId(tenantId)
+            .orElseThrow(() -> new IllegalArgumentException("could not find tenant with tenantId=%s".formatted(tenantId)));
+
+        final TenantEntity update = new TenantEntity(
+            existing.id,
+            tenantId,
+            existing.getCreatedAt(),
+            Instant.now(),
+            TenantEntity.TenantStatusEntity.valueOf(tenant.status().name())
+        );
+        return toTenant(tenantRepository.save(update));
     }
 }

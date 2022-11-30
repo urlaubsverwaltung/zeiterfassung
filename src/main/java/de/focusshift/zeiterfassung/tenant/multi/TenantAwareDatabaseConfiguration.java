@@ -1,6 +1,7 @@
-package de.focusshift.zeiterfassung.multitenant;
+package de.focusshift.zeiterfassung.tenant.multi;
 
 import com.zaxxer.hikari.HikariDataSource;
+import de.focusshift.zeiterfassung.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenantuser.TenantUserEntity;
 import de.focusshift.zeiterfassung.timeclock.TimeClockEntity;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryEntity;

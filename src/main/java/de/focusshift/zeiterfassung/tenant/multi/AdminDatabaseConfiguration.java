@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.multitenant;
+package de.focusshift.zeiterfassung.tenant.multi;
 
 import com.zaxxer.hikari.HikariDataSource;
 import de.focusshift.zeiterfassung.registration.oidc.persistent.OidcClientEntity;

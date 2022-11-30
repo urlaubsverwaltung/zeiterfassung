@@ -1,5 +1,7 @@
-package de.focusshift.zeiterfassung.tenant;
+package de.focusshift.zeiterfassung.tenant.single;
 
+import de.focusshift.zeiterfassung.tenant.TenantConfigurationProperties;
+import de.focusshift.zeiterfassung.tenant.TenantService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -36,5 +38,4 @@ public class SingleTenantInitializer {
         LOG.info("tenant with tenantId={} doesn't exists, will be created", defaultTenantId);
         tenantService.create(defaultTenantId);
     }
-
 }

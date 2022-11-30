@@ -1,5 +1,7 @@
-package de.focusshift.zeiterfassung.multitenant;
+package de.focusshift.zeiterfassung.tenant.multi;
 
+import de.focusshift.zeiterfassung.tenant.TenantContextHolder;
+import de.focusshift.zeiterfassung.tenant.TenantId;
 import org.springframework.jdbc.datasource.ConnectionProxy;
 import org.springframework.jdbc.datasource.DelegatingDataSource;
 import org.springframework.lang.NonNull;

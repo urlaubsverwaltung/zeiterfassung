@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.registration.oidc.persistent;
 
-import de.focusshift.zeiterfassung.multitenant.AdminAware;
+import de.focusshift.zeiterfassung.tenant.multi.AdminAware;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
