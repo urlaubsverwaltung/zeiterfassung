@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.registration.oidc;
+package de.focusshift.zeiterfassung.security;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -18,9 +18,6 @@ public class SecurityConfigurationProperties {
         KEYCLOAK
     }
 
-    @NotEmpty
-    private String serverUrl;
-
     /**
      * OIDC post logout redirect uri.
      * <p>
@@ -31,21 +28,10 @@ public class SecurityConfigurationProperties {
     private String postLogoutRedirectUri = "{baseUrl}";
 
     @NotEmpty
-    private String redirectUriTemplate;
-
-    @NotEmpty
     private String loginFormUrl;
 
     @NotNull
     private ClaimMappers claimMapper;
-
-    public String getServerUrl() {
-        return serverUrl;
-    }
-
-    public void setServerUrl(String serverUrl) {
-        this.serverUrl = serverUrl;
-    }
 
     public String getPostLogoutRedirectUri() {
         return postLogoutRedirectUri;
@@ -53,14 +39,6 @@ public class SecurityConfigurationProperties {
 
     public void setPostLogoutRedirectUri(String postLogoutRedirectUri) {
         this.postLogoutRedirectUri = postLogoutRedirectUri;
-    }
-
-    public String getRedirectUriTemplate() {
-        return redirectUriTemplate;
-    }
-
-    public void setRedirectUriTemplate(String redirectUriTemplate) {
-        this.redirectUriTemplate = redirectUriTemplate;
     }
 
     public String getLoginFormUrl() {

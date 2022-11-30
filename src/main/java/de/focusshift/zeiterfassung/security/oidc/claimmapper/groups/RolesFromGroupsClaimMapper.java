@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static de.focusshift.zeiterfassung.registration.oidc.SecurityConfigurationProperties.GROUPS;
+import static de.focusshift.zeiterfassung.security.SecurityConfigurationProperties.GROUPS;
 
 /**
  * Neutral way of mapping oidc claim and parse application permissions from it.

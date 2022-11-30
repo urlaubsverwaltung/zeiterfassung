@@ -27,30 +27,4 @@ public class TenantConfigurationProperties {
     public void setMode(Mode mode) {
         this.mode = mode;
     }
-
-    private Registration registration = new Registration();
-
-    public Registration getRegistration() {
-        return registration;
-    }
-
-    public void setRegistration(Registration registration) {
-        this.registration = registration;
-    }
-
-    public static class Registration {
-
-        /**
-         * to enable or disable the generation of tenants based on the oidc clients
-         */
-        private boolean enabled;
-
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-    }
 }

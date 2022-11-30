@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.registration.oidc;
 
+import de.focusshift.zeiterfassung.security.SecurityConfigurationProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,13 +26,11 @@ class SecurityConfigurationPropertiesTest {
     @Test
     void ensureAllValuesHasToBeSet() {
         final SecurityConfigurationProperties securityConfigurationProperties = new SecurityConfigurationProperties();
-        securityConfigurationProperties.setServerUrl(null);
         securityConfigurationProperties.setPostLogoutRedirectUri(null);
         securityConfigurationProperties.setLoginFormUrl(null);
-        securityConfigurationProperties.setRedirectUriTemplate(null);
         securityConfigurationProperties.setClaimMapper(null);
         final Set<ConstraintViolation<SecurityConfigurationProperties>> violations = validator.validate(securityConfigurationProperties);
 
-        assertThat(violations).hasSize(5);
+        assertThat(violations).hasSize(3);
     }
 }
