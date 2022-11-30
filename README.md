@@ -79,7 +79,7 @@ be viewed.
 
 #### Security Provider
 
-As security provider OIDC-based security providers are possible to use (e.g. [Keycloak](https://www.keycloak.org/) or Microsoft Azure AD).
+As security provider OIDC-based security providers are possible to use (e.g. [Keycloak](https://www.keycloak.org/), Microsoft Azure AD or other 'OpenID Connect providers').
 To configure the security provider, the following configurations must be made.
 
 ```properties
@@ -122,10 +122,12 @@ works, can be found in the corresponding chapters of the Spring Boot documentati
 To run the docker container e.g. with following command:
 
 ```shell
-docker run -p 8080:8080 ghcr.io/urlaubsverwaltung/zeiterfassung/zeiterfassung:1.0.1
+docker run -p 8080:8080 ghcr.io/urlaubsverwaltung/zeiterfassung/zeiterfassung:$VERSION
 ```
 
-As part of a docker-compose Setup all configurations can be set in service definition
+Replace the $VERSION with a specific version from [the docker images](https://github.com/urlaubsverwaltung/zeiterfassung/pkgs/container/zeiterfassung%2Fzeiterfassung).
+
+As part of a docker-compose setup all configurations can be set in service definition.
 
 ## Development
 
