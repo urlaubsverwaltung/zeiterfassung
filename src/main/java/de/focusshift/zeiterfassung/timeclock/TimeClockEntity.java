@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.timeclock;
 
-import de.focusshift.zeiterfassung.tenant.AbstractTenantAwareEntity;
+import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
 import org.springframework.lang.Nullable;
 
 import javax.persistence.Column;

@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.development;
 
-import de.focusshift.zeiterfassung.tenantuser.TenantUser;
-import de.focusshift.zeiterfassung.tenantuser.TenantUserCreatedEvent;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUserCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserId;

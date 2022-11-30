@@ -3,8 +3,8 @@ package de.focusshift.zeiterfassung.integration.oidc.clientregistration.messagin
 import de.focusshift.zeiterfassung.integration.oidc.clientregistration.OidcClientCreatedEventDTO;
 import de.focusshift.zeiterfassung.integration.oidc.clientregistration.OidcClientDeletedEventDTO;
 import de.focusshift.zeiterfassung.integration.oidc.clientregistration.OidcClientRegistrationEventHandler;
-import de.focusshift.zeiterfassung.registration.tenant.TenantRegistration;
-import de.focusshift.zeiterfassung.registration.tenant.TenantRegistrationService;
+import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistration;
+import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistrationService;
 import org.slf4j.Logger;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 

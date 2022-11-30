@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.feedback;
 
-import de.focusshift.zeiterfassung.tenantuser.EMailAddress;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;

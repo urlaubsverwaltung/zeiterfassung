@@ -2,7 +2,7 @@ package de.focusshift.zeiterfassung.feedback;
 
 import de.focusshift.zeiterfassung.email.EMailConstants;
 import de.focusshift.zeiterfassung.email.EMailService;
-import de.focusshift.zeiterfassung.tenantuser.EMailAddress;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
