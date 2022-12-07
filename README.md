@@ -99,8 +99,11 @@ zeiterfassung.security.oidc.login-form-url=$OIDC_LOGIN_FORM_URL
 
 Zeiterfassung is using user permissions from oidc claim `groups` for mapping possible permissions:
 
-* `ZEITERFASSUNG_ACCESS`: General access to the application aund time tracking features
-* `ZEITERFASSUNG_PRIVILEGED`: Access to reports of other users
+* `ZEITERFASSUNG_USER`: General access to the application aund time tracking features
+* `ZEITERFASSUNG_VIEW_REPORT_ALL`: Access to reports of other users
+
+If you're using Keycloak, this can be configured via a predefined OIDC client mapper with name `groups`.
+Create both permissions as `Realm roles` and assign user to those roles.
 
 #### Logging
 
