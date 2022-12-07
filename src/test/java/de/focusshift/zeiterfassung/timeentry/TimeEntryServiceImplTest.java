@@ -86,7 +86,7 @@ class TimeEntryServiceImplTest {
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
-        when(timeEntryRepository.findAllByOwnerAndTouchingPeriod("batman", from , to)).thenReturn(List.of(timeEntryEntity));
+        when(timeEntryRepository.findAllByOwnerAndTouchingPeriod("batman", from, to)).thenReturn(List.of(timeEntryEntity));
         when(timeEntryRepository.countAllByOwner("batman")).thenReturn(3L);
 
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(new UserId("batman"), 2022, 1);

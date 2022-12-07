@@ -245,7 +245,7 @@ class TimeEntryControllerTest {
     }
 
     @Test
-    void ensureTimeEntryCreationError() throws Exception{
+    void ensureTimeEntryCreationError() throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.parse("2022-09-22T00:00:00.00Z"), ZoneId.systemDefault());
         sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, fixedClock);
