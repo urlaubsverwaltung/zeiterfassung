@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.security.oidc.clientregistration.messaging;
+package de.focusshift.zeiterfassung.tenancy.registration.messaging;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -6,7 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import javax.validation.constraints.NotEmpty;
 
 @Validated
-@ConfigurationProperties("zeiterfassung.security.oidc.client.registration.rabbitmq")
+@ConfigurationProperties("zeiterfassung.tenant.registration.rabbitmq")
 class OidcClientRegistrationRabbitmqConfigurationProperties {
 
     private boolean enabled = false;

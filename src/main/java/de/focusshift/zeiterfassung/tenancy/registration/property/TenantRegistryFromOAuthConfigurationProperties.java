@@ -1,11 +1,11 @@
-package de.focusshift.zeiterfassung.security.oidc.clientregistration.property;
+package de.focusshift.zeiterfassung.tenancy.registration.property;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
-@ConfigurationProperties("zeiterfassung.security.oidc.client.registration.property")
-class OidcClientRegistrationPropertyConfigurationProperties {
+@ConfigurationProperties("zeiterfassung.tenant.registration.property.oauth")
+class TenantRegistryFromOAuthConfigurationProperties {
 
     private boolean enabled = false;
 

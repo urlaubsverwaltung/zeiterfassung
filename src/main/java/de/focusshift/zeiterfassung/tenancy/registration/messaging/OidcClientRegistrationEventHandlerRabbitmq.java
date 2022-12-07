@@ -1,12 +1,12 @@
-package de.focusshift.zeiterfassung.security.oidc.clientregistration.messaging;
+package de.focusshift.zeiterfassung.tenancy.registration.messaging;
 
 import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistration;
 import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistrationService;
 import org.slf4j.Logger;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
-import static de.focusshift.zeiterfassung.security.oidc.clientregistration.messaging.OidcClientRegistrationRabbitmqConfiguration.ZEITERFASSUNG_QUEUE_OIDC_CLIENT_CREATED_CONSUMER;
-import static de.focusshift.zeiterfassung.security.oidc.clientregistration.messaging.OidcClientRegistrationRabbitmqConfiguration.ZEITERFASSUNG_QUEUE_OIDC_CLIENT_DELETED_CONSUMER;
+import static de.focusshift.zeiterfassung.tenancy.registration.messaging.OidcClientRegistrationRabbitmqConfiguration.ZEITERFASSUNG_QUEUE_OIDC_CLIENT_CREATED_CONSUMER;
+import static de.focusshift.zeiterfassung.tenancy.registration.messaging.OidcClientRegistrationRabbitmqConfiguration.ZEITERFASSUNG_QUEUE_OIDC_CLIENT_DELETED_CONSUMER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 

@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.security.oidc.clientregistration.messaging;
+package de.focusshift.zeiterfassung.tenancy.registration.messaging;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

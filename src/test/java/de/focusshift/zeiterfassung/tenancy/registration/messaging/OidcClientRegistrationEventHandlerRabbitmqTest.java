@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.security.oidc.clientregistration.messaging;
+package de.focusshift.zeiterfassung.tenancy.registration.messaging;
 
 
 import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistration;

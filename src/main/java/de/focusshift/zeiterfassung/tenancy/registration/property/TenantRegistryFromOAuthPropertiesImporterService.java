@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.security.oidc.clientregistration.property;
+package de.focusshift.zeiterfassung.tenancy.registration.property;
 
 import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistration;
 import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistrationService;
@@ -17,17 +17,17 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 @Component
 @ConditionalOnBean(TenantRegistrationService.class)
-@ConditionalOnProperty(value = "zeiterfassung.security.oidc.client.registration.property.enabled", havingValue = "true")
-@EnableConfigurationProperties(OidcClientRegistrationPropertyConfigurationProperties.class)
-class OidcClientFromPropertiesImporterService {
+@ConditionalOnProperty(value = "zeiterfassung.tenant.registration.property.oauth.enabled", havingValue = "true")
+@EnableConfigurationProperties(TenantRegistryFromOAuthConfigurationProperties.class)
+class TenantRegistryFromOAuthPropertiesImporterService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final OAuth2ClientProperties oAuth2ClientProperties;
     private final TenantRegistrationService tenantRegistrationService;
 
-    OidcClientFromPropertiesImporterService(OAuth2ClientProperties oAuth2ClientProperties,
-                                            TenantRegistrationService tenantRegistrationService) {
+    TenantRegistryFromOAuthPropertiesImporterService(OAuth2ClientProperties oAuth2ClientProperties,
+                                                     TenantRegistrationService tenantRegistrationService) {
         this.oAuth2ClientProperties = oAuth2ClientProperties;
         this.tenantRegistrationService = tenantRegistrationService;
     }
