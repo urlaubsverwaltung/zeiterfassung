@@ -2,7 +2,7 @@ package de.focusshift.zeiterfassung.timeentry;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.Pattern;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;

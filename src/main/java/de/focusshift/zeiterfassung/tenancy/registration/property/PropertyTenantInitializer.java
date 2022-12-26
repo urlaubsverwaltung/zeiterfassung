@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.SINGLE;
 import static java.lang.invoke.MethodHandles.lookup;

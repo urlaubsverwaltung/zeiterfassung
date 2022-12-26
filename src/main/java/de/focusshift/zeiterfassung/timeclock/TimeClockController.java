@@ -2,6 +2,8 @@ package de.focusshift.zeiterfassung.timeclock;
 
 import de.focusshift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.user.UserId;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
@@ -16,8 +18,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 

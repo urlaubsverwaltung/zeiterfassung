@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
-@WebMvcTest(controllers = { TimeClockController.class })
+@WebMvcTest(controllers = {TimeClockController.class})
 class TimeClockControllerTest {
 
     private static final ZoneId ZONE_EUROPE_BERLIN = ZoneId.of("Europe/Berlin");
@@ -164,7 +164,7 @@ class TimeClockControllerTest {
                 .param("comment", "awesome comment")
                 .param("date", "2023-01-11")
                 .param("time", "13:37")
-                // break: NOP->no param, YEP->param(break,on)
+            // break: NOP->no param, YEP->param(break,on)
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("referer-url"));
@@ -204,7 +204,7 @@ class TimeClockControllerTest {
                 // max 255 chars allowed for comment
                 .param("comment", IntStream.range(0, 256).mapToObj((nr) -> "0").collect(joining("")))
                 // actual pattern "yyyy-MM-dd"
-                .param("date", "11-01-2023")
+                .param("date", "2023-11-01")
                 // actual pattern "HH:mm"
                 .param("time", "13:37:00")
         )
@@ -224,7 +224,7 @@ class TimeClockControllerTest {
                 // max 255 chars allowed for comment
                 .param("comment", IntStream.range(0, 256).mapToObj((nr) -> "0").collect(joining("")))
                 // actual pattern "yyyy-MM-dd"
-                .param("date", "11-01-2023")
+                .param("date", "2023-11-01")
                 // actual pattern "HH:mm"
                 .param("time", "13:37:00")
         )

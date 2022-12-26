@@ -3,7 +3,7 @@ package de.focusshift.zeiterfassung.tenancy.configuration.single;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 @Validated
 @ConfigurationProperties("zeiterfassung.tenant.single")
