@@ -3,7 +3,7 @@ package de.focusshift.zeiterfassung.integration.oidc.clientregistration.messagin
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 
 @Validated
 @ConfigurationProperties("zeiterfassung.integration.oidc.client-registration")
