@@ -53,7 +53,10 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
     @NotNull
     private Instant updatedAt;
 
-    protected TimeEntryEntity(String tenantId, Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt) {
+    @Column(name = "is_break", nullable = false)
+    private boolean isBreak;
+
+    protected TimeEntryEntity(String tenantId, Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt, boolean isBreak) {
         super(tenantId);
         this.id = id;
         this.owner = owner;
@@ -63,10 +66,11 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
         this.end = end;
         this.endZoneId = endZoneId.toString();
         this.updatedAt = updatedAt;
+        this.isBreak = isBreak;
     }
 
-    protected TimeEntryEntity(Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt) {
-        this(null, id, owner, comment, start, startZoneId, end, endZoneId, updatedAt);
+    protected TimeEntryEntity(Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt, boolean isBreak) {
+        this(null, id, owner, comment, start, startZoneId, end, endZoneId, updatedAt, isBreak);
     }
 
     protected TimeEntryEntity() {
@@ -103,5 +107,9 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public boolean isBreak() {
+        return isBreak;
     }
 }

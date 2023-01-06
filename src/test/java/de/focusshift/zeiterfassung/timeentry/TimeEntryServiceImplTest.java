@@ -50,21 +50,29 @@ class TimeEntryServiceImplTest {
         final LocalDate periodToExclusive = LocalDate.of(2022, 1, 10);
 
         final LocalDateTime entryStart = LocalDateTime.of(periodFrom, LocalTime.of(10, 0, 0));
-        final LocalDateTime entryEnd = LocalDateTime.of(periodToExclusive, LocalTime.of(17, 0, 0));
-        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "batman", "hard work", entryStart.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), entryEnd.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), Instant.now());
+        final LocalDateTime entryEnd = LocalDateTime.of(periodToExclusive, LocalTime.of(12, 0, 0));
+        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "batman", "hard work", entryStart.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), entryEnd.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), Instant.now(), false);
+
+        final LocalDateTime entryBreakStart = LocalDateTime.of(periodFrom, LocalTime.of(12, 0, 0));
+        final LocalDateTime entryBreakEnd = LocalDateTime.of(periodToExclusive, LocalTime.of(13, 0, 0));
+        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "batman", "deserved break", entryBreakStart.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), entryBreakEnd.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), Instant.now(), true);
 
         final Instant periodStartInstant = periodFrom.atStartOfDay(ZoneOffset.UTC).toInstant();
         final Instant periodEndInstant = periodToExclusive.atStartOfDay(ZoneOffset.UTC).toInstant();
         when(timeEntryRepository.findAllByOwnerAndTouchingPeriod("batman", periodStartInstant, periodEndInstant))
-            .thenReturn(List.of(timeEntryEntity));
+            .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
         final List<TimeEntry> actualEntries = sut.getEntries(periodFrom, periodToExclusive, new UserId("batman"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
 
+        final ZonedDateTime expectedBreakStart = ZonedDateTime.of(entryBreakStart, ZONE_ID_UTC);
+        final ZonedDateTime expectedBreakEnd = ZonedDateTime.of(entryBreakEnd, ZONE_ID_UTC);
+
         assertThat(actualEntries).containsExactly(
-            new TimeEntry(1L, new UserId("batman"), "hard work", expectedStart, expectedEnd)
+            new TimeEntry(1L, new UserId("batman"), "hard work", expectedStart, expectedEnd, false),
+            new TimeEntry(2L, new UserId("batman"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
         );
     }
 
@@ -76,17 +84,18 @@ class TimeEntryServiceImplTest {
         when(userDateService.firstDayOfWeek(Year.of(2022), 1)).thenReturn(LocalDate.of(2022, 1, 3));
 
         final ZonedDateTime timeEntryStart = ZonedDateTime.of(2022, 1, 4, 9, 0, 0, 0, zoneIdBerlin);
-        final ZonedDateTime timeEntryEnd = ZonedDateTime.of(2022, 1, 4, 17, 0, 0, 0, zoneIdBerlin);
+        final ZonedDateTime timeEntryEnd = ZonedDateTime.of(2022, 1, 4, 12, 0, 0, 0, zoneIdBerlin);
+        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", timeEntryStart.toInstant(), zoneIdBerlin, timeEntryEnd.toInstant(), zoneIdBerlin, Instant.now(), false);
 
-        final Instant timeEntryStartInstant = timeEntryStart.toInstant();
-        final Instant timeEntryEndInstant = timeEntryEnd.toInstant();
-        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", timeEntryStartInstant, zoneIdBerlin, timeEntryEndInstant, zoneIdBerlin, timeEntryStartInstant);
+        final ZonedDateTime timeEntryBreakStart = ZonedDateTime.of(2022, 1, 4, 12, 0, 0, 0, zoneIdBerlin);
+        final ZonedDateTime timeEntryBreakEnd = ZonedDateTime.of(2022, 1, 4, 13, 0, 0, 0, zoneIdBerlin);
+        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "batman", "deserved break", timeEntryBreakStart.toInstant(), zoneIdBerlin, timeEntryBreakEnd.toInstant(), zoneIdBerlin, Instant.now(), true);
 
         final ZonedDateTime fromDateTime = LocalDate.of(2022, 1, 3).atStartOfDay(ZoneId.systemDefault());
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
-        when(timeEntryRepository.findAllByOwnerAndTouchingPeriod("batman", from, to)).thenReturn(List.of(timeEntryEntity));
+        when(timeEntryRepository.findAllByOwnerAndTouchingPeriod("batman", from, to)).thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
         when(timeEntryRepository.countAllByOwner("batman")).thenReturn(3L);
 
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(new UserId("batman"), 2022, 1);
@@ -96,7 +105,8 @@ class TimeEntryServiceImplTest {
                 new TimeEntryWeek(
                     LocalDate.of(2022, 1, 3),
                     List.of(
-                        new TimeEntry(1L, new UserId("batman"), "hack the planet!", timeEntryStart, timeEntryEnd)
+                        new TimeEntry(2L, new UserId("batman"), "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
+                        new TimeEntry(1L, new UserId("batman"), "hack the planet!", timeEntryStart, timeEntryEnd, false)
                     )
                 ),
                 3
