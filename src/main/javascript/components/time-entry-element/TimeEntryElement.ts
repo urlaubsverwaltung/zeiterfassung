@@ -47,14 +47,14 @@ class TimeEntryElement extends HTMLDivElement {
       newValue: string,
       element: HTMLElement,
     ) {
-      if (originalFormData.get(name) !== newValue) {
-        form.classList.add("edited");
-        element.classList.add("edited");
-      } else {
+      if (originalFormData.get(name) === newValue) {
         element.classList.remove("edited");
         if (!isFormChanged()) {
           form.classList.remove("edited");
         }
+      } else {
+        form.classList.add("edited");
+        element.classList.add("edited");
       }
     }
 
