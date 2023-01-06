@@ -35,7 +35,7 @@ class TimeEntryElement extends HTMLDivElement {
       });
     });
 
-    form.addEventListener("focusout", (event: FocusEvent) => {
+    form.addEventListener("change", (event: FocusEvent) => {
       const target: HTMLInputElement = event.target as HTMLInputElement;
       if (target.matches("input[type='checkbox']")) {
         handleValueChanged(target.name, target.checked, target);
