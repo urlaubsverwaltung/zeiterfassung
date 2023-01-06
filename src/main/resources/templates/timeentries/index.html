@@ -289,12 +289,12 @@
                       th:value="${timeEntry.comment}"
                       placeholder="Woran arbeitest du gerade?"
                       th:placeholder="#{time-entry.form.comment.input.placeholder}"
-                      class="peer w-full px-1 -ml-1 md:ml-0 lg:-ml-1 lg:placeholder-transparent text-timeslot-form-input mt-0.5 py-0.5 lg:mt-8 text-sm lg:-translate-y-0.5 bg-transparent"
+                      class="border border-gray-200 w-full px-1 -ml-1 md:ml-0 lg:-ml-1 text-timeslot-form-input mt-0.5 py-0.5 lg:mt-8 text-sm lg:-translate-y-0.5 bg-transparent"
                     />
                     <label
                       for="input-entry-comment"
                       th:for="|${rnd}-input-entry-comment|"
-                      class="md:px-1 lg:px-0 lg:absolute left-0 top-2 transition-all text-sm text-timeslot-form-label lg:peer-placeholder-shown:text-base lg:peer-placeholder-shown:top-5 lg:peer-focus:top-2 lg:peer-focus:text-sm cursor-pointer"
+                      class="md:px-1 lg:px-0 lg:absolute left-0 top-2 transition-all text-sm text-timeslot-form-label cursor-pointer"
                       th:text="#{time-entry.form.comment.label}"
                     >
                       Kommentar
@@ -310,7 +310,7 @@
                         th:value="${timeEntry.start}"
                         placeholder="Von"
                         th:placeholder="#{time-entry.form.start.input.placeholder}"
-                        class="peer px-1 text-timeslot-form-input mt-0.5 sm:mt-7.5 sm:mb-0.5 invalid:border-b invalid:border-red-600 w-full md:flex-1 text-sm bg-transparent"
+                        class="peer px-1 text-timeslot-form-input mt-0.5 sm:mt-7.5 sm:mb-0.5 border border-gray-200 invalid:border-red-600 w-full md:flex-1 text-sm bg-transparent"
                         th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
                       />
                       <label
@@ -332,7 +332,7 @@
                         th:value="${timeEntry.end}"
                         placeholder="Bis"
                         th:placeholder="#{time-entry.form.end.input.placeholder}"
-                        class="peer px-1 text-timeslot-form-input mt-0.5 sm:mt-7.5 sm:mb-0.5 invalid:border-b invalid:border-red-600 w-full md:flex-1 text-sm bg-transparent"
+                        class="peer px-1 text-timeslot-form-input mt-0.5 sm:mt-7.5 sm:mb-0.5 border border-gray-200 invalid:border-red-600 w-full md:flex-1 text-sm bg-transparent"
                         th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
                       />
                       <label
@@ -356,7 +356,7 @@
                         th:value="${timeEntry.duration}"
                         placeholder="hh:mm"
                         th:placeholder="#{time-entry.form.duration.input.placeholder}"
-                        class="peer px-1 text-timeslot-form-input mt-0.5 sm:mt-7.5 sm:mb-0.5 invalid:border-b invalid:border-red-600 w-full md:flex-1 text-sm bg-transparent"
+                        class="peer px-1 text-timeslot-form-input mt-0.5 sm:mt-7.5 sm:mb-0.5 border border-gray-200 invalid:border-red-600 w-full md:flex-1 text-sm bg-transparent"
                         th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
                       />
                       <label
