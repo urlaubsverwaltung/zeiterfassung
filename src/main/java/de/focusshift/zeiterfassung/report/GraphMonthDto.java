@@ -2,8 +2,8 @@ package de.focusshift.zeiterfassung.report;
 
 import java.util.List;
 
-record ReportMonthDto(String yearMonth, List<ReportWeekDto> weekReports, Double maxHoursWorked,
-                      Double averageHoursWorked) {
+record GraphMonthDto(String yearMonth, List<GraphWeekDto> weekReports, Double maxHoursWorked,
+                     Double averageHoursWorked) {
 
     public Double graphLegendMaxHour() {
         final double max = Math.max(maxHoursWorked(), 8);
