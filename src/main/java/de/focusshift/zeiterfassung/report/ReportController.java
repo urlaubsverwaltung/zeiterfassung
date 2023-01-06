@@ -29,6 +29,7 @@ import java.time.DateTimeException;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -90,14 +91,17 @@ class ReportController implements HasTimeClock, HasLaunchpad {
 
         final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, userLocalIds);
         final GraphWeekDto graphWeekDto = toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
+        final DetailWeekDto detailWeekDto = toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
 
         model.addAttribute("weekReport", graphWeekDto);
+        model.addAttribute("weekReportDetail", detailWeekDto);
 
         final YearWeek todayYearWeek = YearWeek.now(clock);
         model.addAttribute("isThisWeek", todayYearWeek.equals(reportYearWeek));
 
         model.addAttribute("chartNavigationFragment", "reports/user-report-week::chart-navigation");
         model.addAttribute("chartFragment", "reports/user-report-week::chart");
+        model.addAttribute("entriesFragment", "reports/user-report-week::entries");
         model.addAttribute("weekAriaCurrent", "location");
         model.addAttribute("monthAriaCurrent", "false");
 
@@ -302,6 +306,32 @@ class ReportController implements HasTimeClock, HasLaunchpad {
         final double hoursWorked = reportDay.workDuration().minutes().hoursDoubleValue();
 
         return new GraphDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked);
+    }
+
+    private DetailWeekDto toDetailWeekDto(ReportWeek reportWeek, Month monthPivot) {
+        final List<DetailDayDto> dayReports = reportWeek.reportDays()
+            .stream()
+            .map(reportDay -> toDetailDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot)))
+            .toList();
+
+        final String yearMonthWeek = dateFormatter.formatYearMonthWeek(reportWeek.firstDateOfWeek());
+
+
+        return new DetailWeekDto(yearMonthWeek, dayReports);
+    }
+
+    private DetailDayDto toDetailDayReportDto(ReportDay reportDay, boolean differentMonth) {
+        final String dayOfWeekNarrow = dateFormatter.formatDayOfWeekNarrow(reportDay.date().getDayOfWeek());
+        final String dayOfWeekFull = dateFormatter.formatDayOfWeekFull(reportDay.date().getDayOfWeek());
+        final String dateString = dateFormatter.formatDate(reportDay.date());
+        final double hoursWorked = reportDay.workDuration().minutes().hoursDoubleValue();
+        final List<DetailDayEntryDto> dayEntryDtos = reportDay.reportDayEntries().stream().map(ReportController::toDetailDayEntryDto).toList();
+
+        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, dayEntryDtos);
+    }
+
+    private static DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry) {
+        return new DetailDayEntryDto(reportDayEntry.user().fullName(), reportDayEntry.comment(), Date.from(reportDayEntry.start().toInstant()), Date.from(reportDayEntry.end().toInstant()));
     }
 
     private static Optional<YearWeek> yearWeek(int year, int week) {
