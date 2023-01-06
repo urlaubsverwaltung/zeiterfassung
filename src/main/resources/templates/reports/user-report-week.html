@@ -169,5 +169,56 @@
         </g>
       </svg>
     </th:block>
+
+    <th:block th:fragment="entries">
+      <div>
+        <ol class="space-y-8">
+          <li th:each="day : ${weekReportDetail.dayReports}">
+            <table class="w-full table-fixed">
+              <caption
+                class="text-gray-400 text-sm text-left px-4 mb-4"
+                th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
+              >
+                Zeiten
+              </caption>
+              <thead>
+                <tr class="bg-gray-100">
+                  <th class="text-left font-bold px-4 py-2 text-sm">Person</th>
+                  <th class="text-left font-bold px-4 py-2 text-sm">
+                    Kommentar
+                  </th>
+                  <th class="text-left font-bold px-4 py-2 text-sm">Zeit</th>
+                  <th class="text-left font-bold px-4 py-2 text-sm">Dauer</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="dayEntry : ${day.dayEntries}">
+                  <td
+                    class="w-56 px-4 py-2 truncate"
+                    th:text="${dayEntry.username}"
+                  >
+                    Bruce Wayne
+                  </td>
+                  <td
+                    class="w-auto px-4 py-2 truncate"
+                    th:text="${dayEntry.comment}"
+                  >
+                    hard work!
+                  </td>
+                  <td
+                    class="w-40 px-4 py-2 tabular-nums"
+                    th:text="#{report.detail.time(${dayEntry.start}, ${dayEntry.end})}"
+                  ></td>
+                  <td
+                    class="w-10 px-4 py-2 tabular-nums"
+                    th:text="${dayEntry.duration}"
+                  ></td>
+                </tr>
+              </tbody>
+            </table>
+          </li>
+        </ol>
+      </div>
+    </th:block>
   </body>
 </html>
