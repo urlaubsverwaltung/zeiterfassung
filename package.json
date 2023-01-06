@@ -39,7 +39,7 @@
     "postcss": "8.4.19",
     "postcss-cli": "10.1.0",
     "prettier": "2.8.0",
-    "prettier-plugin-svelte": "2.8.1",
+    "prettier-plugin-svelte": "2.9.0",
     "rimraf": "3.0.2",
     "rollup": "2.79.1",
     "rollup-plugin-esbuild": "4.10.1",
