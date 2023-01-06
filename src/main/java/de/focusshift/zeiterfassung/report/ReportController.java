@@ -89,9 +89,9 @@ class ReportController implements HasTimeClock, HasLaunchpad {
         final boolean allUsersSelected = optionalAllUsersSelected.isPresent();
 
         final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, userLocalIds);
-        final ReportWeekDto userReportMonthDto = toUserReportWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
+        final GraphWeekDto graphWeekDto = toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
 
-        model.addAttribute("weekReport", userReportMonthDto);
+        model.addAttribute("weekReport", graphWeekDto);
 
         final YearWeek todayYearWeek = YearWeek.now(clock);
         model.addAttribute("isThisWeek", todayYearWeek.equals(reportYearWeek));
@@ -153,9 +153,9 @@ class ReportController implements HasTimeClock, HasLaunchpad {
         final boolean allUsersSelected = optionalAllUsersSelected.isPresent();
 
         final ReportMonth reportMonth = getReportMonth(principal, allUsersSelected, yearMonth, userLocalIds);
-        final ReportMonthDto reportMonthDto = toUserReportMonthDto(reportMonth);
+        final GraphMonthDto graphMonthDto = toGraphMonthDto(reportMonth);
 
-        model.addAttribute("monthReport", reportMonthDto);
+        model.addAttribute("monthReport", graphMonthDto);
 
         final YearMonth todayYearMonth = YearMonth.now(clock);
         model.addAttribute("isThisMonth", todayYearMonth.equals(YearMonth.of(year, month)));
@@ -248,20 +248,20 @@ class ReportController implements HasTimeClock, HasLaunchpad {
         return url;
     }
 
-    private ReportMonthDto toUserReportMonthDto(ReportMonth reportMonth) {
-        final List<ReportWeekDto> reportWeekDtos = reportMonth.weeks().stream()
-            .map(reportWeek -> toUserReportWeekDto(reportWeek, reportMonth.yearMonth().getMonth()))
+    private GraphMonthDto toGraphMonthDto(ReportMonth reportMonth) {
+        final List<GraphWeekDto> graphWeekDtos = reportMonth.weeks().stream()
+            .map(reportWeek -> toGraphWeekDto(reportWeek, reportMonth.yearMonth().getMonth()))
             .toList();
 
-        final double maxHoursWorked = reportWeekDtos.stream()
-            .flatMap(reportWeekDto -> reportWeekDto.dayReports().stream())
-            .map(ReportDayDto::hoursWorked)
+        final double maxHoursWorked = graphWeekDtos.stream()
+            .flatMap(graphWeekDto -> graphWeekDto.dayReports().stream())
+            .map(GraphDayDto::hoursWorked)
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
-        final double hoursWorkedAverageADay = reportWeekDtos.stream()
-            .flatMap(reportWeekDto -> reportWeekDto.dayReports().stream())
-            .map(ReportDayDto::hoursWorked)
+        final double hoursWorkedAverageADay = graphWeekDtos.stream()
+            .flatMap(graphWeekDto -> graphWeekDto.dayReports().stream())
+            .map(GraphDayDto::hoursWorked)
             .mapToDouble(value -> value)
             .average().orElse(0.0);
 
@@ -271,11 +271,11 @@ class ReportController implements HasTimeClock, HasLaunchpad {
 
         final String yearMonth = dateFormatter.formatYearMonth(reportMonth.yearMonth());
 
-        return new ReportMonthDto(yearMonth, reportWeekDtos, maxHoursWorked, averageHoursWorkedRounded);
+        return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked, averageHoursWorkedRounded);
     }
 
-    private ReportWeekDto toUserReportWeekDto(ReportWeek reportWeek, Month monthPivot) {
-        final List<ReportDayDto> dayReports = reportWeek.reportDays()
+    private GraphWeekDto toGraphWeekDto(ReportWeek reportWeek, Month monthPivot) {
+        final List<GraphDayDto> dayReports = reportWeek.reportDays()
             .stream()
             .map(reportDay -> toUserReportDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot)))
             .toList();
@@ -283,25 +283,25 @@ class ReportController implements HasTimeClock, HasLaunchpad {
         final String yearMonthWeek = dateFormatter.formatYearMonthWeek(reportWeek.firstDateOfWeek());
 
         final double maxHoursWorked = dayReports.stream()
-            .map(ReportDayDto::hoursWorked)
+            .map(GraphDayDto::hoursWorked)
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
         final double hoursWorkedAverageADay = dayReports.stream()
-            .map(ReportDayDto::hoursWorked)
+            .map(GraphDayDto::hoursWorked)
             .mapToDouble(value -> value)
             .average().orElse(0.0);
 
-        return new ReportWeekDto(yearMonthWeek, dayReports, maxHoursWorked, hoursWorkedAverageADay);
+        return new GraphWeekDto(yearMonthWeek, dayReports, maxHoursWorked, hoursWorkedAverageADay);
     }
 
-    private ReportDayDto toUserReportDayReportDto(ReportDay reportDay, boolean differentMonth) {
+    private GraphDayDto toUserReportDayReportDto(ReportDay reportDay, boolean differentMonth) {
         final String dayOfWeekNarrow = dateFormatter.formatDayOfWeekNarrow(reportDay.date().getDayOfWeek());
         final String dayOfWeekFull = dateFormatter.formatDayOfWeekFull(reportDay.date().getDayOfWeek());
         final String dateString = dateFormatter.formatDate(reportDay.date());
         final double hoursWorked = reportDay.workDuration().minutes().hoursDoubleValue();
 
-        return new ReportDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked);
+        return new GraphDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked);
     }
 
     private static Optional<YearWeek> yearWeek(int year, int week) {
