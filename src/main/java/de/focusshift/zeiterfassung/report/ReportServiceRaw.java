@@ -154,7 +154,7 @@ class ReportServiceRaw {
             return Stream.empty();
         }
 
-        final ReportDayEntry first = new ReportDayEntry(user, comment, startDateTime, endDateTime);
+        final ReportDayEntry first = new ReportDayEntry(user, comment, startDateTime, endDateTime, timeEntry.isBreak());
         return Stream.of(first);
     }
 
