@@ -147,7 +147,7 @@ class TimeClockServiceTest {
 
         sut.stopTimeClock(new UserId("batman"));
 
-        verify(timeEntryService).saveTimeEntry(new TimeEntry(null, new UserId("batman"), "", startedAt, stoppedAt));
+        verify(timeEntryService).saveTimeEntry(new TimeEntry(null, new UserId("batman"), "", startedAt, stoppedAt, false));
     }
 
     @Test

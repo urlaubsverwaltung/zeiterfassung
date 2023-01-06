@@ -73,7 +73,7 @@ class DemoDataCreationService {
                 timeEntryService.saveTimeEntry(new TimeEntry(null, new UserId(user.id()),
                     getRandomComment(),
                     ZonedDateTime.of(LocalDateTime.of(actualDate, startTime), ZoneId.of("Europe/Berlin")),
-                    ZonedDateTime.of(LocalDateTime.of(actualDate, endTime), ZoneId.of("Europe/Berlin"))));
+                    ZonedDateTime.of(LocalDateTime.of(actualDate, endTime), ZoneId.of("Europe/Berlin")), false));
 
                 startTime = endTime;
                 endTime = randomTimeBetween(startTime, END_OF_WORK_DAY).plusMinutes(30);

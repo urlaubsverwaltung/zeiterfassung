@@ -10,7 +10,8 @@ public record TimeEntry(
     UserId userId,
     String comment,
     ZonedDateTime start,
-    ZonedDateTime end
+    ZonedDateTime end,
+    boolean isBreak
 ) {
 
     public WorkDuration workDuration() {

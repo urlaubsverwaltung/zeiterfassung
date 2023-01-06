@@ -131,7 +131,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         final UserId userId = new UserId(entity.getOwner());
 
-        return new TimeEntry(entity.getId(), userId, entity.getComment(), startDateTime, endDateTime);
+        return new TimeEntry(entity.getId(), userId, entity.getComment(), startDateTime, endDateTime, entity.isBreak());
     }
 
     private TimeEntryEntity toEntity(TimeEntry timeEntry, Instant updatedAt) {
@@ -140,7 +140,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final Instant end = timeEntry.end().toInstant();
         final ZoneId endZoneId = timeEntry.end().getZone();
 
-        return new TimeEntryEntity(timeEntry.id(), timeEntry.userId().value(), timeEntry.comment(), start, startZoneId, end, endZoneId, updatedAt);
+        return new TimeEntryEntity(timeEntry.id(), timeEntry.userId().value(), timeEntry.comment(), start, startZoneId, end, endZoneId, updatedAt, timeEntry.isBreak());
     }
 
     private static Instant toInstant(LocalDate localDate) {
