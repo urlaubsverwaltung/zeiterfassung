@@ -123,7 +123,7 @@ class ReportController implements HasTimeClock, HasLaunchpad {
 
         addUserFilterModelAttributes(model, allUsersSelected, userLocalIds, String.format("/report/year/%d/week/%d", year, week));
 
-        return "reports/user-report.html";
+        return "reports/user-report";
     }
 
     @GetMapping("/report/month")
@@ -187,7 +187,7 @@ class ReportController implements HasTimeClock, HasLaunchpad {
 
         addUserFilterModelAttributes(model, allUsersSelected, userLocalIds, String.format("/report/year/%d/month/%d", year, month));
 
-        return "reports/user-report.html";
+        return "reports/user-report";
     }
 
     private ReportWeek getReportWeek(OidcUser principal, YearWeek reportYearWeek, boolean allUsersSelected, Year reportYear, List<UserLocalId> userLocalIds) {
