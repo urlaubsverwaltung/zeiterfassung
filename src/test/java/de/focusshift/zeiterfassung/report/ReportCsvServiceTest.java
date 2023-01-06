@@ -71,7 +71,7 @@ class ReportCsvServiceTest {
         sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, new UserId("batman"), printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
             """);
     }
 
@@ -84,7 +84,7 @@ class ReportCsvServiceTest {
 
         final ZonedDateTime from = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime to = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 30), ZONE_ID_BERLIN);
-        final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to);
+        final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, false);
         final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), List.of(reportDayEntry));
 
         when(reportService.getReportWeek(Year.of(2021), 1, new UserId("batman")))
@@ -96,8 +96,8 @@ class ReportCsvServiceTest {
         sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, new UserId("batman"), printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment
-            04.01.2021;Bruce;Wayne;0,50;hard work
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;0,50;hard work;false
             """);
     }
 
@@ -111,16 +111,16 @@ class ReportCsvServiceTest {
         // day one
         final ZonedDateTime d1_1_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime d1_1_To = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 11, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry d1_1_ReportDayEntry = new ReportDayEntry(batman, "hard work", d1_1_From, d1_1_To);
+        final ReportDayEntry d1_1_ReportDayEntry = new ReportDayEntry(batman, "hard work", d1_1_From, d1_1_To, false);
         final ZonedDateTime d1_2_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 14, 0), ZONE_ID_BERLIN);
         final ZonedDateTime d1_2_To = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 15, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry d1_2_ReportDayEntry = new ReportDayEntry(batman, "hard work", d1_2_From, d1_2_To);
+        final ReportDayEntry d1_2_ReportDayEntry = new ReportDayEntry(batman, "hard work", d1_2_From, d1_2_To, false);
         final ReportDay reportDayOne = new ReportDay(LocalDate.of(2021, 1, 4), List.of(d1_1_ReportDayEntry, d1_2_ReportDayEntry));
 
         // day two
         final ZonedDateTime d2_1_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 9, 0), ZONE_ID_BERLIN);
         final ZonedDateTime d2_1_To = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 17, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry d2_1_ReportDayEntry = new ReportDayEntry(batman, "hard work", d2_1_From, d2_1_To);
+        final ReportDayEntry d2_1_ReportDayEntry = new ReportDayEntry(batman, "hard work", d2_1_From, d2_1_To, false);
         final ReportDay reportDayTwo = new ReportDay(LocalDate.of(2021, 1, 5), List.of(d2_1_ReportDayEntry));
 
 
@@ -133,10 +133,10 @@ class ReportCsvServiceTest {
         sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, new UserId("batman"), printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment
-            04.01.2021;Bruce;Wayne;1,00;hard work
-            04.01.2021;Bruce;Wayne;1,00;hard work
-            05.01.2021;Bruce;Wayne;8,00;hard work
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;1,00;hard work;false
+            04.01.2021;Bruce;Wayne;1,00;hard work;false
+            05.01.2021;Bruce;Wayne;8,00;hard work;false
             """);
     }
 
@@ -156,7 +156,7 @@ class ReportCsvServiceTest {
         sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, new UserId("batman"), printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
             """);
     }
 
@@ -169,7 +169,7 @@ class ReportCsvServiceTest {
 
         final ZonedDateTime from = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime to = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 30), ZONE_ID_BERLIN);
-        final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to);
+        final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, false);
         final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), List.of(reportDayEntry));
 
         final ReportWeek firstWeek = new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDay));
@@ -187,8 +187,8 @@ class ReportCsvServiceTest {
         sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, new UserId("batman"), printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment
-            04.01.2021;Bruce;Wayne;0,50;hard work
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;0,50;hard work;false
             """);
     }
 
@@ -202,16 +202,16 @@ class ReportCsvServiceTest {
         // week one, day one
         final ZonedDateTime d1_1_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime d1_1_To = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 11, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry d1_1_ReportDayEntry = new ReportDayEntry(batman, "hard work", d1_1_From, d1_1_To);
+        final ReportDayEntry d1_1_ReportDayEntry = new ReportDayEntry(batman, "hard work", d1_1_From, d1_1_To, false);
         final ZonedDateTime d1_2_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 14, 0), ZONE_ID_BERLIN);
         final ZonedDateTime d1_2_To = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 15, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry d1_2_ReportDayEntry = new ReportDayEntry(batman, "hard work", d1_2_From, d1_2_To);
+        final ReportDayEntry d1_2_ReportDayEntry = new ReportDayEntry(batman, "hard work", d1_2_From, d1_2_To, false);
         final ReportDay w1_reportDay = new ReportDay(LocalDate.of(2021, 1, 4), List.of(d1_1_ReportDayEntry, d1_2_ReportDayEntry));
 
         // week two, day one
         final ZonedDateTime d2_1_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 9, 0), ZONE_ID_BERLIN);
         final ZonedDateTime d2_1_To = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 17, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry d2_1_ReportDayEntry = new ReportDayEntry(batman, "hard work", d2_1_From, d2_1_To);
+        final ReportDayEntry d2_1_ReportDayEntry = new ReportDayEntry(batman, "hard work", d2_1_From, d2_1_To, false);
         final ReportDay w2_reportDay = new ReportDay(LocalDate.of(2021, 1, 5), List.of(d2_1_ReportDayEntry));
 
         final ReportWeek firstWeek = new ReportWeek(LocalDate.of(2020, 12, 28), List.of(w1_reportDay));
@@ -229,10 +229,10 @@ class ReportCsvServiceTest {
         sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, new UserId("batman"), printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment
-            04.01.2021;Bruce;Wayne;1,00;hard work
-            04.01.2021;Bruce;Wayne;1,00;hard work
-            05.01.2021;Bruce;Wayne;8,00;hard work
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;1,00;hard work;false
+            04.01.2021;Bruce;Wayne;1,00;hard work;false
+            05.01.2021;Bruce;Wayne;8,00;hard work;false
             """);
     }
 

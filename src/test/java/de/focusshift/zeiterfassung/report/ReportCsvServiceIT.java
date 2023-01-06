@@ -21,7 +21,7 @@ class ReportCsvServiceIT extends TestContainersBase {
     private ReportCsvService sut;
 
     @ParameterizedTest
-    @CsvSource({"de,Datum;Vorname;Nachname;erfasste Stunden;Kommentar", "en,Date;Given name;Family name;Worked hours;Comment"})
+    @CsvSource({"de,Datum;Vorname;Nachname;erfasste Stunden;Kommentar;Pause", "en,Date;Given name;Family name;Worked hours;Comment;Break"})
     void ensureI18nHeader(String languageTag, String expectedHeader) {
         final PrintWriter printWriter = mock(PrintWriter.class);
 
