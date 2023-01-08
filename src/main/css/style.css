@@ -9,6 +9,10 @@
     background-attachment: fixed;
   }
 
+  input:not([class*="rounded"]) {
+    @apply rounded;
+  }
+
   @font-face {
     font-family: "KaushanScript";
     src: local("KaushanScript"), local("KaushanScript Regular"),
