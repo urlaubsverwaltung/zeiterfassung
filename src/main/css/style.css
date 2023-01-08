@@ -9,7 +9,8 @@
     background-attachment: fixed;
   }
 
-  input:not([class*="rounded"]) {
+  input:not([class*="rounded"]),
+  textarea:not([class*="rounded"]) {
     @apply rounded;
   }
 
@@ -525,6 +526,43 @@
     position: fixed;
     top: 0;
     left: 0;
+  }
+}
+
+@layer components {
+  .details-dropdown {
+    position: relative;
+  }
+
+  .details-dropdown_summary {
+    @apply cursor-pointer;
+    @apply block;
+    @apply text-sm;
+    @apply w-full;
+  }
+
+  .details-dropdown:not(.details-dropdown--no-border)
+    .details-dropdown_summary {
+    @apply px-3;
+    @apply py-2;
+    @apply border;
+    @apply border-neutral-300;
+    @apply rounded-md;
+  }
+
+  .details-dropdown_content {
+    z-index: 1;
+    position: absolute;
+    left: 0;
+    right: 0;
+    @apply -bottom-1;
+    @apply translate-y-full;
+    @apply bg-white;
+    @apply shadow-lg;
+    @apply border;
+    @apply px-4;
+    @apply py-3;
+    @apply rounded;
   }
 }
 

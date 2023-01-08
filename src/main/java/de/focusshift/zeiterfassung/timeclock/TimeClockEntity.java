@@ -45,19 +45,25 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
     @Column(name = "stopped_at_zone_id")
     private String stoppedAtZoneId;
 
+    private String comment;
+
     protected TimeClockEntity() {
         super(null);
     }
 
     protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId) {
-        this(null, id, owner, startedAt, startedAtZoneId, null, null);
+        this(null, id, owner, startedAt, startedAtZoneId, null, null, "");
     }
 
     protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId) {
-        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId);
+        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, "");
     }
 
-    protected TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId) {
+    protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId, String comment) {
+        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, comment);
+    }
+
+    protected TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId, String comment) {
         super(tenantId);
         this.id = id;
         this.owner = owner;
@@ -65,6 +71,7 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
         this.startedAtZoneId = startedAtZoneId.toString();
         this.stoppedAt = stoppedAt;
         this.stoppedAtZoneId = stoppedAtZoneId == null ? null : stoppedAtZoneId.toString();
+        this.comment = comment;
     }
 
     public Long getId() {
@@ -89,6 +96,10 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
 
     public String getStoppedAtZoneId() {
         return stoppedAtZoneId;
+    }
+
+    public String getComment() {
+        return comment;
     }
 
     @Override
