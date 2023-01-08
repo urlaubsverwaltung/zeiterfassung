@@ -182,6 +182,7 @@
                   aria-expanded="false"
                   aria-haspopup="true"
                   is="z-nav-popup-menu-button"
+                  class="flex flex-row items-center"
                 >
                   <span class="inline-flex text-blue-200">
                     <img
@@ -189,6 +190,9 @@
                       alt=""
                     />
                   </span>
+                  <svg
+                    th:replace="icons/chevron-down::svg(className='w-4 h-4')"
+                  ></svg>
                 </a>
                 <div id="avatar-menu" class="nav-popup-menu">
                   <div class="nav-popup-menu-inner">
