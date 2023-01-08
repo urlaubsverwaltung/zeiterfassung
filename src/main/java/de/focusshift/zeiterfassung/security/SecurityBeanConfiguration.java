@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.security;
 
-import de.focusshift.zeiterfassung.registration.oidc.SecurityConfigurationProperties;
 import de.focusshift.zeiterfassung.security.oidc.claimmapper.ClaimBasedOAuth2UserService;
 import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMapper;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -56,5 +55,4 @@ class SecurityBeanConfiguration {
     AuthenticationSuccessHandler authenticationSuccessHandler() {
         return new SavedRequestAwareAuthenticationSuccessHandler();
     }
-
 }

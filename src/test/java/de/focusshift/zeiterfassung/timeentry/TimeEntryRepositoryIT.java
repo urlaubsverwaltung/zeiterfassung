@@ -1,10 +1,10 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.TestContainersBase;
-import de.focusshift.zeiterfassung.tenant.TenantService;
-import de.focusshift.zeiterfassung.tenantuser.EMailAddress;
-import de.focusshift.zeiterfassung.tenantuser.TenantUser;
-import de.focusshift.zeiterfassung.tenantuser.TenantUserService;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantService;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,7 +28,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-@SpringBootTest(properties = "zeiterfassung.tenant.registration.enabled=false")
+@SpringBootTest
 @Rollback(value = false)
 class TimeEntryRepositoryIT extends TestContainersBase {
 

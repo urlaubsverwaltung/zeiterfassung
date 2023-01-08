@@ -91,7 +91,6 @@ spring.security.oauth2.client.registration.default.scope=openid,profile,email,ro
 spring.security.oauth2.client.registration.default.authorization-grant-type=authorization_code
 spring.security.oauth2.client.registration.default.redirect-uri=$OIDC_REDIRECT_URI
 spring.security.oauth2.client.provider.default.issuer-uri=$OIDC_ISSUER_URI
-zeiterfassung.security.oidc.server-url=$OIDC_SERVER_URL
 zeiterfassung.security.oidc.login-form-url=$OIDC_LOGIN_FORM_URL
 ```
 

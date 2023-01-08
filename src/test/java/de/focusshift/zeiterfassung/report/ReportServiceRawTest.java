@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
-import de.focusshift.zeiterfassung.tenantuser.EMailAddress;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserDateService;

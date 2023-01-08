@@ -19,7 +19,7 @@ public interface UserDateService {
      * Adjust the given date into the user's firstDayOfWeek.
      * This method should not be used while iterating over dates. Use {@link #localDateToFirstDateOfWeekAdjuster} instead.
      *
-     * @param localDate  date to adjust
+     * @param localDate date to adjust
      * @return the adjusted {@link LocalDate} which matches the user's desired firstDayOfWeek
      */
     LocalDate localDateToFirstDateOfWeek(LocalDate localDate);
@@ -28,10 +28,9 @@ public interface UserDateService {
      * Adjust the given date into the user's firstDayOfWeek.
      * This method should not be used while iterating over dates. Use {@link #localDateToFirstDateOfWeekAdjuster} instead.
      *
-     * @param year  the year to represent, not null
-     * @param weekOfYear  the week-of-week-based-year to represent, from 1 to 53
+     * @param year       the year to represent, not null
+     * @param weekOfYear the week-of-week-based-year to represent, from 1 to 53
      * @return the adjusted {@link LocalDate} which matches the user's desired firstDayOfWeek
-     *
      * @throws DateTimeException if the weekOfYear value is invalid
      */
     LocalDate firstDayOfWeek(Year year, int weekOfYear);

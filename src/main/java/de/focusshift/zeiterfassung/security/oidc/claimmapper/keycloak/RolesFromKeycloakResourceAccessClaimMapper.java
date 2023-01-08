@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 
-import static de.focusshift.zeiterfassung.registration.oidc.SecurityConfigurationProperties.KEYCLOAK;
+import static de.focusshift.zeiterfassung.security.SecurityConfigurationProperties.KEYCLOAK;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 

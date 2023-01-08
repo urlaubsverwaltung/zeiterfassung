@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
-import de.focusshift.zeiterfassung.tenantuser.TenantUser;
-import de.focusshift.zeiterfassung.tenantuser.TenantUserService;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.springframework.stereotype.Service;
 
