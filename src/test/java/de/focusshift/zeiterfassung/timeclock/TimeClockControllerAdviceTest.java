@@ -54,13 +54,24 @@ class TimeClockControllerAdviceTest {
         when(principal.getUserInfo()).thenReturn(oidcUserInfo);
 
         final ZonedDateTime startedAt = dateTimePivot.minusHours(hours).minusMinutes(minutes).minusSeconds(seconds);
-        final TimeClock timeClock = new TimeClock(1L, new UserId("batman"), startedAt, null);
+        final TimeClock timeClock = new TimeClock(1L, new UserId("batman"), startedAt, "awesome comment", null);
         when(timeClockService.getCurrentTimeClock(new UserId("batman"))).thenReturn(Optional.of(timeClock));
 
         sut.addAttributes(model, principal);
 
-        final ZonedDateTime expectedStartedAt = dateTimePivot.minusHours(hours).minusMinutes(minutes).minusSeconds(seconds);
-        assertThat(model.getAttribute("timeClock")).isEqualTo(new TimeClockDto(expectedStartedAt.toInstant(), elapsedTimeString));
+
+        assertThat(model.getAttribute("timeClock")).satisfies(object -> {
+            assertThat(object).isInstanceOf(TimeClockDto.class);
+
+            final TimeClockDto timeClockDto = (TimeClockDto) object;
+
+            final ZonedDateTime expectedStartedAt = dateTimePivot.minusHours(hours).minusMinutes(minutes).minusSeconds(seconds);
+            assertThat(timeClockDto.getStartedAt()).isEqualTo(expectedStartedAt.toInstant());
+
+            assertThat(timeClockDto.getZoneId()).isEqualTo(timeClock.startedAt().getZone());
+            assertThat(timeClockDto.getComment()).isEqualTo("awesome comment");
+            assertThat(timeClockDto.getDuration()).isEqualTo(elapsedTimeString);
+        });
     }
 
     private TimeClockControllerAdvice createSut() {

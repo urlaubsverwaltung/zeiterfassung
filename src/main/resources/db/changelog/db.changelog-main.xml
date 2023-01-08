@@ -10,5 +10,6 @@
     <include relativeToChangelogFile="true" file="changelog-0.11.1-add-tenant-user.xml"/>
     <include relativeToChangelogFile="true" file="changelog-1.1.0-change-type-tenant-id.xml"/>
     <include relativeToChangelogFile="true" file="changelog-1.1.0-add-timeentry-is-break.xml"/>
+    <include relativeToChangelogFile="true" file="changelog-1.1.0-add-timeclock-edit.xml"/>
 
 </databaseChangeLog>

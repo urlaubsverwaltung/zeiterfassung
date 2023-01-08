@@ -9,10 +9,16 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @ControllerAdvice(basePackages = {"de.focusshift.zeiterfassung.feedback", "de.focusshift.zeiterfassung.report", "de.focusshift.zeiterfassung.timeclock", "de.focusshift.zeiterfassung.timeentry"})
 class TimeClockControllerAdvice {
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final TimeClockService timeClockService;
 
@@ -39,7 +45,18 @@ class TimeClockControllerAdvice {
         final int seconds = duration.toSecondsPart();
         final String durationString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
 
-        return new TimeClockDto(startedAt, durationString);
+        final ZoneId zoneId = timeClock.startedAt().getZone();
+
+        final TimeClockDto timeClockDto = new TimeClockDto();
+        timeClockDto.setStartedAt(startedAt);
+
+        timeClockDto.setDate(ZonedDateTime.ofInstant(startedAt, zoneId).format(DATE_FORMATTER));
+        timeClockDto.setTime(ZonedDateTime.ofInstant(startedAt, zoneId).format(TIME_FORMATTER));
+        timeClockDto.setZoneId(timeClock.startedAt().getZone());
+        timeClockDto.setComment(timeClock.comment());
+        timeClockDto.setDuration(durationString);
+
+        return timeClockDto;
     }
 
     private static UserId userId(DefaultOidcUser oidcUser) {
