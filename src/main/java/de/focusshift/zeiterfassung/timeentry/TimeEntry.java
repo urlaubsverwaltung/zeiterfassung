@@ -10,10 +10,11 @@ public record TimeEntry(
     UserId userId,
     String comment,
     ZonedDateTime start,
-    ZonedDateTime end
+    ZonedDateTime end,
+    boolean isBreak
 ) {
 
     public WorkDuration workDuration() {
-        return new WorkDuration(Duration.between(start, end));
+        return new WorkDuration(isBreak ? Duration.ZERO : Duration.between(start, end));
     }
 }
