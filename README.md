@@ -246,7 +246,7 @@ Go to the GitHub action with the name [release trigger][github-action-release-tr
 
 ## 3rd party resources
 
-* Icons: https://heroicons.dev
+* Icons: https://lucide.dev/ (Github: https://github.com/lucide-icons/lucide)
 * Sloth image: https://pixabay.com/de/illustrations/faultiere-säugetiere-pelzig-5599313/
 
 [github-action-release-trigger]: https://github.com/urlaubsverwaltung/zeiterfassung/actions/workflows/release-trigger.yml "Release Trigger"
