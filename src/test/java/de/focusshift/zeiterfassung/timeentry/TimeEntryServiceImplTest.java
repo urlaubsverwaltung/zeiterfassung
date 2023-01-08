@@ -9,9 +9,11 @@ import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,6 +25,9 @@ import java.util.List;
 
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,9 +46,44 @@ class TimeEntryServiceImplTest {
     @Mock
     private UserManagementService userManagementService;
 
+    private final Clock clock = Clock.systemUTC();
+
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, clock);
+    }
+
+    @Test
+    void ensureSaveTimeEntry() {
+
+        final Instant now = Instant.now();
+        final Clock fixedClock = Clock.fixed(now, UTC);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
+
+        final LocalDateTime entryStart = LocalDateTime.of(2023, 1, 1, 10, 0,0);
+        final LocalDateTime entryEnd = LocalDateTime.of(2023, 1, 1, 12, 0,0);
+
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
+
+        final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hard work", ZonedDateTime.of(entryStart, ZONE_ID_UTC), ZonedDateTime.of(entryEnd, ZONE_ID_UTC), false);
+
+        final TimeEntry actual = sut.saveTimeEntry(timeEntry);
+
+        assertThat(actual).isEqualTo(new TimeEntry(1L, new UserId("batman"), "hard work", ZonedDateTime.of(entryStart, ZONE_ID_UTC), ZonedDateTime.of(entryEnd, ZONE_ID_UTC), false));
+
+        final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
+        verify(timeEntryRepository).save(captor.capture());
+
+        assertThat(captor.getValue()).satisfies(entity -> {
+            assertThat(entity.getOwner()).isEqualTo("batman");
+            assertThat(entity.getComment()).isEqualTo("hard work");
+            assertThat(entity.getStart()).isEqualTo(entryStart.toInstant(UTC));
+            assertThat(entity.getStartZoneId()).isEqualTo(ZONE_ID_UTC.getId());
+            assertThat(entity.getEnd()).isEqualTo(entryEnd.toInstant(UTC));
+            assertThat(entity.getEndZoneId()).isEqualTo(ZONE_ID_UTC.getId());
+            assertThat(entity.getUpdatedAt()).isEqualTo(now);
+            assertThat(entity.isBreak()).isFalse();
+        });
     }
 
     @Test
