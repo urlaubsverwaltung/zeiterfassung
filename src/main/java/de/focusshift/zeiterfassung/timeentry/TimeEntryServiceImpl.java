@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Year;
@@ -30,12 +31,16 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private final TimeEntryRepository timeEntryRepository;
     private final UserManagementService userManagementService;
     private final UserDateService userDateService;
+    private final Clock clock;
 
     @Autowired
-    TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, UserManagementService userManagementService, UserDateService userDateService) {
+    TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, UserManagementService userManagementService,
+                         UserDateService userDateService, Clock clock) {
+
         this.timeEntryRepository = timeEntryRepository;
         this.userManagementService = userManagementService;
         this.userDateService = userDateService;
+        this.clock = clock;
     }
 
     @Override
@@ -107,7 +112,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     public TimeEntry saveTimeEntry(TimeEntry timeEntry) {
-        final TimeEntryEntity savedEntity = timeEntryRepository.save(toEntity(timeEntry, Instant.now()));
+        final TimeEntryEntity savedEntity = timeEntryRepository.save(toEntity(timeEntry, Instant.now(clock)));
         return toTimeEntry(savedEntity);
     }
 
