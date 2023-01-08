@@ -375,29 +375,25 @@
                       <span
                         class="flex items-center gap-2 px-1 mt-0.5 sm:mt-7.5 sm:mb-0.5"
                       >
-                        <input
-                          type="checkbox"
-                          id="input-entry-is-break"
-                          th:id="|${rnd}-input-entry-is-break|"
-                          name="break"
-                          th:checked="${timeEntry.isBreak}"
-                          class="peer border border-gray-200"
-                        />
-                        <svg
-                          th:replace="icons/briefcase::svg(className='block peer-checked:hidden time-entry-type-icon--work w-4 h-4')"
-                        />
-                        <svg
-                          th:replace="icons/utensils::svg(className='hidden peer-checked:block time-entry-type-icon--break w-4 h-4')"
-                        />
+                        <span class="checkbox-switch">
+                          <input
+                            type="checkbox"
+                            id="input-entry-is-break"
+                            th:id="|${rnd}-input-entry-is-break|"
+                            name="break"
+                            th:checked="${timeEntry.isBreak}"
+                            class="peer border border-gray-200"
+                          />
+                          <label
+                            for="input-entry-is-break"
+                            th:for="|${rnd}-input-entry-is-break|"
+                            class="sm:absolute left-1 top-2 transition-all text-sm text-timeslot-form-label cursor-pointer"
+                            th:text="#{time-entry.form.is-break.label}"
+                          >
+                            Pause
+                          </label>
+                        </span>
                       </span>
-                      <label
-                        for="input-entry-is-break"
-                        th:for="|${rnd}-input-entry-is-break|"
-                        class="sm:absolute left-1 top-2 transition-all text-sm text-timeslot-form-label cursor-pointer"
-                        th:text="#{time-entry.form.is-break.label}"
-                      >
-                        Pause
-                      </label>
                     </div>
                   </div>
                 </div>
