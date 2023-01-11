@@ -26,15 +26,10 @@
               </button>
             </form>
           </div>
-          <div
-            class="mt-4"
-            th:if="${timeClockUpdate != null}"
-            th:object="${timeClockUpdate}"
-          >
-            <form
-              action="#"
-              th:replace="/timeclock/timeclock-edit-form::form(${timeClockUpdate})"
-            ></form>
+          <div class="mt-4" th:if="${timeClockUpdate != null}">
+            <div
+              th:replace="/timeclock/timeclock-edit-form::time-clock-update"
+            ></div>
           </div>
         </div>
       </main>

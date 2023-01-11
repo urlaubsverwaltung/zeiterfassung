@@ -98,12 +98,9 @@
                     ></svg>
                   </summary>
                   <div class="details-dropdown_content left-auto right-0">
-                    <th:block th:object="${timeClock}">
-                      <form
-                        action="#"
-                        th:replace="/timeclock/timeclock-edit-form::form(${timeClock})"
-                      ></form>
-                    </th:block>
+                    <div
+                      th:replace="/timeclock/timeclock-edit-form::navigation-box"
+                    ></div>
                   </div>
                 </details>
                 <form action="#" th:action="@{/timeclock/stop}" method="post">
