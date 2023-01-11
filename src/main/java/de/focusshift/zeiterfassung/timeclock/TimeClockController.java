@@ -6,10 +6,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -55,10 +57,15 @@ class TimeClockController {
 
     @PostMapping
     public String editTimeClock(@Valid @ModelAttribute("timeClockUpdate") TimeClockDto timeClockUpdateDto, BindingResult errors,
-                                @AuthenticationPrincipal DefaultOidcUser principal, HttpServletRequest request) {
+                                @AuthenticationPrincipal DefaultOidcUser principal, HttpServletRequest request,
+                                @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
 
         if (errors.hasErrors()) {
-            return "timeclock/timeclock-edit";
+            if (StringUtils.hasText(turboFrame)) {
+                return "timeclock/timeclock-edit-form::navigation-box-update";
+            } else {
+                return "timeclock/timeclock-edit";
+            }
         }
 
         final UserId userId = principalToUserId(principal);
