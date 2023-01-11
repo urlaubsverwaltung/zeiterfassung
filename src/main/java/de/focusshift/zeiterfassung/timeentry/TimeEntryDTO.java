@@ -46,17 +46,20 @@ public class TimeEntryDTO {
 
     private String comment;
 
+    private boolean isBreak;
+
     public TimeEntryDTO() {
         date = LocalDate.now();
     }
 
-    private TimeEntryDTO(Long id, LocalDate date, LocalTime start, LocalTime end, String duration, String comment) {
+    private TimeEntryDTO(Long id, LocalDate date, LocalTime start, LocalTime end, String duration, String comment, boolean isBreak) {
         this.id = id;
         this.date = date;
         this.start = start;
         this.end = end;
         this.duration = duration;
         this.comment = comment;
+        this.isBreak = isBreak;
     }
 
     public Long getId() {
@@ -112,6 +115,14 @@ public class TimeEntryDTO {
         this.comment = comment;
     }
 
+    public void setBreak(boolean isBreak) {
+        this.isBreak = isBreak;
+    }
+
+    public boolean isBreak() {
+        return isBreak;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -121,7 +132,12 @@ public class TimeEntryDTO {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TimeEntryDTO that = (TimeEntryDTO) o;
-        return Objects.equals(date, that.date) && Objects.equals(start, that.start) && Objects.equals(end, that.end) && Objects.equals(duration, that.duration) && Objects.equals(comment, that.comment);
+        return Objects.equals(date, that.date)
+            && Objects.equals(start, that.start)
+            && Objects.equals(end, that.end)
+            && Objects.equals(duration, that.duration)
+            && Objects.equals(comment, that.comment)
+            && Objects.equals(isBreak, that.isBreak);
     }
 
     @Override
@@ -138,6 +154,7 @@ public class TimeEntryDTO {
             ", end=" + end +
             ", duration='" + duration + '\'' +
             ", comment='" + comment + '\'' +
+            ", isBreak='" + isBreak + '\'' +
             '}';
     }
 
@@ -148,6 +165,7 @@ public class TimeEntryDTO {
         private LocalTime end;
         private String duration;
         private String comment;
+        private boolean isBreak;
 
         private Builder() {
         }
@@ -182,8 +200,13 @@ public class TimeEntryDTO {
             return this;
         }
 
+        public Builder isBreak(boolean isBreak) {
+            this.isBreak = isBreak;
+            return this;
+        }
+
         public TimeEntryDTO build() {
-            return new TimeEntryDTO(id, date, start, end, duration, comment);
+            return new TimeEntryDTO(id, date, start, end, duration, comment, isBreak);
         }
     }
 }

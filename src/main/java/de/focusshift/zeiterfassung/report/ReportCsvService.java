@@ -75,8 +75,9 @@ class ReportCsvService {
         final String familyName = messageSource.getMessage("report.csv.header.person.familyName", new Object[]{}, locale);
         final String workedHours = messageSource.getMessage("report.csv.header.workedHours", new Object[]{}, locale);
         final String comment = messageSource.getMessage("report.csv.header.comment", new Object[]{}, locale);
+        final String isBreak = messageSource.getMessage("report.csv.header.break", new Object[]{}, locale);
 
-        writer.println(String.format("%s;%s;%s;%s;%s", date, givenName, familyName, workedHours, comment));
+        writer.println(String.format("%s;%s;%s;%s;%s;%s", date, givenName, familyName, workedHours, comment, isBreak));
     }
 
     private void writeWeek(ReportWeek reportWeek, Locale locale, PrintWriter writer) {
@@ -99,7 +100,8 @@ class ReportCsvService {
         final String familyName = reportDayEntry.user().familyName();
         final String hoursWorked = numberFormat.format(reportDayEntry.workDuration().minutes().hoursDoubleValue());
         final String comment = reportDayEntry.comment();
+        final boolean isBreak = reportDayEntry.isBreak();
 
-        return String.format("%s;%s;%s;%s;%s", date, givenName, familyName, hoursWorked, comment);
+        return String.format("%s;%s;%s;%s;%s;%s", date, givenName, familyName, hoursWorked, comment, isBreak);
     }
 }

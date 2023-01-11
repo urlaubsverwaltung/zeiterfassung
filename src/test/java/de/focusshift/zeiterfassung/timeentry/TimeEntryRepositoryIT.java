@@ -289,7 +289,7 @@ class TimeEntryRepositoryIT extends TestContainersBase {
     }
 
     private static TimeEntryEntity createTimeEntryEntity(String owner, String comment, LocalDateTime start, LocalDateTime end) {
-        return new TimeEntryEntity(null, owner, comment, start.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), end.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), Instant.now());
+        return new TimeEntryEntity(null, owner, comment, start.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), end.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), Instant.now(), false);
     }
 
     private static void prepareSecurityContextWithTenantId(final String tenantId) {

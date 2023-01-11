@@ -45,19 +45,27 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
     @Column(name = "stopped_at_zone_id")
     private String stoppedAtZoneId;
 
+    private String comment;
+
+    private boolean isBreak;
+
     protected TimeClockEntity() {
         super(null);
     }
 
     protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId) {
-        this(null, id, owner, startedAt, startedAtZoneId, null, null);
+        this(null, id, owner, startedAt, startedAtZoneId, null, null, "", false);
     }
 
     protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId) {
-        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId);
+        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, "", false);
     }
 
-    protected TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId) {
+    protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId, String comment, boolean isBreak) {
+        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, comment, isBreak);
+    }
+
+    protected TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId, String comment, boolean isBreak) {
         super(tenantId);
         this.id = id;
         this.owner = owner;
@@ -65,6 +73,8 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
         this.startedAtZoneId = startedAtZoneId.toString();
         this.stoppedAt = stoppedAt;
         this.stoppedAtZoneId = stoppedAtZoneId == null ? null : stoppedAtZoneId.toString();
+        this.comment = comment;
+        this.isBreak = isBreak;
     }
 
     public Long getId() {
@@ -89,6 +99,14 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
 
     public String getStoppedAtZoneId() {
         return stoppedAtZoneId;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public boolean isBreak() {
+        return isBreak;
     }
 
     @Override

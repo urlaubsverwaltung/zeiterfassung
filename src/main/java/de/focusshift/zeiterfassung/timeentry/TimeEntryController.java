@@ -258,6 +258,7 @@ public class TimeEntryController {
             .end(endTime)
             .duration(durationString)
             .comment(timeEntry.comment())
+            .isBreak(timeEntry.isBreak())
             .build();
     }
 
@@ -311,7 +312,7 @@ public class TimeEntryController {
             LOG.info("end was `null` while converting TimeEntryDTO. seems fishy <°))))><");
         }
 
-        return new TimeEntry(timeEntryDTO.getId(), userId, timeEntryDTO.getComment(), start, end);
+        return new TimeEntry(timeEntryDTO.getId(), userId, timeEntryDTO.getComment(), start, end, timeEntryDTO.isBreak());
     }
 
     private static Duration toDuration(String timeEntryDTODurationString) {
