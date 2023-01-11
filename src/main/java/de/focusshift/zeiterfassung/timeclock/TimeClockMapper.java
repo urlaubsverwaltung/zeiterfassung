@@ -31,6 +31,7 @@ final class TimeClockMapper {
         timeClockDto.setTime(LocalTime.ofInstant(startedAt, zoneId));
         timeClockDto.setZoneId(timeClock.startedAt().getZone());
         timeClockDto.setComment(timeClock.comment());
+        timeClockDto.setBreak(timeClock.isBreak());
         timeClockDto.setDuration(durationString);
 
         return timeClockDto;

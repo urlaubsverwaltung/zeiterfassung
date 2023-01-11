@@ -48,15 +48,17 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
 
     private String comment;
 
+    private boolean isBreak;
+
     protected TimeClockEntity() {
         super(null);
     }
 
-    private TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId, String comment) {
-        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, comment);
+    private TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId, String comment, boolean isBreak) {
+        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, comment, isBreak);
     }
 
-    private TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId, String comment) {
+    private TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId, String comment, boolean isBreak) {
         super(tenantId);
         this.id = id;
         this.owner = owner;
@@ -65,6 +67,7 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
         this.stoppedAt = stoppedAt;
         this.stoppedAtZoneId = stoppedAtZoneId == null ? null : stoppedAtZoneId.toString();
         this.comment = comment;
+        this.isBreak = isBreak;
     }
 
     public Long getId() {
@@ -95,6 +98,10 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
         return comment;
     }
 
+    public boolean isBreak() {
+        return isBreak;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -120,7 +127,8 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
             .startedAtZoneId(ZoneId.of(timeClockEntity.getStartedAtZoneId()))
             .stoppedAt(timeClockEntity.getStoppedAt())
             .stoppedAtZoneId(Optional.ofNullable(timeClockEntity.getStoppedAtZoneId()).map(ZoneId::of).orElse(null))
-            .comment(timeClockEntity.getComment());
+            .comment(timeClockEntity.getComment())
+            .isBreak(timeClockEntity.isBreak());
     }
 
     public static class Builder {
@@ -132,6 +140,7 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
         private Instant stoppedAt;
         private ZoneId stoppedAtZoneId;
         private String comment;
+        private boolean isBreak;
 
         public Builder id(Long id) {
             this.id = id;
@@ -168,8 +177,13 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
             return this;
         }
 
+        public Builder isBreak(boolean isBreak) {
+            this.isBreak = isBreak;
+            return this;
+        }
+
         public TimeClockEntity build() {
-            return new TimeClockEntity(id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, comment);
+            return new TimeClockEntity(id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, comment, isBreak);
         }
     }
 }
