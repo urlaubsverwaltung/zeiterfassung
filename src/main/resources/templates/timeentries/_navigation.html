@@ -98,76 +98,12 @@
                     ></svg>
                   </summary>
                   <div class="details-dropdown_content left-auto right-0">
-                    <form
-                      action="#"
-                      th:action="@{/timeclock}"
-                      method="post"
-                      class="flex flex-col gap-4"
-                      th:object="${timeClock}"
-                    >
-                      <input type="hidden" th:field="*{zoneId}" />
-                      <div class="flex flex-col gap-4">
-                        <div class="flex gap-2">
-                          <div class="flex flex-col gap-0.5">
-                            <label
-                              for="input-clock-start-date"
-                              class="text-xs text-gray-500 font-bold"
-                              th:text="#{timeclock.edit.startAt.date.label}"
-                            >
-                              Datum
-                            </label>
-                            <input
-                              type="date"
-                              id="input-clock-start-date"
-                              class="border border-gray-300 px-2 py-1 text-sm tabular-nums"
-                              name="date"
-                              th:value="${timeClock.date}"
-                            />
-                          </div>
-                          <div class="flex flex-col gap-0.5">
-                            <label
-                              for="input-clock-start-time"
-                              class="text-xs text-gray-500 font-bold"
-                              th:text="#{timeclock.edit.startAt.time.label}"
-                            >
-                              Uhrzeit
-                            </label>
-                            <input
-                              type="time"
-                              id="input-clock-start-time"
-                              class="border border-gray-300 px-2 py-1 text-sm tabular-nums"
-                              name="time"
-                              th:value="${timeClock.time}"
-                            />
-                          </div>
-                        </div>
-                        <div class="flex flex-col gap-0.5">
-                          <label
-                            for="input-clock-comment"
-                            class="text-xs text-gray-500 font-bold"
-                            th:text="#{timeclock.edit.comment.label}"
-                          >
-                            Kommentar
-                          </label>
-                          <textarea
-                            rows="4"
-                            id="input-clock-comment"
-                            class="border border-gray-300 p-2 text-sm"
-                            name="comment"
-                            th:text="${timeClock.comment}"
-                          ></textarea>
-                        </div>
-                      </div>
-                      <div class="">
-                        <button
-                          type="submit"
-                          class="w-full text-center bg-blue-600 text-blue-50 rounded px-4 py-2 whitespace-nowrap border border-blue-600"
-                          th:text="#{timeclock.edit.submit}"
-                        >
-                          Aktualisieren
-                        </button>
-                      </div>
-                    </form>
+                    <th:block th:object="${timeClock}">
+                      <form
+                        action="#"
+                        th:replace="/timeclock/timeclock-edit-form::form(${timeClock})"
+                      ></form>
+                    </th:block>
                   </div>
                 </details>
                 <form action="#" th:action="@{/timeclock/stop}" method="post">

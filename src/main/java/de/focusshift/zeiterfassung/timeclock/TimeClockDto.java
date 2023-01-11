@@ -1,12 +1,17 @@
 package de.focusshift.zeiterfassung.timeclock;
 
+import org.springframework.validation.annotation.Validated;
+
+import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.time.ZoneId;
 
+@Validated
 class TimeClockDto {
 
     private Instant startedAt;
     private ZoneId zoneId;
+    @Size(max = 255)
     private String comment;
     private String duration;
 

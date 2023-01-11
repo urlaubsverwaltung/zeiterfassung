@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <form
+      th:fragment="form(timeClock)"
+      action="#"
+      th:action="@{/timeclock}"
+      method="post"
+      class="flex flex-col gap-4"
+    >
+      <input
+        type="hidden"
+        name="zoneId"
+        value=""
+        th:value="${timeClock.zoneId}"
+      />
+      <div class="flex flex-col gap-4">
+        <div class="flex gap-2">
+          <div class="flex flex-col gap-0.5">
+            <label
+              for="input-clock-start-date"
+              class="text-xs text-gray-500 font-bold"
+              th:text="#{timeclock.edit.startAt.date.label}"
+            >
+              Datum
+            </label>
+            <input
+              type="date"
+              id="input-clock-start-date"
+              class="border border-gray-300 px-2 py-1 text-sm tabular-nums"
+              name="date"
+              th:value="${timeClock.date}"
+            />
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <label
+              for="input-clock-start-time"
+              class="text-xs text-gray-500 font-bold"
+              th:text="#{timeclock.edit.startAt.time.label}"
+            >
+              Uhrzeit
+            </label>
+            <input
+              type="time"
+              id="input-clock-start-time"
+              class="border border-gray-300 px-2 py-1 text-sm tabular-nums"
+              name="time"
+              th:value="${timeClock.time}"
+            />
+          </div>
+        </div>
+        <div
+          class="flex flex-col gap-0.5"
+          th:with="hasCommentError=${#fields.hasErrors('comment')}"
+        >
+          <label
+            for="input-clock-comment"
+            class="text-xs text-gray-500 font-bold"
+            th:classappend="${hasCommentError ? 'text-red-600' : ''}"
+            th:text="#{timeclock.edit.comment.label}"
+          >
+            Kommentar
+          </label>
+          <textarea
+            rows="4"
+            id="input-clock-comment"
+            class="border border-gray-300 p-2 text-sm"
+            name="comment"
+            th:classappend="${hasCommentError ? 'border-red-300' : ''}"
+            th:text="${timeClock.comment}"
+          ></textarea>
+          <p
+            th:if="${hasCommentError}"
+            th:text="#{timeclock.edit.comment.error}"
+            class="text-sm text-red-600"
+          ></p>
+        </div>
+      </div>
+      <div class="">
+        <button
+          type="submit"
+          class="w-full text-center bg-blue-600 text-blue-50 rounded px-4 py-2 whitespace-nowrap border border-blue-600"
+          th:text="#{timeclock.edit.submit}"
+        >
+          Aktualisieren
+        </button>
+      </div>
+    </form>
+  </body>
+</html>
