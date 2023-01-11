@@ -112,8 +112,10 @@
                             <label
                               for="input-clock-start-date"
                               class="text-xs text-gray-500 font-bold"
-                              >Datum</label
+                              th:text="#{timeclock.edit.startAt.date.label}"
                             >
+                              Datum
+                            </label>
                             <input
                               type="date"
                               id="input-clock-start-date"
@@ -126,8 +128,10 @@
                             <label
                               for="input-clock-start-time"
                               class="text-xs text-gray-500 font-bold"
-                              >Uhrzeit</label
+                              th:text="#{timeclock.edit.startAt.time.label}"
                             >
+                              Uhrzeit
+                            </label>
                             <input
                               type="time"
                               id="input-clock-start-time"
@@ -141,8 +145,10 @@
                           <label
                             for="input-clock-comment"
                             class="text-xs text-gray-500 font-bold"
-                            >Kommentar</label
+                            th:text="#{timeclock.edit.comment.label}"
                           >
+                            Kommentar
+                          </label>
                           <textarea
                             rows="4"
                             id="input-clock-comment"
@@ -156,6 +162,7 @@
                         <button
                           type="submit"
                           class="bg-blue-600 text-blue-50 rounded px-4 py-2 flex items-center whitespace-nowrap"
+                          th:text="#{timeclock.edit.submit}"
                         >
                           Aktualisieren
                         </button>
