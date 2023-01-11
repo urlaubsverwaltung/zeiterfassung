@@ -12,6 +12,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -21,6 +23,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @WebMvcTest(controllers = { TimeClockController.class })
@@ -67,6 +70,22 @@ class TimeClockControllerTest {
                 .param("time", "13:37")
         )
             .andExpect(status().isPreconditionRequired());
+    }
+
+    @Test
+    void ensureEditTimeClockValidationForComment() throws Exception {
+        perform(
+            post("/timeclock")
+                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .header("Referer", "referer-url")
+                .param("zoneId", "Europe/Berlin")
+                // max 255 chars allowed for comment
+                .param("comment", IntStream.range(0, 256).mapToObj((nr) -> "0").collect(Collectors.joining("")))
+                .param("date", "2023-01-11")
+                .param("time", "13:37")
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("timeclock/timeclock-edit"));
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
