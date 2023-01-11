@@ -5,8 +5,38 @@
     <title>Title</title>
   </head>
   <body>
+    <!-- default box rendered in the header. -->
+    <th:block
+      th:fragment="navigation-box"
+      th:object="${timeClock}"
+      th:with="timeClock=${timeClock}"
+    >
+      <turbo-frame id="frame-nav-time-clock-edit">
+        <form action="#" th:replace="::time-clock-form"></form>
+      </turbo-frame>
+    </th:block>
+
+    <!-- POSTing a timeClock Update with JavaScript (Turbo) should render this fragment. -->
+    <th:block
+      th:fragment="navigation-box-update"
+      th:object="${timeClockUpdate}"
+      th:with="timeClock=${timeClockUpdate}"
+    >
+      <turbo-frame id="frame-nav-time-clock-edit">
+        <form action="#" th:replace="::time-clock-form"></form>
+      </turbo-frame>
+    </th:block>
+
+    <!-- POSTing a timeClock Update without JavaScript should render this fragment. -->
+    <th:block
+      th:fragment="time-clock-edit-box"
+      th:with="timeClock=${timeClockUpdate}"
+    >
+      <form action="#" th:replace="::time-clock-form"></form>
+    </th:block>
+
     <form
-      th:fragment="form(timeClock)"
+      th:fragment="time-clock-form"
       action="#"
       th:action="@{/timeclock}"
       method="post"
