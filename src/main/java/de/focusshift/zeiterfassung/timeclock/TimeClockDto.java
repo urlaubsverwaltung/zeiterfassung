@@ -8,6 +8,7 @@ class TimeClockDto {
     private Instant startedAt;
     private ZoneId zoneId;
     private String comment;
+    private boolean isBreak;
     private String duration;
 
     private String date;
@@ -35,6 +36,14 @@ class TimeClockDto {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public boolean isBreak() {
+        return isBreak;
+    }
+
+    public void setBreak(boolean aBreak) {
+        isBreak = aBreak;
     }
 
     public String getDuration() {

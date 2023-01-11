@@ -63,7 +63,7 @@ class TimeClockService {
         final Instant stoppedAtInstant = stoppedAt == null ? null : stoppedAt.toInstant();
         final ZoneId stoppedAtZoneId = stoppedAt == null ? null : stoppedAt.getZone();
 
-        return new TimeClockEntity(id, userId, startedAt.toInstant(), startedAt.getZone(), stoppedAtInstant, stoppedAtZoneId, timeClock.comment());
+        return new TimeClockEntity(id, userId, startedAt.toInstant(), startedAt.getZone(), stoppedAtInstant, stoppedAtZoneId, timeClock.comment(), timeClock.isBreak());
     }
 
     private static TimeClock toTimeClock(TimeClockEntity timeClockEntity) {
@@ -72,7 +72,7 @@ class TimeClockService {
         final ZonedDateTime startedAt = ZonedDateTime.ofInstant(timeClockEntity.getStartedAt(), ZoneId.of(timeClockEntity.getStartedAtZoneId()));
         final ZonedDateTime stoppedAt = timeClockEntity.getStoppedAt() == null ? null : ZonedDateTime.ofInstant(timeClockEntity.getStoppedAt(), ZoneId.of(timeClockEntity.getStoppedAtZoneId()));
 
-        return new TimeClock(id, userId, startedAt, timeClockEntity.getComment(), Optional.ofNullable(stoppedAt));
+        return new TimeClock(id, userId, startedAt, timeClockEntity.getComment(), timeClockEntity.isBreak(), Optional.ofNullable(stoppedAt));
     }
 
     private static TimeEntry timeClockToTimeEntry(TimeClock timeClock) {
@@ -89,6 +89,7 @@ class TimeClockService {
         return TimeClock.builder(existingTimeClock)
             .startedAt(timeClockUpdate.startedAt())
             .comment(timeClockUpdate.comment())
+            .isBreak(timeClockUpdate.isBreak())
             .build();
     }
 

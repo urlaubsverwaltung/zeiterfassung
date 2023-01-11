@@ -10,6 +10,7 @@ import java.time.ZonedDateTime;
  * @param userId id of the user to get the current {@linkplain TimeClock} for
  * @param startedAt new value of startedAt
  * @param comment new value of comment
+ * @param isBreak new value of isBreak
  */
-record TimeClockUpdate(UserId userId, ZonedDateTime startedAt, String comment) {
+record TimeClockUpdate(UserId userId, ZonedDateTime startedAt, String comment, boolean isBreak) {
 }

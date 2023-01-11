@@ -47,23 +47,25 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
 
     private String comment;
 
+    private boolean isBreak;
+
     protected TimeClockEntity() {
         super(null);
     }
 
     protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId) {
-        this(null, id, owner, startedAt, startedAtZoneId, null, null, "");
+        this(null, id, owner, startedAt, startedAtZoneId, null, null, "", false);
     }
 
     protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId) {
-        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, "");
+        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, "", false);
     }
 
-    protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId, String comment) {
-        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, comment);
+    protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId, String comment, boolean isBreak) {
+        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, comment, isBreak);
     }
 
-    protected TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId, String comment) {
+    protected TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId, String comment, boolean isBreak) {
         super(tenantId);
         this.id = id;
         this.owner = owner;
@@ -72,6 +74,7 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
         this.stoppedAt = stoppedAt;
         this.stoppedAtZoneId = stoppedAtZoneId == null ? null : stoppedAtZoneId.toString();
         this.comment = comment;
+        this.isBreak = isBreak;
     }
 
     public Long getId() {
@@ -100,6 +103,10 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
 
     public String getComment() {
         return comment;
+    }
+
+    public boolean isBreak() {
+        return isBreak;
     }
 
     @Override

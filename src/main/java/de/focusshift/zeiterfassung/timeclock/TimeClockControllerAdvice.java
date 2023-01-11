@@ -54,6 +54,7 @@ class TimeClockControllerAdvice {
         timeClockDto.setTime(ZonedDateTime.ofInstant(startedAt, zoneId).format(TIME_FORMATTER));
         timeClockDto.setZoneId(timeClock.startedAt().getZone());
         timeClockDto.setComment(timeClock.comment());
+        timeClockDto.setBreak(timeClock.isBreak());
         timeClockDto.setDuration(durationString);
 
         return timeClockDto;

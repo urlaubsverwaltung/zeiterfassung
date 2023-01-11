@@ -69,7 +69,7 @@ class TimeClockServiceTest {
         final ZonedDateTime startedAtZonedDT = ZonedDateTime.ofInstant(startedAt, utc);
         final ZonedDateTime stoppedAtZonedDT = ZonedDateTime.ofInstant(stoppedAt, utc);
         final TimeClock actualTimeClock = actualMaybeTimeClock.get();
-        assertThat(actualTimeClock).isEqualTo(new TimeClock(1L, new UserId("batman"), startedAtZonedDT, "", Optional.of(stoppedAtZonedDT)));
+        assertThat(actualTimeClock).isEqualTo(new TimeClock(1L, new UserId("batman"), startedAtZonedDT, "", false, Optional.of(stoppedAtZonedDT)));
     }
 
     @Test

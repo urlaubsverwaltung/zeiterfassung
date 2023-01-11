@@ -5,10 +5,10 @@ import de.focusshift.zeiterfassung.user.UserId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-record TimeClock(Long id, UserId userId, ZonedDateTime startedAt, String comment, Optional<ZonedDateTime> stoppedAt) {
+record TimeClock(Long id, UserId userId, ZonedDateTime startedAt, String comment, boolean isBreak, Optional<ZonedDateTime> stoppedAt) {
 
     TimeClock(UserId userId, ZonedDateTime startedAt) {
-        this(null, userId, startedAt, "", Optional.empty());
+        this(null, userId, startedAt, "", false, Optional.empty());
     }
 
     static Builder builder(TimeClock timeClock) {
@@ -20,6 +20,7 @@ record TimeClock(Long id, UserId userId, ZonedDateTime startedAt, String comment
         private final UserId userId;
         private ZonedDateTime startedAt;
         private String comment;
+        private boolean isBreak;
         private ZonedDateTime stoppedAt;
 
         private Builder(TimeClock timeClock) {
@@ -37,13 +38,18 @@ record TimeClock(Long id, UserId userId, ZonedDateTime startedAt, String comment
             return this;
         }
 
+        public Builder isBreak(boolean isBreak) {
+            this.isBreak = isBreak;
+            return this;
+        }
+
         public Builder stoppedAt(ZonedDateTime stoppedAt) {
             this.stoppedAt = stoppedAt;
             return this;
         }
 
         public TimeClock build() {
-            return new TimeClock(id, userId, startedAt, comment, Optional.ofNullable(stoppedAt));
+            return new TimeClock(id, userId, startedAt, comment, isBreak, Optional.ofNullable(stoppedAt));
         }
     }
 }

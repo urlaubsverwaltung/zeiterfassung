@@ -79,7 +79,7 @@ class TimeClockController {
 
         final ZonedDateTime startedAt = ZonedDateTime.of(LocalDate.parse(timeClockDto.getDate()), LocalTime.parse(timeClockDto.getTime()), timeClockDto.getZoneId());
 
-        return new TimeClockUpdate(userId, startedAt, timeClockDto.getComment());
+        return new TimeClockUpdate(userId, startedAt, timeClockDto.getComment(), timeClockDto.isBreak());
     }
 
     private static UserId principalToUserId(DefaultOidcUser principal) {
