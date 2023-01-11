@@ -6,14 +6,20 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 
 @Controller
+@RequestMapping("timeclock")
 @PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
 class TimeClockController {
 
@@ -23,7 +29,22 @@ class TimeClockController {
         this.timeClockService = timeClockService;
     }
 
-    @PostMapping("/timeclock/start")
+    @PostMapping
+    public String editTimeClock(TimeClockDto timeClockUpdateDto, @AuthenticationPrincipal DefaultOidcUser principal, HttpServletRequest request) {
+
+        final UserId userId = principalToUserId(principal);
+        final TimeClockUpdate timeClockUpdate = toTimeClockUpdate(userId, timeClockUpdateDto);
+
+        try {
+            timeClockService.updateTimeClock(userId, timeClockUpdate);
+        } catch (TimeClockNotStartedException e) {
+            throw new ResponseStatusException(PRECONDITION_REQUIRED, "Time clock has not been started yet.");
+        }
+
+        return redirectToPreviousPage(request);
+    }
+
+    @PostMapping("/start")
     public String startTimeClock(@AuthenticationPrincipal DefaultOidcUser principal, HttpServletRequest request) {
 
         final UserId userId = principalToUserId(principal);
@@ -36,23 +57,29 @@ class TimeClockController {
 
         timeClockService.startTimeClock(userId);
 
-        final String previousPage = getPreviousPage(request);
-        return String.format("redirect:%s", previousPage);
+        return redirectToPreviousPage(request);
     }
 
-    @PostMapping("/timeclock/stop")
+    @PostMapping("/stop")
     public String stopTimeClock(@AuthenticationPrincipal DefaultOidcUser principal, HttpServletRequest request) {
 
         final UserId userId = principalToUserId(principal);
 
         timeClockService.stopTimeClock(userId);
 
-        final String previousPage = getPreviousPage(request);
+        return redirectToPreviousPage(request);
+    }
+
+    private String redirectToPreviousPage(HttpServletRequest request) {
+        final String previousPage = Optional.ofNullable(request.getHeader("Referer")).orElse("");
         return String.format("redirect:%s", previousPage);
     }
 
-    private static String getPreviousPage(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader("Referer")).orElse("");
+    private TimeClockUpdate toTimeClockUpdate(UserId userId, TimeClockDto timeClockDto) {
+
+        final ZonedDateTime startedAt = ZonedDateTime.of(LocalDate.parse(timeClockDto.getDate()), LocalTime.parse(timeClockDto.getTime()), timeClockDto.getZoneId());
+
+        return new TimeClockUpdate(userId, startedAt, timeClockDto.getComment());
     }
 
     private static UserId principalToUserId(DefaultOidcUser principal) {

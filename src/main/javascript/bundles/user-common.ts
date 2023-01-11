@@ -1,4 +1,5 @@
 import "../components/avatar";
+import "../components/details-dropdown";
 import "../components/feedback-form";
 import "../components/navigation";
 import "../components/time-clock";
