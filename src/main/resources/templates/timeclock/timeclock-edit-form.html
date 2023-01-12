@@ -41,6 +41,7 @@
       th:action="@{/timeclock}"
       method="post"
       class="flex flex-col gap-4"
+      th:data-has-errors="${#fields.hasErrors() ? 'true' : null}"
     >
       <input
         type="hidden"
