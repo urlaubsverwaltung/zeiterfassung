@@ -1,17 +1,35 @@
 package de.focusshift.zeiterfassung.timeclock;
 
+import org.springframework.validation.annotation.Validated;
+
+import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.time.ZoneId;
 
+@Validated
 class TimeClockDto {
+
+    /**
+     * In case of an invalid {@linkplain TimeClockDto} the user will see this rendered view.
+     */
+    private String refererViewName;
 
     private Instant startedAt;
     private ZoneId zoneId;
+    @Size(max = 255)
     private String comment;
     private String duration;
 
     private String date;
     private String time;
+
+    public String getRefererViewName() {
+        return refererViewName;
+    }
+
+    public void setRefererViewName(String refererViewName) {
+        this.refererViewName = refererViewName;
+    }
 
     public Instant getStartedAt() {
         return startedAt;
