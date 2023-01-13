@@ -634,7 +634,7 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "secret" : "IbIm8MVjF4wbBif3qK1fsHuNheRuJ6YO",
+    "secret" : "zeiterfassung-secret",
     "redirectUris" : [ "http://localhost:8060/*", "http://localhost:8080/*" ],
     "webOrigins" : [ ],
     "notBefore" : 0,
