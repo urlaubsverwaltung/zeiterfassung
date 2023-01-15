@@ -23,6 +23,7 @@ import static org.hamcrest.core.AllOf.allOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,6 +44,54 @@ class TimeClockControllerTest {
 
     @MockBean
     private TimeClockService timeClockService;
+
+    @Test
+    void ensureStartTimeClock() throws Exception {
+
+        perform(
+            post("/timeclock/start")
+                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .header("Referer", "referer-url")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("referer-url"));
+
+        verify(timeClockService).getCurrentTimeClock(new UserId("batman"));
+        verify(timeClockService).startTimeClock(new UserId("batman"));
+        verifyNoMoreInteractions(timeClockService);
+    }
+
+    @Test
+    void ensureStartTimeClockThrowsWhenClockIsRunningAlready() throws Exception {
+
+        final ZonedDateTime startedAt = ZonedDateTime.of(2023, 1, 11, 13, 37, 0, 0, ZONE_EUROPE_BERLIN);
+        final TimeClock timeClock = new TimeClock(1L, new UserId("batman"), startedAt, "awesome comment", Optional.empty());
+        when(timeClockService.getCurrentTimeClock(new UserId("batman"))).thenReturn(Optional.of(timeClock));
+
+        perform(
+            post("/timeclock/start")
+                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+        )
+            .andExpect(status().isConflict());
+
+        verify(timeClockService).getCurrentTimeClock(new UserId("batman"));
+        verifyNoMoreInteractions(timeClockService);
+    }
+
+    @Test
+    void ensureStopTimeClock() throws Exception {
+
+        perform(
+            post("/timeclock/stop")
+                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .header("Referer", "referer-url")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("referer-url"));
+
+        verify(timeClockService).stopTimeClock(new UserId("batman"));
+        verifyNoMoreInteractions(timeClockService);
+    }
 
     @Test
     void ensureEditTimeClockGetMappingWithoutRunningTimeClock() throws Exception {
