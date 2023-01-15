@@ -403,7 +403,6 @@
   }
 
   .nav-popup-menu {
-    @apply w-64;
     @apply transition-transform;
     @apply origin-top-right;
     @apply scale-0;
