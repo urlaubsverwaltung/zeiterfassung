@@ -17,13 +17,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -33,9 +29,6 @@ import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 @RequestMapping("timeclock")
 @PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
 class TimeClockController {
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final TimeClockService timeClockService;
 
@@ -49,7 +42,7 @@ class TimeClockController {
         final UserId userId = principalToUserId(principal);
 
         timeClockService.getCurrentTimeClock(userId)
-            .map(this::toTimeClockDto)
+            .map(TimeClockMapper::timeClockToTimeClockDto)
             .ifPresent(dto -> model.addAttribute("timeClockUpdate", dto));
 
         return "timeclock/timeclock-edit";
@@ -112,30 +105,6 @@ class TimeClockController {
 
     private String getReferer(HttpServletRequest request) {
         return Optional.ofNullable(request.getHeader("Referer")).orElse("");
-    }
-
-    private TimeClockDto toTimeClockDto(TimeClock timeClock) {
-
-        final Instant startedAt = timeClock.startedAt().toInstant();
-
-        final Duration duration = Duration.between(startedAt, Instant.now());
-        final int hours = duration.toHoursPart();
-        final int minutes = duration.toMinutesPart();
-        final int seconds = duration.toSecondsPart();
-        final String durationString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-
-        final ZoneId zoneId = timeClock.startedAt().getZone();
-
-        final TimeClockDto timeClockDto = new TimeClockDto();
-        timeClockDto.setStartedAt(startedAt);
-
-        timeClockDto.setDate(ZonedDateTime.ofInstant(startedAt, zoneId).format(DATE_FORMATTER));
-        timeClockDto.setTime(ZonedDateTime.ofInstant(startedAt, zoneId).format(TIME_FORMATTER));
-        timeClockDto.setZoneId(timeClock.startedAt().getZone());
-        timeClockDto.setComment(timeClock.comment());
-        timeClockDto.setDuration(durationString);
-
-        return timeClockDto;
     }
 
     private TimeClockUpdate toTimeClockUpdate(UserId userId, TimeClockDto timeClockDto) {

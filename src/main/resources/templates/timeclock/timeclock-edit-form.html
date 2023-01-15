@@ -80,7 +80,8 @@
               id="input-clock-start-time"
               class="border border-gray-300 px-2 py-1 text-sm tabular-nums"
               name="time"
-              th:value="${timeClock.time}"
+              th:value="${{timeClock.time}}"
+              th:classappend="${hasTimeError ? 'border-red-300' : ''}"
             />
           </div>
         </div>
