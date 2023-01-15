@@ -2,14 +2,11 @@ package de.focusshift.zeiterfassung.timeclock;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 
 final class TimeClockMapper {
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private TimeClockMapper() {
         //
@@ -30,8 +27,8 @@ final class TimeClockMapper {
         final TimeClockDto timeClockDto = new TimeClockDto();
         timeClockDto.setStartedAt(startedAt);
 
-        timeClockDto.setDate(ZonedDateTime.ofInstant(startedAt, zoneId).format(DATE_FORMATTER));
-        timeClockDto.setTime(ZonedDateTime.ofInstant(startedAt, zoneId).format(TIME_FORMATTER));
+        timeClockDto.setDate(LocalDate.ofInstant(startedAt, zoneId));
+        timeClockDto.setTime(LocalTime.ofInstant(startedAt, zoneId));
         timeClockDto.setZoneId(timeClock.startedAt().getZone());
         timeClockDto.setComment(timeClock.comment());
         timeClockDto.setDuration(durationString);

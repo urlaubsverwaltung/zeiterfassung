@@ -1,22 +1,35 @@
 package de.focusshift.zeiterfassung.timeclock;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 
 @Validated
 public class TimeClockDto {
 
     private Instant startedAt;
+
+    @NotNull
     private ZoneId zoneId;
+
     @Size(max = 255)
     private String comment;
+
     private String duration;
 
-    private String date;
-    private String time;
+    @NotNull
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate date;
+
+    @NotNull
+    @DateTimeFormat(pattern = "HH:mm")
+    private LocalTime time;
 
     public Instant getStartedAt() {
         return startedAt;
@@ -50,19 +63,19 @@ public class TimeClockDto {
         this.duration = duration;
     }
 
-    public void setDate(String date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
-    public String getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setTime(String time) {
+    public void setTime(LocalTime time) {
         this.time = time;
     }
 
-    public String getTime() {
+    public LocalTime getTime() {
         return time;
     }
 }

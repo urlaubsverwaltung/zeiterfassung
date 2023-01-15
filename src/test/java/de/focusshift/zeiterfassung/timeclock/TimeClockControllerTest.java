@@ -11,6 +11,8 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -124,8 +126,8 @@ class TimeClockControllerTest {
                     hasProperty("startedAt", is(Instant.from(startedAt))),
                     hasProperty("zoneId", is(ZONE_EUROPE_BERLIN)),
                     hasProperty("comment", is("awesome comment")),
-                    hasProperty("date", is("2023-01-11")),
-                    hasProperty("time", is("13:37"))
+                    hasProperty("date", is(LocalDate.parse("2023-01-11"))),
+                    hasProperty("time", is(LocalTime.parse("13:37")))
                 )
             ))
             .andExpect(view().name("timeclock/timeclock-edit"));
@@ -175,13 +177,17 @@ class TimeClockControllerTest {
                 .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
                 .header("Referer", "referer-url")
                 .header("Turbo-Frame", "any-value")
-                .param("zoneId", "Europe/Berlin")
+                // must be defined
+                .param("zoneId", "")
                 // max 255 chars allowed for comment
                 .param("comment", IntStream.range(0, 256).mapToObj((nr) -> "0").collect(Collectors.joining("")))
-                .param("date", "2023-01-11")
-                .param("time", "13:37")
+                // actual pattern "yyyy-MM-dd"
+                .param("date", "11-01-2023")
+                // actual pattern "HH:mm"
+                .param("time", "13:37:00")
         )
             .andExpect(status().isOk())
+            .andExpect(model().attributeHasFieldErrors("timeClockUpdate", "zoneId", "comment", "date", "time"))
             .andExpect(view().name("timeclock/timeclock-edit-form::navigation-box-update"));
     }
 
@@ -191,13 +197,17 @@ class TimeClockControllerTest {
             post("/timeclock")
                 .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
                 .header("Referer", "referer-url")
-                .param("zoneId", "Europe/Berlin")
+                // must be defined
+                .param("zoneId", "")
                 // max 255 chars allowed for comment
                 .param("comment", IntStream.range(0, 256).mapToObj((nr) -> "0").collect(Collectors.joining("")))
-                .param("date", "2023-01-11")
-                .param("time", "13:37")
+                // actual pattern "yyyy-MM-dd"
+                .param("date", "11-01-2023")
+                // actual pattern "HH:mm"
+                .param("time", "13:37:00")
         )
             .andExpect(status().isOk())
+            .andExpect(model().attributeHasFieldErrors("timeClockUpdate", "zoneId", "comment", "date", "time"))
             .andExpect(view().name("timeclock/timeclock-edit"));
     }
 

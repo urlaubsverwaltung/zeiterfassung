@@ -17,8 +17,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
@@ -109,7 +107,7 @@ class TimeClockController implements HasTimeClock {
 
     private TimeClockUpdate toTimeClockUpdate(UserId userId, TimeClockDto timeClockDto) {
 
-        final ZonedDateTime startedAt = ZonedDateTime.of(LocalDate.parse(timeClockDto.getDate()), LocalTime.parse(timeClockDto.getTime()), timeClockDto.getZoneId());
+        final ZonedDateTime startedAt = ZonedDateTime.of(timeClockDto.getDate(), timeClockDto.getTime(), timeClockDto.getZoneId());
 
         return new TimeClockUpdate(userId, startedAt, timeClockDto.getComment());
     }

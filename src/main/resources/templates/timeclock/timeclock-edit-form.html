@@ -42,6 +42,7 @@
       method="post"
       class="flex flex-col gap-4"
       th:data-has-errors="${#fields.hasErrors() ? 'true' : null}"
+      th:with="hasDateError=${#fields.hasErrors('date')}, hasTimeError=${#fields.hasErrors('time')}, hasCommentError=${#fields.hasErrors('comment')}"
     >
       <input
         type="hidden"
@@ -56,6 +57,7 @@
               for="input-clock-start-date"
               class="text-xs text-gray-500 font-bold"
               th:text="#{timeclock.edit.startAt.date.label}"
+              th:classappend="${hasDateError ? 'text-red-600' : ''}"
             >
               Datum
             </label>
@@ -65,13 +67,20 @@
               class="border border-gray-300 px-2 py-1 text-sm tabular-nums"
               name="date"
               th:value="${timeClock.date}"
+              th:classappend="${hasDateError ? 'border-red-300' : ''}"
             />
+            <p
+              th:if="${hasDateError}"
+              th:text="#{timeclock.edit.startAt.date.error}"
+              class="text-sm text-red-600"
+            ></p>
           </div>
           <div class="flex flex-col gap-0.5">
             <label
               for="input-clock-start-time"
               class="text-xs text-gray-500 font-bold"
               th:text="#{timeclock.edit.startAt.time.label}"
+              th:classappend="${hasTimeError ? 'text-red-600' : ''}"
             >
               Uhrzeit
             </label>
@@ -83,12 +92,14 @@
               th:value="${{timeClock.time}}"
               th:classappend="${hasTimeError ? 'border-red-300' : ''}"
             />
+            <p
+              th:if="${hasTimeError}"
+              th:text="#{timeclock.edit.startAt.time.error}"
+              class="text-sm text-red-600"
+            ></p>
           </div>
         </div>
-        <div
-          class="flex flex-col gap-0.5"
-          th:with="hasCommentError=${#fields.hasErrors('comment')}"
-        >
+        <div class="flex flex-col gap-0.5">
           <label
             for="input-clock-comment"
             class="text-xs text-gray-500 font-bold"
