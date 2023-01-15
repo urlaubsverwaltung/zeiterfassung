@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 
 @Validated
-class TimeClockDto {
+public class TimeClockDto {
 
     private Instant startedAt;
     private ZoneId zoneId;
