@@ -400,7 +400,6 @@
     top: -17px;
     @apply right-8;
     @apply lg:right-7;
-    @apply dark:border-b-neutral-600;
   }
 
   .nav-popup-menu {
@@ -428,10 +427,7 @@
     @apply border-gray-200;
     @apply bg-white;
     @apply backdrop-blur;
-    @apply dark:bg-zinc-900;
-    @apply dark:border-zinc-800;
     @apply supports-backdrop-blur:bg-white/[0.85];
-    @apply supports-backdrop-blur:dark:bg-zinc-900/[0.85];
   }
 
   .nav-popup-menu-inner ul li:first-of-type .nav-popup-menu_link {
@@ -445,7 +441,6 @@
   .nav-popup-menu-inner ul li[role="separator"] {
     @apply border-t;
     @apply border-gray-200;
-    @apply dark:border-zinc-700;
   }
 
   .nav-popup-menu.visible,
@@ -457,14 +452,11 @@
     @apply text-zinc-900;
     @apply text-opacity-75;
     @apply transition-colors;
-    @apply dark:text-zinc-100;
-    @apply dark:hover:text-opacity-100;
   }
 
   .nav-popup-menu-button:is(:hover, :focus) .nav-popup-menu-button_icon {
     @apply text-opacity-100;
     @apply text-zinc-800;
-    @apply dark:text-zinc-100;
   }
 
   .nav-popup-menu_link {
@@ -483,11 +475,6 @@
     @apply focus:text-black;
     @apply hover:bg-gray-50;
     @apply focus:bg-gray-50;
-    @apply dark:text-zinc-50;
-    @apply dark:hover:text-zinc-200;
-    @apply dark:focus:text-zinc-200;
-    @apply dark:hover:bg-slate-800;
-    @apply dark:focus:bg-slate-800;
   }
 
   .sloth-background {
