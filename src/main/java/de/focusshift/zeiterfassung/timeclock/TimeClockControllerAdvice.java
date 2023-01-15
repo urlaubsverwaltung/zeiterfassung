@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.util.Optional;
 
-@ControllerAdvice(basePackages = {"de.focusshift.zeiterfassung.feedback", "de.focusshift.zeiterfassung.report", "de.focusshift.zeiterfassung.timeclock", "de.focusshift.zeiterfassung.timeentry"})
+@ControllerAdvice(assignableTypes = { HasTimeClock.class })
 class TimeClockControllerAdvice {
 
     private final TimeClockService timeClockService;

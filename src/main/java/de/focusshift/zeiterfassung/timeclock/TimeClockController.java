@@ -28,7 +28,7 @@ import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 @Controller
 @RequestMapping("timeclock")
 @PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
-class TimeClockController {
+class TimeClockController implements HasTimeClock {
 
     private final TimeClockService timeClockService;
 

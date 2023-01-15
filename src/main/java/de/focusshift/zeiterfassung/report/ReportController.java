@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -36,7 +37,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Controller
 @PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
-class ReportController {
+class ReportController implements HasTimeClock {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 

@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -40,7 +41,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 @Controller
 @PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
-public class TimeEntryController {
+class TimeEntryController implements HasTimeClock {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
     private final TimeEntryService timeEntryService;
