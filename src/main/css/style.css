@@ -398,8 +398,7 @@
     @apply border-b-gray-200;
     position: absolute;
     top: -17px;
-    @apply right-8;
-    @apply lg:right-7;
+    @apply right-6;
   }
 
   .nav-popup-menu {
