@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
@@ -41,7 +42,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 @Controller
 @PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
-class TimeEntryController implements HasTimeClock {
+class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
     private final TimeEntryService timeEntryService;

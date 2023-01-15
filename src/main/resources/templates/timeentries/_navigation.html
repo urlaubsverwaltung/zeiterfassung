@@ -60,7 +60,7 @@
                 </ul>
               </nav>
             </div>
-            <div class="z-50 flex-1 flex items-center justify-end">
+            <div class="z-50 flex-1 flex items-center justify-end gap-4">
               <form
                 th:if="${timeClock == null}"
                 action="#"
@@ -118,7 +118,8 @@
                   </button>
                 </form>
               </div>
-              <div class="ml-8 shrink-0 relative">
+              <div th:replace="launchpad/launchpad::navigation-item"></div>
+              <div class="shrink-0 relative">
                 <a
                   href="#avatar-menu"
                   id="avatar-link"

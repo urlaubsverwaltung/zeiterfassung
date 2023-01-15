@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeclock;
 
+import de.focusshift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,7 +27,7 @@ import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 @Controller
 @RequestMapping("timeclock")
 @PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
-class TimeClockController implements HasTimeClock {
+class TimeClockController implements HasTimeClock, HasLaunchpad {
 
     private final TimeClockService timeClockService;
 
