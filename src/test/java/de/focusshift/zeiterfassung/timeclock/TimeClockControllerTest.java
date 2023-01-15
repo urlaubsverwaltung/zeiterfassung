@@ -16,9 +16,9 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static java.util.stream.Collectors.joining;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.AllOf.allOf;
@@ -180,7 +180,7 @@ class TimeClockControllerTest {
                 // must be defined
                 .param("zoneId", "")
                 // max 255 chars allowed for comment
-                .param("comment", IntStream.range(0, 256).mapToObj((nr) -> "0").collect(Collectors.joining("")))
+                .param("comment", IntStream.range(0, 256).mapToObj((nr) -> "0").collect(joining("")))
                 // actual pattern "yyyy-MM-dd"
                 .param("date", "11-01-2023")
                 // actual pattern "HH:mm"
@@ -200,7 +200,7 @@ class TimeClockControllerTest {
                 // must be defined
                 .param("zoneId", "")
                 // max 255 chars allowed for comment
-                .param("comment", IntStream.range(0, 256).mapToObj((nr) -> "0").collect(Collectors.joining("")))
+                .param("comment", IntStream.range(0, 256).mapToObj((nr) -> "0").collect(joining("")))
                 // actual pattern "yyyy-MM-dd"
                 .param("date", "11-01-2023")
                 // actual pattern "HH:mm"
