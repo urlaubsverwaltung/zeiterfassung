@@ -5,7 +5,11 @@
     <title>Launchpad</title>
   </head>
   <body>
-    <div th:fragment="navigation-item" th:if="${launchpad}" class="relative">
+    <div
+      th:fragment="navigation-item"
+      th:if="${launchpad}"
+      class="relative flex items-center"
+    >
       <a
         href="#launchpad"
         aria-expanded="false"
@@ -40,42 +44,48 @@
         </span>
       </a>
       <div id="launchpad" class="nav-popup-menu">
-        <div class="nav-popup-menu-inner flex flex-col gap-2 p-4">
-          <h2
-            class="text-sm font-bold"
-            th:text="#{launchpad.core.apps.heading}"
+        <div class="nav-popup-menu-inner flex flex-col" style="width: 12.5rem">
+          <div
+            class="bg-gradient-to-br from-blue-50 via-gray-100 to-blue-100 px-4 py-2"
           >
-            Anwendungen
-          </h2>
-          <ul
-            class="grid gap-2"
-            style="
-              grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
-            "
-            th:styleappend="${#lists.size(launchpad.apps) > 3 ? '--cols:3' : '--cols:2'}"
-          >
-            <li th:each="app : ${launchpad.apps}">
-              <a
-                class="flex flex-col items-center text-sm px-4 py-2 rounded-lg bg-transparent transition-colors hover:bg-gray-100"
-                href="#"
-                th:href="${app.url}"
-              >
-                <img
-                  src=""
-                  th:src="${app.icon}"
-                  width="64"
-                  height="64"
-                  alt=""
-                />
-                <span
-                  class="block text-center"
-                  th:text="${#messages.msg(app.nameMessageKey)}"
+            <h2
+              class="text-base text-gray-700"
+              th:text="#{launchpad.core.apps.heading}"
+            >
+              Anwendungen
+            </h2>
+          </div>
+          <div class="p-2">
+            <ul
+              class="grid gap-2"
+              style="
+                grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
+              "
+              th:styleappend="${#lists.size(launchpad.apps) > 3 ? '--cols:3' : '--cols:2'}"
+            >
+              <li th:each="app : ${launchpad.apps}">
+                <a
+                  class="flex flex-col items-center text-sm px-4 py-2 rounded-lg bg-transparent transition-colors hover:bg-gray-100"
+                  href="#"
+                  th:href="${app.url}"
                 >
-                  Awesome App
-                </span>
-              </a>
-            </li>
-          </ul>
+                  <img
+                    src=""
+                    th:src="${app.icon}"
+                    width="64"
+                    height="64"
+                    alt=""
+                  />
+                  <span
+                    class="block text-center"
+                    th:text="${#messages.msg(app.nameMessageKey)}"
+                  >
+                    Awesome App
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

@@ -411,13 +411,11 @@
     @apply border-gray-200;
     @apply shadow-xl;
     @apply mt-3;
-    @apply lg:mt-2.5;
     @apply z-50;
     @apply absolute;
-    @apply -right-2;
+    @apply right-0;
     @apply top-full;
     @apply rounded-2xl;
-    @apply lg:right-0;
     @apply dark:border-zinc-800;
     @apply dark:shadow-none;
   }
