@@ -121,17 +121,29 @@
                   th:if="${not #lists.isEmpty(week.timeEntries())}"
                   class="px-4 space-y-10 md:space-y-2"
                 >
-                  <th:block th:each="timeEntry: ${week.timeEntries}">
-                    <div
-                      is="z-time-entry-element"
-                      th:fragment="time-entry-element(timeEntry)"
-                      th:with="formAction=@{/timeentries/{id} (id=${timeEntry.id})}"
-                      th:id="${'time-entry-' + timeEntry.id}"
-                      th:data-date="${#temporals.format(timeEntry.date, 'EEEE, dd. MMMM')}"
-                      th:data-duration="${timeEntry.duration}"
-                      th:insert="::timeentry-slot-form(formAction=${formAction}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')"
-                      data-turbo="true"
-                    ></div>
+                  <th:block th:each="day: ${week.days}">
+                    <h4 class="time-day-header">
+                      <span class="font-medium" th:text="${day.date()}"></span>
+                      <th:block th:if="${not #lists.isEmpty(day.timeEntries)}">
+                        &nbsp;-&nbsp;
+                        <span
+                          class="text-gray-600 font-bold proportional-nums"
+                          th:text="${day.hoursWorked()}"
+                        ></span>
+                      </th:block>
+                    </h4>
+                    <th:block th:each="timeEntry: ${day.timeEntries}">
+                      <div
+                        is="z-time-entry-element"
+                        th:fragment="time-entry-element(timeEntry)"
+                        th:with="formAction=@{/timeentries/{id} (id=${timeEntry.id})}"
+                        th:id="${'time-entry-' + timeEntry.id}"
+                        th:data-date="${#temporals.format(timeEntry.date, 'EEEE, dd. MMMM')}"
+                        th:data-duration="${timeEntry.duration}"
+                        th:insert="::timeentry-slot-form(formAction=${formAction}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')"
+                        data-turbo="true"
+                      ></div>
+                    </th:block>
                   </th:block>
                 </div>
               </div>

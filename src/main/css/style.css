@@ -414,7 +414,7 @@
     @apply top-12;
     @apply z-10;
     @apply pt-3;
-    @apply pb-6;
+    @apply pb-1;
     @apply pl-8;
     @apply text-gray-400;
     @apply transition-all;
@@ -427,6 +427,15 @@
     @apply pl-4;
     @apply text-sm;
     @apply pb-10;
+  }
+
+  .time-day-header {
+    @apply top-4;
+    @apply pt-3;
+    @apply pb-3;
+    @apply pl-6;
+    @apply text-gray-400;
+    @apply transition-all;
   }
 
   .report-graph {
