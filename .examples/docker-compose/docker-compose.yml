@@ -1,0 +1,69 @@
+version: '3.8'
+services:
+  zeiterfassung:
+    image: ghcr.io/urlaubsverwaltung/zeiterfassung/zeiterfassung:1.0.1
+    network_mode: "host"
+    environment:
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/zeiterfassung
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      # Mail
+      ZEITERFASSUNG_MAIL_FROM: zeiterfassung@example.org
+      ZEITERFASSUNG_MAIL_FROMDISPLAYNAME: zeiterfassung
+      ZEITERFASSUNG_MAIL_REPLYTO: replyto@example.org
+      ZEITERFASSUNG_MAIL_REPLYTODISPLAYNAME: replyto
+      SPRING_MAIL_HOST: localhost
+      SPRING_MAIL_PORT: 1025
+      # OpenID Connect identity provider
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT-ID: zeiterfassung
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT-SECRET: zeiterfassung-secret
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT-NAME: zeiterfassung
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_PROVIDER: default
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_SCOPE: openid,profile,email,roles
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_AUTHORIZATION-GRANT-TYPE: authorization_code
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_REDIRECT-URI: http://{baseHost}:8080/login/oauth2/code/{registrationId}
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_ISSUER-URI: http://localhost:8090/auth/realms/zeiterfassung-realm
+      ZEITERFASSUNG_SECURITY_OIDC_SERVER-URL: http://localhost:8090/auth
+      ZEITERFASSUNG_SECURITY_OIDC_LOGIN-FORM-URL: http://localhost:8080/oauth2/authorization/default
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+
+  postgres:
+    image: postgres:9.6
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: zeiterfassung
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+  keycloak:
+    build: ../../docker/keycloak
+    image: quay.io/keycloak/keycloak:20.0.1
+    environment:
+      KC_HTTP_PORT: 8090
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HOSTNAME_STRICT: 'false'
+      KC_HOSTNAME_STRICT_HTTPS: 'false'
+    ports:
+      - '8090:8090'

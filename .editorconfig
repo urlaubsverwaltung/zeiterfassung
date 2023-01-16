@@ -14,5 +14,8 @@ indent_size = 4
 [*.md]
 trim_trailing_whitespace = false
 
+[*.{yml,yaml}]
+indent_size = 2
+
 [*.{html,css,js,ts,svelte,json,svg}]
 indent_size = 2
