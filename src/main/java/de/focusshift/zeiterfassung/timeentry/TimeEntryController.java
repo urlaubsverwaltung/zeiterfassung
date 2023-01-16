@@ -32,6 +32,7 @@ import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.Month.DECEMBER;
@@ -229,15 +230,18 @@ class TimeEntryController implements HasTimeClock {
         final String firstDateString = dateFormatter.formatDate(firstDateOfWeek, firstMonthFormat, firstYearFormat);
         final String lastDateString = dateFormatter.formatDate(lastDateOfWeek, lastMonthFormat, lastYearFormat);
 
-        final List<TimeEntryDTO> timeEntryDtos = timeEntryWeek.timeEntries()
-            .stream()
-            .map(this::toTimeEntryDto)
-            .toList();
-
         final Duration durationMinutes = timeEntryWeek.workDuration().minutes().duration();
         final String hoursWorked = String.format("%02d:%02d", durationMinutes.toHours(), durationMinutes.toMinutesPart());
 
-        return new TimeEntryWeekDto(timeEntryWeek.week(), firstDateString, lastDateString, hoursWorked, timeEntryDtos);
+        final List<TimeEntryDayDto> daysDto = timeEntryWeek.days().stream().map(day -> {
+            final Duration dayDurationMinutes = day.workDuration().minutes().duration();
+            final String dayHoursWorked = String.format("%02d:%02d", dayDurationMinutes.toHours(), dayDurationMinutes.toMinutesPart());
+            final List<TimeEntryDTO> dayTimeEntryDTOs = day.timeEntries().stream().map(this::toTimeEntryDto).toList();
+            final String dateString = dateFormatter.formatDate(day.date(), MonthFormat.STRING, YearFormat.FULL);
+            return new TimeEntryDayDto(dateString, dayHoursWorked, dayTimeEntryDTOs);
+        }).toList();
+
+        return new TimeEntryWeekDto(timeEntryWeek.week(), firstDateString, lastDateString, hoursWorked, daysDto);
     }
 
     private TimeEntryDTO toTimeEntryDto(TimeEntry timeEntry) {

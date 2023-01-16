@@ -218,9 +218,9 @@ class TimeEntryServiceImplTest {
             new TimeEntryWeekPage(
                 new TimeEntryWeek(
                     LocalDate.of(2022, 1, 3),
-                    List.of(
-                        new TimeEntry(2L, new UserId("batman"), "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
-                        new TimeEntry(1L, new UserId("batman"), "hack the planet!", timeEntryStart, timeEntryEnd, false)
+                    List.of(new TimeEntryDay(LocalDate.of(2022, 1, 4),
+                        List.of(new TimeEntry(2L, new UserId("batman"), "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
+                        new TimeEntry(1L, new UserId("batman"), "hack the planet!", timeEntryStart, timeEntryEnd, false)))
                     )
                 ),
                 3

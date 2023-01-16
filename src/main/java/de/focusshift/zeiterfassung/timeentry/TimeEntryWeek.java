@@ -5,17 +5,20 @@ import org.threeten.extra.YearWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.time.Month.DECEMBER;
 import static java.time.temporal.WeekFields.ISO;
 
-record TimeEntryWeek(LocalDate firstDateOfWeek, List<TimeEntry> timeEntries) {
+record TimeEntryWeek(LocalDate firstDateOfWeek, List<TimeEntryDay> days) {
 
     public WorkDuration workDuration() {
 
-        final Duration duration = timeEntries
+        final Duration duration = days
             .stream()
+            .map(TimeEntryDay::timeEntries).flatMap(Collection::stream)
             .map(TimeEntry::workDuration)
             .map(WorkDuration::duration)
             .reduce(Duration.ZERO, Duration::plus);
@@ -42,5 +45,11 @@ record TimeEntryWeek(LocalDate firstDateOfWeek, List<TimeEntry> timeEntries) {
 
     public LocalDate lastDateOfWeek() {
         return firstDateOfWeek.plusDays(6);
+    }
+
+    public List<TimeEntry> timeEntries() {
+        return days.stream().map(TimeEntryDay::timeEntries)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 }

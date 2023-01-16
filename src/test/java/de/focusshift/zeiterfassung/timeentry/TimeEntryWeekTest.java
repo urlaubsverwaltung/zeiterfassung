@@ -29,7 +29,7 @@ class TimeEntryWeekTest {
         final ZonedDateTime secondEnd = ZonedDateTime.of(LocalDateTime.of(2022, 1, 5, 17, 30, 0), ZONE_ID_BERLIN);
         final TimeEntry secondTimeEntry = new TimeEntry(2L, new UserId("batman"), "hard work second day", secondStart, secondEnd, false);
 
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(startOfWeek, List.of(firstTimeEntry, secondTimeEntry));
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(startOfWeek, List.of(new TimeEntryDay(startOfWeek, List.of(firstTimeEntry, secondTimeEntry))));
 
         final Duration actualDuration = timeEntryWeek.workDuration().duration();
         assertThat(actualDuration).isEqualTo(Duration.ofHours(2).plusMinutes(45));
@@ -45,7 +45,7 @@ class TimeEntryWeekTest {
 
         final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hard work in the night", start, end, false);
 
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(startOfWeek, List.of(timeEntry));
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(startOfWeek, List.of(new TimeEntryDay(startOfWeek, List.of(timeEntry))));
 
         final Duration actualDuration = timeEntryWeek.workDuration().duration();
         assertThat(actualDuration).isEqualTo(Duration.ofHours(3));

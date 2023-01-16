@@ -17,7 +17,11 @@ import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -104,7 +108,13 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .map(TimeEntryServiceImpl::toTimeEntry)
             .toList();
 
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(fromDateTime.toLocalDate(), timeEntries);
+        List<TimeEntryDay> daysOfWeek = timeEntries.stream()
+                .collect(Collectors.groupingBy(timeEntry -> timeEntry.start().toLocalDate()))
+                .entrySet().stream()
+                .map(e -> new TimeEntryDay(e.getKey(), e.getValue()))
+                .toList();
+
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(fromDateTime.toLocalDate(), daysOfWeek);
         final long totalTimeEntries = timeEntryRepository.countAllByOwner(userId.value());
 
         return new TimeEntryWeekPage(timeEntryWeek, totalTimeEntries);

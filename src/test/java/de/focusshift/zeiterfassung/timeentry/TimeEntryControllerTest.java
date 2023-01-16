@@ -63,11 +63,13 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(timeEntry));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), List.of(timeEntry));
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(LocalDate.of(2022, 9, 19), MonthFormat.NONE, YearFormat.NONE)).thenReturn("formatted-2022-9-19");
+        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 19), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-19");
         when(dateFormatter.formatDate(LocalDate.of(2022, 9, 25), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-25");
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
@@ -79,7 +81,8 @@ class TimeEntryControllerTest {
             .comment("hack the planet")
             .build();
 
-        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-2022-9-19", "formatted-2022-9-25", "00:30", List.of(expectedTimeEntryDto));
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-2022-9-19", "formatted-2022-9-25", "00:30",
+                List.of(new TimeEntryDayDto("formatted-2022-9-19", "00:30", List.of(expectedTimeEntryDto))));
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 39, 2022, 37, expectedTimeEntryWeekDto, 1337);
 
         perform(
@@ -99,11 +102,13 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(timeEntry));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), List.of(timeEntry));
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 42);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(LocalDate.of(2022, 9, 19), MonthFormat.NONE, YearFormat.NONE)).thenReturn("formatted-2022-9-19");
+        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 19), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-19");
         when(dateFormatter.formatDate(LocalDate.of(2022, 9, 25), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-25");
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
@@ -115,7 +120,8 @@ class TimeEntryControllerTest {
             .comment("hack the planet")
             .build();
 
-        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-2022-9-19", "formatted-2022-9-25", "00:30", List.of(expectedTimeEntryDto));
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-2022-9-19", "formatted-2022-9-25", "00:30",
+                List.of(new TimeEntryDayDto("formatted-2022-9-19", "00:30", List.of(expectedTimeEntryDto))));
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 39, 2022, 37, expectedTimeEntryWeekDto, 42);
 
         perform(
@@ -417,7 +423,7 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(timeEntry));
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(new TimeEntryDay(LocalDate.of(2022, 9, 19), List.of(timeEntry))));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
 
@@ -432,7 +438,8 @@ class TimeEntryControllerTest {
             .comment("hack the planet")
             .build();
 
-        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-date", "formatted-date", "00:30", List.of(expectedTimeEntryDto));
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-date", "formatted-date", "00:30",
+                List.of(new TimeEntryDayDto("formatted-date", "00:30", List.of(expectedTimeEntryDto))));
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 39, 2022, 37, expectedTimeEntryWeekDto, 1337);
 
         final ResultActions perform = perform(
