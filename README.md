@@ -138,6 +138,10 @@ Replace the $VERSION with a specific version from [the docker images](https://gi
 
 As part of a docker-compose setup all configurations can be set in service definition.
 
+### Operations example with docker compose
+
+An example for an environment of Zeiterfassung with [docker-compose](https://docs.docker.com/compose/) can be found [here](https://github.com/urlaubsverwaltung/zeiterfassung/blob/main/.examples/docker-compose/).
+
 ## Development
 
 ### Prerequisites
