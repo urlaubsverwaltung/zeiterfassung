@@ -109,7 +109,7 @@ class TimeClockServiceTest {
         final Instant startedAt = now.minusSeconds(120);
 
         when(timeClockRepository.findByOwnerAndStoppedAtIsNull("batman"))
-            .thenReturn(Optional.of(new TimeClockEntity(1L, "batman", startedAt, utc, null, null)));
+            .thenReturn(Optional.of(new TimeClockEntity(1L, "batman", startedAt, utc, null, null, "awesome comment")));
 
         when(timeClockRepository.save(any()))
             .thenReturn(new TimeClockEntity(1L, "batman", startedAt, utc, now, utc));
@@ -127,6 +127,7 @@ class TimeClockServiceTest {
         assertThat(entity.getOwner()).isEqualTo("batman");
         assertThat(entity.getStartedAt()).isEqualTo(startedAt);
         assertThat(entity.getStoppedAt().truncatedTo(MINUTES)).isEqualTo(now.truncatedTo(MINUTES));
+        assertThat(entity.getComment()).isEqualTo("awesome comment");
     }
 
     @Test
@@ -137,17 +138,28 @@ class TimeClockServiceTest {
         final ZonedDateTime startedAt = ZonedDateTime.ofInstant(startedAtInstant, ZONED_ID_BERLIN);
         final ZonedDateTime stoppedAt = ZonedDateTime.ofInstant(now, ZONED_ID_BERLIN);
 
-        when(timeClockRepository.findByOwnerAndStoppedAtIsNull("batman"))
-            .thenReturn(Optional.of(new TimeClockEntity(1L, "batman", startedAtInstant, ZONED_ID_BERLIN)));
+        final TimeClockEntity runningTimeClockEntity = TimeClockEntity.builder()
+            .id(1L)
+            .owner("batman")
+            .startedAt(startedAt.toInstant())
+            .startedAtZoneId(startedAt.getZone())
+            .comment("awesome comment")
+            .build();
 
-        when(timeClockRepository.save(new TimeClockEntity(1L, "batman", startedAtInstant, ZONED_ID_BERLIN, now, ZONED_ID_BERLIN)))
-            .thenReturn(new TimeClockEntity(1L, "batman", startedAtInstant, ZONED_ID_BERLIN, now, ZONED_ID_BERLIN));
+        when(timeClockRepository.findByOwnerAndStoppedAtIsNull("batman")).thenReturn(Optional.of(runningTimeClockEntity));
+
+        final TimeClockEntity stoppedTimeClockEntity = TimeClockEntity.builder(runningTimeClockEntity)
+            .stoppedAt(stoppedAt.toInstant())
+            .stoppedAtZoneId(stoppedAt.getZone())
+            .build();
+
+        when(timeClockRepository.save(runningTimeClockEntity)).thenReturn(stoppedTimeClockEntity);
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
         sut.stopTimeClock(new UserId("batman"));
 
-        verify(timeEntryService).saveTimeEntry(new TimeEntry(null, new UserId("batman"), "", startedAt, stoppedAt, false));
+        verify(timeEntryService).saveTimeEntry(new TimeEntry(null, new UserId("batman"), "awesome comment", startedAt, stoppedAt, false));
     }
 
     @Test

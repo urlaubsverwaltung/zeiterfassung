@@ -82,7 +82,7 @@ class TimeClockService {
         final ZonedDateTime stoppedAt = timeClock.stoppedAt()
             .orElseThrow(() -> new IllegalArgumentException("expected timeClock with stoppedAt field."));
 
-        return new TimeEntry(null, userId, "", startedAt, stoppedAt, false);
+        return new TimeEntry(null, userId, timeClock.comment(), startedAt, stoppedAt, false);
     }
 
     private static TimeClock prepareTimeClockUpdate(TimeClock existingTimeClock, TimeClockUpdate timeClockUpdate) {
@@ -93,6 +93,9 @@ class TimeClockService {
     }
 
     private static TimeClockEntity timeClockEntityWithStoppedAt(TimeClockEntity entity, ZonedDateTime stoppedAt) {
-        return new TimeClockEntity(entity.getId(), entity.getOwner(), entity.getStartedAt(), ZoneId.of(entity.getStartedAtZoneId()), stoppedAt.toInstant(), stoppedAt.getZone());
+        return TimeClockEntity.builder(entity)
+            .stoppedAt(stoppedAt.toInstant())
+            .stoppedAtZoneId(stoppedAt.getZone())
+            .build();
     }
 }
