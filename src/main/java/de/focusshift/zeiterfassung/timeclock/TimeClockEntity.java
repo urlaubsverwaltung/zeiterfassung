@@ -52,19 +52,11 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
         super(null);
     }
 
-    protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId) {
-        this(null, id, owner, startedAt, startedAtZoneId, null, null, "");
-    }
-
-    protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId) {
-        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, "");
-    }
-
-    protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId, String comment) {
+    private TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId, String comment) {
         this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, comment);
     }
 
-    protected TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId, String comment) {
+    private TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId, String comment) {
         super(tenantId);
         this.id = id;
         this.owner = owner;

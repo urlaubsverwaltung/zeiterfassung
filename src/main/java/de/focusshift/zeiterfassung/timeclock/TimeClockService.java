@@ -6,7 +6,6 @@ import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -56,14 +55,15 @@ class TimeClockService {
     }
 
     private static TimeClockEntity toEntity(TimeClock timeClock) {
-        final Long id = timeClock.id();
-        final String userId = timeClock.userId().value();
-        final ZonedDateTime startedAt = timeClock.startedAt();
-        final ZonedDateTime stoppedAt = timeClock.stoppedAt().orElse(null);
-        final Instant stoppedAtInstant = stoppedAt == null ? null : stoppedAt.toInstant();
-        final ZoneId stoppedAtZoneId = stoppedAt == null ? null : stoppedAt.getZone();
-
-        return new TimeClockEntity(id, userId, startedAt.toInstant(), startedAt.getZone(), stoppedAtInstant, stoppedAtZoneId, timeClock.comment());
+        return TimeClockEntity.builder()
+            .id(timeClock.id())
+            .owner(timeClock.userId().value())
+            .startedAt(timeClock.startedAt().toInstant())
+            .startedAtZoneId(timeClock.startedAt().getZone())
+            .stoppedAt(timeClock.stoppedAt().map(ZonedDateTime::toInstant).orElse(null))
+            .stoppedAtZoneId(timeClock.stoppedAt().map(ZonedDateTime::getZone).orElse(null))
+            .comment(timeClock.comment())
+            .build();
     }
 
     private static TimeClock toTimeClock(TimeClockEntity timeClockEntity) {
