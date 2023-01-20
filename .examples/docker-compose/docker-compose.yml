@@ -35,11 +35,6 @@ services:
         condition: service_healthy
       mailhog:
         condition: service_started
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
-      interval: 30s
-      timeout: 30s
-      retries: 5
 
   postgres:
     image: postgres:9.6
