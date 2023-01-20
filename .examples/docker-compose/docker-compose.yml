@@ -26,6 +26,7 @@ services:
       SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_ISSUER-URI: http://localhost:8090/auth/realms/zeiterfassung-realm
       ZEITERFASSUNG_SECURITY_OIDC_SERVER-URL: http://localhost:8090/auth
       ZEITERFASSUNG_SECURITY_OIDC_LOGIN-FORM-URL: http://localhost:8080/oauth2/authorization/default
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
     depends_on:
       postgres:
         condition: service_healthy
