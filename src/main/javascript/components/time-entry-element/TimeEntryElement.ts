@@ -35,19 +35,22 @@ class TimeEntryElement extends HTMLDivElement {
       });
     });
 
-    form.addEventListener("focusout", (event: FocusEvent) => {
+    form.addEventListener("change", (event: FocusEvent) => {
       const target: HTMLInputElement = event.target as HTMLInputElement;
-      if (target.tagName === "INPUT") {
+      if (target.matches("input[type='checkbox']")) {
+        handleValueChanged(target.name, target.checked, target);
+      } else if (target.matches("input")) {
         handleValueChanged(target.name, target.value, target);
       }
     });
 
     function handleValueChanged(
       name: string,
-      newValue: string,
+      newValue: string | boolean,
       element: HTMLElement,
     ) {
-      if (originalFormData.get(name) === newValue) {
+      const nextFormData = new FormData(form);
+      if (originalFormData.get(name) === nextFormData.get(name)) {
         element.classList.remove("edited");
         if (!isFormChanged()) {
           form.classList.remove("edited");

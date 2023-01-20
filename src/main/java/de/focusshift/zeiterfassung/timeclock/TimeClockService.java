@@ -71,7 +71,7 @@ class TimeClockService {
         final ZonedDateTime stoppedAt = timeClock.stoppedAt()
             .orElseThrow(() -> new IllegalArgumentException("expected timeClock with stoppedAt field."));
 
-        return new TimeEntry(null, userId, "", startedAt, stoppedAt);
+        return new TimeEntry(null, userId, "", startedAt, stoppedAt, false);
     }
 
     private static TimeClockEntity timeClockEntityWithStoppedAt(TimeClockEntity entity, ZonedDateTime stoppedAt) {
