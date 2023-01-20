@@ -29,6 +29,8 @@ services:
       ZEITERFASSUNG_SECURITY_OIDC_LOGIN-FORM-URL: http://localhost:8080/oauth2/authorization/default
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
     depends_on:
+      keycloak:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       mailhog:
@@ -67,5 +69,11 @@ services:
       KC_HTTP_RELATIVE_PATH: /auth
       KC_HOSTNAME_STRICT: 'false'
       KC_HOSTNAME_STRICT_HTTPS: 'false'
+      KC_HEALTH_ENABLED: 'true'
     ports:
       - '8090:8090'
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8090/auth/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
