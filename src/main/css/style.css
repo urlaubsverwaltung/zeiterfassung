@@ -9,7 +9,8 @@
     background-attachment: fixed;
   }
 
-  input:not([class*="rounded"]) {
+  input:not([class*="rounded"]),
+  textarea:not([class*="rounded"]) {
     @apply rounded;
   }
 
@@ -336,29 +337,6 @@
     @apply dark:focus:bg-slate-800;
   }
 
-  a[aria-haspopup="true"] {
-    @apply flex;
-    @apply items-center;
-  }
-  a[aria-haspopup="true"]::after {
-    @apply ml-1;
-    @apply mt-1;
-    display: inline-block;
-    width: 0;
-    height: 0;
-    vertical-align: middle;
-    content: "";
-    border-style: solid;
-    border-width: 6px 6px 0;
-    border-top-color: theme("colors.gray.800");
-    border-right-color: transparent;
-    border-bottom-color: transparent;
-    border-left-color: transparent;
-  }
-  a[aria-haspopup="true"]:hover::after {
-    border-top-color: theme("colors.gray.900");
-  }
-
   .sloth-background {
     background-image: url("/images/sloths_1280.png");
     background-repeat: no-repeat;
@@ -531,6 +509,43 @@
     position: fixed;
     top: 0;
     left: 0;
+  }
+}
+
+@layer components {
+  .details-dropdown {
+    position: relative;
+  }
+
+  .details-dropdown_summary {
+    @apply cursor-pointer;
+    @apply block;
+    @apply text-sm;
+    @apply w-full;
+  }
+
+  .details-dropdown:not(.details-dropdown--no-border)
+  .details-dropdown_summary {
+    @apply px-3;
+    @apply py-2;
+    @apply border;
+    @apply border-neutral-300;
+    @apply rounded-md;
+  }
+
+  .details-dropdown_content {
+    z-index: 1;
+    position: absolute;
+    left: 0;
+    right: 0;
+    @apply -bottom-1;
+    @apply translate-y-full;
+    @apply bg-white;
+    @apply shadow-lg;
+    @apply border;
+    @apply px-4;
+    @apply py-3;
+    @apply rounded;
   }
 }
 

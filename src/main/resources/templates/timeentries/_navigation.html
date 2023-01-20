@@ -78,18 +78,34 @@
                 </button>
               </form>
               <div th:if="${timeClock != null}" class="flex items-center">
-                <p class="mr-4">
-                  <span
-                    class="sr-only"
-                    th:text="#{timeclock.elapsed-time.label}"
-                  ></span>
-                  <span
-                    class="text-lg"
-                    th:text="${timeClock.duration}"
-                    th:data-started-at="${timeClock.startedAt}"
-                    is="z-time-clock-duration"
-                  ></span>
-                </p>
+                <details
+                  class="details-dropdown details-dropdown--no-border mr-4"
+                  is="z-details-dropdown"
+                >
+                  <summary
+                    id="time-clock-summary"
+                    class="details-dropdown_summary flex items-center"
+                  >
+                    <span
+                      class="sr-only"
+                      th:text="#{timeclock.elapsed-time.label}"
+                    ></span>
+                    <span
+                      class="text-lg"
+                      th:text="${timeClock.duration}"
+                      th:data-started-at="${timeClock.startedAt}"
+                      is="z-time-clock-duration"
+                    ></span>
+                    <svg
+                      th:replace="icons/chevron-down::svg(className='w-4 h-4')"
+                    ></svg>
+                  </summary>
+                  <div class="details-dropdown_content left-auto right-0">
+                    <div
+                      th:replace="/timeclock/timeclock-edit-form::navigation-box"
+                    ></div>
+                  </div>
+                </details>
                 <form action="#" th:action="@{/timeclock/stop}" method="post">
                   <button
                     type="submit"
@@ -109,6 +125,7 @@
                   aria-expanded="false"
                   aria-haspopup="true"
                   is="z-nav-popup-menu-button"
+                  class="flex flex-row items-center"
                 >
                   <span class="inline-flex text-blue-200">
                     <img
@@ -116,6 +133,9 @@
                       alt=""
                     />
                   </span>
+                  <svg
+                    th:replace="icons/chevron-down::svg(className='w-4 h-4')"
+                  ></svg>
                 </a>
                 <div id="avatar-menu" class="nav-popup-menu">
                   <div class="nav-popup-menu-inner">

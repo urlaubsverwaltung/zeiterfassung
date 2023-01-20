@@ -15,6 +15,7 @@ import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Objects;
+import java.util.Optional;
 
 @Entity
 @Table(name = "time_clock")
@@ -45,19 +46,17 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
     @Column(name = "stopped_at_zone_id")
     private String stoppedAtZoneId;
 
+    private String comment;
+
     protected TimeClockEntity() {
         super(null);
     }
 
-    protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId) {
-        this(null, id, owner, startedAt, startedAtZoneId, null, null);
+    private TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId, String comment) {
+        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, comment);
     }
 
-    protected TimeClockEntity(Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, Instant stoppedAt, ZoneId stoppedAtZoneId) {
-        this(null, id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId);
-    }
-
-    protected TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId) {
+    private TimeClockEntity(String tenantId, Long id, String owner, Instant startedAt, ZoneId startedAtZoneId, @Nullable Instant stoppedAt, @Nullable ZoneId stoppedAtZoneId, String comment) {
         super(tenantId);
         this.id = id;
         this.owner = owner;
@@ -65,6 +64,7 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
         this.startedAtZoneId = startedAtZoneId.toString();
         this.stoppedAt = stoppedAt;
         this.stoppedAtZoneId = stoppedAtZoneId == null ? null : stoppedAtZoneId.toString();
+        this.comment = comment;
     }
 
     public Long getId() {
@@ -91,6 +91,10 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
         return stoppedAtZoneId;
     }
 
+    public String getComment() {
+        return comment;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -102,5 +106,70 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    static Builder builder() {
+        return new Builder();
+    }
+
+    static Builder builder(TimeClockEntity timeClockEntity) {
+        return new Builder()
+            .id(timeClockEntity.getId())
+            .owner(timeClockEntity.getOwner())
+            .startedAt(timeClockEntity.getStartedAt())
+            .startedAtZoneId(ZoneId.of(timeClockEntity.getStartedAtZoneId()))
+            .stoppedAt(timeClockEntity.getStoppedAt())
+            .stoppedAtZoneId(Optional.ofNullable(timeClockEntity.getStoppedAtZoneId()).map(ZoneId::of).orElse(null))
+            .comment(timeClockEntity.getComment());
+    }
+
+    public static class Builder {
+
+        private Long id;
+        private String owner;
+        private Instant startedAt;
+        private ZoneId startedAtZoneId;
+        private Instant stoppedAt;
+        private ZoneId stoppedAtZoneId;
+        private String comment;
+
+        public Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder owner(String owner) {
+            this.owner = owner;
+            return this;
+        }
+
+        public Builder startedAt(Instant startedAt) {
+            this.startedAt = startedAt;
+            return this;
+        }
+
+        public Builder startedAtZoneId(ZoneId startedAtZoneId) {
+            this.startedAtZoneId = startedAtZoneId;
+            return this;
+        }
+
+        public Builder stoppedAt(Instant stoppedAt) {
+            this.stoppedAt = stoppedAt;
+            return this;
+        }
+
+        public Builder stoppedAtZoneId(ZoneId stoppedAtZoneId) {
+            this.stoppedAtZoneId = stoppedAtZoneId;
+            return this;
+        }
+
+        public Builder comment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
+        public TimeClockEntity build() {
+            return new TimeClockEntity(id, owner, startedAt, startedAtZoneId, stoppedAt, stoppedAtZoneId, comment);
+        }
     }
 }

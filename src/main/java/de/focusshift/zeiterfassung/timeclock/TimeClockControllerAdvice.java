@@ -7,11 +7,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Optional;
 
-@ControllerAdvice(basePackages = {"de.focusshift.zeiterfassung.feedback", "de.focusshift.zeiterfassung.report", "de.focusshift.zeiterfassung.timeclock", "de.focusshift.zeiterfassung.timeentry"})
+@ControllerAdvice(assignableTypes = { HasTimeClock.class })
 class TimeClockControllerAdvice {
 
     private final TimeClockService timeClockService;
@@ -25,21 +23,8 @@ class TimeClockControllerAdvice {
         final UserId userId = userId(principal);
         final Optional<TimeClock> currentTimeClock = timeClockService.getCurrentTimeClock(userId);
 
-        currentTimeClock.map(this::toTimeClockDto)
+        currentTimeClock.map(TimeClockMapper::timeClockToTimeClockDto)
             .ifPresent(timeClockDto -> model.addAttribute("timeClock", timeClockDto));
-    }
-
-    private TimeClockDto toTimeClockDto(TimeClock timeClock) {
-
-        final Instant startedAt = timeClock.startedAt().toInstant();
-
-        final Duration duration = Duration.between(startedAt, Instant.now());
-        final int hours = duration.toHoursPart();
-        final int minutes = duration.toMinutesPart();
-        final int seconds = duration.toSecondsPart();
-        final String durationString = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-
-        return new TimeClockDto(startedAt, durationString);
     }
 
     private static UserId userId(DefaultOidcUser oidcUser) {

@@ -6,7 +6,6 @@ import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -35,6 +34,17 @@ class TimeClockService {
         timeClockRepository.save(toEntity(timeClock));
     }
 
+    TimeClock updateTimeClock(UserId userId, TimeClockUpdate timeClockUpdate) throws TimeClockNotStartedException {
+
+        final TimeClock timeClock = getCurrentTimeClock(userId)
+            .map(existingTimeClock -> prepareTimeClockUpdate(existingTimeClock, timeClockUpdate))
+            .orElseThrow(() -> new TimeClockNotStartedException(userId));
+
+        final TimeClockEntity timeClockEntity = toEntity(timeClock);
+
+        return toTimeClock(timeClockRepository.save(timeClockEntity));
+    }
+
     void stopTimeClock(UserId userId) {
         timeClockRepository.findByOwnerAndStoppedAtIsNull(userId.value())
             .map(entity -> timeClockEntityWithStoppedAt(entity, ZonedDateTime.now(userSettingsProvider.zoneId())))
@@ -45,14 +55,15 @@ class TimeClockService {
     }
 
     private static TimeClockEntity toEntity(TimeClock timeClock) {
-        final Long id = timeClock.id();
-        final String userId = timeClock.userId().value();
-        final ZonedDateTime startedAt = timeClock.startedAt();
-        final ZonedDateTime stoppedAt = timeClock.stoppedAt().orElse(null);
-        final Instant stoppedAtInstant = stoppedAt == null ? null : stoppedAt.toInstant();
-        final ZoneId stoppedAtZoneId = stoppedAt == null ? null : stoppedAt.getZone();
-
-        return new TimeClockEntity(id, userId, startedAt.toInstant(), startedAt.getZone(), stoppedAtInstant, stoppedAtZoneId);
+        return TimeClockEntity.builder()
+            .id(timeClock.id())
+            .owner(timeClock.userId().value())
+            .startedAt(timeClock.startedAt().toInstant())
+            .startedAtZoneId(timeClock.startedAt().getZone())
+            .stoppedAt(timeClock.stoppedAt().map(ZonedDateTime::toInstant).orElse(null))
+            .stoppedAtZoneId(timeClock.stoppedAt().map(ZonedDateTime::getZone).orElse(null))
+            .comment(timeClock.comment())
+            .build();
     }
 
     private static TimeClock toTimeClock(TimeClockEntity timeClockEntity) {
@@ -61,7 +72,7 @@ class TimeClockService {
         final ZonedDateTime startedAt = ZonedDateTime.ofInstant(timeClockEntity.getStartedAt(), ZoneId.of(timeClockEntity.getStartedAtZoneId()));
         final ZonedDateTime stoppedAt = timeClockEntity.getStoppedAt() == null ? null : ZonedDateTime.ofInstant(timeClockEntity.getStoppedAt(), ZoneId.of(timeClockEntity.getStoppedAtZoneId()));
 
-        return new TimeClock(id, userId, startedAt, Optional.ofNullable(stoppedAt));
+        return new TimeClock(id, userId, startedAt, timeClockEntity.getComment(), Optional.ofNullable(stoppedAt));
     }
 
     private static TimeEntry timeClockToTimeEntry(TimeClock timeClock) {
@@ -71,10 +82,20 @@ class TimeClockService {
         final ZonedDateTime stoppedAt = timeClock.stoppedAt()
             .orElseThrow(() -> new IllegalArgumentException("expected timeClock with stoppedAt field."));
 
-        return new TimeEntry(null, userId, "", startedAt, stoppedAt, false);
+        return new TimeEntry(null, userId, timeClock.comment(), startedAt, stoppedAt, false);
+    }
+
+    private static TimeClock prepareTimeClockUpdate(TimeClock existingTimeClock, TimeClockUpdate timeClockUpdate) {
+        return TimeClock.builder(existingTimeClock)
+            .startedAt(timeClockUpdate.startedAt())
+            .comment(timeClockUpdate.comment())
+            .build();
     }
 
     private static TimeClockEntity timeClockEntityWithStoppedAt(TimeClockEntity entity, ZonedDateTime stoppedAt) {
-        return new TimeClockEntity(entity.getId(), entity.getOwner(), entity.getStartedAt(), ZoneId.of(entity.getStartedAtZoneId()), stoppedAt.toInstant(), stoppedAt.getZone());
+        return TimeClockEntity.builder(entity)
+            .stoppedAt(stoppedAt.toInstant())
+            .stoppedAtZoneId(stoppedAt.getZone())
+            .build();
     }
 }
