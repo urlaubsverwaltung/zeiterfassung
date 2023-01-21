@@ -4,6 +4,7 @@ services:
     image: ghcr.io/urlaubsverwaltung/zeiterfassung/zeiterfassung:1.0.1
     network_mode: "host"
     environment:
+      SERVER_PORT: 8080
       # Database
       SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/zeiterfassung
       SPRING_DATASOURCE_USERNAME: user
@@ -26,16 +27,14 @@ services:
       SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_ISSUER-URI: http://localhost:8090/auth/realms/zeiterfassung-realm
       ZEITERFASSUNG_SECURITY_OIDC_SERVER-URL: http://localhost:8090/auth
       ZEITERFASSUNG_SECURITY_OIDC_LOGIN-FORM-URL: http://localhost:8080/oauth2/authorization/default
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
     depends_on:
+      keycloak:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       mailhog:
         condition: service_started
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
-      interval: 30s
-      timeout: 30s
-      retries: 5
 
   postgres:
     image: postgres:9.6
@@ -65,5 +64,11 @@ services:
       KC_HTTP_RELATIVE_PATH: /auth
       KC_HOSTNAME_STRICT: 'false'
       KC_HOSTNAME_STRICT_HTTPS: 'false'
+      KC_HEALTH_ENABLED: 'true'
     ports:
       - '8090:8090'
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8090/auth/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
