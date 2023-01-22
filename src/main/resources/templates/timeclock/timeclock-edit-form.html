@@ -74,11 +74,6 @@
               th:value="${timeClock.date}"
               th:classappend="${hasDateError ? 'border-red-300' : ''}"
             />
-            <p
-              th:if="${hasDateError}"
-              th:text="#{timeclock.edit.startAt.date.error}"
-              class="text-sm text-red-600"
-            ></p>
           </div>
           <div class="flex flex-col gap-0.5">
             <label
@@ -97,11 +92,6 @@
               th:value="${{timeClock.time}}"
               th:classappend="${hasTimeError ? 'border-red-300' : ''}"
             />
-            <p
-              th:if="${hasTimeError}"
-              th:text="#{timeclock.edit.startAt.time.error}"
-              class="text-sm text-red-600"
-            ></p>
           </div>
           <div class="flex flex-col gap-0.5 checkbox-switch">
             <label
@@ -119,6 +109,20 @@
               class="border border-gray-200"
             />
           </div>
+        </div>
+        <div>
+          <ul th:if="${hasDateError}" class="text-sm text-red-600">
+            <li
+              th:each="error : ${#fields.errors('date')}"
+              th:text="${error}"
+            ></li>
+          </ul>
+          <ul th:if="${hasTimeError}" class="text-sm text-red-600">
+            <li
+              th:each="error : ${#fields.errors('time')}"
+              th:text="${error}"
+            ></li>
+          </ul>
         </div>
         <div class="flex flex-col gap-0.5">
           <label
