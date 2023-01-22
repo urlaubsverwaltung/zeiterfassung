@@ -4,6 +4,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PastOrPresent;
 import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -11,6 +12,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 
 @Validated
+@PastOrPresent(message = "{timeclock.edit.startAt.error.past-or-present}")
 public class TimeClockDto {
 
     private Instant startedAt;
@@ -25,11 +27,11 @@ public class TimeClockDto {
 
     private String duration;
 
-    @NotNull
+    @NotNull(message = "{timeclock.edit.startAt.date.error.required}")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
 
-    @NotNull
+    @NotNull(message = "{timeclock.edit.startAt.time.error.required}")
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime time;
 
