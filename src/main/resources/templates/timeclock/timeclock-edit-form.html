@@ -47,7 +47,7 @@
       method="post"
       class="flex flex-col gap-4"
       th:data-has-errors="${#fields.hasErrors() ? 'true' : null}"
-      th:with="hasDateError=${#fields.hasErrors('date')}, hasTimeError=${#fields.hasErrors('time')}, hasCommentError=${#fields.hasErrors('comment')}"
+      th:with="hasDateError=${#fields.hasErrors('date')}, hasTimeError=${!hasDateError && #fields.hasErrors('time')}, hasCommentError=${#fields.hasErrors('comment')}"
     >
       <input
         type="hidden"
