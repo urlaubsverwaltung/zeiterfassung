@@ -1,6 +1,6 @@
 import { useSticky } from "./use-sticky";
 
-export class TimeWeekHeader extends HTMLHeadingElement {
+export class TimeDayHeader extends HTMLHeadingElement {
   #cleanup: () => void;
 
   connectedCallback() {
@@ -18,4 +18,4 @@ export class TimeWeekHeader extends HTMLHeadingElement {
   }
 }
 
-customElements.define("z-time-week-header", TimeWeekHeader, { extends: "h3" });
+customElements.define("z-time-day-header", TimeDayHeader, { extends: "h4" });

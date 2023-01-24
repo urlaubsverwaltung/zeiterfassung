@@ -92,11 +92,7 @@
           <div id="time-entries-box" class="space-y-16">
             <th:block th:ref="time-entries-box-content">
               <div th:with="week=${timeEntryWeeksPage.timeEntryWeek}">
-                <h3
-                  th:fragment="calendar-week-title"
-                  class="time-week-header"
-                  is="z-time-week-header"
-                >
+                <h3 th:fragment="calendar-week-title" class="time-week-header">
                   <span
                     class="font-medium"
                     th:text="#{time-entry.overview.week.group.title.date-range(${week.calendarWeek}, ${week.from}, ${week.to})}"
@@ -121,8 +117,11 @@
                   th:if="${not #lists.isEmpty(week.timeEntries())}"
                   class="px-4 space-y-10 md:space-y-2"
                 >
-                  <th:block th:each="day: ${week.days}">
-                    <h4 class="time-day-header">
+                  <div
+                    th:each="day: ${week.days}"
+                    class="space-y-10 md:space-y-2"
+                  >
+                    <h4 class="time-day-header" is="z-time-day-header">
                       <span class="font-medium" th:text="${day.date()}"></span>
                       <th:block th:if="${not #lists.isEmpty(day.timeEntries)}">
                         &nbsp;-&nbsp;
@@ -144,7 +143,7 @@
                         data-turbo="true"
                       ></div>
                     </th:block>
-                  </th:block>
+                  </div>
                 </div>
               </div>
             </th:block>
