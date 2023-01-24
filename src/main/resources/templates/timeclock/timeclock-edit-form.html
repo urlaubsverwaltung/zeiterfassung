@@ -103,6 +103,22 @@
               class="text-sm text-red-600"
             ></p>
           </div>
+          <div class="flex flex-col gap-0.5 checkbox-switch">
+            <label
+              for="input-clock-is-break"
+              class="text-xs text-gray-500 font-bold"
+              th:text="#{timeclock.edit.isBreak.label}"
+            >
+              Pause
+            </label>
+            <input
+              type="checkbox"
+              id="input-clock-is-break"
+              name="break"
+              th:checked="${timeClock.isBreak}"
+              class="border border-gray-200"
+            />
+          </div>
         </div>
         <div class="flex flex-col gap-0.5">
           <label

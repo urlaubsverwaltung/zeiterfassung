@@ -63,6 +63,7 @@ class TimeClockService {
             .stoppedAt(timeClock.stoppedAt().map(ZonedDateTime::toInstant).orElse(null))
             .stoppedAtZoneId(timeClock.stoppedAt().map(ZonedDateTime::getZone).orElse(null))
             .comment(timeClock.comment())
+            .isBreak(timeClock.isBreak())
             .build();
     }
 
@@ -72,7 +73,7 @@ class TimeClockService {
         final ZonedDateTime startedAt = ZonedDateTime.ofInstant(timeClockEntity.getStartedAt(), ZoneId.of(timeClockEntity.getStartedAtZoneId()));
         final ZonedDateTime stoppedAt = timeClockEntity.getStoppedAt() == null ? null : ZonedDateTime.ofInstant(timeClockEntity.getStoppedAt(), ZoneId.of(timeClockEntity.getStoppedAtZoneId()));
 
-        return new TimeClock(id, userId, startedAt, timeClockEntity.getComment(), Optional.ofNullable(stoppedAt));
+        return new TimeClock(id, userId, startedAt, timeClockEntity.getComment(), timeClockEntity.isBreak(), Optional.ofNullable(stoppedAt));
     }
 
     private static TimeEntry timeClockToTimeEntry(TimeClock timeClock) {
@@ -82,13 +83,14 @@ class TimeClockService {
         final ZonedDateTime stoppedAt = timeClock.stoppedAt()
             .orElseThrow(() -> new IllegalArgumentException("expected timeClock with stoppedAt field."));
 
-        return new TimeEntry(null, userId, timeClock.comment(), startedAt, stoppedAt, false);
+        return new TimeEntry(null, userId, timeClock.comment(), startedAt, stoppedAt, timeClock.isBreak());
     }
 
     private static TimeClock prepareTimeClockUpdate(TimeClock existingTimeClock, TimeClockUpdate timeClockUpdate) {
         return TimeClock.builder(existingTimeClock)
             .startedAt(timeClockUpdate.startedAt())
             .comment(timeClockUpdate.comment())
+            .isBreak(timeClockUpdate.isBreak())
             .build();
     }
 

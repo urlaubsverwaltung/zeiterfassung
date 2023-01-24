@@ -54,7 +54,7 @@ class TimeClockControllerAdviceTest {
         when(principal.getUserInfo()).thenReturn(oidcUserInfo);
 
         final ZonedDateTime startedAt = dateTimePivot.minusHours(hours).minusMinutes(minutes).minusSeconds(seconds);
-        final TimeClock timeClock = new TimeClock(1L, new UserId("batman"), startedAt, "awesome comment", null);
+        final TimeClock timeClock = new TimeClock(1L, new UserId("batman"), startedAt, "awesome comment", true, null);
         when(timeClockService.getCurrentTimeClock(new UserId("batman"))).thenReturn(Optional.of(timeClock));
 
         sut.addAttributes(model, principal);
@@ -70,6 +70,7 @@ class TimeClockControllerAdviceTest {
 
             assertThat(timeClockDto.getZoneId()).isEqualTo(timeClock.startedAt().getZone());
             assertThat(timeClockDto.getComment()).isEqualTo("awesome comment");
+            assertThat(timeClockDto.isBreak()).isEqualTo(true);
             assertThat(timeClockDto.getDuration()).isEqualTo(elapsedTimeString);
         });
     }

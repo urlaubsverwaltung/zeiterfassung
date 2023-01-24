@@ -67,7 +67,7 @@ class TimeClockControllerTest {
     void ensureStartTimeClockThrowsWhenClockIsRunningAlready() throws Exception {
 
         final ZonedDateTime startedAt = ZonedDateTime.of(2023, 1, 11, 13, 37, 0, 0, ZONE_EUROPE_BERLIN);
-        final TimeClock timeClock = new TimeClock(1L, new UserId("batman"), startedAt, "awesome comment", Optional.empty());
+        final TimeClock timeClock = new TimeClock(1L, new UserId("batman"), startedAt, "awesome comment", false, Optional.empty());
         when(timeClockService.getCurrentTimeClock(new UserId("batman"))).thenReturn(Optional.of(timeClock));
 
         perform(
@@ -113,7 +113,7 @@ class TimeClockControllerTest {
     void ensureEditTimeClockGetMappingWithRunningTimeClock() throws Exception {
 
         final ZonedDateTime startedAt = ZonedDateTime.of(2023, 1, 11, 13, 37, 0, 0, ZONE_EUROPE_BERLIN);
-        final TimeClock timeClock = new TimeClock(1L, new UserId("batman"), startedAt, "awesome comment", Optional.empty());
+        final TimeClock timeClock = new TimeClock(1L, new UserId("batman"), startedAt, "awesome comment", true, Optional.empty());
         when(timeClockService.getCurrentTimeClock(new UserId("batman"))).thenReturn(Optional.of(timeClock));
 
         perform(
@@ -126,6 +126,7 @@ class TimeClockControllerTest {
                     hasProperty("startedAt", is(Instant.from(startedAt))),
                     hasProperty("zoneId", is(ZONE_EUROPE_BERLIN)),
                     hasProperty("comment", is("awesome comment")),
+                    hasProperty("break", is(true)),
                     hasProperty("date", is(LocalDate.parse("2023-01-11"))),
                     hasProperty("time", is(LocalTime.parse("13:37")))
                 )
@@ -141,6 +142,7 @@ class TimeClockControllerTest {
                 .header("Referer", "referer-url")
                 .param("zoneId", "Europe/Berlin")
                 .param("comment", "awesome comment")
+                .param("break", "on")
                 .param("date", "2023-01-11")
                 .param("time", "13:37")
         )
@@ -149,7 +151,27 @@ class TimeClockControllerTest {
 
         final UserId expectedUserId = new UserId("batman");
         final ZonedDateTime expectedZonedDateTime = ZonedDateTime.of(2023, 1, 11, 13, 37, 0, 0, ZONE_EUROPE_BERLIN);
-        verify(timeClockService).updateTimeClock(expectedUserId, new TimeClockUpdate(expectedUserId, expectedZonedDateTime, "awesome comment"));
+        verify(timeClockService).updateTimeClock(expectedUserId, new TimeClockUpdate(expectedUserId, expectedZonedDateTime, "awesome comment", true));
+    }
+
+    @Test
+    void ensureEditTimeClockDisablingBreak() throws Exception {
+        perform(
+            post("/timeclock")
+                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .header("Referer", "referer-url")
+                .param("zoneId", "Europe/Berlin")
+                .param("comment", "awesome comment")
+                .param("date", "2023-01-11")
+                .param("time", "13:37")
+                // break: NOP->no param, YEP->param(break,on)
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("referer-url"));
+
+        final UserId expectedUserId = new UserId("batman");
+        final ZonedDateTime expectedZonedDateTime = ZonedDateTime.of(2023, 1, 11, 13, 37, 0, 0, ZONE_EUROPE_BERLIN);
+        verify(timeClockService).updateTimeClock(expectedUserId, new TimeClockUpdate(expectedUserId, expectedZonedDateTime, "awesome comment", false));
     }
 
     @Test

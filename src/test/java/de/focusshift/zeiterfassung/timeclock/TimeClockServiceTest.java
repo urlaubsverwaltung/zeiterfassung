@@ -80,7 +80,7 @@ class TimeClockServiceTest {
         final ZonedDateTime startedAtZonedDT = ZonedDateTime.ofInstant(startedAt, utc);
         final ZonedDateTime stoppedAtZonedDT = ZonedDateTime.ofInstant(stoppedAt, utc);
         final TimeClock actualTimeClock = actualMaybeTimeClock.get();
-        assertThat(actualTimeClock).isEqualTo(new TimeClock(1L, new UserId("batman"), startedAtZonedDT, "", Optional.of(stoppedAtZonedDT)));
+        assertThat(actualTimeClock).isEqualTo(new TimeClock(1L, new UserId("batman"), startedAtZonedDT, "", false, Optional.of(stoppedAtZonedDT)));
     }
 
     @Test
@@ -175,6 +175,7 @@ class TimeClockServiceTest {
             .startedAt(startedAt.toInstant())
             .startedAtZoneId(startedAt.getZone())
             .comment("awesome comment")
+            .isBreak(true)
             .build();
 
         when(timeClockRepository.findByOwnerAndStoppedAtIsNull("batman")).thenReturn(Optional.of(runningTimeClockEntity));
@@ -190,7 +191,7 @@ class TimeClockServiceTest {
 
         sut.stopTimeClock(new UserId("batman"));
 
-        verify(timeEntryService).saveTimeEntry(new TimeEntry(null, new UserId("batman"), "awesome comment", startedAt, stoppedAt, false));
+        verify(timeEntryService).saveTimeEntry(new TimeEntry(null, new UserId("batman"), "awesome comment", startedAt, stoppedAt, true));
     }
 
     @Test
@@ -211,7 +212,7 @@ class TimeClockServiceTest {
         final ZoneId zoneId = ZoneId.of("Europe/Berlin");
         final ZonedDateTime date = ZonedDateTime.of(2023, 1, 11, 13, 37, 0, 0, zoneId);
 
-        final TimeClock actualUpdatedTimeClock = sut.updateTimeClock(userId, new TimeClockUpdate(userId, date, "awesome comment"));
+        final TimeClock actualUpdatedTimeClock = sut.updateTimeClock(userId, new TimeClockUpdate(userId, date, "awesome comment", true));
 
         assertThat(actualUpdatedTimeClock.userId()).isEqualTo(userId);
         assertThat(actualUpdatedTimeClock.startedAt()).isEqualTo(date);
@@ -224,6 +225,7 @@ class TimeClockServiceTest {
         assertThat(entityCaptor.getValue()).satisfies(entity -> {
             assertThat(entity.getOwner()).isEqualTo("batman");
             assertThat(entity.getComment()).isEqualTo("awesome comment");
+            assertThat(entity.isBreak()).isTrue();
             assertThat(entity.getStartedAt()).isEqualTo(Instant.from(date));
             assertThat(entity.getStartedAtZoneId()).isEqualTo("Europe/Berlin");
             assertThat(entity.getStoppedAt()).isNull();
@@ -235,7 +237,7 @@ class TimeClockServiceTest {
     void ensureUpdateTimeClockThrowsWhenThereIsNoClockRunning() {
 
         final UserId userId = new UserId("batman");
-        final TimeClockUpdate timeClockUpdate = new TimeClockUpdate(userId, null, "");
+        final TimeClockUpdate timeClockUpdate = new TimeClockUpdate(userId, null, "", false);
 
         when(timeClockRepository.findByOwnerAndStoppedAtIsNull("batman")).thenReturn(Optional.empty());
 

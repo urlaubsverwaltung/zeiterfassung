@@ -109,7 +109,7 @@ class TimeClockController implements HasTimeClock {
 
         final ZonedDateTime startedAt = ZonedDateTime.of(timeClockDto.getDate(), timeClockDto.getTime(), timeClockDto.getZoneId());
 
-        return new TimeClockUpdate(userId, startedAt, timeClockDto.getComment());
+        return new TimeClockUpdate(userId, startedAt, timeClockDto.getComment(), timeClockDto.isBreak());
     }
 
     private static UserId principalToUserId(DefaultOidcUser principal) {
