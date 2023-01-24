@@ -40,7 +40,6 @@ jobs:
         with:
           name: Release Zeiterfassung ${{ steps.vars.outputs.version }}
           body_path: .chglog/${{ steps.vars.outputs.version }}.md
-          append_body: The docker image can be found in the [GitHub Packages](https://github.com/urlaubsverwaltung/zeiterfassung/pkgs/container/zeiterfassung%2Fzeiterfassung)
           files: |
               ./target/zeiterfassung-*.jar
       - name: Publish docker image to GitHub Container Registry
