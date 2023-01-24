@@ -120,10 +120,7 @@
                   th:if="${not #lists.isEmpty(week.timeEntries())}"
                   class="px-4 space-y-10 md:space-y-2"
                 >
-                  <div
-                    th:each="day: ${week.days}"
-                    class="space-y-10 md:space-y-2"
-                  >
+                  <div th:each="day: ${week.days}">
                     <h4 class="time-day-header" is="z-time-day-header">
                       <span class="font-medium" th:text="${day.date()}"></span>
                       <th:block th:if="${not #lists.isEmpty(day.timeEntries)}">
@@ -134,8 +131,9 @@
                         ></span>
                       </th:block>
                     </h4>
-                    <th:block th:each="timeEntry: ${day.timeEntries}">
+                    <div class="space-y-10 md:space-y-2">
                       <div
+                        th:each="timeEntry: ${day.timeEntries}"
                         is="z-time-entry-element"
                         th:fragment="time-entry-element(timeEntry)"
                         th:with="formAction=@{/timeentries/{id} (id=${timeEntry.id})}"
@@ -145,7 +143,7 @@
                         th:insert="::timeentry-slot-form(formAction=${formAction}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')"
                         data-turbo="true"
                       ></div>
-                    </th:block>
+                    </div>
                   </div>
                 </div>
               </div>
