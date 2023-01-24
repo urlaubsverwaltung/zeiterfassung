@@ -92,7 +92,10 @@
           <div id="time-entries-box" class="space-y-16">
             <th:block th:ref="time-entries-box-content">
               <div th:with="week=${timeEntryWeeksPage.timeEntryWeek}">
-                <h3 th:fragment="calendar-week-title" class="time-week-header">
+                <h3
+                  th:fragment="calendar-week-title"
+                  class="px-8 text-gray-400"
+                >
                   <span
                     class="font-medium"
                     th:text="#{time-entry.overview.week.group.title.date-range(${week.calendarWeek}, ${week.from}, ${week.to})}"

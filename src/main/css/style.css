@@ -409,14 +409,6 @@
     margin-top: 1rem;
   }
 
-  .time-week-header {
-    @apply pt-3;
-    @apply pb-1;
-    @apply pl-8;
-    @apply text-gray-400;
-    @apply transition-all;
-  }
-
   .time-day-header {
     @apply sticky;
     @apply top-12;
