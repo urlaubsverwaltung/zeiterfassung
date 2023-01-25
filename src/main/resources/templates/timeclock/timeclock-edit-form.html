@@ -114,7 +114,7 @@
             />
           </div>
         </div>
-        <div>
+        <div th:if="${hasDateError or hasTimeError}">
           <ul th:if="${hasDateError}" class="text-sm text-red-600">
             <li
               id="errors-time-clock-date"
