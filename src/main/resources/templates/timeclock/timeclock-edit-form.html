@@ -47,7 +47,7 @@
       method="post"
       class="flex flex-col gap-4"
       th:data-has-errors="${#fields.hasErrors() ? 'true' : null}"
-      th:with="hasDateError=${#fields.hasErrors('date')}, hasTimeError=${#fields.hasErrors('time')}, hasCommentError=${#fields.hasErrors('comment')}"
+      th:with="hasDateError=${#fields.hasErrors('date')}, hasTimeError=${!hasDateError && #fields.hasErrors('time')}, hasCommentError=${#fields.hasErrors('comment')}"
     >
       <input
         type="hidden"
@@ -73,12 +73,9 @@
               name="date"
               th:value="${timeClock.date}"
               th:classappend="${hasDateError ? 'border-red-300' : ''}"
+              th:aria-invalid="${hasDateError ?: 'true'}"
+              th:aria-describedBy="${hasDateError ?: 'errors-time-clock-date'}"
             />
-            <p
-              th:if="${hasDateError}"
-              th:text="#{timeclock.edit.startAt.date.error}"
-              class="text-sm text-red-600"
-            ></p>
           </div>
           <div class="flex flex-col gap-0.5">
             <label
@@ -96,12 +93,9 @@
               name="time"
               th:value="${{timeClock.time}}"
               th:classappend="${hasTimeError ? 'border-red-300' : ''}"
+              th:aria-invalid="${hasTimeError ?: 'true'}"
+              th:aria-describedBy="${hasTimeError ?: 'errors-time-clock-time'}"
             />
-            <p
-              th:if="${hasTimeError}"
-              th:text="#{timeclock.edit.startAt.time.error}"
-              class="text-sm text-red-600"
-            ></p>
           </div>
           <div class="flex flex-col gap-0.5 checkbox-switch">
             <label
@@ -119,6 +113,22 @@
               class="border border-gray-200"
             />
           </div>
+        </div>
+        <div>
+          <ul th:if="${hasDateError}" class="text-sm text-red-600">
+            <li
+              id="errors-time-clock-date"
+              th:each="error : ${#fields.errors('date')}"
+              th:text="${error}"
+            ></li>
+          </ul>
+          <ul th:if="${hasTimeError}" class="text-sm text-red-600">
+            <li
+              id="errors-time-clock-time"
+              th:each="error : ${#fields.errors('time')}"
+              th:text="${error}"
+            ></li>
+          </ul>
         </div>
         <div class="flex flex-col gap-0.5">
           <label
