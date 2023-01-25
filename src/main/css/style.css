@@ -409,24 +409,24 @@
     margin-top: 1rem;
   }
 
-  .time-week-header {
+  .time-day-header {
     @apply sticky;
     @apply top-12;
     @apply z-10;
     @apply pt-3;
-    @apply pb-6;
-    @apply pl-8;
+    @apply pb-3;
+    @apply pl-4;
     @apply text-gray-400;
     @apply transition-all;
   }
 
-  .time-week-header.is-pinned {
+  .time-day-header.is-pinned {
     @apply bg-gradient-to-b;
     @apply from-white;
     @apply via-white;
-    @apply pl-4;
+    @apply pt-1;
+    @apply pb-3;
     @apply text-sm;
-    @apply pb-10;
   }
 
   .report-graph {
@@ -525,7 +525,7 @@
   }
 
   .details-dropdown:not(.details-dropdown--no-border)
-  .details-dropdown_summary {
+    .details-dropdown_summary {
     @apply px-3;
     @apply py-2;
     @apply border;
