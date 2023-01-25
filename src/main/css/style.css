@@ -656,6 +656,24 @@
   }
 
   .body-overlay {
+    opacity: 0;
+    transition: opacity ease-in-out 150ms;
+  }
+
+  /* body-overlay.visible has to be separated from body:has */
+  /* otherwise firefox does not take these values oO */
+  .body-overlay.visible {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.33);
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+
+  body:has(.time-clock-dropdown[open]) #body-overlay {
+    opacity: 1;
     background-color: rgba(0, 0, 0, 0.33);
     width: 100vw;
     height: 100vh;
@@ -732,26 +750,5 @@
     @apply bg-blue-500 !important;
     background-position: right center;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
-  }
-}
-
-@layer utilities {
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  .animation-fade-in {
-    --animation-duration: 150ms;
-    animation: fade-in ease-in-out var(--animation-duration);
-  }
-
-  .animation-fade-out {
-    --animation-duration: 150ms;
-    animation: fade-in ease-in-out var(--animation-duration) reverse;
   }
 }
