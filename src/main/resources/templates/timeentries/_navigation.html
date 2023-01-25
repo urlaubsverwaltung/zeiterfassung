@@ -109,17 +109,12 @@
                 <form action="#" th:action="@{/timeclock/stop}" method="post">
                   <button
                     type="submit"
-                    class="bg-red-700 text-white p-2 xs:py-1 xs:pl-2 xs:pr-3 text-lg font-medium rounded-full flex items-center gap-1.5 hover:bg-red-600 transition-colors"
+                    class="bg-red-700 text-white py-1 pl-2 pr-3 text-lg font-medium rounded-full flex items-center gap-1.5 hover:bg-red-600 transition-colors"
                   >
                     <svg
                       th:replace="icons/stop::svg(className='text-red-100 w-6 h-6')"
                     />
-                    <span
-                      class="sr-only xs:not-sr-only"
-                      th:text="#{timeclock.stop}"
-                    >
-                      Stop
-                    </span>
+                    <span th:text="#{timeclock.stop}"> Stop </span>
                   </button>
                 </form>
               </div>
