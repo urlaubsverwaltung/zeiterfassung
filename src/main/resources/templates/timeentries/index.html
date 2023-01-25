@@ -229,7 +229,7 @@
                 id="input-entry-date"
                 th:id="|${rnd}-input-entry-date|"
                 name="date"
-                class="text-black bg-transparent"
+                class="text-black"
                 value="2021-11-27"
                 th:value="${#temporals.format(timeEntry.date, 'yyyy-MM-dd')}"
                 data-iso-value="2021-11-27"
@@ -287,12 +287,8 @@
               <div
                 class="ajax-loader flex-1 border md:border-l-0 border-timeslot-form rounded-b-3xl md:rounded-b-none md:rounded-r-3xl flex items-center"
               >
-                <div
-                  class="w-full flex flex-col sm:flex-row md:flex-col lg:flex-row py-4 lg:py-0 px-5"
-                >
-                  <div
-                    class="relative sm:flex-1 flex flex-col-reverse lg:flex-row lg:items-center w-full mb-4 sm:mb-0 sm:mr-4"
-                  >
+                <div class="time-entry-cell-container">
+                  <div class="time-entry-cell time-entry-cell__comment">
                     <input
                       type="text"
                       id="input-entry-comment"
@@ -301,112 +297,99 @@
                       th:value="${timeEntry.comment}"
                       placeholder="Woran arbeitest du gerade?"
                       th:placeholder="#{time-entry.form.comment.input.placeholder}"
-                      class="border border-gray-200 w-full px-1 -ml-1 md:ml-0 lg:-ml-1 mt-0.5 py-0.5 lg:mt-8 text-sm lg:-translate-y-0.5 bg-transparent"
                     />
                     <label
                       for="input-entry-comment"
                       th:for="|${rnd}-input-entry-comment|"
-                      class="md:px-1 lg:px-0 lg:absolute left-0 top-2 transition-all text-sm cursor-pointer"
                       th:text="#{time-entry.form.comment.label}"
                     >
                       Kommentar
                     </label>
                   </div>
-                  <div class="flex gap-1">
-                    <div class="relative flex flex-col-reverse md:flex-col">
-                      <input
-                        type="time"
-                        id="input-entry-from"
-                        th:id="|${rnd}-input-entry-from|"
-                        name="start"
-                        th:value="${timeEntry.start}"
-                        placeholder="Von"
-                        th:placeholder="#{time-entry.form.start.input.placeholder}"
-                        class="peer px-1 mt-0.5 sm:mt-7.5 sm:mb-0.5 border border-gray-200 invalid:border-red-600 w-full md:flex-1 text-sm bg-transparent"
-                        th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
-                      />
-                      <label
-                        for="input-entry-from"
-                        th:for="|${rnd}-input-entry-from|"
-                        class="sm:absolute left-1 top-2 transition-all text-sm cursor-pointer peer-invalid:text-red-600"
-                        th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
-                        th:text="#{time-entry.form.start.label}"
-                      >
-                        Von
-                      </label>
-                    </div>
-                    <div class="relative flex flex-col-reverse md:flex-col">
-                      <input
-                        type="time"
-                        id="input-entry-to"
-                        th:id="|${rnd}-input-entry-to|"
-                        name="end"
-                        th:value="${timeEntry.end}"
-                        placeholder="Bis"
-                        th:placeholder="#{time-entry.form.end.input.placeholder}"
-                        class="peer px-1 mt-0.5 sm:mt-7.5 sm:mb-0.5 border border-gray-200 invalid:border-red-600 w-full md:flex-1 text-sm bg-transparent"
-                        th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
-                      />
-                      <label
-                        for="input-entry-to"
-                        th:for="|${rnd}-input-entry-to|"
-                        class="sm:absolute left-1 top-2 transition-all text-sm cursor-pointer peer-invalid:text-red-600"
-                        th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
-                        th:text="#{time-entry.form.end.label}"
-                      >
-                        Bis
-                      </label>
-                    </div>
-                    <div
-                      class="relative sm:w-18 flex flex-col-reverse md:flex-col justify-center"
+                  <div class="time-entry-cell time-entry-cell__from">
+                    <input
+                      type="time"
+                      id="input-entry-from"
+                      th:id="|${rnd}-input-entry-from|"
+                      name="start"
+                      th:value="${timeEntry.start}"
+                      placeholder="Von"
+                      th:placeholder="#{time-entry.form.start.input.placeholder}"
+                      class="peer invalid:border-red-600"
+                      th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
+                    />
+                    <label
+                      for="input-entry-from"
+                      th:for="|${rnd}-input-entry-from|"
+                      class="peer-invalid:text-red-600"
+                      th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
+                      th:text="#{time-entry.form.start.label}"
                     >
-                      <input
-                        type="text"
-                        id="input-entry-duration"
-                        th:id="|${rnd}-input-entry-duration|"
-                        name="duration"
-                        th:value="${timeEntry.duration}"
-                        placeholder="hh:mm"
-                        th:placeholder="#{time-entry.form.duration.input.placeholder}"
-                        class="peer px-1 mt-0.5 sm:mt-7.5 sm:mb-0.5 border border-gray-200 invalid:border-red-600 w-full md:flex-1 text-sm bg-transparent"
-                        th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
-                      />
-                      <label
-                        for="input-entry-duration"
-                        th:for="|${rnd}-input-entry-duration|"
-                        class="sm:absolute left-1 top-2 transition-all text-sm cursor-pointer peer-invalid:text-red-600"
-                        th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
-                        th:text="#{time-entry.form.duration.label}"
-                      >
-                        Dauer
-                      </label>
-                    </div>
-                    <div
-                      class="relative sm:w-16 flex flex-col-reverse md:flex-col justify-center"
+                      Von
+                    </label>
+                  </div>
+                  <div class="time-entry-cell time-entry-cell__to">
+                    <input
+                      type="time"
+                      id="input-entry-to"
+                      th:id="|${rnd}-input-entry-to|"
+                      name="end"
+                      th:value="${timeEntry.end}"
+                      placeholder="Bis"
+                      th:placeholder="#{time-entry.form.end.input.placeholder}"
+                      class="peer invalid:border-red-600"
+                      th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
+                    />
+                    <label
+                      for="input-entry-to"
+                      th:for="|${rnd}-input-entry-to|"
+                      class="peer-invalid:text-red-600"
+                      th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
+                      th:text="#{time-entry.form.end.label}"
                     >
-                      <span
-                        class="flex items-center gap-2 px-1 mt-0.5 sm:mt-7.5 sm:mb-0.5"
-                      >
-                        <span class="checkbox-switch">
-                          <input
-                            type="checkbox"
-                            id="input-entry-is-break"
-                            th:id="|${rnd}-input-entry-is-break|"
-                            name="break"
-                            th:checked="${timeEntry.isBreak}"
-                            class="peer border border-gray-200"
-                          />
-                          <label
-                            for="input-entry-is-break"
-                            th:for="|${rnd}-input-entry-is-break|"
-                            class="sm:absolute left-1 top-2 transition-all text-sm cursor-pointer"
-                            th:text="#{time-entry.form.is-break.label}"
-                          >
-                            Pause
-                          </label>
-                        </span>
-                      </span>
-                    </div>
+                      Bis
+                    </label>
+                  </div>
+                  <div class="time-entry-cell time-entry-cell__duration">
+                    <input
+                      type="text"
+                      id="input-entry-duration"
+                      th:id="|${rnd}-input-entry-duration|"
+                      name="duration"
+                      th:value="${timeEntry.duration}"
+                      placeholder="hh:mm"
+                      th:placeholder="#{time-entry.form.duration.input.placeholder}"
+                      class="peer invalid:border-red-600"
+                      th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
+                    />
+                    <label
+                      for="input-entry-duration"
+                      th:for="|${rnd}-input-entry-duration|"
+                      class="peer-invalid:text-red-600"
+                      th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
+                      th:text="#{time-entry.form.duration.label}"
+                    >
+                      Dauer
+                    </label>
+                  </div>
+                  <div class="time-entry-cell time-entry-cell__break">
+                    <span class="checkbox-switch">
+                      <input
+                        type="checkbox"
+                        id="input-entry-is-break"
+                        th:id="|${rnd}-input-entry-is-break|"
+                        name="break"
+                        th:checked="${timeEntry.isBreak}"
+                        class="peer mt-0.5"
+                      />
+                    </span>
+                    <label
+                      for="input-entry-is-break"
+                      th:for="|${rnd}-input-entry-is-break|"
+                      th:text="#{time-entry.form.is-break.label}"
+                    >
+                      Pause
+                    </label>
                   </div>
                 </div>
               </div>
