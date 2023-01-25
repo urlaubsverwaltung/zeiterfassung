@@ -1,17 +1,10 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-import org.threeten.extra.YearWeek;
-
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.Year;
 import java.util.List;
 
-import static java.time.Month.DECEMBER;
-import static java.time.temporal.WeekFields.ISO;
-
-record TimeEntryDay(LocalDate date,
-                    List<TimeEntry> timeEntries) {
+record TimeEntryDay(LocalDate date, List<TimeEntry> timeEntries) {
 
     public WorkDuration workDuration() {
 

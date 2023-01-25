@@ -49,7 +49,7 @@ record TimeEntryWeek(LocalDate firstDateOfWeek, List<TimeEntryDay> days) {
 
     public List<TimeEntry> timeEntries() {
         return days.stream().map(TimeEntryDay::timeEntries)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
+            .flatMap(Collection::stream)
+            .toList();
     }
 }
