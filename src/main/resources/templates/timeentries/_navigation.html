@@ -79,7 +79,7 @@
               </form>
               <div th:if="${timeClock != null}" class="flex items-center">
                 <details
-                  class="time-clock-dropdown mr-4"
+                  class="time-clock-dropdown mr-4 sr-only xs:not-sr-only"
                   is="z-details-dropdown"
                 >
                   <summary
@@ -109,12 +109,17 @@
                 <form action="#" th:action="@{/timeclock/stop}" method="post">
                   <button
                     type="submit"
-                    class="bg-red-700 text-white pl-3 pr-4 py-1 text-lg font-medium rounded-full flex items-center hover:bg-red-600 transition-colors"
+                    class="bg-red-700 text-white p-2 xs:py-1 xs:pl-2 xs:pr-3 text-lg font-medium rounded-full flex items-center gap-1.5 hover:bg-red-600 transition-colors"
                   >
                     <svg
-                      th:replace="icons/stop::svg(className='w-6 h-6 mr-1.5')"
+                      th:replace="icons/stop::svg(className='text-red-100 w-6 h-6')"
                     />
-                    <span th:text="#{timeclock.stop}"> Stop </span>
+                    <span
+                      class="sr-only xs:not-sr-only"
+                      th:text="#{timeclock.stop}"
+                    >
+                      Stop
+                    </span>
                   </button>
                 </form>
               </div>
