@@ -666,117 +666,41 @@
 }
 
 @layer components {
-  /*
-   * firefox does not support :has() selector currently.
-   */
-  @supports not selector(:has(+ *)) {
-    .details-dropdown {
-      position: relative;
-    }
-
-    .details-dropdown_summary {
-      @apply cursor-pointer;
-      @apply block;
-      @apply text-sm;
-      @apply w-full;
-    }
-
-    .details-dropdown:not(.details-dropdown--no-border)
-      > .details-dropdown_summary {
-      @apply px-3;
-      @apply py-2;
-      @apply border;
-      @apply border-neutral-300;
-      @apply rounded-md;
-    }
-
-    .details-dropdown_content {
-      z-index: 1;
-      position: absolute;
-      left: 0;
-      right: 0;
-      @apply -bottom-1;
-      @apply translate-y-full;
-      @apply bg-white;
-      @apply shadow-lg;
-      @apply border;
-      @apply px-4;
-      @apply py-3;
-      @apply rounded;
-    }
-
-    .details-dropdown_content--full-to-sm {
-      left: auto;
-      right: 0;
-    }
+  .time-clock-dropdown_summary {
+    @apply cursor-pointer;
+    @apply text-sm;
+    @apply w-full;
+    @apply px-3;
+    @apply py-2;
+    @apply rounded-md;
+    @apply flex;
+    @apply items-center;
   }
 
-  /*
-   * Chrome, Edge, Safari
-   */
-  @supports selector(:has(+ *)) {
-    .details-dropdown:not(:has(.details-dropdown_content--full-to-sm)) {
+  .time-clock-dropdown_content {
+    z-index: 1;
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    width: calc(100vw - 1rem); /* 1rem = left + right */
+    @apply bg-white;
+    @apply border;
+    @apply px-4;
+    @apply py-3;
+    @apply rounded;
+    @apply translate-y-4;
+    @apply shadow-2xl;
+  }
+
+  @screen sm {
+    .time-clock-dropdown {
       position: relative;
     }
 
-    .details-dropdown_summary {
-      @apply cursor-pointer;
-      @apply block;
-      @apply text-sm;
-      @apply w-full;
-    }
-
-    .details-dropdown:not(.details-dropdown--no-border)
-      > .details-dropdown_summary {
-      @apply px-3;
-      @apply py-2;
-      @apply border;
-      @apply border-neutral-300;
-      @apply rounded-md;
-    }
-
-    .details-dropdown > .details-dropdown_content {
-      z-index: 1;
-      position: absolute;
-      @apply bg-white;
-      @apply border;
-      @apply px-4;
-      @apply py-3;
-      @apply rounded;
-    }
-
-    .details-dropdown:not(:has(.details-dropdown_content--full-to-sm))
-      > .details-dropdown_content {
-      left: 0;
+    .time-clock-dropdown_content {
+      left: auto;
       right: 0;
-      @apply -bottom-1;
-      @apply translate-y-full;
-      @apply shadow-lg;
-    }
-
-    .details-dropdown:has(.details-dropdown_content--full-to-sm)
-      > .details-dropdown_content {
-      left: 0.5rem;
-      right: 0.5rem;
-      @apply translate-y-4;
-      @apply shadow-2xl;
-    }
-
-    .details-dropdown_content--full-to-sm {
-      width: calc(100vw - 1rem); /* 1rem = padding-x */
-    }
-
-    @screen sm {
-      .details-dropdown {
-        position: relative;
-      }
-
-      .details-dropdown:has(.details-dropdown_content--full-to-sm)
-        > .details-dropdown_content {
-        width: auto;
-        left: auto;
-        right: 0;
-      }
+      width: auto;
     }
   }
 }
