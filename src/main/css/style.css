@@ -656,6 +656,24 @@
   }
 
   .body-overlay {
+    opacity: 0;
+    transition: opacity ease-in-out 150ms;
+  }
+
+  /* body-overlay.visible has to be separated from body:has */
+  /* otherwise firefox does not take these values oO */
+  .body-overlay.visible {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.33);
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+
+  body:has(.time-clock-dropdown[open]) #body-overlay {
+    opacity: 1;
     background-color: rgba(0, 0, 0, 0.33);
     width: 100vw;
     height: 100vh;
@@ -666,39 +684,42 @@
 }
 
 @layer components {
-  .details-dropdown {
-    position: relative;
-  }
-
-  .details-dropdown_summary {
+  .time-clock-dropdown_summary {
     @apply cursor-pointer;
-    @apply block;
     @apply text-sm;
     @apply w-full;
-  }
-
-  .details-dropdown:not(.details-dropdown--no-border)
-    .details-dropdown_summary {
     @apply px-3;
     @apply py-2;
-    @apply border;
-    @apply border-neutral-300;
     @apply rounded-md;
+    @apply flex;
+    @apply items-center;
   }
 
-  .details-dropdown_content {
+  .time-clock-dropdown_content {
     z-index: 1;
     position: absolute;
-    left: 0;
-    right: 0;
-    @apply -bottom-1;
-    @apply translate-y-full;
+    left: 0.5rem;
+    right: 0.5rem;
+    width: calc(100vw - 1rem); /* 1rem = left + right */
     @apply bg-white;
-    @apply shadow-lg;
     @apply border;
     @apply px-4;
     @apply py-3;
     @apply rounded;
+    @apply translate-y-4;
+    @apply shadow-2xl;
+  }
+
+  @screen sm {
+    .time-clock-dropdown {
+      position: relative;
+    }
+
+    .time-clock-dropdown_content {
+      left: auto;
+      right: 0;
+      width: auto;
+    }
   }
 }
 
@@ -729,26 +750,5 @@
     @apply bg-blue-500 !important;
     background-position: right center;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
-  }
-}
-
-@layer utilities {
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  .animation-fade-in {
-    --animation-duration: 150ms;
-    animation: fade-in ease-in-out var(--animation-duration);
-  }
-
-  .animation-fade-out {
-    --animation-duration: 150ms;
-    animation: fade-in ease-in-out var(--animation-duration) reverse;
   }
 }

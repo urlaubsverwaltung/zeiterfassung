@@ -79,12 +79,12 @@
               </form>
               <div th:if="${timeClock != null}" class="flex items-center">
                 <details
-                  class="details-dropdown details-dropdown--no-border mr-4"
+                  class="time-clock-dropdown mr-4"
                   is="z-details-dropdown"
                 >
                   <summary
                     id="time-clock-summary"
-                    class="details-dropdown_summary flex items-center"
+                    class="time-clock-dropdown_summary"
                   >
                     <span
                       class="sr-only"
@@ -100,7 +100,7 @@
                       th:replace="icons/chevron-down::svg(className='w-4 h-4')"
                     ></svg>
                   </summary>
-                  <div class="details-dropdown_content left-auto right-0">
+                  <div class="time-clock-dropdown_content">
                     <div
                       th:replace="/timeclock/timeclock-edit-form::navigation-box"
                     ></div>
