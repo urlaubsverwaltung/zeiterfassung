@@ -391,80 +391,133 @@
     @apply fill-amber-500;
   }
 
-  .nav-popup-menu::before {
-    content: "";
-    border-color: transparent;
-    border-width: 8px;
-    @apply border-b-gray-200;
-    position: absolute;
-    top: -17px;
-    @apply right-8;
-    @apply lg:right-7;
-    @apply dark:border-b-neutral-600;
-  }
-
   .nav-popup-menu {
-    @apply w-64;
-    @apply transition-transform;
-    @apply origin-top-right;
     @apply scale-0;
-    @apply border;
-    @apply border-gray-200;
-    @apply shadow-xl;
-    @apply mt-3;
-    @apply lg:mt-2.5;
-    @apply z-50;
-    @apply absolute;
-    @apply -right-2;
-    @apply top-full;
-    @apply rounded-2xl;
-    @apply lg:right-0;
-    @apply dark:border-zinc-800;
-    @apply dark:shadow-none;
-  }
+    @apply opacity-0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    @apply transition-all;
+    @apply duration-150;
 
-  .nav-popup-menu-inner {
-    @apply rounded-2xl;
-    @apply border-gray-200;
     @apply bg-white;
     @apply backdrop-blur;
-    @apply dark:bg-zinc-900;
-    @apply dark:border-zinc-800;
-    @apply supports-backdrop-blur:bg-white/[0.85];
-    @apply supports-backdrop-blur:dark:bg-zinc-900/[0.85];
+    @apply supports-backdrop-blur:bg-white/[0.95];
   }
 
-  .nav-popup-menu-inner ul li:first-of-type .nav-popup-menu_link {
+  .nav-popup-menu.visible {
+    @apply scale-100;
+    @apply opacity-100;
     @apply rounded-t-2xl;
   }
 
-  .nav-popup-menu-inner ul li:last-of-type .nav-popup-menu_link {
-    @apply rounded-b-2xl;
+  /* screen xs */
+  @media screen and (max-width: 481px) {
+    .nav-popup-menu.visible {
+      height: calc(100vh - 4rem);
+    }
   }
 
-  .nav-popup-menu-inner ul li[role="separator"] {
-    @apply border-t;
-    @apply border-gray-200;
-    @apply dark:border-zinc-700;
+  .nav-popup-menu-inner {
+    @apply flex flex-col;
+    @apply max-h-screen;
   }
 
-  .nav-popup-menu.visible,
-  .nav-popup-menu:focus-within {
-    @apply scale-100;
+  .nav-popup-menu-inner__header {
+    @apply rounded-t-2xl;
+    @apply bg-gradient-to-br;
+    @apply from-blue-50;
+    @apply via-gray-100;
+    @apply to-blue-100;
+    @apply px-4;
+    @apply py-2;
   }
 
-  .nav-popup-menu-button_icon {
-    @apply text-zinc-900;
-    @apply text-opacity-75;
-    @apply transition-colors;
-    @apply dark:text-zinc-100;
-    @apply dark:hover:text-opacity-100;
+  .nav-popup-menu-inner__content {
+    @apply p-2;
+    overflow-y: auto;
   }
 
-  .nav-popup-menu-button:is(:hover, :focus) .nav-popup-menu-button_icon {
-    @apply text-opacity-100;
-    @apply text-zinc-800;
-    @apply dark:text-zinc-100;
+  body:has(.nav-popup-menu.visible) {
+    /* disable body scroll as long as nav-popup-menu is open */
+    overflow: hidden;
+  }
+
+  .nav-popup-menu.visible .nav-popup-menu-inner {
+    width: 100%;
+    height: 100%;
+  }
+
+  @screen xs {
+    .nav-popup-menu::before {
+      content: "";
+      border-color: transparent;
+      border-width: 8px;
+      @apply border-b-gray-200;
+      position: absolute;
+      top: -17px;
+      @apply right-6;
+    }
+
+    .nav-popup-menu {
+      @apply transition-transform;
+      @apply origin-top-right;
+      @apply scale-0;
+      @apply border;
+      @apply border-gray-200;
+      @apply shadow-xl;
+      @apply mt-3;
+      @apply z-50;
+      @apply absolute;
+      @apply left-auto;
+      @apply right-0;
+      @apply bottom-auto;
+      @apply top-full;
+      @apply rounded-2xl;
+      @apply dark:border-zinc-800;
+      @apply dark:shadow-none;
+    }
+
+    .nav-popup-menu-inner {
+      max-height: 75vh;
+      @apply w-auto;
+      @apply h-auto;
+      @apply rounded-2xl;
+      @apply border-gray-200;
+      @apply bg-white;
+      @apply backdrop-blur;
+      @apply supports-backdrop-blur:bg-white/[0.85];
+    }
+
+    .nav-popup-menu-inner ul li:first-of-type .nav-popup-menu_link {
+      @apply rounded-t-2xl;
+    }
+
+    .nav-popup-menu-inner ul li:last-of-type .nav-popup-menu_link {
+      @apply rounded-b-2xl;
+    }
+
+    .nav-popup-menu-inner ul li[role="separator"] {
+      @apply border-t;
+      @apply border-gray-200;
+    }
+
+    .nav-popup-menu.visible,
+    .nav-popup-menu:focus-within {
+      @apply scale-100;
+    }
+
+    .nav-popup-menu-button_icon {
+      @apply text-zinc-900;
+      @apply text-opacity-75;
+      @apply transition-colors;
+    }
+
+    .nav-popup-menu-button:is(:hover, :focus) .nav-popup-menu-button_icon {
+      @apply text-opacity-100;
+      @apply text-zinc-800;
+    }
   }
 
   .nav-popup-menu_link {
@@ -483,11 +536,6 @@
     @apply focus:text-black;
     @apply hover:bg-gray-50;
     @apply focus:bg-gray-50;
-    @apply dark:text-zinc-50;
-    @apply dark:hover:text-zinc-200;
-    @apply dark:focus:text-zinc-200;
-    @apply dark:hover:bg-slate-800;
-    @apply dark:focus:bg-slate-800;
   }
 
   .sloth-background {
@@ -681,23 +729,20 @@
     top: 0;
     left: 0;
   }
+
+  body:has(.time-clock-dropdown[open]) .navigation-content-spacer--left::after,
+  body:has(.time-clock-dropdown[open])
+    .navigation-content-spacer--right::after {
+    /* can't handle content-space positioning with z-index. */
+    /* therefore set color. note that this depends on the user's monitor, of course. */
+    /* the used value seems to be a good compromise. */
+    background-color: rgba(0, 0, 0, 0.31);
+  }
 }
 
 @layer components {
-  .time-clock-dropdown_summary {
-    @apply cursor-pointer;
-    @apply text-sm;
-    @apply w-full;
-    @apply px-3;
-    @apply py-2;
-    @apply rounded-md;
-    @apply flex;
-    @apply items-center;
-  }
-
   .time-clock-dropdown_content {
     z-index: 1;
-    position: absolute;
     left: 0.5rem;
     right: 0.5rem;
     width: calc(100vw - 1rem); /* 1rem = left + right */
@@ -710,12 +755,30 @@
     @apply shadow-2xl;
   }
 
+  @screen xs {
+    .time-clock-dropdown_summary {
+      @apply cursor-pointer;
+      @apply text-sm;
+      @apply w-full;
+      @apply px-3;
+      @apply py-2;
+      @apply rounded-md;
+      @apply flex;
+      @apply items-center;
+    }
+
+    .time-clock-dropdown_content {
+      position: fixed;
+    }
+  }
+
   @screen sm {
     .time-clock-dropdown {
       position: relative;
     }
 
     .time-clock-dropdown_content {
+      position: absolute;
       left: auto;
       right: 0;
       width: auto;

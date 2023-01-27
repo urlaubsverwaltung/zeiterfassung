@@ -60,12 +60,13 @@
                 </ul>
               </nav>
             </div>
-            <div class="z-50 flex-1 flex items-center justify-end">
+            <div class="z-50 flex-1 flex justify-end gap-4">
               <form
                 th:if="${timeClock == null}"
                 action="#"
                 th:action="@{/timeclock/start}"
                 method="post"
+                class="flex items-center"
               >
                 <button
                   type="submit"
@@ -79,7 +80,7 @@
               </form>
               <div th:if="${timeClock != null}" class="flex items-center">
                 <details
-                  class="time-clock-dropdown mr-4"
+                  class="time-clock-dropdown mr-4 sr-only xs:not-sr-only xs:relative"
                   is="z-details-dropdown"
                 >
                   <summary
@@ -106,19 +107,25 @@
                     ></div>
                   </div>
                 </details>
-                <form action="#" th:action="@{/timeclock/stop}" method="post">
+                <form
+                  action="#"
+                  th:action="@{/timeclock/stop}"
+                  method="post"
+                  class="flex items-center"
+                >
                   <button
                     type="submit"
-                    class="bg-red-700 text-white pl-3 pr-4 py-1 text-lg font-medium rounded-full flex items-center hover:bg-red-600 transition-colors"
+                    class="bg-red-700 text-white py-1 pl-2 pr-3 text-lg font-medium rounded-full flex items-center gap-1.5 hover:bg-red-600 transition-colors"
                   >
                     <svg
-                      th:replace="icons/stop::svg(className='w-6 h-6 mr-1.5')"
+                      th:replace="icons/stop::svg(className='text-red-100 w-6 h-6')"
                     />
                     <span th:text="#{timeclock.stop}"> Stop </span>
                   </button>
                 </form>
               </div>
-              <div class="ml-8 shrink-0 relative">
+              <div th:replace="launchpad/launchpad::navigation-item"></div>
+              <div class="shrink-0 relative flex">
                 <a
                   href="#avatar-menu"
                   id="avatar-link"
@@ -137,64 +144,66 @@
                     th:replace="icons/chevron-down::svg(className='w-4 h-4')"
                   ></svg>
                 </a>
-                <div id="avatar-menu" class="nav-popup-menu">
+                <div id="avatar-menu" class="nav-popup-menu xs:max-w-xs">
                   <div class="nav-popup-menu-inner">
-                    <ul class="list-none m-0 p-0 max-w-xs">
-                      <li class="mb-1">
-                        <a
-                          href="/"
-                          th:href="@{/}"
-                          class="bg-gradient-to-br from-blue-50 via-gray-100 to-blue-100 dark:from-sky-800 dark:via-slate-800 dark:to-sky-900 bg-blue-50 px-6 py-3 rounded-t-2xl flex items-center gap-4 hover:no-underline focus:no-underline"
+                    <div class="nav-popup-menu-inner__header">
+                      <a
+                        href="/"
+                        th:href="@{/}"
+                        class="flex items-center gap-4 hover:no-underline focus:no-underline"
+                      >
+                        <span class="text-blue-200">
+                          <img
+                            th:replace="fragments/avatar::avatar(fullName=${signedInUser.fullName},width='64px',height='64px')"
+                            alt=""
+                          />
+                        </span>
+                        <p
+                          class="m-0 whitespace-nowrap overflow-hidden text-ellipsis"
                         >
-                          <span class="text-blue-200">
-                            <img
-                              th:replace="fragments/avatar::avatar(fullName=${signedInUser.fullName},width='64px',height='64px')"
-                              alt=""
-                            />
+                          <span
+                            th:text="#{navigation.avatar-menu.signed-in-as}"
+                            class="text-sm block text-gray-600 dark:text-zinc-100"
+                          ></span>
+                          <span
+                            class="text-lg leading-none text-gray-700 hover:text-black focus:text-black dark:text-zinc-200"
+                            th:text="${signedInUser.fullName}"
+                          >
+                            Max Mustermann
                           </span>
-                          <p
-                            class="m-0 whitespace-nowrap overflow-hidden text-ellipsis"
+                        </p>
+                      </a>
+                    </div>
+                    <div class="nav-popup-menu-inner__content">
+                      <ul class="list-none m-0 p-0">
+                        <li>
+                          <form
+                            action="#"
+                            th:action="@{/logout}"
+                            method="POST"
+                            class="ml-auto w-full"
                           >
-                            <span
-                              th:text="#{navigation.avatar-menu.signed-in-as}"
-                              class="text-sm block text-gray-600 dark:text-zinc-100"
-                            ></span>
-                            <span
-                              class="text-lg leading-none text-gray-700 hover:text-black focus:text-black dark:text-zinc-200"
-                              th:text="${signedInUser.fullName}"
+                            <button
+                              type="submit"
+                              class="nav-popup-menu_link rounded-b-2xl"
+                              data-test-id="logout"
                             >
-                              Max Mustermann
-                            </span>
-                          </p>
-                        </a>
-                      </li>
-                      <li>
-                        <form
-                          action="#"
-                          th:action="@{/logout}"
-                          method="POST"
-                          class="ml-auto w-full"
-                        >
-                          <button
-                            type="submit"
-                            class="nav-popup-menu_link rounded-b-2xl"
-                            data-test-id="logout"
-                          >
-                            <span
-                              class="px-2 py-1 rounded flex items-center ml-2.5"
-                            >
-                              <svg
-                                th:replace="icons/logout::svg(className='w-6 h-6')"
-                              ></svg>
-                            </span>
-                            <span
-                              class="ml-4"
-                              th:text="#{navigation.avatar-menu.logout}"
-                            ></span>
-                          </button>
-                        </form>
-                      </li>
-                    </ul>
+                              <span
+                                class="px-2 py-1 rounded flex items-center ml-2.5"
+                              >
+                                <svg
+                                  th:replace="icons/logout::svg(className='w-6 h-6')"
+                                ></svg>
+                              </span>
+                              <span
+                                class="ml-4"
+                                th:text="#{navigation.avatar-menu.logout}"
+                              ></span>
+                            </button>
+                          </form>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>

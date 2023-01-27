@@ -126,6 +126,42 @@ works, can be found in the corresponding chapters of the Spring Boot documentati
 * [Linux Service](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment-service)
 * [Windows Service](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment-windows)
 
+#### Launchpad
+
+You can configure a launchpad that shows other applications the user can navigate to.
+
+```properties
+launchpad.name-default-locale=de
+
+launchpad.apps[0].url=https://example.org
+launchpad.apps[0].name.de=Anwendung 1
+launchpad.apps[0].name.en=App 1
+launchpad.apps[0].icon=
+
+launchpad.apps[1].url=https://example-2.org
+launchpad.apps[1].name.de=Anwendung 2
+launchpad.apps[1].name.en=App 2
+launchpad.apps[1].icon=
+```
+
+| Property                        | Type     | Description                                                                                                                                       |
+|---------------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| launchpad.name-default-locale   | Locale   | Default application name when requested Locale has no name configured.                                                                            |
+| launchpad.apps[x].url           | String   | The URL of the application.                                                                                                                       |
+| launchpad.apps[x].name.[locale] | String   | Localized application name.                                                                                                                       |
+| launchpad.apps[x].icon          | String   | URL of an image, or a base64 encoded one. Will be injected into a `<img src="" />` attribute.<br/>Note that the image should ideally be a square. |
+| launchpad.apps[x].authority     | [String] | Optional authority required to display the app or not for an Authentication.                                                                      |
+
+
+Launchpad has custom messages. So you have to tell Spring about the messages file:
+
+```properties
+spring.messages.basename=messages,launchpad-core
+```
+
+* **(required)** `messages` is the default application messages properties
+* **(required)** `launchpad-core` provides launchpad specific messages
+
 ### Run application
 
 To run the docker container e.g. with following command:
