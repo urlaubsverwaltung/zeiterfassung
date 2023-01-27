@@ -2,12 +2,12 @@ package de.focusshift.launchpad.core;
 
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.context.properties.bind.BindResult;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
@@ -18,15 +18,11 @@ import java.util.List;
 
 @Configuration
 @EnableConfigurationProperties(LaunchpadConfigProperties.class)
+@ConditionalOnProperty(name="launchpad")
 public class LaunchpadAutoConfiguration {
 
     @Conditional(LaunchpadAppsCondition.class)
     static class LaunchpadConfig {
-
-        @Bean
-        static LaunchpadConfigValidator configurationPropertiesValidator(ApplicationContext applicationContext) {
-            return new LaunchpadConfigValidator(applicationContext);
-        }
 
         @Bean
         LaunchpadControllerAdvice launchpadControllerAdvice(LaunchpadService launchpadService) {

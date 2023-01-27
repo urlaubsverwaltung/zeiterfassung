@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.util.List;
+import java.util.Locale;
 
 @ControllerAdvice(assignableTypes = { HasLaunchpad.class })
 public class LaunchpadControllerAdvice {
@@ -17,13 +18,13 @@ public class LaunchpadControllerAdvice {
     }
 
     @ModelAttribute
-    public void addAttributes(Model model) {
+    public void addAttributes(Model model, Locale locale) {
 
         final Launchpad launchpad = launchpadService.getLaunchpad();
 
         final List<AppDto> appDtos = launchpad.apps()
             .stream()
-            .map(app -> new AppDto(app.url().toString(), app.messageKey(), app.icon()))
+            .map(app -> new AppDto(app.url().toString(), app.appName().get(locale), app.icon()))
             .toList();
 
         if (!appDtos.isEmpty()) {

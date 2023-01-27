@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -43,8 +44,8 @@ class LaunchpadControllerAdviceIT {
         when(launchpadService.getLaunchpad()).thenReturn(
             new Launchpad(
                 List.of(
-                    new App(new URL("https://example.org"), "message-key", "icon"),
-                    new App(new URL("https://example-2.org"), "message-key-2", "icon-2")
+                    new App(new URL("https://example.org"), new AppName("App 1", Map.of()), "icon"),
+                    new App(new URL("https://example-2.org"), new AppName("App 2", Map.of()), "icon-2")
                 )
             )
         );
@@ -53,8 +54,8 @@ class LaunchpadControllerAdviceIT {
             .perform(get("/launchpad"))
             .andExpect(model().attribute("launchpad", new LaunchpadDto(
                 List.of(
-                    new AppDto("https://example.org", "message-key", "icon"),
-                    new AppDto("https://example-2.org", "message-key-2", "icon-2")
+                    new AppDto("https://example.org", "App 1", "icon"),
+                    new AppDto("https://example-2.org", "App 2", "icon-2")
                 )
             )));
     }

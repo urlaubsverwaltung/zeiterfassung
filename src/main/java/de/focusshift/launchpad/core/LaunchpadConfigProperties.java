@@ -3,17 +3,28 @@ package de.focusshift.launchpad.core;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.net.URL;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @Validated
 @ConfigurationProperties(prefix = "launchpad")
 class LaunchpadConfigProperties {
 
+    @NotNull
+    private Locale nameDefaultLocale;
+
     private List<App> apps = List.of();
+
+    public Locale getNameDefaultLocale() {
+        return nameDefaultLocale;
+    }
+
+    public void setNameDefaultLocale(Locale nameDefaultLocale) {
+        this.nameDefaultLocale = nameDefaultLocale;
+    }
 
     List<App> getApps() {
         return apps;
@@ -24,5 +35,5 @@ class LaunchpadConfigProperties {
     }
 
     @Validated
-    record App(@Valid @NotNull URL url, @NotEmpty String messageKey, @NotEmpty String icon) {}
+    record App(@NotNull String url, @NotNull Map<Locale, String> name, @NotEmpty String icon) {}
 }
