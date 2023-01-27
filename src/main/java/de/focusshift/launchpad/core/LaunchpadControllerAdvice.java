@@ -1,6 +1,7 @@
 package de.focusshift.launchpad.core;
 
 import de.focusshift.launchpad.api.HasLaunchpad;
+import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -18,9 +19,9 @@ public class LaunchpadControllerAdvice {
     }
 
     @ModelAttribute
-    public void addAttributes(Model model, Locale locale) {
+    public void addAttributes(Model model, Locale locale, Authentication authentication) {
 
-        final Launchpad launchpad = launchpadService.getLaunchpad();
+        final Launchpad launchpad = launchpadService.getLaunchpad(authentication);
 
         final List<AppDto> appDtos = launchpad.apps()
             .stream()

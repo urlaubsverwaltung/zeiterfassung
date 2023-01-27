@@ -35,5 +35,5 @@ class LaunchpadConfigProperties {
     }
 
     @Validated
-    record App(@NotNull String url, @NotNull Map<Locale, String> name, @NotEmpty String icon) {}
+    record App(@NotNull String url, @NotNull Map<Locale, String> name, @NotEmpty String icon, String authority) {}
 }

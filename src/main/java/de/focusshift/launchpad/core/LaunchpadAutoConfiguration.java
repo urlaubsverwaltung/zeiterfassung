@@ -21,7 +21,7 @@ import java.util.List;
 
 @Configuration
 @EnableConfigurationProperties(LaunchpadConfigProperties.class)
-@ConditionalOnProperty(name="launchpad")
+@ConditionalOnProperty(prefix="launchpad", name = "name-default-locale")
 public class LaunchpadAutoConfiguration {
 
     @Conditional(LaunchpadAppsCondition.class)

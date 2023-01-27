@@ -144,12 +144,13 @@ launchpad.apps[1].name.en=App 2
 launchpad.apps[1].icon=
 ```
 
-| Property                        | Type   | Description                                                                                                                                       |
-|---------------------------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| launchpad.name-default-locale   | Locale | Default application name when requested Locale has no name configured.                                                                            |
-| launchpad.apps[x].url           | String | The URL of the application.                                                                                                                       |
-| launchpad.apps[x].name.[locale] | String | Localized application name.                                                                                                                       |
-| launchpad.apps[x].icon          | String | URL of an image, or a base64 encoded one. Will be injected into a `<img src="" />` attribute.<br/>Note that the image should ideally be a square. |
+| Property                        | Type     | Description                                                                                                                                       |
+|---------------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| launchpad.name-default-locale   | Locale   | Default application name when requested Locale has no name configured.                                                                            |
+| launchpad.apps[x].url           | String   | The URL of the application.                                                                                                                       |
+| launchpad.apps[x].name.[locale] | String   | Localized application name.                                                                                                                       |
+| launchpad.apps[x].icon          | String   | URL of an image, or a base64 encoded one. Will be injected into a `<img src="" />` attribute.<br/>Note that the image should ideally be a square. |
+| launchpad.apps[x].authority     | [String] | Optional authority required to display the app or not for an Authentication.                                                                      |
 
 
 Launchpad has custom messages. So you have to tell Spring about the messages file:

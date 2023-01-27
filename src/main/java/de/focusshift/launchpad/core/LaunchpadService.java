@@ -1,6 +1,8 @@
 package de.focusshift.launchpad.core;
 
+import org.springframework.security.core.Authentication;
+
 interface LaunchpadService {
 
-    Launchpad getLaunchpad();
+    Launchpad getLaunchpad(Authentication authentication);
 }
