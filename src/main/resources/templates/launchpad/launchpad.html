@@ -65,7 +65,8 @@
                   minmax(8rem, 1fr)
                 );
               "
-              th:styleappend="${#lists.size(launchpad.apps) > 3 ? '--cols:3' : '--cols:2'}"
+              th:with="size=${#lists.size(launchpad.apps)}"
+              th:styleappend="${size > 3 ? '--cols:3' : (size > 1 ? '--cols:2' : '--cols:1')}"
             >
               <li th:each="app : ${launchpad.apps}">
                 <a
