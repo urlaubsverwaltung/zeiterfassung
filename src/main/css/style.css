@@ -393,6 +393,7 @@
 
   .nav-popup-menu {
     @apply scale-0;
+    @apply opacity-0;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -407,6 +408,7 @@
 
   .nav-popup-menu.visible {
     @apply scale-100;
+    @apply opacity-100;
     @apply rounded-t-2xl;
   }
 
