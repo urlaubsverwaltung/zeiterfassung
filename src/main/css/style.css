@@ -699,6 +699,15 @@
     top: 0;
     left: 0;
   }
+
+  body:has(.time-clock-dropdown[open]) .navigation-content-spacer--left::after,
+  body:has(.time-clock-dropdown[open])
+    .navigation-content-spacer--right::after {
+    /* can't handle content-space positioning with z-index. */
+    /* therefore set color. note that this depends on the user's monitor, of course. */
+    /* the used value seems to be a good compromise. */
+    background-color: rgba(0, 0, 0, 0.31);
+  }
 }
 
 @layer components {
