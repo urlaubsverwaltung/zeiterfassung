@@ -66,6 +66,7 @@
                 action="#"
                 th:action="@{/timeclock/start}"
                 method="post"
+                class="flex items-center"
               >
                 <button
                   type="submit"
@@ -106,7 +107,12 @@
                     ></div>
                   </div>
                 </details>
-                <form action="#" th:action="@{/timeclock/stop}" method="post">
+                <form
+                  action="#"
+                  th:action="@{/timeclock/stop}"
+                  method="post"
+                  class="flex items-center"
+                >
                   <button
                     type="submit"
                     class="bg-red-700 text-white py-1 pl-2 pr-3 text-lg font-medium rounded-full flex items-center gap-1.5 hover:bg-red-600 transition-colors"
