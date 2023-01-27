@@ -48,6 +48,7 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
 
     private String comment;
 
+    @Column(name = "is_break")
     private boolean isBreak;
 
     protected TimeClockEntity() {
