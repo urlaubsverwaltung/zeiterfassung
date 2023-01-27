@@ -60,7 +60,10 @@
             <ul
               class="grid gap-2"
               style="
-                grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
+                grid-template-columns: repeat(
+                  var(--cols, 1),
+                  minmax(8rem, 1fr)
+                );
               "
               th:styleappend="${#lists.size(launchpad.apps) > 3 ? '--cols:3' : '--cols:2'}"
             >
@@ -77,7 +80,10 @@
                     height="64"
                     alt=""
                   />
-                  <span class="block text-center" th:text="${app.name}">
+                  <span
+                    class="block text-center w-full whitespace-nowrap overflow-hidden text-ellipsis"
+                    th:text="${app.name}"
+                  >
                     Awesome App
                   </span>
                 </a>
