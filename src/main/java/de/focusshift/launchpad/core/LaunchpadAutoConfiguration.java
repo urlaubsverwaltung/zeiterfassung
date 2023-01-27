@@ -1,7 +1,9 @@
 package de.focusshift.launchpad.core;
 
+import de.focusshift.launchpad.api.LaunchpadAppUrlCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -14,6 +16,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
+import java.net.URL;
 import java.util.List;
 
 @Configuration
@@ -30,8 +33,14 @@ public class LaunchpadAutoConfiguration {
         }
 
         @Bean
-        LaunchpadService launchpadService(LaunchpadConfigProperties launchpadConfigProperties) {
-            return new LaunchpadServiceImpl(launchpadConfigProperties);
+        LaunchpadService launchpadService(LaunchpadConfigProperties launchpadConfigProperties, LaunchpadAppUrlCustomizer appUrlCustomizer) {
+            return new LaunchpadServiceImpl(launchpadConfigProperties, appUrlCustomizer);
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        LaunchpadAppUrlCustomizer appUrlCustomizer() {
+            return URL::new;
         }
     }
 

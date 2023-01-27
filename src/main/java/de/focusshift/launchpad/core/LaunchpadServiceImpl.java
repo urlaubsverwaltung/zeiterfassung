@@ -1,5 +1,6 @@
 package de.focusshift.launchpad.core;
 
+import de.focusshift.launchpad.api.LaunchpadAppUrlCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,9 +17,11 @@ class LaunchpadServiceImpl implements LaunchpadService {
 
 
     private final LaunchpadConfigProperties appsProperties;
+    private final LaunchpadAppUrlCustomizer appUrlCustomizer;
 
-    LaunchpadServiceImpl(LaunchpadConfigProperties appsProperties) {
+    LaunchpadServiceImpl(LaunchpadConfigProperties appsProperties, LaunchpadAppUrlCustomizer appUrlCustomizer) {
         this.appsProperties = appsProperties;
+        this.appUrlCustomizer = appUrlCustomizer;
     }
 
     @Override
@@ -33,7 +36,7 @@ class LaunchpadServiceImpl implements LaunchpadService {
                 final URL url;
 
                 try {
-                    url = new URL(app.url());
+                    url = appUrlCustomizer.customize(app.url());
                 } catch (MalformedURLException e) {
                     LOG.info("ignoring app because: could not build URL for app={}", app);
                     return null;
