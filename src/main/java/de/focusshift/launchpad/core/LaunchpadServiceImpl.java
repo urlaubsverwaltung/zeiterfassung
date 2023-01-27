@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
 
@@ -32,21 +32,23 @@ class LaunchpadServiceImpl implements LaunchpadService {
     private List<App> getApplications() {
         return appsProperties.getApps()
             .stream()
-            .map(app -> {
-                final URL url;
-
-                try {
-                    url = appUrlCustomizer.customize(app.url());
-                } catch (MalformedURLException e) {
-                    LOG.info("ignoring app because: could not build URL for app={}", app);
-                    return null;
-                }
-
-                final AppName appName = new AppName(app.name().get(appsProperties.getNameDefaultLocale()), app.name());
-
-                return new App(url, appName, app.icon());
-            })
-            .filter(Objects::nonNull)
+            .map(this::toApp)
+            .filter(Optional::isPresent)
+            .flatMap(Optional::stream)
             .toList();
+    }
+
+    private Optional<App> toApp(LaunchpadConfigProperties.App app){
+        return getAppUrl(app)
+            .map(url -> new App(url, new AppName(app.name().get(appsProperties.getNameDefaultLocale()), app.name()), app.icon()));
+    }
+
+    private Optional<URL> getAppUrl(LaunchpadConfigProperties.App app) {
+        try {
+            return Optional.of(appUrlCustomizer.customize(app.url()));
+        } catch (MalformedURLException e) {
+            LOG.info("ignoring launchpad app: could not build URL for app={}", app, e);
+            return Optional.empty();
+        }
     }
 }
