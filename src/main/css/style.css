@@ -702,20 +702,8 @@
 }
 
 @layer components {
-  .time-clock-dropdown_summary {
-    @apply cursor-pointer;
-    @apply text-sm;
-    @apply w-full;
-    @apply px-3;
-    @apply py-2;
-    @apply rounded-md;
-    @apply flex;
-    @apply items-center;
-  }
-
   .time-clock-dropdown_content {
     z-index: 1;
-    position: absolute;
     left: 0.5rem;
     right: 0.5rem;
     width: calc(100vw - 1rem); /* 1rem = left + right */
@@ -728,12 +716,30 @@
     @apply shadow-2xl;
   }
 
+  @screen xs {
+    .time-clock-dropdown_summary {
+      @apply cursor-pointer;
+      @apply text-sm;
+      @apply w-full;
+      @apply px-3;
+      @apply py-2;
+      @apply rounded-md;
+      @apply flex;
+      @apply items-center;
+    }
+
+    .time-clock-dropdown_content {
+      position: fixed;
+    }
+  }
+
   @screen sm {
     .time-clock-dropdown {
       position: relative;
     }
 
     .time-clock-dropdown_content {
+      position: absolute;
       left: auto;
       right: 0;
       width: auto;
