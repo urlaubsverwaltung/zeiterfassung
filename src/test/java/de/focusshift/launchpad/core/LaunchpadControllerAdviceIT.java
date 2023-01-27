@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -55,8 +54,8 @@ class LaunchpadControllerAdviceIT {
         when(launchpadService.getLaunchpad(any(Authentication.class))).thenReturn(
             new Launchpad(
                 List.of(
-                    new App(new URL("https://example.org"), new AppName("App 1", Map.of()), "icon", Optional.empty()),
-                    new App(new URL("https://example-2.org"), new AppName("App 2", Map.of()), "icon-2", Optional.empty())
+                    new App(new URL("https://example.org"), new AppName("App 1", Map.of()), "icon"),
+                    new App(new URL("https://example-2.org"), new AppName("App 2", Map.of()), "icon-2")
                 )
             )
         );

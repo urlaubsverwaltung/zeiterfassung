@@ -35,5 +35,48 @@ class LaunchpadConfigProperties {
     }
 
     @Validated
-    record App(@NotNull String url, @NotNull Map<Locale, String> name, @NotEmpty String icon, String authority) {}
+    static class App {
+        @NotNull
+        private String url;
+
+        @NotNull
+        private Map<Locale, String> name;
+
+        @NotEmpty
+        private String icon;
+
+        private String authority;
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public Map<Locale, String> getName() {
+            return name;
+        }
+
+        public void setName(Map<Locale, String> name) {
+            this.name = name;
+        }
+
+        public String getIcon() {
+            return icon;
+        }
+
+        public void setIcon(String icon) {
+            this.icon = icon;
+        }
+
+        public String getAuthority() {
+            return authority;
+        }
+
+        public void setAuthority(String authority) {
+            this.authority = authority;
+        }
+    }
 }

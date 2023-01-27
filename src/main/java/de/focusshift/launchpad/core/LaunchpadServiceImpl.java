@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.stream.Collectors.toList;
 
 class LaunchpadServiceImpl implements LaunchpadService {
 
@@ -37,11 +38,11 @@ class LaunchpadServiceImpl implements LaunchpadService {
             .filter(Optional::isPresent)
             .flatMap(Optional::stream)
             .filter(app -> isAllowed(app, authentication))
-            .toList();
+            .collect(toList());
     }
 
     private boolean isAllowed(App app, Authentication authentication) {
-        return app.authority()
+        return app.getAuthority()
             .map(authority -> authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(authority::equals)
@@ -51,15 +52,14 @@ class LaunchpadServiceImpl implements LaunchpadService {
 
     private Optional<App> toApp(LaunchpadConfigProperties.App app) {
         return getAppUrl(app).map(url -> {
-            final String defaultName = app.name().get(appsProperties.getNameDefaultLocale());
-            final Optional<String> authority = Optional.ofNullable(app.authority());
-            return new App(url, new AppName(defaultName, app.name()), app.icon(), authority);
+            final String defaultName = app.getName().get(appsProperties.getNameDefaultLocale());
+            return new App(url, new AppName(defaultName, app.getName()), app.getIcon(), app.getAuthority());
         });
     }
 
     private Optional<URL> getAppUrl(LaunchpadConfigProperties.App app) {
         try {
-            return Optional.of(appUrlCustomizer.customize(app.url()));
+            return Optional.of(appUrlCustomizer.customize(app.getUrl()));
         } catch (MalformedURLException e) {
             LOG.info("ignoring launchpad app: could not build URL for app={}", app, e);
             return Optional.empty();

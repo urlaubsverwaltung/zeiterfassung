@@ -15,7 +15,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,9 +34,9 @@ class LaunchpadServiceImplIT {
 
         final Launchpad launchpad = sut.getLaunchpad(authentication);
 
-        assertThat(launchpad.apps()).containsExactly(
-            new App(new URL("https://first.app.example.org"), new AppName("Anwendung 1", Map.of(Locale.GERMAN, "Anwendung 1", Locale.ENGLISH, "App 1")), "icon-first", Optional.empty()),
-            new App(new URL("https://second.app.example.org"), new AppName("Anwendung 2", Map.of(Locale.GERMAN, "Anwendung 2", Locale.ENGLISH, "App 2")), "icon-second", Optional.empty())
+        assertThat(launchpad.getApps()).containsExactly(
+            new App(new URL("https://first.app.example.org"), new AppName("Anwendung 1", Map.of(Locale.GERMAN, "Anwendung 1", Locale.ENGLISH, "App 1")), "icon-first"),
+            new App(new URL("https://second.app.example.org"), new AppName("Anwendung 2", Map.of(Locale.GERMAN, "Anwendung 2", Locale.ENGLISH, "App 2")), "icon-second")
         );
     }
 
