@@ -23,6 +23,7 @@ module.exports = {
       },
       screens: {
         xs: "480px",
+        "3xl": "1920px",
       },
       backgroundColor: {
         "timeslot-form-day": "var(--timeslot-form-day-background-color)",
