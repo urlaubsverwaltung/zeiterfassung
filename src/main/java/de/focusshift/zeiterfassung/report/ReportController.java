@@ -158,14 +158,17 @@ class ReportController implements HasTimeClock, HasLaunchpad {
 
         final ReportMonth reportMonth = getReportMonth(principal, allUsersSelected, yearMonth, userLocalIds);
         final GraphMonthDto graphMonthDto = toGraphMonthDto(reportMonth);
+        final DetailMonthDto detailMonthDto = toDetailMonthDto(reportMonth);
 
         model.addAttribute("monthReport", graphMonthDto);
+        model.addAttribute("monthReportDetail", detailMonthDto);
 
         final YearMonth todayYearMonth = YearMonth.now(clock);
         model.addAttribute("isThisMonth", todayYearMonth.equals(YearMonth.of(year, month)));
 
         model.addAttribute("chartNavigationFragment", "reports/user-report-month::chart-navigation");
         model.addAttribute("chartFragment", "reports/user-report-month::chart");
+        model.addAttribute("entriesFragment", "reports/user-report-month::entries");
         model.addAttribute("weekAriaCurrent", "false");
         model.addAttribute("monthAriaCurrent", "location");
 
@@ -306,6 +309,17 @@ class ReportController implements HasTimeClock, HasLaunchpad {
         final double hoursWorked = reportDay.workDuration().minutes().hoursDoubleValue();
 
         return new GraphDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked);
+    }
+
+    private DetailMonthDto toDetailMonthDto(ReportMonth reportMonth) {
+        final List<DetailWeekDto> weeks = reportMonth.weeks()
+            .stream()
+            .map(week -> toDetailWeekDto(week, reportMonth.yearMonth().getMonth()))
+            .toList();
+
+        final String yearMonth = dateFormatter.formatYearMonth(reportMonth.yearMonth());
+
+        return new DetailMonthDto(yearMonth, weeks);
     }
 
     private DetailWeekDto toDetailWeekDto(ReportWeek reportWeek, Month monthPivot) {
