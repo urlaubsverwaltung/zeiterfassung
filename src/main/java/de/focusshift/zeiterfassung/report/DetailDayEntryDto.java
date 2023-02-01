@@ -5,8 +5,7 @@ import java.util.Date;
 
 record DetailDayEntryDto(String username, String comment, Date start, Date end) {
 
-    public String getDuration() {
-        final Duration duration = Duration.ofMillis(end.getTime() - start.getTime());
-        return "%02d:%02d".formatted(duration.toHoursPart(), duration.toMinutesPart());
+    public Duration getDuration() {
+        return Duration.ofMillis(end.getTime() - start.getTime());
     }
 }

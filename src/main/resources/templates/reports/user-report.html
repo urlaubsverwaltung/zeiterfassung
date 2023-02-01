@@ -12,7 +12,7 @@
     <th:block th:fragment="content">
       <main class="grow">
         <div
-          class="mx-auto w-full max-w-screen-lg 2xl:max-w-screen-3xl space-y-16"
+          class="mx-auto w-full max-w-screen-lg 2xl:max-w-screen-3xl space-y-8"
         >
           <div class="px-8">
             <div class="flex items-center">
@@ -44,17 +44,17 @@
             </div>
             <div class="mt-8" th:insert="__${chartNavigationFragment}__"></div>
           </div>
-          <div class="flex flex-col-reverse 2xl:flex-row 2xl:gap-8">
-            <div class="px-4 xl:flex-1">
-              <div th:replace="__${entriesFragment}__"></div>
-            </div>
+          <div class="px-4 grid grid-cols-1 2xl:grid-cols-2 2xl:gap-8">
             <div
-              class="px-4 2xl:flex-1 2xl:sticky 2xl:self-start"
+              class="px-4 2xl:sticky 2xl:self-start"
               style="top: calc(var(--navigation-header-height) + 1rem)"
             >
               <div class="p-8 bg-gradient-to-b from-gray-100 rounded-t-3xl">
                 <div th:replace="__${chartFragment}__"></div>
               </div>
+            </div>
+            <div class="px-4 2xl:px-0">
+              <div th:replace="__${entriesFragment}__"></div>
             </div>
           </div>
         </div>

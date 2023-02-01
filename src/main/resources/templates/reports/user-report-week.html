@@ -179,79 +179,94 @@
           <li
             th:each="day : ${weekReportDetail.dayReports}"
             th:data-date="${day.date}"
-            th:with="hasEntries=${#lists.isEmpty(day.dayEntries)}"
+            th:with="hasNoEntries=${#lists.isEmpty(day.dayEntries)}"
           >
-            <th:block th:if="${hasEntries}">
+            <th:block th:if="${hasNoEntries}">
               <div
-                class="text-gray-400 text-sm text-left px-4 mb-4"
+                class="text-gray-400 text-sm text-left px-2 mb-2"
                 th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
               >
                 Zeiten
               </div>
-              <div class="px-4" th:text="#{report.detail.no-entries}">
+              <div
+                class="px-2 text-sm text-gray-700"
+                th:text="#{report.detail.no-entries}"
+              >
                 Für diesen Tag wurden bisher noch keine Zeiten erfasst.
               </div>
             </th:block>
-            <table th:if="${not hasEntries}" class="w-full table-fixed">
-              <caption
-                class="text-gray-400 text-sm text-left px-4 mb-4"
+            <th:block
+              th:if="${not hasNoEntries}"
+              th:with="listLabelId=${'day-' + #strings.randomAlphanumeric(9)}"
+            >
+              <p
+                th:id="${listLabelId}"
+                class="text-gray-400 text-sm text-left px-2 mb-2"
                 th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
               >
                 Zeiten
-              </caption>
-              <thead>
-                <tr class="bg-gray-100">
-                  <th
-                    class="text-left font-bold px-4 py-2 text-sm"
-                    th:text="#{report.detail.table.head.person}"
+              </p>
+              <ol
+                class="w-full divide-y divide-blue-50"
+                th:aria-labelledby="${listLabelId}"
+              >
+                <li th:each="dayEntry : ${day.dayEntries}">
+                  <div
+                    class="group flex items-start gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
                   >
-                    Person
-                  </th>
-                  <th
-                    class="text-left font-bold px-4 py-2 text-sm"
-                    th:text="#{report.detail.table.head.comment}"
-                  >
-                    Kommentar
-                  </th>
-                  <th
-                    class="text-left font-bold px-4 py-2 text-sm"
-                    th:text="#{report.detail.table.head.time}"
-                  >
-                    Zeit
-                  </th>
-                  <th
-                    class="text-left font-bold px-4 py-2 text-sm"
-                    th:text="#{report.detail.table.head.duration}"
-                  >
-                    Dauer
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="dayEntry : ${day.dayEntries}">
-                  <td
-                    class="w-56 px-4 py-2 truncate"
-                    th:text="${dayEntry.username}"
-                  >
-                    Bruce Wayne
-                  </td>
-                  <td
-                    class="w-auto px-4 py-2 truncate"
-                    th:text="${dayEntry.comment}"
-                  >
-                    hard work!
-                  </td>
-                  <td
-                    class="w-40 px-4 py-2 tabular-nums"
-                    th:text="#{report.detail.time(${dayEntry.start}, ${dayEntry.end})}"
-                  ></td>
-                  <td
-                    class="w-10 px-4 py-2 tabular-nums"
-                    th:text="${dayEntry.duration}"
-                  ></td>
-                </tr>
-              </tbody>
-            </table>
+                    <div class="flex items-center gap-1">
+                      <span
+                        class="text-blue-100 transition-colors group-hover:text-blue-200"
+                      >
+                        <img
+                          th:replace="fragments/avatar::avatar(${dayEntry.username},42,42)"
+                        />
+                      </span>
+                      <span class="sr-only" th:text="${dayEntry.username}">
+                        Bruce Wayne
+                      </span>
+                    </div>
+                    <div
+                      class="flex-1 flex flex-col gap-1 text-gray-700 transition-colors group-hover:text-black md:flex-row md:items-start md:gap-8"
+                    >
+                      <div
+                        class="shrink-0 flex flex-col gap-1 xs:flex-row xs:gap-4 md:flex-col md:gap-1 md:w-1/4 xl:flex-row xl:w-1/3 2xl:flex-col 2xl:w-1/4"
+                      >
+                        <div class="flex items-center gap-1 text-sm">
+                          <svg
+                            th:replace="icons/clock::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')"
+                          />
+                          <span
+                            class=""
+                            th:text="#{report.detail.time(${dayEntry.start}, ${dayEntry.end})}"
+                          ></span>
+                        </div>
+                        <div class="flex items-center gap-0.5 text-sm">
+                          <svg
+                            th:replace="icons/timer::svg(className='-translate-x-px shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')"
+                          />
+                          <span
+                            class="whitespace-nowrap"
+                            th:text="${{dayEntry.duration}}"
+                          ></span>
+                        </div>
+                      </div>
+                      <div class="flex-1 flex items-start gap-1 text-sm">
+                        <svg
+                          th:replace="icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 md:w-6 md:h-6 text-blue-300 transition-colors group-hover:text-blue-400')"
+                        />
+                        <p
+                          th:text="${dayEntry.comment}"
+                          class="flex-1 break-words leading-5"
+                        >
+                          hard work!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ol>
+            </th:block>
           </li>
         </ol>
       </div>
