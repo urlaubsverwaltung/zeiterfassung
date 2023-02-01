@@ -201,12 +201,30 @@
               </caption>
               <thead>
                 <tr class="bg-gray-100">
-                  <th class="text-left font-bold px-4 py-2 text-sm">Person</th>
-                  <th class="text-left font-bold px-4 py-2 text-sm">
+                  <th
+                    class="text-left font-bold px-4 py-2 text-sm"
+                    th:text="#{report.detail.table.head.person}"
+                  >
+                    Person
+                  </th>
+                  <th
+                    class="text-left font-bold px-4 py-2 text-sm"
+                    th:text="#{report.detail.table.head.comment}"
+                  >
                     Kommentar
                   </th>
-                  <th class="text-left font-bold px-4 py-2 text-sm">Zeit</th>
-                  <th class="text-left font-bold px-4 py-2 text-sm">Dauer</th>
+                  <th
+                    class="text-left font-bold px-4 py-2 text-sm"
+                    th:text="#{report.detail.table.head.time}"
+                  >
+                    Zeit
+                  </th>
+                  <th
+                    class="text-left font-bold px-4 py-2 text-sm"
+                    th:text="#{report.detail.table.head.duration}"
+                  >
+                    Dauer
+                  </th>
                 </tr>
               </thead>
               <tbody>
