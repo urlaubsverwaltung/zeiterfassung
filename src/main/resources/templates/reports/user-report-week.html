@@ -179,8 +179,20 @@
           <li
             th:each="day : ${weekReportDetail.dayReports}"
             th:data-date="${day.date}"
+            th:with="hasEntries=${#lists.isEmpty(day.dayEntries)}"
           >
-            <table class="w-full table-fixed">
+            <th:block th:if="${hasEntries}">
+              <div
+                class="text-gray-400 text-sm text-left px-4 mb-4"
+                th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
+              >
+                Zeiten
+              </div>
+              <div class="px-4" th:text="#{report.detail.no-entries}">
+                Für diesen Tag wurden bisher noch keine Zeiten erfasst.
+              </div>
+            </th:block>
+            <table th:if="${not hasEntries}" class="w-full table-fixed">
               <caption
                 class="text-gray-400 text-sm text-left px-4 mb-4"
                 th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
