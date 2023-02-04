@@ -6,7 +6,7 @@
   <body>
     <div
       th:fragment="chart-navigation"
-      class="flex flex-row gap-4 flex-wrap items-start"
+      class="flex flex-row gap-4 flex-wrap items-start 2xl:grid 2xl:grid-cols-2 2xl:gap-8"
     >
       <nav
         class="flex items-center gap-1"
@@ -43,16 +43,18 @@
           >
         </a>
       </nav>
-      <form th:replace="reports/_user-select::form" />
-      <a
-        href="#"
-        th:href="${userReportCsvDownloadUrl}"
-        download
-        class="sm:ml-auto inline-block border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
-        th:text="#{report.week.button.csv-download}"
-      >
-        CSV Download
-      </a>
+      <div class="flex-1 flex justify-between gap-2">
+        <form th:replace="reports/_user-select::form" />
+        <a
+          href="#"
+          th:href="${userReportCsvDownloadUrl}"
+          download
+          class="whitespace-nowrap sm:ml-auto inline-block border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
+          th:text="#{report.week.button.csv-download}"
+        >
+          CSV Download
+        </a>
+      </div>
     </div>
 
     <th:block th:fragment="chart">

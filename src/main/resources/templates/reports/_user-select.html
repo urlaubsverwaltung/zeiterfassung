@@ -13,7 +13,7 @@
       <div class="relative">
         <a
           href="#report-user-selection"
-          class="flex items-center border border-gray-200 hover:border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded px-4 py-2 transition-colors duration-75"
+          class="flex items-center border border-gray-200 hover:border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded px-4 py-2 transition-colors duration-75 2xl:border-blue-600 2xl:bg-white 2xl:text-blue-600 hover:2xl:bg-white hover:2xl:border-blue-600"
           is="z-report-user-select"
         >
           <th:block
@@ -31,6 +31,9 @@
             </th:block>
           </th:block>
           <th:block th:text="#{report.filter.users}"> Personen </th:block>
+          <svg
+            th:replace="icons/chevron-down::svg(className='ml-4 w-4 h-4')"
+          ></svg>
         </a>
         <div id="report-user-selection" data-js-hidden>
           <div class="w-48 overflow-y-auto" style="max-height: 10rem">
