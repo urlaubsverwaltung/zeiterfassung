@@ -6,10 +6,12 @@ export class ReportBreakdownList extends HTMLOListElement {
     const handleDaySelected = (event) => {
       const { date } = event.detail;
       for (const li of this.querySelectorAll("li")) {
-        if (!date || li.dataset.date === date) {
-          li.classList.remove("hidden");
-        } else {
-          li.classList.add("hidden");
+        if (li.parentElement === this) {
+          if (!date || li.dataset.date === date) {
+            li.removeAttribute("hidden");
+          } else {
+            li.setAttribute("hidden", "");
+          }
         }
       }
     };
