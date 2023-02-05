@@ -37,7 +37,9 @@
         </a>
         <div id="report-user-selection" data-js-hidden>
           <div class="w-48 overflow-y-auto" style="max-height: 10rem">
-            <div class="space-x-2 border-b border-b-gray-300 pb-2.5">
+            <div
+              class="space-x-2 border-b border-dashed border-b-gray-300 pb-1.5"
+            >
               <input
                 type="checkbox"
                 name="everyone"
@@ -50,14 +52,15 @@
               <label
                 for="report-users-select-everyone"
                 th:text="#{report.filter.users.all}"
-                >Alle</label
               >
+                Alle
+              </label>
             </div>
             <ol class="mt-3">
               <li
                 th:each="user : ${users}"
                 th:with="rnd=${#strings.randomAlphanumeric(6)}"
-                class="flex items-center space-x-2"
+                class="flex items-center space-x-3 py-1"
               >
                 <input
                   type="checkbox"
@@ -66,12 +69,21 @@
                   id="user"
                   th:id="|${rnd}-user|"
                   th:checked="${allUsersSelected or user.selected}"
+                  class="peer"
                 />
                 <label
                   for="user"
                   th:for="|${rnd}-user|"
-                  th:text="${user.fullName}"
-                ></label>
+                  class="group flex items-center gap-2"
+                >
+                  <span class="text-blue-300">
+                    <img
+                      alt=""
+                      th:replace="fragments/avatar::avatar(${user.fullName},26,26)"
+                    />
+                  </span>
+                  <span th:text="${user.fullName}"></span>
+                </label>
               </li>
             </ol>
           </div>
