@@ -44,20 +44,22 @@
             </div>
             <div class="mt-8" th:insert="__${chartNavigationFragment}__"></div>
           </div>
-          <div class="px-4 grid grid-cols-1 2xl:grid-cols-2 2xl:gap-8">
+          <div class="px-8 grid grid-cols-1 2xl:grid-cols-2 2xl:gap-8">
             <div
-              class="px-4 2xl:sticky 2xl:self-start"
+              class="2xl:sticky 2xl:self-start"
               style="top: calc(var(--navigation-header-height) + 1rem)"
             >
               <div class="p-8 bg-gradient-to-b from-gray-100 rounded-t-3xl">
                 <div th:replace="__${chartFragment}__"></div>
               </div>
             </div>
-            <div class="px-4 2xl:px-0">
-              <h2 class="sr-only" th:text="#{report.detail.section.heading}">
-                Zeiteinträge
-              </h2>
-              <div th:replace="__${entriesFragment}__"></div>
+            <div class="">
+              <div class="p-4 bg-white border border-gray-100 rounded-3xl">
+                <h2 class="sr-only" th:text="#{report.detail.section.heading}">
+                  Zeiteinträge
+                </h2>
+                <div th:replace="__${entriesFragment}__"></div>
+              </div>
             </div>
           </div>
         </div>
