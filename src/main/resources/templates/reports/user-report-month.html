@@ -170,13 +170,11 @@
     </th:block>
 
     <th:block th:fragment="entries">
-      <div>
-        <ol class="space-y-8">
-          <li th:each="weekReportDetail : ${monthReportDetail.weekReports}">
-            <th:block th:replace="reports/user-report-week::entries" />
-          </li>
-        </ol>
-      </div>
+      <ol class="space-y-8">
+        <li th:each="weekReportDetail : ${monthReportDetail.weekReports}">
+          <th:block th:replace="reports/user-report-week::entries" />
+        </li>
+      </ol>
     </th:block>
   </body>
 </html>

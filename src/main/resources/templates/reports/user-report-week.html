@@ -176,103 +176,101 @@
     </th:block>
 
     <th:block th:fragment="entries">
-      <div>
-        <ol class="space-y-8" is="z-report-breakdown-list">
-          <li
-            th:each="day : ${weekReportDetail.dayReports}"
-            th:data-date="${day.date}"
-            th:with="hasNoEntries=${#lists.isEmpty(day.dayEntries)}"
-          >
-            <th:block th:if="${hasNoEntries}">
-              <div
-                class="text-gray-400 text-sm text-left px-2 mb-2"
-                th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
-              >
-                Zeiten
-              </div>
-              <div
-                class="px-2 text-sm text-gray-700"
-                th:text="#{report.detail.no-entries}"
-              >
-                Für diesen Tag wurden bisher noch keine Zeiten erfasst.
-              </div>
-            </th:block>
-            <th:block
-              th:if="${not hasNoEntries}"
-              th:with="listLabelId=${'day-' + #strings.randomAlphanumeric(9)}"
+      <ol class="space-y-8" is="z-report-breakdown-list">
+        <li
+          th:each="day : ${weekReportDetail.dayReports}"
+          th:data-date="${day.date}"
+          th:with="hasNoEntries=${#lists.isEmpty(day.dayEntries)}"
+        >
+          <th:block th:if="${hasNoEntries}">
+            <div
+              class="text-gray-400 text-sm text-left px-2 mb-2"
+              th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
             >
-              <p
-                th:id="${listLabelId}"
-                class="text-gray-400 text-sm text-left px-2 mb-2"
-                th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
-              >
-                Zeiten
-              </p>
-              <ol
-                class="w-full divide-y divide-blue-50"
-                th:aria-labelledby="${listLabelId}"
-              >
-                <li th:each="dayEntry : ${day.dayEntries}">
-                  <div
-                    class="group flex items-start gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
-                  >
-                    <div class="flex items-center gap-1">
-                      <span
-                        class="text-blue-100 transition-colors group-hover:text-blue-200"
-                      >
-                        <img
-                          alt=""
-                          th:replace="fragments/avatar::avatar(${dayEntry.username},42,42)"
-                        />
-                      </span>
-                      <span class="sr-only" th:text="${dayEntry.username}">
-                        Bruce Wayne
-                      </span>
-                    </div>
-                    <div
-                      class="flex-1 flex flex-col gap-1 text-gray-700 transition-colors group-hover:text-black md:flex-row md:items-start md:gap-8"
+              Zeiten
+            </div>
+            <div
+              class="px-2 text-sm text-gray-700"
+              th:text="#{report.detail.no-entries}"
+            >
+              Für diesen Tag wurden bisher noch keine Zeiten erfasst.
+            </div>
+          </th:block>
+          <th:block
+            th:if="${not hasNoEntries}"
+            th:with="listLabelId=${'day-' + #strings.randomAlphanumeric(9)}"
+          >
+            <p
+              th:id="${listLabelId}"
+              class="text-gray-400 text-sm text-left px-2 mb-2"
+              th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
+            >
+              Zeiten
+            </p>
+            <ol
+              class="w-full divide-y divide-blue-50"
+              th:aria-labelledby="${listLabelId}"
+            >
+              <li th:each="dayEntry : ${day.dayEntries}">
+                <div
+                  class="group flex items-start gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
+                >
+                  <div class="flex items-center gap-1">
+                    <span
+                      class="text-blue-100 transition-colors group-hover:text-blue-200"
                     >
-                      <div
-                        class="shrink-0 flex flex-col gap-1 xs:flex-row xs:gap-4 md:flex-col md:gap-1 md:w-1/4 xl:flex-row xl:w-1/3 2xl:flex-col 2xl:w-1/4"
-                      >
-                        <div class="flex items-center gap-1 text-sm">
-                          <svg
-                            th:replace="icons/clock::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')"
-                          />
-                          <span
-                            class=""
-                            th:text="#{report.detail.time(${dayEntry.start}, ${dayEntry.end})}"
-                          ></span>
-                        </div>
-                        <div class="flex items-center gap-0.5 text-sm">
-                          <svg
-                            th:replace="icons/timer::svg(className='-translate-x-px shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')"
-                          />
-                          <span
-                            class="whitespace-nowrap"
-                            th:text="${{dayEntry.duration}}"
-                          ></span>
-                        </div>
-                      </div>
-                      <div class="flex-1 flex items-start gap-1 text-sm">
+                      <img
+                        alt=""
+                        th:replace="fragments/avatar::avatar(${dayEntry.username},42,42)"
+                      />
+                    </span>
+                    <span class="sr-only" th:text="${dayEntry.username}">
+                      Bruce Wayne
+                    </span>
+                  </div>
+                  <div
+                    class="flex-1 flex flex-col gap-1 text-gray-700 transition-colors group-hover:text-black md:flex-row md:items-start md:gap-8"
+                  >
+                    <div
+                      class="shrink-0 flex flex-col gap-1 xs:flex-row xs:gap-4 md:flex-col md:gap-1 md:w-1/4 xl:flex-row xl:w-1/3 2xl:flex-col 2xl:w-1/4"
+                    >
+                      <div class="flex items-center gap-1 text-sm">
                         <svg
-                          th:replace="icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 md:w-6 md:h-6 text-blue-300 transition-colors group-hover:text-blue-400')"
+                          th:replace="icons/clock::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')"
                         />
-                        <p
-                          th:text="${dayEntry.comment}"
-                          class="flex-1 break-words leading-5"
-                        >
-                          hard work!
-                        </p>
+                        <span
+                          class=""
+                          th:text="#{report.detail.time(${dayEntry.start}, ${dayEntry.end})}"
+                        ></span>
                       </div>
+                      <div class="flex items-center gap-0.5 text-sm">
+                        <svg
+                          th:replace="icons/timer::svg(className='-translate-x-px shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')"
+                        />
+                        <span
+                          class="whitespace-nowrap"
+                          th:text="${{dayEntry.duration}}"
+                        ></span>
+                      </div>
+                    </div>
+                    <div class="flex-1 flex items-start gap-1 text-sm">
+                      <svg
+                        th:replace="icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 md:w-6 md:h-6 text-blue-300 transition-colors group-hover:text-blue-400')"
+                      />
+                      <p
+                        th:text="${dayEntry.comment}"
+                        class="flex-1 break-words leading-5"
+                      >
+                        hard work!
+                      </p>
                     </div>
                   </div>
-                </li>
-              </ol>
-            </th:block>
-          </li>
-        </ol>
-      </div>
+                </div>
+              </li>
+            </ol>
+          </th:block>
+        </li>
+      </ol>
     </th:block>
   </body>
 </html>
