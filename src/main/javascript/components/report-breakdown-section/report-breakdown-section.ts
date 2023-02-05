@@ -1,16 +1,16 @@
-export class ReportBreakdownList extends HTMLOListElement {
+export class ReportBreakdownSection extends HTMLElement {
   #cleanup: () => void;
 
   connectedCallback() {
     // eslint-disable-next-line unicorn/consistent-function-scoping
     const handleDaySelected = (event) => {
       const { date } = event.detail;
-      for (const li of this.querySelectorAll("li")) {
-        if (li.parentElement === this) {
-          if (!date || li.dataset.date === date) {
-            li.removeAttribute("hidden");
+      for (const element of this.querySelectorAll("[data-date]")) {
+        if (element.parentElement === this) {
+          if (!date || (element as HTMLElement).dataset.date === date) {
+            element.removeAttribute("hidden");
           } else {
-            li.setAttribute("hidden", "");
+            element.setAttribute("hidden", "");
           }
         }
       }
@@ -28,6 +28,6 @@ export class ReportBreakdownList extends HTMLOListElement {
   }
 }
 
-customElements.define("z-report-breakdown-list", ReportBreakdownList, {
-  extends: "ol",
+customElements.define("z-report-breakdown-section", ReportBreakdownSection, {
+  extends: "section",
 });

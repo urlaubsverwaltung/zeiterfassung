@@ -17,4 +17,8 @@ record ReportWeek(LocalDate firstDateOfWeek, List<ReportDay> reportDays) {
 
         return new WorkDuration(duration);
     }
+
+    public LocalDate lastDateOfWeek() {
+        return firstDateOfWeek.plusDays(6);
+    }
 }

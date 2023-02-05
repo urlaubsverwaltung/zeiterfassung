@@ -169,12 +169,24 @@
       </div>
     </th:block>
 
-    <th:block th:fragment="entries">
-      <ol class="space-y-8">
-        <li th:each="weekReportDetail : ${monthReportDetail.weekReports}">
-          <th:block th:replace="reports/user-report-week::entries" />
-        </li>
-      </ol>
+    <th:block
+      th:fragment="entries"
+      th:with="monthGroupLabelId=${'month-group-' + #strings.randomAlphanumeric(9)}"
+    >
+      <p
+        class="sr-only"
+        th:id="${monthGroupLabelId}"
+        th:text="#{report.detail.month.section.title(${monthReportDetail.yearMonth})}"
+      >
+        Zeiteinträge für Januar
+      </p>
+      <section th:aria-labelledby="${monthGroupLabelId}">
+        <ol class="space-y-8" th:aria-labelledby="${monthGroupLabelId}">
+          <li th:each="weekReportDetail : ${monthReportDetail.weekReports}">
+            <th:block th:replace="reports/user-report-week::entries" />
+          </li>
+        </ol>
+      </section>
     </th:block>
   </body>
 </html>

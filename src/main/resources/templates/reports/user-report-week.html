@@ -175,38 +175,43 @@
       </div>
     </th:block>
 
-    <th:block th:fragment="entries">
-      <ol class="space-y-8" is="z-report-breakdown-list">
-        <li
+    <th:block
+      th:fragment="entries"
+      th:with="weekGroupLabelId=${'week-entries-' + #strings.randomAlphanumeric(9)}"
+    >
+      <p
+        th:id="${weekGroupLabelId}"
+        th:text="#{report.detail.week.section.title(${weekReportDetail.firstDateOfWeek}, ${weekReportDetail.lastDateOfWeek}, ${weekReportDetail.calendarWeek})}"
+        class="sr-only"
+        aria-hidden="true"
+      ></p>
+      <section
+        class="space-y-8"
+        is="z-report-breakdown-section"
+        th:aria-labelledby="${weekGroupLabelId}"
+      >
+        <div
           th:each="day : ${weekReportDetail.dayReports}"
           th:data-date="${day.date}"
-          th:with="hasNoEntries=${#lists.isEmpty(day.dayEntries)}"
+          th:with="hasEntries=${not #lists.isEmpty(day.dayEntries)}, listLabelId=${'day-' + #strings.randomAlphanumeric(9)}"
         >
-          <th:block th:if="${hasNoEntries}">
-            <div
-              class="text-gray-400 text-sm text-left px-2 mb-2"
-              th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
-            >
-              Zeiten
-            </div>
-            <div
+          <p
+            th:id="${listLabelId}"
+            class="text-gray-400 text-sm text-left px-2 mb-2"
+            th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
+            th:attrappend="aria-hidden=${hasEntries ? 'true' : null}"
+          >
+            Zeiten
+          </p>
+          <th:block th:if="${not hasEntries}">
+            <p
               class="px-2 text-sm text-gray-700"
               th:text="#{report.detail.no-entries}"
             >
-              Für diesen Tag wurden bisher noch keine Zeiten erfasst.
-            </div>
-          </th:block>
-          <th:block
-            th:if="${not hasNoEntries}"
-            th:with="listLabelId=${'day-' + #strings.randomAlphanumeric(9)}"
-          >
-            <p
-              th:id="${listLabelId}"
-              class="text-gray-400 text-sm text-left px-2 mb-2"
-              th:text="#{report.detail.day.head(${day.date}, ${day.hoursWorked})}"
-            >
-              Zeiten
+              Für diesen Tag wurden noch keine Zeiten erfasst.
             </p>
+          </th:block>
+          <th:block th:if="${hasEntries}">
             <ol
               class="w-full divide-y divide-blue-50"
               th:aria-labelledby="${listLabelId}"
@@ -218,6 +223,7 @@
                   <div class="flex items-center gap-1">
                     <span
                       class="text-blue-100 transition-colors group-hover:text-blue-200"
+                      aria-hidden="true"
                     >
                       <img
                         alt=""
@@ -234,7 +240,7 @@
                     <div
                       class="shrink-0 flex flex-col gap-1 xs:flex-row xs:gap-4 md:flex-col md:gap-1 md:w-1/4 xl:flex-row xl:w-1/3 2xl:flex-col 2xl:w-1/4"
                     >
-                      <div class="flex items-center gap-1 text-sm">
+                      <p class="flex items-center gap-1 text-sm">
                         <svg
                           th:replace="icons/clock::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')"
                         />
@@ -242,8 +248,8 @@
                           class=""
                           th:text="#{report.detail.time(${dayEntry.start}, ${dayEntry.end})}"
                         ></span>
-                      </div>
-                      <div class="flex items-center gap-0.5 text-sm">
+                      </p>
+                      <p class="flex items-center gap-0.5 text-sm">
                         <svg
                           th:replace="icons/timer::svg(className='-translate-x-px shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')"
                         />
@@ -251,26 +257,32 @@
                           class="whitespace-nowrap"
                           th:text="${{dayEntry.duration}}"
                         ></span>
-                      </div>
+                      </p>
                     </div>
-                    <div class="flex-1 flex items-start gap-1 text-sm">
+                    <p class="flex-1 flex items-start gap-1 text-sm">
                       <svg
                         th:replace="icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 md:w-6 md:h-6 text-blue-300 transition-colors group-hover:text-blue-400')"
                       />
-                      <p
+                      <span
+                        class="sr-only"
+                        th:text="#{report.detail.day.comment.label}"
+                      >
+                        Kommentar:&nbsp;
+                      </span>
+                      <span
                         th:text="${dayEntry.comment}"
                         class="flex-1 break-words leading-5"
                       >
                         hard work!
-                      </p>
-                    </div>
+                      </span>
+                    </p>
                   </div>
                 </div>
               </li>
             </ol>
           </th:block>
-        </li>
-      </ol>
+        </div>
+      </section>
     </th:block>
   </body>
 </html>

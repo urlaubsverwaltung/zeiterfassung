@@ -26,9 +26,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -328,10 +333,14 @@ class ReportController implements HasTimeClock, HasLaunchpad {
             .map(reportDay -> toDetailDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot)))
             .toList();
 
-        final String yearMonthWeek = dateFormatter.formatYearMonthWeek(reportWeek.firstDateOfWeek());
+        final LocalDate first = reportWeek.firstDateOfWeek();
+        final LocalDate last = reportWeek.lastDateOfWeek();
+        final int calendarWeek = first.get(ChronoField.ALIGNED_WEEK_OF_YEAR);
 
+        final ZonedDateTime firstOfWeek = ZonedDateTime.of(first, LocalTime.MIN, ZoneId.systemDefault());
+        final ZonedDateTime lastOfWeek = ZonedDateTime.of(last, LocalTime.MIN, ZoneId.systemDefault());
 
-        return new DetailWeekDto(yearMonthWeek, dayReports);
+        return new DetailWeekDto(Date.from(firstOfWeek.toInstant()), Date.from(lastOfWeek.toInstant()), calendarWeek, dayReports);
     }
 
     private DetailDayDto toDetailDayReportDto(ReportDay reportDay, boolean differentMonth) {
