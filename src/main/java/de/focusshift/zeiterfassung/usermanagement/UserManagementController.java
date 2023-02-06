@@ -37,17 +37,8 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping("/{id}")
-    String user(@PathVariable("id") Long id, Model model) {
-
-        List<UserDto> users = userManagementService.findAllUsers()
-            .stream()
-            .map(UserManagementController::userToDto)
-            .toList();
-
-        model.addAttribute("users", users);
-        model.addAttribute("selectedUser", users.stream().filter(u -> u.id() == id).findFirst().orElse(null));
-
-        return "usermanagement/users";
+    String user(@PathVariable("id") Long id) {
+        return "forward:/users/%s/working-time".formatted(id);
     }
 
     static UserDto userToDto(User user) {

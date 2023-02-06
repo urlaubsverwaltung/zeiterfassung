@@ -86,92 +86,47 @@
                   </span>
                 </div>
                 <div class="p-6 bg-white">
-                  <form action="#" class="flex flex-col gap-8">
+                  <form
+                    action="#"
+                    th:action="@{/users/{userId}/working-time (userId=${selectedUser.id})}"
+                    method="post"
+                    class="flex flex-col gap-8"
+                    th:object="${workingTime}"
+                  >
                     <fieldset class="border-t border-gray-100">
                       <legend class="text-sm font-medium text-gray-400">
                         Arbeitstage
                       </legend>
                       <div class="mt-2">
                         <ul class="flex gap-4">
-                          <li class="flex items-center gap-1">
+                          <li
+                            class="flex items-center gap-1"
+                            th:fragment="workday(dayOfWeek)"
+                            th:with="dayOfWeek=${dayOfWeek ?: 'monday'}"
+                          >
                             <input
                               type="checkbox"
                               name="workday"
                               value="monday"
+                              th:value="${dayOfWeek}"
                               id="workday-monday"
-                            />
-                            <label for="workday-monday" th:text="#{MONDAY}"
-                              >Montag</label
-                            >
-                          </li>
-                          <li class="flex items-center gap-1">
-                            <input
-                              type="checkbox"
-                              name="workday"
-                              value="monday"
-                              id="workday-tuesday"
-                            />
-                            <label for="workday-tuesday" th:text="#{TUESDAY}"
-                              >Dienstag</label
-                            >
-                          </li>
-                          <li class="flex items-center gap-1">
-                            <input
-                              type="checkbox"
-                              name="workday"
-                              value="monday"
-                              id="workday-wednesday"
+                              th:id="${'workday-' + dayOfWeek}"
+                              th:checked="${#lists.contains(workingTime.workday, dayOfWeek)}"
                             />
                             <label
-                              for="workday-wednesday"
-                              th:text="#{WEDNESDAY}"
-                              >Mittwoch</label
+                              for="workday-monday"
+                              th:for="${'workday-' + dayOfWeek}"
+                              th:text="${#messages.msg(dayOfWeek.toUpperCase())}"
                             >
+                              Montag
+                            </label>
                           </li>
-                          <li class="flex items-center gap-1">
-                            <input
-                              type="checkbox"
-                              name="workday"
-                              value="monday"
-                              id="workday-thursday"
-                            />
-                            <label for="workday-thursday" th:text="#{THURSDAY}"
-                              >Donnerstag</label
-                            >
-                          </li>
-                          <li class="flex items-center gap-1">
-                            <input
-                              type="checkbox"
-                              name="workday"
-                              value="monday"
-                              id="workday-friday"
-                            />
-                            <label for="workday-friday" th:text="#{FRIDAY}"
-                              >Freitag</label
-                            >
-                          </li>
-                          <li class="flex items-center gap-1">
-                            <input
-                              type="checkbox"
-                              name="workday"
-                              value="monday"
-                              id="workday-saturday"
-                            />
-                            <label for="workday-saturday" th:text="#{SATURDAY}"
-                              >Samstag</label
-                            >
-                          </li>
-                          <li class="flex items-center gap-1">
-                            <input
-                              type="checkbox"
-                              name="workday"
-                              value="monday"
-                              id="workday-sunday"
-                            />
-                            <label for="workday-sunday" th:text="#{SUNDAY}"
-                              >Sonntag</label
-                            >
-                          </li>
+                          <li th:replace="::workday('tuesday')"></li>
+                          <li th:replace="::workday('wednesday')"></li>
+                          <li th:replace="::workday('thursday')"></li>
+                          <li th:replace="::workday('friday')"></li>
+                          <li th:replace="::workday('saturday')"></li>
+                          <li th:replace="::workday('sunday')"></li>
                         </ul>
                       </div>
                     </fieldset>
@@ -183,9 +138,10 @@
                         <div class="space-x-1">
                           <input
                             type="text"
-                            name="workingtime"
+                            name="workingTime"
                             id="input-workingtime"
                             class="border border-gray-300 px-2 py-1 w-12"
+                            th:field="*{workingTime}"
                           />
                           <label for="input-workingtime">Stunden am Tag</label>
                         </div>
@@ -199,77 +155,84 @@
                         <div class="space-x-1">
                           <input
                             type="text"
-                            name="workingtimeMonday"
-                            id="input-workingtime-monday"
+                            name="workingTimeMonday"
+                            id="input-working-time-monday"
                             class="border border-gray-300 px-2 py-1 w-12"
+                            th:field="*{workingTimeMonday}"
                           />
-                          <label for="input-workingtime-monday"
+                          <label for="input-working-time-monday"
                             >Stunden am Montag</label
                           >
                         </div>
                         <div class="space-x-1">
                           <input
                             type="text"
-                            name="workingtimeTuesday"
-                            id="input-workingtime-tuesday"
+                            name="workingTimeTuesday"
+                            id="input-working-time-tuesday"
                             class="border border-gray-300 px-2 py-1 w-12"
+                            th:field="*{workingTimeTuesday}"
                           />
-                          <label for="input-workingtime-tuesday"
+                          <label for="input-working-time-tuesday"
                             >Stunden am Dienstag</label
                           >
                         </div>
                         <div class="space-x-1">
                           <input
                             type="text"
-                            name="workingtimeWednesday"
-                            id="input-workingtime-wednesday"
+                            name="workingTimeWednesday"
+                            id="input-working-time-wednesday"
                             class="border border-gray-300 px-2 py-1 w-12"
+                            th:field="*{workingTimeWednesday}"
                           />
-                          <label for="input-workingtime-wednesday"
+                          <label for="input-working-time-wednesday"
                             >Stunden am Mittwoch</label
                           >
                         </div>
                         <div class="space-x-1">
                           <input
                             type="text"
-                            name="workingtimeThursday"
-                            id="input-workingtime-thursday"
+                            name="workingTimeThursday"
+                            id="input-working-time-thursday"
                             class="border border-gray-300 px-2 py-1 w-12"
+                            th:field="*{workingTimeThursday}"
                           />
-                          <label for="input-workingtime-thursday"
+                          <label for="input-working-time-thursday"
                             >Stunden am Donnerstag</label
                           >
                         </div>
                         <div class="space-x-1">
                           <input
                             type="text"
-                            name="workingtimeFriday"
-                            id="input-workingtime-friday"
+                            name="workingTimeFriday"
+                            id="input-working-time-friday"
                             class="border border-gray-300 px-2 py-1 w-12"
+                            th:field="*{workingTimeFriday}"
                           />
-                          <label for="input-workingtime-friday"
+                          <label for="input-working-time-friday"
                             >Stunden am Freitag</label
                           >
                         </div>
                         <div class="space-x-1">
                           <input
                             type="text"
-                            name="workingtimeSaturday"
-                            id="input-workingtime-saturday"
+                            name="workingTimeSaturday"
+                            id="input-working-time-saturday"
                             class="border border-gray-300 px-2 py-1 w-12"
+                            th:field="*{workingTimeSaturday}"
                           />
-                          <label for="input-workingtime-saturday"
+                          <label for="input-working-time-saturday"
                             >Stunden am Samstag</label
                           >
                         </div>
                         <div class="space-x-1">
                           <input
                             type="text"
-                            name="workingtimeSunday"
-                            id="input-workingtime-sunday"
+                            name="workingTimeSunday"
+                            id="input-working-time-sunday"
                             class="border border-gray-300 px-2 py-1 w-12"
+                            th:field="*{workingTimeSunday}"
                           />
-                          <label for="input-workingtime-sunday"
+                          <label for="input-working-time-sunday"
                             >Stunden am Sonntag</label
                           >
                         </div>

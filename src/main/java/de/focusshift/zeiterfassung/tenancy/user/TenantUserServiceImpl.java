@@ -78,7 +78,8 @@ class TenantUserServiceImpl implements TenantUserService {
         final String givenName = tenantUserEntity.getGivenName();
         final String familyName = tenantUserEntity.getFamilyName();
         final EMailAddress eMail = new EMailAddress(tenantUserEntity.getEmail());
+        final Instant firstLoginAt = tenantUserEntity.getFirstLoginAt();
 
-        return new TenantUser(uuid, id, givenName, familyName, eMail);
+        return new TenantUser(uuid, id, givenName, familyName, eMail, firstLoginAt);
     }
 }
