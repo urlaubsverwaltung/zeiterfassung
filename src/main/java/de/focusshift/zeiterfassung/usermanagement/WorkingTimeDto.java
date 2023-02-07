@@ -1,23 +1,54 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.PositiveOrZero;
+import org.springframework.validation.annotation.Validated;
+
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.util.List;
 
+@Validated
 class WorkingTimeDto {
 
     private Long userId;
 
     private List<String> workday;
 
+    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
+    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
     private BigDecimal workingTime;
 
+    // a flag to enable simpler validation for individual working time.
+    // summarizes workingTime-dayOfWeek
+    private boolean workingTimeClash;
+
+    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
+    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
     private BigDecimal workingTimeMonday;
+
+    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
+    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
     private BigDecimal workingTimeTuesday;
+
+    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
+    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
     private BigDecimal workingTimeWednesday;
+
+    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
+    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
     private BigDecimal workingTimeThursday;
+
+    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
+    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
     private BigDecimal workingTimeFriday;
+
+    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
+    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
     private BigDecimal workingTimeSaturday;
+
+    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
+    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
     private BigDecimal workingTimeSunday;
 
     public Long getUserId() {
@@ -29,7 +60,7 @@ class WorkingTimeDto {
     }
 
     public List<String> getWorkday() {
-        return workday;
+        return workday == null ? List.of() : workday;
     }
 
     public void setWorkday(List<String> workday) {
@@ -38,6 +69,10 @@ class WorkingTimeDto {
 
     public BigDecimal getWorkingTime() {
         return workingTime;
+    }
+
+    public boolean isWorkingTimeClash() {
+        return workingTimeClash;
     }
 
     public void setWorkingTime(BigDecimal workingTime) {

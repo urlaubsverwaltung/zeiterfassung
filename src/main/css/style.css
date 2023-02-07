@@ -28,6 +28,18 @@
   }
 }
 
+@layer utilities {
+  input.invalid {
+    @apply border;
+    @apply border-red-400;
+    @apply text-red-600;
+  }
+
+  p.invalid {
+    @apply text-red-600;
+  }
+}
+
 @layer components {
   @keyframes to-max-width {
     from {

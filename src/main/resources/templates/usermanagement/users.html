@@ -130,8 +130,22 @@
                         </ul>
                       </div>
                     </fieldset>
-                    <fieldset class="border-t border-gray-100">
-                      <legend class="text-sm font-medium text-gray-400">
+                    <div
+                      class="p-4 rounded-md text-red-900 border border-red-100 bg-red-50"
+                      th:if="${#fields.hasErrors('workingTimeClash')}"
+                    >
+                      <p th:text="${#fields.errors('workingTimeClash')[0]}">
+                        Arbeitszeit Fehlernachricht.
+                      </p>
+                    </div>
+                    <fieldset
+                      class="border-t border-gray-100"
+                      th:classappend="${#fields.hasErrors('workingTimeClash') ? 'border-red-600' : ''}"
+                    >
+                      <legend
+                        class="text-sm font-medium text-gray-400"
+                        th:classappend="${#fields.hasErrors('workingTimeClash') ? 'text-red-600' : ''}"
+                      >
                         Arbeitszeit
                       </legend>
                       <div class="mt-2">
@@ -141,15 +155,27 @@
                             inputmode="numeric"
                             name="workingTime"
                             id="input-workingtime"
-                            class="border border-gray-300 px-2 py-1 w-12"
+                            class="border border-gray-300 px-2 py-1 w-14"
                             th:field="*{workingTime}"
+                            th:errorclass="invalid"
                           />
                           <label for="input-workingtime">Stunden am Tag</label>
+                          <p
+                            th:if="${#fields.hasErrors('workingTime')}"
+                            th:text="${#fields.errors('workingTime')[0]}"
+                            class="mt-2 invalid"
+                          ></p>
                         </div>
                       </div>
                     </fieldset>
-                    <fieldset class="border-t border-gray-100">
-                      <legend class="text-sm font-medium text-gray-400">
+                    <fieldset
+                      class="border-t border-gray-100"
+                      th:classappend="${#fields.hasErrors('workingTimeClash') ? 'border-red-400' : ''}"
+                    >
+                      <legend
+                        class="text-sm font-medium text-gray-400"
+                        th:classappend="${#fields.hasErrors('workingTimeClash') ? 'text-red-600' : ''}"
+                      >
                         Individuelle Arbeitszeit
                       </legend>
                       <div class="mt-2 space-y-2">
@@ -159,12 +185,18 @@
                             inputmode="numeric"
                             name="workingTimeMonday"
                             id="input-working-time-monday"
-                            class="border border-gray-300 px-2 py-1 w-12"
+                            class="border border-gray-300 px-2 py-1 w-14"
                             th:field="*{workingTimeMonday}"
+                            th:errorclass="invalid"
                           />
-                          <label for="input-working-time-monday"
-                            >Stunden am Montag</label
-                          >
+                          <label for="input-working-time-monday">
+                            Stunden am Montag
+                          </label>
+                          <p
+                            th:if="${#fields.hasErrors('workingTimeMonday')}"
+                            th:text="${#fields.errors('workingTimeMonday')[0]}"
+                            class="mt-2 invalid"
+                          ></p>
                         </div>
                         <div class="space-x-1">
                           <input
@@ -172,12 +204,18 @@
                             inputmode="numeric"
                             name="workingTimeTuesday"
                             id="input-working-time-tuesday"
-                            class="border border-gray-300 px-2 py-1 w-12"
+                            class="border border-gray-300 px-2 py-1 w-14"
                             th:field="*{workingTimeTuesday}"
+                            th:errorclass="invalid"
                           />
-                          <label for="input-working-time-tuesday"
-                            >Stunden am Dienstag</label
-                          >
+                          <label for="input-working-time-tuesday">
+                            Stunden am Dienstag
+                          </label>
+                          <p
+                            th:if="${#fields.hasErrors('workingTimeTuesday')}"
+                            th:text="${#fields.errors('workingTimeTuesday')[0]}"
+                            class="mt-2 invalid"
+                          ></p>
                         </div>
                         <div class="space-x-1">
                           <input
@@ -185,12 +223,18 @@
                             inputmode="numeric"
                             name="workingTimeWednesday"
                             id="input-working-time-wednesday"
-                            class="border border-gray-300 px-2 py-1 w-12"
+                            class="border border-gray-300 px-2 py-1 w-14"
                             th:field="*{workingTimeWednesday}"
+                            th:errorclass="invalid"
                           />
-                          <label for="input-working-time-wednesday"
-                            >Stunden am Mittwoch</label
-                          >
+                          <label for="input-working-time-wednesday">
+                            Stunden am Mittwoch
+                          </label>
+                          <p
+                            th:if="${#fields.hasErrors('workingTimeWednesday')}"
+                            th:text="${#fields.errors('workingTimeWednesday')[0]}"
+                            class="mt-2 invalid"
+                          ></p>
                         </div>
                         <div class="space-x-1">
                           <input
@@ -198,12 +242,18 @@
                             inputmode="numeric"
                             name="workingTimeThursday"
                             id="input-working-time-thursday"
-                            class="border border-gray-300 px-2 py-1 w-12"
+                            class="border border-gray-300 px-2 py-1 w-14"
                             th:field="*{workingTimeThursday}"
+                            th:errorclass="invalid"
                           />
-                          <label for="input-working-time-thursday"
-                            >Stunden am Donnerstag</label
-                          >
+                          <label for="input-working-time-thursday">
+                            Stunden am Donnerstag
+                          </label>
+                          <p
+                            th:if="${#fields.hasErrors('workingTimeThursday')}"
+                            th:text="${#fields.errors('workingTimeThursday')[0]}"
+                            class="mt-2 invalid"
+                          ></p>
                         </div>
                         <div class="space-x-1">
                           <input
@@ -211,12 +261,18 @@
                             inputmode="numeric"
                             name="workingTimeFriday"
                             id="input-working-time-friday"
-                            class="border border-gray-300 px-2 py-1 w-12"
+                            class="border border-gray-300 px-2 py-1 w-14"
                             th:field="*{workingTimeFriday}"
+                            th:errorclass="invalid"
                           />
-                          <label for="input-working-time-friday"
-                            >Stunden am Freitag</label
-                          >
+                          <label for="input-working-time-friday">
+                            Stunden am Freitag
+                          </label>
+                          <p
+                            th:if="${#fields.hasErrors('workingTimeFriday')}"
+                            th:text="${#fields.errors('workingTimeFriday')[0]}"
+                            class="mt-2 invalid"
+                          ></p>
                         </div>
                         <div class="space-x-1">
                           <input
@@ -224,12 +280,18 @@
                             inputmode="numeric"
                             name="workingTimeSaturday"
                             id="input-working-time-saturday"
-                            class="border border-gray-300 px-2 py-1 w-12"
+                            class="border border-gray-300 px-2 py-1 w-14"
                             th:field="*{workingTimeSaturday}"
+                            th:errorclass="invalid"
                           />
-                          <label for="input-working-time-saturday"
-                            >Stunden am Samstag</label
-                          >
+                          <label for="input-working-time-saturday">
+                            Stunden am Samstag
+                          </label>
+                          <p
+                            th:if="${#fields.hasErrors('workingTimeSaturday')}"
+                            th:text="${#fields.errors('workingTimeSaturday')[0]}"
+                            class="mt-2 invalid"
+                          ></p>
                         </div>
                         <div class="space-x-1">
                           <input
@@ -237,12 +299,18 @@
                             inputmode="numeric"
                             name="workingTimeSunday"
                             id="input-working-time-sunday"
-                            class="border border-gray-300 px-2 py-1 w-12"
+                            class="border border-gray-300 px-2 py-1 w-14"
                             th:field="*{workingTimeSunday}"
+                            th:errorclass="invalid"
                           />
-                          <label for="input-working-time-sunday"
-                            >Stunden am Sonntag</label
-                          >
+                          <label for="input-working-time-sunday">
+                            Stunden am Sonntag
+                          </label>
+                          <p
+                            th:if="${#fields.hasErrors('workingTimeSunday')}"
+                            th:text="${#fields.errors('workingTimeSunday')[0]}"
+                            class="mt-2 invalid"
+                          ></p>
                         </div>
                       </div>
                     </fieldset>

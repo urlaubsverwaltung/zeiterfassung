@@ -2,8 +2,10 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,10 +23,12 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
     private final UserManagementService userManagementService;
     private final WorkingTimeService workingTimeService;
+    private final WorkingTimeDtoValidator validator;
 
-    WorkingTimeController(UserManagementService userManagementService, WorkingTimeService workingTimeService) {
+    WorkingTimeController(UserManagementService userManagementService, WorkingTimeService workingTimeService, WorkingTimeDtoValidator validator) {
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
+        this.validator = validator;
     }
 
     @GetMapping
@@ -46,7 +50,23 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping
-    String post(@PathVariable("userId") Long userId, @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto) {
+    String post(@PathVariable("userId") Long userId, @Valid @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto,
+                BindingResult result, Model model) {
+
+        validator.validate(workingTimeDto, result);
+        if (result.hasErrors()) {
+
+            List<UserDto> users = userManagementService.findAllUsers()
+                .stream()
+                .map(UserManagementController::userToDto)
+                .toList();
+
+            model.addAttribute("users", users);
+            model.addAttribute("selectedUser", users.stream().filter(u -> u.id() == userId).findFirst().orElse(null));
+            model.addAttribute("workingTime", workingTimeDto);
+
+            return "usermanagement/users";
+        }
 
         final WorkingTime workingTime = dtoToWorkingTime(workingTimeDto);
 
