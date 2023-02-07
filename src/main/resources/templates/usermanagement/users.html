@@ -9,8 +9,10 @@
         <div
           class="mx-auto w-full px-8 max-w-screen-xl 3xl:px-4 3xl:max-w-screen-3xl"
         >
-          <h1 class="text-xl font-bold">Personen</h1>
-          <p class="mt-2 text-gray-600">
+          <h1 class="text-xl font-bold" th:text="#{usermanagement.heading}">
+            Personen
+          </h1>
+          <p class="mt-2 text-gray-600" th:text="#{usermanagement.teaser-text}">
             Information: Es werden hier nur Personen angezeigt, welche sich
             mindestens einmal in der Zeiterfassung angemeldet haben.
           </p>
@@ -63,7 +65,12 @@
                 th:if="${selectedUser == null}"
                 class="flex-1 flex items-center justify-center"
               >
-                <p class="text-xl">Wähle eine Person aus.</p>
+                <p
+                  class="text-xl"
+                  th:text="#{usermanagement.select-person.info}"
+                >
+                  Wähle eine Person aus.
+                </p>
               </div>
               <div th:if="${selectedUser}" class="w-full">
                 <h2 class="sr-only" th:text="${selectedUser.fullName}"></h2>

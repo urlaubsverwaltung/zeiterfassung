@@ -13,7 +13,12 @@
         th:object="${workingTime}"
       >
         <fieldset class="border-t border-gray-100">
-          <legend class="text-sm font-medium text-gray-400">Arbeitstage</legend>
+          <legend
+            class="text-sm font-medium text-gray-400"
+            th:text="#{usermanagement.working-time.workdays.title}"
+          >
+            Arbeitstage
+          </legend>
           <div class="mt-2">
             <ul class="flex gap-4">
               <li
@@ -62,6 +67,7 @@
           <legend
             class="text-sm font-medium text-gray-400"
             th:classappend="${#fields.hasErrors('workingTimeClash') ? 'text-red-600' : ''}"
+            th:text="#{usermanagement.working-time.common-hours.title}"
           >
             Arbeitszeit
           </legend>
@@ -78,7 +84,12 @@
                 th:aria-invalid="${#fields.hasErrors('workingTime')}"
                 th:aria-message="${#fields.hasErrors('workingTime') ? 'working-time-error-message' : ''}"
               />
-              <label for="input-workingtime">Stunden am Tag</label>
+              <label
+                for="input-workingtime"
+                th:text="#{usermanagement.working-time.common-hours.input.label}"
+              >
+                Stunden am Tag
+              </label>
               <p
                 th:if="${#fields.hasErrors('workingTime')}"
                 th:text="${#fields.errors('workingTime')[0]}"
@@ -95,6 +106,7 @@
           <legend
             class="text-sm font-medium text-gray-400"
             th:classappend="${#fields.hasErrors('workingTimeClash') ? 'text-red-600' : ''}"
+            th:text="#{usermanagement.working-time.individual-hours.title}"
           >
             Individuelle Arbeitszeit
           </legend>
@@ -111,7 +123,12 @@
                 th:aria-invalid="${#fields.hasErrors('workingTimeMonday')}"
                 th:aria-message="${#fields.hasErrors('workingTimeMonday') ? 'working-time-monday-error-message' : ''}"
               />
-              <label for="input-working-time-monday"> Stunden am Montag </label>
+              <label
+                for="input-working-time-monday"
+                th:text="#{usermanagement.working-time.individual-hours.monday.input.label}"
+              >
+                Stunden am Montag
+              </label>
               <p
                 th:if="${#fields.hasErrors('workingTimeMonday')}"
                 th:text="${#fields.errors('workingTimeMonday')[0]}"
@@ -131,7 +148,10 @@
                 th:aria-invalid="${#fields.hasErrors('workingTimeTuesday')}"
                 th:aria-message="${#fields.hasErrors('workingTimeTuesday') ? 'working-time-tuesday-error-message' : ''}"
               />
-              <label for="input-working-time-tuesday">
+              <label
+                for="input-working-time-tuesday"
+                th:text="#{usermanagement.working-time.individual-hours.tuesday.input.label}"
+              >
                 Stunden am Dienstag
               </label>
               <p
@@ -153,7 +173,10 @@
                 th:aria-invalid="${#fields.hasErrors('workingTimeWednesday')}"
                 th:aria-message="${#fields.hasErrors('workingTimeWednesday') ? 'working-time-wednesday-error-message' : ''}"
               />
-              <label for="input-working-time-wednesday">
+              <label
+                for="input-working-time-wednesday"
+                th:text="#{usermanagement.working-time.individual-hours.wednesday.input.label}"
+              >
                 Stunden am Mittwoch
               </label>
               <p
@@ -175,7 +198,10 @@
                 th:aria-invalid="${#fields.hasErrors('workingTimeThursday')}"
                 th:aria-message="${#fields.hasErrors('workingTimeThursday') ? 'working-time-thursday-error-message' : ''}"
               />
-              <label for="input-working-time-thursday">
+              <label
+                for="input-working-time-thursday"
+                th:text="#{usermanagement.working-time.individual-hours.thursday.input.label}"
+              >
                 Stunden am Donnerstag
               </label>
               <p
@@ -197,7 +223,10 @@
                 th:aria-invalid="${#fields.hasErrors('workingTimeFriday')}"
                 th:aria-message="${#fields.hasErrors('workingTimeFriday') ? 'working-time-friday-error-message' : ''}"
               />
-              <label for="input-working-time-friday">
+              <label
+                for="input-working-time-friday"
+                th:text="#{usermanagement.working-time.individual-hours.friday.input.label}"
+              >
                 Stunden am Freitag
               </label>
               <p
@@ -219,7 +248,10 @@
                 th:aria-invalid="${#fields.hasErrors('workingTimeSaturday')}"
                 th:aria-message="${#fields.hasErrors('workingTimeSaturday') ? 'working-time-saturday-error-message' : ''}"
               />
-              <label for="input-working-time-saturday">
+              <label
+                for="input-working-time-saturday"
+                th:text="#{usermanagement.working-time.individual-hours.saturday.input.label}"
+              >
                 Stunden am Samstag
               </label>
               <p
@@ -241,7 +273,10 @@
                 th:aria-invalid="${#fields.hasErrors('workingTimeSunday')}"
                 th:aria-message="${#fields.hasErrors('workingTimeSunday') ? 'working-time-sunday-error-message' : ''}"
               />
-              <label for="input-working-time-sunday">
+              <label
+                for="input-working-time-sunday"
+                th:text="#{usermanagement.working-time.individual-hours.sunday.input.label}"
+              >
                 Stunden am Sonntag
               </label>
               <p
@@ -259,11 +294,12 @@
             class="bg-blue-700 border border-blue-700 text-white font-medium rounded px-4 py-2 flex items-center gap-2"
           >
             <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
-            Aktualisieren
+            <th:block th:text="#{usermanagement.save}">Aktualisieren</th:block>
           </button>
           <button
             type="reset"
             class="whitespace-nowrap border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
+            th:text="#{usermanagement.revert}"
           >
             Änderungen verwerfen
           </button>
