@@ -61,10 +61,12 @@
                   </li>
                   <li>
                     <a
+                      id="main-navigation-link-users"
                       href="#"
                       th:href="@{/users}"
                       class="flex items-center main-nav-link"
-                      th:aria-current="${currentRequestURI.startsWith('/users') ? 'page' : 'false'}"
+                      th:classappend="${currentRequestURI.startsWith('/users') ? 'current' : ''}"
+                      th:aria-current="${currentRequestURI.equals('/users') ? 'page' : 'false'}"
                     >
                       <svg th:replace="~{icons/users::svg}"></svg>
                       <th:block>Personen</th:block>

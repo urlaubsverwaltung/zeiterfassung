@@ -402,6 +402,7 @@
     @apply fill-amber-500;
     @apply fill-amber-500;
   }
+  .main-nav-link.current svg,
   .main-nav-link[aria-current="page"] svg {
     @apply fill-amber-500;
     @apply fill-amber-500;
@@ -829,5 +830,30 @@
     @apply bg-blue-500 !important;
     background-position: right center;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+  }
+}
+
+@layer components {
+  main[data-selected-user] [data-hidden-with-selected-user] {
+    display: none;
+  }
+
+  main:not([data-selected-user]) [data-hidden-without-selected-user] {
+    display: none;
+  }
+
+  @screen lg {
+    main[data-selected-user] [data-hidden-with-selected-user],
+    main:not([data-selected-user]) [data-hidden-without-selected-user] {
+      display: var(--display-when-visible);
+    }
+  }
+
+  .user-selection-list > li {
+    @apply hover:bg-gray-50;
+  }
+
+  .user-selection-list > li:has(a[aria-current="page"]) {
+    @apply bg-gray-100;
   }
 }
