@@ -86,7 +86,7 @@
                 </a>
               </div>
               <div
-                class="flex-1 border border-gray-100 bg-blue-50 rounded-xl overflow-hidden flex"
+                class="flex-1 border border-gray-100 bg-gradient-to-br from-blue-200 to-blue-50 rounded-xl overflow-hidden flex"
               >
                 <div
                   th:if="${selectedUser == null}"
@@ -114,7 +114,7 @@
                         th:text="${selectedUser.fullName}"
                       ></span>
                       <span
-                        class="text-gray-400"
+                        class="text-gray-500 text-bold"
                         th:text="${selectedUser.email}"
                       ></span>
                     </span>
