@@ -1,6 +1,6 @@
-// import * as Turbo from "@hotwired/turbo";
+import "../components/user-selection-list";
 
-document.addEventListener("turbo:render", function (event) {
+document.addEventListener("turbo:render", function () {
   const main = document.querySelector("main");
 
   const currentLink = document.querySelector(
@@ -13,5 +13,3 @@ document.addEventListener("turbo:render", function (event) {
     delete main.dataset.selectedUser;
   }
 });
-
-export {};
