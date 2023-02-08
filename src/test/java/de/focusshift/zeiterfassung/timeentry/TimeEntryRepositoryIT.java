@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.tenancy.tenant.TenantService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,6 +40,12 @@ class TimeEntryRepositoryIT extends TestContainersBase {
     private TenantUserService tenantUserService;
     @Autowired
     private TenantService tenantService;
+
+    @AfterEach
+    void tearDown() {
+        sut.deleteAll();
+        tenantUserService.findAllUsers().forEach(user -> tenantUserService.deleteUser(user.localId()));
+    }
 
     @Test
     void countAllByOwner() {
