@@ -5,9 +5,12 @@ import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -23,17 +26,25 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping
-    String users(Model model) {
+    String users(Model model,
+                 @RequestParam(value = "query", required = false, defaultValue = "") String query,
+                 @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
 
-        List<UserDto> users = userManagementService.findAllUsers()
+        List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()
             .map(UserManagementController::userToDto)
             .toList();
 
+        model.addAttribute("query", query);
         model.addAttribute("users", users);
         model.addAttribute("selectedUser", null);
+        model.addAttribute("personSearchFormAction", "/users");
 
-        return "usermanagement/users";
+        if (StringUtils.hasText(turboFrame)) {
+            return "usermanagement/users::#" + turboFrame;
+        } else {
+            return "usermanagement/users";
+        }
     }
 
     @GetMapping("/{id}")

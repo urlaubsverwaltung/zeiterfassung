@@ -5,12 +5,15 @@ import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -32,40 +35,66 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping
-    String get(@PathVariable("userId") Long userId, Model model) {
+    String get(@PathVariable("userId") Long userId, Model model,
+               @RequestParam(value = "query", required = false, defaultValue = "") String query,
+               @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
 
-        List<UserDto> users = userManagementService.findAllUsers()
+        final List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()
             .map(UserManagementController::userToDto)
             .toList();
 
+        final UserDto selectedUser = users.stream().filter(u -> u.id() == userId)
+            .findFirst()
+            .or(() -> userManagementService.findUserById(new UserLocalId(userId)).map(UserManagementController::userToDto))
+            .orElseThrow(() -> new IllegalArgumentException("could not find person=%s".formatted(userId)));
+
         final WorkingTime workingTime = workingTimeService.getWorkingTimeByUser(new UserLocalId(userId));
         final WorkingTimeDto workingTimeDto = workingTimeToDto(workingTime);
 
+        model.addAttribute("query", query);
         model.addAttribute("users", users);
-        model.addAttribute("selectedUser", users.stream().filter(u -> u.id() == userId).findFirst().orElse(null));
+        model.addAttribute("selectedUser", selectedUser);
         model.addAttribute("workingTime", workingTimeDto);
+        model.addAttribute("personSearchFormAction", "/users/" + selectedUser.id());
 
-        return "usermanagement/users";
+        if (StringUtils.hasText(turboFrame)) {
+            return "usermanagement/users::#" + turboFrame;
+        } else {
+            return "usermanagement/users";
+        }
     }
 
     @PostMapping
-    String post(@PathVariable("userId") Long userId, @Valid @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto,
-                BindingResult result, Model model) {
+    String post(@PathVariable("userId") Long userId, Model model,
+                @Valid @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
+                @RequestParam(value = "query", required = false, defaultValue = "") String query,
+                @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
 
         validator.validate(workingTimeDto, result);
         if (result.hasErrors()) {
 
-            List<UserDto> users = userManagementService.findAllUsers()
+            final List<UserDto> users = userManagementService.findAllUsers(query)
                 .stream()
                 .map(UserManagementController::userToDto)
                 .toList();
 
-            model.addAttribute("users", users);
-            model.addAttribute("selectedUser", users.stream().filter(u -> u.id() == userId).findFirst().orElse(null));
-            model.addAttribute("workingTime", workingTimeDto);
+            final UserDto selectedUser = users.stream().filter(u -> u.id() == userId)
+                .findFirst()
+                .or(() -> userManagementService.findUserById(new UserLocalId(userId)).map(UserManagementController::userToDto))
+                .orElseThrow(() -> new IllegalArgumentException("could not find person=%s".formatted(userId)));
 
-            return "usermanagement/users";
+            model.addAttribute("query", query);
+            model.addAttribute("users", users);
+            model.addAttribute("selectedUser", selectedUser);
+            model.addAttribute("workingTime", workingTimeDto);
+            model.addAttribute("personSearchFormAction", "/users/" + selectedUser.id());
+
+            if (StringUtils.hasText(turboFrame)) {
+                return "usermanagement/users::#" + turboFrame;
+            } else {
+                return "usermanagement/users";
+            }
         }
 
         final WorkingTime workingTime = dtoToWorkingTime(workingTimeDto);

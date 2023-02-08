@@ -19,7 +19,7 @@
           class="flex-1 flex flex-col mx-auto w-full px-8 max-w-screen-xl 3xl:px-4 3xl:max-w-screen-3xl"
         >
           <div
-            class="mb-12"
+            class="mb-8"
             style="--display-when-visible: block"
             data-hidden-with-selected-user
           >
@@ -34,6 +34,46 @@
               mindestens einmal in der Zeiterfassung angemeldet haben.
             </p>
           </div>
+          <div>
+            <div class="lg:w-1/3 mb-4">
+              <form
+                id="person-search-form"
+                method="get"
+                action="#"
+                th:action="${personSearchFormAction}"
+                class="flex flex-row items-center"
+                data-turbo-frame="person-list-frame"
+                data-turbo-action="replace"
+              >
+                <div class="flex-1 relative">
+                  <svg
+                    th:replace="~{icons/search::svg(className='w-5 h-5 text-gray-400 absolute left-2 top-2.5')}"
+                  ></svg>
+                  <input
+                    type="search"
+                    name="query"
+                    placeholder="Suche nach Vor- / Nachname"
+                    th:value="${query}"
+                    id="person-query"
+                    class="rounded-xl w-full border border-gray-100 pl-9 pr-3 py-2 bg-white"
+                    data-auto-submit="user-search-submit"
+                    data-auto-submit-delay="100"
+                  />
+                  <label class="sr-only" for="person-query">
+                    Personensuche
+                  </label>
+                </div>
+                <button
+                  id="user-search-submit"
+                  type="submit"
+                  class="border border-blue-600 bg-blue-600 text-blue-50 rounded-r-lg px-4 py-2 font-bold"
+                  data-js-hidden
+                >
+                  Suchen
+                </button>
+              </form>
+            </div>
+          </div>
           <div class="flex-1 flex md:gap-4">
             <div
               class="w-full border border-gray-100 bg-white rounded-xl p-4 lg:w-1/3 lg:sticky"
@@ -44,48 +84,50 @@
               data-hidden-with-selected-user
               is="z-user-selection-list"
             >
-              <ol class="flex flex-col user-selection-list">
-                <th:block th:each="user : ${users}">
-                  <li
-                    class="py-3 px-2 flex items-center justify-between gap-4 rounded-xl transition-colors"
-                  >
-                    <span class="text-blue-300">
-                      <img
-                        alt=""
-                        th:replace="~{fragments/avatar::avatar(${user.fullName},48,48)}"
-                      />
-                    </span>
-                    <a
-                      th:fragment="user-element-link(user)"
-                      th:id="${'user-element-link-' + user.id}"
-                      href="#"
-                      th:href="@{/users/{id} (id=${user.id})}"
-                      th:aria-current="${selectedUser != null && user.id == selectedUser.id ? 'page' : ''}"
-                      th:data-user="${user.id}"
-                      class="flex-1 flex items-center justify-between gap-4"
-                      data-turbo-frame="person-frame"
-                      data-turbo-action="advance"
+              <turbo-frame id="person-list-frame">
+                <ol class="flex flex-col user-selection-list">
+                  <th:block th:each="user : ${users}">
+                    <li
+                      class="py-3 px-2 flex items-center justify-between gap-4 rounded-xl transition-colors"
                     >
-                      <span class="flex flex-col">
-                        <span
-                          class="text-black"
-                          th:text="${user.fullName}"
-                        ></span>
-                        <span
-                          class="text-gray-400"
-                          th:text="${user.email}"
-                        ></span>
+                      <span class="text-blue-300">
+                        <img
+                          alt=""
+                          th:replace="~{fragments/avatar::avatar(${user.fullName},48,48)}"
+                        />
                       </span>
-                      <svg
-                        th:replace="~{icons/chevron-right::svg(className='w-6 h-6 text-gray-400')}"
-                      ></svg>
-                    </a>
-                  </li>
-                  <li th:if="${not userStat.last}" role="separator">
-                    <div class="bg-gray-100 h-px mx-2"></div>
-                  </li>
-                </th:block>
-              </ol>
+                      <a
+                        th:fragment="user-element-link(user)"
+                        th:id="${'user-element-link-' + user.id}"
+                        href="#"
+                        th:href="@{/users/{id} (id=${user.id}, query=${query})}"
+                        th:aria-current="${selectedUser != null && user.id == selectedUser.id ? 'page' : ''}"
+                        th:data-user="${user.id}"
+                        class="flex-1 flex items-center justify-between gap-4"
+                        data-turbo-frame="person-frame"
+                        data-turbo-action="advance"
+                      >
+                        <span class="flex flex-col">
+                          <span
+                            class="text-black"
+                            th:text="${user.fullName}"
+                          ></span>
+                          <span
+                            class="text-gray-400"
+                            th:text="${user.email}"
+                          ></span>
+                        </span>
+                        <svg
+                          th:replace="~{icons/chevron-right::svg(className='w-6 h-6 text-gray-400')}"
+                        ></svg>
+                      </a>
+                    </li>
+                    <li th:if="${not userStat.last}" role="separator">
+                      <div class="bg-gray-100 h-px mx-2"></div>
+                    </li>
+                  </th:block>
+                </ol>
+              </turbo-frame>
             </div>
             <turbo-frame class="flex-1" id="person-frame">
               <th:block th:if="${selectedUser}">
@@ -105,6 +147,12 @@
                 >
                   <template th:insert="~{::user-element-link(${user})}"></template>
                 </turbo-stream>
+                <turbo-stream target="back-to-users-link" action="replace">
+                  <template th:insert="~{::#back-to-users-link}"></template>
+                </turbo-stream>
+                <turbo-stream target="person-search-form" action="replace">
+                  <template th:insert="~{::#person-search-form}"></template>
+                </turbo-stream>
               </th:block>
               <div
                 class="h-full flex flex-col"
@@ -113,7 +161,9 @@
               >
                 <div class="lg:hidden mb-8">
                   <a
-                    href="/users"
+                    id="back-to-users-link"
+                    href="#"
+                    th:href="@{/users (query=${query})}"
                     class="inline-flex items-center gap-2 text-black font-medium"
                     th:if="${selectedUser}"
                     data-turbo-frame="_top"

@@ -23,10 +23,23 @@ class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
+    public Optional<User> findUserById(UserLocalId userId) {
+        return findAllUsers().stream().filter(user -> user.localId().equals(userId)).findFirst();
+    }
+
+    @Override
     public List<User> findAllUsers() {
         return tenantUserService.findAllUsers()
             .stream()
             .map(UserManagementServiceImpl::tenantUserToUser)
+            .toList();
+    }
+
+    @Override
+    public List<User> findAllUsers(String query) {
+        return findAllUsers()
+            .stream()
+            .filter(user -> user.fullName().toLowerCase().contains(query.toLowerCase()))
             .toList();
     }
 
