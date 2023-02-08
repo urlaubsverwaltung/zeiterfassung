@@ -53,13 +53,18 @@
                     type="search"
                     name="query"
                     placeholder="Suche nach Vor- / Nachname"
+                    th:placeholder="#{usermanagement.person-list.search.placeholder}"
                     th:value="${query}"
                     id="person-query"
                     class="rounded-xl w-full border border-gray-100 pl-9 pr-3 py-2 bg-white"
                     data-auto-submit="user-search-submit"
                     data-auto-submit-delay="100"
                   />
-                  <label class="sr-only" for="person-query">
+                  <label
+                    class="sr-only"
+                    for="person-query"
+                    th:text="#{usermanagement.person-list.search.label}"
+                  >
                     Personensuche
                   </label>
                 </div>
@@ -68,6 +73,7 @@
                   type="submit"
                   class="border border-blue-600 bg-blue-600 text-blue-50 rounded-r-lg px-4 py-2 font-bold"
                   data-js-hidden
+                  th:text="#{usermanagement.person-list.search.submit}"
                 >
                   Suchen
                 </button>
