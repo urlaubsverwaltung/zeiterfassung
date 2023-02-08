@@ -65,47 +65,47 @@ class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     public List<TenantUser> findAllUsers() {
-        return tenantUserRepository.findAll().stream()
-            .map(TenantUserServiceImpl::entityToTenantUser)
-            .toList();
+        return mapToTenantUser(tenantUserRepository.findAll());
     }
 
     @Override
     public List<TenantUser> findAllUsers(String query) {
-        final String queryLowercase = query.toLowerCase();
-        return tenantUserRepository.findAll().stream()
-            .map(TenantUserServiceImpl::entityToTenantUser)
-            .filter(user -> user.givenName().toLowerCase().contains(queryLowercase) || user.familyName().toLowerCase().contains(queryLowercase))
-            .toList();
+        return mapToTenantUser(tenantUserRepository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase(query, query));
     }
 
     @Override
     public List<TenantUser> findAllUsersById(Collection<UserId> userIds) {
-        return findAllUsers().stream()
-            .filter(user -> userIds.contains(new UserId(user.id())))
-            .toList();
+        final List<String> idValues = userIds.stream().map(UserId::value).toList();
+        return mapToTenantUser(tenantUserRepository.findAllByUuidIsIn(idValues));
     }
 
     @Override
     public List<TenantUser> findAllUsersByLocalId(Collection<UserLocalId> userLocalIds) {
-        return findAllUsers().stream()
-            .filter(user -> userLocalIds.contains(new UserLocalId(user.localId())))
-            .toList();
+        final List<Long> idValues = userLocalIds.stream().map(UserLocalId::value).toList();
+        return mapToTenantUser(tenantUserRepository.findAllByIdIsIn(idValues));
     }
 
     @Override
     public Optional<TenantUser> findById(UserId userId) {
-        return tenantUserRepository.findByUuid(userId.value()).map(TenantUserServiceImpl::entityToTenantUser);
+        return mapToTenantUser(tenantUserRepository.findByUuid(userId.value()));
     }
 
     @Override
     public Optional<TenantUser> findByLocalId(UserLocalId localId) {
-        return tenantUserRepository.findById(localId.value()).map(TenantUserServiceImpl::entityToTenantUser);
+        return mapToTenantUser(tenantUserRepository.findById(localId.value()));
     }
 
     @Override
     public void deleteUser(Long id) {
         tenantUserRepository.deleteById(id);
+    }
+
+    private Optional<TenantUser> mapToTenantUser(Optional<TenantUserEntity> optional) {
+        return optional.map(TenantUserServiceImpl::entityToTenantUser);
+    }
+
+    private List<TenantUser> mapToTenantUser(Collection<TenantUserEntity> collection) {
+        return collection.stream().map(TenantUserServiceImpl::entityToTenantUser).toList();
     }
 
     private static TenantUser entityToTenantUser(TenantUserEntity tenantUserEntity) {
