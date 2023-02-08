@@ -7,17 +7,28 @@
     <th:block th:fragment="content">
       <main class="grow">
         <div
-          class="mx-auto w-full px-8 max-w-screen-xl 3xl:px-4 3xl:max-w-screen-3xl"
+          class="mx-auto w-full px-8 max-w-screen-xl lg:space-y-12 3xl:px-4 3xl:max-w-screen-3xl"
+          th:classappend="${selectedUser == null ? 'space-y-12' : ''}"
         >
-          <h1 class="text-xl font-bold" th:text="#{usermanagement.heading}">
-            Personen
-          </h1>
-          <p class="mt-2 text-gray-600" th:text="#{usermanagement.teaser-text}">
-            Information: Es werden hier nur Personen angezeigt, welche sich
-            mindestens einmal in der Zeiterfassung angemeldet haben.
-          </p>
-          <div class="mt-12 flex gap-4">
-            <div class="w-1/3 border border-gray-100 bg-white rounded-xl p-4">
+          <div
+            th:classappend="${selectedUser == null ? '' : 'hidden lg:block'}"
+          >
+            <h1 class="text-xl font-bold" th:text="#{usermanagement.heading}">
+              Personen
+            </h1>
+            <p
+              class="mt-2 text-gray-600"
+              th:text="#{usermanagement.teaser-text}"
+            >
+              Information: Es werden hier nur Personen angezeigt, welche sich
+              mindestens einmal in der Zeiterfassung angemeldet haben.
+            </p>
+          </div>
+          <div class="flex md:gap-4">
+            <div
+              class="w-full lg:w-1/3 border border-gray-100 bg-white rounded-xl p-4"
+              th:classappend="${selectedUser == null ? '' : 'hidden lg:block lg:p-4'}"
+            >
               <ol class="flex flex-col">
                 <th:block th:each="user : ${users}">
                   <li>
@@ -59,43 +70,60 @@
               </ol>
             </div>
             <div
-              class="flex-1 border border-gray-100 bg-blue-50 rounded-xl overflow-hidden flex"
+              class="flex-1 flex flex-col gap-8"
+              th:classappend="${selectedUser == null ? 'hidden lg:flex' : ''}"
             >
-              <div
-                th:if="${selectedUser == null}"
-                class="flex-1 flex items-center justify-center"
-              >
-                <p
-                  class="text-xl"
-                  th:text="#{usermanagement.select-person.info}"
+              <div class="lg:hidden">
+                <a
+                  href="/users"
+                  class="inline-flex items-center gap-2 text-black font-medium"
+                  th:if="${selectedUser}"
                 >
-                  Wähle eine Person aus.
-                </p>
+                  <svg
+                    th:replace="~{icons/arrow-left::svg(className='w-5 h-5')}"
+                  ></svg>
+                  Zurück zu Personen
+                </a>
               </div>
-              <div th:if="${selectedUser}" class="w-full">
-                <h2 class="sr-only" th:text="${selectedUser.fullName}"></h2>
-                <div class="p-4 flex items-center gap-4">
-                  <span class="text-blue-300">
-                    <img
-                      alt=""
-                      th:replace="~{fragments/avatar::avatar(${selectedUser.fullName},64, 64)}"
-                    />
-                  </span>
-                  <span class="flex flex-col">
-                    <span
-                      class="text-black font-bold"
-                      th:text="${selectedUser.fullName}"
-                    ></span>
-                    <span
-                      class="text-gray-400"
-                      th:text="${selectedUser.email}"
-                    ></span>
-                  </span>
+              <div
+                class="flex-1 border border-gray-100 bg-blue-50 rounded-xl overflow-hidden flex"
+              >
+                <div
+                  th:if="${selectedUser == null}"
+                  class="flex-1 flex items-center justify-center"
+                >
+                  <p
+                    class="text-xl"
+                    th:text="#{usermanagement.select-person.info}"
+                  >
+                    Wähle eine Person aus.
+                  </p>
                 </div>
-                <div class="p-6 bg-white">
-                  <div
-                    th:replace="/usermanagement/user/working-time-settings::section(${selectedUser}, ${workingTime})"
-                  ></div>
+                <div th:if="${selectedUser}" class="w-full">
+                  <h2 class="sr-only" th:text="${selectedUser.fullName}"></h2>
+                  <div class="p-4 flex items-center gap-4">
+                    <span class="text-blue-300">
+                      <img
+                        alt=""
+                        th:replace="~{fragments/avatar::avatar(${selectedUser.fullName},64, 64)}"
+                      />
+                    </span>
+                    <span class="flex flex-col">
+                      <span
+                        class="text-black font-bold"
+                        th:text="${selectedUser.fullName}"
+                      ></span>
+                      <span
+                        class="text-gray-400"
+                        th:text="${selectedUser.email}"
+                      ></span>
+                    </span>
+                  </div>
+                  <div class="p-6 bg-white">
+                    <div
+                      th:replace="~{/usermanagement/user/working-time-settings::section(${selectedUser}, ${workingTime})}"
+                    ></div>
+                  </div>
                 </div>
               </div>
             </div>
