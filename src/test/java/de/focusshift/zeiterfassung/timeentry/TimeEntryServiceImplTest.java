@@ -227,4 +227,45 @@ class TimeEntryServiceImplTest {
             )
         );
     }
+
+
+    @Test
+    void ensureGetEntryWeekPageWithDaysInCorrectOrder() {
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+
+        when(userDateService.firstDayOfWeek(Year.of(2023), 5)).thenReturn(LocalDate.of(2023, 1, 30));
+
+        final ZonedDateTime firstDayOfWeekTimeEntryStart = ZonedDateTime.of(2023, 1, 30, 9, 0, 0, 0, zoneIdBerlin);
+        final ZonedDateTime firstDayOfWeekTimeEntryEnd = ZonedDateTime.of(2023, 1, 30, 12, 0, 0, 0, zoneIdBerlin);
+        final TimeEntryEntity firstDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", firstDayOfWeekTimeEntryStart.toInstant(), zoneIdBerlin, firstDayOfWeekTimeEntryEnd.toInstant(), zoneIdBerlin, Instant.now(), false);
+
+        final ZonedDateTime lastDayOfWeekTimeEntryStart = ZonedDateTime.of(2023, 2, 5, 9, 0, 0, 0, zoneIdBerlin);
+        final ZonedDateTime lastDayOfWeekTimeEntryEnd = ZonedDateTime.of(2023, 2, 5, 12, 0, 0, 0, zoneIdBerlin);
+        final TimeEntryEntity lastDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 2L, "batman", "hack the planet, second time!", lastDayOfWeekTimeEntryStart.toInstant(), zoneIdBerlin, lastDayOfWeekTimeEntryEnd.toInstant(), zoneIdBerlin, Instant.now(), false);
+
+
+        final ZonedDateTime fromDateTime = LocalDate.of(2023, 1, 30).atStartOfDay(ZoneId.systemDefault());
+        final Instant from = Instant.from(fromDateTime);
+        final Instant to = Instant.from(fromDateTime.plusWeeks(1));
+
+        when(timeEntryRepository.findAllByOwnerAndTouchingPeriod("batman", from, to)).thenReturn(List.of(lastDayOfWeekTimeEntry, firstDayOfWeekTimeEntry));
+        when(timeEntryRepository.countAllByOwner("batman")).thenReturn(6L);
+
+        final TimeEntryWeekPage actual = sut.getEntryWeekPage(new UserId("batman"), 2023, 5);
+
+        assertThat(actual).isEqualTo(
+                new TimeEntryWeekPage(
+                        new TimeEntryWeek(
+                                LocalDate.of(2023, 1, 30),
+                                List.of(new TimeEntryDay(LocalDate.of(2023, 2, 5),
+                                            List.of(new TimeEntry(2L, new UserId("batman"), "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false))),
+                                        new TimeEntryDay(LocalDate.of(2023, 1, 30),
+                                                List.of(new TimeEntry(1L, new UserId("batman"), "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)))
+                                )
+                        ),
+                        6
+                )
+        );
+    }
 }
