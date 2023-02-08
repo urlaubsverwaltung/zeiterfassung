@@ -1,10 +1,13 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
+import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -65,6 +68,39 @@ class TenantUserServiceImpl implements TenantUserService {
         return tenantUserRepository.findAll().stream()
             .map(TenantUserServiceImpl::entityToTenantUser)
             .toList();
+    }
+
+    @Override
+    public List<TenantUser> findAllUsers(String query) {
+        final String queryLowercase = query.toLowerCase();
+        return tenantUserRepository.findAll().stream()
+            .map(TenantUserServiceImpl::entityToTenantUser)
+            .filter(user -> user.givenName().toLowerCase().contains(queryLowercase) || user.familyName().toLowerCase().contains(queryLowercase))
+            .toList();
+    }
+
+    @Override
+    public List<TenantUser> findAllUsersById(Collection<UserId> userIds) {
+        return findAllUsers().stream()
+            .filter(user -> userIds.contains(new UserId(user.id())))
+            .toList();
+    }
+
+    @Override
+    public List<TenantUser> findAllUsersByLocalId(Collection<UserLocalId> userLocalIds) {
+        return findAllUsers().stream()
+            .filter(user -> userLocalIds.contains(new UserLocalId(user.localId())))
+            .toList();
+    }
+
+    @Override
+    public Optional<TenantUser> findById(UserId userId) {
+        return tenantUserRepository.findByUuid(userId.value()).map(TenantUserServiceImpl::entityToTenantUser);
+    }
+
+    @Override
+    public Optional<TenantUser> findByLocalId(UserLocalId localId) {
+        return tenantUserRepository.findById(localId.value()).map(TenantUserServiceImpl::entityToTenantUser);
     }
 
     @Override

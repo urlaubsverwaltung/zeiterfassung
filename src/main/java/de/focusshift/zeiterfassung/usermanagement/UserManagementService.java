@@ -9,7 +9,7 @@ public interface UserManagementService {
 
     Optional<User> findUserById(UserId userId);
 
-    Optional<User> findUserById(UserLocalId userId);
+    Optional<User> findUserByLocalId(UserLocalId userId);
 
     List<User> findAllUsers();
 

@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,38 +20,42 @@ class UserManagementServiceImpl implements UserManagementService {
 
     @Override
     public Optional<User> findUserById(UserId userId) {
-        return findAllUsers().stream().filter(user -> user.id().equals(userId)).findFirst();
+        return mapToUser(tenantUserService.findById(userId));
     }
 
     @Override
-    public Optional<User> findUserById(UserLocalId userId) {
-        return findAllUsers().stream().filter(user -> user.localId().equals(userId)).findFirst();
+    public Optional<User> findUserByLocalId(UserLocalId userId) {
+        return mapToUser(tenantUserService.findByLocalId(userId));
     }
 
     @Override
     public List<User> findAllUsers() {
-        return tenantUserService.findAllUsers()
-            .stream()
-            .map(UserManagementServiceImpl::tenantUserToUser)
-            .toList();
+        return mapToUser(tenantUserService.findAllUsers());
     }
 
     @Override
     public List<User> findAllUsers(String query) {
-        return findAllUsers()
-            .stream()
-            .filter(user -> user.fullName().toLowerCase().contains(query.toLowerCase()))
-            .toList();
+        return mapToUser(tenantUserService.findAllUsers(query));
     }
 
     @Override
     public List<User> findAllUsersByIds(List<UserId> userIds) {
-        return findAllUsers().stream().filter(user -> userIds.contains(user.id())).toList();
+        return mapToUser(tenantUserService.findAllUsersById(userIds));
     }
 
     @Override
     public List<User> findAllUsersByLocalIds(List<UserLocalId> localIds) {
-        return findAllUsers().stream().filter(user -> localIds.contains(user.localId())).toList();
+        return mapToUser(tenantUserService.findAllUsersByLocalId(localIds));
+    }
+
+    private static Optional<User> mapToUser(Optional<TenantUser> optional) {
+        return optional.map(UserManagementServiceImpl::tenantUserToUser);
+    }
+
+    private static List<User> mapToUser(Collection<TenantUser> collection) {
+        return collection.stream()
+            .map(UserManagementServiceImpl::tenantUserToUser)
+            .toList();
     }
 
     private static User tenantUserToUser(TenantUser tenantUser) {

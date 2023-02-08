@@ -46,7 +46,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         final UserDto selectedUser = users.stream().filter(u -> u.id() == userId)
             .findFirst()
-            .or(() -> userManagementService.findUserById(new UserLocalId(userId)).map(UserManagementController::userToDto))
+            .or(() -> userManagementService.findUserByLocalId(new UserLocalId(userId)).map(UserManagementController::userToDto))
             .orElseThrow(() -> new IllegalArgumentException("could not find person=%s".formatted(userId)));
 
         final WorkingTime workingTime = workingTimeService.getWorkingTimeByUser(new UserLocalId(userId));
@@ -81,7 +81,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
             final UserDto selectedUser = users.stream().filter(u -> u.id() == userId)
                 .findFirst()
-                .or(() -> userManagementService.findUserById(new UserLocalId(userId)).map(UserManagementController::userToDto))
+                .or(() -> userManagementService.findUserByLocalId(new UserLocalId(userId)).map(UserManagementController::userToDto))
                 .orElseThrow(() -> new IllegalArgumentException("could not find person=%s".formatted(userId)));
 
             model.addAttribute("query", query);
