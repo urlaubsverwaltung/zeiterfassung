@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.util.List;
+import java.util.Objects;
 
 @Validated
 class WorkingTimeDto {
@@ -149,6 +150,30 @@ class WorkingTimeDto {
             ", workingtimeSaturday=" + workingTimeSaturday +
             ", workingtimeSunday=" + workingTimeSunday +
             '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WorkingTimeDto that = (WorkingTimeDto) o;
+        return workingTimeClash == that.workingTimeClash
+            && userId.equals(that.userId)
+            && workday.equals(that.workday)
+            && Objects.equals(workingTime, that.workingTime)
+            && Objects.equals(workingTimeMonday, that.workingTimeMonday)
+            && Objects.equals(workingTimeTuesday, that.workingTimeTuesday)
+            && Objects.equals(workingTimeWednesday, that.workingTimeWednesday)
+            && Objects.equals(workingTimeThursday, that.workingTimeThursday)
+            && Objects.equals(workingTimeFriday, that.workingTimeFriday)
+            && Objects.equals(workingTimeSaturday, that.workingTimeSaturday)
+            && Objects.equals(workingTimeSunday, that.workingTimeSunday);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userId, workday, workingTime, workingTimeClash, workingTimeMonday, workingTimeTuesday,
+            workingTimeWednesday, workingTimeThursday, workingTimeFriday, workingTimeSaturday, workingTimeSunday);
     }
 
     public static Builder builder() {
