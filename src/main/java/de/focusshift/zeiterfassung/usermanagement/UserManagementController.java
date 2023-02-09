@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
+import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_EDIT_WORKING_TIME_ALL;
+
 @Controller
 @RequestMapping("/users")
-@PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
+@PreAuthorize(ALLOW_EDIT_WORKING_TIME_ALL)
 class UserManagementController implements HasTimeClock, HasLaunchpad {
 
     private final UserManagementService userManagementService;

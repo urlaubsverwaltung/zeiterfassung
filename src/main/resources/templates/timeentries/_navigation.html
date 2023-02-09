@@ -59,7 +59,7 @@
                       <th:block th:text="#{navigation.main.reports}"></th:block>
                     </a>
                   </li>
-                  <li>
+                  <li th:if="${showMainNavigationPersons}">
                     <a
                       id="main-navigation-link-users"
                       href="#"

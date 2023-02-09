@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeclock;
 
+import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,9 @@ class TimeClockControllerTest {
 
     @MockBean
     private TimeClockService timeClockService;
+
+    @MockBean
+    private CurrentUserProvider currentUserProvider;
 
     @Test
     void ensureStartTimeClock() throws Exception {

@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focusshift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -20,8 +21,11 @@ import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_EDIT_WORKING_TIME_ALL;
+
 @Controller
 @RequestMapping("/users/{userId}/working-time")
+@PreAuthorize(ALLOW_EDIT_WORKING_TIME_ALL)
 class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
     private final UserManagementService userManagementService;

@@ -3,6 +3,8 @@ package de.focusshift.zeiterfassung.security;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.util.Optional;
+
 public enum SecurityRoles {
 
     ZEITERFASSUNG_OPERATOR, // used by fss employees only!
@@ -17,5 +19,14 @@ public enum SecurityRoles {
             authority = new SimpleGrantedAuthority("ROLE_" + this.name());
         }
         return authority;
+    }
+
+    public static Optional<SecurityRoles> fromAuthority(GrantedAuthority authority) {
+        try {
+            final SecurityRoles role = SecurityRoles.valueOf(authority.getAuthority().substring("ROLE_".length()));
+            return Optional.of(role);
+        } catch(IllegalArgumentException exception) {
+            return Optional.empty();
+        }
     }
 }
