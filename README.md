@@ -100,6 +100,7 @@ Zeiterfassung is using user permissions from oidc claim `groups` for mapping pos
 
 * `ZEITERFASSUNG_USER`: General access to the application aund time tracking features
 * `ZEITERFASSUNG_VIEW_REPORT_ALL`: Access to reports of other users
+* `ZEITERFASSUNG_WORKING_TIME_EDIT_ALL`: Allowed to edit working time of all users
 
 If you're using Keycloak, this can be configured via a predefined OIDC client mapper with name `groups`.
 Create both permissions as `Realm roles` and assign user to those roles.

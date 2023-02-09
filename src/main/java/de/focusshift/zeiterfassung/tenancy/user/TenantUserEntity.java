@@ -1,19 +1,28 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
+import de.focusshift.zeiterfassung.security.SecurityRoles;
 import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
-
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.LazyCollection;
+
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Set;
 
+import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.GenerationType.SEQUENCE;
+import static org.hibernate.annotations.LazyCollectionOption.FALSE;
 
 @Entity
 @Table(name = "tenant_user")
@@ -53,15 +62,21 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
     @Size(max = 255)
     private String email;
 
+    @CollectionTable(name = "tenant_user_authorities", joinColumns = @JoinColumn(name = "tenant_user_id"))
+    @ElementCollection
+    @LazyCollection(FALSE)
+    @Enumerated(STRING)
+    private Set<SecurityRoles> authorities;
+
     protected TenantUserEntity() {
-        this(null, null, null, null, null, null, null, null);
+        this(null, null, null, null, null, null, null, null, Set.of());
     }
 
-    protected TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email) {
-        this(id, null, uuid, firstLoginAt, lastLoginAt, givenName, familyName, email);
+    protected TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRoles> authorities) {
+        this(id, null, uuid, firstLoginAt, lastLoginAt, givenName, familyName, email, authorities);
     }
 
-    protected TenantUserEntity(Long id, String tenantId, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email) {
+    protected TenantUserEntity(Long id, String tenantId, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRoles> authorities) {
         super(tenantId);
         this.id = id;
         this.uuid = uuid;
@@ -70,6 +85,7 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
         this.givenName = givenName;
         this.familyName = familyName;
         this.email = email;
+        this.authorities = authorities;
     }
 
     public Long getId() {
@@ -98,6 +114,10 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
 
     public String getEmail() {
         return email;
+    }
+
+    public Set<SecurityRoles> getAuthorities() {
+        return authorities;
     }
 
     @Override

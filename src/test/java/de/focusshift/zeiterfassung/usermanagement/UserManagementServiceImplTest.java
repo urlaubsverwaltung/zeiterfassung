@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -45,8 +46,8 @@ class UserManagementServiceImplTest {
         final UserLocalId localId = new UserLocalId(42L);
         final EMailAddress email = new EMailAddress("mail@example.org");
 
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email);
-        final User user = new User(id, localId, "givenName", "familyName", email);
+        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, Set.of());
+        final User user = new User(id, localId, "givenName", "familyName", email, Set.of());
 
         when(tenantUserService.findById(new UserId("user-id"))).thenReturn(Optional.of(tenantUser));
 
@@ -71,8 +72,8 @@ class UserManagementServiceImplTest {
         final UserLocalId localId = new UserLocalId(42L);
         final EMailAddress email = new EMailAddress("mail@example.org");
 
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email);
-        final User user = new User(id, localId, "givenName", "familyName", email);
+        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, Set.of());
+        final User user = new User(id, localId, "givenName", "familyName", email, Set.of());
 
         when(tenantUserService.findByLocalId(new UserLocalId(42L))).thenReturn(Optional.of(tenantUser));
 
@@ -97,15 +98,15 @@ class UserManagementServiceImplTest {
         final UserLocalId localId = new UserLocalId(42L);
         final EMailAddress email = new EMailAddress("mail@example.org");
 
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email);
-        final User user = new User(id, localId, "givenName", "familyName", email);
+        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, Set.of());
+        final User user = new User(id, localId, "givenName", "familyName", email, Set.of());
 
         final UserId id2 = new UserId("user-id-2");
         final UserLocalId localId2 = new UserLocalId(1337L);
         final EMailAddress email2 = new EMailAddress("mail-2@example.org");
 
-        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2);
-        final User user2 = new User(id2, localId2, "givenName-2", "familyName-2", email2);
+        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2, Set.of());
+        final User user2 = new User(id2, localId2, "givenName-2", "familyName-2", email2, Set.of());
 
         when(tenantUserService.findAllUsers("batman")).thenReturn(List.of(tenantUser, tenantUser2));
 
@@ -131,15 +132,15 @@ class UserManagementServiceImplTest {
         final UserLocalId localId = new UserLocalId(42L);
         final EMailAddress email = new EMailAddress("mail@example.org");
 
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email);
-        final User user = new User(id, localId, "givenName", "familyName", email);
+        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, Set.of());
+        final User user = new User(id, localId, "givenName", "familyName", email, Set.of());
 
         final UserId id2 = new UserId("user-id-2");
         final UserLocalId localId2 = new UserLocalId(1337L);
         final EMailAddress email2 = new EMailAddress("mail-2@example.org");
 
-        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2);
-        final User user2 = new User(id2, localId2, "givenName-2", "familyName-2", email2);
+        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2, Set.of());
+        final User user2 = new User(id2, localId2, "givenName-2", "familyName-2", email2, Set.of());
 
         when(tenantUserService.findAllUsersById(List.of(id, id2))).thenReturn(List.of(tenantUser, tenantUser2));
 
@@ -165,15 +166,15 @@ class UserManagementServiceImplTest {
         final UserLocalId localId = new UserLocalId(42L);
         final EMailAddress email = new EMailAddress("mail@example.org");
 
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email);
-        final User user = new User(id, localId, "givenName", "familyName", email);
+        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, Set.of());
+        final User user = new User(id, localId, "givenName", "familyName", email, Set.of());
 
         final UserId id2 = new UserId("user-id-2");
         final UserLocalId localId2 = new UserLocalId(1337L);
         final EMailAddress email2 = new EMailAddress("mail-2@example.org");
 
-        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2);
-        final User user2 = new User(id2, localId2, "givenName-2", "familyName-2", email2);
+        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2, Set.of());
+        final User user2 = new User(id2, localId2, "givenName-2", "familyName-2", email2, Set.of());
 
         when(tenantUserService.findAllUsersByLocalId(List.of(localId, localId2))).thenReturn(List.of(tenantUser, tenantUser2));
 

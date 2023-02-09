@@ -59,6 +59,6 @@ class UserManagementServiceImpl implements UserManagementService {
     }
 
     private static User tenantUserToUser(TenantUser tenantUser) {
-        return new User(new UserId(tenantUser.id()), new UserLocalId(tenantUser.localId()), tenantUser.givenName(), tenantUser.familyName(), tenantUser.eMail());
+        return new User(new UserId(tenantUser.id()), new UserLocalId(tenantUser.localId()), tenantUser.givenName(), tenantUser.familyName(), tenantUser.eMail(), tenantUser.authorities());
     }
 }

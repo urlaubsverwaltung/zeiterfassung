@@ -92,6 +92,14 @@
       "clientRole" : false,
       "containerId" : "zeiterfassung-realm",
       "attributes" : { }
+    }, {
+      "id" : "fefac8c1-9618-4375-9c8e-55db784f222a",
+      "name" : "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL",
+      "description" : "",
+      "composite" : false,
+      "clientRole" : false,
+      "containerId" : "zeiterfassung-realm",
+      "attributes" : { }
     } ],
     "client" : {
       "realm-management" : [ {
@@ -365,7 +373,7 @@
     "name" : "ZEITERFASSUNG_PRIVILEGED",
     "path" : "/ZEITERFASSUNG_PRIVILEGED",
     "attributes" : { },
-    "realmRoles" : [ "ZEITERFASSUNG_VIEW_REPORT_ALL" ],
+    "realmRoles" : [ "ZEITERFASSUNG_VIEW_REPORT_ALL", "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL" ],
     "clientRoles" : { },
     "subGroups" : [ ]
   } ],

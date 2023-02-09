@@ -7,7 +7,8 @@ public enum SecurityRoles {
 
     ZEITERFASSUNG_OPERATOR, // used by fss employees only!
     ZEITERFASSUNG_USER,
-    ZEITERFASSUNG_VIEW_REPORT_ALL;
+    ZEITERFASSUNG_VIEW_REPORT_ALL,
+    ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 
     private GrantedAuthority authority;
 

@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
+import de.focusshift.zeiterfassung.security.SecurityRoles;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 
@@ -12,7 +13,7 @@ public interface TenantUserService {
 
     Optional<TenantUser> getUserByUuid(UUID uuid);
 
-    TenantUser createNewUser(UUID uuid, String givenName, String familyName, EMailAddress eMailAddress);
+    TenantUser createNewUser(UUID uuid, String givenName, String familyName, EMailAddress eMailAddress, Collection<SecurityRoles> authorities);
 
     TenantUser updateUser(TenantUser user);
 

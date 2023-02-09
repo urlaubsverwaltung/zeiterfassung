@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,8 +60,8 @@ class TenantUserServiceImplTest {
         final EMailAddress email = new EMailAddress("mail@example.org");
 
         final Instant firstLoginAt = clock.instant();
-        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value());
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt);
+        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value(), Set.of());
+        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt, Set.of());
 
         when(repository.findByUuid(uuid.toString())).thenReturn(Optional.of(entity));
 
@@ -89,8 +90,8 @@ class TenantUserServiceImplTest {
         final EMailAddress email = new EMailAddress("mail@example.org");
 
         final Instant firstLoginAt = clock.instant();
-        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value());
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt);
+        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value(), Set.of());
+        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt, Set.of());
 
         when(repository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase("batman", "batman"))
             .thenReturn(List.of(entity));
@@ -118,8 +119,8 @@ class TenantUserServiceImplTest {
         final EMailAddress email = new EMailAddress("mail@example.org");
 
         final Instant firstLoginAt = clock.instant();
-        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value());
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt);
+        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value(), Set.of());
+        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt, Set.of());
 
         final UUID uuid2 = UUID.randomUUID();
 
@@ -128,8 +129,8 @@ class TenantUserServiceImplTest {
         final EMailAddress email2 = new EMailAddress("mail@example.org");
 
         final Instant firstLoginAt2 = clock.instant();
-        final TenantUserEntity entity2 = new TenantUserEntity(localId2.value(), id2.value(), firstLoginAt2, clock.instant(), "givenName-2", "familyName-2", email2.value());
-        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2, firstLoginAt2);
+        final TenantUserEntity entity2 = new TenantUserEntity(localId2.value(), id2.value(), firstLoginAt2, clock.instant(), "givenName-2", "familyName-2", email2.value(), Set.of());
+        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2, firstLoginAt2, Set.of());
 
         when(repository.findAllByUuidIsIn(List.of(uuid.toString(), uuid2.toString()))).thenReturn(List.of(entity, entity2));
 
@@ -156,8 +157,8 @@ class TenantUserServiceImplTest {
         final EMailAddress email = new EMailAddress("mail@example.org");
 
         final Instant firstLoginAt = clock.instant();
-        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value());
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt);
+        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value(), Set.of());
+        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt, Set.of());
 
         final UUID uuid2 = UUID.randomUUID();
 
@@ -166,8 +167,8 @@ class TenantUserServiceImplTest {
         final EMailAddress email2 = new EMailAddress("mail@example.org");
 
         final Instant firstLoginAt2 = clock.instant();
-        final TenantUserEntity entity2 = new TenantUserEntity(localId2.value(), id2.value(), firstLoginAt2, clock.instant(), "givenName-2", "familyName-2", email2.value());
-        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2, firstLoginAt2);
+        final TenantUserEntity entity2 = new TenantUserEntity(localId2.value(), id2.value(), firstLoginAt2, clock.instant(), "givenName-2", "familyName-2", email2.value(), Set.of());
+        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2, firstLoginAt2, Set.of());
 
         when(repository.findAllByIdIsIn(List.of(localId.value(), localId2.value()))).thenReturn(List.of(entity, entity2));
 
@@ -194,8 +195,8 @@ class TenantUserServiceImplTest {
         final EMailAddress email = new EMailAddress("mail@example.org");
 
         final Instant firstLoginAt = clock.instant();
-        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value());
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt);
+        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value(), Set.of());
+        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt, Set.of());
 
         when(repository.findByUuid(uuid.toString())).thenReturn(Optional.of(entity));
 
@@ -223,8 +224,8 @@ class TenantUserServiceImplTest {
         final EMailAddress email = new EMailAddress("mail@example.org");
 
         final Instant firstLoginAt = clock.instant();
-        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value());
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt);
+        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value(), Set.of());
+        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt, Set.of());
 
         when(repository.findById(localId.value())).thenReturn(Optional.of(entity));
 
