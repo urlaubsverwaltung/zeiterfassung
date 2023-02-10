@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@duetds/date-picker": "1.4.0",
-    "@hotwired/turbo": "7.2.4",
+    "@hotwired/turbo": "7.2.5",
     "@rollup/plugin-commonjs": "23.0.3",
     "@rollup/plugin-node-resolve": "15.0.1",
     "@tsconfig/svelte": "3.0.0",
