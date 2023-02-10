@@ -56,6 +56,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         return result
             .stream()
             .map(TimeEntryServiceImpl::toTimeEntry)
+            .sorted(comparing(TimeEntry::start).reversed())
             .toList();
     }
 
