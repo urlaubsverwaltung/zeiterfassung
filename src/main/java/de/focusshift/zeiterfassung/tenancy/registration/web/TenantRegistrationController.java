@@ -27,13 +27,13 @@ public class TenantRegistrationController {
     public String items(Model model) {
         List<String> tenantRegistrations = this.tenantRegistrationService.findAll();
         model.addAttribute("tenantRegistrations", tenantRegistrations);
-        return "tenants/registrations/index.html";
+        return "tenants/registrations/index";
     }
 
     @GetMapping("/tenants/registrations/form")
     public String form(Model model) {
         model.addAttribute("tenantRegistration", new TenantRegistrationDTO());
-        return "tenants/registrations/form.html";
+        return "tenants/registrations/form";
     }
 
     @PostMapping("/tenants/registrations")

@@ -11,8 +11,10 @@
   <body th:replace="timeentries/_layout::body(~{::content})">
     <th:block th:fragment="content">
       <main class="grow">
-        <div class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28">
-          <div class="px-4">
+        <div
+          class="mx-auto w-full max-w-screen-lg 2xl:max-w-screen-3xl space-y-8"
+        >
+          <div class="px-8">
             <div class="flex items-center">
               <p class="mr-4" th:text="#{report.view.select}">Ansicht:</p>
               <ul class="flex space-x-4">
@@ -41,9 +43,22 @@
               </ul>
             </div>
             <div class="mt-8" th:insert="__${chartNavigationFragment}__"></div>
-            <div class="mt-8">
+          </div>
+          <div class="px-8 grid grid-cols-1 2xl:grid-cols-2 2xl:gap-8">
+            <div
+              class="2xl:sticky 2xl:self-start"
+              style="top: calc(var(--navigation-header-height) + 1rem)"
+            >
               <div class="p-8 bg-gradient-to-b from-gray-100 rounded-t-3xl">
                 <div th:replace="__${chartFragment}__"></div>
+              </div>
+            </div>
+            <div class="">
+              <div class="p-4 bg-white border border-gray-100 rounded-3xl">
+                <h2 class="sr-only" th:text="#{report.detail.section.heading}">
+                  Zeiteinträge
+                </h2>
+                <div th:replace="__${entriesFragment}__"></div>
               </div>
             </div>
           </div>

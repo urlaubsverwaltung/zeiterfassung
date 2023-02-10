@@ -12,8 +12,6 @@ export class ReportUserSelect extends HTMLAnchorElement {
       "absolute",
       "top-full",
       "left-0",
-      "sm:left-auto",
-      "sm:right-0",
       "shadow-xl",
       "rounded-lg",
       "bg-white",

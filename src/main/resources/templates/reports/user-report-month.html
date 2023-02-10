@@ -6,7 +6,7 @@
   <body>
     <div
       th:fragment="chart-navigation"
-      class="flex flex-row gap-4 flex-wrap items-start"
+      class="flex flex-row gap-4 flex-wrap items-start 2xl:grid 2xl:grid-cols-2 2xl:gap-8"
     >
       <nav
         class="flex items-center gap-1"
@@ -41,16 +41,18 @@
           >
         </a>
       </nav>
-      <form th:replace="reports/_user-select::form" />
-      <a
-        href="#"
-        th:href="${userReportCsvDownloadUrl}"
-        download
-        class="sm:ml-auto inline-block border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
-        th:text="#{report.month.button.csv-download}"
-      >
-        CSV Download
-      </a>
+      <div class="flex-1 flex justify-between gap-2">
+        <form th:replace="reports/_user-select::form" />
+        <a
+          href="#"
+          th:href="${userReportCsvDownloadUrl}"
+          download
+          class="whitespace-nowrap sm:ml-auto inline-block border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
+          th:text="#{report.month.button.csv-download}"
+        >
+          CSV Download
+        </a>
+      </div>
     </div>
 
     <th:block th:fragment="chart">
@@ -70,98 +72,121 @@
           Dezember 2021
         </span>
       </div>
-      <svg
-        th:with="
-      chartWidth=1000,
-      chartHeight=300,
-      paddingTop=16,
-      nrOfWeeks=${#lists.size(monthReport.weekReports)},
-      weekGap=25,
-      dayGap=2,
-      barWidth=${(chartWidth - (nrOfWeeks * weekGap) - (nrOfWeeks * 7 - dayGap)) / (nrOfWeeks * 7)}
-    "
-        viewbox="0 0 1024 360"
-        width="100%"
-        preserveAspectRatio="xMidYMin meet"
-        class="mt-8 report-graph"
-      >
-        <g
-          th:each="hour : ${#numbers.sequence(0, monthReport.graphLegendMaxHour, 2)}"
-          th:with="y=${paddingTop + (chartHeight * (1 - (hour / monthReport.graphLegendMaxHour)))}"
+      <div is="z-report-graph">
+        <svg
+          th:with="
+            chartWidth=1000,
+            chartHeight=300,
+            paddingTop=16,
+            nrOfWeeks=${#lists.size(monthReport.weekReports)},
+            weekGap=25,
+            dayGap=2,
+            barWidth=${(chartWidth - (nrOfWeeks * weekGap) - (nrOfWeeks * 7 - dayGap)) / (nrOfWeeks * 7)}
+          "
+          viewbox="0 0 1024 360"
+          width="100%"
+          preserveAspectRatio="xMidYMin meet"
+          class="mt-8 report-graph"
         >
-          <line
-            x1="0"
-            th:y1="${y}"
-            th:x2="${chartWidth}"
-            th:y2="${y}"
-            class="report-graph-hour-line"
-          ></line>
-          <text
-            x="1024"
-            th:y="${y}"
-            text-anchor="end"
-            dominant-baseline="middle"
-            th:text="${hour + 'h'}"
-            class="report-graph-hour-text"
-          ></text>
-        </g>
-        <th:block th:each="week, weekIt : ${monthReport.weekReports}">
           <g
-            th:each="day, dayIt : ${week.dayReports}"
-            th:with="
-          barHeight=${(chartHeight * (day.hoursWorked / monthReport.graphLegendMaxHour))},
-          top=${paddingTop + chartHeight - barHeight},
-          bottom=${paddingTop + chartHeight},
-          left=${(weekIt.index * weekGap) + (weekIt.index * 7 * barWidth) + (weekIt.index * 6 * dayGap) + (dayIt.index * dayGap) + (dayIt.index * barWidth)},
-          radius=${barWidth/2}
-        "
-            th:classappend="${day.differentMonth ? 'report-graph-group--different-month' : ''}"
+            th:each="hour : ${#numbers.sequence(0, monthReport.graphLegendMaxHour, 2)}"
+            th:with="y=${paddingTop + (chartHeight * (1 - (hour / monthReport.graphLegendMaxHour)))}"
           >
-            <path
-              th:if="${day.hoursWorked != 0}"
-              th:with="radius=${(barHeight - radius) < 0 ? barHeight : radius}"
-              th:d="|M${left},${bottom} v${-1 * (barHeight - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${barHeight - radius} z|"
-              class="report-graph-day-bar"
-            />
-            <rect
-              th:if="${day.hoursWorked == 0}"
-              th:y="${top}"
-              th:x="${left}"
-              th:width="${barWidth}"
-              th:height="1"
-              class="report-graph-day-bar"
+            <line
+              x1="0"
+              th:y1="${y}"
+              th:x2="${chartWidth}"
+              th:y2="${y}"
+              class="report-graph-hour-line"
+            ></line>
+            <text
+              x="1024"
+              th:y="${y}"
+              text-anchor="end"
+              dominant-baseline="middle"
+              th:text="${hour + 'h'}"
+              class="report-graph-hour-text"
+            ></text>
+          </g>
+          <th:block th:each="week, weekIt : ${monthReport.weekReports}">
+            <g
+              th:each="day, dayIt : ${week.dayReports}"
+              th:with="
+                barHeight=${(chartHeight * (day.hoursWorked / monthReport.graphLegendMaxHour))},
+                top=${paddingTop + chartHeight - barHeight},
+                bottom=${paddingTop + chartHeight},
+                left=${(weekIt.index * weekGap) + (weekIt.index * 7 * barWidth) + (weekIt.index * 6 * dayGap) + (dayIt.index * dayGap) + (dayIt.index * barWidth)},
+                radius=${barWidth/2}
+              "
+              th:classappend="${day.differentMonth ? 'report-graph-group--different-month' : ''}"
+            >
+              <path
+                th:if="${day.hoursWorked != 0}"
+                th:with="radius=${(barHeight - radius) < 0 ? barHeight : radius}"
+                th:d="|M${left},${bottom} v${-1 * (barHeight - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${barHeight - radius} z|"
+                class="report-graph-day-bar"
+                th:data-date="${day.date}"
+              />
+              <rect
+                th:if="${day.hoursWorked == 0}"
+                th:y="${top}"
+                th:x="${left}"
+                th:width="${barWidth}"
+                th:height="1"
+                class="report-graph-day-bar"
+              />
+              <text
+                th:y="${paddingTop + chartHeight + 25}"
+                th:x="${left + (barWidth/2)}"
+                text-anchor="middle"
+                th:text="${day.dayOfWeek}"
+                class="report-graph-day-text"
+              />
+            </g>
+          </th:block>
+          <g
+            th:with="y=${paddingTop + (chartHeight * (1 - (monthReport.averageHoursWorked / monthReport.graphLegendMaxHour)))}"
+          >
+            <line
+              x1="0"
+              th:y1="${y}"
+              th:x2="${chartWidth}"
+              th:y2="${y}"
+              stroke-dasharray="6 2"
+              class="report-graph-avg-line"
             />
             <text
-              th:y="${paddingTop + chartHeight + 25}"
-              th:x="${left + (barWidth/2)}"
-              text-anchor="middle"
-              th:text="${day.dayOfWeek}"
-              class="report-graph-day-text"
-            />
+              th:x="${0}"
+              th:y="${y}"
+              text-anchor="start"
+              dominant-baseline="text-after-edge"
+              class="report-graph-avg-text"
+            >
+              avg
+            </text>
           </g>
-        </th:block>
-        <g
-          th:with="y=${paddingTop + (chartHeight * (1 - (monthReport.averageHoursWorked / monthReport.graphLegendMaxHour)))}"
-        >
-          <line
-            x1="0"
-            th:y1="${y}"
-            th:x2="${chartWidth}"
-            th:y2="${y}"
-            stroke-dasharray="6 2"
-            class="report-graph-avg-line"
-          />
-          <text
-            th:x="${0}"
-            th:y="${y}"
-            text-anchor="start"
-            dominant-baseline="text-after-edge"
-            class="report-graph-avg-text"
-          >
-            avg
-          </text>
-        </g>
-      </svg>
+        </svg>
+      </div>
+    </th:block>
+
+    <th:block
+      th:fragment="entries"
+      th:with="monthGroupLabelId=${'month-group-' + #strings.randomAlphanumeric(9)}"
+    >
+      <p
+        class="sr-only"
+        th:id="${monthGroupLabelId}"
+        th:text="#{report.detail.month.section.title(${monthReportDetail.yearMonth})}"
+      >
+        Zeiteinträge für Januar
+      </p>
+      <section th:aria-labelledby="${monthGroupLabelId}">
+        <ol class="space-y-8" th:aria-labelledby="${monthGroupLabelId}">
+          <li th:each="weekReportDetail : ${monthReportDetail.weekReports}">
+            <th:block th:replace="reports/user-report-week::entries" />
+          </li>
+        </ol>
+      </section>
     </th:block>
   </body>
 </html>

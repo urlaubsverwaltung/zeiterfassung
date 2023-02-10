@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    --navigation-header-height: 3rem;
+  }
+
   body {
     min-height: 100vh;
     background-image: linear-gradient(#ffffff, #fafafa);

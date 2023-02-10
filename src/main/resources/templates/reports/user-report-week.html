@@ -6,7 +6,7 @@
   <body>
     <div
       th:fragment="chart-navigation"
-      class="flex flex-row gap-4 flex-wrap items-start"
+      class="flex flex-row gap-4 flex-wrap items-start 2xl:grid 2xl:grid-cols-2 2xl:gap-8"
     >
       <nav
         class="flex items-center gap-1"
@@ -43,16 +43,18 @@
           >
         </a>
       </nav>
-      <form th:replace="reports/_user-select::form" />
-      <a
-        href="#"
-        th:href="${userReportCsvDownloadUrl}"
-        download
-        class="sm:ml-auto inline-block border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
-        th:text="#{report.week.button.csv-download}"
-      >
-        CSV Download
-      </a>
+      <div class="flex-1 flex justify-between gap-2">
+        <form th:replace="reports/_user-select::form" />
+        <a
+          href="#"
+          th:href="${userReportCsvDownloadUrl}"
+          download
+          class="whitespace-nowrap sm:ml-auto inline-block border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
+          th:text="#{report.week.button.csv-download}"
+        >
+          CSV Download
+        </a>
+      </div>
     </div>
 
     <th:block th:fragment="chart">
@@ -70,104 +72,219 @@
           Dezember 2021, KW 42
         </span>
       </div>
-      <svg
-        th:with="
-      chartWidth=700,
-      chartHeight=300,
-      paddingTop=16,
-      paddingLeft=150,
-      paddingRight=150,
-      dayGap=30,
-      barWidth=${(chartWidth - 6*dayGap) / 7}
-    "
-        viewbox="0 0 1024 360"
-        width="100%"
-        preserveAspectRatio="xMidYMin meet"
-        class="mt-8 report-graph"
-      >
-        <g
-          th:each="hour : ${#numbers.sequence(0, weekReport.graphLegendMaxHour, 2)}"
-          th:with="y=${paddingTop + (chartHeight * (1 - (hour / weekReport.graphLegendMaxHour)))}"
-        >
-          <line
-            x1="0"
-            th:y1="${y}"
-            th:x2="${paddingLeft + paddingRight + chartWidth}"
-            th:y2="${y}"
-            class="report-graph-hour-line"
-          ></line>
-          <text
-            x="1024"
-            th:y="${y}"
-            text-anchor="end"
-            dominant-baseline="middle"
-            th:text="${hour + 'h'}"
-            class="report-graph-hour-text"
-          ></text>
-        </g>
-        <g
-          th:each="day, dayIt : ${weekReport.dayReports}"
+      <div is="z-report-graph">
+        <svg
           th:with="
-        barHeight=${(chartHeight * (day.hoursWorked / weekReport.graphLegendMaxHour))},
-        top=${paddingTop + chartHeight - barHeight},
-        bottom=${paddingTop + chartHeight},
-        left=${paddingLeft + (dayIt.index * dayGap) + (dayIt.index * barWidth)},
-        radius=${barWidth/2}
-      "
+            chartWidth=700,
+            chartHeight=300,
+            paddingTop=16,
+            paddingLeft=150,
+            paddingRight=150,
+            dayGap=30,
+            barWidth=${(chartWidth - 6*dayGap) / 7}
+          "
+          viewbox="0 0 1024 360"
+          width="100%"
+          preserveAspectRatio="xMidYMin meet"
+          class="mt-8 report-graph"
         >
-          <path
-            th:if="${day.hoursWorked != 0}"
-            th:with="radius=${(barHeight - radius) < 0 ? barHeight : radius}"
-            th:d="|M${left},${bottom} v${-1 * (barHeight - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${barHeight - radius} z|"
-            class="report-graph-day-bar"
-          />
-          <rect
-            th:if="${day.hoursWorked == 0}"
-            th:y="${top}"
-            th:x="${left}"
-            th:width="${barWidth}"
-            th:height="1"
-            class="report-graph-day-bar"
-          />
-          <text
-            th:y="${paddingTop + chartHeight + 6}"
-            th:x="${left + (barWidth/2)}"
-            text-anchor="middle"
-            dominant-baseline="text-before-edge"
-            th:text="${day.dayOfWeekFull}"
-            class="report-graph-day-text"
-          />
-          <text
-            th:y="${paddingTop + chartHeight + 24}"
-            th:x="${left + (barWidth/2)}"
-            text-anchor="middle"
-            dominant-baseline="text-before-edge"
-            th:text="${day.date}"
-            class="report-graph-date-text"
-          />
-        </g>
-        <g
-          th:with="y=${paddingTop + (chartHeight * (1 - (weekReport.averageHoursWorked / weekReport.graphLegendMaxHour)))}"
-        >
-          <line
-            x1="0"
-            th:y1="${y}"
-            th:x2="${chartWidth + paddingLeft + paddingRight}"
-            th:y2="${y}"
-            stroke-dasharray="6 2"
-            class="report-graph-avg-line"
-          />
-          <text
-            th:x="${0}"
-            th:y="${y}"
-            text-anchor="start"
-            dominant-baseline="text-after-edge"
-            class="report-graph-avg-text"
+          <g
+            th:each="hour : ${#numbers.sequence(0, weekReport.graphLegendMaxHour, 2)}"
+            th:with="y=${paddingTop + (chartHeight * (1 - (hour / weekReport.graphLegendMaxHour)))}"
           >
-            avg
-          </text>
-        </g>
-      </svg>
+            <line
+              x1="0"
+              th:y1="${y}"
+              th:x2="${paddingLeft + paddingRight + chartWidth}"
+              th:y2="${y}"
+              class="report-graph-hour-line"
+            ></line>
+            <text
+              x="1024"
+              th:y="${y}"
+              text-anchor="end"
+              dominant-baseline="middle"
+              th:text="${hour + 'h'}"
+              class="report-graph-hour-text"
+            ></text>
+          </g>
+          <g
+            th:each="day, dayIt : ${weekReport.dayReports}"
+            th:with="
+              barHeight=${(chartHeight * (day.hoursWorked / weekReport.graphLegendMaxHour))},
+              top=${paddingTop + chartHeight - barHeight},
+              bottom=${paddingTop + chartHeight},
+              left=${paddingLeft + (dayIt.index * dayGap) + (dayIt.index * barWidth)},
+              radius=${barWidth/2}
+            "
+          >
+            <path
+              th:if="${day.hoursWorked != 0}"
+              th:with="radius=${(barHeight - radius) < 0 ? barHeight : radius}"
+              th:d="|M${left},${bottom} v${-1 * (barHeight - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${barHeight - radius} z|"
+              class="report-graph-day-bar"
+              th:data-date="${day.date}"
+            />
+            <rect
+              th:if="${day.hoursWorked == 0}"
+              th:y="${top}"
+              th:x="${left}"
+              th:width="${barWidth}"
+              th:height="1"
+              class="report-graph-day-bar"
+            />
+            <text
+              th:y="${paddingTop + chartHeight + 6}"
+              th:x="${left + (barWidth/2)}"
+              text-anchor="middle"
+              dominant-baseline="text-before-edge"
+              th:text="${day.dayOfWeekFull}"
+              class="report-graph-day-text"
+            />
+            <text
+              th:y="${paddingTop + chartHeight + 24}"
+              th:x="${left + (barWidth/2)}"
+              text-anchor="middle"
+              dominant-baseline="text-before-edge"
+              th:text="${day.date}"
+              class="report-graph-date-text"
+            />
+          </g>
+          <g
+            th:with="y=${paddingTop + (chartHeight * (1 - (weekReport.averageHoursWorked / weekReport.graphLegendMaxHour)))}"
+          >
+            <line
+              x1="0"
+              th:y1="${y}"
+              th:x2="${chartWidth + paddingLeft + paddingRight}"
+              th:y2="${y}"
+              stroke-dasharray="6 2"
+              class="report-graph-avg-line"
+            />
+            <text
+              th:x="${0}"
+              th:y="${y}"
+              text-anchor="start"
+              dominant-baseline="text-after-edge"
+              class="report-graph-avg-text"
+            >
+              avg
+            </text>
+          </g>
+        </svg>
+      </div>
+    </th:block>
+
+    <th:block
+      th:fragment="entries"
+      th:with="weekGroupLabelId=${'week-entries-' + #strings.randomAlphanumeric(9)}"
+    >
+      <p
+        th:id="${weekGroupLabelId}"
+        th:text="#{report.detail.week.section.title(${weekReportDetail.firstDateOfWeek}, ${weekReportDetail.lastDateOfWeek}, ${weekReportDetail.calendarWeek})}"
+        class="sr-only"
+        aria-hidden="true"
+      ></p>
+      <section
+        class="space-y-8"
+        is="z-report-breakdown-section"
+        th:aria-labelledby="${weekGroupLabelId}"
+      >
+        <div
+          th:each="day : ${weekReportDetail.dayReports}"
+          th:data-date="${day.date}"
+          th:with="hasEntries=${not #lists.isEmpty(day.dayEntries)}, listLabelId=${'day-' + #strings.randomAlphanumeric(9)}"
+        >
+          <p
+            th:id="${listLabelId}"
+            class="text-gray-400 text-sm text-left px-2 mb-2"
+            th:text="#{report.detail.day.head(${day.dayOfWeekFull}, ${day.date}, ${day.hoursWorked})}"
+            th:attrappend="aria-hidden=${hasEntries ? 'true' : null}"
+          >
+            Zeiten
+          </p>
+          <th:block th:if="${not hasEntries}">
+            <p
+              class="px-2 text-sm text-gray-700"
+              th:text="#{report.detail.no-entries}"
+            >
+              Für diesen Tag wurden noch keine Zeiten erfasst.
+            </p>
+          </th:block>
+          <th:block th:if="${hasEntries}">
+            <ol
+              class="w-full divide-y divide-blue-50"
+              th:aria-labelledby="${listLabelId}"
+            >
+              <li th:each="dayEntry : ${day.dayEntries}">
+                <div
+                  class="group flex items-start gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
+                >
+                  <div class="flex items-center gap-1">
+                    <span
+                      class="text-blue-100 transition-colors group-hover:text-blue-200"
+                      aria-hidden="true"
+                    >
+                      <img
+                        alt=""
+                        th:replace="fragments/avatar::avatar(${dayEntry.username},42,42)"
+                      />
+                    </span>
+                    <span class="sr-only" th:text="${dayEntry.username}">
+                      Bruce Wayne
+                    </span>
+                  </div>
+                  <div
+                    class="flex-1 flex flex-col gap-1 md:flex-row md:items-start md:gap-8 2xl:flex-col 2xl:gap-1"
+                  >
+                    <div
+                      class="shrink-0 flex flex-col gap-1 text-sm transition-colors text-gray-500 group-hover:text-gray-600 xs:flex-row xs:gap-4 md:flex-col md:gap-1 md:w-1/4 2xl:flex-row 2xl:w-full 2xl:gap-4 2xl:text-gray-500 group-hover:2xl:text-gray-600"
+                    >
+                      <p class="flex items-center gap-1">
+                        <svg
+                          th:replace="icons/clock::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')"
+                        />
+                        <span
+                          class=""
+                          th:text="#{report.detail.time(${dayEntry.start}, ${dayEntry.end})}"
+                        ></span>
+                      </p>
+                      <p class="flex items-center gap-0.5">
+                        <svg
+                          th:replace="icons/timer::svg(className='-translate-x-px shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')"
+                        />
+                        <span
+                          class="whitespace-nowrap"
+                          th:text="${{dayEntry.duration}}"
+                        ></span>
+                      </p>
+                    </div>
+                    <p
+                      class="flex-1 flex items-start gap-1 text-base text-gray-800 transition-colors group-hover:text-black"
+                    >
+                      <svg
+                        th:replace="icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')"
+                      />
+                      <span
+                        class="sr-only"
+                        th:text="#{report.detail.day.comment.label}"
+                      >
+                        Kommentar:&nbsp;
+                      </span>
+                      <span
+                        th:text="${dayEntry.comment}"
+                        class="flex-1 break-words leading-5"
+                      >
+                        hard work!
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </li>
+            </ol>
+          </th:block>
+        </div>
+      </section>
     </th:block>
   </body>
 </html>

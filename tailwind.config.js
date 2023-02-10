@@ -13,6 +13,9 @@ module.exports = {
       fontFamily: {
         logo: ["KaushanScript"],
       },
+      inset: {
+        "nav-header": "var(--navigation-header-height)",
+      },
       spacing: {
         6.5: "1.625rem",
         7.5: "1.875rem",
@@ -23,6 +26,8 @@ module.exports = {
       },
       screens: {
         xs: "480px",
+        "2xl": "1440px",
+        "3xl": "1600px",
       },
       backgroundColor: {
         "timeslot-form-day": "var(--timeslot-form-day-background-color)",
