@@ -40,7 +40,7 @@
                       href="#"
                       th:href="@{/timeentries}"
                       class="flex items-center main-nav-link"
-                      th:aria-current="${#httpServletRequest.getRequestURI().startsWith('/timeentries') ? 'page' : 'false'}"
+                      th:aria-current="${currentRequestURI.startsWith('/timeentries') ? 'page' : 'false'}"
                     >
                       <svg th:replace="icons/bookmark::svg"></svg>
                       <th:block
@@ -53,7 +53,7 @@
                       href="#"
                       th:href="@{/report}"
                       class="flex items-center main-nav-link"
-                      th:aria-current="${#httpServletRequest.getRequestURI().startsWith('/report') ? 'page' : 'false'}"
+                      th:aria-current="${currentRequestURI.startsWith('/report') ? 'page' : 'false'}"
                     >
                       <svg th:replace="icons/chart-pie::svg"></svg>
                       <th:block th:text="#{navigation.main.reports}"></th:block>

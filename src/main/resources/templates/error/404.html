@@ -25,7 +25,7 @@
             ></p>
             <div
               class="mt-8 sm:mt-8 text-lg flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-2"
-              th:with="previousPageLink=${#request.getHeader('Referer')}"
+              th:with="previousPageLink=${header_referer}"
             >
               <a
                 th:if="${not #strings.isEmpty(previousPageLink)}"
