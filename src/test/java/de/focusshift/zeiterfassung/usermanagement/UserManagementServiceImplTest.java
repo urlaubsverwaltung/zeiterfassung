@@ -52,8 +52,10 @@ class UserManagementServiceImplTest {
         when(tenantUserService.findById(new UserId("user-id"))).thenReturn(Optional.of(tenantUser));
 
         final Optional<User> actual = sut.findUserById(new UserId("user-id"));
-        assertThat(actual).isPresent();
-        assertThat(actual).hasValue(user);
+
+        assertThat(actual)
+            .isPresent()
+            .hasValue(user);
     }
 
     @Test
@@ -78,8 +80,10 @@ class UserManagementServiceImplTest {
         when(tenantUserService.findByLocalId(new UserLocalId(42L))).thenReturn(Optional.of(tenantUser));
 
         final Optional<User> actual = sut.findUserByLocalId(new UserLocalId(42L));
-        assertThat(actual).isPresent();
-        assertThat(actual).hasValue(user);
+
+        assertThat(actual)
+            .isPresent()
+            .hasValue(user);
     }
 
     @Test

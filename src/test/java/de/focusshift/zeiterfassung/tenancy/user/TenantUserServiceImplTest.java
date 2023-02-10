@@ -66,8 +66,10 @@ class TenantUserServiceImplTest {
         when(repository.findByUuid(uuid.toString())).thenReturn(Optional.of(entity));
 
         final Optional<TenantUser> actual = sut.getUserByUuid(uuid);
-        assertThat(actual).isPresent();
-        assertThat(actual).hasValue(tenantUser);
+
+        assertThat(actual)
+            .isPresent()
+            .hasValue(tenantUser);
     }
 
     @Test
@@ -201,8 +203,10 @@ class TenantUserServiceImplTest {
         when(repository.findByUuid(uuid.toString())).thenReturn(Optional.of(entity));
 
         final Optional<TenantUser> actual = sut.findById(id);
-        assertThat(actual).isPresent();
-        assertThat(actual).hasValue(tenantUser);
+
+        assertThat(actual)
+            .isPresent()
+            .hasValue(tenantUser);
     }
 
     @Test
@@ -230,8 +234,9 @@ class TenantUserServiceImplTest {
         when(repository.findById(localId.value())).thenReturn(Optional.of(entity));
 
         final Optional<TenantUser> actual = sut.findByLocalId(localId);
-        assertThat(actual).isPresent();
-        assertThat(actual).hasValue(tenantUser);
+        assertThat(actual)
+            .isPresent()
+            .hasValue(tenantUser);
     }
 
     @Test
