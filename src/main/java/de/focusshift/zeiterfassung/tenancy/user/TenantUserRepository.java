@@ -20,7 +20,6 @@ interface TenantUserRepository extends CrudRepository<TenantUserEntity, Long> {
     @NonNull
     List<TenantUserEntity> findAllByIdIsIn(Collection<Long> localIds);
 
-
     @NonNull
     List<TenantUserEntity> findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase(String givenNameQuery, String familyNameQuery);
 }
