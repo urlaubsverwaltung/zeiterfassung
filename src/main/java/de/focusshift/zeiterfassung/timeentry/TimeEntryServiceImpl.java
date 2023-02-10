@@ -56,6 +56,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         return result
             .stream()
             .map(TimeEntryServiceImpl::toTimeEntry)
+            .sorted(comparing(TimeEntry::start).reversed())
             .toList();
     }
 
@@ -109,6 +110,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .collect(Collectors.groupingBy(timeEntry -> timeEntry.start().toLocalDate()))
             .entrySet().stream()
             .map(e -> new TimeEntryDay(e.getKey(), e.getValue()))
+            .sorted(comparing(TimeEntryDay::date).reversed())
             .toList();
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(fromDateTime.toLocalDate(), daysOfWeek);
