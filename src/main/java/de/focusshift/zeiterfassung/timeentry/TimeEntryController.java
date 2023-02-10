@@ -7,6 +7,8 @@ import de.focusshift.zeiterfassung.user.MonthFormat;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.YearFormat;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,9 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -32,12 +32,13 @@ import java.time.LocalTime;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.WeekFields;
 import java.util.List;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.Month.DECEMBER;
-import static java.time.ZoneOffset.UTC;
 import static java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
+import static java.time.temporal.TemporalAdjusters.previousOrSame;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Controller
@@ -48,13 +49,11 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private final TimeEntryService timeEntryService;
     private final UserSettingsProvider userSettingsProvider;
     private final DateFormatter dateFormatter;
-    private final Clock clock;
 
-    public TimeEntryController(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider, DateFormatter dateFormatter, Clock clock) {
+    public TimeEntryController(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider, DateFormatter dateFormatter) {
         this.timeEntryService = timeEntryService;
         this.userSettingsProvider = userSettingsProvider;
         this.dateFormatter = dateFormatter;
-        this.clock = clock;
     }
 
     @GetMapping("/timeentries")
@@ -99,16 +98,25 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         Model model,
         @AuthenticationPrincipal OidcUser principal,
         HttpServletRequest request
-    ) {
+    ) throws InvalidTimeEntryException {
+
+        final int year;
+        final int weekOfYear;
+
+        try {
+            final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDTO.getDate(), DayOfWeek.MONDAY);
+            year = firstDateOfWeek.getYear();
+            weekOfYear = firstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR);
+        } catch(NullPointerException exception) {
+            throw new InvalidTimeEntryException("invalid time entry. date must be set.");
+        }
+
         final String viewName = saveOrUpdate(timeEntryDTO, bindingResult, model, principal, request);
+
         if (bindingResult.hasErrors()) {
-            final ZoneId userZoneId = userSettingsProvider.zoneId();
-            final LocalDate now = LocalDate.now(clock);
-            final ZonedDateTime userAwareNow = ZonedDateTime.ofLocal(now.atStartOfDay(), userZoneId, UTC);
-            final int year = userAwareNow.getYear();
-            final int weekOfYear = userAwareNow.get(WEEK_OF_WEEK_BASED_YEAR);
             addTimeEntriesToModel(year, weekOfYear, model, principal);
         }
+
         return viewName;
     }
 
@@ -121,14 +129,24 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
         Model model,
         HttpServletRequest request
-    ) {
+    ) throws InvalidTimeEntryException {
+
+        final int year;
+        final int weekOfYear;
+
+        try {
+            final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDTO.getDate(), DayOfWeek.MONDAY);
+            year = firstDateOfWeek.getYear();
+            weekOfYear = firstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR);
+        } catch(NullPointerException exception) {
+            throw new InvalidTimeEntryException("invalid time entry. date must be set.");
+        }
 
         final String viewName = saveOrUpdate(timeEntryDTO, bindingResult, model, principal, request);
 
+        final UserId userId = new UserId(principal.getUserInfo().getSubject());
+
         if (StringUtils.hasText(turboFrame)) {
-            final int year = timeEntryDTO.getDate().getYear();
-            final int weekOfYear = timeEntryDTO.getDate().get(WEEK_OF_WEEK_BASED_YEAR);
-            final UserId userId = new UserId(principal.getUserInfo().getSubject());
             final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
 
             final TimeEntryDay timeEntryDay = entryWeekPage.timeEntryWeek().days()
@@ -148,12 +166,6 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             return "timeentries/index::#frame-time-entry";
         } else {
             if (bindingResult.hasErrors()) {
-                final ZoneId userZoneId = userSettingsProvider.zoneId();
-                // TODO fixme: use date of incoming dto instead of 'now'
-                final LocalDate now = LocalDate.now(clock);
-                final ZonedDateTime userAwareNow = ZonedDateTime.ofLocal(now.atStartOfDay(), userZoneId, UTC);
-                final int year = userAwareNow.getYear();
-                final int weekOfYear = userAwareNow.get(WEEK_OF_WEEK_BASED_YEAR);
                 addTimeEntriesToModel(year, weekOfYear, model, principal);
             }
             return viewName;
@@ -358,5 +370,24 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     private int lastWeekOfYear(int year) {
         return Year.of(year).atMonth(DECEMBER).atEndOfMonth().get(WEEK_OF_WEEK_BASED_YEAR);
+    }
+
+    private LocalDate localDateToFirstDateOfWeek(LocalDate localDate, DayOfWeek firstDayOfWeek) {
+        // using minimalDaysInFirstWeek = 4 since it is defined by ISO-8601 (starting week with monday)
+        // I have no glue whether this value can be use here or not. Some unit tests say we can... so...
+        final WeekFields userWeekFields = WeekFields.of(firstDayOfWeek, 4);
+
+        final int temporalYear = localDate.getYear();
+        final int temporalWeekOfYear = localDate.get(WEEK_OF_WEEK_BASED_YEAR);
+
+        final LocalDate previousOrSame = localDate.with(previousOrSame(firstDayOfWeek));
+
+        final int year = previousOrSame.getYear();
+        final int week = previousOrSame.get(userWeekFields.weekOfWeekBasedYear());
+        if (year == temporalYear && week > temporalWeekOfYear) {
+            return previousOrSame.minusWeeks(1);
+        }
+
+        return previousOrSame;
     }
 }

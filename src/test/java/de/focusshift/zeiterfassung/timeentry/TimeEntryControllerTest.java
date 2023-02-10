@@ -15,8 +15,6 @@ import org.springframework.security.web.method.annotation.AuthenticationPrincipa
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -49,11 +47,9 @@ class TimeEntryControllerTest {
     @Mock
     private DateFormatter dateFormatter;
 
-    private final Clock clock = Clock.systemUTC();
-
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, clock);
+        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter);
     }
 
     @Test
@@ -283,20 +279,14 @@ class TimeEntryControllerTest {
     @Test
     void ensureTimeEntryCreationError() throws Exception {
 
-        final Clock fixedClock = Clock.fixed(Instant.parse("2022-09-22T00:00:00.00Z"), ZoneId.systemDefault());
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, fixedClock);
-
-        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
-
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 99);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2021, 52)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-date", "formatted-date", "00:00", List.of());
-        final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 39, 2022, 37, expectedTimeEntryWeekDto, 99);
+        final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 1, 2021, 51, expectedTimeEntryWeekDto, 99);
 
         final ResultActions perform = perform(
             post("/timeentries")
@@ -443,11 +433,7 @@ class TimeEntryControllerTest {
     @Test
     void ensureTimeEntryEditWithValidationError() throws Exception {
 
-        final Clock fixedClock = Clock.fixed(Instant.parse("2022-09-22T00:00:00.00Z"), ZoneId.systemDefault());
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, fixedClock);
-
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
@@ -455,7 +441,7 @@ class TimeEntryControllerTest {
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(new TimeEntryDay(LocalDate.of(2022, 9, 19), List.of(timeEntry))));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2021, 52)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -470,7 +456,8 @@ class TimeEntryControllerTest {
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-date", "formatted-date", "00:30",
                 List.of(new TimeEntryDayDto("formatted-date", "00:30", List.of(expectedTimeEntryDto))));
-        final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 39, 2022, 37, expectedTimeEntryWeekDto, 1337);
+
+        final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 1, 2021, 51, expectedTimeEntryWeekDto, 1337);
 
         final ResultActions perform = perform(
             post("/timeentries/1337")
