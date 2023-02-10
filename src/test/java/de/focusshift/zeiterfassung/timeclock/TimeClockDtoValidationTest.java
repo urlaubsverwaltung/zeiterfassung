@@ -3,9 +3,9 @@ package de.focusshift.zeiterfassung.timeclock;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -41,7 +41,7 @@ class TimeClockDtoValidationTest {
             assertThat(violations).hasSize(1);
             assertThat(violations).anySatisfy(violation -> {
                 assertThat(violation.getPropertyPath()).hasToString("zoneId");
-                assertThat(violation.getMessageTemplate()).isEqualTo("{javax.validation.constraints.NotNull.message}");
+                assertThat(violation.getMessageTemplate()).isEqualTo("{jakarta.validation.constraints.NotNull.message}");
             });
         }
 

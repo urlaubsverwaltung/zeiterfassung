@@ -1,9 +1,9 @@
 package de.focusshift.zeiterfassung.tenancy.tenant;
 
-import javax.persistence.Column;
-import javax.persistence.EntityListeners;
-import javax.persistence.MappedSuperclass;
-import javax.validation.constraints.Size;
+import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.validation.constraints.Size;
 import java.io.Serial;
 import java.io.Serializable;
 

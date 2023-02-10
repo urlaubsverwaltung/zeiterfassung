@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.timeclock;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.constraints.PastOrPresent;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.constraints.PastOrPresent;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

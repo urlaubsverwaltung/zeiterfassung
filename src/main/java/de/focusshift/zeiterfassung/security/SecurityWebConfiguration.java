@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.metrics.export.prometheus.PrometheusScrapeEndpoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 class SecurityWebConfiguration {
 
     private final AuthenticationEntryPoint authenticationEntryPoint;
@@ -41,10 +41,10 @@ class SecurityWebConfiguration {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         //@formatter:off
         http
-            .authorizeRequests()
+            .authorizeHttpRequests()
                 .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
                 .requestMatchers(EndpointRequest.to(PrometheusScrapeEndpoint.class)).permitAll()
-                .antMatchers("/fonts/**/*", "/style.css").permitAll()
+                .requestMatchers("/fonts/*/*", "/style.css").permitAll()
                 .anyRequest().authenticated()
             .and()
             .oauth2Login()
@@ -53,7 +53,7 @@ class SecurityWebConfiguration {
                 .oidcUserService(oidcUserService);
 
         // exclude /actuator from csrf protection
-        http.requestMatcher(request -> !request.getRequestURI().startsWith("/actuator"))
+        http.securityMatcher(request -> !request.getRequestURI().startsWith("/actuator"))
             .csrf()
             // disable lazy csrf token creation - see https://github.com/spring-projects/spring-security/issues/3906
             .csrfTokenRepository(new HttpSessionCsrfTokenRepository());
