@@ -4,9 +4,8 @@ import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -149,7 +148,7 @@ public final class WorkingTime {
 
     public static class Builder {
         private UserLocalId userId;
-        private final Map<DayOfWeek, Duration> workDays = new HashMap<>();
+        private final EnumMap<DayOfWeek, Duration> workDays = new EnumMap<>(DayOfWeek.class);
 
         public Builder userId(UserLocalId userId) {
             this.userId = userId;
