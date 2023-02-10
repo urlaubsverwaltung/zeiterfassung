@@ -26,13 +26,14 @@ import java.util.List;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
@@ -377,6 +378,31 @@ class TimeEntryControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
 
+        final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
+        final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
+        final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hack the planet", start, end, false);
+
+        final ZonedDateTime startOtherDay = ZonedDateTime.of(2022, 9, 29, 14, 30, 0, 0, zoneIdBerlin);
+        final ZonedDateTime endOtherDay = ZonedDateTime.of(2022, 9, 29, 15, 0, 0, 0, zoneIdBerlin);
+        final TimeEntry timeEntryOtherDay = new TimeEntry(1L, new UserId("batman"), "hack the planet", startOtherDay, endOtherDay, false);
+
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(
+            LocalDate.of(2022, 9, 26),
+            List.of(
+                new TimeEntryDay(
+                    LocalDate.of(2022, 9, 28),
+                    List.of(timeEntry)
+                ),
+                new TimeEntryDay(
+                    LocalDate.of(2022, 9, 29),
+                    List.of(timeEntryOtherDay)
+                )
+            )
+        );
+
+        final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
+        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 39)).thenReturn(timeEntryWeekPage);
+
         final ResultActions perform = perform(
             post("/timeentries/1337")
                 .header("Turbo-Frame", "any-value")
@@ -400,7 +426,11 @@ class TimeEntryControllerTest {
             .build();
 
         perform
+            .andExpect(status().isOk())
             .andExpect(model().attribute("turboEditedTimeEntry", expectedTimeEntryDto))
+            .andExpect(model().attribute("calendarWeek", 39))
+            .andExpect(model().attribute("workedHoursSumWeek", "01:15"))
+            .andExpect(model().attribute("workedHoursSumDay", "00:45"))
             .andExpect(view().name("timeentries/index::#frame-time-entry"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
@@ -460,6 +490,11 @@ class TimeEntryControllerTest {
     @Test
     void ensureTimeEntryEditWithValidationErrorWithAjax() throws Exception {
 
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 28), List.of());
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), List.of(timeEntryDay));
+        final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
+        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 39)).thenReturn(timeEntryWeekPage);
+
         final ResultActions perform = perform(
             post("/timeentries/1337")
                 .header("Turbo-Frame", "any-value")
@@ -477,7 +512,7 @@ class TimeEntryControllerTest {
             .andExpect(model().attributeDoesNotExist("timeEntryWeeks"))
             .andExpect(view().name("timeentries/index::#frame-time-entry"));
 
-        verifyNoInteractions(timeEntryService);
+        verifyNoMoreInteractions(timeEntryService);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {

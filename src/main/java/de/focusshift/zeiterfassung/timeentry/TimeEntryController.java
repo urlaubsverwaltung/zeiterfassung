@@ -126,11 +126,30 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final String viewName = saveOrUpdate(timeEntryDTO, bindingResult, model, principal, request);
 
         if (StringUtils.hasText(turboFrame)) {
+            final int year = timeEntryDTO.getDate().getYear();
+            final int weekOfYear = timeEntryDTO.getDate().get(WEEK_OF_WEEK_BASED_YEAR);
+            final UserId userId = new UserId(principal.getUserInfo().getSubject());
+            final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
+
+            final TimeEntryDay timeEntryDay = entryWeekPage.timeEntryWeek().days()
+                .stream()
+                .filter(day -> day.date().equals(timeEntryDTO.getDate()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("expected a day"));
+
+            final String weekHoursWorked = durationToTimeString(entryWeekPage.timeEntryWeek().workDuration().duration());
+            final String dayHoursWorked = durationToTimeString(timeEntryDay.workDuration().duration());
+
             model.addAttribute("turboEditedTimeEntry", timeEntryDTO);
+            model.addAttribute("calendarWeek", entryWeekPage.timeEntryWeek().week());
+            model.addAttribute("workedHoursSumWeek", weekHoursWorked);
+            model.addAttribute("workedHoursSumDay", dayHoursWorked);
+
             return "timeentries/index::#frame-time-entry";
         } else {
             if (bindingResult.hasErrors()) {
                 final ZoneId userZoneId = userSettingsProvider.zoneId();
+                // TODO fixme: use date of incoming dto instead of 'now'
                 final LocalDate now = LocalDate.now(clock);
                 final ZonedDateTime userAwareNow = ZonedDateTime.ofLocal(now.atStartOfDay(), userZoneId, UTC);
                 final int year = userAwareNow.getYear();
@@ -230,18 +249,20 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final String firstDateString = dateFormatter.formatDate(firstDateOfWeek, firstMonthFormat, firstYearFormat);
         final String lastDateString = dateFormatter.formatDate(lastDateOfWeek, lastMonthFormat, lastYearFormat);
 
-        final Duration durationMinutes = timeEntryWeek.workDuration().minutes().duration();
-        final String hoursWorked = String.format("%02d:%02d", durationMinutes.toHours(), durationMinutes.toMinutesPart());
+        final String hoursWorked = durationToTimeString(timeEntryWeek.workDuration().minutes().duration());
 
         final List<TimeEntryDayDto> daysDto = timeEntryWeek.days().stream().map(day -> {
-            final Duration dayDurationMinutes = day.workDuration().minutes().duration();
-            final String dayHoursWorked = String.format("%02d:%02d", dayDurationMinutes.toHours(), dayDurationMinutes.toMinutesPart());
+            final String dayHoursWorked = durationToTimeString(day.workDuration().minutes().duration());
             final List<TimeEntryDTO> dayTimeEntryDTOs = day.timeEntries().stream().map(this::toTimeEntryDto).toList();
             final String dateString = dateFormatter.formatDate(day.date(), MonthFormat.STRING, YearFormat.FULL);
             return new TimeEntryDayDto(dateString, dayHoursWorked, dayTimeEntryDTOs);
         }).toList();
 
         return new TimeEntryWeekDto(timeEntryWeek.week(), firstDateString, lastDateString, hoursWorked, daysDto);
+    }
+
+    private static String durationToTimeString(Duration duration) {
+        return String.format("%02d:%02d", duration.toHours(), duration.toMinutesPart());
     }
 
     private TimeEntryDTO toTimeEntryDto(TimeEntry timeEntry) {
