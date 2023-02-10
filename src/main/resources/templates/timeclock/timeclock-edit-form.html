@@ -14,10 +14,10 @@
       <turbo-frame id="frame-nav-time-clock-edit">
         <turbo-stream target="time-clock-summary" action="replace">
           <template
-            th:insert="timeentries/_navigation::#time-clock-summary"
+            th:insert="~{timeentries/_navigation::#time-clock-summary}"
           ></template>
         </turbo-stream>
-        <form action="#" th:replace="::time-clock-form"></form>
+        <form action="#" th:replace="~{::time-clock-form}"></form>
       </turbo-frame>
     </th:block>
 
@@ -28,7 +28,7 @@
       th:with="timeClock=${timeClockUpdate}"
     >
       <turbo-frame id="frame-nav-time-clock-edit">
-        <form action="#" th:replace="::time-clock-form"></form>
+        <form action="#" th:replace="~{::time-clock-form}"></form>
       </turbo-frame>
     </th:block>
 
@@ -37,7 +37,7 @@
       th:fragment="time-clock-edit-box"
       th:with="timeClock=${timeClockUpdate}"
     >
-      <form action="#" th:replace="::time-clock-form"></form>
+      <form action="#" th:replace="~{::time-clock-form}"></form>
     </th:block>
 
     <form

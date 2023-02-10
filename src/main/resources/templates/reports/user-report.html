@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
-    th:replace="timeentries/_layout::head(~{::title}, ~{}, ~{::scriptsDeferred}, ~{})"
+    th:replace="~{timeentries/_layout::head(~{::title}, ~{}, ~{::scriptsDeferred}, ~{})}"
   >
     <title th:text="#{report.page.meta.title}">Zeiterfassung - Bericht</title>
     <th:block th:fragment="scriptsDeferred">
       <script type="module" src="" th:src="@{/assets/reports.js}"></script>
     </th:block>
   </head>
-  <body th:replace="timeentries/_layout::body(~{::content})">
+  <body th:replace="~{timeentries/_layout::body(~{::content})}">
     <th:block th:fragment="content">
       <main class="grow">
         <div
@@ -42,7 +42,7 @@
                 </li>
               </ul>
             </div>
-            <div class="mt-8" th:insert="__${chartNavigationFragment}__"></div>
+            <div class="mt-8" th:insert="~{__${chartNavigationFragment}__}"></div>
           </div>
           <div class="px-8 grid grid-cols-1 2xl:grid-cols-2 2xl:gap-8">
             <div
@@ -50,7 +50,7 @@
               style="top: calc(var(--navigation-header-height) + 1rem)"
             >
               <div class="p-8 bg-gradient-to-b from-gray-100 rounded-t-3xl">
-                <div th:replace="__${chartFragment}__"></div>
+                <div th:replace="~{__${chartFragment}__}"></div>
               </div>
             </div>
             <div class="">
@@ -58,7 +58,7 @@
                 <h2 class="sr-only" th:text="#{report.detail.section.heading}">
                   Zeiteinträge
                 </h2>
-                <div th:replace="__${entriesFragment}__"></div>
+                <div th:replace="~{__${entriesFragment}__}"></div>
               </div>
             </div>
           </div>

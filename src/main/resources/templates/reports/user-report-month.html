@@ -17,7 +17,7 @@
           th:href="${userReportPreviousSectionUrl}"
           class="bg-blue-700 text-white font-medium rounded px-4 py-2"
         >
-          <svg th:replace="icons/chevron-left::svg(className='w-6 h-6')"></svg>
+          <svg th:replace="~{icons/chevron-left::svg(className='w-6 h-6')}"></svg>
           <span class="sr-only" th:text="#{report.month.navigation.button.next}"
             >voriger Monat</span
           >
@@ -35,14 +35,14 @@
           th:href="${userReportNextSectionUrl}"
           class="bg-blue-700 text-white font-medium rounded px-4 py-2"
         >
-          <svg th:replace="icons/chevron-right::svg(className='w-6 h-6')"></svg>
+          <svg th:replace="~{icons/chevron-right::svg(className='w-6 h-6')}"></svg>
           <span class="sr-only" th:text="#{report.month.navigation.button.next}"
             >nächster Monat</span
           >
         </a>
       </nav>
       <div class="flex-1 flex justify-between gap-2">
-        <form th:replace="reports/_user-select::form" />
+        <form th:replace="~{reports/_user-select::form}" />
         <a
           href="#"
           th:href="${userReportCsvDownloadUrl}"
@@ -62,7 +62,7 @@
           class="text-gray-400 text-sm absolute -top-3/4 flex items-center"
         >
           <svg
-            th:replace="icons/bookmark::svg(className='-ml-0.5 mr-1 w-3 h-3 fill-amber-300')"
+            th:replace="~{icons/bookmark::svg(className='-ml-0.5 mr-1 w-3 h-3 fill-amber-300')}"
           />
           <th:block th:text="#{report.month.current-month}"
             >Dieser Monat</th:block
@@ -183,7 +183,7 @@
       <section th:aria-labelledby="${monthGroupLabelId}">
         <ol class="space-y-8" th:aria-labelledby="${monthGroupLabelId}">
           <li th:each="weekReportDetail : ${monthReportDetail.weekReports}">
-            <th:block th:replace="reports/user-report-week::entries" />
+            <th:block th:replace="~{reports/user-report-week::entries}" />
           </li>
         </ol>
       </section>

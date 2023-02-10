@@ -52,13 +52,13 @@
       <p th:text="#{feedback.kudos}">Vielen Dank für dein Feedback.</p>
     </noscript>
 
-    <nav th:replace="timeentries/_navigation::nav">navigation block</nav>
+    <nav th:replace="~{timeentries/_navigation::nav}">navigation block</nav>
 
     <div class="pb-16" style="min-height: 100vh">
       <div th:replace="${content}">content block</div>
     </div>
 
-    <div th:replace="/fragments/feedback-form::feedback"></div>
+    <div th:replace="~{/fragments/feedback-form::feedback}"></div>
 
     <div id="body-overlay" class="body-overlay"></div>
 
