@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
-    th:replace="timeentries/_layout::head(~{::title}, ~{::scriptsSynchrounous}, ~{::scriptsDeferred}, ~{})"
+    th:replace="~{timeentries/_layout::head(~{::title}, ~{::scriptsSynchrounous}, ~{::scriptsDeferred}, ~{})}"
   >
     <title>Zeiterfassung</title>
     <th:block th:fragment="scriptsSynchrounous">
-      <script th:replace="fragments/i18n::date-picker"></script>
-      <script th:replace="fragments/i18n::time-entry"></script>
-      <script th:replace="fragments/i18n::time-slot-validation"></script>
+      <script th:replace="~{fragments/i18n::date-picker}"></script>
+      <script th:replace="~{fragments/i18n::time-entry}"></script>
+      <script th:replace="~{fragments/i18n::time-slot-validation}"></script>
     </th:block>
     <th:block th:fragment="scriptsDeferred">
       <script
@@ -18,7 +18,7 @@
       <script type="module" src="" th:src="@{/assets/time-entries.js}"></script>
     </th:block>
   </head>
-  <body th:replace="timeentries/_layout::body(~{::content})">
+  <body th:replace="~{timeentries/_layout::body(~{::content})}">
     <th:block
       th:fragment="content"
       th:with="noTimeEntriesYet=${timeEntryWeeksPage.totalTimeEntryElements eq 0}"
@@ -33,7 +33,7 @@
               Neuen Zeitslot erfassen
             </h1>
             <th:block
-              th:insert="::timeentry-slot-form(formAction=@{/timeentries}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')"
+              th:insert="~{::timeentry-slot-form(formAction=@{/timeentries}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
             ></th:block>
           </div>
         </div>
@@ -67,7 +67,7 @@
               th:target="${'time-entry-' + turboEditedTimeEntry.id}"
             >
               <template
-                th:insert="::time-entry-element(${turboEditedTimeEntry})"
+                th:insert="~{::time-entry-element(${turboEditedTimeEntry})}"
               ></template>
             </turbo-stream>
           </th:block>
@@ -77,10 +77,10 @@
             th:if="${not (turboStreamsEnabled eq null) and turboStreamsEnabled eq true}"
           >
             <turbo-stream action="append" target="time-entries-box">
-              <template th:insert="::time-entries-box-content"></template>
+              <template th:insert="~{::time-entries-box-content}"></template>
             </turbo-stream>
             <turbo-stream action="replace" target="load-more-button">
-              <template th:insert="::#load-more-button"></template>
+              <template th:insert="~{::#load-more-button}"></template>
             </turbo-stream>
           </th:block>
         </turbo-frame>
@@ -140,7 +140,7 @@
                           th:id="${'time-entry-' + timeEntry.id}"
                           th:data-date="${#temporals.format(timeEntry.date, 'EEEE, dd. MMMM')}"
                           th:data-duration="${timeEntry.duration}"
-                          th:insert="::timeentry-slot-form(formAction=${formAction}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')"
+                          th:insert="~{::timeentry-slot-form(formAction=${formAction}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')}"
                           data-turbo="true"
                         ></div>
                       </th:block>
@@ -422,7 +422,7 @@
           class="mr-4 flex items-center justify-center text-blue-700 md:rounded-full md:w-12 md:h-12 hover:md:bg-blue-100 transition-colors duration-200"
         >
           <svg
-            th:replace="icons/plus::svg(className='w-6 h-6 md:w-10 md:h-10 stroke-2 md:stroke-1')"
+            th:replace="~{icons/plus::svg(className='w-6 h-6 md:w-10 md:h-10 stroke-2 md:stroke-1')}"
           ></svg>
           <span class="ml-2 md:sr-only" th:text="#{time-entry.form.create}">
             Eintragen
@@ -443,7 +443,7 @@
           data-js-hidden
         >
           <svg
-            th:replace="icons/refresh::svg(className='w-5 h-5 md:w-6 md:h-6')"
+            th:replace="~{icons/refresh::svg(className='w-5 h-5 md:w-6 md:h-6')}"
           ></svg>
           <span class="ml-2 md:sr-only" th:text="#{time-entry.form.reset}">
             Zurücksetzen
@@ -457,7 +457,7 @@
           data-turbo-frame="frame-time-entry"
         >
           <svg
-            th:replace="icons/save::svg(className='w-5 h-5 md:w-6 md:h-6')"
+            th:replace="~{icons/save::svg(className='w-5 h-5 md:w-6 md:h-6')}"
           ></svg>
           <span class="ml-2 md:sr-only" th:text="#{time-entry.form.save}">
             Speichern
@@ -471,7 +471,7 @@
           th:title="#{time-entry.form.delete.tooltip}"
         >
           <svg
-            th:replace="icons/trash::svg(className='w-5 h-5 md:w-6 md:h-6')"
+            th:replace="~{icons/trash::svg(className='w-5 h-5 md:w-6 md:h-6')}"
           ></svg>
           <span class="ml-2 md:sr-only" th:text="#{time-entry.form.delete}">
             Löschen
