@@ -14,15 +14,14 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import org.hibernate.annotations.LazyCollection;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
 
 import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.GenerationType.SEQUENCE;
-import static org.hibernate.annotations.LazyCollectionOption.FALSE;
 
 @Entity
 @Table(name = "tenant_user")
@@ -63,8 +62,7 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
     private String email;
 
     @CollectionTable(name = "tenant_user_authorities", joinColumns = @JoinColumn(name = "tenant_user_id"))
-    @ElementCollection
-    @LazyCollection(FALSE)
+    @ElementCollection(fetch = EAGER)
     @Enumerated(STRING)
     private Set<SecurityRoles> authorities;
 
