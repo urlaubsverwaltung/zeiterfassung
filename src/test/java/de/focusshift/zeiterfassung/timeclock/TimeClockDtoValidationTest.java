@@ -1,11 +1,11 @@
 package de.focusshift.zeiterfassung.timeclock;
 
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -38,11 +38,12 @@ class TimeClockDtoValidationTest {
 
             final Set<ConstraintViolation<TimeClockDto>> violations = validator.validate(timeClockDto);
 
-            assertThat(violations).hasSize(1);
-            assertThat(violations).anySatisfy(violation -> {
-                assertThat(violation.getPropertyPath()).hasToString("zoneId");
-                assertThat(violation.getMessageTemplate()).isEqualTo("{jakarta.validation.constraints.NotNull.message}");
-            });
+            assertThat(violations)
+                .hasSize(1)
+                .anySatisfy(violation -> {
+                    assertThat(violation.getPropertyPath()).hasToString("zoneId");
+                    assertThat(violation.getMessageTemplate()).isEqualTo("{jakarta.validation.constraints.NotNull.message}");
+                });
         }
 
         @Test
@@ -55,13 +56,10 @@ class TimeClockDtoValidationTest {
 
             final Set<ConstraintViolation<TimeClockDto>> violations = validator.validate(timeClockDto);
 
-            assertThat(violations).hasSize(2);
-            assertThat(violations).anySatisfy(violation -> {
-                assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.date.error.required}");
-            });
-            assertThat(violations).anySatisfy(violation -> {
-                assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}");
-            });
+            assertThat(violations)
+                .hasSize(2)
+                .anySatisfy(violation -> assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.date.error.required}"))
+                .anySatisfy(violation -> assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}"));
         }
 
         @Test
@@ -74,13 +72,10 @@ class TimeClockDtoValidationTest {
 
             final Set<ConstraintViolation<TimeClockDto>> violations = validator.validate(timeClockDto);
 
-            assertThat(violations).hasSize(2);
-            assertThat(violations).anySatisfy(violation -> {
-                assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.time.error.required}");
-            });
-            assertThat(violations).anySatisfy(violation -> {
-                assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}");
-            });
+            assertThat(violations)
+                .hasSize(2)
+                .anySatisfy(violation -> assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.time.error.required}"))
+                .anySatisfy(violation -> assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}"));
         }
 
         @Test
@@ -93,15 +88,16 @@ class TimeClockDtoValidationTest {
 
             final Set<ConstraintViolation<TimeClockDto>> violations = validator.validate(timeClockDto);
 
-            assertThat(violations).hasSize(3); // +1 item -> class level violation is reported somehow
-            assertThat(violations).anySatisfy(violation -> {
-                assertThat(violation.getPropertyPath()).hasToString("time");
-                assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}");
-            });
-            assertThat(violations).anySatisfy(violation -> {
-                assertThat(violation.getPropertyPath()).hasToString("date");
-                assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}");
-            });
+            assertThat(violations)
+                .hasSize(3) // +1 item -> class level violation is reported somehow
+                .anySatisfy(violation -> {
+                    assertThat(violation.getPropertyPath()).hasToString("time");
+                    assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}");
+                })
+                .anySatisfy(violation -> {
+                    assertThat(violation.getPropertyPath()).hasToString("date");
+                    assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}");
+                });
         }
 
         @Test
@@ -114,11 +110,12 @@ class TimeClockDtoValidationTest {
 
             final Set<ConstraintViolation<TimeClockDto>> violations = validator.validate(timeClockDto);
 
-            assertThat(violations).hasSize(2); // +1 item -> class level violation is reported somehow
-            assertThat(violations).anySatisfy(violation -> {
-                assertThat(violation.getPropertyPath()).hasToString("time");
-                assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}");
-            });
+            assertThat(violations)
+                .hasSize(2) // +1 item -> class level violation is reported somehow
+                .anySatisfy(violation -> {
+                    assertThat(violation.getPropertyPath()).hasToString("time");
+                    assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}");
+                });
         }
     }
 
