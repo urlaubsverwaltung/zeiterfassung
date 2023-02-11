@@ -70,7 +70,7 @@ class TimeClockControllerAdviceTest {
 
             assertThat(timeClockDto.getZoneId()).isEqualTo(timeClock.startedAt().getZone());
             assertThat(timeClockDto.getComment()).isEqualTo("awesome comment");
-            assertThat(timeClockDto.isBreak()).isEqualTo(true);
+            assertThat(timeClockDto.isBreak()).isTrue();
             assertThat(timeClockDto.getDuration()).isEqualTo(elapsedTimeString);
         });
     }
