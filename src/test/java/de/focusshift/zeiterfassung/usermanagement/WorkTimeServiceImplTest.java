@@ -48,13 +48,13 @@ class WorkTimeServiceImplTest {
         final WorkingTime actual = sut.getWorkingTimeByUser(new UserLocalId(42L));
 
         assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
-        assertThat(actual.getMonday()).isEqualTo(WorkDay.monday(Duration.ofHours(1)));
-        assertThat(actual.getTuesday()).isEqualTo(WorkDay.tuesday(Duration.ofHours(2)));
-        assertThat(actual.getWednesday()).isEqualTo(WorkDay.wednesday(Duration.ofHours(3)));
-        assertThat(actual.getThursday()).isEqualTo(WorkDay.thursday(Duration.ofHours(4)));
-        assertThat(actual.getFriday()).isEqualTo(WorkDay.friday(Duration.ofHours(5)));
-        assertThat(actual.getSaturday()).isEqualTo(WorkDay.saturday(Duration.ofHours(6)));
-        assertThat(actual.getSunday()).isEqualTo(WorkDay.sunday(Duration.ofHours(7)));
+        assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
+        assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
+        assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));
+        assertThat(actual.getThursday()).hasValue(WorkDay.thursday(Duration.ofHours(4)));
+        assertThat(actual.getFriday()).hasValue(WorkDay.friday(Duration.ofHours(5)));
+        assertThat(actual.getSaturday()).hasValue(WorkDay.saturday(Duration.ofHours(6)));
+        assertThat(actual.getSunday()).hasValue(WorkDay.sunday(Duration.ofHours(7)));
     }
 
     @Test
@@ -65,13 +65,13 @@ class WorkTimeServiceImplTest {
         final WorkingTime actual = sut.getWorkingTimeByUser(new UserLocalId(42L));
 
         assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
-        assertThat(actual.getMonday()).isEqualTo(WorkDay.monday(Duration.ofHours(8)));
-        assertThat(actual.getTuesday()).isEqualTo(WorkDay.tuesday(Duration.ofHours(8)));
-        assertThat(actual.getWednesday()).isEqualTo(WorkDay.wednesday(Duration.ofHours(8)));
-        assertThat(actual.getThursday()).isEqualTo(WorkDay.thursday(Duration.ofHours(8)));
-        assertThat(actual.getFriday()).isEqualTo(WorkDay.friday(Duration.ofHours(8)));
-        assertThat(actual.getSaturday()).isEqualTo(WorkDay.saturday(Duration.ZERO));
-        assertThat(actual.getSunday()).isEqualTo(WorkDay.sunday(Duration.ZERO));
+        assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(8)));
+        assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(8)));
+        assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(8)));
+        assertThat(actual.getThursday()).hasValue(WorkDay.thursday(Duration.ofHours(8)));
+        assertThat(actual.getFriday()).hasValue(WorkDay.friday(Duration.ofHours(8)));
+        assertThat(actual.getSaturday()).hasValue(WorkDay.saturday(Duration.ZERO));
+        assertThat(actual.getSunday()).hasValue(WorkDay.sunday(Duration.ZERO));
     }
 
     @Test
@@ -105,13 +105,13 @@ class WorkTimeServiceImplTest {
 
         assertThat(actual).isNotSameAs(workingTime);
         assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
-        assertThat(actual.getMonday()).isEqualTo(WorkDay.monday(Duration.ofHours(1)));
-        assertThat(actual.getTuesday()).isEqualTo(WorkDay.tuesday(Duration.ofHours(2)));
-        assertThat(actual.getWednesday()).isEqualTo(WorkDay.wednesday(Duration.ofHours(3)));
-        assertThat(actual.getThursday()).isEqualTo(WorkDay.thursday(Duration.ofHours(4)));
-        assertThat(actual.getFriday()).isEqualTo(WorkDay.friday(Duration.ofHours(5)));
-        assertThat(actual.getSaturday()).isEqualTo(WorkDay.saturday(Duration.ofHours(6)));
-        assertThat(actual.getSunday()).isEqualTo(WorkDay.sunday(Duration.ofHours(7)));
+        assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
+        assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
+        assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));
+        assertThat(actual.getThursday()).hasValue(WorkDay.thursday(Duration.ofHours(4)));
+        assertThat(actual.getFriday()).hasValue(WorkDay.friday(Duration.ofHours(5)));
+        assertThat(actual.getSaturday()).hasValue(WorkDay.saturday(Duration.ofHours(6)));
+        assertThat(actual.getSunday()).hasValue(WorkDay.sunday(Duration.ofHours(7)));
 
         final ArgumentCaptor<WorkingTimeEntity> captor = ArgumentCaptor.forClass(WorkingTimeEntity.class);
         verify(workingTimeRepository).save(captor.capture());
@@ -148,13 +148,13 @@ class WorkTimeServiceImplTest {
 
         assertThat(actual).isNotSameAs(workingTime);
         assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
-        assertThat(actual.getMonday()).isEqualTo(WorkDay.monday(Duration.ofHours(1)));
-        assertThat(actual.getTuesday()).isEqualTo(WorkDay.tuesday(Duration.ofHours(2)));
-        assertThat(actual.getWednesday()).isEqualTo(WorkDay.wednesday(Duration.ofHours(3)));
-        assertThat(actual.getThursday()).isEqualTo(WorkDay.thursday(Duration.ofHours(4)));
-        assertThat(actual.getFriday()).isEqualTo(WorkDay.friday(Duration.ofHours(5)));
-        assertThat(actual.getSaturday()).isEqualTo(WorkDay.saturday(Duration.ofHours(6)));
-        assertThat(actual.getSunday()).isEqualTo(WorkDay.sunday(Duration.ofHours(7)));
+        assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
+        assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
+        assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));
+        assertThat(actual.getThursday()).hasValue(WorkDay.thursday(Duration.ofHours(4)));
+        assertThat(actual.getFriday()).hasValue(WorkDay.friday(Duration.ofHours(5)));
+        assertThat(actual.getSaturday()).hasValue(WorkDay.saturday(Duration.ofHours(6)));
+        assertThat(actual.getSunday()).hasValue(WorkDay.sunday(Duration.ofHours(7)));
 
         final ArgumentCaptor<WorkingTimeEntity> captor = ArgumentCaptor.forClass(WorkingTimeEntity.class);
         verify(workingTimeRepository).save(captor.capture());

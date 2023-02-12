@@ -16,6 +16,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -86,7 +87,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(workingTime.getUserId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(EIGHT)
+            .workingTime(8.0)
             .build();
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
@@ -125,7 +126,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(workingTime.getUserId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(EIGHT)
+            .workingTime(8.0)
             .build();
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
@@ -164,13 +165,9 @@ class WorkingTimeControllerTest {
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(workingTime.getUserId().value())
             .workday(List.of(MONDAY, WEDNESDAY, SATURDAY))
-            .workingTimeMonday(BigDecimal.valueOf(4))
-            .workingTimeTuesday(BigDecimal.ZERO)
-            .workingTimeWednesday(BigDecimal.valueOf(5))
-            .workingTimeThursday(BigDecimal.ZERO)
-            .workingTimeFriday(BigDecimal.ZERO)
-            .workingTimeSaturday(BigDecimal.valueOf(6))
-            .workingTimeSunday(BigDecimal.ZERO)
+            .workingTimeMonday(4.0)
+            .workingTimeWednesday(5.0)
+            .workingTimeSaturday(6.0)
             .build();
 
         final UserDto expectedSelectedUser = new UserDto(1, "Alfred", "Pennyworth", "Alfred Pennyworth", "alfred@example.org");
@@ -205,7 +202,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(workingTime.getUserId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(EIGHT)
+            .workingTime(8.0)
             .build();
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
@@ -245,7 +242,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(workingTime.getUserId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(EIGHT)
+            .workingTime(8.0)
             .build();
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
@@ -288,7 +285,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(workingTime.getUserId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(EIGHT)
+            .workingTime(8.0)
             .build();
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
@@ -330,7 +327,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(workingTime.getUserId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(EIGHT)
+            .workingTime(8.0)
             .build();
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
@@ -373,13 +370,13 @@ class WorkingTimeControllerTest {
 
         final WorkingTime actual = captor.getValue();
         assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
-        assertThat(actual.getMonday()).isEqualTo(new WorkDay(MONDAY, BigDecimal.valueOf(0)));
-        assertThat(actual.getTuesday()).isEqualTo(new WorkDay(TUESDAY, BigDecimal.valueOf(1)));
-        assertThat(actual.getWednesday()).isEqualTo(new WorkDay(WEDNESDAY, BigDecimal.valueOf(2)));
-        assertThat(actual.getThursday()).isEqualTo(new WorkDay(THURSDAY, BigDecimal.valueOf(3)));
-        assertThat(actual.getFriday()).isEqualTo(new WorkDay(FRIDAY, BigDecimal.valueOf(4)));
-        assertThat(actual.getSaturday()).isEqualTo(new WorkDay(SATURDAY, BigDecimal.valueOf(5)));
-        assertThat(actual.getSunday()).isEqualTo(new WorkDay(SUNDAY, BigDecimal.valueOf(6)));
+        assertThat(actual.getMonday()).hasValue(new WorkDay(MONDAY, Duration.ofHours(0)));
+        assertThat(actual.getTuesday()).hasValue(new WorkDay(TUESDAY, Duration.ofHours(1)));
+        assertThat(actual.getWednesday()).hasValue(new WorkDay(WEDNESDAY, Duration.ofHours(2)));
+        assertThat(actual.getThursday()).hasValue(new WorkDay(THURSDAY, Duration.ofHours(3)));
+        assertThat(actual.getFriday()).hasValue(new WorkDay(FRIDAY, Duration.ofHours(4)));
+        assertThat(actual.getSaturday()).hasValue(new WorkDay(SATURDAY, Duration.ofHours(5)));
+        assertThat(actual.getSunday()).hasValue(new WorkDay(SUNDAY, Duration.ofHours(6)));
     }
 
     @Test
@@ -405,13 +402,13 @@ class WorkingTimeControllerTest {
 
         final WorkingTime actual = captor.getValue();
         assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
-        assertThat(actual.getMonday()).isEqualTo(new WorkDay(MONDAY, BigDecimal.valueOf(0)));
-        assertThat(actual.getTuesday()).isEqualTo(new WorkDay(TUESDAY, BigDecimal.valueOf(1)));
-        assertThat(actual.getWednesday()).isEqualTo(new WorkDay(WEDNESDAY, BigDecimal.valueOf(2)));
-        assertThat(actual.getThursday()).isEqualTo(new WorkDay(THURSDAY, BigDecimal.valueOf(3)));
-        assertThat(actual.getFriday()).isEqualTo(new WorkDay(FRIDAY, BigDecimal.valueOf(4)));
-        assertThat(actual.getSaturday()).isEqualTo(new WorkDay(SATURDAY, BigDecimal.valueOf(5)));
-        assertThat(actual.getSunday()).isEqualTo(new WorkDay(SUNDAY, BigDecimal.valueOf(6)));
+        assertThat(actual.getMonday()).hasValue(new WorkDay(MONDAY, Duration.ofHours(0)));
+        assertThat(actual.getTuesday()).hasValue(new WorkDay(TUESDAY, Duration.ofHours(1)));
+        assertThat(actual.getWednesday()).hasValue(new WorkDay(WEDNESDAY, Duration.ofHours(2)));
+        assertThat(actual.getThursday()).hasValue(new WorkDay(THURSDAY, Duration.ofHours(3)));
+        assertThat(actual.getFriday()).hasValue(new WorkDay(FRIDAY, Duration.ofHours(4)));
+        assertThat(actual.getSaturday()).hasValue(new WorkDay(SATURDAY, Duration.ofHours(5)));
+        assertThat(actual.getSunday()).hasValue(new WorkDay(SUNDAY, Duration.ofHours(6)));
     }
 
     @Test
@@ -420,7 +417,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(42L)
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(BigDecimal.valueOf(48))
+            .workingTime(48.0)
             .build();
 
         doAnswer(
@@ -460,7 +457,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(42L)
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(BigDecimal.valueOf(48))
+            .workingTime(48.0)
             .build();
 
         doAnswer(

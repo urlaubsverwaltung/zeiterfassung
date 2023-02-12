@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.timeclock;
 
 import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.web.DoubleFormatter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -50,6 +51,9 @@ class TimeClockControllerTest {
 
     @MockBean
     private CurrentUserProvider currentUserProvider;
+
+    @MockBean
+    private DoubleFormatter doubleFormatter;
 
     @Test
     void ensureStartTimeClock() throws Exception {

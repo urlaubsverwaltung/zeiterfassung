@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Optional;
 
 @Service
 class WorkTimeServiceImpl implements WorkingTimeService {
@@ -25,19 +26,23 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
         final WorkingTimeEntity entity = repository.findByUserId(workingTime.getUserId().value()).orElseGet(WorkingTimeEntity::new);
 
-        entity.setMonday(workingTime.getMonday().duration().toString());
-        entity.setTuesday(workingTime.getTuesday().duration().toString());
-        entity.setWednesday(workingTime.getWednesday().duration().toString());
-        entity.setThursday(workingTime.getThursday().duration().toString());
-        entity.setFriday(workingTime.getFriday().duration().toString());
-        entity.setSaturday(workingTime.getSaturday().duration().toString());
-        entity.setSunday(workingTime.getSunday().duration().toString());
+        entity.setMonday(toDurationString(workingTime.getMonday()));
+        entity.setTuesday(toDurationString(workingTime.getTuesday()));
+        entity.setWednesday(toDurationString(workingTime.getWednesday()));
+        entity.setThursday(toDurationString(workingTime.getThursday()));
+        entity.setFriday(toDurationString(workingTime.getFriday()));
+        entity.setSaturday(toDurationString(workingTime.getSaturday()));
+        entity.setSunday(toDurationString(workingTime.getSunday()));
 
         if (entity.getId() == null) {
             entity.setUserId(workingTime.getUserId().value());
         }
 
         return entityToWorkingTime(repository.save(entity));
+    }
+
+    private String toDurationString(Optional<WorkDay> workDay) {
+        return workDay.map(WorkDay::duration).map(Duration::toString).orElse(Duration.ZERO.toString());
     }
 
     private WorkingTime defaultWorkingTime(UserLocalId userLocalId) {

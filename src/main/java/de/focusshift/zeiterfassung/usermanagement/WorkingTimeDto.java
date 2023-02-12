@@ -1,56 +1,22 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.PositiveOrZero;
-import org.springframework.validation.annotation.Validated;
-
-import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Validated
 class WorkingTimeDto {
 
     private Long userId;
-
-    private List<String> workday;
-
-    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
-    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
-    private BigDecimal workingTime;
-
-    // a flag to enable simpler validation for individual working time.
-    // summarizes workingTime-dayOfWeek
-    private boolean workingTimeClash;
-
-    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
-    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
-    private BigDecimal workingTimeMonday;
-
-    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
-    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
-    private BigDecimal workingTimeTuesday;
-
-    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
-    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
-    private BigDecimal workingTimeWednesday;
-
-    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
-    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
-    private BigDecimal workingTimeThursday;
-
-    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
-    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
-    private BigDecimal workingTimeFriday;
-
-    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
-    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
-    private BigDecimal workingTimeSaturday;
-
-    @PositiveOrZero(message = "{usermanagement.working-time.positive-or-zero.constraint.message}")
-    @Max(value = 24, message = "{usermanagement.working-time.24h.constraint.message}")
-    private BigDecimal workingTimeSunday;
+    private List<String> workday = new ArrayList<>();
+    private Double workingTime;
+    private Double workingTimeMonday;
+    private Double workingTimeTuesday;
+    private Double workingTimeWednesday;
+    private Double workingTimeThursday;
+    private Double workingTimeFriday;
+    private Double workingTimeSaturday;
+    private Double workingTimeSunday;
 
     public Long getUserId() {
         return userId;
@@ -61,79 +27,148 @@ class WorkingTimeDto {
     }
 
     public List<String> getWorkday() {
-        return workday == null ? List.of() : workday;
+        return workday;
     }
 
     public void setWorkday(List<String> workday) {
         this.workday = workday;
     }
 
-    public BigDecimal getWorkingTime() {
+    public Double getWorkingTime() {
         return workingTime;
     }
 
-    public boolean isWorkingTimeClash() {
-        return workingTimeClash;
-    }
-
-    public void setWorkingTime(BigDecimal workingTime) {
+    public void setWorkingTime(Double workingTime) {
         this.workingTime = workingTime;
     }
 
-    public BigDecimal getWorkingTimeMonday() {
+    public Double getWorkingTimeMonday() {
         return workingTimeMonday;
     }
 
-    public void setWorkingTimeMonday(BigDecimal workingTimeMonday) {
+    public void setWorkingTimeMonday(Double workingTimeMonday) {
         this.workingTimeMonday = workingTimeMonday;
     }
 
-    public BigDecimal getWorkingTimeTuesday() {
+    public Double getWorkingTimeTuesday() {
         return workingTimeTuesday;
     }
 
-    public void setWorkingTimeTuesday(BigDecimal workingTimeTuesday) {
+    public void setWorkingTimeTuesday(Double workingTimeTuesday) {
         this.workingTimeTuesday = workingTimeTuesday;
     }
 
-    public BigDecimal getWorkingTimeWednesday() {
+    public Double getWorkingTimeWednesday() {
         return workingTimeWednesday;
     }
 
-    public void setWorkingTimeWednesday(BigDecimal workingTimeWednesday) {
+    public void setWorkingTimeWednesday(Double workingTimeWednesday) {
         this.workingTimeWednesday = workingTimeWednesday;
     }
 
-    public BigDecimal getWorkingTimeThursday() {
+    public Double getWorkingTimeThursday() {
         return workingTimeThursday;
     }
 
-    public void setWorkingTimeThursday(BigDecimal workingTimeThursday) {
+    public void setWorkingTimeThursday(Double workingTimeThursday) {
         this.workingTimeThursday = workingTimeThursday;
     }
 
-    public BigDecimal getWorkingTimeFriday() {
+    public Double getWorkingTimeFriday() {
         return workingTimeFriday;
     }
 
-    public void setWorkingTimeFriday(BigDecimal workingTimeFriday) {
+    public void setWorkingTimeFriday(Double workingTimeFriday) {
         this.workingTimeFriday = workingTimeFriday;
     }
 
-    public BigDecimal getWorkingTimeSaturday() {
+    public Double getWorkingTimeSaturday() {
         return workingTimeSaturday;
     }
 
-    public void setWorkingTimeSaturday(BigDecimal workingTimeSaturday) {
+    public void setWorkingTimeSaturday(Double workingTimeSaturday) {
         this.workingTimeSaturday = workingTimeSaturday;
     }
 
-    public BigDecimal getWorkingTimeSunday() {
+    public Double getWorkingTimeSunday() {
         return workingTimeSunday;
     }
 
-    public void setWorkingTimeSunday(BigDecimal workingTimeSunday) {
+    public void setWorkingTimeSunday(Double workingTimeSunday) {
         this.workingTimeSunday = workingTimeSunday;
+    }
+
+
+    /**
+     * marker to ease validation feedback for the user. field error is set in {@linkplain WorkingTimeDtoValidator}.
+     * @return always {@code false}
+     */
+    public boolean isEmpty() {
+        return false;
+    }
+
+    /**
+     * marker to ease validation feedback for the user. field error is set in {@linkplain WorkingTimeDtoValidator}.
+     * @return {@code true} when monday is selected, {@code false} otherwise
+     */
+    public boolean isWorkDayMonday() {
+        return getWorkday().contains("monday");
+    }
+
+        /**
+     * marker to ease validation feedback for the user. field error is set in {@linkplain WorkingTimeDtoValidator}.
+     * @return {@code true} when tuesday is selected, {@code false} otherwise
+     */
+    public boolean isWorkDayTuesday() {
+        return getWorkday().contains("tuesday");
+    }
+
+        /**
+     * marker to ease validation feedback for the user. field error is set in {@linkplain WorkingTimeDtoValidator}.
+     * @return {@code true} when wednesday is selected, {@code false} otherwise
+     */
+    public boolean isWorkDayWednesday() {
+        return getWorkday().contains("wednesday");
+    }
+
+    /**
+     * marker to ease validation feedback for the user. field error is set in {@linkplain WorkingTimeDtoValidator}.
+     * @return {@code true} when thursday is selected, {@code false} otherwise
+     */
+    public boolean isWorkDayThursday() {
+        return getWorkday().contains("thursday");
+    }
+
+    /**
+     * marker to ease validation feedback for the user. field error is set in {@linkplain WorkingTimeDtoValidator}.
+     * @return {@code true} when friday is selected, {@code false} otherwise
+     */
+    public boolean isWorkDayFriday() {
+        return getWorkday().contains("friday");
+    }
+
+    /**
+     * marker to ease validation feedback for the user. field error is set in {@linkplain WorkingTimeDtoValidator}.
+     * @return {@code true} when saturday is selected, {@code false} otherwise
+     */
+    public boolean isWorkDaySaturday() {
+        return getWorkday().contains("saturday");
+    }
+
+    /**
+     * marker to ease validation feedback for the user. field error is set in {@linkplain WorkingTimeDtoValidator}.
+     * @return {@code true} when sunday is selected, {@code false} otherwise
+     */
+    public boolean isWorkDaySunday() {
+        return getWorkday().contains("sunday");
+    }
+
+    /**
+     * marker to ease validation feedback for the user. field error is set in {@linkplain WorkingTimeDtoValidator}.
+     * @return always {@code false}
+     */
+    public boolean isWorkingTimeClash() {
+        return false;
     }
 
     @Override
@@ -157,8 +192,7 @@ class WorkingTimeDto {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WorkingTimeDto that = (WorkingTimeDto) o;
-        return workingTimeClash == that.workingTimeClash
-            && userId.equals(that.userId)
+        return userId.equals(that.userId)
             && workday.equals(that.workday)
             && Objects.equals(workingTime, that.workingTime)
             && Objects.equals(workingTimeMonday, that.workingTimeMonday)
@@ -172,7 +206,7 @@ class WorkingTimeDto {
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, workday, workingTime, workingTimeClash, workingTimeMonday, workingTimeTuesday,
+        return Objects.hash(userId, workday, workingTime, workingTimeMonday, workingTimeTuesday,
             workingTimeWednesday, workingTimeThursday, workingTimeFriday, workingTimeSaturday, workingTimeSunday);
     }
 
@@ -182,15 +216,15 @@ class WorkingTimeDto {
 
     public static class Builder {
         private Long userId;
-        private List<DayOfWeek> workday;
-        private BigDecimal workingTime;
-        private BigDecimal workingTimeMonday;
-        private BigDecimal workingTimeTuesday;
-        private BigDecimal workingTimeWednesday;
-        private BigDecimal workingTimeThursday;
-        private BigDecimal workingTimeFriday;
-        private BigDecimal workingTimeSaturday;
-        private BigDecimal workingTimeSunday;
+        private List<DayOfWeek> workday = new ArrayList<>();
+        private Double workingTime;
+        private Double workingTimeMonday;
+        private Double workingTimeTuesday;
+        private Double workingTimeWednesday;
+        private Double workingTimeThursday;
+        private Double workingTimeFriday;
+        private Double workingTimeSaturday;
+        private Double workingTimeSunday;
 
         public Builder userId(Long userId) {
             this.userId = userId;
@@ -202,42 +236,42 @@ class WorkingTimeDto {
             return this;
         }
 
-        public Builder workingTime(BigDecimal workingTime) {
+        public Builder workingTime(Double workingTime) {
             this.workingTime = workingTime;
             return this;
         }
 
-        public Builder workingTimeMonday(BigDecimal workingTimeMonday) {
+        public Builder workingTimeMonday(Double workingTimeMonday) {
             this.workingTimeMonday = workingTimeMonday;
             return this;
         }
 
-        public Builder workingTimeTuesday(BigDecimal workingTimeTuesday) {
+        public Builder workingTimeTuesday(Double workingTimeTuesday) {
             this.workingTimeTuesday = workingTimeTuesday;
             return this;
         }
 
-        public Builder workingTimeWednesday(BigDecimal workingTimeWednesday) {
+        public Builder workingTimeWednesday(Double workingTimeWednesday) {
             this.workingTimeWednesday = workingTimeWednesday;
             return this;
         }
 
-        public Builder workingTimeThursday(BigDecimal workingTimeThursday) {
+        public Builder workingTimeThursday(Double workingTimeThursday) {
             this.workingTimeThursday = workingTimeThursday;
             return this;
         }
 
-        public Builder workingTimeFriday(BigDecimal workingTimeFriday) {
+        public Builder workingTimeFriday(Double workingTimeFriday) {
             this.workingTimeFriday = workingTimeFriday;
             return this;
         }
 
-        public Builder workingTimeSaturday(BigDecimal workingTimeSaturday) {
+        public Builder workingTimeSaturday(Double workingTimeSaturday) {
             this.workingTimeSaturday = workingTimeSaturday;
             return this;
         }
 
-        public Builder workingTimeSunday(BigDecimal workingTimeSunday) {
+        public Builder workingTimeSunday(Double workingTimeSunday) {
             this.workingTimeSunday = workingTimeSunday;
             return this;
         }

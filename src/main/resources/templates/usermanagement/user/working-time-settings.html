@@ -12,7 +12,18 @@
         class="flex flex-col gap-8"
         th:object="${workingTime}"
       >
-        <fieldset class="border-t border-gray-100">
+        <div
+          class="p-4 rounded-md text-red-900 border border-red-100 bg-red-50"
+          th:if="${#fields.hasErrors('empty')}"
+        >
+          <p th:text="${#fields.errors('empty')[0]}">
+            Leeres Formular Fehlernachricht.
+          </p>
+        </div>
+        <fieldset
+          class="border-t border-gray-100"
+          th:with="hasError=${#fields.hasErrors('workday') or #fields.hasErrors('workDayMonday') or #fields.hasErrors('workDayTuesday') or #fields.hasErrors('workDayWednesday') or #fields.hasErrors('workDayThursday') or #fields.hasErrors('workDayFriday') or #fields.hasErrors('workDaySaturday') or #fields.hasErrors('workDaySunday')}"
+        >
           <legend
             class="text-sm font-medium text-gray-400"
             th:text="#{usermanagement.working-time.workdays.title}"
@@ -24,7 +35,7 @@
               <li
                 class="flex items-center gap-1"
                 th:fragment="workday(dayOfWeek)"
-                th:with="dayOfWeek=${dayOfWeek ?: 'monday'}"
+                th:with="dayOfWeek=${dayOfWeek ?: 'monday'}, hasError=${#fields.hasErrors('workDay'+ #strings.capitalize(dayOfWeek))}"
               >
                 <input
                   type="checkbox"
@@ -34,11 +45,15 @@
                   id="workday-monday"
                   th:id="${'workday-' + dayOfWeek}"
                   th:checked="${#lists.contains(workingTime.workday, dayOfWeek)}"
+                  th:class="${hasError ? 'invalid' : ''}"
+                  th:aria-invalid="${hasError}"
+                  th:aria-message="${hasError ? 'work-day-error-message' : ''}"
                 />
                 <label
                   for="workday-monday"
                   th:for="${'workday-' + dayOfWeek}"
                   th:text="${#messages.msg(dayOfWeek.toUpperCase())}"
+                  th:class="${hasError ? 'invalid' : ''}"
                 >
                   Montag
                 </label>
@@ -50,16 +65,35 @@
               <li th:replace="~{::workday('saturday')}"></li>
               <li th:replace="~{::workday('sunday')}"></li>
             </ul>
+            <div class="mt-2" th:if="${hasError}">
+              <p
+                th:if="${#fields.hasErrors('workday')}"
+                th:text="${#fields.errors('workday')[0]}"
+                class="invalid"
+              >
+                Arbeitstag Fehlernachricht.
+              </p>
+              <th:block
+                th:fragment="workdayError(dayOfWeek)"
+                th:with="dayOfWeek=${dayOfWeek ?: 'monday'}, fieldName=${'workDay' + #strings.capitalize(dayOfWeek)}"
+              >
+                <p
+                  th:if="${#fields.hasErrors(fieldName)}"
+                  th:text="${#fields.errors(fieldName)[0]}"
+                  class="invalid"
+                >
+                  Arbeitstag Fehlernachricht.
+                </p>
+              </th:block>
+              <p th:replace="~{::workdayError('tuesday')}"></p>
+              <p th:replace="~{::workdayError('wednesday')}"></p>
+              <p th:replace="~{::workdayError('thursday')}"></p>
+              <p th:replace="~{::workdayError('friday')}"></p>
+              <p th:replace="~{::workdayError('saturday')}"></p>
+              <p th:replace="~{::workdayError('sunday')}"></p>
+            </div>
           </div>
         </fieldset>
-        <div
-          class="p-4 rounded-md text-red-900 border border-red-100 bg-red-50"
-          th:if="${#fields.hasErrors('workingTimeClash')}"
-        >
-          <p th:text="${#fields.errors('workingTimeClash')[0]}">
-            Arbeitszeit Fehlernachricht.
-          </p>
-        </div>
         <fieldset
           class="border-t border-gray-100"
           th:classappend="${#fields.hasErrors('workingTimeClash') ? 'border-red-600' : ''}"
@@ -67,7 +101,7 @@
           <legend
             class="text-sm font-medium text-gray-400"
             th:classappend="${#fields.hasErrors('workingTimeClash') ? 'text-red-600' : ''}"
-            th:text="#{usermanagement.working-time.common-hours.title}"
+            th:text="#{usermanagement.working-time.hours.common.title}"
           >
             Arbeitszeit
           </legend>
@@ -86,7 +120,7 @@
               />
               <label
                 for="input-workingtime"
-                th:text="#{usermanagement.working-time.common-hours.input.label}"
+                th:text="#{usermanagement.working-time.hours.common.input.label}"
               >
                 Stunden am Tag
               </label>
@@ -106,7 +140,7 @@
           <legend
             class="text-sm font-medium text-gray-400"
             th:classappend="${#fields.hasErrors('workingTimeClash') ? 'text-red-600' : ''}"
-            th:text="#{usermanagement.working-time.individual-hours.title}"
+            th:text="#{usermanagement.working-time.hours.individual.title}"
           >
             Individuelle Arbeitszeit
           </legend>
@@ -125,16 +159,57 @@
               />
               <label
                 for="input-working-time-monday"
-                th:text="#{usermanagement.working-time.individual-hours.monday.input.label}"
+                th:text="#{usermanagement.working-time.hours.monday.input.label}"
               >
                 Stunden am Montag
               </label>
-              <p
-                th:if="${#fields.hasErrors('workingTimeMonday')}"
-                th:text="${#fields.errors('workingTimeMonday')[0]}"
-                id="working-time-monday-error-message"
-                class="mt-2 invalid"
-              ></p>
+              <th:block
+                th:fragment="working-time-error-message(dayOfWeek)"
+                th:with="dayOfWeek=${dayOfWeek ?: 'monday'}, fieldName=${'workingTime' + #strings.capitalize(dayOfWeek)}"
+              >
+                <div
+                  th:if="${#fields.hasErrors(fieldName)}"
+                  class="mt-2 flex items-center"
+                >
+                  <p
+                    th:id="${'working-time-' + dayOfWeek + '-error-message'}"
+                    class="invalid w-full"
+                  >
+                    <th:block
+                      th:text="${#fields.errors(fieldName)[0]}"
+                    ></th:block>
+                    <th:block
+                      th:if="${#fields.hasErrors(fieldName) && not #lists.contains(workingTime.workday, dayOfWeek)}"
+                    >
+                      <button
+                        type="submit"
+                        name="select"
+                        th:value="${dayOfWeek}"
+                        class="inline underline"
+                        th:with="DAY_OF_WEEK=${#strings.toUpperCase(dayOfWeek)}"
+                        th:text="#{usermanagement.working-time.validation-hint.select-working-day.button.text(${#messages.msg(DAY_OF_WEEK)})}"
+                      >
+                        Wähle den Montag aus
+                      </button>
+                      <th:block
+                        th:text="#{usermanagement.working-time.validation-hint.or}"
+                      >
+                        oder
+                      </th:block>
+                      <button
+                        type="submit"
+                        name="clear"
+                        th:value="${dayOfWeek}"
+                        class="inline underline"
+                        th:text="#{usermanagement.working-time.validation-hint.clear-hours.button.text}"
+                      >
+                        setze die Stunden auf 0
+                      </button>
+                      .
+                    </th:block>
+                  </p>
+                </div>
+              </th:block>
             </div>
             <div class="space-x-1">
               <input
@@ -150,16 +225,13 @@
               />
               <label
                 for="input-working-time-tuesday"
-                th:text="#{usermanagement.working-time.individual-hours.tuesday.input.label}"
+                th:text="#{usermanagement.working-time.hours.tuesday.input.label}"
               >
                 Stunden am Dienstag
               </label>
-              <p
-                th:if="${#fields.hasErrors('workingTimeTuesday')}"
-                th:text="${#fields.errors('workingTimeTuesday')[0]}"
-                id="working-time-tuesday-error-message"
-                class="mt-2 invalid"
-              ></p>
+              <div
+                th:replace="~{::working-time-error-message('tuesday')}"
+              ></div>
             </div>
             <div class="space-x-1">
               <input
@@ -175,16 +247,13 @@
               />
               <label
                 for="input-working-time-wednesday"
-                th:text="#{usermanagement.working-time.individual-hours.wednesday.input.label}"
+                th:text="#{usermanagement.working-time.hours.wednesday.input.label}"
               >
                 Stunden am Mittwoch
               </label>
-              <p
-                th:if="${#fields.hasErrors('workingTimeWednesday')}"
-                th:text="${#fields.errors('workingTimeWednesday')[0]}"
-                id="working-time-wednesday-error-message"
-                class="mt-2 invalid"
-              ></p>
+              <div
+                th:replace="~{::working-time-error-message('wednesday')}"
+              ></div>
             </div>
             <div class="space-x-1">
               <input
@@ -200,16 +269,13 @@
               />
               <label
                 for="input-working-time-thursday"
-                th:text="#{usermanagement.working-time.individual-hours.thursday.input.label}"
+                th:text="#{usermanagement.working-time.hours.thursday.input.label}"
               >
                 Stunden am Donnerstag
               </label>
-              <p
-                th:if="${#fields.hasErrors('workingTimeThursday')}"
-                th:text="${#fields.errors('workingTimeThursday')[0]}"
-                id="working-time-thursday-error-message"
-                class="mt-2 invalid"
-              ></p>
+              <div
+                th:replace="~{::working-time-error-message('thursday')}"
+              ></div>
             </div>
             <div class="space-x-1">
               <input
@@ -225,16 +291,11 @@
               />
               <label
                 for="input-working-time-friday"
-                th:text="#{usermanagement.working-time.individual-hours.friday.input.label}"
+                th:text="#{usermanagement.working-time.hours.friday.input.label}"
               >
                 Stunden am Freitag
               </label>
-              <p
-                th:if="${#fields.hasErrors('workingTimeFriday')}"
-                th:text="${#fields.errors('workingTimeFriday')[0]}"
-                id="working-time-friday-error-message"
-                class="mt-2 invalid"
-              ></p>
+              <div th:replace="~{::working-time-error-message('friday')}"></div>
             </div>
             <div class="space-x-1">
               <input
@@ -250,16 +311,13 @@
               />
               <label
                 for="input-working-time-saturday"
-                th:text="#{usermanagement.working-time.individual-hours.saturday.input.label}"
+                th:text="#{usermanagement.working-time.hours.saturday.input.label}"
               >
                 Stunden am Samstag
               </label>
-              <p
-                th:if="${#fields.hasErrors('workingTimeSaturday')}"
-                th:text="${#fields.errors('workingTimeSaturday')[0]}"
-                id="working-time-saturday-error-message"
-                class="mt-2 invalid"
-              ></p>
+              <div
+                th:replace="~{::working-time-error-message('saturday')}"
+              ></div>
             </div>
             <div class="space-x-1">
               <input
@@ -275,16 +333,11 @@
               />
               <label
                 for="input-working-time-sunday"
-                th:text="#{usermanagement.working-time.individual-hours.sunday.input.label}"
+                th:text="#{usermanagement.working-time.hours.sunday.input.label}"
               >
                 Stunden am Sonntag
               </label>
-              <p
-                th:if="${#fields.hasErrors('workingTimeSunday')}"
-                th:text="${#fields.errors('workingTimeSunday')[0]}"
-                id="working-time-sunday-error-message"
-                class="mt-2 invalid"
-              ></p>
+              <div th:replace="~{::working-time-error-message('sunday')}"></div>
             </div>
           </div>
         </fieldset>

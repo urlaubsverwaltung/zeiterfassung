@@ -2,11 +2,18 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.validation.MapBindingResult;
 
-import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
@@ -16,6 +23,7 @@ import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.util.StringUtils.capitalize;
 
 class WorkingTimeDtoValidatorTest {
 
@@ -31,24 +39,30 @@ class WorkingTimeDtoValidatorTest {
         assertThat(sut.supports(WorkingTimeDto.class)).isTrue();
     }
 
-    @Test
-    void ensureErrorWhenNoWorkingTimeIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(MONDAY))
-            .build();
+    @ParameterizedTest
+    @EnumSource(DayOfWeek.class)
+    void validWhenDayOfWeekIsSet(DayOfWeek dayOfWeek) {
+        final WorkingTimeDto.Builder builder = WorkingTimeDto.builder();
+        final Map<DayOfWeek, Consumer<Double>> setterByDayOfWeek = setterByDayOfWeek(builder);
+
+        builder.workday(List.of(dayOfWeek));
+        setterByDayOfWeek.get(dayOfWeek).accept(10.0);
+
+        final WorkingTimeDto dto = builder.build();
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
 
-        assertThat(bindingResult.getFieldError("workingTimeClash").getCode())
-            .isEqualTo("usermanagement.working-time.clash.constraint.message");
+        assertThat(bindingResult.hasErrors()).isFalse();
     }
 
-    @Test
-    void ensureValidWhenZeroWorkingTimeIsSet() {
+    @ParameterizedTest
+    @EnumSource(DayOfWeek.class)
+    void validWhenWorkingTimeIsSetButNoDayOfWeekHours(DayOfWeek dayOfWeek) {
+
         final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(MONDAY))
-            .workingTime(BigDecimal.ZERO)
+            .workday(List.of(dayOfWeek))
+            .workingTime(10.0)
             .build();
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
@@ -58,205 +72,168 @@ class WorkingTimeDtoValidatorTest {
     }
 
     @Test
-    void ensureErrorWhenWorkingTimeAndMondayIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(MONDAY))
-            .workingTime(BigDecimal.TEN)
-            .workingTimeMonday(BigDecimal.TEN)
-            .build();
+    void invalidWhenNothingIsSet() {
+        final WorkingTimeDto dto = WorkingTimeDto.builder().build();
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
 
-        assertThat(bindingResult.getFieldError("workingTimeClash").getCode())
-            .isEqualTo("usermanagement.working-time.clash.constraint.message");
+        assertThat(bindingResult.getFieldError("empty")).isNotNull();
+        assertThat(bindingResult.getFieldError("empty").getCode()).isEqualTo("usermanagement.working-time.validation.not-empty");
     }
 
     @Test
-    void ensureValidWhenMondayIsSet() {
+    void invalidWhenWorkdayIsNotSelected() {
         final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(MONDAY))
-            .workingTime(BigDecimal.ZERO)
-            .workingTimeMonday(BigDecimal.TEN)
+            .workday(List.of())
+            .workingTime(8.0)
             .build();
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
 
-        assertThat(bindingResult.hasErrors()).isFalse();
+        assertThat(bindingResult.getFieldError("workday")).isNotNull();
+        assertThat(bindingResult.getFieldError("workday").getCode()).isEqualTo("usermanagement.working-time.validation.workday.not-empty");
+    }
+
+    @ParameterizedTest
+    @EnumSource(DayOfWeek.class)
+    void invalidWhenWorkingTimeIsNull(DayOfWeek dayOfWeek) {
+        final WorkingTimeDto dto = WorkingTimeDto.builder()
+            .workday(List.of(dayOfWeek))
+            .workingTime(null)
+            .build();
+
+        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
+        sut.validate(dto, bindingResult);
+
+        assertThat(bindingResult.getFieldError("workingTime")).isNotNull();
+        assertThat(bindingResult.getFieldError("workingTime").getCode()).isEqualTo("usermanagement.working-time.validation.working-time.not-empty");
+    }
+
+    @ParameterizedTest
+    @EnumSource(DayOfWeek.class)
+    void invalidWhenWorkingTimeIsZero(DayOfWeek dayOfWeek) {
+        final WorkingTimeDto dto = WorkingTimeDto.builder()
+            .workday(List.of(dayOfWeek))
+            .workingTime(0.0)
+            .build();
+
+        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
+        sut.validate(dto, bindingResult);
+
+        assertThat(bindingResult.getFieldError("workingTime")).isNotNull();
+        assertThat(bindingResult.getFieldError("workingTime").getCode()).isEqualTo("usermanagement.working-time.validation.working-time.not-empty");
     }
 
     @Test
-    void ensureErrorWhenWorkingTimeAndTuesdayIsSet() {
+    void invalidWhenWorkingTimeIsNegative() {
         final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(TUESDAY))
-            .workingTime(BigDecimal.TEN)
-            .workingTimeTuesday(BigDecimal.TEN)
+            .workingTime(-1.0)
             .build();
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
 
-        assertThat(bindingResult.getFieldError("workingTimeClash").getCode())
-            .isEqualTo("usermanagement.working-time.clash.constraint.message");
+        assertThat(bindingResult.getFieldError("workingTime")).isNotNull();
+        assertThat(bindingResult.getFieldError("workingTime").getCode()).isEqualTo("usermanagement.working-time.validation.positive-or-zero");
+    }
+
+    @ParameterizedTest
+    @EnumSource(DayOfWeek.class)
+    void invalidWhenDayOfWeekWorkingTimeIsNegative(DayOfWeek dayOfWeek) {
+
+        final WorkingTimeDto.Builder builder = WorkingTimeDto.builder();
+        final Map<DayOfWeek, Consumer<Double>> setterByDayOfWeek = setterByDayOfWeek(builder);
+
+        builder.workday(List.of(dayOfWeek));
+        setterByDayOfWeek.get(dayOfWeek).accept(-1.0);
+
+        final WorkingTimeDto dto = builder.build();
+
+        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
+        sut.validate(dto, bindingResult);
+
+        final String field = "workingTime" + capitalize(dayOfWeek.name().toLowerCase());
+        assertThat(bindingResult.getFieldError(field)).isNotNull();
+        assertThat(bindingResult.getFieldError(field).getCode()).isEqualTo("usermanagement.working-time.validation.positive-or-zero");
     }
 
     @Test
-    void ensureValidWhentuesdayIsSet() {
+    void invalidWhenWorkingTimeIsGreaterThan24() {
         final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(TUESDAY))
-            .workingTime(BigDecimal.ZERO)
-            .workingTimeTuesday(BigDecimal.TEN)
+            .workingTime(24.1)
             .build();
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
 
-        assertThat(bindingResult.hasErrors()).isFalse();
+        assertThat(bindingResult.getFieldError("workingTime")).isNotNull();
+        assertThat(bindingResult.getFieldError("workingTime").getCode()).isEqualTo("usermanagement.working-time.validation.max");
     }
 
-    @Test
-    void ensureErrorWhenWorkingTimeAndWednesdayIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(WEDNESDAY))
-            .workingTime(BigDecimal.TEN)
-            .workingTimeWednesday(BigDecimal.TEN)
-            .build();
+    @ParameterizedTest
+    @EnumSource(DayOfWeek.class)
+    void invalidWhenDayOfWeekWorkingTimeIsGreaterThan24(DayOfWeek dayOfWeek) {
+
+        final WorkingTimeDto.Builder builder = WorkingTimeDto.builder();
+        final Map<DayOfWeek, Consumer<Double>> setterByDayOfWeek = setterByDayOfWeek(builder);
+
+        builder.workday(List.of(dayOfWeek));
+        setterByDayOfWeek.get(dayOfWeek).accept(24.1);
+
+        final WorkingTimeDto dto = builder.build();
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
 
-        assertThat(bindingResult.getFieldError("workingTimeClash").getCode())
-            .isEqualTo("usermanagement.working-time.clash.constraint.message");
+        final String field = "workingTime" + capitalize(dayOfWeek.name().toLowerCase());
+        assertThat(bindingResult.getFieldError(field)).isNotNull();
+        assertThat(bindingResult.getFieldError(field).getCode()).isEqualTo("usermanagement.working-time.validation.max");
     }
 
-    @Test
-    void ensureValidWhenWednesdayIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(WEDNESDAY))
-            .workingTime(BigDecimal.ZERO)
-            .workingTimeWednesday(BigDecimal.TEN)
-            .build();
-
-        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
-        sut.validate(dto, bindingResult);
-
-        assertThat(bindingResult.hasErrors()).isFalse();
+    private static Stream<Arguments> factory() {
+        return Stream.of(
+            Arguments.arguments(MONDAY, SUNDAY),
+            Arguments.arguments(TUESDAY, SUNDAY),
+            Arguments.arguments(WEDNESDAY, SUNDAY),
+            Arguments.arguments(THURSDAY, SUNDAY),
+            Arguments.arguments(FRIDAY, SUNDAY),
+            Arguments.arguments(SATURDAY, SUNDAY),
+            Arguments.arguments(SUNDAY, MONDAY)
+        );
     }
 
-    @Test
-    void ensureErrorWhenWorkingTimeAndThursdayIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(THURSDAY))
-            .workingTime(BigDecimal.TEN)
-            .workingTimeThursday(BigDecimal.TEN)
-            .build();
+    @ParameterizedTest
+    @MethodSource("factory")
+    void invalidWhenDayOfWeekHoursAreGivenButDayIsNotSelected(DayOfWeek dayOfWeek, DayOfWeek otherDayOfWeek) {
+
+        final WorkingTimeDto.Builder builder = WorkingTimeDto.builder();
+        final Map<DayOfWeek, Consumer<Double>> setterByDayOfWeek = setterByDayOfWeek(builder);
+
+        builder.workday(List.of(otherDayOfWeek));
+        setterByDayOfWeek.get(dayOfWeek).accept(8.0);
+
+        final WorkingTimeDto dto = builder.build();
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
 
-        assertThat(bindingResult.getFieldError("workingTimeClash").getCode())
-            .isEqualTo("usermanagement.working-time.clash.constraint.message");
+        final String name = dayOfWeek.name().toLowerCase();
+        final String field = "workingTime" + capitalize(name);
+        assertThat(bindingResult.getFieldError(field)).isNotNull();
+        assertThat(bindingResult.getFieldError(field).getCode()).isEqualTo("usermanagement.working-time.validation.hours.%s.no-workday".formatted(name));
     }
 
-    @Test
-    void ensureValidWhenThursdayIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(THURSDAY))
-            .workingTime(BigDecimal.ZERO)
-            .workingTimeThursday(BigDecimal.TEN)
-            .build();
-
-        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
-        sut.validate(dto, bindingResult);
-
-        assertThat(bindingResult.hasErrors()).isFalse();
-    }
-
-    @Test
-    void ensureErrorWhenWorkingTimeAndFridayIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(FRIDAY))
-            .workingTime(BigDecimal.TEN)
-            .workingTimeFriday(BigDecimal.TEN)
-            .build();
-
-        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
-        sut.validate(dto, bindingResult);
-
-        assertThat(bindingResult.getFieldError("workingTimeClash").getCode())
-            .isEqualTo("usermanagement.working-time.clash.constraint.message");
-    }
-
-    @Test
-    void ensureValidWhenFridayIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(FRIDAY))
-            .workingTime(BigDecimal.ZERO)
-            .workingTimeFriday(BigDecimal.TEN)
-            .build();
-
-        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
-        sut.validate(dto, bindingResult);
-
-        assertThat(bindingResult.hasErrors()).isFalse();
-    }
-
-    @Test
-    void ensureErrorWhenWorkingTimeAndSaturdayIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(SATURDAY))
-            .workingTime(BigDecimal.TEN)
-            .workingTimeSaturday(BigDecimal.TEN)
-            .build();
-
-        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
-        sut.validate(dto, bindingResult);
-
-        assertThat(bindingResult.getFieldError("workingTimeClash").getCode())
-            .isEqualTo("usermanagement.working-time.clash.constraint.message");
-    }
-
-    @Test
-    void ensureValidWhenSaturdayIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(SATURDAY))
-            .workingTime(BigDecimal.ZERO)
-            .workingTimeSaturday(BigDecimal.TEN)
-            .build();
-
-        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
-        sut.validate(dto, bindingResult);
-
-        assertThat(bindingResult.hasErrors()).isFalse();
-    }
-
-    @Test
-    void ensureErrorWhenWorkingTimeAndSundayIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(SUNDAY))
-            .workingTime(BigDecimal.TEN)
-            .workingTimeSunday(BigDecimal.TEN)
-            .build();
-
-        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
-        sut.validate(dto, bindingResult);
-
-        assertThat(bindingResult.getFieldError("workingTimeClash").getCode())
-            .isEqualTo("usermanagement.working-time.clash.constraint.message");
-    }
-
-    @Test
-    void ensureValidWhenSundayIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(SUNDAY))
-            .workingTime(BigDecimal.ZERO)
-            .workingTimeSunday(BigDecimal.TEN)
-            .build();
-
-        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
-        sut.validate(dto, bindingResult);
-
-        assertThat(bindingResult.hasErrors()).isFalse();
+    private static Map<DayOfWeek, Consumer<Double>> setterByDayOfWeek(WorkingTimeDto.Builder builder) {
+        return Map.of(
+            MONDAY, builder::workingTimeMonday,
+            TUESDAY, builder::workingTimeTuesday,
+            WEDNESDAY, builder::workingTimeWednesday,
+            THURSDAY, builder::workingTimeThursday,
+            FRIDAY, builder::workingTimeFriday,
+            SATURDAY, builder::workingTimeSaturday,
+            SUNDAY, builder::workingTimeSunday
+        );
     }
 }

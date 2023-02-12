@@ -3,11 +3,12 @@ package de.focusshift.zeiterfassung.usermanagement;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.Duration;
-import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.math.BigDecimal.ONE;
@@ -22,6 +23,7 @@ import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static java.time.Duration.ZERO;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * Contractual working time. This representation has no context of absences like public holidays.
@@ -54,32 +56,60 @@ public final class WorkingTime {
         return userId;
     }
 
-    public WorkDay getMonday() {
-        return monday;
+    /**
+     *
+     * @return optional {@linkplain WorkDay} of monday, or {@linkplain Optional#empty()} when it is not a working day.
+     */
+    public Optional<WorkDay> getMonday() {
+        return Optional.ofNullable(monday);
     }
 
-    public WorkDay getTuesday() {
-        return tuesday;
+    /**
+     *
+     * @return optional {@linkplain WorkDay} of tuesday, or {@linkplain Optional#empty()} when it is not a working day.
+     */
+    public Optional<WorkDay> getTuesday() {
+        return Optional.ofNullable(tuesday);
     }
 
-    public WorkDay getWednesday() {
-        return wednesday;
+    /**
+     *
+     * @return optional {@linkplain WorkDay} of wednesday, or {@linkplain Optional#empty()} when it is not a working day.
+     */
+    public Optional<WorkDay> getWednesday() {
+        return Optional.ofNullable(wednesday);
     }
 
-    public WorkDay getThursday() {
-        return thursday;
+    /**
+     *
+     * @return optional {@linkplain WorkDay} of thursday, or {@linkplain Optional#empty()} when it is not a working day.
+     */
+    public Optional<WorkDay> getThursday() {
+        return Optional.ofNullable(thursday);
     }
 
-    public WorkDay getFriday() {
-        return friday;
+    /**
+     *
+     * @return optional {@linkplain WorkDay} of friday, or {@linkplain Optional#empty()} when it is not a working day.
+     */
+    public Optional<WorkDay> getFriday() {
+        return Optional.ofNullable(friday);
     }
 
-    public WorkDay getSaturday() {
-        return saturday;
+    /**
+     *
+     * @return optional {@linkplain WorkDay} of saturday, or {@linkplain Optional#empty()} when it is not a working day.
+     */
+    public Optional<WorkDay> getSaturday() {
+        return Optional.ofNullable(saturday);
     }
 
-    public WorkDay getSunday() {
-        return sunday;
+    /**
+     *
+     * @return optional {@linkplain WorkDay} of sunday, or {@linkplain Optional#empty()} when it is not a working day.
+     */
+    public Optional<WorkDay> getSunday() {
+        return Optional.ofNullable(sunday);
     }
 
     /**
@@ -88,7 +118,31 @@ public final class WorkingTime {
      */
     public List<WorkDay> getWorkingDays() {
         return Stream.of(monday, tuesday, wednesday, thursday, friday, saturday, sunday)
+            .filter(Objects::nonNull)
             .filter(not(w -> ZERO.equals(w.duration()))).toList();
+    }
+
+    public List<DayOfWeek> getWorkingDayOfWeeks() {
+        return hoursSupplierByDayMap(this).entrySet()
+            .stream()
+            .filter(entry -> entry.getValue().get() != null)
+            .map(Map.Entry::getKey)
+            .toList();
+    }
+
+    /**
+     * Checks whether there are different WorkDay Hours or not.
+     *
+     * @return {@code true} when there are differences, {@code false} if every WorkDay has the same Hours.
+     */
+    public boolean hasDifferentWorkingHours() {
+        return Stream.of(getMonday(), getTuesday(), getWednesday(), getThursday(), getFriday(), getSaturday(), getSunday())
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(WorkDay::duration)
+            .filter(not(Duration.ZERO::equals))
+            .collect(toSet())
+            .size() > 1;
     }
 
     /**
@@ -106,6 +160,18 @@ public final class WorkingTime {
         }
 
         return Optional.of(workingHours);
+    }
+
+    private static Map<DayOfWeek, Supplier<BigDecimal>> hoursSupplierByDayMap(WorkingTime workTime) {
+        return Map.of(
+            MONDAY, () -> workTime.getMonday().map(WorkDay::hours).orElse(null),
+            TUESDAY, () -> workTime.getTuesday().map(WorkDay::hours).orElse(null),
+            WEDNESDAY, () -> workTime.getWednesday().map(WorkDay::hours).orElse(null),
+            THURSDAY, () -> workTime.getThursday().map(WorkDay::hours).orElse(null),
+            FRIDAY, () -> workTime.getFriday().map(WorkDay::hours).orElse(null),
+            SATURDAY, () -> workTime.getSaturday().map(WorkDay::hours).orElse(null),
+            SUNDAY, () -> workTime.getSunday().map(WorkDay::hours).orElse(null)
+        );
     }
 
     /**
@@ -153,21 +219,6 @@ public final class WorkingTime {
         public Builder userId(UserLocalId userId) {
             this.userId = userId;
             return this;
-        }
-
-        public Builder workdays(Collection<DayOfWeek> workdays, Duration duration) {
-            for (DayOfWeek workday : workdays) {
-                this.workDays.put(workday, duration);
-            }
-            return this;
-        }
-
-        public Builder workdays(Collection<DayOfWeek> workdays, double hours) {
-            return workdays(workdays, BigDecimal.valueOf(hours));
-        }
-
-        public Builder workdays(Collection<DayOfWeek> workdays, BigDecimal hours) {
-            return workdays(workdays, hoursToDuration(hours));
         }
 
         public Builder monday(Duration duration) {
@@ -268,7 +319,7 @@ public final class WorkingTime {
 
         private WorkDay getWorkDay(DayOfWeek dayOfWeek) {
             final Duration hours = workDays.get(dayOfWeek);
-            return new WorkDay(dayOfWeek, hours == null ? ZERO : hours);
+            return hours == null ? null : new WorkDay(dayOfWeek, hours);
         }
 
         private static Duration hoursToDuration(BigDecimal hours) {

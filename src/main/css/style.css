@@ -35,6 +35,7 @@
     @apply text-red-600;
   }
 
+  label.invalid,
   p.invalid {
     @apply text-red-600;
   }
