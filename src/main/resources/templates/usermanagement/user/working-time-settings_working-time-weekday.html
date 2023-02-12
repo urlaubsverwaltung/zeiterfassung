@@ -8,7 +8,7 @@
     <div
       th:fragment="box(dayOfWeek, value)"
       th:with="fieldName=${'workingTime' + #strings.capitalize(dayOfWeek)}, hasError=${#fields.hasErrors(fieldName)}"
-      class="space-x-1"
+      class="flex items-center sm:flex-col-reverse gap-2 sm:gap-1"
     >
       <input
         type="text"
@@ -16,20 +16,26 @@
         th:name="${fieldName}"
         id="input-working-time-day-of-week"
         th:id="${'input-working-time-' + dayOfWeek}"
-        class="border border-gray-300 px-2 py-1 w-14"
+        class="border border-gray-300 px-2 py-1 w-14 sm:w-full"
         th:classappend="${hasError ? 'invalid' : ''}"
         th:value="${{value}}"
         th:aria-invalid="${hasError}"
         th:aria-message="${hasError ? 'working-time-' + dayOfWeek + '-error-message' : ''}"
       />
       <label
+        class="sm:w-full sm:text-ellipsis sm:overflow-hidden"
         for="input-working-time-day-of-week"
         th:for="${'input-working-time-' + dayOfWeek}"
-        th:with="DAY_OF_WEEK=${#strings.toUpperCase(dayOfWeek)}"
-        th:text="#{usermanagement.working-time.hours.input.label(${#messages.msg(DAY_OF_WEEK)})}"
+        th:text="${#messages.msg(#strings.toUpperCase(dayOfWeek))}"
       >
-        Stunden am Montag
+        Montag
       </label>
+    </div>
+
+    <th:block
+      th:fragment="error-box(dayOfWeek)"
+      th:with="fieldName=${'workingTime' + #strings.capitalize(dayOfWeek)}, hasError=${#fields.hasErrors(fieldName)}"
+    >
       <div th:if="${hasError}" class="mt-2 flex items-center">
         <p
           th:id="${'working-time-' + dayOfWeek + '-error-message'}"
@@ -67,6 +73,6 @@
           </th:block>
         </p>
       </div>
-    </div>
+    </th:block>
   </body>
 </html>

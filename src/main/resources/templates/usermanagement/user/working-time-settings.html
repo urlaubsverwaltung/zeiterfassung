@@ -30,7 +30,7 @@
           >
             Arbeitstage
           </legend>
-          <div class="mt-2">
+          <div class="mt-2 sm:mt-4">
             <ul class="flex flex-wrap gap-4">
               <li
                 class="flex items-center gap-1"
@@ -105,14 +105,16 @@
           >
             Arbeitszeit
           </legend>
-          <div class="mt-2">
-            <div class="space-x-1">
+          <div class="mt-2 sm:mt-4">
+            <div
+              class="flex items-center gap-2 sm:grid sm:grid-cols-7 sm:gap-4"
+            >
               <input
                 type="text"
                 inputmode="numeric"
                 name="workingTime"
                 id="input-workingtime"
-                class="border border-gray-300 px-2 py-1 w-14"
+                class="border border-gray-300 px-2 py-1 w-14 sm:w-full"
                 th:field="*{workingTime}"
                 th:errorclass="invalid"
                 th:aria-invalid="${#fields.hasErrors('workingTime')}"
@@ -120,17 +122,18 @@
               />
               <label
                 for="input-workingtime"
+                class="col-span-6"
                 th:text="#{usermanagement.working-time.hours.common.input.label}"
               >
                 Stunden am Tag
               </label>
-              <p
-                th:if="${#fields.hasErrors('workingTime')}"
-                th:text="${#fields.errors('workingTime')[0]}"
-                id="working-time-error-message"
-                class="mt-2 invalid"
-              ></p>
             </div>
+            <p
+              th:if="${#fields.hasErrors('workingTime')}"
+              th:text="${#fields.errors('workingTime')[0]}"
+              id="working-time-error-message"
+              class="mt-2 invalid"
+            ></p>
           </div>
         </fieldset>
         <fieldset
@@ -144,7 +147,9 @@
           >
             Individuelle Arbeitszeit
           </legend>
-          <div class="mt-2 space-y-2">
+          <div
+            class="mt-2 flex flex-col gap-2 sm:mt-4 sm:grid sm:grid-cols-7 sm:gap-4"
+          >
             <div
               th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('monday', ${workingTime.workingTimeMonday})}"
             ></div>
@@ -165,6 +170,29 @@
             ></div>
             <div
               th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('sunday', ${workingTime.workingTimeSunday})}"
+            ></div>
+          </div>
+          <div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('monday')}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('tuesday')}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('wednesday')}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('thursday')}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('friday')}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('saturday')}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('sunday')}"
             ></div>
           </div>
         </fieldset>
