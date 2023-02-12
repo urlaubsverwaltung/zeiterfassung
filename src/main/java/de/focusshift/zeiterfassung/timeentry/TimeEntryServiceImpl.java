@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Year;
@@ -120,14 +121,74 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public TimeEntry saveTimeEntry(TimeEntry timeEntry) {
-        final TimeEntryEntity savedEntity = timeEntryRepository.save(toEntity(timeEntry, Instant.now(clock)));
-        return toTimeEntry(savedEntity);
+    public TimeEntry createTimeEntry(UserId userId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak) {
+
+        final TimeEntryEntity entity = new TimeEntryEntity();
+        entity.setOwner(userId.value());
+        entity.setComment(comment.strip());
+        entity.setStart(start.toInstant());
+        entity.setStartZoneId(start.getZone().getId());
+        entity.setEnd(end.toInstant());
+        entity.setEndZoneId(end.getZone().getId());
+        entity.setBreak(isBreak);
+
+        return save(entity);
+    }
+
+    @Override
+    public TimeEntry updateTimeEntry(TimeEntryId id, String comment, ZonedDateTime start, ZonedDateTime end,
+                                     Duration duration, boolean isBreak) throws TimeEntryUpdateException {
+
+        final TimeEntryEntity entity = timeEntryRepository.findById(id.value())
+            .orElseThrow(() -> new IllegalStateException("could not find existing timeEntry id=%s".formatted(id)));
+
+        final TimeEntry existingTimeEntry = toTimeEntry(entity);
+        final boolean startChanged = notEquals(existingTimeEntry.start(), start);
+        final boolean endChanged = notEquals(existingTimeEntry.end(), end);
+        final boolean durationChanged = !existingTimeEntry.workDuration().duration().equals(duration);
+
+        if (startChanged && endChanged && durationChanged) {
+            throw new TimeEntryUpdateException("cannot update time-entry when start, end and duration should be changed. pick two of them.");
+        }
+
+        if (startChanged) {
+            entity.setStart(start.toInstant());
+            entity.setStartZoneId(start.getZone().getId());
+            if (durationChanged) {
+                final ZonedDateTime newEnd = start.plusMinutes(duration.toMinutes());
+                entity.setEnd(newEnd.toInstant());
+                entity.setEndZoneId(newEnd.getZone().getId());
+            }
+        }
+
+        if (endChanged) {
+            entity.setEnd(end.toInstant());
+            entity.setEndZoneId(end.getZone().getId());
+            if (durationChanged) {
+                final ZonedDateTime newStart = end.minusMinutes(duration.toMinutes());
+                entity.setStart(newStart.toInstant());
+                entity.setStartZoneId(newStart.getZone().getId());
+            }
+        }
+
+        entity.setComment(comment.strip());
+        entity.setBreak(isBreak);
+
+        return save(entity);
+    }
+
+    private boolean notEquals(ZonedDateTime one, ZonedDateTime two) {
+        return !one.toInstant().atZone(ZoneOffset.UTC).equals(two.toInstant().atZone(ZoneOffset.UTC));
     }
 
     @Override
     public void deleteTimeEntry(long timeEntryId) {
         timeEntryRepository.deleteById(timeEntryId);
+    }
+
+    private TimeEntry save(TimeEntryEntity entity) {
+        entity.setUpdatedAt(Instant.now(clock));
+        return toTimeEntry(timeEntryRepository.save(entity));
     }
 
     private static TimeEntry toTimeEntry(TimeEntryEntity entity) {
@@ -145,16 +206,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         final UserId userId = new UserId(entity.getOwner());
 
-        return new TimeEntry(entity.getId(), userId, entity.getComment(), startDateTime, endDateTime, entity.isBreak());
-    }
-
-    private TimeEntryEntity toEntity(TimeEntry timeEntry, Instant updatedAt) {
-        final Instant start = timeEntry.start().toInstant();
-        final ZoneId startZoneId = timeEntry.start().getZone();
-        final Instant end = timeEntry.end().toInstant();
-        final ZoneId endZoneId = timeEntry.end().getZone();
-
-        return new TimeEntryEntity(timeEntry.id(), timeEntry.userId().value(), timeEntry.comment(), start, startZoneId, end, endZoneId, updatedAt, timeEntry.isBreak());
+        return new TimeEntry(new TimeEntryId(entity.getId()), userId, entity.getComment(), startDateTime, endDateTime, entity.isBreak());
     }
 
     private static Instant toInstant(LocalDate localDate) {

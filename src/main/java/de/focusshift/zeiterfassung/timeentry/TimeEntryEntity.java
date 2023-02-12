@@ -1,7 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,6 +10,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Objects;
@@ -82,36 +82,72 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
         return id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getOwner() {
         return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 
     public String getComment() {
         return comment;
     }
 
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
     public Instant getStart() {
         return start;
+    }
+
+    public void setStart(Instant start) {
+        this.start = start;
     }
 
     public String getStartZoneId() {
         return startZoneId;
     }
 
+    public void setStartZoneId(String startZoneId) {
+        this.startZoneId = startZoneId;
+    }
+
     public Instant getEnd() {
         return end;
+    }
+
+    public void setEnd(Instant end) {
+        this.end = end;
     }
 
     public String getEndZoneId() {
         return endZoneId;
     }
 
+    public void setEndZoneId(String endZoneId) {
+        this.endZoneId = endZoneId;
+    }
+
     public Instant getUpdatedAt() {
         return updatedAt;
     }
 
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     public boolean isBreak() {
         return isBreak;
+    }
+
+    public void setBreak(boolean aBreak) {
+        isBreak = aBreak;
     }
 
     @Override

@@ -50,8 +50,14 @@ class TimeClockService {
             .map(entity -> timeClockEntityWithStoppedAt(entity, ZonedDateTime.now(userSettingsProvider.zoneId())))
             .map(timeClockRepository::save)
             .map(TimeClockService::toTimeClock)
-            .map(TimeClockService::timeClockToTimeEntry)
-            .ifPresent(timeEntryService::saveTimeEntry);
+            .ifPresent(timeClock -> {
+
+                final ZonedDateTime start = timeClock.startedAt();
+                final ZonedDateTime end = timeClock.stoppedAt()
+                    .orElseThrow(() -> new IllegalStateException("expected stoppedAt to contain a value."));
+
+                timeEntryService.createTimeEntry(userId, timeClock.comment(), start, end, timeClock.isBreak());
+            });
     }
 
     private static TimeClockEntity toEntity(TimeClock timeClock) {

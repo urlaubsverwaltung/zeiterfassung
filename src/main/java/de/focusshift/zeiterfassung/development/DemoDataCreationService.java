@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.development;
 
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserCreatedEvent;
-import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.slf4j.Logger;
@@ -70,10 +69,13 @@ class DemoDataCreationService {
             LocalTime endTime = randomTimeBetween(startTime, END_OF_WORK_DAY);
 
             while (endTime.isBefore(END_OF_WORK_DAY)) {
-                timeEntryService.saveTimeEntry(new TimeEntry(null, new UserId(user.id()),
-                    getRandomComment(),
-                    ZonedDateTime.of(LocalDateTime.of(actualDate, startTime), ZoneId.of("Europe/Berlin")),
-                    ZonedDateTime.of(LocalDateTime.of(actualDate, endTime), ZoneId.of("Europe/Berlin")), false));
+
+                final UserId userId = new UserId(user.id());
+                final ZoneId zoneId = ZoneId.of("Europe/Berlin");
+                final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(actualDate, startTime), zoneId);
+                final ZonedDateTime end = ZonedDateTime.of(LocalDateTime.of(actualDate, endTime), zoneId);
+
+                timeEntryService.createTimeEntry(userId, getRandomComment(), start, end, false);
 
                 startTime = endTime;
                 endTime = randomTimeBetween(startTime, END_OF_WORK_DAY).plusMinutes(30);

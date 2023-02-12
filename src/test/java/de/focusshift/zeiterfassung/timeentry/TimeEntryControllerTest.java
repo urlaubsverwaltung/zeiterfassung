@@ -15,6 +15,7 @@ import org.springframework.security.web.method.annotation.AuthenticationPrincipa
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -58,7 +59,7 @@ class TimeEntryControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), List.of(timeEntry));
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(timeEntryDay));
@@ -97,7 +98,7 @@ class TimeEntryControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), List.of(timeEntry));
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(timeEntryDay));
@@ -214,9 +215,8 @@ class TimeEntryControllerTest {
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 1, 2, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry expectedTimeEntry = new TimeEntry(null, new UserId("batman"), "hard work", expectedStart, expectedEnd, false);
 
-        verify(timeEntryService).saveTimeEntry(expectedTimeEntry);
+        verify(timeEntryService).createTimeEntry(new UserId("batman"), "hard work", expectedStart, expectedEnd, false);
     }
 
     @Test
@@ -243,9 +243,8 @@ class TimeEntryControllerTest {
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 1, 2, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry expectedTimeEntry = new TimeEntry(null, new UserId("batman"), "hard work", expectedStart, expectedEnd, true);
 
-        verify(timeEntryService).saveTimeEntry(expectedTimeEntry);
+        verify(timeEntryService).createTimeEntry(new UserId("batman"), "hard work", expectedStart, expectedEnd, true);
     }
 
     @Test
@@ -271,9 +270,8 @@ class TimeEntryControllerTest {
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 22, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 1, 3, 1, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry expectedTimeEntry = new TimeEntry(null, new UserId("batman"), "hard work", expectedStart, expectedEnd, false);
 
-        verify(timeEntryService).saveTimeEntry(expectedTimeEntry);
+        verify(timeEntryService).createTimeEntry(new UserId("batman"), "hard work", expectedStart, expectedEnd, false);
     }
 
     @Test
@@ -327,9 +325,8 @@ class TimeEntryControllerTest {
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry expectedTimeEntry = new TimeEntry(1337L, new UserId("batman"), "hard work extended", expectedStart, expectedEnd, false);
 
-        verify(timeEntryService).saveTimeEntry(expectedTimeEntry);
+        verify(timeEntryService).updateTimeEntry(new TimeEntryId(1337L), "hard work extended", expectedStart, expectedEnd, Duration.ZERO, false);
     }
 
     @Test
@@ -357,9 +354,8 @@ class TimeEntryControllerTest {
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry expectedTimeEntry = new TimeEntry(1337L, new UserId("batman"), "hard work extended", expectedStart, expectedEnd, true);
 
-        verify(timeEntryService).saveTimeEntry(expectedTimeEntry);
+        verify(timeEntryService).updateTimeEntry(new TimeEntryId(1337L), "hard work extended", expectedStart, expectedEnd, Duration.ZERO, true);
     }
 
     @Test
@@ -370,11 +366,11 @@ class TimeEntryControllerTest {
 
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hack the planet", start, end, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1337L), new UserId("batman"), "hard work extended", start, end, false);
 
         final ZonedDateTime startOtherDay = ZonedDateTime.of(2022, 9, 29, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime endOtherDay = ZonedDateTime.of(2022, 9, 29, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntryOtherDay = new TimeEntry(1L, new UserId("batman"), "hack the planet", startOtherDay, endOtherDay, false);
+        final TimeEntry timeEntryOtherDay = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", startOtherDay, endOtherDay, false);
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(
             LocalDate.of(2022, 9, 26),
@@ -411,7 +407,7 @@ class TimeEntryControllerTest {
             .date(LocalDate.of(2022, 9, 28))
             .start(LocalTime.of(20, 30))
             .end(LocalTime.of(21, 15))
-            .duration(null)
+            .duration("00:45")
             .comment("hard work extended")
             .build();
 
@@ -425,9 +421,8 @@ class TimeEntryControllerTest {
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry expectedTimeEntry = new TimeEntry(1337L, new UserId("batman"), "hard work extended", expectedStart, expectedEnd, false);
 
-        verify(timeEntryService).saveTimeEntry(expectedTimeEntry);
+        verify(timeEntryService).updateTimeEntry(new TimeEntryId(1337L), "hard work extended", expectedStart, expectedEnd, Duration.ZERO, false);
     }
 
     @Test
@@ -437,7 +432,7 @@ class TimeEntryControllerTest {
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(new TimeEntryDay(LocalDate.of(2022, 9, 19), List.of(timeEntry))));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
@@ -477,7 +472,13 @@ class TimeEntryControllerTest {
     @Test
     void ensureTimeEntryEditWithValidationErrorWithAjax() throws Exception {
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 28), List.of());
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+
+        final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
+        final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1337L), new UserId("batman"), "hard work extended", start, end, false);
+
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 28), List.of(timeEntry));
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 39)).thenReturn(timeEntryWeekPage);

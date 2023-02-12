@@ -6,7 +6,7 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 
 public record TimeEntry(
-    Long id,
+    TimeEntryId id,
     UserId userId,
     String comment,
     ZonedDateTime start,
