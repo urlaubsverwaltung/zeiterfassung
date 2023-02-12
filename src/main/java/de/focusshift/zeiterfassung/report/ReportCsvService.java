@@ -98,7 +98,7 @@ class ReportCsvService {
         final String date = dateFormatter.formatDate(reportDayEntry.start().toLocalDate());
         final String givenName = reportDayEntry.user().givenName();
         final String familyName = reportDayEntry.user().familyName();
-        final String hoursWorked = numberFormat.format(reportDayEntry.workDuration().minutes().hoursDoubleValue());
+        final String hoursWorked = numberFormat.format(reportDayEntry.workDuration().hoursDoubleValue());
         final String comment = reportDayEntry.comment();
         final boolean isBreak = reportDayEntry.isBreak();
 

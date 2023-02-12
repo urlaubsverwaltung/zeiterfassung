@@ -293,7 +293,7 @@ class TimeEntryControllerTest {
                 )
                 .param("date", "2022-01-02")
                 .param("comment", "hard work")
-            // missing start/end/duration
+            // missing start/end/value
         );
 
         perform
@@ -461,7 +461,7 @@ class TimeEntryControllerTest {
                 )
                 .param("date", "2022-01-02")
                 .param("comment", "hard work")
-            // missing start/end/duration
+            // missing start/end/value
         );
 
         perform

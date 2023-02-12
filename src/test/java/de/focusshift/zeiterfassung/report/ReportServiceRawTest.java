@@ -77,7 +77,7 @@ class ReportServiceRawTest {
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
         for (ReportDay reportDay : actualReportWeek.reportDays()) {
-            assertThat(reportDay.workDuration().duration()).isZero();
+            assertThat(reportDay.workDuration().value()).isZero();
         }
     }
 
@@ -105,13 +105,13 @@ class ReportServiceRawTest {
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
-        assertThat(actualReportWeek.reportDays().get(0).workDuration().duration()).isEqualTo(Duration.ofHours(1L));
-        assertThat(actualReportWeek.reportDays().get(1).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(2).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(3).workDuration().duration()).isEqualTo(Duration.ofHours(3L));
-        assertThat(actualReportWeek.reportDays().get(4).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(5).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(6).workDuration().duration()).isZero();
+        assertThat(actualReportWeek.reportDays().get(0).workDuration().value()).isEqualTo(Duration.ofHours(1L));
+        assertThat(actualReportWeek.reportDays().get(1).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(2).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(3).workDuration().value()).isEqualTo(Duration.ofHours(3L));
+        assertThat(actualReportWeek.reportDays().get(4).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(5).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(6).workDuration().value()).isZero();
     }
 
     @Test
@@ -137,13 +137,13 @@ class ReportServiceRawTest {
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
-        assertThat(actualReportWeek.reportDays().get(0).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(1).workDuration().duration()).isEqualTo(Duration.ofHours(5L));
-        assertThat(actualReportWeek.reportDays().get(2).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(3).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(4).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(5).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(6).workDuration().duration()).isZero();
+        assertThat(actualReportWeek.reportDays().get(0).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(1).workDuration().value()).isEqualTo(Duration.ofHours(5L));
+        assertThat(actualReportWeek.reportDays().get(2).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(3).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(4).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(5).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(6).workDuration().value()).isZero();
     }
 
     @Test
@@ -165,13 +165,13 @@ class ReportServiceRawTest {
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
-        assertThat(actualReportWeek.reportDays().get(0).workDuration().duration()).isEqualTo(Duration.ofHours(5L));
-        assertThat(actualReportWeek.reportDays().get(1).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(2).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(3).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(4).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(5).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(6).workDuration().duration()).isZero();
+        assertThat(actualReportWeek.reportDays().get(0).workDuration().value()).isEqualTo(Duration.ofHours(5L));
+        assertThat(actualReportWeek.reportDays().get(1).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(2).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(3).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(4).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(5).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(6).workDuration().value()).isZero();
     }
 
     // ------------------------------------------------------------
@@ -215,7 +215,7 @@ class ReportServiceRawTest {
             assertThat(reportWeek.reportDays()).hasSize(7);
 
             for (ReportDay reportDay : reportWeek.reportDays()) {
-                assertThat(reportDay.workDuration().duration()).isZero();
+                assertThat(reportDay.workDuration().value()).isZero();
             }
         }
     }
@@ -267,11 +267,11 @@ class ReportServiceRawTest {
         assertThat(actualReportMonth.yearMonth()).isEqualTo(YearMonth.of(2021, 1));
         assertThat(actualReportMonth.weeks()).hasSize(5);
 
-        assertThat(actualReportMonth.weeks().get(0).workDuration().duration()).isEqualTo(Duration.ZERO);
-        assertThat(actualReportMonth.weeks().get(1).workDuration().duration()).isEqualTo(Duration.ofHours(2));
-        assertThat(actualReportMonth.weeks().get(2).workDuration().duration()).isEqualTo(Duration.ofHours(4));
-        assertThat(actualReportMonth.weeks().get(3).workDuration().duration()).isEqualTo(Duration.ofHours(6));
-        assertThat(actualReportMonth.weeks().get(4).workDuration().duration()).isEqualTo(Duration.ofHours(8));
+        assertThat(actualReportMonth.weeks().get(0).workDuration().value()).isEqualTo(Duration.ZERO);
+        assertThat(actualReportMonth.weeks().get(1).workDuration().value()).isEqualTo(Duration.ofHours(2));
+        assertThat(actualReportMonth.weeks().get(2).workDuration().value()).isEqualTo(Duration.ofHours(4));
+        assertThat(actualReportMonth.weeks().get(3).workDuration().value()).isEqualTo(Duration.ofHours(6));
+        assertThat(actualReportMonth.weeks().get(4).workDuration().value()).isEqualTo(Duration.ofHours(8));
     }
 
     private static ZonedDateTime dateTime(int year, int month, int dayOfMonth, int hour, int minute) {

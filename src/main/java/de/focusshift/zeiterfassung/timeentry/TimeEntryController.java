@@ -155,8 +155,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("expected a day"));
 
-            final String weekHoursWorked = durationToTimeString(entryWeekPage.timeEntryWeek().workDuration().duration());
-            final String dayHoursWorked = durationToTimeString(timeEntryDay.workDuration().duration());
+            final String weekHoursWorked = durationToTimeString(entryWeekPage.timeEntryWeek().workDuration().value());
+            final String dayHoursWorked = durationToTimeString(timeEntryDay.workDuration().value());
 
             final TimeEntry editedTimeEntry = timeEntryDay.timeEntries().stream()
                 .filter(entry -> entry.id().value().equals(timeEntryDTO.getId()))
@@ -199,7 +199,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
             final boolean hasErrorStart = bindingResult.hasFieldErrors("start");
             final boolean hasErrorEnd = bindingResult.hasFieldErrors("end");
-            final boolean hasErrorDuration = bindingResult.hasFieldErrors("duration");
+            final boolean hasErrorDuration = bindingResult.hasFieldErrors("value");
 
             if (hasErrorStart && hasErrorEnd && !hasErrorDuration) {
                 bindingResult.reject("time-entry.validation.startOrEnd.required");
@@ -237,11 +237,11 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             start = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
             end = getEndDate(dto, zoneId);
         } else if (dto.getStart() == null) {
-            // end and duration should be given
+            // end and value should be given
             end = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getEnd()), zoneId);
             start = end.minusMinutes(duration.toMinutes());
         } else {
-            // start and duration should be given
+            // start and value should be given
             start = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
             end = start.plusMinutes(duration.toMinutes());
         }
@@ -319,10 +319,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final String firstDateString = dateFormatter.formatDate(firstDateOfWeek, firstMonthFormat, firstYearFormat);
         final String lastDateString = dateFormatter.formatDate(lastDateOfWeek, lastMonthFormat, lastYearFormat);
 
-        final String hoursWorked = durationToTimeString(timeEntryWeek.workDuration().minutes().duration());
+        final String hoursWorked = durationToTimeString(timeEntryWeek.workDuration().minutes());
 
         final List<TimeEntryDayDto> daysDto = timeEntryWeek.days().stream().map(day -> {
-            final String dayHoursWorked = durationToTimeString(day.workDuration().minutes().duration());
+            final String dayHoursWorked = durationToTimeString(day.workDuration().minutes());
             final List<TimeEntryDTO> dayTimeEntryDTOs = day.timeEntries().stream().map(this::toTimeEntryDto).toList();
             final String dateString = dateFormatter.formatDate(day.date(), MonthFormat.STRING, YearFormat.FULL);
             return new TimeEntryDayDto(dateString, dayHoursWorked, dayTimeEntryDTOs);
@@ -344,7 +344,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final LocalTime startTime = start.toLocalTime();
         final LocalTime endTime = end.toLocalTime();
 
-        final Duration duration = timeEntry.workDuration().minutes().duration();
+        final Duration duration = timeEntry.duration().minutes();
         final String durationString = toTimeEntryDTODurationString(duration);
 
         return TimeEntryDTO.builder()

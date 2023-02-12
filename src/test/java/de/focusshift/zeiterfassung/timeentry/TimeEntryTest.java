@@ -22,7 +22,7 @@ class TimeEntryTest {
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), batman, "hard work", from, to, true);
 
-        assertThat(timeEntry.workDuration().duration()).isEqualTo(Duration.ZERO);
+        assertThat(timeEntry.workDuration().value()).isEqualTo(Duration.ZERO);
     }
 
     @Test
@@ -34,7 +34,7 @@ class TimeEntryTest {
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), batman, "hard work", from, to, false);
 
-        assertThat(timeEntry.workDuration().duration()).isEqualTo(Duration.ofHours(1));
+        assertThat(timeEntry.workDuration().value()).isEqualTo(Duration.ofHours(1));
     }
 
 

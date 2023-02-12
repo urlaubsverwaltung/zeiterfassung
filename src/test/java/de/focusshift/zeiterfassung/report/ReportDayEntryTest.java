@@ -26,7 +26,7 @@ class ReportDayEntryTest {
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
         final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, true);
 
-        assertThat(reportDayEntry.workDuration().duration()).isEqualTo(Duration.ZERO);
+        assertThat(reportDayEntry.workDuration().value()).isEqualTo(Duration.ZERO);
     }
 
     @Test
@@ -38,7 +38,7 @@ class ReportDayEntryTest {
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
         final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, false);
 
-        assertThat(reportDayEntry.workDuration().duration()).isEqualTo(Duration.ofHours(1));
+        assertThat(reportDayEntry.workDuration().value()).isEqualTo(Duration.ofHours(1));
     }
 
     private static ZonedDateTime dateTime(int year, int month, int dayOfMonth, int hour, int minute) {

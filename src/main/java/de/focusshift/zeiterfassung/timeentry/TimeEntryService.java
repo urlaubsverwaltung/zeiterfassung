@@ -73,7 +73,7 @@ public interface TimeEntryService {
      * @param id of the {@linkplain TimeEntry} to update
      * @param start new start
      * @param end new end
-     * @param duration new duration.
+     * @param duration new value.
      * @param isBreak new isBreak
      * @return the updated {@linkplain TimeEntry}.
      *
