@@ -204,13 +204,14 @@
             <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
             <th:block th:text="#{usermanagement.save}">Aktualisieren</th:block>
           </button>
-          <button
-            type="reset"
+          <a
+            href="#"
+            th:href="@{/users/{id} (id=${user.id}, query=${query})}"
             class="whitespace-nowrap border border-blue-700 text-blue-700 font-medium rounded px-4 py-2 text-center sm:text-left"
             th:text="#{usermanagement.revert}"
           >
             Änderungen verwerfen
-          </button>
+          </a>
         </div>
       </form>
     </th:block>
