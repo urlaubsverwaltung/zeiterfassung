@@ -91,6 +91,25 @@
               is="z-user-selection-list"
             >
               <turbo-frame id="person-list-frame">
+                <th:block th:if="${selectedUser}">
+                  <turbo-stream
+                    target="working-time-form-hidden-inputs"
+                    action="replace"
+                  >
+                    <template
+                      th:insert="~{usermanagement/user/working-time-settings::#working-time-form-hidden-inputs}"
+                    ></template>
+                  </turbo-stream>
+                  <turbo-stream
+                    target="working-time-settings-reset-button"
+                    action="replace"
+                    th:with="user=${selectedUser}"
+                  >
+                    <template
+                      th:insert="~{usermanagement/user/working-time-settings::#working-time-settings-reset-button}"
+                    ></template>
+                  </turbo-stream>
+                </th:block>
                 <ol class="flex flex-col user-selection-list">
                   <th:block th:each="user : ${users}">
                     <li
@@ -151,7 +170,9 @@
                   th:target="${'user-element-link-' + user.id}"
                   action="replace"
                 >
-                  <template th:insert="~{::user-element-link(${user})}"></template>
+                  <template
+                    th:insert="~{::user-element-link(${user})}"
+                  ></template>
                 </turbo-stream>
                 <turbo-stream target="back-to-users-link" action="replace">
                   <template th:insert="~{::#back-to-users-link}"></template>
