@@ -12,6 +12,7 @@
         class="flex flex-col gap-8"
         th:object="${workingTime}"
       >
+        <input type="hidden" name="query" th:value="${query}" />
         <div
           class="p-4 rounded-md text-red-900 border border-red-100 bg-red-50"
           th:if="${#fields.hasErrors('empty')}"
