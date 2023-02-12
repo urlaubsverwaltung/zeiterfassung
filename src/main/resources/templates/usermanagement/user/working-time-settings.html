@@ -145,200 +145,27 @@
             Individuelle Arbeitszeit
           </legend>
           <div class="mt-2 space-y-2">
-            <div class="space-x-1">
-              <input
-                type="text"
-                inputmode="numeric"
-                name="workingTimeMonday"
-                id="input-working-time-monday"
-                class="border border-gray-300 px-2 py-1 w-14"
-                th:field="*{workingTimeMonday}"
-                th:errorclass="invalid"
-                th:aria-invalid="${#fields.hasErrors('workingTimeMonday')}"
-                th:aria-message="${#fields.hasErrors('workingTimeMonday') ? 'working-time-monday-error-message' : ''}"
-              />
-              <label
-                for="input-working-time-monday"
-                th:text="#{usermanagement.working-time.hours.monday.input.label}"
-              >
-                Stunden am Montag
-              </label>
-              <th:block
-                th:fragment="working-time-error-message(dayOfWeek)"
-                th:with="dayOfWeek=${dayOfWeek ?: 'monday'}, fieldName=${'workingTime' + #strings.capitalize(dayOfWeek)}"
-              >
-                <div
-                  th:if="${#fields.hasErrors(fieldName)}"
-                  class="mt-2 flex items-center"
-                >
-                  <p
-                    th:id="${'working-time-' + dayOfWeek + '-error-message'}"
-                    class="invalid w-full"
-                  >
-                    <th:block
-                      th:text="${#fields.errors(fieldName)[0]}"
-                    ></th:block>
-                    <th:block
-                      th:if="${#fields.hasErrors(fieldName) && not #lists.contains(workingTime.workday, dayOfWeek)}"
-                    >
-                      <button
-                        type="submit"
-                        name="select"
-                        th:value="${dayOfWeek}"
-                        class="inline underline"
-                        th:with="DAY_OF_WEEK=${#strings.toUpperCase(dayOfWeek)}"
-                        th:text="#{usermanagement.working-time.validation-hint.select-working-day.button.text(${#messages.msg(DAY_OF_WEEK)})}"
-                      >
-                        Wähle den Montag aus
-                      </button>
-                      <th:block
-                        th:text="#{usermanagement.working-time.validation-hint.or}"
-                      >
-                        oder
-                      </th:block>
-                      <button
-                        type="submit"
-                        name="clear"
-                        th:value="${dayOfWeek}"
-                        class="inline underline"
-                        th:text="#{usermanagement.working-time.validation-hint.clear-hours.button.text}"
-                      >
-                        setze die Stunden auf 0
-                      </button>
-                      .
-                    </th:block>
-                  </p>
-                </div>
-              </th:block>
-            </div>
-            <div class="space-x-1">
-              <input
-                type="text"
-                inputmode="numeric"
-                name="workingTimeTuesday"
-                id="input-working-time-tuesday"
-                class="border border-gray-300 px-2 py-1 w-14"
-                th:field="*{workingTimeTuesday}"
-                th:errorclass="invalid"
-                th:aria-invalid="${#fields.hasErrors('workingTimeTuesday')}"
-                th:aria-message="${#fields.hasErrors('workingTimeTuesday') ? 'working-time-tuesday-error-message' : ''}"
-              />
-              <label
-                for="input-working-time-tuesday"
-                th:text="#{usermanagement.working-time.hours.tuesday.input.label}"
-              >
-                Stunden am Dienstag
-              </label>
-              <div
-                th:replace="~{::working-time-error-message('tuesday')}"
-              ></div>
-            </div>
-            <div class="space-x-1">
-              <input
-                type="text"
-                inputmode="numeric"
-                name="workingTimeWednesday"
-                id="input-working-time-wednesday"
-                class="border border-gray-300 px-2 py-1 w-14"
-                th:field="*{workingTimeWednesday}"
-                th:errorclass="invalid"
-                th:aria-invalid="${#fields.hasErrors('workingTimeWednesday')}"
-                th:aria-message="${#fields.hasErrors('workingTimeWednesday') ? 'working-time-wednesday-error-message' : ''}"
-              />
-              <label
-                for="input-working-time-wednesday"
-                th:text="#{usermanagement.working-time.hours.wednesday.input.label}"
-              >
-                Stunden am Mittwoch
-              </label>
-              <div
-                th:replace="~{::working-time-error-message('wednesday')}"
-              ></div>
-            </div>
-            <div class="space-x-1">
-              <input
-                type="text"
-                inputmode="numeric"
-                name="workingTimeThursday"
-                id="input-working-time-thursday"
-                class="border border-gray-300 px-2 py-1 w-14"
-                th:field="*{workingTimeThursday}"
-                th:errorclass="invalid"
-                th:aria-invalid="${#fields.hasErrors('workingTimeThursday')}"
-                th:aria-message="${#fields.hasErrors('workingTimeThursday') ? 'working-time-thursday-error-message' : ''}"
-              />
-              <label
-                for="input-working-time-thursday"
-                th:text="#{usermanagement.working-time.hours.thursday.input.label}"
-              >
-                Stunden am Donnerstag
-              </label>
-              <div
-                th:replace="~{::working-time-error-message('thursday')}"
-              ></div>
-            </div>
-            <div class="space-x-1">
-              <input
-                type="text"
-                inputmode="numeric"
-                name="workingTimeFriday"
-                id="input-working-time-friday"
-                class="border border-gray-300 px-2 py-1 w-14"
-                th:field="*{workingTimeFriday}"
-                th:errorclass="invalid"
-                th:aria-invalid="${#fields.hasErrors('workingTimeFriday')}"
-                th:aria-message="${#fields.hasErrors('workingTimeFriday') ? 'working-time-friday-error-message' : ''}"
-              />
-              <label
-                for="input-working-time-friday"
-                th:text="#{usermanagement.working-time.hours.friday.input.label}"
-              >
-                Stunden am Freitag
-              </label>
-              <div th:replace="~{::working-time-error-message('friday')}"></div>
-            </div>
-            <div class="space-x-1">
-              <input
-                type="text"
-                inputmode="numeric"
-                name="workingTimeSaturday"
-                id="input-working-time-saturday"
-                class="border border-gray-300 px-2 py-1 w-14"
-                th:field="*{workingTimeSaturday}"
-                th:errorclass="invalid"
-                th:aria-invalid="${#fields.hasErrors('workingTimeSaturday')}"
-                th:aria-message="${#fields.hasErrors('workingTimeSaturday') ? 'working-time-saturday-error-message' : ''}"
-              />
-              <label
-                for="input-working-time-saturday"
-                th:text="#{usermanagement.working-time.hours.saturday.input.label}"
-              >
-                Stunden am Samstag
-              </label>
-              <div
-                th:replace="~{::working-time-error-message('saturday')}"
-              ></div>
-            </div>
-            <div class="space-x-1">
-              <input
-                type="text"
-                inputmode="numeric"
-                name="workingTimeSunday"
-                id="input-working-time-sunday"
-                class="border border-gray-300 px-2 py-1 w-14"
-                th:field="*{workingTimeSunday}"
-                th:errorclass="invalid"
-                th:aria-invalid="${#fields.hasErrors('workingTimeSunday')}"
-                th:aria-message="${#fields.hasErrors('workingTimeSunday') ? 'working-time-sunday-error-message' : ''}"
-              />
-              <label
-                for="input-working-time-sunday"
-                th:text="#{usermanagement.working-time.hours.sunday.input.label}"
-              >
-                Stunden am Sonntag
-              </label>
-              <div th:replace="~{::working-time-error-message('sunday')}"></div>
-            </div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('monday', ${workingTime.workingTimeMonday})}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('tuesday', ${workingTime.workingTimeTuesday})}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('wednesday', ${workingTime.workingTimeWednesday})}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('thursday', ${workingTime.workingTimeThursday})}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('friday', ${workingTime.workingTimeFriday})}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('saturday', ${workingTime.workingTimeSaturday})}"
+            ></div>
+            <div
+              th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('sunday', ${workingTime.workingTimeSunday})}"
+            ></div>
           </div>
         </fieldset>
         <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
