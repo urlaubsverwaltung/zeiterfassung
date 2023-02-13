@@ -107,28 +107,55 @@
         >
           <div id="time-entries-box" class="space-y-16">
             <th:block th:ref="time-entries-box-content">
-              <div th:with="week=${timeEntryWeeksPage.timeEntryWeek}">
-                <h3
-                  th:fragment="calendar-week-title"
-                  class="px-8 text-gray-400"
-                >
-                  <span
-                    class="font-medium"
-                    th:text="#{time-entry.overview.week.group.title.date-range(${week.calendarWeek}, ${week.from}, ${week.to})}"
-                  ></span>
-                  <th:block
-                    th:if="${not #lists.isEmpty(week.timeEntries)}"
-                    th:with="hoursWorked=${week.hoursWorked}, calendarWeek=${week.calendarWeek}"
+              <div
+                class="space-y-2"
+                th:with="week=${timeEntryWeeksPage.timeEntryWeek}"
+              >
+                <div class="px-4">
+                  <div
+                    th:fragment="calendar-week-title"
+                    class="flex items-center"
                   >
-                    &nbsp;-&nbsp;
-                    <span
-                      th:fragment="calendar-week-title-sum(hoursWorked, calendarWeek)"
-                      th:id="${'calendar-week-title-sum-'+ calendarWeek}"
-                      class="text-gray-600 font-bold proportional-nums"
-                      th:text="${hoursWorked}"
-                    ></span>
-                  </th:block>
-                </h3>
+                    <div
+                      class="flex-1 relative py-1 px-4 bg-green-100 w-full rounded-full"
+                    >
+                      <div
+                        class="absolute left-0 top-0 bottom-0 bg-green-300 rounded-full"
+                        style="width: 75%"
+                      ></div>
+                      <div
+                        class="relative flex flex-col justify-between text-green-800 text-sm xs:flex-row"
+                      >
+                        <h3 class="relative text-green-800 text-sm">
+                          <span
+                            class="font-medium"
+                            th:text="#{time-entry.overview.week.group.title.date-range(${week.calendarWeek}, ${week.from}, ${week.to})}"
+                          ></span>
+                        </h3>
+                        <p
+                          th:if="${not #lists.isEmpty(week.timeEntries)}"
+                          th:with="hoursWorked=${week.hoursWorked}, calendarWeek=${week.calendarWeek}"
+                        >
+                          <span class="sr-only sm:not-sr-only">Woche:</span>
+                          <span
+                            th:fragment="calendar-week-title-sum(hoursWorked, calendarWeek)"
+                            th:id="${'calendar-week-title-sum-'+ calendarWeek}"
+                            class="font-bold proportional-nums"
+                            th:text="${hoursWorked}"
+                          ></span>
+                          (<span class="sr-only sm:not-sr-only">Soll: </span
+                          ><span class="font-bold proportional-nums">40:00</span
+                          >)
+                        </p>
+                      </div>
+                    </div>
+                    <div
+                      class="sr-only xs:not-sr-only xs:text-green-500 xs:ml-2 md:ml-4 md:w-1/5 lg:w-1/6"
+                    >
+                      + 05:45
+                    </div>
+                  </div>
+                </div>
                 <div th:if="${#lists.isEmpty(week.timeEntries)}">
                   <p
                     class="m-8"
@@ -139,25 +166,52 @@
                 </div>
                 <div
                   th:if="${not #lists.isEmpty(week.timeEntries())}"
-                  class="px-4 space-y-10 md:space-y-2"
+                  class="space-y-10 md:space-y-4"
                 >
-                  <div th:each="day : ${week.days}">
-                    <h4 class="time-day-header" is="z-time-day-header">
-                      <span class="font-medium" th:text="${day.date()}"></span>
-                      <th:block
-                        th:if="${not #lists.isEmpty(day.timeEntries)}"
-                        th:with="hoursWorked=${day.hoursWorked()}, calendarWeek=${week.calendarWeek()}, day=${day.timeEntries[0].date.dayOfWeek}"
-                      >
-                        &nbsp;-&nbsp;
-                        <span
-                          th:fragment="calendar-week-day-title-sum(hoursWorked, calendarWeek, day)"
-                          th:id="${'calendar-day-title-sum-' + calendarWeek + '-' + day}"
-                          class="text-gray-600 font-bold proportional-nums"
-                          th:text="${hoursWorked}"
-                        ></span>
-                      </th:block>
-                    </h4>
-                    <div class="space-y-10 md:space-y-2">
+                  <th:block th:each="day: ${week.days}">
+                    <div class="px-4 sticky top-nav-header pt-px z-10">
+                      <div class="flex items-center">
+                        <div
+                          class="flex-1 relative py-1 px-4 bg-green-100 w-full rounded-full"
+                        >
+                          <div
+                            class="absolute left-0 top-0 bottom-0 bg-green-300 rounded-full"
+                            style="width: 24%"
+                          ></div>
+                          <div
+                            class="relative flex flex-col justify-between text-green-800 text-sm xs:flex-row"
+                          >
+                            <h4
+                              class="font-medium"
+                              th:text="${day.date()}"
+                            ></h4>
+                            <p
+                              th:if="${not #lists.isEmpty(day.timeEntries)}"
+                              th:with="hoursWorked=${day.hoursWorked()}, calendarWeek=${week.calendarWeek()}, day=${day.timeEntries[0].date.dayOfWeek}"
+                              class="text-gray-600"
+                            >
+                              <span class="sr-only sm:not-sr-only">Tag:</span>
+                              <span
+                                th:fragment="calendar-week-day-title-sum(hoursWorked, calendarWeek, day)"
+                                th:id="${'calendar-day-title-sum-' + calendarWeek + '-' + day}"
+                                class="font-bold proportional-nums"
+                                th:text="${hoursWorked}"
+                              ></span>
+                              (<span class="sr-only sm:not-sr-only">Soll: </span
+                              ><span class="font-bold proportional-nums"
+                                >08:00</span
+                              >)
+                            </p>
+                          </div>
+                        </div>
+                        <div
+                          class="sr-only xs:not-sr-only xs:text-green-500 xs:ml-2 md:ml-4 md:w-1/5 lg:w-1/6"
+                        >
+                          + 01:30
+                        </div>
+                      </div>
+                    </div>
+                    <div class="px-4 space-y-10 md:space-y-2">
                       <th:block th:each="timeEntry: ${day.timeEntries}">
                         <div
                           is="z-time-entry-element"
@@ -171,7 +225,7 @@
                         ></div>
                       </th:block>
                     </div>
-                  </div>
+                  </th:block>
                 </div>
               </div>
             </th:block>
@@ -423,7 +477,7 @@
             </div>
           </div>
           <div
-            class="mt-4 md:mt-0 md:ml-4 md:mr-auto flex items-center justify-center"
+            class="mt-4 flex items-center justify-center md:justify-start md:ml-4 md:w-1/5 md:mt-0 lg:w-1/6"
             th:insert="${actions}"
           ></div>
         </div>
