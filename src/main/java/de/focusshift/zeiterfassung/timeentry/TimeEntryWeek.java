@@ -7,10 +7,10 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.time.Month.DECEMBER;
 import static java.time.temporal.WeekFields.ISO;
+import static java.util.function.Predicate.not;
 
 record TimeEntryWeek(LocalDate firstDateOfWeek, List<TimeEntryDay> days) {
 
@@ -18,9 +18,11 @@ record TimeEntryWeek(LocalDate firstDateOfWeek, List<TimeEntryDay> days) {
 
         final Duration duration = days
             .stream()
-            .map(TimeEntryDay::timeEntries).flatMap(Collection::stream)
+            .map(TimeEntryDay::timeEntries)
+            .flatMap(Collection::stream)
+            .filter(not(TimeEntry::isBreak))
             .map(TimeEntry::workDuration)
-            .map(WorkDuration::duration)
+            .map(WorkDuration::value)
             .reduce(Duration.ZERO, Duration::plus);
 
         return new WorkDuration(duration);

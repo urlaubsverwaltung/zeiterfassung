@@ -6,13 +6,17 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 
 public record TimeEntry(
-    Long id,
+    TimeEntryId id,
     UserId userId,
     String comment,
     ZonedDateTime start,
     ZonedDateTime end,
     boolean isBreak
 ) {
+
+    public TimeEntryDuration duration() {
+        return new SimpleTimeEntryDuration(Duration.between(start, end));
+    }
 
     public WorkDuration workDuration() {
         return new WorkDuration(isBreak ? Duration.ZERO : Duration.between(start, end));

@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.timeclock;
 
-import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -191,7 +190,7 @@ class TimeClockServiceTest {
 
         sut.stopTimeClock(new UserId("batman"));
 
-        verify(timeEntryService).saveTimeEntry(new TimeEntry(null, new UserId("batman"), "awesome comment", startedAt, stoppedAt, true));
+        verify(timeEntryService).createTimeEntry(new UserId("batman"), "awesome comment", startedAt, stoppedAt, true);
     }
 
     @Test

@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -76,7 +77,7 @@ class ReportServiceRawTest {
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
         for (ReportDay reportDay : actualReportWeek.reportDays()) {
-            assertThat(reportDay.workDuration().duration()).isZero();
+            assertThat(reportDay.workDuration().value()).isZero();
         }
     }
 
@@ -85,11 +86,11 @@ class ReportServiceRawTest {
 
         final ZonedDateTime firstFrom = dateTime(2021, 1, 4, 10, 0);
         final ZonedDateTime firstTo = dateTime(2021, 1, 4, 11, 0);
-        final TimeEntry firstTimeEntry = new TimeEntry(1L, new UserId("batman"), "hard work", firstFrom, firstTo, false);
+        final TimeEntry firstTimeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", firstFrom, firstTo, false);
 
         final ZonedDateTime secondFrom = dateTime(2021, 1, 7, 8, 0);
         final ZonedDateTime secondTo = dateTime(2021, 1, 7, 11, 0);
-        final TimeEntry secondTimeEntry = new TimeEntry(1L, new UserId("batman"), "hard work", secondFrom, secondTo, false);
+        final TimeEntry secondTimeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", secondFrom, secondTo, false);
 
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
@@ -104,24 +105,24 @@ class ReportServiceRawTest {
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
-        assertThat(actualReportWeek.reportDays().get(0).workDuration().duration()).isEqualTo(Duration.ofHours(1L));
-        assertThat(actualReportWeek.reportDays().get(1).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(2).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(3).workDuration().duration()).isEqualTo(Duration.ofHours(3L));
-        assertThat(actualReportWeek.reportDays().get(4).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(5).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(6).workDuration().duration()).isZero();
+        assertThat(actualReportWeek.reportDays().get(0).workDuration().value()).isEqualTo(Duration.ofHours(1L));
+        assertThat(actualReportWeek.reportDays().get(1).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(2).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(3).workDuration().value()).isEqualTo(Duration.ofHours(3L));
+        assertThat(actualReportWeek.reportDays().get(4).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(5).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(6).workDuration().value()).isZero();
     }
 
     @Test
     void ensureReportWeekWithMultipleTimeEntriesADay() {
         final ZonedDateTime morningFrom = dateTime(2021, 1, 5, 10, 0);
         final ZonedDateTime morningTo = dateTime(2021, 1, 5, 11, 0);
-        final TimeEntry morningTimeEntry = new TimeEntry(1L, new UserId("batman"), "hard work in the morning", morningFrom, morningTo, false);
+        final TimeEntry morningTimeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work in the morning", morningFrom, morningTo, false);
 
         final ZonedDateTime noonFrom = dateTime(2021, 1, 5, 15, 0);
         final ZonedDateTime noonTo = dateTime(2021, 1, 5, 19, 0);
-        final TimeEntry noonTimeEntry = new TimeEntry(1L, new UserId("batman"), "hard work in the noon", noonFrom, noonTo, false);
+        final TimeEntry noonTimeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work in the noon", noonFrom, noonTo, false);
 
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
@@ -136,20 +137,20 @@ class ReportServiceRawTest {
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
-        assertThat(actualReportWeek.reportDays().get(0).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(1).workDuration().duration()).isEqualTo(Duration.ofHours(5L));
-        assertThat(actualReportWeek.reportDays().get(2).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(3).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(4).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(5).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(6).workDuration().duration()).isZero();
+        assertThat(actualReportWeek.reportDays().get(0).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(1).workDuration().value()).isEqualTo(Duration.ofHours(5L));
+        assertThat(actualReportWeek.reportDays().get(2).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(3).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(4).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(5).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(6).workDuration().value()).isZero();
     }
 
     @Test
     void ensureReportWeekWithTimeEntryTouchingNextDayIsReportedForStartingDate() {
         final ZonedDateTime from = dateTime(2021, 1, 4, 22, 0);
         final ZonedDateTime to = dateTime(2021, 1, 5, 3, 0);
-        final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hard work in the night", from, to, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work in the night", from, to, false);
 
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
@@ -164,13 +165,13 @@ class ReportServiceRawTest {
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
-        assertThat(actualReportWeek.reportDays().get(0).workDuration().duration()).isEqualTo(Duration.ofHours(5L));
-        assertThat(actualReportWeek.reportDays().get(1).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(2).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(3).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(4).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(5).workDuration().duration()).isZero();
-        assertThat(actualReportWeek.reportDays().get(6).workDuration().duration()).isZero();
+        assertThat(actualReportWeek.reportDays().get(0).workDuration().value()).isEqualTo(Duration.ofHours(5L));
+        assertThat(actualReportWeek.reportDays().get(1).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(2).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(3).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(4).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(5).workDuration().value()).isZero();
+        assertThat(actualReportWeek.reportDays().get(6).workDuration().value()).isZero();
     }
 
     // ------------------------------------------------------------
@@ -214,7 +215,7 @@ class ReportServiceRawTest {
             assertThat(reportWeek.reportDays()).hasSize(7);
 
             for (ReportDay reportDay : reportWeek.reportDays()) {
-                assertThat(reportDay.workDuration().duration()).isZero();
+                assertThat(reportDay.workDuration().value()).isZero();
             }
         }
     }
@@ -226,31 +227,31 @@ class ReportServiceRawTest {
 
         final ZonedDateTime w1_d1_From = dateTime(2021, 1, 4, 1, 0);
         final ZonedDateTime w1_d1_To = dateTime(2021, 1, 4, 2, 0);
-        final TimeEntry w1_d1_TimeEntry = new TimeEntry(1L, batman, "hard work w1_d1", w1_d1_From, w1_d1_To, false);
+        final TimeEntry w1_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), batman, "hard work w1_d1", w1_d1_From, w1_d1_To, false);
         final ZonedDateTime w1_d2_From = dateTime(2021, 1, 5, 3, 0);
         final ZonedDateTime w1_d2_To = dateTime(2021, 1, 5, 4, 0);
-        final TimeEntry w1_d2_TimeEntry = new TimeEntry(1L, batman, "hard work w1_d2", w1_d2_From, w1_d2_To, false);
+        final TimeEntry w1_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), batman, "hard work w1_d2", w1_d2_From, w1_d2_To, false);
 
         final ZonedDateTime w2_d1_From = dateTime(2021, 1, 11, 1, 0);
         final ZonedDateTime w2_d1_To = dateTime(2021, 1, 11, 3, 0);
-        final TimeEntry w2_d1_TimeEntry = new TimeEntry(1L, batman, "hard work w2_d1", w2_d1_From, w2_d1_To, false);
+        final TimeEntry w2_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), batman, "hard work w2_d1", w2_d1_From, w2_d1_To, false);
         final ZonedDateTime w2_d2_From = dateTime(2021, 1, 12, 4, 0);
         final ZonedDateTime w2_d2_To = dateTime(2021, 1, 12, 6, 0);
-        final TimeEntry w2_d2_TimeEntry = new TimeEntry(1L, batman, "hard work w2_d2", w2_d2_From, w2_d2_To, false);
+        final TimeEntry w2_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), batman, "hard work w2_d2", w2_d2_From, w2_d2_To, false);
 
         final ZonedDateTime w3_d1_From = dateTime(2021, 1, 18, 1, 0);
         final ZonedDateTime w3_d1_To = dateTime(2021, 1, 18, 4, 0);
-        final TimeEntry w3_d1_TimeEntry = new TimeEntry(1L, batman, "hard work w3_d1", w3_d1_From, w3_d1_To, false);
+        final TimeEntry w3_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), batman, "hard work w3_d1", w3_d1_From, w3_d1_To, false);
         final ZonedDateTime w3_d2_From = dateTime(2021, 1, 19, 5, 0);
         final ZonedDateTime w3_d2_To = dateTime(2021, 1, 19, 8, 0);
-        final TimeEntry w3_d2_TimeEntry = new TimeEntry(1L, batman, "hard work w3_d2", w3_d2_From, w3_d2_To, false);
+        final TimeEntry w3_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), batman, "hard work w3_d2", w3_d2_From, w3_d2_To, false);
 
         final ZonedDateTime w4_d1_From = dateTime(2021, 1, 25, 1, 0);
         final ZonedDateTime w4_d1_To = dateTime(2021, 1, 25, 5, 0);
-        final TimeEntry w4_d1_TimeEntry = new TimeEntry(1L, batman, "hard work w4_d1", w4_d1_From, w4_d1_To, false);
+        final TimeEntry w4_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), batman, "hard work w4_d1", w4_d1_From, w4_d1_To, false);
         final ZonedDateTime w4_d2_From = dateTime(2021, 1, 26, 6, 0);
         final ZonedDateTime w4_d2_To = dateTime(2021, 1, 26, 10, 0);
-        final TimeEntry w4_d2_TimeEntry = new TimeEntry(1L, batman, "hard work w4_d2", w4_d2_From, w4_d2_To, false);
+        final TimeEntry w4_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), batman, "hard work w4_d2", w4_d2_From, w4_d2_To, false);
 
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 1, 1)))
             .thenReturn(LocalDate.of(2020, 12, 28));
@@ -266,11 +267,11 @@ class ReportServiceRawTest {
         assertThat(actualReportMonth.yearMonth()).isEqualTo(YearMonth.of(2021, 1));
         assertThat(actualReportMonth.weeks()).hasSize(5);
 
-        assertThat(actualReportMonth.weeks().get(0).workDuration().duration()).isEqualTo(Duration.ZERO);
-        assertThat(actualReportMonth.weeks().get(1).workDuration().duration()).isEqualTo(Duration.ofHours(2));
-        assertThat(actualReportMonth.weeks().get(2).workDuration().duration()).isEqualTo(Duration.ofHours(4));
-        assertThat(actualReportMonth.weeks().get(3).workDuration().duration()).isEqualTo(Duration.ofHours(6));
-        assertThat(actualReportMonth.weeks().get(4).workDuration().duration()).isEqualTo(Duration.ofHours(8));
+        assertThat(actualReportMonth.weeks().get(0).workDuration().value()).isEqualTo(Duration.ZERO);
+        assertThat(actualReportMonth.weeks().get(1).workDuration().value()).isEqualTo(Duration.ofHours(2));
+        assertThat(actualReportMonth.weeks().get(2).workDuration().value()).isEqualTo(Duration.ofHours(4));
+        assertThat(actualReportMonth.weeks().get(3).workDuration().value()).isEqualTo(Duration.ofHours(6));
+        assertThat(actualReportMonth.weeks().get(4).workDuration().value()).isEqualTo(Duration.ofHours(8));
     }
 
     private static ZonedDateTime dateTime(int year, int month, int dayOfMonth, int hour, int minute) {

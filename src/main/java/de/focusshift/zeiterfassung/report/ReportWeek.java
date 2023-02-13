@@ -12,7 +12,7 @@ record ReportWeek(LocalDate firstDateOfWeek, List<ReportDay> reportDays) {
         final Duration duration = reportDays
             .stream()
             .map(ReportDay::workDuration)
-            .map(WorkDuration::duration)
+            .map(WorkDuration::value)
             .reduce(Duration.ZERO, Duration::plus);
 
         return new WorkDuration(duration);

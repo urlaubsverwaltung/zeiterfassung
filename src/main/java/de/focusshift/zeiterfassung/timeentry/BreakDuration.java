@@ -4,17 +4,17 @@ import java.time.Duration;
 import java.util.Objects;
 
 /**
- * Defines a {@linkplain Duration} of worked time. Different to {@linkplain BreakDuration}.
+ * Defines a {@linkplain Duration} of break time. Different to {@linkplain WorkDuration}.
  */
-public final class WorkDuration implements TimeEntryDuration {
+public final class BreakDuration implements TimeEntryDuration {
 
     private final SimpleTimeEntryDuration timeEntryDuration;
 
-    public WorkDuration(Duration value) {
+    public BreakDuration(Duration value) {
         this(new SimpleTimeEntryDuration(value));
     }
 
-    WorkDuration(SimpleTimeEntryDuration timeEntryDuration) {
+    BreakDuration(SimpleTimeEntryDuration timeEntryDuration) {
         this.timeEntryDuration = timeEntryDuration;
     }
 
@@ -23,6 +23,9 @@ public final class WorkDuration implements TimeEntryDuration {
         return timeEntryDuration.value();
     }
 
+    /**
+     * @return work value rounded up to full minutes.
+     */
     @Override
     public Duration minutes() {
         return timeEntryDuration.minutes();
@@ -37,7 +40,7 @@ public final class WorkDuration implements TimeEntryDuration {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        WorkDuration that = (WorkDuration) o;
+        BreakDuration that = (BreakDuration) o;
         return Objects.equals(timeEntryDuration, that.timeEntryDuration);
     }
 
@@ -48,7 +51,7 @@ public final class WorkDuration implements TimeEntryDuration {
 
     @Override
     public String toString() {
-        return "WorkDuration{" +
+        return "BreakDuration{" +
             "timeEntryDuration=" + timeEntryDuration +
             '}';
     }

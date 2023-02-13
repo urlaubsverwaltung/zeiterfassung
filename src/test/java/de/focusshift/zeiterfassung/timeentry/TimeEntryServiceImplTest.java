@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,9 +23,11 @@ import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -54,7 +57,7 @@ class TimeEntryServiceImplTest {
     }
 
     @Test
-    void ensureSaveTimeEntry() {
+    void ensureCreateTimeEntry() {
 
         final Instant now = Instant.now();
         final Clock fixedClock = Clock.fixed(now, UTC);
@@ -63,13 +66,21 @@ class TimeEntryServiceImplTest {
         final LocalDateTime entryStart = LocalDateTime.of(2023, 1, 1, 10, 0,0);
         final LocalDateTime entryEnd = LocalDateTime.of(2023, 1, 1, 12, 0,0);
 
-        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(invocationOnMock -> {
+            final TimeEntryEntity entity = invocationOnMock.getArgument(0);
+            entity.setId(1L);
+            return entity;
+        });
 
-        final TimeEntry timeEntry = new TimeEntry(1L, new UserId("batman"), "hard work", ZonedDateTime.of(entryStart, ZONE_ID_UTC), ZonedDateTime.of(entryEnd, ZONE_ID_UTC), false);
+        final TimeEntry actual = sut.createTimeEntry(
+            new UserId("batman"),
+            "hard work",
+            ZonedDateTime.of(entryStart, ZONE_ID_UTC),
+            ZonedDateTime.of(entryEnd, ZONE_ID_UTC),
+            false
+        );
 
-        final TimeEntry actual = sut.saveTimeEntry(timeEntry);
-
-        assertThat(actual).isEqualTo(new TimeEntry(1L, new UserId("batman"), "hard work", ZonedDateTime.of(entryStart, ZONE_ID_UTC), ZonedDateTime.of(entryEnd, ZONE_ID_UTC), false));
+        assertThat(actual).isEqualTo(new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", ZonedDateTime.of(entryStart, ZONE_ID_UTC), ZonedDateTime.of(entryEnd, ZONE_ID_UTC), false));
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -84,6 +95,428 @@ class TimeEntryServiceImplTest {
             assertThat(entity.getUpdatedAt()).isEqualTo(now);
             assertThat(entity.isBreak()).isFalse();
         });
+    }
+
+    @Test
+    void ensureUpdateTimeEntryThrowsWhenTimeEntryIsUnknown() {
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(
+            () -> sut.updateTimeEntry(new TimeEntryId(42L), null, null, null, null, false)
+        );
+    }
+
+    @Test
+    void ensureUpdateTimeEntryThrowsWhenStarEndDurationAreGiven() {
+
+        final ZonedDateTime now = ZonedDateTime.now(clock);
+        final Duration duration = Duration.ofMinutes(60);
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+        final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
+
+        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
+        final LocalDateTime entryEnd = LocalDateTime.of(toExclusive, LocalTime.of(12, 0, 0));
+
+        final TimeEntryEntity entity = new TimeEntryEntity(
+            42L,
+            "batman",
+            "",
+            entryStart.toInstant(UTC),
+            ZONE_ID_UTC,
+            entryEnd.toInstant(UTC),
+            ZONE_ID_UTC,
+            Instant.now(),
+            false);
+
+        when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
+
+        assertThatExceptionOfType(TimeEntryUpdateException.class).isThrownBy(
+            () -> sut.updateTimeEntry(new TimeEntryId(42L), null, now, now, duration, false)
+        );
+    }
+
+    @Test
+    void ensureUpdateTimeEntryStart() throws Exception {
+
+        final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+
+        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
+        final LocalDateTime entryEnd = entryStart.plusHours(2);
+
+        final TimeEntryEntity existingEntity = new TimeEntryEntity(
+            42L,
+            "batman",
+            "",
+            entryStart.toInstant(UTC),
+            ZONE_ID_UTC,
+            entryEnd.toInstant(UTC),
+            ZONE_ID_UTC,
+            Instant.now(),
+            false);
+
+        when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
+
+        final ZonedDateTime newStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC).plusMinutes(30);
+        final ZonedDateTime sameEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC);
+        final Duration sameDuration = Duration.ofHours(2);
+
+        final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", newStart, sameEnd, sameDuration, false);
+
+        assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
+        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
+        assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameEnd);
+        assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
+        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(Duration.ofMinutes(90));
+
+        final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
+        verify(timeEntryRepository).save(captor.capture());
+
+        final TimeEntryEntity actualPersisted = captor.getValue();
+
+        assertThat(actualPersisted.getId()).isEqualTo(42L);
+        assertThat(actualPersisted.getOwner()).isEqualTo("batman");
+        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getStart()).isEqualTo(newStart.toInstant());
+        assertThat(actualPersisted.getStartZoneId()).isEqualTo(newStart.getZone().getId());
+        assertThat(actualPersisted.getEnd()).isEqualTo(sameEnd.toInstant());
+        assertThat(actualPersisted.getEndZoneId()).isEqualTo(sameEnd.getZone().getId());
+        assertThat(actualPersisted.getUpdatedAt()).isEqualTo(Instant.now(fixedClock));
+        assertThat(actualPersisted.isBreak()).isFalse();
+    }
+
+    @Test
+    void ensureUpdateTimeEntryStartAndEnd() throws Exception {
+
+        final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+
+        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
+        final LocalDateTime entryEnd = entryStart.plusHours(2);
+
+        final TimeEntryEntity existingEntity = new TimeEntryEntity(
+            42L,
+            "batman",
+            "",
+            entryStart.toInstant(UTC),
+            ZONE_ID_UTC,
+            entryEnd.toInstant(UTC),
+            ZONE_ID_UTC,
+            Instant.now(),
+            false);
+
+        when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
+
+        final ZonedDateTime newStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC).minusMinutes(30);
+        final ZonedDateTime newEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC).plusMinutes(30);
+        final Duration sameDuration = Duration.ofHours(2);
+
+        final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", newStart, newEnd, sameDuration, false);
+
+        assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
+        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
+        assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
+        assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
+        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(Duration.ofHours(3));
+
+        final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
+        verify(timeEntryRepository).save(captor.capture());
+
+        final TimeEntryEntity actualPersisted = captor.getValue();
+
+        assertThat(actualPersisted.getId()).isEqualTo(42L);
+        assertThat(actualPersisted.getOwner()).isEqualTo("batman");
+        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getStart()).isEqualTo(newStart.toInstant());
+        assertThat(actualPersisted.getStartZoneId()).isEqualTo(newStart.getZone().getId());
+        assertThat(actualPersisted.getEnd()).isEqualTo(newEnd.toInstant());
+        assertThat(actualPersisted.getEndZoneId()).isEqualTo(newEnd.getZone().getId());
+        assertThat(actualPersisted.getUpdatedAt()).isEqualTo(Instant.now(fixedClock));
+        assertThat(actualPersisted.isBreak()).isFalse();
+    }
+
+    @Test
+    void ensureUpdateTimeEntryStartAndDuration() throws Exception {
+
+        final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+
+        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
+        final LocalDateTime entryEnd = entryStart.plusHours(2);
+
+        final TimeEntryEntity existingEntity = new TimeEntryEntity(
+            42L,
+            "batman",
+            "",
+            entryStart.toInstant(UTC),
+            ZONE_ID_UTC,
+            entryEnd.toInstant(UTC),
+            ZONE_ID_UTC,
+            Instant.now(),
+            false);
+
+        when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
+
+        final ZonedDateTime newStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC).minusMinutes(30);
+        final ZonedDateTime sameEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC);
+        final Duration newDuration = Duration.ofHours(3);
+
+        final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", newStart, sameEnd, newDuration, false);
+
+        assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
+        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
+        assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newStart.plusHours(3));
+        assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
+        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(Duration.ofHours(3));
+
+        final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
+        verify(timeEntryRepository).save(captor.capture());
+
+        final TimeEntryEntity actualPersisted = captor.getValue();
+
+        assertThat(actualPersisted.getId()).isEqualTo(42L);
+        assertThat(actualPersisted.getOwner()).isEqualTo("batman");
+        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getStart()).isEqualTo(newStart.toInstant());
+        assertThat(actualPersisted.getStartZoneId()).isEqualTo(newStart.getZone().getId());
+        assertThat(actualPersisted.getEnd()).isEqualTo(newStart.plusHours(3).toInstant());
+        assertThat(actualPersisted.getEndZoneId()).isEqualTo(sameEnd.getZone().getId());
+        assertThat(actualPersisted.getUpdatedAt()).isEqualTo(Instant.now(fixedClock));
+        assertThat(actualPersisted.isBreak()).isFalse();
+    }
+
+    @Test
+    void ensureUpdateTimeEntryEnd() throws Exception {
+
+        final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+
+        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
+        final LocalDateTime entryEnd = entryStart.plusHours(2);
+
+        final TimeEntryEntity existingEntity = new TimeEntryEntity(
+            42L,
+            "batman",
+            "",
+            entryStart.toInstant(UTC),
+            ZONE_ID_UTC,
+            entryEnd.toInstant(UTC),
+            ZONE_ID_UTC,
+            Instant.now(),
+            false);
+
+        when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
+
+        final ZonedDateTime sameStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC);
+        final ZonedDateTime newEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC).minusMinutes(30);
+        final Duration sameDuration = Duration.ofHours(2);
+
+        final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", sameStart, newEnd, sameDuration, false);
+
+        assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
+        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
+        assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
+        assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
+        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(Duration.ofMinutes(90));
+
+        final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
+        verify(timeEntryRepository).save(captor.capture());
+
+        final TimeEntryEntity actualPersisted = captor.getValue();
+
+        assertThat(actualPersisted.getId()).isEqualTo(42L);
+        assertThat(actualPersisted.getOwner()).isEqualTo("batman");
+        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getStart()).isEqualTo(sameStart.toInstant());
+        assertThat(actualPersisted.getStartZoneId()).isEqualTo(sameStart.getZone().getId());
+        assertThat(actualPersisted.getEnd()).isEqualTo(newEnd.toInstant());
+        assertThat(actualPersisted.getEndZoneId()).isEqualTo(newEnd.getZone().getId());
+        assertThat(actualPersisted.getUpdatedAt()).isEqualTo(Instant.now(fixedClock));
+        assertThat(actualPersisted.isBreak()).isFalse();
+    }
+
+    @Test
+    void ensureUpdateTimeEntryEndAndDuration() throws Exception {
+
+        final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+
+        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
+        final LocalDateTime entryEnd = entryStart.plusHours(2);
+
+        final TimeEntryEntity existingEntity = new TimeEntryEntity(
+            42L,
+            "batman",
+            "",
+            entryStart.toInstant(UTC),
+            ZONE_ID_UTC,
+            entryEnd.toInstant(UTC),
+            ZONE_ID_UTC,
+            Instant.now(),
+            false);
+
+        when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
+
+        final ZonedDateTime sameStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC);
+        final ZonedDateTime newEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC).minusMinutes(30);
+        final Duration newDuration = Duration.ofHours(3);
+
+        final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", sameStart, newEnd, newDuration, false);
+
+        assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
+        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newEnd.minusHours(3));
+        assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
+        assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
+        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(newDuration);
+
+        final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
+        verify(timeEntryRepository).save(captor.capture());
+
+        final TimeEntryEntity actualPersisted = captor.getValue();
+
+        assertThat(actualPersisted.getId()).isEqualTo(42L);
+        assertThat(actualPersisted.getOwner()).isEqualTo("batman");
+        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getStart()).isEqualTo(newEnd.minusHours(3).toInstant());
+        assertThat(actualPersisted.getStartZoneId()).isEqualTo(sameStart.getZone().getId());
+        assertThat(actualPersisted.getEnd()).isEqualTo(newEnd.toInstant());
+        assertThat(actualPersisted.getEndZoneId()).isEqualTo(newEnd.getZone().getId());
+        assertThat(actualPersisted.getUpdatedAt()).isEqualTo(Instant.now(fixedClock));
+        assertThat(actualPersisted.isBreak()).isFalse();
+    }
+
+    @Test
+    void ensureUpdateTimeEntryDuration() throws Exception {
+
+        final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+
+        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
+        final LocalDateTime entryEnd = entryStart.plusHours(2);
+
+        final TimeEntryEntity existingEntity = new TimeEntryEntity(
+            42L,
+            "batman",
+            "",
+            entryStart.toInstant(UTC),
+            ZONE_ID_UTC,
+            entryEnd.toInstant(UTC),
+            ZONE_ID_UTC,
+            Instant.now(),
+            false);
+
+        when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
+
+        final ZonedDateTime sameStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC);
+        final ZonedDateTime sameEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC);
+        final Duration newDuration = Duration.ofHours(4);
+
+        final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", sameStart, sameEnd, newDuration, false);
+
+        assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
+        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
+        assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameStart.plusMinutes(newDuration.toMinutes()));
+        assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
+        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(newDuration);
+
+        final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
+        verify(timeEntryRepository).save(captor.capture());
+
+        final TimeEntryEntity actualPersisted = captor.getValue();
+
+        assertThat(actualPersisted.getId()).isEqualTo(42L);
+        assertThat(actualPersisted.getOwner()).isEqualTo("batman");
+        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getStart()).isEqualTo(sameStart.toInstant());
+        assertThat(actualPersisted.getStartZoneId()).isEqualTo(sameStart.getZone().getId());
+        assertThat(actualPersisted.getEnd()).isEqualTo(sameStart.plusMinutes(newDuration.toMinutes()).toInstant());
+        assertThat(actualPersisted.getEndZoneId()).isEqualTo(sameStart.getZone().getId());
+        assertThat(actualPersisted.getUpdatedAt()).isEqualTo(Instant.now(fixedClock));
+        assertThat(actualPersisted.isBreak()).isFalse();
+    }
+
+    @Test
+    void ensureUpdateTimeEntryIsBreak() throws Exception {
+
+        final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+
+        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
+        final LocalDateTime entryEnd = entryStart.plusHours(2);
+
+        final TimeEntryEntity existingEntity = new TimeEntryEntity(
+            42L,
+            "batman",
+            "",
+            entryStart.toInstant(UTC),
+            ZONE_ID_UTC,
+            entryEnd.toInstant(UTC),
+            ZONE_ID_UTC,
+            Instant.now(),
+            false);
+
+        when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
+
+        final ZonedDateTime sameStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC);
+        final ZonedDateTime sameEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC);
+        final Duration sameDuration = Duration.ofHours(2);
+
+        final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", sameStart, sameEnd, sameDuration, true);
+
+        assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
+        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
+        assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameEnd);
+        assertThat(actualUpdatedTimeEntry.isBreak()).isTrue();
+        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(Duration.ZERO);
+
+        final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
+        verify(timeEntryRepository).save(captor.capture());
+
+        final TimeEntryEntity actualPersisted = captor.getValue();
+
+        assertThat(actualPersisted.getId()).isEqualTo(42L);
+        assertThat(actualPersisted.getOwner()).isEqualTo("batman");
+        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getStart()).isEqualTo(sameStart.toInstant());
+        assertThat(actualPersisted.getStartZoneId()).isEqualTo(sameStart.getZone().getId());
+        assertThat(actualPersisted.getEnd()).isEqualTo(sameEnd.toInstant());
+        assertThat(actualPersisted.getEndZoneId()).isEqualTo(sameEnd.getZone().getId());
+        assertThat(actualPersisted.getUpdatedAt()).isEqualTo(Instant.now(fixedClock));
+        assertThat(actualPersisted.isBreak()).isTrue();
     }
 
     @Test
@@ -113,8 +546,8 @@ class TimeEntryServiceImplTest {
         final ZonedDateTime expectedBreakEnd = ZonedDateTime.of(entryBreakEnd, ZONE_ID_UTC);
 
         assertThat(actual).containsExactly(
-            new TimeEntry(1L, new UserId("batman"), "hard work", expectedStart, expectedEnd, false),
-            new TimeEntry(2L, new UserId("pinguin"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
+            new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", expectedStart, expectedEnd, false),
+            new TimeEntry(new TimeEntryId(2L), new UserId("pinguin"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
         );
     }
 
@@ -152,8 +585,8 @@ class TimeEntryServiceImplTest {
         final ZonedDateTime expectedBreakEnd = ZonedDateTime.of(entryBreakEnd, ZONE_ID_UTC);
 
         assertThat(actual).containsExactly(
-            new TimeEntry(1L, new UserId("batman"), "hard work", expectedStart, expectedEnd, false),
-            new TimeEntry(2L, new UserId("robin"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
+            new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", expectedStart, expectedEnd, false),
+            new TimeEntry(new TimeEntryId(2L), new UserId("robin"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
         );
     }
 
@@ -192,9 +625,9 @@ class TimeEntryServiceImplTest {
         final ZonedDateTime expectedEnd2 = ZonedDateTime.of(entryEnd2, ZONE_ID_UTC);
 
         assertThat(actualEntries).containsExactly(
-            new TimeEntry(2L, new UserId("batman"), "deserved break", expectedBreakStart, expectedBreakEnd, true),
-            new TimeEntry(1L, new UserId("batman"), "hard work", expectedStart, expectedEnd, false),
-            new TimeEntry(3L, new UserId("batman"), "waking up *zzzz", expectedStart2, expectedEnd2, false)
+            new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "deserved break", expectedBreakStart, expectedBreakEnd, true),
+            new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", expectedStart, expectedEnd, false),
+            new TimeEntry(new TimeEntryId(3L), new UserId("batman"), "waking up *zzzz", expectedStart2, expectedEnd2, false)
         );
     }
 
@@ -227,8 +660,8 @@ class TimeEntryServiceImplTest {
                 new TimeEntryWeek(
                     LocalDate.of(2022, 1, 3),
                     List.of(new TimeEntryDay(LocalDate.of(2022, 1, 4),
-                        List.of(new TimeEntry(2L, new UserId("batman"), "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
-                        new TimeEntry(1L, new UserId("batman"), "hack the planet!", timeEntryStart, timeEntryEnd, false)))
+                        List.of(new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
+                        new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet!", timeEntryStart, timeEntryEnd, false)))
                     )
                 ),
                 3
@@ -267,9 +700,9 @@ class TimeEntryServiceImplTest {
                         new TimeEntryWeek(
                                 LocalDate.of(2023, 1, 30),
                                 List.of(new TimeEntryDay(LocalDate.of(2023, 2, 5),
-                                            List.of(new TimeEntry(2L, new UserId("batman"), "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false))),
+                                            List.of(new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false))),
                                         new TimeEntryDay(LocalDate.of(2023, 1, 30),
-                                                List.of(new TimeEntry(1L, new UserId("batman"), "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)))
+                                                List.of(new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)))
                                 )
                         ),
                         6

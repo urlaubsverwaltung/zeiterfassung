@@ -7,13 +7,14 @@ import de.focusshift.zeiterfassung.user.MonthFormat;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.YearFormat;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -22,9 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -32,13 +31,15 @@ import java.time.LocalTime;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.WeekFields;
 import java.util.List;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.Month.DECEMBER;
-import static java.time.ZoneOffset.UTC;
 import static java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
+import static java.time.temporal.TemporalAdjusters.previousOrSame;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.util.StringUtils.hasText;
 
 @Controller
 @PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
@@ -48,13 +49,11 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private final TimeEntryService timeEntryService;
     private final UserSettingsProvider userSettingsProvider;
     private final DateFormatter dateFormatter;
-    private final Clock clock;
 
-    public TimeEntryController(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider, DateFormatter dateFormatter, Clock clock) {
+    public TimeEntryController(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider, DateFormatter dateFormatter) {
         this.timeEntryService = timeEntryService;
         this.userSettingsProvider = userSettingsProvider;
         this.dateFormatter = dateFormatter;
-        this.clock = clock;
     }
 
     @GetMapping("/timeentries")
@@ -76,7 +75,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
                                                   @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
                                                   Model model) {
 
-        if (StringUtils.hasText(turboFrame)) {
+        if (hasText(turboFrame)) {
             prepareTimeEntriesView(year, weekOfYear, model, principal);
             model.addAttribute("turboStreamsEnabled", true);
             return "timeentries/index::#frame-time-entry-weeks";
@@ -99,16 +98,25 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         Model model,
         @AuthenticationPrincipal OidcUser principal,
         HttpServletRequest request
-    ) {
+    ) throws InvalidTimeEntryException {
+
+        final int year;
+        final int weekOfYear;
+
+        try {
+            final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDTO.getDate(), DayOfWeek.MONDAY);
+            year = firstDateOfWeek.getYear();
+            weekOfYear = firstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR);
+        } catch(NullPointerException exception) {
+            throw new InvalidTimeEntryException("invalid time entry. date must be set.");
+        }
+
         final String viewName = saveOrUpdate(timeEntryDTO, bindingResult, model, principal, request);
+
         if (bindingResult.hasErrors()) {
-            final ZoneId userZoneId = userSettingsProvider.zoneId();
-            final LocalDate now = LocalDate.now(clock);
-            final ZonedDateTime userAwareNow = ZonedDateTime.ofLocal(now.atStartOfDay(), userZoneId, UTC);
-            final int year = userAwareNow.getYear();
-            final int weekOfYear = userAwareNow.get(WEEK_OF_WEEK_BASED_YEAR);
             addTimeEntriesToModel(year, weekOfYear, model, principal);
         }
+
         return viewName;
     }
 
@@ -121,52 +129,52 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
         Model model,
         HttpServletRequest request
-    ) {
+    ) throws InvalidTimeEntryException {
+
+        final int year;
+        final int weekOfYear;
+
+        try {
+            final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDTO.getDate(), DayOfWeek.MONDAY);
+            year = firstDateOfWeek.getYear();
+            weekOfYear = firstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR);
+        } catch(NullPointerException exception) {
+            throw new InvalidTimeEntryException("invalid time entry. date must be set.");
+        }
 
         final String viewName = saveOrUpdate(timeEntryDTO, bindingResult, model, principal, request);
 
-        if (StringUtils.hasText(turboFrame)) {
-            model.addAttribute("turboEditedTimeEntry", timeEntryDTO);
+        final UserId userId = new UserId(principal.getUserInfo().getSubject());
+
+        if (hasText(turboFrame)) {
+            final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
+
+            final TimeEntryDay timeEntryDay = entryWeekPage.timeEntryWeek().days()
+                .stream()
+                .filter(day -> day.date().equals(timeEntryDTO.getDate()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("expected a day"));
+
+            final String weekHoursWorked = durationToTimeString(entryWeekPage.timeEntryWeek().workDuration().value());
+            final String dayHoursWorked = durationToTimeString(timeEntryDay.workDuration().value());
+
+            final TimeEntry editedTimeEntry = timeEntryDay.timeEntries().stream()
+                .filter(entry -> entry.id().value().equals(timeEntryDTO.getId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("could not find edited timeEntry=%s".formatted(timeEntryDTO.getId())));
+
+            model.addAttribute("turboEditedTimeEntry", toTimeEntryDto(editedTimeEntry));
+            model.addAttribute("calendarWeek", entryWeekPage.timeEntryWeek().week());
+            model.addAttribute("workedHoursSumWeek", weekHoursWorked);
+            model.addAttribute("workedHoursSumDay", dayHoursWorked);
+
             return "timeentries/index::#frame-time-entry";
         } else {
             if (bindingResult.hasErrors()) {
-                final ZoneId userZoneId = userSettingsProvider.zoneId();
-                final LocalDate now = LocalDate.now(clock);
-                final ZonedDateTime userAwareNow = ZonedDateTime.ofLocal(now.atStartOfDay(), userZoneId, UTC);
-                final int year = userAwareNow.getYear();
-                final int weekOfYear = userAwareNow.get(WEEK_OF_WEEK_BASED_YEAR);
                 addTimeEntriesToModel(year, weekOfYear, model, principal);
             }
             return viewName;
         }
-    }
-
-    private String saveOrUpdate(TimeEntryDTO timeEntryDTO, BindingResult bindingResult, Model model, OidcUser principal, HttpServletRequest request) {
-
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("timeEntryErrorId", timeEntryDTO);
-            final boolean hasErrorStart = bindingResult.hasFieldErrors("start");
-            final boolean hasErrorEnd = bindingResult.hasFieldErrors("end");
-            final boolean hasErrorDuration = bindingResult.hasFieldErrors("duration");
-
-            if (hasErrorStart && hasErrorEnd && !hasErrorDuration) {
-                bindingResult.reject("time-entry.validation.startOrEnd.required");
-            } else if (hasErrorStart && !hasErrorEnd && hasErrorDuration) {
-                bindingResult.reject("time-entry.validation.startOrDuration.required");
-            } else if (!hasErrorStart && hasErrorEnd && hasErrorDuration) {
-                bindingResult.reject("time-entry.validation.endOrDuration.required");
-            }
-
-            return "timeentries/index";
-        }
-
-        final UserId userId = new UserId(principal.getUserInfo().getSubject());
-        final TimeEntry timeEntry = toTimeEntry(timeEntryDTO, userId);
-
-        timeEntryService.saveTimeEntry(timeEntry);
-
-        final String referer = request.getHeader("referer");
-        return "redirect:" + referer;
     }
 
     @PostMapping(value = "/timeentries/{id}", params = "delete")
@@ -182,6 +190,87 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     public void deleteJs(@PathVariable("id") Long id, @AuthenticationPrincipal OidcUser principal) {
 
         timeEntryService.deleteTimeEntry(id);
+    }
+
+    private String saveOrUpdate(TimeEntryDTO dto, BindingResult bindingResult, Model model, OidcUser principal, HttpServletRequest request) {
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("timeEntryErrorId", dto);
+
+            final boolean hasErrorStart = bindingResult.hasFieldErrors("start");
+            final boolean hasErrorEnd = bindingResult.hasFieldErrors("end");
+            final boolean hasErrorDuration = bindingResult.hasFieldErrors("value");
+
+            if (hasErrorStart && hasErrorEnd && !hasErrorDuration) {
+                bindingResult.reject("time-entry.validation.startOrEnd.required");
+            } else if (hasErrorStart && !hasErrorEnd && hasErrorDuration) {
+                bindingResult.reject("time-entry.validation.startOrDuration.required");
+            } else if (!hasErrorStart && hasErrorEnd && hasErrorDuration) {
+                bindingResult.reject("time-entry.validation.endOrDuration.required");
+            }
+
+            return "timeentries/index";
+        }
+
+        final UserId userId = new UserId(principal.getUserInfo().getSubject());
+        final ZoneId zoneId = userSettingsProvider.zoneId();
+
+        if (dto.getId() == null) {
+            createTimeEntry(dto, userId, zoneId);
+        } else {
+            updateTimeEntry(dto, zoneId);
+        }
+
+        final String referer = request.getHeader("referer");
+        return "redirect:" + referer;
+    }
+
+    private void createTimeEntry(TimeEntryDTO dto, UserId userId, ZoneId zoneId) {
+
+        final ZonedDateTime start;
+        final ZonedDateTime end;
+
+        final Duration duration = toDuration(dto.getDuration());
+
+        if (duration.equals(Duration.ZERO)) {
+            // start and end should be given
+            start = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
+            end = getEndDate(dto, zoneId);
+        } else if (dto.getStart() == null) {
+            // end and value should be given
+            end = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getEnd()), zoneId);
+            start = end.minusMinutes(duration.toMinutes());
+        } else {
+            // start and value should be given
+            start = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
+            end = start.plusMinutes(duration.toMinutes());
+        }
+
+        timeEntryService.createTimeEntry(userId, dto.getComment(), start, end, dto.isBreak());
+    }
+
+    private void updateTimeEntry(TimeEntryDTO dto, ZoneId zoneId) {
+
+        final Duration duration = toDuration(dto.getDuration());
+        final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
+        final ZonedDateTime end = getEndDate(dto, zoneId);
+
+        try {
+            timeEntryService.updateTimeEntry(new TimeEntryId(dto.getId()), dto.getComment(), start, end, duration, dto.isBreak());
+        } catch (TimeEntryUpdateException e) {
+            LOG.info("could not update time-entry", e);
+            // TODO provide user feedback somehow? or is an error page enough? should not happen often this case?
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {
+        if (dto.getEnd().isBefore(dto.getStart())) {
+            // end is on next day
+            return ZonedDateTime.of(LocalDateTime.of(dto.getDate().plusDays(1), dto.getEnd()), zoneId);
+        } else {
+            return ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getEnd()), zoneId);
+        }
     }
 
     private void addTimeEntryToModel(Model model, TimeEntryDTO timeEntryDTO) {
@@ -230,18 +319,20 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final String firstDateString = dateFormatter.formatDate(firstDateOfWeek, firstMonthFormat, firstYearFormat);
         final String lastDateString = dateFormatter.formatDate(lastDateOfWeek, lastMonthFormat, lastYearFormat);
 
-        final Duration durationMinutes = timeEntryWeek.workDuration().minutes().duration();
-        final String hoursWorked = String.format("%02d:%02d", durationMinutes.toHours(), durationMinutes.toMinutesPart());
+        final String hoursWorked = durationToTimeString(timeEntryWeek.workDuration().minutes());
 
         final List<TimeEntryDayDto> daysDto = timeEntryWeek.days().stream().map(day -> {
-            final Duration dayDurationMinutes = day.workDuration().minutes().duration();
-            final String dayHoursWorked = String.format("%02d:%02d", dayDurationMinutes.toHours(), dayDurationMinutes.toMinutesPart());
+            final String dayHoursWorked = durationToTimeString(day.workDuration().minutes());
             final List<TimeEntryDTO> dayTimeEntryDTOs = day.timeEntries().stream().map(this::toTimeEntryDto).toList();
             final String dateString = dateFormatter.formatDate(day.date(), MonthFormat.STRING, YearFormat.FULL);
             return new TimeEntryDayDto(dateString, dayHoursWorked, dayTimeEntryDTOs);
         }).toList();
 
         return new TimeEntryWeekDto(timeEntryWeek.week(), firstDateString, lastDateString, hoursWorked, daysDto);
+    }
+
+    private static String durationToTimeString(Duration duration) {
+        return String.format("%02d:%02d", duration.toHours(), duration.toMinutesPart());
     }
 
     private TimeEntryDTO toTimeEntryDto(TimeEntry timeEntry) {
@@ -253,11 +344,11 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final LocalTime startTime = start.toLocalTime();
         final LocalTime endTime = end.toLocalTime();
 
-        final Duration duration = timeEntry.workDuration().minutes().duration();
+        final Duration duration = timeEntry.duration().minutes();
         final String durationString = toTimeEntryDTODurationString(duration);
 
         return TimeEntryDTO.builder()
-            .id(timeEntry.id())
+            .id(timeEntry.id().value())
             .date(date)
             .start(startTime)
             .end(endTime)
@@ -267,61 +358,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             .build();
     }
 
-    private TimeEntry toTimeEntry(TimeEntryDTO timeEntryDTO, UserId userId) {
-
-        LocalDate date = timeEntryDTO.getDate();
-        LocalTime startTime = timeEntryDTO.getStart();
-        LocalTime endTime = timeEntryDTO.getEnd();
-        Duration duration = toDuration(timeEntryDTO.getDuration());
-
-        final ZoneId zoneId = userSettingsProvider.zoneId();
-
-        if (startTime != null && endTime == null && duration != null) {
-            endTime = startTime.plusMinutes(duration.toMinutes());
-        } else if (startTime == null && duration != null) {
-            startTime = endTime.minusMinutes(duration.toMinutes());
-        } else if (startTime != null && endTime != null && duration == null) {
-            duration = Duration.between(startTime, endTime);
-        }
-
-        ZonedDateTime start = null;
-        ZonedDateTime end = null;
-
-        if (startTime != null && endTime != null) {
-            start = ZonedDateTime.of(LocalDateTime.of(date, startTime), zoneId);
-            if (endTime.isBefore(startTime)) {
-                end = ZonedDateTime.of(LocalDateTime.of(date.plusDays(1), endTime), zoneId);
-            } else {
-                end = ZonedDateTime.of(LocalDateTime.of(date, endTime), zoneId);
-            }
-        } else if (startTime == null && duration != null) {
-            start = ZonedDateTime.of(LocalDateTime.of(date, endTime), zoneId).minusSeconds(duration.toSeconds());
-            if (endTime.isBefore(startTime)) {
-                end = ZonedDateTime.of(LocalDateTime.of(date.plusDays(1), endTime), zoneId);
-            } else {
-                end = ZonedDateTime.of(LocalDateTime.of(date, endTime), zoneId);
-            }
-        } else if (startTime != null && duration != null) {
-            start = ZonedDateTime.of(LocalDateTime.of(date, startTime), zoneId);
-            if (endTime.isBefore(startTime)) {
-                end = ZonedDateTime.of(LocalDateTime.of(date.plusDays(1), startTime), zoneId).plusSeconds(duration.toSeconds());
-            } else {
-                end = ZonedDateTime.of(LocalDateTime.of(date, startTime), zoneId).plusSeconds(duration.toSeconds());
-            }
-        }
-
-        if (start == null) {
-            LOG.info("start was `null` while converting TimeEntryDTO. seems fishy <°))))><");
-        }
-        if (end == null) {
-            LOG.info("end was `null` while converting TimeEntryDTO. seems fishy <°))))><");
-        }
-
-        return new TimeEntry(timeEntryDTO.getId(), userId, timeEntryDTO.getComment(), start, end, timeEntryDTO.isBreak());
-    }
-
     private static Duration toDuration(String timeEntryDTODurationString) {
-        if (StringUtils.hasText(timeEntryDTODurationString)) {
+        if (hasText(timeEntryDTODurationString)) {
             final String[] split = timeEntryDTODurationString.split(":");
             return Duration.ofHours(Integer.parseInt(split[0])).plusMinutes(Integer.parseInt(split[1]));
         }
@@ -337,5 +375,24 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     private int lastWeekOfYear(int year) {
         return Year.of(year).atMonth(DECEMBER).atEndOfMonth().get(WEEK_OF_WEEK_BASED_YEAR);
+    }
+
+    private LocalDate localDateToFirstDateOfWeek(LocalDate localDate, DayOfWeek firstDayOfWeek) {
+        // using minimalDaysInFirstWeek = 4 since it is defined by ISO-8601 (starting week with monday)
+        // I have no glue whether this value can be use here or not. Some unit tests say we can... so...
+        final WeekFields userWeekFields = WeekFields.of(firstDayOfWeek, 4);
+
+        final int temporalYear = localDate.getYear();
+        final int temporalWeekOfYear = localDate.get(WEEK_OF_WEEK_BASED_YEAR);
+
+        final LocalDate previousOrSame = localDate.with(previousOrSame(firstDayOfWeek));
+
+        final int year = previousOrSame.getYear();
+        final int week = previousOrSame.get(userWeekFields.weekOfWeekBasedYear());
+        if (year == temporalYear && week > temporalWeekOfYear) {
+            return previousOrSame.minusWeeks(1);
+        }
+
+        return previousOrSame;
     }
 }

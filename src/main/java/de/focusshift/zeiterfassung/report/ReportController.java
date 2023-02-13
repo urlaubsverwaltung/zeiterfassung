@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.threeten.extra.YearWeek;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
@@ -311,7 +311,7 @@ class ReportController implements HasTimeClock, HasLaunchpad {
         final String dayOfWeekNarrow = dateFormatter.formatDayOfWeekNarrow(reportDay.date().getDayOfWeek());
         final String dayOfWeekFull = dateFormatter.formatDayOfWeekFull(reportDay.date().getDayOfWeek());
         final String dateString = dateFormatter.formatDate(reportDay.date());
-        final double hoursWorked = reportDay.workDuration().minutes().hoursDoubleValue();
+        final double hoursWorked = reportDay.workDuration().hoursDoubleValue();
 
         return new GraphDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked);
     }
@@ -347,7 +347,7 @@ class ReportController implements HasTimeClock, HasLaunchpad {
         final String dayOfWeekNarrow = dateFormatter.formatDayOfWeekNarrow(reportDay.date().getDayOfWeek());
         final String dayOfWeekFull = dateFormatter.formatDayOfWeekFull(reportDay.date().getDayOfWeek());
         final String dateString = dateFormatter.formatDate(reportDay.date());
-        final double hoursWorked = reportDay.workDuration().minutes().hoursDoubleValue();
+        final double hoursWorked = reportDay.workDuration().hoursDoubleValue();
         final List<DetailDayEntryDto> dayEntryDtos = reportDay.reportDayEntries().stream().map(ReportController::toDetailDayEntryDto).toList();
 
         return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, dayEntryDtos);

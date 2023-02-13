@@ -11,7 +11,7 @@ record TimeEntryDay(LocalDate date, List<TimeEntry> timeEntries) {
         final Duration duration = timeEntries
             .stream()
             .map(TimeEntry::workDuration)
-            .map(WorkDuration::duration)
+            .map(WorkDuration::value)
             .reduce(Duration.ZERO, Duration::plus);
 
         return new WorkDuration(duration);
