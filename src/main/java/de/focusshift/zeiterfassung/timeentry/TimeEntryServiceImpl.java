@@ -171,6 +171,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
             }
         }
 
+        if (durationChanged && !startChanged && !endChanged) {
+            final ZonedDateTime newEnd = start.plusMinutes(duration.toMinutes());
+            entity.setEnd(newEnd.toInstant());
+            entity.setEndZoneId(newEnd.getZone().getId());
+        }
+
         entity.setComment(comment.strip());
         entity.setBreak(isBreak);
 
