@@ -26,7 +26,19 @@ class TimeEntryTest {
     }
 
     @Test
-    void ensureWorkDurationIsCorrectItNotABreak() {
+    void ensureBreakDurationIsCorretIfBreak() {
+
+        final UserId batman = new UserId("batman");
+
+        final ZonedDateTime from = dateTime(2021, 1, 4, 1, 0);
+        final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
+        final TimeEntry timeEntry = new TimeEntry(1L, batman, "hard work", from, to, true);
+
+        assertThat(timeEntry.breakDuration().duration()).isEqualTo(Duration.ofMinutes(60));
+    }
+
+    @Test
+    void ensureWorkDurationIsCorrectIfItIsNotABreak() {
 
         final UserId batman = new UserId("batman");
 
@@ -35,6 +47,18 @@ class TimeEntryTest {
         final TimeEntry timeEntry = new TimeEntry(1L, batman, "hard work", from, to, false);
 
         assertThat(timeEntry.workDuration().duration()).isEqualTo(Duration.ofHours(1));
+    }
+
+    @Test
+    void ensureBreakDurationIsZeroIfItIsNotABreak() {
+
+        final UserId batman = new UserId("batman");
+
+        final ZonedDateTime from = dateTime(2021, 1, 4, 1, 0);
+        final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
+        final TimeEntry timeEntry = new TimeEntry(1L, batman, "hard work", from, to, false);
+
+        assertThat(timeEntry.breakDuration().duration()).isEqualTo(Duration.ZERO);
     }
 
 

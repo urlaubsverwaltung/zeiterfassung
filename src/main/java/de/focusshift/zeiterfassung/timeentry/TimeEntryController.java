@@ -253,7 +253,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final LocalTime startTime = start.toLocalTime();
         final LocalTime endTime = end.toLocalTime();
 
-        final Duration duration = timeEntry.workDuration().minutes().duration();
+        final Duration duration = timeEntry.isBreak() ? timeEntry.breakDuration().minutes().duration() : timeEntry.workDuration().minutes().duration();
         final String durationString = toTimeEntryDTODurationString(duration);
 
         return TimeEntryDTO.builder()
