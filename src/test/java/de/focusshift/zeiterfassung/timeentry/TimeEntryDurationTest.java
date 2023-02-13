@@ -11,36 +11,36 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class WorkDurationTest {
+class TimeEntryDurationTest {
 
     @Test
     void ensureMinutesReturnsNewWorkDurationWithDurationZero() {
-        final WorkDuration actual = new WorkDuration(Duration.ZERO).minutes();
+        final TimeEntryDuration actual = new TimeEntryDuration(Duration.ZERO).minutes();
         assertThat(actual.duration()).isEqualTo(Duration.ZERO);
     }
 
     @ParameterizedTest
     @ValueSource(ints = {1, 59, 60})
     void ensureMinutesReturnsNewWorkDurationWithAtLeastOneMinuteDuration(int givenSeconds) {
-        final WorkDuration actual = new WorkDuration(Duration.ofSeconds(givenSeconds)).minutes();
+        final TimeEntryDuration actual = new TimeEntryDuration(Duration.ofSeconds(givenSeconds)).minutes();
         assertThat(actual.duration()).isEqualTo(Duration.ofMinutes(1));
     }
 
     @ParameterizedTest
     @ValueSource(ints = {61, 120})
     void ensureMinutesReturnsNewWorkDurationRoundedUpToNextFullMinute(int givenSeconds) {
-        final WorkDuration actual = new WorkDuration(Duration.ofSeconds(givenSeconds)).minutes();
+        final TimeEntryDuration actual = new TimeEntryDuration(Duration.ofSeconds(givenSeconds)).minutes();
         assertThat(actual.duration()).isEqualTo(Duration.ofMinutes(2));
     }
 
     @Test
     void ensureHoursDoubleValueReturnsZero() {
-        assertThat(new WorkDuration(Duration.ZERO).hoursDoubleValue()).isEqualTo(0d);
+        assertThat(new TimeEntryDuration(Duration.ZERO).hoursDoubleValue()).isEqualTo(0d);
     }
 
     @Test
     void ensureHoursDoubleValueReturnsOne() {
-        assertThat(new WorkDuration(Duration.ofHours(1)).hoursDoubleValue()).isEqualTo(1d);
+        assertThat(new TimeEntryDuration(Duration.ofHours(1)).hoursDoubleValue()).isEqualTo(1d);
     }
 
     static Stream<Arguments> workDurationToHoursArguments() {
@@ -55,6 +55,6 @@ class WorkDurationTest {
     @ParameterizedTest
     @MethodSource("workDurationToHoursArguments")
     void ensureHoursDoubleValueReturnsRoundedToTwoDigits(int givenMinutes, double expectedHours) {
-        assertThat(new WorkDuration(Duration.ofMinutes(givenMinutes)).hoursDoubleValue()).isEqualTo(expectedHours);
+        assertThat(new TimeEntryDuration(Duration.ofMinutes(givenMinutes)).hoursDoubleValue()).isEqualTo(expectedHours);
     }
 }

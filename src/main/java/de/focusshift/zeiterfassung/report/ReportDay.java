@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
-import de.focusshift.zeiterfassung.timeentry.WorkDuration;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDuration;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -10,13 +10,13 @@ import static java.util.function.Predicate.not;
 
 record ReportDay(LocalDate date, List<ReportDayEntry> reportDayEntries) {
 
-    public WorkDuration workDuration() {
+    public TimeEntryDuration workDuration() {
         final Duration duration = reportDayEntries.stream()
             .filter(not(ReportDayEntry::isBreak))
             .map(ReportDayEntry::workDuration)
-            .map(WorkDuration::duration)
+            .map(TimeEntryDuration::duration)
             .reduce(Duration.ZERO, Duration::plus);
 
-        return new WorkDuration(duration);
+        return new TimeEntryDuration(duration);
     }
 }

@@ -7,23 +7,22 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.time.Month.DECEMBER;
 import static java.time.temporal.WeekFields.ISO;
 
 record TimeEntryWeek(LocalDate firstDateOfWeek, List<TimeEntryDay> days) {
 
-    public WorkDuration workDuration() {
+    public TimeEntryDuration workDuration() {
 
         final Duration duration = days
             .stream()
             .map(TimeEntryDay::timeEntries).flatMap(Collection::stream)
             .map(TimeEntry::workDuration)
-            .map(WorkDuration::duration)
+            .map(TimeEntryDuration::duration)
             .reduce(Duration.ZERO, Duration::plus);
 
-        return new WorkDuration(duration);
+        return new TimeEntryDuration(duration);
     }
 
     public int year() {

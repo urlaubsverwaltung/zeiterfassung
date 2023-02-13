@@ -4,19 +4,19 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 
-public record WorkDuration(Duration duration) {
+public record TimeEntryDuration(Duration duration) {
 
     /**
-     * @return work duration rounded up to full minutes.
+     * @return duration rounded up to full minutes.
      */
-    public WorkDuration minutes() {
+    public TimeEntryDuration minutes() {
         final long seconds = duration.toSeconds();
 
         final Duration durationMinutes = seconds % 60 == 0
             ? duration
             : Duration.ofMinutes(duration.toMinutes() + 1);
 
-        return new WorkDuration(durationMinutes);
+        return new TimeEntryDuration(durationMinutes);
     }
 
     public double hoursDoubleValue() {

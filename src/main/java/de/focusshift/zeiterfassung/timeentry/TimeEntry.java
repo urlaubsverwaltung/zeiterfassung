@@ -14,7 +14,8 @@ public record TimeEntry(
     boolean isBreak
 ) {
 
-    public WorkDuration workDuration() {
-        return new WorkDuration(isBreak ? Duration.ZERO : Duration.between(start, end));
+    public TimeEntryDuration workDuration() {
+        return new TimeEntryDuration(isBreak ? Duration.ZERO : Duration.between(start, end));
+    }
     }
 }

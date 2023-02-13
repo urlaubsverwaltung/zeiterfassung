@@ -6,14 +6,14 @@ import java.util.List;
 
 record TimeEntryDay(LocalDate date, List<TimeEntry> timeEntries) {
 
-    public WorkDuration workDuration() {
+    public TimeEntryDuration workDuration() {
 
         final Duration duration = timeEntries
             .stream()
             .map(TimeEntry::workDuration)
-            .map(WorkDuration::duration)
+            .map(TimeEntryDuration::duration)
             .reduce(Duration.ZERO, Duration::plus);
 
-        return new WorkDuration(duration);
+        return new TimeEntryDuration(duration);
     }
 }
