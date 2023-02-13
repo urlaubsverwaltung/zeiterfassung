@@ -5,10 +5,8 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.math.BigDecimal.ONE;
@@ -122,14 +120,6 @@ public final class WorkingTime {
             .filter(not(w -> ZERO.equals(w.duration()))).toList();
     }
 
-    public List<DayOfWeek> getWorkingDayOfWeeks() {
-        return hoursSupplierByDayMap(this).entrySet()
-            .stream()
-            .filter(entry -> entry.getValue().get() != null)
-            .map(Map.Entry::getKey)
-            .toList();
-    }
-
     /**
      * Checks whether there are different WorkDay Hours or not.
      *
@@ -160,25 +150,6 @@ public final class WorkingTime {
         }
 
         return Optional.of(workingHours);
-    }
-
-    private static Map<DayOfWeek, Supplier<BigDecimal>> hoursSupplierByDayMap(WorkingTime workTime) {
-        return Map.of(
-            MONDAY, () -> workTime.getMonday().map(WorkDay::hours).orElse(null),
-            TUESDAY, () -> workTime.getTuesday().map(WorkDay::hours).orElse(null),
-            WEDNESDAY, () -> workTime.getWednesday().map(WorkDay::hours).orElse(null),
-            THURSDAY, () -> workTime.getThursday().map(WorkDay::hours).orElse(null),
-            FRIDAY, () -> workTime.getFriday().map(WorkDay::hours).orElse(null),
-            SATURDAY, () -> workTime.getSaturday().map(WorkDay::hours).orElse(null),
-            SUNDAY, () -> workTime.getSunday().map(WorkDay::hours).orElse(null)
-        );
-    }
-
-    /**
-     * @return common working hours for working days, {@linkplain Optional#empty()} when hours are different.
-     */
-    public Optional<BigDecimal> getWorkingHours() {
-        return getWorkingDuration().map(duration -> new WorkDay(MONDAY, duration).hours());
     }
 
     @Override
