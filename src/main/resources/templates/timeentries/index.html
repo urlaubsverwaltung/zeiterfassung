@@ -67,7 +67,7 @@
               th:target="${'calendar-week-title-sum-'+ calendarWeek}"
             >
               <template
-                th:insert="::calendar-week-title-sum(${workedHoursSumWeek}, ${calendarWeek})"
+                th:insert="::calendar-week-title-sum(${workedHoursSumWeek}, ${workedHoursShouldSumWeek}, ${calendarWeek})"
               ></template>
             </turbo-stream>
             <turbo-stream
@@ -75,7 +75,7 @@
               th:target="${'calendar-day-title-sum-'+ calendarWeek + '-' + turboEditedTimeEntry.date.dayOfWeek}"
             >
               <template
-                th:insert="::calendar-week-day-title-sum(${workedHoursSumDay}, ${calendarWeek}, ${turboEditedTimeEntry.date.dayOfWeek})"
+                th:insert="::calendar-week-day-title-sum(${workedHoursSumDay}, ${workedHoursShouldSumDay}, ${calendarWeek}, ${turboEditedTimeEntry.date.dayOfWeek})"
               ></template>
             </turbo-stream>
             <turbo-stream
@@ -121,7 +121,7 @@
                     >
                       <div
                         class="absolute left-0 top-0 bottom-0 bg-green-300 rounded-full"
-                        style="width: 75%"
+                        th:styleappend="${'width:' + week.hoursWorkedRatio + '%'}"
                       ></div>
                       <div
                         class="relative flex flex-col justify-between text-green-800 text-sm xs:flex-row"
@@ -134,25 +134,33 @@
                         </h3>
                         <p
                           th:if="${not #lists.isEmpty(week.timeEntries)}"
-                          th:with="hoursWorked=${week.hoursWorked}, calendarWeek=${week.calendarWeek}"
+                          th:with="hoursWorked=${week.hoursWorked}, hoursWorkedShould=${week.hoursWorkedShould}, calendarWeek=${week.calendarWeek}"
                         >
                           <span class="sr-only sm:not-sr-only">Woche:</span>
                           <span
-                            th:fragment="calendar-week-title-sum(hoursWorked, calendarWeek)"
+                            th:fragment="calendar-week-title-sum(hoursWorked, hoursWorkedShould, calendarWeek)"
                             th:id="${'calendar-week-title-sum-'+ calendarWeek}"
                             class="font-bold proportional-nums"
                             th:text="${hoursWorked}"
                           ></span>
                           (<span class="sr-only sm:not-sr-only">Soll: </span
-                          ><span class="font-bold proportional-nums">40:00</span
+                          ><span
+                            class="font-bold proportional-nums"
+                            th:text="${hoursWorkedShould}"
+                            >40:00</span
                           >)
                         </p>
                       </div>
                     </div>
                     <div
-                      class="sr-only xs:not-sr-only xs:text-green-500 xs:ml-2 md:ml-4 md:w-1/5 lg:w-1/6"
+                      class="sr-only proportional-nums xs:not-sr-only xs:text-sm xs:ml-2 md:ml-4 md:w-1/5 lg:w-1/6"
+                      th:classappend="${week.hoursDeltaNegative ? 'xs:text-gray-400' : 'xs:text-green-500'}"
                     >
-                      + 05:45
+                      <th:block th:if="${week.hoursDeltaNegative}">-</th:block>
+                      <th:block th:if="${not week.hoursDeltaNegative}"
+                        >+</th:block
+                      >
+                      <th:block th:text="${week.hoursDelta}">05:45</th:block>
                     </div>
                   </div>
                 </div>
@@ -176,7 +184,7 @@
                         >
                           <div
                             class="absolute left-0 top-0 bottom-0 bg-green-300 rounded-full"
-                            style="width: 24%"
+                            th:styleappend="${'width:' + day.hoursWorkedRatio + '%'}"
                           ></div>
                           <div
                             class="relative flex flex-col justify-between text-green-800 text-sm xs:flex-row"
@@ -187,27 +195,36 @@
                             ></h4>
                             <p
                               th:if="${not #lists.isEmpty(day.timeEntries)}"
-                              th:with="hoursWorked=${day.hoursWorked()}, calendarWeek=${week.calendarWeek()}, day=${day.timeEntries[0].date.dayOfWeek}"
+                              th:with="hoursWorked=${day.hoursWorked}, calendarWeek=${week.calendarWeek()}, dayOfWeek=${day.timeEntries[0].date.dayOfWeek}"
                               class="text-gray-600"
                             >
                               <span class="sr-only sm:not-sr-only">Tag:</span>
                               <span
-                                th:fragment="calendar-week-day-title-sum(hoursWorked, calendarWeek, day)"
-                                th:id="${'calendar-day-title-sum-' + calendarWeek + '-' + day}"
+                                th:fragment="calendar-week-day-title-sum(hoursWorked, calendarWeek, dayOfWeek)"
+                                th:id="${'calendar-day-title-sum-' + calendarWeek + '-' + dayOfWeek}"
                                 class="font-bold proportional-nums"
                                 th:text="${hoursWorked}"
                               ></span>
                               (<span class="sr-only sm:not-sr-only">Soll: </span
-                              ><span class="font-bold proportional-nums"
+                              ><span
+                                class="font-bold proportional-nums"
+                                th:text="${day.hoursWorkedShould}"
                                 >08:00</span
                               >)
                             </p>
                           </div>
                         </div>
                         <div
-                          class="sr-only xs:not-sr-only xs:text-green-500 xs:ml-2 md:ml-4 md:w-1/5 lg:w-1/6"
+                          class="sr-only proportional-nums xs:not-sr-only xs:text-sm xs:ml-2 md:ml-4 md:w-1/5 lg:w-1/6"
+                          th:classappend="${day.hoursDeltaNegative ? 'xs:text-gray-400' : 'xs:text-green-500'}"
                         >
-                          + 01:30
+                          <th:block th:if="${day.hoursDeltaNegative}"
+                            >-</th:block
+                          >
+                          <th:block th:if="${not day.hoursDeltaNegative}"
+                            >+</th:block
+                          >
+                          <th:block th:text="${day.hoursDelta}">01:30</th:block>
                         </div>
                       </div>
                     </div>
