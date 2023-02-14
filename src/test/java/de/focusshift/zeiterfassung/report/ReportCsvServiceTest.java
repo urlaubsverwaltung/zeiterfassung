@@ -24,6 +24,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -80,7 +81,7 @@ class ReportCsvServiceTest {
 
         mockDateFormatter("dd.MM.yyyy");
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"));
+        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
 
         final ZonedDateTime from = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime to = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 30), ZONE_ID_BERLIN);
@@ -106,7 +107,7 @@ class ReportCsvServiceTest {
 
         mockDateFormatter("dd.MM.yyyy");
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"));
+        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
 
         // day one
         final ZonedDateTime d1_1_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
@@ -165,7 +166,7 @@ class ReportCsvServiceTest {
 
         mockDateFormatter("dd.MM.yyyy");
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"));
+        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
 
         final ZonedDateTime from = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime to = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 30), ZONE_ID_BERLIN);
@@ -197,7 +198,7 @@ class ReportCsvServiceTest {
 
         mockDateFormatter("dd.MM.yyyy");
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"));
+        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
 
         // week one, day one
         final ZonedDateTime d1_1_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);

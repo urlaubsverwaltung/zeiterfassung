@@ -9,7 +9,11 @@ public interface UserManagementService {
 
     Optional<User> findUserById(UserId userId);
 
+    Optional<User> findUserByLocalId(UserLocalId userId);
+
     List<User> findAllUsers();
+
+    List<User> findAllUsers(String query);
 
     List<User> findAllUsersByIds(List<UserId> ids);
 

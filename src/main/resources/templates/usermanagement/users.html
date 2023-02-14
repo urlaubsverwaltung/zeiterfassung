@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+  <head
+    th:replace="~{timeentries/_layout::head(~{::title}, ~{}, ~{::scriptsDeferred}, ~{})}"
+  >
+    <title>Zeiterfassung - Personen</title>
+    <th:block th:fragment="scriptsDeferred">
+      <script type="module" src="" th:src="@{/assets/users.js}"></script>
+    </th:block>
+  </head>
+  <body th:replace="~{timeentries/_layout::body(~{::content})}">
+    <th:block th:fragment="content">
+      <main
+        class="flex-1 flex flex-col"
+        data-turbo="true"
+        th:data-selected-user="${selectedUser == null ? '' :  selectedUser.id}"
+      >
+        <div
+          class="flex-1 flex flex-col mx-auto w-full px-8 max-w-screen-xl 3xl:px-4 3xl:max-w-screen-3xl"
+        >
+          <div
+            class="mb-8"
+            style="--display-when-visible: block"
+            data-hidden-with-selected-user
+          >
+            <h1 class="text-xl font-bold" th:text="#{usermanagement.heading}">
+              Personen
+            </h1>
+            <p
+              class="mt-2 text-gray-600"
+              th:text="#{usermanagement.teaser-text}"
+            >
+              Information: Es werden hier nur Personen angezeigt, welche sich
+              mindestens einmal in der Zeiterfassung angemeldet haben.
+            </p>
+          </div>
+          <div>
+            <div class="lg:w-1/3 mb-4">
+              <form
+                id="person-search-form"
+                method="get"
+                action="#"
+                th:action="${personSearchFormAction}"
+                class="flex flex-row items-center"
+                data-turbo-frame="person-list-frame"
+                data-turbo-action="replace"
+              >
+                <div class="flex-1 relative">
+                  <svg
+                    th:replace="~{icons/search::svg(className='w-5 h-5 text-gray-400 absolute left-2 top-2.5')}"
+                  ></svg>
+                  <input
+                    type="search"
+                    name="query"
+                    placeholder="Suche nach Vor- / Nachname"
+                    th:placeholder="#{usermanagement.person-list.search.placeholder}"
+                    th:value="${query}"
+                    id="person-query"
+                    class="rounded-xl w-full border border-gray-100 pl-9 pr-3 py-2 bg-white"
+                    data-auto-submit="user-search-submit"
+                    data-auto-submit-delay="100"
+                  />
+                  <label
+                    class="sr-only"
+                    for="person-query"
+                    th:text="#{usermanagement.person-list.search.label}"
+                  >
+                    Personensuche
+                  </label>
+                </div>
+                <button
+                  id="user-search-submit"
+                  type="submit"
+                  class="border border-blue-600 bg-blue-600 text-blue-50 rounded-r-lg px-4 py-2 font-bold"
+                  data-js-hidden
+                  th:text="#{usermanagement.person-list.search.submit}"
+                >
+                  Suchen
+                </button>
+              </form>
+            </div>
+          </div>
+          <div class="flex-1 flex md:gap-4">
+            <div
+              class="w-full border border-gray-100 bg-white rounded-xl p-4 lg:w-1/3 lg:sticky"
+              style="
+                --display-when-visible: block;
+                top: calc(var(--navigation-header-height) + 1rem);
+              "
+              data-hidden-with-selected-user
+              is="z-user-selection-list"
+            >
+              <turbo-frame id="person-list-frame">
+                <th:block th:if="${selectedUser}">
+                  <turbo-stream
+                    target="working-time-form-hidden-inputs"
+                    action="replace"
+                  >
+                    <template
+                      th:insert="~{usermanagement/user/working-time-settings::#working-time-form-hidden-inputs}"
+                    ></template>
+                  </turbo-stream>
+                  <turbo-stream
+                    target="working-time-settings-reset-button"
+                    action="replace"
+                    th:with="user=${selectedUser}"
+                  >
+                    <template
+                      th:insert="~{usermanagement/user/working-time-settings::#working-time-settings-reset-button}"
+                    ></template>
+                  </turbo-stream>
+                </th:block>
+                <ol class="flex flex-col user-selection-list">
+                  <th:block th:each="user : ${users}">
+                    <li
+                      class="py-3 px-2 flex items-center justify-between gap-4 rounded-xl transition-colors"
+                    >
+                      <span class="text-blue-300">
+                        <img
+                          alt=""
+                          th:replace="~{fragments/avatar::avatar(${user.fullName},48,48)}"
+                        />
+                      </span>
+                      <a
+                        th:fragment="user-element-link(user)"
+                        th:id="${'user-element-link-' + user.id}"
+                        href="#"
+                        th:href="@{/users/{id} (id=${user.id}, query=${query})}"
+                        th:aria-current="${selectedUser != null && user.id == selectedUser.id ? 'page' : ''}"
+                        th:data-user="${user.id}"
+                        class="flex-1 flex items-center justify-between gap-4"
+                        data-turbo-frame="person-frame"
+                        data-turbo-action="advance"
+                      >
+                        <span class="flex flex-col">
+                          <span
+                            class="text-black"
+                            th:text="${user.fullName}"
+                          ></span>
+                          <span
+                            class="text-gray-400"
+                            th:text="${user.email}"
+                          ></span>
+                        </span>
+                        <svg
+                          th:replace="~{icons/chevron-right::svg(className='w-6 h-6 text-gray-400')}"
+                        ></svg>
+                      </a>
+                    </li>
+                    <li th:if="${not userStat.last}" role="separator">
+                      <div class="bg-gray-100 h-px mx-2"></div>
+                    </li>
+                  </th:block>
+                </ol>
+              </turbo-frame>
+            </div>
+            <turbo-frame class="flex-1" id="person-frame">
+              <th:block th:if="${selectedUser}">
+                <turbo-stream
+                  target="main-navigation-link-users"
+                  action="replace"
+                >
+                  <!-- replace main-navigation-link to update aria-current -->
+                  <template
+                    th:insert="~{timeentries/_navigation::#main-navigation-link-users}"
+                  ></template>
+                </turbo-stream>
+                <turbo-stream
+                  th:each="user : ${users}"
+                  th:target="${'user-element-link-' + user.id}"
+                  action="replace"
+                >
+                  <template
+                    th:insert="~{::user-element-link(${user})}"
+                  ></template>
+                </turbo-stream>
+                <turbo-stream target="back-to-users-link" action="replace">
+                  <template th:insert="~{::#back-to-users-link}"></template>
+                </turbo-stream>
+                <turbo-stream target="person-search-form" action="replace">
+                  <template th:insert="~{::#person-search-form}"></template>
+                </turbo-stream>
+              </th:block>
+              <div
+                class="h-full flex flex-col"
+                style="--display-when-visible: flex"
+                data-hidden-without-selected-user
+              >
+                <div class="lg:hidden mb-8">
+                  <a
+                    id="back-to-users-link"
+                    href="#"
+                    th:href="@{/users (query=${query})}"
+                    class="inline-flex items-center gap-2 text-black font-medium"
+                    th:if="${selectedUser}"
+                    data-turbo-frame="_top"
+                    data-turbo-action="advance"
+                  >
+                    <svg
+                      th:replace="~{icons/arrow-left::svg(className='w-5 h-5')}"
+                    ></svg>
+                    Zurück zu Personen
+                  </a>
+                </div>
+                <div
+                  class="flex-1 flex flex-col border border-gray-100 bg-gradient-to-br from-blue-200 to-blue-50 rounded-xl overflow-hidden flex"
+                >
+                  <div
+                    th:if="${selectedUser == null}"
+                    class="flex-1 flex items-center justify-center"
+                  >
+                    <p
+                      class="text-xl"
+                      th:text="#{usermanagement.select-person.info}"
+                    >
+                      Wähle eine Person aus.
+                    </p>
+                  </div>
+                  <div
+                    th:if="${selectedUser}"
+                    class="w-full h-full flex flex-col"
+                  >
+                    <h2 class="sr-only" th:text="${selectedUser.fullName}"></h2>
+                    <div class="p-4 flex items-center gap-4">
+                      <span class="text-blue-300">
+                        <img
+                          alt=""
+                          th:replace="~{fragments/avatar::avatar(${selectedUser.fullName},64, 64)}"
+                        />
+                      </span>
+                      <span class="flex flex-col">
+                        <span
+                          class="text-black font-bold"
+                          th:text="${selectedUser.fullName}"
+                        ></span>
+                        <span
+                          class="text-gray-500 text-bold"
+                          th:text="${selectedUser.email}"
+                        ></span>
+                      </span>
+                    </div>
+                    <div class="flex-1 p-6 bg-white">
+                      <div
+                        th:replace="~{/usermanagement/user/working-time-settings::section(${selectedUser}, ${workingTime})}"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </turbo-frame>
+          </div>
+        </div>
+      </main>
+    </th:block>
+  </body>
+</html>

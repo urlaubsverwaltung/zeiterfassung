@@ -33,9 +33,9 @@
               </label>
               <nav>
                 <ul
-                  class="flex flex-col space-y-8 lg:flex-row lg:space-y-0 overflow-hidden"
+                  class="flex flex-col space-y-8 lg:space-x-8 lg:space-y-0 lg:flex-row overflow-hidden"
                 >
-                  <li class="mr-8">
+                  <li>
                     <a
                       href="#"
                       th:href="@{/timeentries}"
@@ -57,6 +57,19 @@
                     >
                       <svg th:replace="~{icons/chart-pie::svg}"></svg>
                       <th:block th:text="#{navigation.main.reports}"></th:block>
+                    </a>
+                  </li>
+                  <li th:if="${showMainNavigationPersons}">
+                    <a
+                      id="main-navigation-link-users"
+                      href="#"
+                      th:href="@{/users}"
+                      class="flex items-center main-nav-link"
+                      th:classappend="${currentRequestURI.startsWith('/users') ? 'current' : ''}"
+                      th:aria-current="${currentRequestURI.equals('/users') ? 'page' : 'false'}"
+                    >
+                      <svg th:replace="~{icons/users::svg}"></svg>
+                      <th:block>Personen</th:block>
                     </a>
                   </li>
                 </ul>

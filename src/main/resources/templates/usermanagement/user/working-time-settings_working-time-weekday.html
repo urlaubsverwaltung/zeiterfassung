@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <div
+      th:fragment="box(dayOfWeek, value)"
+      th:with="fieldName=${'workingTime' + #strings.capitalize(dayOfWeek)}, hasError=${#fields.hasErrors(fieldName)}"
+      class="flex items-center sm:flex-col-reverse gap-2 sm:gap-1"
+    >
+      <input
+        type="text"
+        inputmode="numeric"
+        th:name="${fieldName}"
+        id="input-working-time-day-of-week"
+        th:id="${'input-working-time-' + dayOfWeek}"
+        class="border border-gray-300 px-2 py-1 w-14 sm:w-full"
+        th:classappend="${hasError ? 'invalid' : ''}"
+        th:value="${{value}}"
+        th:aria-invalid="${hasError}"
+        th:aria-message="${hasError ? 'working-time-' + dayOfWeek + '-error-message' : ''}"
+      />
+      <label
+        class="sm:w-full sm:text-ellipsis sm:overflow-hidden"
+        for="input-working-time-day-of-week"
+        th:for="${'input-working-time-' + dayOfWeek}"
+        th:text="${#messages.msg(#strings.toUpperCase(dayOfWeek))}"
+      >
+        Montag
+      </label>
+    </div>
+
+    <th:block
+      th:fragment="error-box(dayOfWeek)"
+      th:with="fieldName=${'workingTime' + #strings.capitalize(dayOfWeek)}, hasError=${#fields.hasErrors(fieldName)}"
+    >
+      <div th:if="${hasError}" class="mt-2 flex items-center">
+        <p
+          th:id="${'working-time-' + dayOfWeek + '-error-message'}"
+          class="invalid w-full"
+        >
+          <th:block th:text="${#fields.errors(fieldName)[0]}"></th:block>
+          <th:block
+            th:if="${hasError && not #lists.contains(workingTime.workday, dayOfWeek)}"
+          >
+            <button
+              type="submit"
+              name="select"
+              th:value="${dayOfWeek}"
+              class="inline underline"
+              th:with="DAY_OF_WEEK=${#strings.toUpperCase(dayOfWeek)}"
+              th:text="#{usermanagement.working-time.validation-hint.select-working-day.button.text(${#messages.msg(DAY_OF_WEEK)})}"
+            >
+              Wähle den Montag aus
+            </button>
+            <th:block
+              th:text="#{usermanagement.working-time.validation-hint.or}"
+            >
+              oder
+            </th:block>
+            <button
+              type="submit"
+              name="clear"
+              th:value="${dayOfWeek}"
+              class="inline underline"
+              th:text="#{usermanagement.working-time.validation-hint.clear-hours.button.text}"
+            >
+              setze die Stunden auf 0
+            </button>
+            .
+          </th:block>
+        </p>
+      </div>
+    </th:block>
+  </body>
+</html>

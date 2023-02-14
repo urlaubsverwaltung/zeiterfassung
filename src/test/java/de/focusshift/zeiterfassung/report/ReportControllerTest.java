@@ -22,6 +22,7 @@ import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Set;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
@@ -162,7 +163,7 @@ class ReportControllerTest {
     void ensureWeekReportUserFilterRelatedUrlsAreNotAddedWhenCurrentUserHasNoPermission() throws Exception {
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
-            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "", "", new EMailAddress(""))));
+            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "", "", new EMailAddress(""), Set.of())));
 
         when(reportService.getReportWeek(Year.of(2022), 1, new UserId("batman")))
             .thenReturn(anyReportWeek());
@@ -174,9 +175,9 @@ class ReportControllerTest {
     @Test
     void ensureWeekReportUserFilterRelatedUrls() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""));
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""));
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""));
+        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
+        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
             .thenReturn(List.of(batman, joker, robin));
@@ -198,9 +199,9 @@ class ReportControllerTest {
     @Test
     void ensureWeekReportUserFilterRelatedUrlsForEveryone() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""));
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""));
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""));
+        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
+        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
             .thenReturn(List.of(batman, joker, robin));
@@ -226,9 +227,9 @@ class ReportControllerTest {
     @Test
     void ensureWeekReportUserFilterRelatedUrlsForWithSelectedUser() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""));
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""));
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""));
+        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
+        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
             .thenReturn(List.of(batman, joker, robin));
@@ -357,7 +358,7 @@ class ReportControllerTest {
     void ensureMonthReportUserFilterRelatedUrlsAreNotAddedWhenCurrentUserHasNoPermission() throws Exception {
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
-            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "", "", new EMailAddress(""))));
+            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "", "", new EMailAddress(""), Set.of())));
 
         when(reportService.getReportMonth(YearMonth.of(2022, 1), new UserId("batman")))
             .thenReturn(anyReportMonth());
@@ -369,9 +370,9 @@ class ReportControllerTest {
     @Test
     void ensureMonthReportUserFilterRelatedUrls() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""));
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""));
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""));
+        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
+        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
             .thenReturn(List.of(batman, joker, robin));
@@ -393,9 +394,9 @@ class ReportControllerTest {
     @Test
     void ensureMonthReportUserFilterRelatedUrlsForEveryone() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""));
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""));
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""));
+        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
+        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
             .thenReturn(List.of(batman, joker, robin));
@@ -421,9 +422,9 @@ class ReportControllerTest {
     @Test
     void ensureMonthReportUserFilterRelatedUrlsForWithSelectedUser() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""));
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""));
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""));
+        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
+        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
             .thenReturn(List.of(batman, joker, robin));
