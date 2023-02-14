@@ -479,8 +479,10 @@ class TimeEntryControllerTest {
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 39)).thenReturn(timeEntryWeekPage);
 
-        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 28), MonthFormat.STRING, YearFormat.FULL))
-            .thenReturn("date-formatted-2022-9-28");
+        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 26), MonthFormat.STRING, YearFormat.NONE)).thenReturn("formatted-2022-9-26");
+        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 28), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-28");
+        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 29), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-29");
+        when(dateFormatter.formatDate(LocalDate.of(2022, 10, 2), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-10-2");
 
         final ResultActions perform = perform(
             post("/timeentries/1337")
@@ -504,8 +506,17 @@ class TimeEntryControllerTest {
             .comment("hard work extended")
             .build();
 
-        final TimeEntryDayDto expectedTimeEntryDayDto = TimeEntryDayDto.builder()
-            .date("date-formatted-2022-9-28")
+        final TimeEntryDTO otherTimeEntryDto = TimeEntryDTO.builder()
+            .id(1L)
+            .date(LocalDate.of(2022, 9, 29))
+            .start(LocalTime.of(14, 30))
+            .end(LocalTime.of(15, 0))
+            .duration("00:30")
+            .comment("hack the planet")
+            .build();
+
+        final TimeEntryDayDto expectedDayDto = TimeEntryDayDto.builder()
+            .date("formatted-2022-9-28")
             .hoursWorked("00:45")
             .hoursWorkedShould("08:00")
             .hoursDelta("07:15")
@@ -514,9 +525,32 @@ class TimeEntryControllerTest {
             .timeEntries(List.of(expectedTimeEntryDto))
             .build();
 
+        final TimeEntryDayDto otherDayDto = TimeEntryDayDto.builder()
+            .date("formatted-2022-9-29")
+            .hoursWorked("00:30")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:30")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(7.0)
+            .timeEntries(List.of(otherTimeEntryDto))
+            .build();
+
+        final TimeEntryWeekDto expectedWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(39)
+            .from("formatted-2022-9-26")
+            .to("formatted-2022-10-2")
+            .hoursWorked("01:15")
+            .hoursWorkedShould("16:00")
+            .hoursDelta("14:45")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(8.0)
+            .days(List.of(expectedDayDto, otherDayDto))
+            .build();
+
         perform
             .andExpect(status().isOk())
-            .andExpect(model().attribute("turboEditedDay", expectedTimeEntryDayDto))
+            .andExpect(model().attribute("turboEditedWeek", expectedWeekDto))
+            .andExpect(model().attribute("turboEditedDay", expectedDayDto))
             .andExpect(model().attribute("turboEditedTimeEntry", expectedTimeEntryDto))
             .andExpect(model().attribute("calendarWeek", 39))
             .andExpect(model().attribute("workedHoursSumWeek", "01:15"))

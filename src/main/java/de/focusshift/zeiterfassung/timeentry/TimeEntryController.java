@@ -176,6 +176,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("could not find edited timeEntry=%s".formatted(timeEntryDTO.getId())));
 
+            model.addAttribute("turboEditedWeek", toTimeEntryWeekDto(timeEntryWeek));
             model.addAttribute("turboEditedDay", toTimeEntryDayDto(timeEntryDay));
             model.addAttribute("turboEditedTimeEntry", toTimeEntryDto(editedTimeEntry));
 

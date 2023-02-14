@@ -64,10 +64,10 @@
           <th:block th:if="${turboEditedTimeEntry != null}">
             <turbo-stream
               action="replace"
-              th:target="${'calendar-week-title-sum-'+ calendarWeek}"
+              th:target="${'week-banner-'+ turboEditedWeek.calendarWeek}"
             >
               <template
-                th:insert="::calendar-week-title-sum(${workedHoursSumWeek}, ${workedHoursShouldSumWeek}, ${calendarWeek})"
+                th:insert="::week-banner(${turboEditedWeek})"
               ></template>
             </turbo-stream>
             <turbo-stream
@@ -113,7 +113,8 @@
               >
                 <div class="px-4">
                   <div
-                    th:fragment="calendar-week-title"
+                    th:fragment="week-banner(week)"
+                    th:id="${'week-banner-'+ week.calendarWeek}"
                     class="flex items-center"
                   >
                     <div
@@ -132,21 +133,16 @@
                             th:text="#{time-entry.overview.week.group.title.date-range(${week.calendarWeek}, ${week.from}, ${week.to})}"
                           ></span>
                         </h3>
-                        <p
-                          th:if="${not #lists.isEmpty(week.timeEntries)}"
-                          th:with="hoursWorked=${week.hoursWorked}, hoursWorkedShould=${week.hoursWorkedShould}, calendarWeek=${week.calendarWeek}"
-                        >
+                        <p th:if="${not #lists.isEmpty(week.timeEntries)}">
                           <span class="sr-only sm:not-sr-only">Woche:</span>
                           <span
-                            th:fragment="calendar-week-title-sum(hoursWorked, hoursWorkedShould, calendarWeek)"
-                            th:id="${'calendar-week-title-sum-'+ calendarWeek}"
                             class="font-bold tabular-nums"
-                            th:text="${hoursWorked}"
+                            th:text="${week.hoursWorked}"
                           ></span>
                           (<span class="sr-only sm:not-sr-only">Soll: </span
                           ><span
                             class="font-bold tabular-nums"
-                            th:text="${hoursWorkedShould}"
+                            th:text="${week.hoursWorkedShould}"
                             >40:00</span
                           >)
                         </p>
