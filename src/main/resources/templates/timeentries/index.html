@@ -107,10 +107,7 @@
         >
           <div id="time-entries-box" class="space-y-16">
             <th:block th:ref="time-entries-box-content">
-              <div
-                class="space-y-2"
-                th:with="week=${timeEntryWeeksPage.timeEntryWeek}"
-              >
+              <div th:with="week=${timeEntryWeeksPage.timeEntryWeek}">
                 <div class="px-4">
                   <div
                     th:fragment="week-banner(week)"
@@ -160,7 +157,7 @@
                     </div>
                   </div>
                 </div>
-                <div th:if="${#lists.isEmpty(week.timeEntries)}">
+                <div class="mt-2" th:if="${#lists.isEmpty(week.timeEntries)}">
                   <p
                     class="m-8"
                     th:text="#{time-entry.no-entries-available.week}"
@@ -168,13 +165,12 @@
                     In dieser Woche sind keine Einträge vorhanden.
                   </p>
                 </div>
-                <div
-                  th:if="${not #lists.isEmpty(week.timeEntries())}"
-                  class="space-y-10 md:space-y-4"
-                >
-                  <th:block
+                <div th:if="${not #lists.isEmpty(week.timeEntries())}">
+                  <div
                     th:each="day: ${week.days}"
                     th:with="calendarWeek=${week.calendarWeek}"
+                    class="space-y-10 md:space-y-4"
+                    th:classappend="${dayStat.first ? 'mt-2' : 'mt-4'}"
                   >
                     <div class="px-4 sticky top-nav-header pt-px z-10">
                       <div
@@ -239,7 +235,7 @@
                         ></div>
                       </th:block>
                     </div>
-                  </th:block>
+                  </div>
                 </div>
               </div>
             </th:block>
