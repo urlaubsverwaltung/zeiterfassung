@@ -9,6 +9,8 @@ import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -135,8 +137,9 @@ class TimeEntryServiceImplTest {
         );
     }
 
-    @Test
-    void ensureUpdateTimeEntryStart() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true,false})
+    void ensureUpdateTimeEntryStart(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
@@ -155,7 +158,7 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            false);
+            isBreak);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
@@ -190,8 +193,9 @@ class TimeEntryServiceImplTest {
         assertThat(actualPersisted.isBreak()).isFalse();
     }
 
-    @Test
-    void ensureUpdateTimeEntryStartAndEnd() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true,false})
+    void ensureUpdateTimeEntryStartAndEnd(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
@@ -210,7 +214,7 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            false);
+            isBreak);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
@@ -245,8 +249,9 @@ class TimeEntryServiceImplTest {
         assertThat(actualPersisted.isBreak()).isFalse();
     }
 
-    @Test
-    void ensureUpdateTimeEntryStartAndDuration() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true,false})
+    void ensureUpdateTimeEntryStartAndDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
@@ -265,7 +270,7 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            false);
+            isBreak);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
@@ -300,8 +305,9 @@ class TimeEntryServiceImplTest {
         assertThat(actualPersisted.isBreak()).isFalse();
     }
 
-    @Test
-    void ensureUpdateTimeEntryEnd() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true,false})
+    void ensureUpdateTimeEntryEnd(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
@@ -320,7 +326,7 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            false);
+            isBreak);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
@@ -355,8 +361,9 @@ class TimeEntryServiceImplTest {
         assertThat(actualPersisted.isBreak()).isFalse();
     }
 
-    @Test
-    void ensureUpdateTimeEntryEndAndDuration() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true,false})
+    void ensureUpdateTimeEntryEndAndDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
@@ -375,7 +382,7 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            false);
+            isBreak);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
@@ -410,8 +417,9 @@ class TimeEntryServiceImplTest {
         assertThat(actualPersisted.isBreak()).isFalse();
     }
 
-    @Test
-    void ensureUpdateTimeEntryDuration() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true,false})
+    void ensureUpdateTimeEntryDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, userDateService, fixedClock);
@@ -430,7 +438,7 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            false);
+            isBreak);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
