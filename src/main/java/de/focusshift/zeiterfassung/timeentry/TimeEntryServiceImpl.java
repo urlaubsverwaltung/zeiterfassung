@@ -145,10 +145,10 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final TimeEntry existingTimeEntry = toTimeEntry(entity);
         final boolean startChanged = notEquals(existingTimeEntry.start(), start);
         final boolean endChanged = notEquals(existingTimeEntry.end(), end);
-        final boolean durationChanged = !existingTimeEntry.workDuration().value().equals(duration);
+        final boolean durationChanged = !existingTimeEntry.duration().value().equals(duration);
 
         if (startChanged && endChanged && durationChanged) {
-            throw new TimeEntryUpdateException("cannot update time-entry when start, end and value should be changed. pick two of them.");
+            throw new TimeEntryUpdateException("cannot update time-entry when start, end and duration should be changed. pick two of them.");
         }
 
         if (startChanged) {
