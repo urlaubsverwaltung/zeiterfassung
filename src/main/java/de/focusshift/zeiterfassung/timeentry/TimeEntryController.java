@@ -158,18 +158,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("expected a day"));
 
-            // TODO whole week header must be rendered as Turbo-Stream
-            // TODO whole day header must be rendered as Turbo-Stream
-
             final TimeEntryWeek timeEntryWeek = entryWeekPage.timeEntryWeek();
-            final String weekHoursWorked = durationToTimeString(timeEntryWeek.workDuration().value());
-            final String weekHoursWorkedShould = durationToTimeString(timeEntryWeek.plannedWorkingHours().minutes());
-//            final Duration weekOvertimeDuration = timeEntryWeek.overtime();
-//            final String weekOvertime = durationToTimeString(weekOvertimeDuration);
-//            final double weekRatio = timeEntryWeek.workedHoursRatio();
-
-            final String dayHoursWorked = durationToTimeString(timeEntryDay.workDuration().value());
-            final String dayHoursWorkedShould = durationToTimeString(timeEntryDay.plannedWorkingHours().minutes());
 
             final TimeEntry editedTimeEntry = timeEntryDay.timeEntries().stream()
                 .filter(entry -> entry.id().value().equals(timeEntryDTO.getId()))
@@ -179,13 +168,6 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             model.addAttribute("turboEditedWeek", toTimeEntryWeekDto(timeEntryWeek));
             model.addAttribute("turboEditedDay", toTimeEntryDayDto(timeEntryDay));
             model.addAttribute("turboEditedTimeEntry", toTimeEntryDto(editedTimeEntry));
-
-            model.addAttribute("calendarWeek", entryWeekPage.timeEntryWeek().week());
-            model.addAttribute("workedHoursSumWeek", weekHoursWorked);
-            model.addAttribute("workedHoursShouldSumWeek", weekHoursWorkedShould);
-
-            model.addAttribute("workedHoursSumDay", dayHoursWorked);
-            model.addAttribute("workedHoursShouldSumDay", dayHoursWorkedShould);
 
             return "timeentries/index::#frame-time-entry";
         } else {

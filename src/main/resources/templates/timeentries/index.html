@@ -72,10 +72,10 @@
             </turbo-stream>
             <turbo-stream
               action="replace"
-              th:target="${'day-of-week-banner-'+ calendarWeek + '-' + turboEditedTimeEntry.date.dayOfWeek}"
+              th:target="${'day-of-week-banner-'+ turboEditedWeek.calendarWeek + '-' + turboEditedTimeEntry.date.dayOfWeek}"
             >
               <template
-                th:insert="::day-of-week-banner(${calendarWeek}, ${turboEditedDay})"
+                th:insert="::day-of-week-banner(${turboEditedWeek.calendarWeek}, ${turboEditedDay})"
               ></template>
             </turbo-stream>
             <turbo-stream

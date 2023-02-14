@@ -552,9 +552,6 @@ class TimeEntryControllerTest {
             .andExpect(model().attribute("turboEditedWeek", expectedWeekDto))
             .andExpect(model().attribute("turboEditedDay", expectedDayDto))
             .andExpect(model().attribute("turboEditedTimeEntry", expectedTimeEntryDto))
-            .andExpect(model().attribute("calendarWeek", 39))
-            .andExpect(model().attribute("workedHoursSumWeek", "01:15"))
-            .andExpect(model().attribute("workedHoursSumDay", "00:45"))
             .andExpect(view().name("timeentries/index::#frame-time-entry"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
