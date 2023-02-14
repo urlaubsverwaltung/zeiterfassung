@@ -72,10 +72,10 @@
             </turbo-stream>
             <turbo-stream
               action="replace"
-              th:target="${'calendar-day-title-sum-'+ calendarWeek + '-' + turboEditedTimeEntry.date.dayOfWeek}"
+              th:target="${'day-of-week-banner-'+ calendarWeek + '-' + turboEditedTimeEntry.date.dayOfWeek}"
             >
               <template
-                th:insert="::calendar-week-day-title-sum(${workedHoursSumDay}, ${workedHoursShouldSumDay}, ${calendarWeek}, ${turboEditedTimeEntry.date.dayOfWeek})"
+                th:insert="::day-of-week-banner(${calendarWeek}, ${turboEditedDay})"
               ></template>
             </turbo-stream>
             <turbo-stream
@@ -176,9 +176,16 @@
                   th:if="${not #lists.isEmpty(week.timeEntries())}"
                   class="space-y-10 md:space-y-4"
                 >
-                  <th:block th:each="day: ${week.days}">
+                  <th:block
+                    th:each="day: ${week.days}"
+                    th:with="calendarWeek=${week.calendarWeek}"
+                  >
                     <div class="px-4 sticky top-nav-header pt-px z-10">
-                      <div class="flex items-center">
+                      <div
+                        th:fragment="day-of-week-banner(calendarWeek, day)"
+                        th:id="${'day-of-week-banner-' + calendarWeek + '-' + day.timeEntries[0].date.dayOfWeek}"
+                        class="flex items-center"
+                      >
                         <div
                           class="flex-1 relative py-1 px-4 bg-green-100 w-full rounded-full"
                         >
@@ -189,21 +196,15 @@
                           <div
                             class="relative flex flex-col justify-between text-green-800 text-sm xs:flex-row"
                           >
-                            <h4
-                              class="font-medium"
-                              th:text="${day.date()}"
-                            ></h4>
+                            <h4 class="font-medium" th:text="${day.date}"></h4>
                             <p
                               th:if="${not #lists.isEmpty(day.timeEntries)}"
-                              th:with="hoursWorked=${day.hoursWorked}, calendarWeek=${week.calendarWeek()}, dayOfWeek=${day.timeEntries[0].date.dayOfWeek}"
                               class="text-gray-600"
                             >
                               <span class="sr-only sm:not-sr-only">Tag:</span>
                               <span
-                                th:fragment="calendar-week-day-title-sum(hoursWorked, calendarWeek, dayOfWeek)"
-                                th:id="${'calendar-day-title-sum-' + calendarWeek + '-' + dayOfWeek}"
                                 class="font-bold tabular-nums"
-                                th:text="${hoursWorked}"
+                                th:text="${day.hoursWorked}"
                               ></span>
                               (<span class="sr-only sm:not-sr-only">Soll: </span
                               ><span

@@ -479,6 +479,9 @@ class TimeEntryControllerTest {
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 39)).thenReturn(timeEntryWeekPage);
 
+        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 28), MonthFormat.STRING, YearFormat.FULL))
+            .thenReturn("date-formatted-2022-9-28");
+
         final ResultActions perform = perform(
             post("/timeentries/1337")
                 .header("Turbo-Frame", "any-value")
@@ -501,8 +504,19 @@ class TimeEntryControllerTest {
             .comment("hard work extended")
             .build();
 
+        final TimeEntryDayDto expectedTimeEntryDayDto = TimeEntryDayDto.builder()
+            .date("date-formatted-2022-9-28")
+            .hoursWorked("00:45")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:15")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(10.0)
+            .timeEntries(List.of(expectedTimeEntryDto))
+            .build();
+
         perform
             .andExpect(status().isOk())
+            .andExpect(model().attribute("turboEditedDay", expectedTimeEntryDayDto))
             .andExpect(model().attribute("turboEditedTimeEntry", expectedTimeEntryDto))
             .andExpect(model().attribute("calendarWeek", 39))
             .andExpect(model().attribute("workedHoursSumWeek", "01:15"))
