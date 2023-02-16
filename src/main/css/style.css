@@ -761,7 +761,7 @@
       @apply text-sm;
       @apply w-full;
       @apply px-3;
-      @apply py-2;
+      @apply py-0; /* centered by container */
       @apply rounded-md;
       @apply flex;
       @apply items-center;
