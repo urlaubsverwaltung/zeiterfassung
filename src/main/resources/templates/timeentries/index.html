@@ -141,9 +141,12 @@
                             <th:block th:if="${not week.hoursDeltaNegative}"
                               >+</th:block
                             >
-                            <th:block th:text="${week.hoursDelta}"
-                              >05:45</th:block
+                            <span
+                              class="font-bold tabular-nums"
+                              th:text="${week.hoursDelta}"
                             >
+                              05:45
+                            </span>
                             <th:block th:if="${not week.hoursDeltaNegative}">
                               <svg
                                 th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1 text-green-700')}"
@@ -222,9 +225,12 @@
                                 <th:block th:if="${not day.hoursDeltaNegative}"
                                   >+</th:block
                                 >
-                                <th:block th:text="${day.hoursDelta}"
-                                  >01:30</th:block
+                                <span
+                                  class="font-bold tabular-nums"
+                                  th:text="${day.hoursDelta}"
                                 >
+                                  01:30
+                                </span>
                                 <th:block
                                   th:if="${not day.hoursDeltaNegative and day.hoursDelta != '00:00'}"
                                 >
