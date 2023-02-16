@@ -17,7 +17,7 @@ import static jakarta.persistence.FetchType.LAZY;
 
 
 @Entity(name = "working_time")
-class WorkingTimeEntity extends AbstractTenantAwareEntity {
+public class WorkingTimeEntity extends AbstractTenantAwareEntity {
 
     @Id
     @Column(name = "id", unique = true, nullable = false, updatable = false)
@@ -46,7 +46,7 @@ class WorkingTimeEntity extends AbstractTenantAwareEntity {
 
     private String sunday;
 
-    public WorkingTimeEntity() {
+    protected WorkingTimeEntity() {
         super(null);
     }
 
