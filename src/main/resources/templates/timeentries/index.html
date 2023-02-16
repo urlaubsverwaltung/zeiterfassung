@@ -149,7 +149,7 @@
                             </span>
                             <th:block th:if="${not week.hoursDeltaNegative}">
                               <svg
-                                th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1 text-green-700')}"
+                                th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1')}"
                               ></svg>
                             </th:block>
                           </span>
@@ -235,7 +235,7 @@
                                   th:if="${not day.hoursDeltaNegative and day.hoursDelta != '00:00'}"
                                 >
                                   <svg
-                                    th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1 text-green-700')}"
+                                    th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1')}"
                                   ></svg>
                                 </th:block>
                               </span>
