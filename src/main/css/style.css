@@ -709,6 +709,7 @@
   /* body-overlay.visible has to be separated from body:has */
   /* otherwise firefox does not take these values oO */
   .body-overlay.visible {
+    z-index: 10;
     opacity: 1;
     background-color: rgba(0, 0, 0, 0.33);
     width: 100vw;
@@ -719,6 +720,7 @@
   }
 
   body:has(.time-clock-dropdown[open]) #body-overlay {
+    z-index: 10;
     opacity: 1;
     background-color: rgba(0, 0, 0, 0.33);
     width: 100vw;
