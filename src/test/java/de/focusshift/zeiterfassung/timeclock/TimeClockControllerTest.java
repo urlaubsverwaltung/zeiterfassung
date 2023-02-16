@@ -208,7 +208,7 @@ class TimeClockControllerTest {
                 .header("Referer", "referer-url")
                 .header("Turbo-Frame", "any-value")
                 // must be defined
-                .param("zoneId", "")
+                .param("zoneId", "Europe/Berlin")
                 // max 255 chars allowed for comment
                 .param("comment", IntStream.range(0, 256).mapToObj((nr) -> "0").collect(joining("")))
                 // actual pattern "yyyy-MM-dd"
@@ -217,7 +217,7 @@ class TimeClockControllerTest {
                 .param("time", "13:37:00")
         )
             .andExpect(status().isOk())
-            .andExpect(model().attributeHasFieldErrors("timeClockUpdate", "zoneId", "comment", "date", "time"))
+            .andExpect(model().attributeHasFieldErrors("timeClockUpdate", "comment"))
             .andExpect(view().name("timeclock/timeclock-edit-form::navigation-box-update"));
     }
 
@@ -228,7 +228,7 @@ class TimeClockControllerTest {
                 .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
                 .header("Referer", "referer-url")
                 // must be defined
-                .param("zoneId", "")
+                .param("zoneId", "Europe/Berlin")
                 // max 255 chars allowed for comment
                 .param("comment", IntStream.range(0, 256).mapToObj((nr) -> "0").collect(joining("")))
                 // actual pattern "yyyy-MM-dd"
@@ -237,7 +237,7 @@ class TimeClockControllerTest {
                 .param("time", "13:37:00")
         )
             .andExpect(status().isOk())
-            .andExpect(model().attributeHasFieldErrors("timeClockUpdate", "zoneId", "comment", "date", "time"))
+            .andExpect(model().attributeHasFieldErrors("timeClockUpdate", "comment"))
             .andExpect(view().name("timeclock/timeclock-edit"));
     }
 

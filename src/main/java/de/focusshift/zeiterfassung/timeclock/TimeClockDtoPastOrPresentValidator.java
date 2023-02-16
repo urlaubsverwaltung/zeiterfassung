@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeclock;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.constraints.PastOrPresent;
+
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,15 +20,16 @@ public class TimeClockDtoPastOrPresentValidator implements ConstraintValidator<P
         // (user time zone has not to be considered here)
         final LocalDate date = object.getDate();
         final LocalTime time = object.getTime();
+        final ZoneId zoneId = object.getZoneId();
 
-        if (date == null || time == null) {
+        if (date == null || time == null || zoneId == null) {
             return false;
         }
 
         // using `clock` to be able to do deterministic tests.
         // however, we are interested in the LocalDateTime default zone.
         final Clock clock = context.getClockProvider().getClock();
-        final LocalDateTime now = ZonedDateTime.now(clock).withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+        final LocalDateTime now = ZonedDateTime.now(clock).withZoneSameInstant(zoneId).toLocalDateTime();
         final String message = context.getDefaultConstraintMessageTemplate();
 
         final boolean valid;

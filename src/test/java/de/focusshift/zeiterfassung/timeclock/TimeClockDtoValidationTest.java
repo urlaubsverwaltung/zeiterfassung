@@ -39,7 +39,7 @@ class TimeClockDtoValidationTest {
             final Set<ConstraintViolation<TimeClockDto>> violations = validator.validate(timeClockDto);
 
             assertThat(violations)
-                .hasSize(1)
+                .hasSize(2)
                 .anySatisfy(violation -> {
                     assertThat(violation.getPropertyPath()).hasToString("zoneId");
                     assertThat(violation.getMessageTemplate()).isEqualTo("{jakarta.validation.constraints.NotNull.message}");
