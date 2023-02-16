@@ -10,14 +10,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
 
 import java.util.Objects;
 
 import static jakarta.persistence.FetchType.LAZY;
 
 
-@Entity(name = "working_time")
-class WorkingTimeEntity extends AbstractTenantAwareEntity {
+@Entity
+@Table(name = "working_time")
+public class WorkingTimeEntity extends AbstractTenantAwareEntity {
 
     @Id
     @Column(name = "id", unique = true, nullable = false, updatable = false)
@@ -46,7 +48,7 @@ class WorkingTimeEntity extends AbstractTenantAwareEntity {
 
     private String sunday;
 
-    public WorkingTimeEntity() {
+    protected WorkingTimeEntity() {
         super(null);
     }
 
