@@ -155,12 +155,19 @@
                           th:if="${not #lists.isEmpty(week.timeEntries)}"
                           class="sr-only sm:not-sr-only"
                         >
-                          <span>Woche:</span>
+                          <th:block
+                            th:text="#{time-entry.overview.week.group.hours-bar.week}"
+                          >
+                            Woche:
+                          </th:block>
                           <span
                             class="font-bold tabular-nums"
                             th:text="${week.hoursWorked}"
                           ></span>
-                          (<span>Soll: </span>
+                          (<th:block
+                            th:text="#{time-entry.overview.week.group.hours-bar.should}"
+                            >Soll:</th:block
+                          >&nbsp;
                           <span
                             class="font-bold tabular-nums"
                             th:text="${week.hoursWorkedShould}"
@@ -231,12 +238,18 @@
                               th:if="${not #lists.isEmpty(day.timeEntries)}"
                               class="sr-only sm:not-sr-only"
                             >
-                              <span>Tag:</span>
+                              <th:block
+                                th:text="#{time-entry.overview.day.group.hours-bar.day}"
+                                >Tag:</th:block
+                              >
                               <span
                                 class="font-bold tabular-nums"
                                 th:text="${day.hoursWorked}"
                               ></span>
-                              (<span>Soll: </span>
+                              (<th:block
+                                th:text="#{time-entry.overview.day.group.hours-bar.should}"
+                                >Soll:</th:block
+                              >&nbsp;
                               <span
                                 class="font-bold tabular-nums"
                                 th:text="${day.hoursWorkedShould}"
