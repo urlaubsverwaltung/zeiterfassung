@@ -125,39 +125,52 @@
                         th:styleappend="${'width:' + week.hoursWorkedRatio + '%'}"
                       ></div>
                       <div
-                        class="relative flex flex-col justify-between text-green-800 text-sm xs:flex-row"
+                        class="relative flex justify-between gap-x-2 flex-wrap text-green-800 text-sm"
                       >
-                        <h3 class="relative text-green-800 text-sm">
-                          <span
-                            class="font-medium"
-                            th:text="#{time-entry.overview.week.group.title.date-range(${week.calendarWeek}, ${week.from}, ${week.to})}"
-                          ></span>
-                        </h3>
-                        <p th:if="${not #lists.isEmpty(week.timeEntries)}">
-                          <span class="sr-only sm:not-sr-only">Woche:</span>
+                        <h3
+                          class="font-medium"
+                          th:text="#{time-entry.overview.week.group.title.date-range(${week.calendarWeek}, ${week.from}, ${week.to})}"
+                        ></h3>
+                        <p
+                          class="tabular-nums text-sm text-green-900 font-medium sm:flex-1 sm:absolute sm:left-0 sm:right-0 sm:text-center"
+                        >
+                          <span class="inline-flex items-center">
+                            <th:block th:if="${week.hoursDeltaNegative}"
+                              >-</th:block
+                            >
+                            <th:block th:if="${not week.hoursDeltaNegative}"
+                              >+</th:block
+                            >
+                            <th:block th:text="${week.hoursDelta}"
+                              >05:45</th:block
+                            >
+                            <th:block th:if="${not week.hoursDeltaNegative}">
+                              <svg
+                                th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1 text-green-700')}"
+                              ></svg>
+                            </th:block>
+                          </span>
+                        </p>
+                        <p
+                          th:if="${not #lists.isEmpty(week.timeEntries)}"
+                          class="sr-only sm:not-sr-only"
+                        >
+                          <span>Woche:</span>
                           <span
                             class="font-bold tabular-nums"
                             th:text="${week.hoursWorked}"
                           ></span>
-                          (<span class="sr-only sm:not-sr-only">Soll: </span
-                          ><span
+                          (<span>Soll: </span>
+                          <span
                             class="font-bold tabular-nums"
                             th:text="${week.hoursWorkedShould}"
-                            >40:00</span
+                          >
+                            40:00 </span
                           >)
                         </p>
                       </div>
                     </div>
-                    <div
-                      class="sr-only tabular-nums xs:not-sr-only xs:text-sm xs:ml-2 md:ml-4 md:w-1/5 lg:w-1/6"
-                      th:classappend="${week.hoursDeltaNegative ? 'xs:text-gray-400' : 'xs:text-green-500'}"
-                    >
-                      <th:block th:if="${week.hoursDeltaNegative}">-</th:block>
-                      <th:block th:if="${not week.hoursDeltaNegative}"
-                        >+</th:block
-                      >
-                      <th:block th:text="${week.hoursDelta}">05:45</th:block>
-                    </div>
+                    <div class="md:ml-4 md:w-1/5 lg:w-1/6"></div>
                   </div>
                 </div>
                 <div class="mt-2" th:if="${#lists.isEmpty(week.timeEntries)}">
@@ -189,39 +202,51 @@
                             th:styleappend="${'width:' + day.hoursWorkedRatio + '%'}"
                           ></div>
                           <div
-                            class="relative flex flex-col justify-between text-green-800 text-sm xs:flex-row"
+                            class="relative flex justify-between gap-x-2 flex-wrap text-green-800 text-sm"
                           >
                             <h4 class="font-medium" th:text="${day.date}"></h4>
                             <p
-                              th:if="${not #lists.isEmpty(day.timeEntries)}"
-                              class="text-gray-600"
+                              class="tabular-nums text-sm text-green-900 font-medium sm:flex-1 sm:absolute sm:left-0 sm:right-0 sm:text-center"
                             >
-                              <span class="sr-only sm:not-sr-only">Tag:</span>
+                              <span class="inline-flex items-center">
+                                <th:block th:if="${day.hoursDeltaNegative}"
+                                  >-</th:block
+                                >
+                                <th:block th:if="${not day.hoursDeltaNegative}"
+                                  >+</th:block
+                                >
+                                <th:block th:text="${day.hoursDelta}"
+                                  >01:30</th:block
+                                >
+                                <th:block
+                                  th:if="${not day.hoursDeltaNegative and day.hoursDelta != '00:00'}"
+                                >
+                                  <svg
+                                    th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1 text-green-700')}"
+                                  ></svg>
+                                </th:block>
+                              </span>
+                            </p>
+                            <p
+                              th:if="${not #lists.isEmpty(day.timeEntries)}"
+                              class="sr-only sm:not-sr-only"
+                            >
+                              <span>Tag:</span>
                               <span
                                 class="font-bold tabular-nums"
                                 th:text="${day.hoursWorked}"
                               ></span>
-                              (<span class="sr-only sm:not-sr-only">Soll: </span
-                              ><span
+                              (<span>Soll: </span>
+                              <span
                                 class="font-bold tabular-nums"
                                 th:text="${day.hoursWorkedShould}"
-                                >08:00</span
+                              >
+                                08:00 </span
                               >)
                             </p>
                           </div>
                         </div>
-                        <div
-                          class="sr-only tabular-nums xs:not-sr-only xs:text-sm xs:ml-2 md:ml-4 md:w-1/5 lg:w-1/6"
-                          th:classappend="${day.hoursDeltaNegative ? 'xs:text-gray-400' : 'xs:text-green-500'}"
-                        >
-                          <th:block th:if="${day.hoursDeltaNegative}"
-                            >-</th:block
-                          >
-                          <th:block th:if="${not day.hoursDeltaNegative}"
-                            >+</th:block
-                          >
-                          <th:block th:text="${day.hoursDelta}">01:30</th:block>
-                        </div>
+                        <div class="md:ml-4 md:w-1/5 lg:w-1/6"></div>
                       </div>
                     </div>
                     <div class="px-4 space-y-10 md:space-y-2">
