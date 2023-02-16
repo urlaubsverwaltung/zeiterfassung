@@ -760,7 +760,7 @@
       @apply cursor-pointer;
       @apply text-sm;
       @apply w-full;
-      @apply px-3;
+      @apply px-0; /* gap by container */
       @apply py-0; /* centered by container */
       @apply rounded-md;
       @apply flex;
