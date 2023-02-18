@@ -100,6 +100,19 @@
                 style="stop-color: #4ade80; stop-opacity: 1"
               />
             </linearGradient>
+            <linearGradient
+              id="gradient-background"
+              x1="0%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+            >
+              <stop offset="0%" style="stop-color: #e5e7eb; stop-opacity: 1" />
+              <stop
+                offset="100%"
+                style="stop-color: #d4d4d8; stop-opacity: 1"
+              />
+            </linearGradient>
           </defs>
           <g
             th:each="hour : ${#numbers.sequence(0, weekReport.graphLegendMaxHour, 2)}"
@@ -121,6 +134,18 @@
               class="report-graph-hour-text"
             ></text>
           </g>
+          <g>
+            <rect
+              th:each="day, dayIt : ${weekReport.dayReports}"
+              th:with="left=${paddingLeft + (dayIt.index * dayGap) + (dayIt.index * barWidth)}"
+              th:x="${left - 12.5}"
+              th:y="${0}"
+              th:width="${barWidth + 25}"
+              th:height="${chartHeight + paddingTop}"
+              class="report-graph-hover-background cursor-pointer"
+              th:data-date="${day.date}"
+            ></rect>
+          </g>
           <g
             th:each="day, dayIt : ${weekReport.dayReports}"
             th:id="${'bar-should-' + #strings.toLowerCase(day.dayOfWeekFull)}"
@@ -131,6 +156,7 @@
               left=${paddingLeft + (dayIt.index * dayGap) + (dayIt.index * barWidth)},
               radius=${barWidth/2}
             "
+            class="pointer-events-none"
           >
             <clipPath
               th:id="${'clip-path-dept-' + #strings.toLowerCase(day.dayOfWeekFull)}"
@@ -165,6 +191,7 @@
                 radius=${barWidth/2}
             "
             th:id="${'bar-actual-' + #strings.toLowerCase(day.dayOfWeekFull)}"
+            class="pointer-events-none"
           >
             <th:block
               th:if="${day.hoursWorked != 0 && day.hoursWorked > day.hoursWorkedShould}"
@@ -234,6 +261,7 @@
           </g>
           <g
             th:with="y=${paddingTop + (chartHeight * (1 - (weekReport.averageHoursWorked / weekReport.graphLegendMaxHour)))}"
+            class="pointer-events-none"
           >
             <line
               x1="0"

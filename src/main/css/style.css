@@ -630,6 +630,13 @@
 
   .report-graph {
   }
+  .report-graph-hover-background {
+    fill: transparent;
+  }
+  .report-graph-hover-background.selected,
+  .report-graph-hover-background:hover {
+    fill: url(#gradient-background);
+  }
   .report-graph-hour-line {
     @apply stroke-gray-200;
   }
