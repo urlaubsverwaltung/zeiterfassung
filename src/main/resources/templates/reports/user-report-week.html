@@ -17,7 +17,9 @@
           th:href="${userReportPreviousSectionUrl}"
           class="bg-blue-700 text-white font-medium rounded px-4 py-2"
         >
-          <svg th:replace="~{icons/chevron-left::svg(className='w-6 h-6')}"></svg>
+          <svg
+            th:replace="~{icons/chevron-left::svg(className='w-6 h-6')}"
+          ></svg>
           <span
             class="sr-only"
             th:text="#{report.week.navigation.button.previous}"
@@ -37,7 +39,9 @@
           th:href="${userReportNextSectionUrl}"
           class="bg-blue-700 text-white font-medium rounded px-4 py-2"
         >
-          <svg th:replace="~{icons/chevron-right::svg(className='w-6 h-6')}"></svg>
+          <svg
+            th:replace="~{icons/chevron-right::svg(className='w-6 h-6')}"
+          ></svg>
           <span class="sr-only" th:text="#{report.week.navigation.button.next}"
             >nächste Woche</span
           >
@@ -88,6 +92,15 @@
           preserveAspectRatio="xMidYMin meet"
           class="mt-8 report-graph"
         >
+          <defs>
+            <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color: #22c55e; stop-opacity: 1" />
+              <stop
+                offset="100%"
+                style="stop-color: #4ade80; stop-opacity: 1"
+              />
+            </linearGradient>
+          </defs>
           <g
             th:each="hour : ${#numbers.sequence(0, weekReport.graphLegendMaxHour, 2)}"
             th:with="y=${paddingTop + (chartHeight * (1 - (hour / weekReport.graphLegendMaxHour)))}"
@@ -110,29 +123,98 @@
           </g>
           <g
             th:each="day, dayIt : ${weekReport.dayReports}"
+            th:id="${'bar-should-' + #strings.toLowerCase(day.dayOfWeekFull)}"
             th:with="
-              barHeight=${(chartHeight * (day.hoursWorked / weekReport.graphLegendMaxHour))},
-              top=${paddingTop + chartHeight - barHeight},
+              height=${chartHeight * (day.hoursWorkedShould / weekReport.graphLegendMaxHour)},
+              top=${paddingTop + chartHeight - height},
               bottom=${paddingTop + chartHeight},
               left=${paddingLeft + (dayIt.index * dayGap) + (dayIt.index * barWidth)},
               radius=${barWidth/2}
             "
           >
+            <clipPath
+              th:id="${'clip-path-dept-' + #strings.toLowerCase(day.dayOfWeekFull)}"
+            >
+              <path d="" th:replace="~{::clip-path-dept}" />
+            </clipPath>
             <path
-              th:if="${day.hoursWorked != 0}"
-              th:with="radius=${(barHeight - radius) < 0 ? barHeight : radius}"
-              th:d="|M${left},${bottom} v${-1 * (barHeight - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${barHeight - radius} z|"
-              class="report-graph-day-bar"
-              th:data-date="${day.date}"
+              th:fragment="clip-path-dept"
+              th:if="${day.hoursWorkedShould != 0 && day.hoursWorkedShould > day.hoursWorked}"
+              th:with="radius=${(height - radius) < 0 ? height : (day.hoursWorked > day.hoursWorkedShould ? 0 : radius)}"
+              th:d="|M${left},${bottom} v${-1 * (height - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${height - radius} z|"
+              class="report-graph-day-should-bar"
+              d=""
             />
             <rect
-              th:if="${day.hoursWorked == 0}"
+              th:if="${day.hoursWorkedShould == 0}"
               th:y="${top}"
               th:x="${left}"
               th:width="${barWidth}"
               th:height="1"
-              class="report-graph-day-bar"
+              class="report-graph-day-should-bar"
             />
+          </g>
+          <g
+            th:each="day, dayIt : ${weekReport.dayReports}"
+            th:with="
+                heightHours=${chartHeight * (day.hoursWorked / weekReport.graphLegendMaxHour)},
+                heightShould=${chartHeight * (day.hoursWorkedShould / weekReport.graphLegendMaxHour)},
+                topHours=${paddingTop + chartHeight - heightHours},
+                bottom=${paddingTop + chartHeight},
+                left=${paddingLeft + (dayIt.index * dayGap) + (dayIt.index * barWidth)},
+                radius=${barWidth/2}
+            "
+            th:id="${'bar-actual-' + #strings.toLowerCase(day.dayOfWeekFull)}"
+          >
+            <th:block
+              th:if="${day.hoursWorked != 0 && day.hoursWorked > day.hoursWorkedShould}"
+              th:with="
+                heightOvertime=${chartHeight * (day.hoursWorked / weekReport.graphLegendMaxHour)},
+                bottomOvertime=${topHours + heightOvertime}
+              "
+            >
+              <mask
+                th:id="${'mask-overtime-' + #strings.toLowerCase(day.dayOfWeekFull)}"
+              >
+                <path
+                  th:d="|M${left},${bottom} v${-1 * (heightOvertime - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${heightOvertime - radius} z|"
+                  fill="white"
+                  d=""
+                />
+              </mask>
+              <path
+                th:d="|M${left},${bottom} v${-1 * (heightOvertime - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${heightOvertime - radius} z|"
+                class="report-graph-day-overtime-bar"
+                d=""
+              />
+              <path
+                th:with="
+                  radius=${(heightHours - radius) < 0 ? heightHours : (day.hoursWorked > day.hoursWorkedShould ? 0 : radius)},
+                  clipPathId=${'mask-overtime-' + #strings.toLowerCase(day.dayOfWeekFull)}
+                "
+                th:d="|M${left},${bottom} v${-1 * (heightShould - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${heightShould - radius} z|"
+                class="report-graph-day-bar"
+                th:mask="${'url(#'+clipPathId+')'}"
+                fill="url(#gradient)"
+                d=""
+              />
+            </th:block>
+            <th:block
+              th:if="${day.hoursWorked != 0 && day.hoursWorked <= day.hoursWorkedShould}"
+            >
+              <path
+                th:with="
+                  yMax=${bottom - heightHours},
+                  radius=${radius + yMax},
+                  clipPathId=${'clip-path-dept-' + #strings.toLowerCase(day.dayOfWeekFull)}
+                "
+                th:d="|M${left},${bottom} v${-1*heightHours} h${barWidth} v${heightHours} z|"
+                th:clip-path="${'url(#'+clipPathId+')'}"
+                fill="url(#gradient)"
+                class="report-graph-day-bar"
+                d=""
+              />
+            </th:block>
             <text
               th:y="${paddingTop + chartHeight + 6}"
               th:x="${left + (barWidth/2)}"

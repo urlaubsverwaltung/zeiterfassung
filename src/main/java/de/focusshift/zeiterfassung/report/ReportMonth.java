@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 
 import java.time.Duration;
@@ -26,5 +27,11 @@ record ReportMonth(YearMonth yearMonth, List<ReportWeek> weeks) {
         final Duration duration = Duration.ofMinutes(Math.round(averageMinutes));
 
         return new WorkDuration(duration);
+    }
+
+    public PlannedWorkingHours plannedWorkingHours() {
+        return weeks.stream()
+            .map(ReportWeek::plannedWorkingHours)
+            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
     }
 }

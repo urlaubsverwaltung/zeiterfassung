@@ -644,7 +644,14 @@
     @apply text-xs;
   }
   .report-graph-day-bar {
-    @apply fill-amber-500;
+  }
+  .report-graph-day-overtime-bar {
+    @apply fill-teal-900;
+    @apply stroke-emerald-600;
+  }
+  .report-graph-day-should-bar {
+    @apply fill-green-100;
+    @apply stroke-emerald-600;
   }
   .report-graph-day-text {
     @apply fill-gray-600;

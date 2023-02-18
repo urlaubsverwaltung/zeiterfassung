@@ -299,8 +299,9 @@ class ReportController implements HasTimeClock, HasLaunchpad {
         final String dayOfWeekFull = dateFormatter.formatDayOfWeekFull(reportDay.date().getDayOfWeek());
         final String dateString = dateFormatter.formatDate(reportDay.date());
         final double hoursWorked = reportDay.workDuration().hoursDoubleValue();
+        final double hoursWorkedShould = reportDay.plannedWorkingHours().hoursDoubleValue();
 
-        return new GraphDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked);
+        return new GraphDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, hoursWorkedShould);
     }
 
     private DetailMonthDto toDetailMonthDto(ReportMonth reportMonth) {

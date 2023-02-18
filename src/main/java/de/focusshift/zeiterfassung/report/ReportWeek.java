@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 
 import java.time.Duration;
@@ -9,6 +10,12 @@ import java.util.List;
 import static java.util.function.Predicate.not;
 
 record ReportWeek(LocalDate firstDateOfWeek, List<ReportDay> reportDays) {
+
+    public PlannedWorkingHours plannedWorkingHours() {
+        return reportDays.stream()
+            .map(ReportDay::plannedWorkingHours)
+            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+    }
 
     public WorkDuration averageDayWorkDuration() {
 
