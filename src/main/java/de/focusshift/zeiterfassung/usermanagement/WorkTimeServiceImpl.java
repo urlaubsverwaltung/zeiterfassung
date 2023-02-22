@@ -7,20 +7,28 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 @Service
 class WorkTimeServiceImpl implements WorkingTimeService {
 
     private final WorkingTimeRepository repository;
     private final UserDateService userDateService;
+    private final UserManagementService userManagementService;
 
-    WorkTimeServiceImpl(WorkingTimeRepository repository, UserDateService userDateService) {
+    WorkTimeServiceImpl(WorkingTimeRepository repository, UserDateService userDateService,
+                        UserManagementService userManagementService) {
+
         this.repository = repository;
         this.userDateService = userDateService;
+        this.userManagementService = userManagementService;
     }
 
     @Override
@@ -28,6 +36,31 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         return repository.findByUserId(userLocalId.value())
             .map(WorkTimeServiceImpl::entityToWorkingTime)
             .orElseGet(() -> defaultWorkingTime(userLocalId));
+    }
+
+    @Override
+    public Map<UserLocalId, WorkingTime> getWorkingTimeByUsers(Collection<UserLocalId> userLocalIds) {
+
+        final List<Long> idValues = userLocalIds.stream().map(UserLocalId::value).toList();
+
+        final Map<UserLocalId, WorkingTime> result = repository.findAllByUserIdIsIn(idValues)
+            .stream()
+            .map(WorkTimeServiceImpl::entityToWorkingTime)
+            .collect(toMap(WorkingTime::getUserId, identity()));
+
+        for (UserLocalId userLocalId : userLocalIds) {
+            if (!result.containsKey(userLocalId)) {
+                result.put(userLocalId, defaultWorkingTime(userLocalId));
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public Map<UserLocalId, WorkingTime> getAllWorkingTimeByUsers() {
+        final List<UserLocalId> userIds = userManagementService.findAllUsers().stream().map(User::localId).toList();
+        return getWorkingTimeByUsers(userIds);
     }
 
     @Override
@@ -39,7 +72,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         return IntStream.range(0, 7)
             .mapToObj(firstDayOfWeek::plusDays)
             .map(day -> Map.entry(day, workDayToPlannedHours(workingTime.getForDayOfWeek(day.getDayOfWeek()))))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     @Override

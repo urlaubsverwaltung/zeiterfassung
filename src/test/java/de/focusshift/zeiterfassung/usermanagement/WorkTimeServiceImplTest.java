@@ -13,8 +13,10 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -33,9 +35,12 @@ class WorkTimeServiceImplTest {
     @Mock
     private UserDateService userDateService;
 
+    @Mock
+    private UserManagementService userManagementService;
+
     @BeforeEach
     void setUp() {
-        sut = new WorkTimeServiceImpl(workingTimeRepository, userDateService);
+        sut = new WorkTimeServiceImpl(workingTimeRepository, userDateService, userManagementService);
     }
 
     @Test
@@ -80,6 +85,160 @@ class WorkTimeServiceImplTest {
         assertThat(actual.getFriday()).hasValue(WorkDay.friday(Duration.ofHours(8)));
         assertThat(actual.getSaturday()).hasValue(WorkDay.saturday(Duration.ZERO));
         assertThat(actual.getSunday()).hasValue(WorkDay.sunday(Duration.ZERO));
+    }
+
+    @Test
+    void ensureGetWorkingTimeByUsers() {
+
+        final WorkingTimeEntity entity_1 = new WorkingTimeEntity();
+        entity_1.setUserId(1L);
+        entity_1.setMonday("PT1H");
+        entity_1.setTuesday("PT2H");
+        entity_1.setWednesday("PT3H");
+        entity_1.setThursday("PT4H");
+        entity_1.setFriday("PT5H");
+        entity_1.setSaturday("PT6H");
+        entity_1.setSunday("PT7H");
+
+        final WorkingTimeEntity entity_2 = new WorkingTimeEntity();
+        entity_2.setUserId(2L);
+        entity_2.setMonday("PT7H");
+        entity_2.setTuesday("PT6H");
+        entity_2.setWednesday("PT5H");
+        entity_2.setThursday("PT4H");
+        entity_2.setFriday("PT3H");
+        entity_2.setSaturday("PT2H");
+        entity_2.setSunday("PT1H");
+
+        when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L, 2L))).thenReturn(List.of(entity_1, entity_2));
+
+        final Map<UserLocalId, WorkingTime> actual = sut.getWorkingTimeByUsers(List.of(new UserLocalId(1L), new UserLocalId(2L)));
+
+        assertThat(actual)
+            .containsEntry(new UserLocalId(1L), WorkingTime.builder()
+                .userId(new UserLocalId(1L))
+                .monday(1)
+                .tuesday(2)
+                .wednesday(3)
+                .thursday(4)
+                .friday(5)
+                .saturday(6)
+                .sunday(8)
+                .build()
+            )
+            .containsEntry(new UserLocalId(2L), WorkingTime.builder()
+                .userId(new UserLocalId(2L))
+                .monday(7)
+                .tuesday(6)
+                .wednesday(5)
+                .thursday(4)
+                .friday(4)
+                .saturday(2)
+                .sunday(1)
+                .build()
+            );
+    }
+
+    @Test
+    void ensureGetWorkingTimeByUsersAddsDefaultWorkingTimeForUsersWithoutExplicitOne() {
+
+        when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L))).thenReturn(List.of());
+
+        final Map<UserLocalId, WorkingTime> actual = sut.getWorkingTimeByUsers(List.of(new UserLocalId(1L)));
+
+        assertThat(actual)
+            .containsEntry(new UserLocalId(1L), WorkingTime.builder()
+                .userId(new UserLocalId(1L))
+                .monday(8)
+                .tuesday(8)
+                .wednesday(8)
+                .thursday(8)
+                .friday(8)
+                .saturday(0)
+                .sunday(0)
+                .build()
+            );
+    }
+
+    @Test
+    void ensureGetAllWorkingTimeByUsers() {
+
+        final WorkingTimeEntity entity_1 = new WorkingTimeEntity();
+        entity_1.setUserId(1L);
+        entity_1.setMonday("PT1H");
+        entity_1.setTuesday("PT2H");
+        entity_1.setWednesday("PT3H");
+        entity_1.setThursday("PT4H");
+        entity_1.setFriday("PT5H");
+        entity_1.setSaturday("PT6H");
+        entity_1.setSunday("PT7H");
+
+        final WorkingTimeEntity entity_2 = new WorkingTimeEntity();
+        entity_2.setUserId(2L);
+        entity_2.setMonday("PT7H");
+        entity_2.setTuesday("PT6H");
+        entity_2.setWednesday("PT5H");
+        entity_2.setThursday("PT4H");
+        entity_2.setFriday("PT3H");
+        entity_2.setSaturday("PT2H");
+        entity_2.setSunday("PT1H");
+
+        when(userManagementService.findAllUsers()).thenReturn(List.of(
+            new User(null, new UserLocalId(1L), "", "", null, Set.of()),
+            new User(null, new UserLocalId(2L), "", "", null, Set.of())
+        ));
+
+        when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L, 2L))).thenReturn(List.of(entity_1, entity_2));
+
+        final Map<UserLocalId, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
+
+        assertThat(actual)
+            .containsEntry(new UserLocalId(1L), WorkingTime.builder()
+                .userId(new UserLocalId(1L))
+                .monday(1)
+                .tuesday(2)
+                .wednesday(3)
+                .thursday(4)
+                .friday(5)
+                .saturday(6)
+                .sunday(8)
+                .build()
+            )
+            .containsEntry(new UserLocalId(2L), WorkingTime.builder()
+                .userId(new UserLocalId(2L))
+                .monday(7)
+                .tuesday(6)
+                .wednesday(5)
+                .thursday(4)
+                .friday(4)
+                .saturday(2)
+                .sunday(1)
+                .build()
+            );
+    }
+
+    @Test
+    void ensureGetAllWorkingTimeByUsersAddsDefaultWorkingTimeForUsersWithoutExplicitOne() {
+
+        when(userManagementService.findAllUsers())
+            .thenReturn(List.of(new User(null, new UserLocalId(1L), "", "", null, Set.of())));
+
+        when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L))).thenReturn(List.of());
+
+        final Map<UserLocalId, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
+
+        assertThat(actual)
+            .containsEntry(new UserLocalId(1L), WorkingTime.builder()
+                .userId(new UserLocalId(1L))
+                .monday(8)
+                .tuesday(8)
+                .wednesday(8)
+                .thursday(8)
+                .friday(8)
+                .saturday(0)
+                .sunday(0)
+                .build()
+            );
     }
 
     @Test

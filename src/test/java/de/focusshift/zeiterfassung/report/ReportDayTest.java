@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -29,7 +30,7 @@ class ReportDayTest {
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
         final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, true);
 
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), List.of(reportDayEntry));
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), PlannedWorkingHours.EIGHT, List.of(reportDayEntry));
 
         assertThat(reportDay.workDuration().value()).isEqualTo(Duration.ZERO);
     }

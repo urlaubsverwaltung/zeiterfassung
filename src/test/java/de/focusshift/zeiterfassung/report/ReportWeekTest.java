@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -21,6 +22,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ReportWeekTest {
 
     @Test
+    void ensureAverageDayWorkDurationIsEmptyWhenNoReportDays() {
+        final ReportWeek sut = new ReportWeek(LocalDate.of(2023, 2, 13), List.of());
+        assertThat(sut.averageDayWorkDuration()).isEqualTo(WorkDuration.ZERO);
+    }
+
+    @Test
+    void ensureAverageDayWorkDurationIsEmptyWhenAllReportDaysHasNotPlannedWorkingHours() {
+
+        final ReportWeek sut = new ReportWeek(LocalDate.of(2023, 2, 13), List.of(
+            new ReportDay(LocalDate.of(2023, 2, 13), PlannedWorkingHours.ZERO, List.of()),
+            new ReportDay(LocalDate.of(2023, 2, 14), PlannedWorkingHours.ZERO, List.of()),
+            new ReportDay(LocalDate.of(2023, 2, 15), PlannedWorkingHours.ZERO, List.of()),
+            new ReportDay(LocalDate.of(2023, 2, 16), PlannedWorkingHours.ZERO, List.of()),
+            new ReportDay(LocalDate.of(2023, 2, 17), PlannedWorkingHours.ZERO, List.of()),
+            new ReportDay(LocalDate.of(2023, 2, 18), PlannedWorkingHours.ZERO, List.of())
+        ));
+
+        assertThat(sut.averageDayWorkDuration()).isEqualTo(WorkDuration.ZERO);
+    }
+
+    @Test
     void ensureAverageDayWorkDuration() {
 
         final User user = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
@@ -37,23 +59,23 @@ class ReportWeekTest {
         final LocalDate sunday = monday.plusDays(6);
 
         final ReportWeek sut = new ReportWeek(monday, List.of(
-            new ReportDay(monday, List.of(
+            new ReportDay(monday, PlannedWorkingHours.EIGHT, List.of(
                 new ReportDayEntry(user, "", ZonedDateTime.of(LocalDateTime.of(monday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(monday, timeEnd), UTC), false)
             )),
-            new ReportDay(tuesday, List.of(
+            new ReportDay(tuesday, PlannedWorkingHours.EIGHT, List.of(
                 new ReportDayEntry(user, "", ZonedDateTime.of(LocalDateTime.of(tuesday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(tuesday, timeEnd), UTC), false)
             )),
-            new ReportDay(wednesday, List.of(
+            new ReportDay(wednesday, PlannedWorkingHours.EIGHT, List.of(
                 new ReportDayEntry(user, "", ZonedDateTime.of(LocalDateTime.of(wednesday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(wednesday, timeEnd), UTC), false)
             )),
-            new ReportDay(thursday, List.of(
+            new ReportDay(thursday, PlannedWorkingHours.EIGHT, List.of(
                 new ReportDayEntry(user, "", ZonedDateTime.of(LocalDateTime.of(thursday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(thursday, timeEnd), UTC), false)
             )),
-            new ReportDay(friday, List.of(
+            new ReportDay(friday, PlannedWorkingHours.EIGHT, List.of(
                 new ReportDayEntry(user, "", ZonedDateTime.of(LocalDateTime.of(friday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(friday, timeEnd), UTC), false)
             )),
-            new ReportDay(saturday, List.of()),
-            new ReportDay(sunday, List.of())
+            new ReportDay(saturday, PlannedWorkingHours.ZERO, List.of()),
+            new ReportDay(sunday, PlannedWorkingHours.ZERO, List.of())
         ));
 
         final WorkDuration actual = sut.averageDayWorkDuration();
