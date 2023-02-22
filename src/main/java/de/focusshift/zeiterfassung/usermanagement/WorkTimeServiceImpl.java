@@ -49,9 +49,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             .collect(toMap(WorkingTime::getUserId, identity()));
 
         for (UserLocalId userLocalId : userLocalIds) {
-            if (!result.containsKey(userLocalId)) {
-                result.put(userLocalId, defaultWorkingTime(userLocalId));
-            }
+            result.computeIfAbsent(userLocalId, this::defaultWorkingTime);
         }
 
         return result;
