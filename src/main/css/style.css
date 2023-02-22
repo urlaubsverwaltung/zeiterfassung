@@ -650,8 +650,6 @@
     @apply fill-teal-700;
     @apply text-xs;
   }
-  .report-graph-day-bar {
-  }
   .report-graph-day-overtime-bar {
     @apply fill-teal-900;
     @apply stroke-emerald-600;
