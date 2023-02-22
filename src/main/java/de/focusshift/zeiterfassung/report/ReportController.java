@@ -22,8 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.threeten.extra.YearWeek;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -265,25 +263,17 @@ class ReportController implements HasTimeClock, HasLaunchpad {
             .map(reportWeek -> toGraphWeekDto(reportWeek, reportMonth.yearMonth().getMonth()))
             .toList();
 
+        final String yearMonth = dateFormatter.formatYearMonth(reportMonth.yearMonth());
+
         final double maxHoursWorked = graphWeekDtos.stream()
             .flatMap(graphWeekDto -> graphWeekDto.dayReports().stream())
             .map(GraphDayDto::hoursWorked)
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
-        final double hoursWorkedAverageADay = graphWeekDtos.stream()
-            .flatMap(graphWeekDto -> graphWeekDto.dayReports().stream())
-            .map(GraphDayDto::hoursWorked)
-            .mapToDouble(value -> value)
-            .average().orElse(0.0);
+        final double hoursWorkedAverageADay = reportMonth.averageDayWorkDuration().hoursDoubleValue();
 
-        final double averageHoursWorkedRounded = BigDecimal.valueOf(hoursWorkedAverageADay)
-            .setScale(2, RoundingMode.DOWN)
-            .doubleValue();
-
-        final String yearMonth = dateFormatter.formatYearMonth(reportMonth.yearMonth());
-
-        return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked, averageHoursWorkedRounded);
+        return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked, hoursWorkedAverageADay);
     }
 
     private GraphWeekDto toGraphWeekDto(ReportWeek reportWeek, Month monthPivot) {
@@ -299,10 +289,7 @@ class ReportController implements HasTimeClock, HasLaunchpad {
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
-        final double hoursWorkedAverageADay = dayReports.stream()
-            .map(GraphDayDto::hoursWorked)
-            .mapToDouble(value -> value)
-            .average().orElse(0.0);
+        final double hoursWorkedAverageADay = reportWeek.averageDayWorkDuration().hoursDoubleValue();
 
         return new GraphWeekDto(yearMonthWeek, dayReports, maxHoursWorked, hoursWorkedAverageADay);
     }

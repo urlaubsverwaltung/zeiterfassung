@@ -8,6 +8,8 @@ import java.util.Objects;
  */
 public final class WorkDuration implements TimeEntryDuration {
 
+    public static final WorkDuration ZERO = new WorkDuration(Duration.ZERO);
+
     private final SimpleTimeEntryDuration timeEntryDuration;
 
     public WorkDuration(Duration value) {
