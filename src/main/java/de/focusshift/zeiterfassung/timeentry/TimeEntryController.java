@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -46,6 +48,7 @@ import static org.springframework.util.StringUtils.hasText;
 class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
+
     private final TimeEntryService timeEntryService;
     private final UserSettingsProvider userSettingsProvider;
     private final DateFormatter dateFormatter;
@@ -155,18 +158,16 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("expected a day"));
 
-            final String weekHoursWorked = durationToTimeString(entryWeekPage.timeEntryWeek().workDuration().value());
-            final String dayHoursWorked = durationToTimeString(timeEntryDay.workDuration().value());
+            final TimeEntryWeek timeEntryWeek = entryWeekPage.timeEntryWeek();
 
             final TimeEntry editedTimeEntry = timeEntryDay.timeEntries().stream()
                 .filter(entry -> entry.id().value().equals(timeEntryDTO.getId()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("could not find edited timeEntry=%s".formatted(timeEntryDTO.getId())));
 
+            model.addAttribute("turboEditedWeek", toTimeEntryWeekDto(timeEntryWeek));
+            model.addAttribute("turboEditedDay", toTimeEntryDayDto(timeEntryDay));
             model.addAttribute("turboEditedTimeEntry", toTimeEntryDto(editedTimeEntry));
-            model.addAttribute("calendarWeek", entryWeekPage.timeEntryWeek().week());
-            model.addAttribute("workedHoursSumWeek", weekHoursWorked);
-            model.addAttribute("workedHoursSumDay", dayHoursWorked);
 
             return "timeentries/index::#frame-time-entry";
         } else {
@@ -319,20 +320,46 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final String firstDateString = dateFormatter.formatDate(firstDateOfWeek, firstMonthFormat, firstYearFormat);
         final String lastDateString = dateFormatter.formatDate(lastDateOfWeek, lastMonthFormat, lastYearFormat);
 
-        final String hoursWorked = durationToTimeString(timeEntryWeek.workDuration().minutes());
+        final List<TimeEntryDayDto> daysDto = timeEntryWeek.days()
+            .stream()
+            .map(this::toTimeEntryDayDto)
+            .toList();
 
-        final List<TimeEntryDayDto> daysDto = timeEntryWeek.days().stream().map(day -> {
-            final String dayHoursWorked = durationToTimeString(day.workDuration().minutes());
-            final List<TimeEntryDTO> dayTimeEntryDTOs = day.timeEntries().stream().map(this::toTimeEntryDto).toList();
-            final String dateString = dateFormatter.formatDate(day.date(), MonthFormat.STRING, YearFormat.FULL);
-            return new TimeEntryDayDto(dateString, dayHoursWorked, dayTimeEntryDTOs);
-        }).toList();
+        final String weekHoursWorked = durationToTimeString(timeEntryWeek.workDuration().minutes());
+        final String weekHoursWorkedShould = durationToTimeString(timeEntryWeek.plannedWorkingHours().minutes());
+        final Duration weekOvertimeDuration = timeEntryWeek.overtime();
+        final String weekOvertime = durationToTimeString(weekOvertimeDuration);
+        final double weekRatio = timeEntryWeek.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
 
-        return new TimeEntryWeekDto(timeEntryWeek.week(), firstDateString, lastDateString, hoursWorked, daysDto);
+        return new TimeEntryWeekDto(timeEntryWeek.week(), firstDateString, lastDateString, weekHoursWorked,
+            weekHoursWorkedShould, weekOvertime, weekOvertimeDuration.isNegative(), weekRatio, daysDto);
     }
 
     private static String durationToTimeString(Duration duration) {
-        return String.format("%02d:%02d", duration.toHours(), duration.toMinutesPart());
+        // negative duration is only the case for overtime.
+        // negative overtime is handled in the template.
+        // -> just use positive values to format duration string
+        return String.format("%02d:%02d", Math.abs(duration.toHours()), Math.abs(duration.toMinutesPart()));
+    }
+
+    private TimeEntryDayDto toTimeEntryDayDto(TimeEntryDay timeEntryDay) {
+
+        final String dateString = dateFormatter.formatDate(timeEntryDay.date(), MonthFormat.STRING, YearFormat.FULL);
+        final String workedHours = durationToTimeString(timeEntryDay.workDuration().minutes());
+        final String workedHoursShould = durationToTimeString(timeEntryDay.plannedWorkingHours().minutes());
+        final Duration hoursDelta = timeEntryDay.overtime();
+        final double ratio = timeEntryDay.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
+        final List<TimeEntryDTO> dayTimeEntryDTOs = timeEntryDay.timeEntries().stream().map(this::toTimeEntryDto).toList();
+
+        return TimeEntryDayDto.builder()
+            .date(dateString)
+            .hoursWorked(workedHours)
+            .hoursWorkedShould(workedHoursShould)
+            .hoursDelta(durationToTimeString(hoursDelta))
+            .hoursDeltaNegative(hoursDelta.isNegative())
+            .hoursWorkedRatio(ratio)
+            .timeEntries(dayTimeEntryDTOs)
+            .build();
     }
 
     private TimeEntryDTO toTimeEntryDto(TimeEntry timeEntry) {

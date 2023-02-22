@@ -5,8 +5,10 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.math.BigDecimal.ONE;
@@ -52,6 +54,22 @@ public final class WorkingTime {
 
     public UserLocalId getUserId() {
         return userId;
+    }
+
+    /**
+     *
+     * @return optional {@linkplain WorkDay} of the given {@linkplain DayOfWeek}, or {@linkplain Optional#empty()} when it is not a working day.
+     */
+    public Optional<WorkDay> getForDayOfWeek(DayOfWeek dayOfWeek) {
+        return Map.<DayOfWeek, Supplier<Optional<WorkDay>>>of(
+            MONDAY, this::getMonday,
+            TUESDAY, this::getTuesday,
+            WEDNESDAY, this::getWednesday,
+            THURSDAY, this::getThursday,
+            FRIDAY, this::getFriday,
+            SATURDAY, this::getSaturday,
+            SUNDAY, this::getSunday
+        ).get(dayOfWeek).get();
     }
 
     /**

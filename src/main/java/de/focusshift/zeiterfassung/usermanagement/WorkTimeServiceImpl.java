@@ -1,17 +1,26 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.user.UserDateService;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.Year;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 class WorkTimeServiceImpl implements WorkingTimeService {
 
     private final WorkingTimeRepository repository;
+    private final UserDateService userDateService;
 
-    WorkTimeServiceImpl(WorkingTimeRepository repository) {
+    WorkTimeServiceImpl(WorkingTimeRepository repository, UserDateService userDateService) {
         this.repository = repository;
+        this.userDateService = userDateService;
     }
 
     @Override
@@ -19,6 +28,18 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         return repository.findByUserId(userLocalId.value())
             .map(WorkTimeServiceImpl::entityToWorkingTime)
             .orElseGet(() -> defaultWorkingTime(userLocalId));
+    }
+
+    @Override
+    public Map<LocalDate, PlannedWorkingHours> getWorkingHoursByUserAndYearWeek(UserLocalId userLocalId, Year year, int weekOfYear) {
+
+        final WorkingTime workingTime = getWorkingTimeByUser(userLocalId);
+        final LocalDate firstDayOfWeek = userDateService.firstDayOfWeek(year, weekOfYear);
+
+        return IntStream.range(0, 7)
+            .mapToObj(firstDayOfWeek::plusDays)
+            .map(day -> Map.entry(day, workDayToPlannedHours(workingTime.getForDayOfWeek(day.getDayOfWeek()))))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     @Override
@@ -70,6 +91,13 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             .saturday(orZero(entity.getSaturday()))
             .sunday(orZero(entity.getSunday()))
             .build();
+    }
+
+    private PlannedWorkingHours workDayToPlannedHours(Optional<WorkDay> workDay) {
+        return workDay
+            .map(WorkDay::duration)
+            .map(PlannedWorkingHours::new)
+            .orElse(PlannedWorkingHours.ZERO);
     }
 
     private static Duration orZero(String durationString) {

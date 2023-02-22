@@ -61,8 +61,8 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), List.of(timeEntry));
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(timeEntryDay));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntry));
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
 
@@ -79,9 +79,30 @@ class TimeEntryControllerTest {
             .comment("hack the planet")
             .build();
 
-        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-2022-9-19", "formatted-2022-9-25", "00:30",
-                List.of(new TimeEntryDayDto("formatted-2022-9-19", "00:30", List.of(expectedTimeEntryDto))));
-        final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 39, 2022, 37, expectedTimeEntryWeekDto, 1337);
+        final TimeEntryDayDto expectedTimeEntryDayDto = TimeEntryDayDto.builder()
+            .date("formatted-2022-9-19")
+            .hoursWorked("00:30")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:30")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(7.0)
+            .timeEntries(List.of(expectedTimeEntryDto))
+            .build();
+
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(38)
+            .from("formatted-2022-9-19")
+            .to("formatted-2022-9-25")
+            .hoursWorked("00:30")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:30")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(7.0)
+            .days(List.of(expectedTimeEntryDayDto))
+            .build();
+
+        final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(
+            2022, 39, 2022, 37, expectedTimeEntryWeekDto, 1337);
 
         perform(
             get("/timeentries/2022/38")
@@ -100,8 +121,8 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), List.of(timeEntry));
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(timeEntryDay));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntry));
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 42);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
 
@@ -118,9 +139,30 @@ class TimeEntryControllerTest {
             .comment("hack the planet")
             .build();
 
-        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-2022-9-19", "formatted-2022-9-25", "00:30",
-                List.of(new TimeEntryDayDto("formatted-2022-9-19", "00:30", List.of(expectedTimeEntryDto))));
-        final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 39, 2022, 37, expectedTimeEntryWeekDto, 42);
+        final TimeEntryDayDto expectedTimeEntryDayDto = TimeEntryDayDto.builder()
+            .date("formatted-2022-9-19")
+            .hoursWorked("00:30")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:30")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(7.0)
+            .timeEntries(List.of(expectedTimeEntryDto))
+            .build();
+
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(38)
+            .from("formatted-2022-9-19")
+            .to("formatted-2022-9-25")
+            .hoursWorked("00:30")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:30")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(7.0)
+            .days(List.of(expectedTimeEntryDayDto))
+            .build();
+
+        final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(
+            2022, 39, 2022, 37, expectedTimeEntryWeekDto, 42);
 
         perform(
             get("/timeentries/2022/38")
@@ -134,13 +176,24 @@ class TimeEntryControllerTest {
 
     @Test
     void ensureTimeEntriesForYearAndWeekOfYearWhenNextYearWouldBeReachedWithLoadMore() throws Exception {
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 12, 27), List.of());
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 12, 27), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 52)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
-        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(52, "formatted-date", "formatted-date", "00:00", List.of());
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(52)
+            .from("formatted-date")
+            .to("formatted-date")
+            .hoursWorked("00:00")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("08:00")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(0)
+            .days(List.of())
+            .build();
+
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2023, 1, 2022, 51, expectedTimeEntryWeekDto, 0);
 
         perform(
@@ -154,13 +207,24 @@ class TimeEntryControllerTest {
 
     @Test
     void ensureTimeEntriesForYearAndWeekOfYearWhenPreviousYearWouldBeReachedWithShowPastWith52() throws Exception {
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 1, 3), List.of());
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 1, 3), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 1)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
-        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(1, "formatted-date", "formatted-date", "00:00", List.of());
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(1)
+            .from("formatted-date")
+            .to("formatted-date")
+            .hoursWorked("00:00")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("08:00")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(0)
+            .days(List.of())
+            .build();
+
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 2, 2021, 52, expectedTimeEntryWeekDto, 0);
 
         perform(
@@ -174,13 +238,24 @@ class TimeEntryControllerTest {
 
     @Test
     void ensureTimeEntriesForYearAndWeekOfYearWhenPreviousYearWouldBeReachedWithShowPastWith53() throws Exception {
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2021, 1, 4), List.of());
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2021, 1, 4), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2021, 1)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
-        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(1, "formatted-date", "formatted-date", "00:00", List.of());
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(1)
+            .from("formatted-date")
+            .to("formatted-date")
+            .hoursWorked("00:00")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("08:00")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(0)
+            .days(List.of())
+            .build();
+
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2021, 2, 2020, 53, expectedTimeEntryWeekDto, 0);
 
         perform(
@@ -277,14 +352,26 @@ class TimeEntryControllerTest {
     @Test
     void ensureTimeEntryCreationError() throws Exception {
 
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of());
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 99);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2021, 52)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
-        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-date", "formatted-date", "00:00", List.of());
-        final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 1, 2021, 51, expectedTimeEntryWeekDto, 99);
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(38)
+            .from("formatted-date")
+            .to("formatted-date")
+            .hoursWorked("00:00")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("08:00")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(0)
+            .days(List.of())
+            .build();
+
+        final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(
+            2022, 1, 2021, 51, expectedTimeEntryWeekDto, 99);
 
         final ResultActions perform = perform(
             post("/timeentries")
@@ -374,13 +461,16 @@ class TimeEntryControllerTest {
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(
             LocalDate.of(2022, 9, 26),
+            new PlannedWorkingHours(Duration.ofHours(16)),
             List.of(
                 new TimeEntryDay(
                     LocalDate.of(2022, 9, 28),
+                    PlannedWorkingHours.EIGHT,
                     List.of(timeEntry)
                 ),
                 new TimeEntryDay(
                     LocalDate.of(2022, 9, 29),
+                    PlannedWorkingHours.EIGHT,
                     List.of(timeEntryOtherDay)
                 )
             )
@@ -388,6 +478,11 @@ class TimeEntryControllerTest {
 
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 39)).thenReturn(timeEntryWeekPage);
+
+        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 26), MonthFormat.STRING, YearFormat.NONE)).thenReturn("formatted-2022-9-26");
+        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 28), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-28");
+        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 29), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-29");
+        when(dateFormatter.formatDate(LocalDate.of(2022, 10, 2), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-10-2");
 
         final ResultActions perform = perform(
             post("/timeentries/1337")
@@ -411,12 +506,52 @@ class TimeEntryControllerTest {
             .comment("hard work extended")
             .build();
 
+        final TimeEntryDTO otherTimeEntryDto = TimeEntryDTO.builder()
+            .id(1L)
+            .date(LocalDate.of(2022, 9, 29))
+            .start(LocalTime.of(14, 30))
+            .end(LocalTime.of(15, 0))
+            .duration("00:30")
+            .comment("hack the planet")
+            .build();
+
+        final TimeEntryDayDto expectedDayDto = TimeEntryDayDto.builder()
+            .date("formatted-2022-9-28")
+            .hoursWorked("00:45")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:15")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(10.0)
+            .timeEntries(List.of(expectedTimeEntryDto))
+            .build();
+
+        final TimeEntryDayDto otherDayDto = TimeEntryDayDto.builder()
+            .date("formatted-2022-9-29")
+            .hoursWorked("00:30")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:30")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(7.0)
+            .timeEntries(List.of(otherTimeEntryDto))
+            .build();
+
+        final TimeEntryWeekDto expectedWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(39)
+            .from("formatted-2022-9-26")
+            .to("formatted-2022-10-2")
+            .hoursWorked("01:15")
+            .hoursWorkedShould("16:00")
+            .hoursDelta("14:45")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(8.0)
+            .days(List.of(expectedDayDto, otherDayDto))
+            .build();
+
         perform
             .andExpect(status().isOk())
+            .andExpect(model().attribute("turboEditedWeek", expectedWeekDto))
+            .andExpect(model().attribute("turboEditedDay", expectedDayDto))
             .andExpect(model().attribute("turboEditedTimeEntry", expectedTimeEntryDto))
-            .andExpect(model().attribute("calendarWeek", 39))
-            .andExpect(model().attribute("workedHoursSumWeek", "01:15"))
-            .andExpect(model().attribute("workedHoursSumDay", "00:45"))
             .andExpect(view().name("timeentries/index::#frame-time-entry"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
@@ -434,7 +569,8 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), List.of(new TimeEntryDay(LocalDate.of(2022, 9, 19), List.of(timeEntry))));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntry));
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2021, 52)).thenReturn(timeEntryWeekPage);
 
@@ -449,8 +585,27 @@ class TimeEntryControllerTest {
             .comment("hack the planet")
             .build();
 
-        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(38, "formatted-date", "formatted-date", "00:30",
-                List.of(new TimeEntryDayDto("formatted-date", "00:30", List.of(expectedTimeEntryDto))));
+        final TimeEntryDayDto timeEntryDayDto = TimeEntryDayDto.builder()
+            .date("formatted-date")
+            .hoursWorked("00:30")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:30")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(7.0)
+            .timeEntries(List.of(expectedTimeEntryDto))
+            .build();
+
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(38)
+            .from("formatted-date")
+            .to("formatted-date")
+            .hoursWorked("00:30")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:30")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(7.0)
+            .days(List.of(timeEntryDayDto))
+            .build();
 
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 1, 2021, 51, expectedTimeEntryWeekDto, 1337);
 
@@ -478,8 +633,8 @@ class TimeEntryControllerTest {
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1337L), new UserId("batman"), "hard work extended", start, end, false);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 28), List.of(timeEntry));
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), List.of(timeEntryDay));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 28), PlannedWorkingHours.EIGHT, List.of(timeEntry));
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 39)).thenReturn(timeEntryWeekPage);
 

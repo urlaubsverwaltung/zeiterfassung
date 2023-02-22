@@ -26,12 +26,15 @@
       <main class="flex-1 flex flex-col">
         <div class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28">
           <div class="px-4">
-            <h1
-              class="text-2xl text-blue-700 text-center mb-4"
-              th:text="#{time-entry.create.title}"
-            >
-              Neuen Zeitslot erfassen
-            </h1>
+            <div class="flex">
+              <h1
+                class="flex-1 text-2xl text-blue-700 text-center mb-4"
+                th:text="#{time-entry.create.title}"
+              >
+                Neuen Zeitslot erfassen
+              </h1>
+              <div class="md:ml-4 md:w-1/5 lg:w-1/6"></div>
+            </div>
             <th:block
               th:insert="~{::timeentry-slot-form(formAction=@{/timeentries}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
             ></th:block>
@@ -64,18 +67,18 @@
           <th:block th:if="${turboEditedTimeEntry != null}">
             <turbo-stream
               action="replace"
-              th:target="${'calendar-week-title-sum-'+ calendarWeek}"
+              th:target="${'week-banner-'+ turboEditedWeek.calendarWeek}"
             >
               <template
-                th:insert="::calendar-week-title-sum(${workedHoursSumWeek}, ${calendarWeek})"
+                th:insert="::week-banner(${turboEditedWeek})"
               ></template>
             </turbo-stream>
             <turbo-stream
               action="replace"
-              th:target="${'calendar-day-title-sum-'+ calendarWeek + '-' + turboEditedTimeEntry.date.dayOfWeek}"
+              th:target="${'day-of-week-banner-'+ turboEditedWeek.calendarWeek + '-' + turboEditedTimeEntry.date.dayOfWeek}"
             >
               <template
-                th:insert="::calendar-week-day-title-sum(${workedHoursSumDay}, ${calendarWeek}, ${turboEditedTimeEntry.date.dayOfWeek})"
+                th:insert="::day-of-week-banner(${turboEditedWeek.calendarWeek}, ${turboEditedDay})"
               ></template>
             </turbo-stream>
             <turbo-stream
@@ -108,28 +111,79 @@
           <div id="time-entries-box" class="space-y-16">
             <th:block th:ref="time-entries-box-content">
               <div th:with="week=${timeEntryWeeksPage.timeEntryWeek}">
-                <h3
-                  th:fragment="calendar-week-title"
-                  class="px-8 text-gray-400"
-                >
-                  <span
-                    class="font-medium"
-                    th:text="#{time-entry.overview.week.group.title.date-range(${week.calendarWeek}, ${week.from}, ${week.to})}"
-                  ></span>
-                  <th:block
-                    th:if="${not #lists.isEmpty(week.timeEntries)}"
-                    th:with="hoursWorked=${week.hoursWorked}, calendarWeek=${week.calendarWeek}"
+                <div class="px-4">
+                  <div
+                    th:fragment="week-banner(week)"
+                    th:id="${'week-banner-'+ week.calendarWeek}"
+                    class="flex items-center"
                   >
-                    &nbsp;-&nbsp;
-                    <span
-                      th:fragment="calendar-week-title-sum(hoursWorked, calendarWeek)"
-                      th:id="${'calendar-week-title-sum-'+ calendarWeek}"
-                      class="text-gray-600 font-bold proportional-nums"
-                      th:text="${hoursWorked}"
-                    ></span>
-                  </th:block>
-                </h3>
-                <div th:if="${#lists.isEmpty(week.timeEntries)}">
+                    <div
+                      class="flex-1 py-1 px-4 w-full rounded-full bg-blue-50 border border-blue-100"
+                    >
+                      <div
+                        class="relative flex justify-between gap-x-2 flex-wrap text-blue-900 text-sm"
+                      >
+                        <h3
+                          class="font-medium"
+                          th:text="#{time-entry.overview.week.group.title.date-range(${week.calendarWeek}, ${week.from}, ${week.to})}"
+                        ></h3>
+                        <p
+                          class="tabular-nums text-sm text-gray-800 font-medium sm:flex-1 sm:absolute sm:left-0 sm:right-0 sm:text-center"
+                        >
+                          <span class="inline-flex items-center">
+                            <th:block th:if="${week.hoursDeltaNegative}"
+                              >-</th:block
+                            >
+                            <th:block th:if="${not week.hoursDeltaNegative}"
+                              >+</th:block
+                            >
+                            <span
+                              class="font-bold tabular-nums"
+                              th:text="${week.hoursDelta}"
+                            >
+                              05:45
+                            </span>
+                            <th:block th:if="${not week.hoursDeltaNegative}">
+                              <svg
+                                th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1')}"
+                              ></svg>
+                            </th:block>
+                          </span>
+                        </p>
+                        <p
+                          th:if="${not #lists.isEmpty(week.timeEntries)}"
+                          class="sr-only sm:not-sr-only"
+                        >
+                          <th:block
+                            th:text="#{time-entry.overview.week.group.hours-bar.week}"
+                          >
+                            Woche:
+                          </th:block>
+                          <span
+                            class="font-bold tabular-nums"
+                            th:text="${week.hoursWorked}"
+                          ></span>
+                          (<th:block
+                            th:text="#{time-entry.overview.week.group.hours-bar.should}"
+                            >Soll:</th:block
+                          >&nbsp;
+                          <span
+                            class="font-bold tabular-nums"
+                            th:text="${week.hoursWorkedShould}"
+                          >
+                            40:00 </span
+                          >)
+                        </p>
+                      </div>
+                      <div
+                        class="translate-y-1 h-1 rounded-full bg-gradient-to-r from-blue-100 to-blue-500"
+                        th:styleappend="${'width:' + week.hoursWorkedRatio + '%'}"
+                      ></div>
+                    </div>
+                    <div class="md:ml-4 md:w-1/5 lg:w-1/6"></div>
+                  </div>
+                </div>
+                <div class="mt-2" th:if="${#lists.isEmpty(week.timeEntries)}">
                   <p
                     class="m-8"
                     th:text="#{time-entry.no-entries-available.week}"
@@ -137,27 +191,84 @@
                     In dieser Woche sind keine Einträge vorhanden.
                   </p>
                 </div>
-                <div
-                  th:if="${not #lists.isEmpty(week.timeEntries())}"
-                  class="px-4 space-y-10 md:space-y-2"
-                >
-                  <div th:each="day : ${week.days}">
-                    <h4 class="time-day-header" is="z-time-day-header">
-                      <span class="font-medium" th:text="${day.date()}"></span>
-                      <th:block
-                        th:if="${not #lists.isEmpty(day.timeEntries)}"
-                        th:with="hoursWorked=${day.hoursWorked()}, calendarWeek=${week.calendarWeek()}, day=${day.timeEntries[0].date.dayOfWeek}"
+                <div th:if="${not #lists.isEmpty(week.timeEntries())}">
+                  <div
+                    th:each="day: ${week.days}"
+                    th:with="calendarWeek=${week.calendarWeek}"
+                    class="space-y-10 md:space-y-4"
+                    th:classappend="${dayStat.first ? 'mt-2' : 'mt-4'}"
+                  >
+                    <div class="px-4 sticky top-nav-header pt-px z-10">
+                      <div
+                        th:fragment="day-of-week-banner(calendarWeek, day)"
+                        th:id="${'day-of-week-banner-' + calendarWeek + '-' + day.timeEntries[0].date.dayOfWeek}"
+                        class="flex items-center"
                       >
-                        &nbsp;-&nbsp;
-                        <span
-                          th:fragment="calendar-week-day-title-sum(hoursWorked, calendarWeek, day)"
-                          th:id="${'calendar-day-title-sum-' + calendarWeek + '-' + day}"
-                          class="text-gray-600 font-bold proportional-nums"
-                          th:text="${hoursWorked}"
-                        ></span>
-                      </th:block>
-                    </h4>
-                    <div class="space-y-10 md:space-y-2">
+                        <div
+                          class="flex-1 py-1 px-4 w-full rounded-full bg-green-50 border border-green-100"
+                        >
+                          <div
+                            class="relative flex justify-between gap-x-2 flex-wrap text-green-900 text-sm"
+                          >
+                            <h4 class="font-medium" th:text="${day.date}"></h4>
+                            <p
+                              class="tabular-nums text-sm text-gray-800 font-medium sm:flex-1 sm:absolute sm:left-0 sm:right-0 sm:text-center"
+                            >
+                              <span class="inline-flex items-center">
+                                <th:block th:if="${day.hoursDeltaNegative}"
+                                  >-</th:block
+                                >
+                                <th:block th:if="${not day.hoursDeltaNegative}"
+                                  >+</th:block
+                                >
+                                <span
+                                  class="font-bold tabular-nums"
+                                  th:text="${day.hoursDelta}"
+                                >
+                                  01:30
+                                </span>
+                                <th:block
+                                  th:if="${not day.hoursDeltaNegative and day.hoursDelta != '00:00'}"
+                                >
+                                  <svg
+                                    th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1')}"
+                                  ></svg>
+                                </th:block>
+                              </span>
+                            </p>
+                            <p
+                              th:if="${not #lists.isEmpty(day.timeEntries)}"
+                              class="sr-only sm:not-sr-only"
+                            >
+                              <th:block
+                                th:text="#{time-entry.overview.day.group.hours-bar.day}"
+                                >Tag:</th:block
+                              >
+                              <span
+                                class="font-bold tabular-nums"
+                                th:text="${day.hoursWorked}"
+                              ></span>
+                              (<th:block
+                                th:text="#{time-entry.overview.day.group.hours-bar.should}"
+                                >Soll:</th:block
+                              >&nbsp;
+                              <span
+                                class="font-bold tabular-nums"
+                                th:text="${day.hoursWorkedShould}"
+                              >
+                                08:00 </span
+                              >)
+                            </p>
+                          </div>
+                          <div
+                            class="translate-y-1 h-1 rounded-full bg-gradient-to-r from-green-100 to-green-500"
+                            th:styleappend="${'width:' + day.hoursWorkedRatio + '%'}"
+                          ></div>
+                        </div>
+                        <div class="md:ml-4 md:w-1/5 lg:w-1/6"></div>
+                      </div>
+                    </div>
+                    <div class="px-4 space-y-10 md:space-y-2">
                       <th:block th:each="timeEntry: ${day.timeEntries}">
                         <div
                           is="z-time-entry-element"
@@ -423,7 +534,7 @@
             </div>
           </div>
           <div
-            class="mt-4 md:mt-0 md:ml-4 md:mr-auto flex items-center justify-center"
+            class="mt-4 flex items-center justify-center md:justify-start md:ml-4 md:w-1/5 md:mt-0 lg:w-1/6"
             th:insert="${actions}"
           ></div>
         </div>

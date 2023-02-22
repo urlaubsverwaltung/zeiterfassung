@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.user.UserDateService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +11,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.Year;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,9 +30,12 @@ class WorkTimeServiceImplTest {
     @Mock
     private WorkingTimeRepository workingTimeRepository;
 
+    @Mock
+    private UserDateService userDateService;
+
     @BeforeEach
     void setUp() {
-        sut = new WorkTimeServiceImpl(workingTimeRepository);
+        sut = new WorkTimeServiceImpl(workingTimeRepository, userDateService);
     }
 
     @Test
@@ -72,6 +80,56 @@ class WorkTimeServiceImplTest {
         assertThat(actual.getFriday()).hasValue(WorkDay.friday(Duration.ofHours(8)));
         assertThat(actual.getSaturday()).hasValue(WorkDay.saturday(Duration.ZERO));
         assertThat(actual.getSunday()).hasValue(WorkDay.sunday(Duration.ZERO));
+    }
+
+    @Test
+    void ensureGetWorkingHoursByUserAndYearWeek() {
+
+        final WorkingTimeEntity entity = new WorkingTimeEntity();
+        entity.setUserId(42L);
+        entity.setMonday("PT1H");
+        entity.setTuesday("PT2H");
+        entity.setWednesday("PT3H");
+        entity.setThursday("PT4H");
+        entity.setFriday("PT5H");
+        entity.setSaturday("PT6H");
+        entity.setSunday("PT7H");
+
+        when(workingTimeRepository.findByUserId(42L)).thenReturn(Optional.of(entity));
+
+        when(userDateService.firstDayOfWeek(Year.of(2023), 7))
+            .thenReturn(LocalDate.of(2023, 2, 13));
+
+        final Map<LocalDate, PlannedWorkingHours> actual = sut.getWorkingHoursByUserAndYearWeek(new UserLocalId(42L), Year.of(2023), 7);
+
+        assertThat(actual)
+            .containsEntry(LocalDate.of(2023, 2, 13), new PlannedWorkingHours(Duration.ofHours(1)))
+            .containsEntry(LocalDate.of(2023, 2, 14), new PlannedWorkingHours(Duration.ofHours(2)))
+            .containsEntry(LocalDate.of(2023, 2, 15), new PlannedWorkingHours(Duration.ofHours(3)))
+            .containsEntry(LocalDate.of(2023, 2, 16), new PlannedWorkingHours(Duration.ofHours(4)))
+            .containsEntry(LocalDate.of(2023, 2, 17), new PlannedWorkingHours(Duration.ofHours(5)))
+            .containsEntry(LocalDate.of(2023, 2, 18), new PlannedWorkingHours(Duration.ofHours(6)))
+            .containsEntry(LocalDate.of(2023, 2, 19), new PlannedWorkingHours(Duration.ofHours(7)));
+    }
+
+    @Test
+    void ensureGetWorkingHoursByUserAndYearWeekUsesDefault() {
+
+        when(workingTimeRepository.findByUserId(42L)).thenReturn(Optional.empty());
+
+        when(userDateService.firstDayOfWeek(Year.of(2023), 7))
+            .thenReturn(LocalDate.of(2023, 2, 13));
+
+        final Map<LocalDate, PlannedWorkingHours> actual = sut.getWorkingHoursByUserAndYearWeek(new UserLocalId(42L), Year.of(2023), 7);
+
+        assertThat(actual)
+            .containsEntry(LocalDate.of(2023, 2, 13), PlannedWorkingHours.EIGHT)
+            .containsEntry(LocalDate.of(2023, 2, 14), PlannedWorkingHours.EIGHT)
+            .containsEntry(LocalDate.of(2023, 2, 15), PlannedWorkingHours.EIGHT)
+            .containsEntry(LocalDate.of(2023, 2, 16), PlannedWorkingHours.EIGHT)
+            .containsEntry(LocalDate.of(2023, 2, 17), PlannedWorkingHours.EIGHT)
+            .containsEntry(LocalDate.of(2023, 2, 18), PlannedWorkingHours.ZERO)  // saturday
+            .containsEntry(LocalDate.of(2023, 2, 19), PlannedWorkingHours.ZERO); // sunday
     }
 
     @Test

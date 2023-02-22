@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.usermanagement.WorkingTimeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -32,15 +34,17 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     private final TimeEntryRepository timeEntryRepository;
     private final UserManagementService userManagementService;
+    private final WorkingTimeService workingTimeService;
     private final UserDateService userDateService;
     private final Clock clock;
 
     @Autowired
     TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, UserManagementService userManagementService,
-                         UserDateService userDateService, Clock clock) {
+                         WorkingTimeService workingTimeService, UserDateService userDateService, Clock clock) {
 
         this.timeEntryRepository = timeEntryRepository;
         this.userManagementService = userManagementService;
+        this.workingTimeService = workingTimeService;
         this.userDateService = userDateService;
         this.clock = clock;
     }
@@ -107,14 +111,23 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .map(TimeEntryServiceImpl::toTimeEntry)
             .toList();
 
-        List<TimeEntryDay> daysOfWeek = timeEntries.stream()
+        // TODO refactor getEntryWeekPage to accept UserLocalId
+        final User user = userManagementService.findUserById(userId).orElseThrow(() -> new IllegalStateException("expected user=%s to exist.".formatted(userId)));
+        final UserLocalId userLocalId = user.localId();
+        final Map<LocalDate, PlannedWorkingHours> plannedByDate = workingTimeService.getWorkingHoursByUserAndYearWeek(userLocalId, Year.of(year), weekOfYear);
+
+        final PlannedWorkingHours weekPlannedHours = plannedByDate.values()
+            .stream()
+            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+
+        final List<TimeEntryDay> daysOfWeek = timeEntries.stream()
             .collect(Collectors.groupingBy(timeEntry -> timeEntry.start().toLocalDate()))
             .entrySet().stream()
-            .map(e -> new TimeEntryDay(e.getKey(), e.getValue()))
+            .map(e -> new TimeEntryDay(e.getKey(), plannedByDate.get(e.getKey()), e.getValue()))
             .sorted(comparing(TimeEntryDay::date).reversed())
             .toList();
 
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(fromDateTime.toLocalDate(), daysOfWeek);
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(fromDateTime.toLocalDate(), weekPlannedHours, daysOfWeek);
         final long totalTimeEntries = timeEntryRepository.countAllByOwner(userId.value());
 
         return new TimeEntryWeekPage(timeEntryWeek, totalTimeEntries);
