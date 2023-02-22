@@ -47,7 +47,8 @@ class ReportWeekControllerTest {
 
     @BeforeEach
     void setUp() {
-        sut = new ReportWeekController(reportService, reportPermissionService, dateFormatter, clock);
+        final ReportControllerHelper helper = new ReportControllerHelper(reportPermissionService, dateFormatter);
+        sut = new ReportWeekController(reportService, helper, clock);
     }
 
     @Test

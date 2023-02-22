@@ -2,9 +2,6 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
-import de.focusshift.zeiterfassung.user.DateFormatter;
-import de.focusshift.zeiterfassung.user.UserId;
-import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -24,19 +21,11 @@ import org.threeten.extra.YearWeek;
 
 import java.time.Clock;
 import java.time.DateTimeException;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.Month;
 import java.time.Year;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
-import static java.util.stream.Collectors.joining;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Controller
@@ -46,14 +35,12 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
     private final ReportService reportService;
-    private final ReportPermissionService reportPermissionService;
-    private final DateFormatter dateFormatter;
+    private final ReportControllerHelper helper;
     private final Clock clock;
 
-    ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService, DateFormatter dateFormatter, Clock clock) {
+    ReportWeekController(ReportService reportService, ReportControllerHelper helper, Clock clock) {
         this.reportService = reportService;
-        this.reportPermissionService = reportPermissionService;
-        this.dateFormatter = dateFormatter;
+        this.helper = helper;
         this.clock = clock;
     }
 
@@ -84,8 +71,8 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         final boolean allUsersSelected = optionalAllUsersSelected.isPresent();
 
         final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, userLocalIds);
-        final GraphWeekDto graphWeekDto = toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
-        final DetailWeekDto detailWeekDto = toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
+        final GraphWeekDto graphWeekDto = helper.toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
+        final DetailWeekDto detailWeekDto = helper.toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
 
         model.addAttribute("weekReport", graphWeekDto);
         model.addAttribute("weekReportDetail", detailWeekDto);
@@ -101,17 +88,17 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
         final int previousYear = reportYearWeek.minusWeeks(1).getYear();
         final int previousWeek = reportYearWeek.minusWeeks(1).getWeek();
-        final String previousSectionUrl = createUrl(String.format("/report/year/%d/week/%d", previousYear, previousWeek), allUsersSelected, userLocalIds);
+        final String previousSectionUrl = helper.createUrl(String.format("/report/year/%d/week/%d", previousYear, previousWeek), allUsersSelected, userLocalIds);
 
-        final String todaySectionUrl = createUrl("/report/week", allUsersSelected, userLocalIds);
+        final String todaySectionUrl = helper.createUrl("/report/week", allUsersSelected, userLocalIds);
 
         final int nextYear = reportYearWeek.plusWeeks(1).getYear();
         final int nextWeek = reportYearWeek.plusWeeks(1).getWeek();
-        final String nextSectionUrl = createUrl(String.format("/report/year/%d/week/%d", nextYear, nextWeek), allUsersSelected, userLocalIds);
+        final String nextSectionUrl = helper.createUrl(String.format("/report/year/%d/week/%d", nextYear, nextWeek), allUsersSelected, userLocalIds);
 
         final int selectedYear = reportYearWeek.getYear();
         final int selectedWeek = reportYearWeek.getWeek();
-        final String selectedYearWeekUrl = createUrl(String.format("/report/year/%d/week/%d", selectedYear, selectedWeek), allUsersSelected, userLocalIds);
+        final String selectedYearWeekUrl = helper.createUrl(String.format("/report/year/%d/week/%d", selectedYear, selectedWeek), allUsersSelected, userLocalIds);
         final String csvDownloadUrl = selectedYearWeekUrl.contains("?") ? selectedYearWeekUrl + "&csv" : selectedYearWeekUrl + "?csv";
 
         model.addAttribute("userReportPreviousSectionUrl", previousSectionUrl);
@@ -119,111 +106,24 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         model.addAttribute("userReportNextSectionUrl", nextSectionUrl);
         model.addAttribute("userReportCsvDownloadUrl", csvDownloadUrl);
 
-        addUserFilterModelAttributes(model, allUsersSelected, userLocalIds, String.format("/report/year/%d/week/%d", year, week));
+        helper.addUserFilterModelAttributes(model, allUsersSelected, userLocalIds, String.format("/report/year/%d/week/%d", year, week));
 
         return "reports/user-report";
     }
 
     private ReportWeek getReportWeek(OidcUser principal, YearWeek reportYearWeek, boolean allUsersSelected, Year reportYear, List<UserLocalId> userLocalIds) {
+
         final ReportWeek reportWeek;
 
         if (allUsersSelected) {
             reportWeek = reportService.getReportWeekForAllUsers(reportYear, reportYearWeek.getWeek());
         } else if (userLocalIds.isEmpty()) {
-            reportWeek = reportService.getReportWeek(reportYear, reportYearWeek.getWeek(), principalToUserId(principal));
+            reportWeek = reportService.getReportWeek(reportYear, reportYearWeek.getWeek(), helper.principalToUserId(principal));
         } else {
             reportWeek = reportService.getReportWeek(reportYear, reportYearWeek.getWeek(), userLocalIds);
         }
 
         return reportWeek;
-    }
-
-    private static UserId principalToUserId(OidcUser principal) {
-        return new UserId(principal.getUserInfo().getSubject());
-    }
-
-    private String createUrl(String prefix, boolean allUsersSelected, List<UserLocalId> selectedUserLocalIds) {
-        String url = prefix;
-
-        if (allUsersSelected || !selectedUserLocalIds.isEmpty()) {
-            url += "?";
-        }
-
-        if (allUsersSelected) {
-            url += "everyone=";
-        }
-
-        final String usersParam = selectedUserLocalIds.stream()
-            .map(UserLocalId::value)
-            .map(id -> "user=" + id)
-            .collect(joining("&"));
-
-        if (!usersParam.isEmpty()) {
-            if (allUsersSelected) {
-                url += "&";
-            }
-            url += usersParam;
-        }
-
-        return url;
-    }
-
-    private GraphWeekDto toGraphWeekDto(ReportWeek reportWeek, Month monthPivot) {
-        final List<GraphDayDto> dayReports = reportWeek.reportDays()
-            .stream()
-            .map(reportDay -> toUserReportDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot)))
-            .toList();
-
-        final String yearMonthWeek = dateFormatter.formatYearMonthWeek(reportWeek.firstDateOfWeek());
-
-        final double maxHoursWorked = dayReports.stream()
-            .map(GraphDayDto::hoursWorked)
-            .mapToDouble(value -> value)
-            .max().orElse(0.0);
-
-        final double hoursWorkedAverageADay = reportWeek.averageDayWorkDuration().hoursDoubleValue();
-
-        return new GraphWeekDto(yearMonthWeek, dayReports, maxHoursWorked, hoursWorkedAverageADay);
-    }
-
-    private GraphDayDto toUserReportDayReportDto(ReportDay reportDay, boolean differentMonth) {
-        final String dayOfWeekNarrow = dateFormatter.formatDayOfWeekNarrow(reportDay.date().getDayOfWeek());
-        final String dayOfWeekFull = dateFormatter.formatDayOfWeekFull(reportDay.date().getDayOfWeek());
-        final String dateString = dateFormatter.formatDate(reportDay.date());
-        final double hoursWorked = reportDay.workDuration().hoursDoubleValue();
-        final double hoursWorkedShould = reportDay.plannedWorkingHours().hoursDoubleValue();
-
-        return new GraphDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, hoursWorkedShould);
-    }
-
-    private DetailWeekDto toDetailWeekDto(ReportWeek reportWeek, Month monthPivot) {
-        final List<DetailDayDto> dayReports = reportWeek.reportDays()
-            .stream()
-            .map(reportDay -> toDetailDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot)))
-            .toList();
-
-        final LocalDate first = reportWeek.firstDateOfWeek();
-        final LocalDate last = reportWeek.lastDateOfWeek();
-        final int calendarWeek = first.get(ChronoField.ALIGNED_WEEK_OF_YEAR);
-
-        final ZonedDateTime firstOfWeek = ZonedDateTime.of(first, LocalTime.MIN, ZoneId.systemDefault());
-        final ZonedDateTime lastOfWeek = ZonedDateTime.of(last, LocalTime.MIN, ZoneId.systemDefault());
-
-        return new DetailWeekDto(Date.from(firstOfWeek.toInstant()), Date.from(lastOfWeek.toInstant()), calendarWeek, dayReports);
-    }
-
-    private DetailDayDto toDetailDayReportDto(ReportDay reportDay, boolean differentMonth) {
-        final String dayOfWeekNarrow = dateFormatter.formatDayOfWeekNarrow(reportDay.date().getDayOfWeek());
-        final String dayOfWeekFull = dateFormatter.formatDayOfWeekFull(reportDay.date().getDayOfWeek());
-        final String dateString = dateFormatter.formatDate(reportDay.date());
-        final double hoursWorked = reportDay.workDuration().hoursDoubleValue();
-        final List<DetailDayEntryDto> dayEntryDtos = reportDay.reportDayEntries().stream().map(ReportWeekController::toDetailDayEntryDto).toList();
-
-        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, dayEntryDtos);
-    }
-
-    private static DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry) {
-        return new DetailDayEntryDto(reportDayEntry.user().fullName(), reportDayEntry.comment(), Date.from(reportDayEntry.start().toInstant()), Date.from(reportDayEntry.end().toInstant()));
     }
 
     private static Optional<YearWeek> yearWeek(int year, int week) {
@@ -233,24 +133,5 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
             LOG.error("could not create YearWeek with year={} week={}", year, week, exception);
             return Optional.empty();
         }
-    }
-
-    private void addUserFilterModelAttributes(Model model, boolean allUsersSelected, List<UserLocalId> selectedUserLocalIds, String userReportFilterUrl) {
-        final List<User> permittedUsers = reportPermissionService.findAllPermittedUsersForCurrentUser();
-        if (permittedUsers.size() > 1) {
-            final List<SelectableUserDto> selectableUserDtos = permittedUsers
-                .stream()
-                .map(user -> userToSelectableUserDto(user, selectedUserLocalIds.contains(user.localId())))
-                .toList();
-
-            model.addAttribute("users", selectableUserDtos);
-            model.addAttribute("selectedUserIds", selectedUserLocalIds.stream().map(UserLocalId::value).toList());
-            model.addAttribute("allUsersSelected", allUsersSelected);
-            model.addAttribute("userReportFilterUrl", userReportFilterUrl);
-        }
-    }
-
-    private static SelectableUserDto userToSelectableUserDto(User user, boolean selected) {
-        return new SelectableUserDto(user.localId().value(), user.givenName() + " " + user.familyName(), selected);
     }
 }
