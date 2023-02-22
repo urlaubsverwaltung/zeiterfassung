@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.Collection;
 import java.util.Map;
 
 public interface WorkingTimeService {
@@ -16,6 +17,10 @@ public interface WorkingTimeService {
      * @return {@linkplain WorkingTime} for the user, never {@code null}.
      */
     WorkingTime getWorkingTimeByUser(UserLocalId userLocalId);
+
+    Map<UserLocalId, WorkingTime> getWorkingTimeByUsers(Collection<UserLocalId> userLocalIds);
+
+    Map<UserLocalId, WorkingTime> getAllWorkingTimeByUsers();
 
     /**
      * Get {@linkplain PlannedWorkingHours}. Note that public holidays and other absences are not considered.

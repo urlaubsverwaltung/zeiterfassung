@@ -630,6 +630,13 @@
 
   .report-graph {
   }
+  .report-graph-hover-background {
+    fill: transparent;
+  }
+  .report-graph-hover-background.selected,
+  .report-graph-hover-background:hover {
+    fill: url(#gradient-background);
+  }
   .report-graph-hour-line {
     @apply stroke-gray-200;
   }
@@ -643,8 +650,13 @@
     @apply fill-teal-700;
     @apply text-xs;
   }
-  .report-graph-day-bar {
-    @apply fill-amber-500;
+  .report-graph-day-overtime-bar {
+    @apply fill-teal-900;
+    @apply stroke-emerald-600;
+  }
+  .report-graph-day-should-bar {
+    @apply fill-green-100;
+    @apply stroke-emerald-600;
   }
   .report-graph-day-text {
     @apply fill-gray-600;

@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -110,7 +111,7 @@ class ReportServicePermissionAware implements ReportService {
 
     private ReportWeek emptyReportWeek(LocalDate startOfWeekDate) {
         final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
-            .mapToObj(daysToAdd -> new ReportDay(startOfWeekDate.plusDays(daysToAdd), List.of()))
+            .mapToObj(daysToAdd -> new ReportDay(startOfWeekDate.plusDays(daysToAdd), PlannedWorkingHours.ZERO, List.of()))
             .toList();
 
         return new ReportWeek(startOfWeekDate, reportDays);
