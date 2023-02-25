@@ -21,7 +21,6 @@ import java.util.List;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
-import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_EDIT_WORKING_TIME_ALL;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Controller

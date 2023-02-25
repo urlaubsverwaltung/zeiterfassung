@@ -27,7 +27,6 @@ import java.util.function.Supplier;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
-import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_EDIT_WORKING_TIME_ALL;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static java.math.BigDecimal.ZERO;
 import static java.time.DayOfWeek.FRIDAY;
@@ -40,7 +39,7 @@ import static java.time.DayOfWeek.WEDNESDAY;
 
 @Controller
 @RequestMapping("/users/{userId}/working-time")
-@PreAuthorize(ALLOW_EDIT_WORKING_TIME_ALL)
+@PreAuthorize("hasAuthority('ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL')")
 class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
     private final UserManagementService userManagementService;

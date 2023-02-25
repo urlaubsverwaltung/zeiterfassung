@@ -23,7 +23,6 @@ import java.util.List;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
-import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static java.math.BigDecimal.ONE;
 import static java.math.RoundingMode.DOWN;
@@ -32,7 +31,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 @Controller
 @RequestMapping("/users/{userId}/overtime-account")
-@PreAuthorize(ALLOW_OVERTIME_ACCOUNT_EDIT_ALL)
+@PreAuthorize("hasAuthority('ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL')")
 class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
 
     private final UserManagementService userManagementService;
