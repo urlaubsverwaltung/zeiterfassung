@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 
+import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_OVERTIME_ACCOUNT_EDIT_ALL;
 import static java.math.BigDecimal.ONE;
 import static java.math.RoundingMode.DOWN;
 import static java.math.RoundingMode.HALF_EVEN;
@@ -24,6 +26,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 @Controller
 @RequestMapping("/users/{userId}/overtime-account")
+@PreAuthorize(ALLOW_OVERTIME_ACCOUNT_EDIT_ALL)
 class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
 
     private final UserManagementService userManagementService;
