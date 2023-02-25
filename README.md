@@ -235,11 +235,11 @@ users.
 
 As a user of a tenant can log in via `http://localhost:8060/`:
 
-| username            | password | role                                        |
-|---------------------|----------|---------------------------------------------|
-| boss@example.org    | secret   | `view_reports_all`, `working_time_edit_all` |
-| office@example.org  | secret   | `view_reports_all`, `working_time_edit_all` |
-| user@example.org    | secret   |                                             |
+| username   | password | role                                        |
+|------------|----------|---------------------------------------------|
+| boss       | secret   | `view_reports_all`, `working_time_edit_all` |
+| office     | secret   | `view_reports_all`, `working_time_edit_all` |
+| user       | secret   |                                             |
 
 
 ### git hooks (optional)

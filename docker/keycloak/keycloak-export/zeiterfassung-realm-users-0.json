@@ -3,7 +3,7 @@
   "users" : [ {
     "id" : "9e7f6ab0-7075-4a17-853b-9a76fd063381",
     "createdTimestamp" : 1608290049557,
-    "username" : "boss@example.org",
+    "username" : "boss",
     "enabled" : true,
     "totp" : false,
     "emailVerified" : true,
@@ -28,7 +28,7 @@
   }, {
     "id" : "58400ef7-1cc9-48cb-93a8-f45c7af186ad",
     "createdTimestamp" : 1608289715282,
-    "username" : "office@example.org",
+    "username" : "office",
     "enabled" : true,
     "totp" : false,
     "emailVerified" : true,
@@ -53,7 +53,7 @@
   }, {
     "id" : "3d07ae0d-90a1-4dfd-9393-172c0c9e7c10",
     "createdTimestamp" : 1608289984833,
-    "username" : "user@example.org",
+    "username" : "user",
     "enabled" : true,
     "totp" : false,
     "emailVerified" : true,
