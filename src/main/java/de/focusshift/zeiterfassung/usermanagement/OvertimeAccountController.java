@@ -3,6 +3,9 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focusshift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -18,7 +21,10 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_OVERTIME_ACCOUNT_EDIT_ALL;
+import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static java.math.BigDecimal.ONE;
 import static java.math.RoundingMode.DOWN;
 import static java.math.RoundingMode.HALF_EVEN;
@@ -40,13 +46,14 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
     @GetMapping
     String get(@PathVariable("userId") Long userId, Model model,
                @RequestParam(value = "query", required = false, defaultValue = "") String query,
-               @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
+               @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+               @AuthenticationPrincipal OidcUser principal) {
 
         final UserLocalId userLocalId = new UserLocalId(userId);
         final OvertimeAccount overtimeAccount = overtimeAccountService.getOvertimeAccount(userLocalId);
         final OvertimeAccountDto overtimeAccountDto = toOvertimeAccountDto(overtimeAccount);
 
-        prepareGetRequestModel(model, query, userId, overtimeAccountDto);
+        prepareGetRequestModel(model, query, userId, overtimeAccountDto, principal);
 
         if (hasText(turboFrame)) {
             return "usermanagement/users::#" + turboFrame;
@@ -59,10 +66,11 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
     String post(@PathVariable("userId") Long userId, Model model,
                 @ModelAttribute("overtimeAccount") OvertimeAccountDto overtimeAccountDto, BindingResult result,
                 @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
+                @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                @AuthenticationPrincipal DefaultOidcUser principal) {
 
         if (result.hasErrors()) {
-            prepareGetRequestModel(model, query, userId, overtimeAccountDto);
+            prepareGetRequestModel(model, query, userId, overtimeAccountDto, principal);
             if (hasText(turboFrame)) {
                 return "usermanagement/users::#" + turboFrame;
             } else {
@@ -75,7 +83,8 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
         return "redirect:/users/%s/overtime-account".formatted(userId);
     }
 
-    private void prepareGetRequestModel(Model model, String query, Long userId, OvertimeAccountDto overtimeAccountDto) {
+    private void prepareGetRequestModel(Model model, String query, Long userId, OvertimeAccountDto overtimeAccountDto,
+                                        OidcUser principal) {
 
         final List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()
@@ -96,6 +105,9 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
         model.addAttribute("selectedUser", selectedUser);
         model.addAttribute("personSearchFormAction", "/users/%s/overtime-account".formatted(selectedUser.id()));
         model.addAttribute("overtimeAccount", overtimeAccountDto);
+
+        model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, principal));
+        model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal));
     }
 
     private static OvertimeAccountDto toOvertimeAccountDto(OvertimeAccount overtimeAccount) {

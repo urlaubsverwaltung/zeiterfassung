@@ -1,8 +1,11 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.launchpad.api.HasLaunchpad;
+import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -56,5 +59,9 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
 
     static UserDto userToDto(User user) {
         return new UserDto(user.localId().value(), user.givenName(), user.familyName(), user.givenName() + " " + user.familyName(), user.email().value());
+    }
+
+    static boolean hasAuthority(SecurityRole securityRole, OidcUser principal) {
+        return principal.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_" + securityRole));
     }
 }

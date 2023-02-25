@@ -247,7 +247,7 @@
                     </div>
                     <div>
                       <ul class="flex flex-col sm:flex-row sm:px-2">
-                        <li>
+                        <li th:if="${allowedToEditWorkingTime}">
                           <a
                             href="#"
                             th:href="@{/users/{userId} (userId=${selectedUser.id})}"
@@ -259,7 +259,7 @@
                             Arbeitszeit
                           </a>
                         </li>
-                        <li>
+                        <li th:if="${allowedToEditOvertimeAccount}">
                           <a
                             href="#"
                             th:href="@{/users/{userId}/overtime-account (userId=${selectedUser.id})}"

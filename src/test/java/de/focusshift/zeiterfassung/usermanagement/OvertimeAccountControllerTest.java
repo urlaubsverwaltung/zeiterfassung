@@ -7,12 +7,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.format.support.FormattingConversionService;
-import org.springframework.security.web.context.NullSecurityContextRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
@@ -28,6 +30,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -66,7 +69,10 @@ class OvertimeAccountControllerTest {
 
         final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
 
-        perform(get("/users/1337/overtime-account"))
+        perform(
+            get("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+        )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("section", "overtime"))
@@ -78,6 +84,30 @@ class OvertimeAccountControllerTest {
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("personSearchFormAction", "/users/1337/overtime-account"))
             .andExpect(model().attribute("overtimeAccount", new OvertimeAccountDto(true, 10.5)));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
+        "ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
+    })
+    void ensureSimpleGetAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
+
+        final UserLocalId batmanId = new UserLocalId(1337L);
+
+        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(new UserId("superman"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
+
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanId, true, Duration.ofHours(10).plusMinutes(30));
+        when(overtimeAccountService.getOvertimeAccount(batmanId)).thenReturn(overtimeAccount);
+
+        perform(
+            get("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority(authority)))
+        )
+            .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTime))
+            .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount));
     }
 
     @Test
@@ -96,6 +126,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             get("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-turbo-frame")
         )
             .andExpect(status().isOk())
@@ -124,6 +155,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             get("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .param("query", "awesome-query")
         )
             .andExpect(status().isOk())
@@ -144,6 +176,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             get("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-turbo-frame")
                 .param("query", "awesome-query")
         )
@@ -168,6 +201,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             get("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .param("query", "super")
         )
             .andExpect(status().isOk())
@@ -196,6 +230,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             get("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-turbo-frame")
                 .param("query", "super")
         )
@@ -214,6 +249,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             post("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .param("allowed", "true")
                 .param("maxAllowedOvertime", "5%s25".formatted(separator))
         )
@@ -236,6 +272,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             post("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-turbo-frame")
                 .param("allowed", "true")
                 .param("maxAllowedOvertime", "5%s25".formatted(separator))
@@ -266,6 +303,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             post("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .param("allowed", "true")
                 .param("maxAllowedOvertime", "must-be-a-number")
         )
@@ -284,6 +322,27 @@ class OvertimeAccountControllerTest {
         verifyNoInteractions(overtimeAccountService);
     }
 
+    @ParameterizedTest
+    @CsvSource({
+        "ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
+        "ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
+    })
+    void ensurePostWithValidationErrorAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
+
+        final UserLocalId batmanId = new UserLocalId(1337L);
+        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(batman));
+
+        perform(
+            post("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority(authority)))
+                .param("allowed", "true")
+                .param("maxAllowedOvertime", "must-be-a-number")
+        )
+            .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTime))
+            .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount));
+    }
+
     @Test
     void ensurePostWithValidationErrorWithJavaScript() throws Exception {
 
@@ -297,6 +356,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             post("/users/1337/overtime-account")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-turbo-frame")
                 .param("allowed", "true")
                 .param("maxAllowedOvertime", "must-be-a-number")
@@ -324,7 +384,7 @@ class OvertimeAccountControllerTest {
 
         return standaloneSetup(sut)
             .setConversionService(formattingConversionService)
-            .addFilters(new SecurityContextHolderFilter(new NullSecurityContextRepository()))
+            .addFilters(new SecurityContextHolderFilter(new HttpSessionSecurityContextRepository()))
             .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
             .build()
             .perform(builder);

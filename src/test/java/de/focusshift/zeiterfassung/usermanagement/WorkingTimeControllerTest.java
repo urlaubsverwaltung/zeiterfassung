@@ -5,10 +5,14 @@ import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.web.context.SecurityContextPersistenceFilter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -37,6 +41,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -92,7 +97,10 @@ class WorkingTimeControllerTest {
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
 
-        perform(get("/users/42/working-time"))
+        perform(
+            get("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("query", ""))
@@ -103,6 +111,37 @@ class WorkingTimeControllerTest {
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
+        "ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
+    })
+    void ensureSimpleGetAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
+
+        final User batman = new User(new UserId("uuid"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
+
+        final WorkingTime workingTime = WorkingTime.builder()
+            .userId(new UserLocalId(42L))
+            .monday(EIGHT)
+            .tuesday(EIGHT)
+            .wednesday(EIGHT)
+            .thursday(EIGHT)
+            .friday(EIGHT)
+            .build();
+
+        when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
+
+
+        perform(
+            get("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority(authority)))
+        )
+            .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTime))
+            .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount));
     }
 
     @Test
@@ -133,6 +172,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
         )
             .andExpect(status().isOk())
@@ -172,7 +212,10 @@ class WorkingTimeControllerTest {
 
         final UserDto expectedSelectedUser = new UserDto(1, "Alfred", "Pennyworth", "Alfred Pennyworth", "alfred@example.org");
 
-        perform(get("/users/1/working-time"))
+        perform(
+            get("/users/1/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("query", ""))
@@ -209,6 +252,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("query", "super")
         )
             .andExpect(status().isOk())
@@ -249,6 +293,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("query", "super")
         )
@@ -292,6 +337,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("query", "bat")
         )
             .andExpect(status().isOk())
@@ -334,6 +380,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("query", "bat")
         )
@@ -353,6 +400,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
                 .param("workingTimeMonday", "0")
                 .param("workingTimeTuesday", "1")
@@ -384,6 +432,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
                 .param("workingTimeMonday", "0")
@@ -434,6 +483,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
                 .param("workingTime", "48")
         )
@@ -449,6 +499,41 @@ class WorkingTimeControllerTest {
             .andExpect(model().attribute("personSearchFormAction", is("/users/42")));
 
         verifyNoInteractions(workingTimeService);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
+        "ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
+    })
+    void ensurePostWithValidationErrorAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
+
+        final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
+            .userId(42L)
+            .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
+            .workingTime(48.0)
+            .build();
+
+        doAnswer(
+            invocation -> {
+                final BindingResult result = invocation.getArgument(1);
+                result.addError(new ObjectError("workingTime", "error"));
+                return null;
+            }
+        ).when(workingTimeDtoValidator).validate(eq(expectedWorkingTimeDto), any(BindingResult.class));
+
+        final User batman = new User(new UserId("uuid"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
+
+        perform(
+            post("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority(authority)))
+                .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
+                .param("workingTime", "48")
+        )
+            .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTime))
+            .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount));
     }
 
     @Test
@@ -474,6 +559,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
                 .param("workingTime", "48")
@@ -494,7 +580,7 @@ class WorkingTimeControllerTest {
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
         return standaloneSetup(sut)
-            .addFilters(new SecurityContextPersistenceFilter())
+            .addFilters(new SecurityContextHolderFilter(new HttpSessionSecurityContextRepository()))
             .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
             .build()
             .perform(builder);
