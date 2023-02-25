@@ -4,6 +4,7 @@ import de.focusshift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
@@ -14,10 +15,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_EDIT_WORKING_TIME_ALL;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Controller
 @RequestMapping("/users")
@@ -53,8 +58,23 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping("/{id}")
-    String user(@PathVariable("id") Long id) {
-        return "forward:/users/%s/working-time".formatted(id);
+    String user(@PathVariable("id") Long id, @AuthenticationPrincipal OidcUser principal) {
+
+        final String slug;
+
+        if (hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, principal)) {
+            slug = "working-time";
+        } else if (hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal)) {
+            slug = "overtime-account";
+        } else {
+            slug = null;
+        }
+
+        if (slug == null) {
+            throw new ResponseStatusException(UNAUTHORIZED);
+        }
+
+        return "forward:/users/%s/%s".formatted(id, slug);
     }
 
     static UserDto userToDto(User user) {

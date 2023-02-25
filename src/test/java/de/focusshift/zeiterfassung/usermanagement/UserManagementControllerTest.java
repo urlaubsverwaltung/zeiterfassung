@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.web.context.SecurityContextPersistenceFilter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -19,6 +21,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -45,7 +48,10 @@ class UserManagementControllerTest {
         final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        perform(get("/users"))
+        perform(
+            get("/users")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("query", is("")))
@@ -66,6 +72,7 @@ class UserManagementControllerTest {
 
         perform(
             get("/users")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
         )
             .andExpect(status().isOk())
@@ -87,6 +94,7 @@ class UserManagementControllerTest {
 
         perform(
             get("/users")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("query", "bat")
         )
             .andExpect(status().isOk())
@@ -107,6 +115,7 @@ class UserManagementControllerTest {
 
         perform(
             get("/users")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("query", "bat")
         )
@@ -122,13 +131,25 @@ class UserManagementControllerTest {
 
     @Test
     void ensureUserForwardsToWorkingTime() throws Exception {
-        perform(get("/users/42"))
+        perform(
+            get("/users/42")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        )
             .andExpect(view().name("forward:/users/42/working-time"));
+    }
+
+    @Test
+    void ensureUserForwardsToOvertimeAccount() throws Exception {
+        perform(
+            get("/users/42")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+        )
+            .andExpect(view().name("forward:/users/42/overtime-account"));
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
         return standaloneSetup(sut)
-            .addFilters(new SecurityContextPersistenceFilter())
+            .addFilters(new SecurityContextHolderFilter(new HttpSessionSecurityContextRepository()))
             .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
             .build()
             .perform(builder);
