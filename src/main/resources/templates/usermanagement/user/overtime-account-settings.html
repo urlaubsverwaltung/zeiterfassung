@@ -16,7 +16,10 @@
         </div>
         <div class="flex flex-col gap-8">
           <fieldset class="border-t border-gray-100">
-            <legend class="text-sm font-medium text-gray-400">
+            <legend
+              class="text-sm font-medium text-gray-400"
+              th:text="#{usermanagement.overtime-account.overtime-regulation.title}"
+            >
               Überstundenregelung
             </legend>
             <div class="mt-2 sm:mt-4">
@@ -26,14 +29,20 @@
                   id="overtime-allowed-input"
                   th:field="*{allowed}"
                 />
-                <label for="overtime-allowed-input"
-                  >darf Überstunden machen.</label
+                <label
+                  for="overtime-allowed-input"
+                  th:text="#{usermanagement.overtime-account.overtime.allowed.label}"
                 >
+                  darf Überstunden machen.
+                </label>
               </div>
             </div>
           </fieldset>
           <fieldset class="border-t border-gray-100">
-            <legend class="text-sm font-medium text-gray-400">
+            <legend
+              class="text-sm font-medium text-gray-400"
+              th:text="#{usermanagement.overtime-account.overtime-account.title}"
+            >
               Überstundenkonto
             </legend>
             <div
@@ -44,7 +53,11 @@
                 class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2"
               >
                 <span>
-                  <span>Maximal</span>
+                  <span
+                    th:text="#{usermanagement.overtime-account.overtime-account.max.pre}"
+                  >
+                    Maximal
+                  </span>
                   <input
                     type="text"
                     inputmode="numeric"
@@ -56,7 +69,10 @@
                     th:aria-message="${hasError ? fieldName + '-error-message' : ''}"
                   />
                 </span>
-                <label for="overtime-account-max-allowed-input">
+                <label
+                  for="overtime-account-max-allowed-input"
+                  th:text="#{usermanagement.overtime-account.overtime-account.max.label}"
+                >
                   Überstunden dürfen angesammelt werden.
                 </label>
               </div>
@@ -68,7 +84,10 @@
               >
                 Max Überstunden Fehlernachricht
               </p>
-              <p class="mt-4 max-w-prose">
+              <p
+                class="mt-4 max-w-prose"
+                th:text="#{usermanagement.overtime-account.overtime-account.info-text(${user.fullName})}"
+              >
                 Stunden darüber hinaus werden Max Mustermann nicht als
                 Überstunden angezeigt. Kann leer gelassen werden, wenn beliebig
                 viele möglich sind.

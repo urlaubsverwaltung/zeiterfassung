@@ -255,6 +255,7 @@
                             th:classappend="${section == null ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
                             data-turbo-frame="person-frame"
                             data-turbo-action="advance"
+                            th:text="#{usermanagement.navigation.working-time}"
                           >
                             Arbeitszeit
                           </a>
@@ -267,6 +268,7 @@
                             th:classappend="${section == 'overtime' ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
                             data-turbo-frame="person-frame"
                             data-turbo-action="advance"
+                            th:text="#{usermanagement.navigation.overtime-account}"
                           >
                             Überstundenregelung
                           </a>
