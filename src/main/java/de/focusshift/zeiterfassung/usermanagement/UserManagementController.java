@@ -45,6 +45,7 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
             .toList();
 
         model.addAttribute("query", query);
+        model.addAttribute("slug", "");
         model.addAttribute("users", users);
         model.addAttribute("selectedUser", null);
         model.addAttribute("personSearchFormAction", "/users");

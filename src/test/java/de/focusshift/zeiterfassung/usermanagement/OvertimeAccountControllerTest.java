@@ -77,6 +77,7 @@ class OvertimeAccountControllerTest {
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("section", "overtime"))
             .andExpect(model().attribute("query", ""))
+            .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
@@ -133,6 +134,7 @@ class OvertimeAccountControllerTest {
             .andExpect(view().name("usermanagement/users::#awesome-turbo-frame"))
             .andExpect(model().attribute("section", "overtime"))
             .andExpect(model().attribute("query", ""))
+            .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
@@ -207,6 +209,7 @@ class OvertimeAccountControllerTest {
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("query", "super"))
+            .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
@@ -237,6 +240,7 @@ class OvertimeAccountControllerTest {
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users::#awesome-turbo-frame"))
             .andExpect(model().attribute("query", "super"))
+            .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
@@ -311,6 +315,7 @@ class OvertimeAccountControllerTest {
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("section", "overtime"))
             .andExpect(model().attribute("query", ""))
+            .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
@@ -365,6 +370,7 @@ class OvertimeAccountControllerTest {
             .andExpect(view().name("usermanagement/users::#awesome-turbo-frame"))
             .andExpect(model().attribute("section", "overtime"))
             .andExpect(model().attribute("query", ""))
+            .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")

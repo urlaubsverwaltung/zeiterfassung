@@ -100,6 +100,7 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
 
         model.addAttribute("section", "overtime");
         model.addAttribute("query", query);
+        model.addAttribute("slug", "overtime-account");
         model.addAttribute("users", users);
         model.addAttribute("selectedUser", selectedUser);
         model.addAttribute("personSearchFormAction", "/users/%s/overtime-account".formatted(selectedUser.id()));

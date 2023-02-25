@@ -72,6 +72,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         final WorkingTimeDto workingTimeDto = workingTimeToDto(workingTime);
 
         model.addAttribute("query", query);
+        model.addAttribute("slug", "working-time");
         model.addAttribute("users", users);
         model.addAttribute("selectedUser", selectedUser);
         model.addAttribute("workingTime", workingTimeDto);
@@ -124,6 +125,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                 .orElseThrow(() -> new IllegalArgumentException("could not find person=%s".formatted(userId)));
 
             model.addAttribute("query", query);
+            model.addAttribute("slug", "working-time");
             model.addAttribute("users", users);
             model.addAttribute("selectedUser", selectedUser);
             model.addAttribute("workingTime", workingTimeDto);

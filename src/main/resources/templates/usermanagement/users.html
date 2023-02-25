@@ -125,7 +125,7 @@
                         th:fragment="user-element-link(user)"
                         th:id="${'user-element-link-' + user.id}"
                         href="#"
-                        th:href="@{/users/{id} (id=${user.id}, query=${query})}"
+                        th:href="@{/users/{id}{slug} (id=${user.id}, query=${query}, slug=${#strings.isEmpty(slug) ? '' : '/' + slug})}"
                         th:aria-current="${selectedUser != null && user.id == selectedUser.id ? 'page' : ''}"
                         th:data-user="${user.id}"
                         class="flex-1 flex items-center justify-between gap-4"

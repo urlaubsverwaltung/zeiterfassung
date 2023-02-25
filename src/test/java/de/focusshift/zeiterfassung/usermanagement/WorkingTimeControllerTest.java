@@ -104,6 +104,7 @@ class WorkingTimeControllerTest {
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("query", ""))
+            .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
@@ -178,6 +179,7 @@ class WorkingTimeControllerTest {
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users::#awesome-frame"))
             .andExpect(model().attribute("query", ""))
+            .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
@@ -219,6 +221,7 @@ class WorkingTimeControllerTest {
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("query", ""))
+            .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(expectedSelectedUser)))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
@@ -258,6 +261,7 @@ class WorkingTimeControllerTest {
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("query", "super"))
+            .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
@@ -300,6 +304,7 @@ class WorkingTimeControllerTest {
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users::#awesome-frame"))
             .andExpect(model().attribute("query", "super"))
+            .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
@@ -343,6 +348,7 @@ class WorkingTimeControllerTest {
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("query", "bat"))
+            .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org")
             )))
@@ -387,6 +393,7 @@ class WorkingTimeControllerTest {
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users::#awesome-frame"))
             .andExpect(model().attribute("query", "bat"))
+            .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org")
             )))
@@ -489,7 +496,8 @@ class WorkingTimeControllerTest {
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
-            .andExpect(model().attribute("query", is("")))
+            .andExpect(model().attribute("query", ""))
+            .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
@@ -566,7 +574,8 @@ class WorkingTimeControllerTest {
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users::#awesome-frame"))
-            .andExpect(model().attribute("query", is("")))
+            .andExpect(model().attribute("query", ""))
+            .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
