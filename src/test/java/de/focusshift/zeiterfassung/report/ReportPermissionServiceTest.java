@@ -16,7 +16,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import java.util.List;
 import java.util.Set;
 
-import static de.focusshift.zeiterfassung.security.SecurityRoles.ZEITERFASSUNG_VIEW_REPORT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 

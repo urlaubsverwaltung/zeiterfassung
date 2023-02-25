@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
-import de.focusshift.zeiterfassung.security.SecurityRoles;
+import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,7 +28,7 @@ class TenantUserServiceImpl implements TenantUserService {
     }
 
     @Override
-    public TenantUser createNewUser(String uuid, String givenName, String familyName, EMailAddress eMailAddress, Collection<SecurityRoles> authorities) {
+    public TenantUser createNewUser(String uuid, String givenName, String familyName, EMailAddress eMailAddress, Collection<SecurityRole> authorities) {
 
         final Instant now = clock.instant();
 
@@ -111,7 +111,7 @@ class TenantUserServiceImpl implements TenantUserService {
         final String familyName = tenantUserEntity.getFamilyName();
         final EMailAddress eMail = new EMailAddress(tenantUserEntity.getEmail());
         final Instant firstLoginAt = tenantUserEntity.getFirstLoginAt();
-        final Set<SecurityRoles> authorities = new HashSet<>(tenantUserEntity.getAuthorities());
+        final Set<SecurityRole> authorities = new HashSet<>(tenantUserEntity.getAuthorities());
 
         return new TenantUser(uuid, id, givenName, familyName, eMail, firstLoginAt, authorities);
     }
