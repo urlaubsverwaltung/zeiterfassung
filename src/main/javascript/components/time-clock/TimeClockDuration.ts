@@ -1,19 +1,28 @@
+import { animationInterval } from "./animation-interval";
+
 export class TimeClockDuration extends HTMLSpanElement {
-  #startedAtMillis: number;
+  #controller: AbortController;
 
   connectedCallback() {
-    this.#startedAtMillis = new Date(this.dataset.startedAt).getTime();
-    setInterval(() => this.render(), 0);
+    this.#controller = new AbortController();
+
+    const start = Date.now() - new Date(this.dataset.startedAt).getTime();
+
+    animationInterval(1000, this.#controller.signal, (time) => {
+      this.render(start + time);
+    });
 
     this.classList.add("tabular-nums");
   }
 
-  render() {
-    const elapseMillis = Date.now() - this.#startedAtMillis;
+  disconnectedCallback() {
+    this.#controller.abort();
+  }
 
-    const seconds = Math.floor((elapseMillis / 1000) % 60);
-    const minutes = Math.floor((elapseMillis / (1000 * 60)) % 60);
-    const hours = Math.floor(elapseMillis / (1000 * 60 * 60));
+  render(time) {
+    const seconds = Math.floor((time / 1000) % 60);
+    const minutes = Math.floor((time / (1000 * 60)) % 60);
+    const hours = Math.floor(time / (1000 * 60 * 60));
 
     const hh = hours < 10 ? "0" + hours : hours;
     const mm = minutes < 10 ? "0" + minutes : minutes;
