@@ -26,7 +26,7 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Controller
 @RequestMapping("/users")
-@PreAuthorize(ALLOW_EDIT_WORKING_TIME_ALL)
+@PreAuthorize("hasAnyAuthority('ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL', 'ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL')")
 class UserManagementController implements HasTimeClock, HasLaunchpad {
 
     private final UserManagementService userManagementService;
