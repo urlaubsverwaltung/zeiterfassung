@@ -90,6 +90,34 @@
               ></template>
             </turbo-stream>
           </th:block>
+          <th:block th:if="${turboDeletedTimeEntry != null}">
+            <turbo-stream
+              action="replace"
+              th:target="${'week-banner-'+ turboEditedWeek.calendarWeek}"
+            >
+              <template
+                th:insert="::week-banner(${turboEditedWeek})"
+              ></template>
+            </turbo-stream>
+            <turbo-stream
+              th:if="${turboEditedDay != null}"
+              th:target="${'day-of-week-banner-'+ turboEditedWeek.calendarWeek + '-' + turboDeletedTimeEntry.date.dayOfWeek}"
+              action="replace"
+            >
+              <template
+                th:insert="::day-of-week-banner(${turboEditedWeek.calendarWeek}, ${turboEditedDay})"
+              ></template>
+            </turbo-stream>
+            <turbo-stream
+              th:if="${turboEditedDay == null}"
+              th:target="${'day-of-week-'+ turboEditedWeek.calendarWeek + '-' + turboDeletedTimeEntry.date.dayOfWeek}"
+              action="remove"
+            ></turbo-stream>
+            <turbo-stream
+              action="remove"
+              th:target="${'time-entry-' + turboDeletedTimeEntry.id}"
+            ></turbo-stream>
+          </th:block>
         </turbo-frame>
         <turbo-frame id="frame-time-entry-weeks">
           <th:block
@@ -197,6 +225,7 @@
                     th:with="calendarWeek=${week.calendarWeek}"
                     class="space-y-10 md:space-y-4"
                     th:classappend="${dayStat.first ? 'mt-2' : 'mt-4'}"
+                    th:id="${'day-of-week-' + calendarWeek + '-' + day.timeEntries[0].date.dayOfWeek}"
                   >
                     <div class="px-4 sticky top-nav-header pt-px z-10">
                       <div
@@ -601,11 +630,12 @@
           </span>
         </button>
         <button
-          type="button"
+          type="submit"
           name="delete"
           class="flex items-center justify-center text-gray-500 md:text-gray-300 md:hover:text-gray-700 md:rounded-full md:w-12 md:h-12 hover:md:bg-blue-100 transition-colors duration-200"
           title="Löschen"
           th:title="#{time-entry.form.delete.tooltip}"
+          data-turbo-frame="frame-time-entry"
         >
           <svg
             th:replace="~{icons/trash::svg(className='w-5 h-5 md:w-6 md:h-6')}"

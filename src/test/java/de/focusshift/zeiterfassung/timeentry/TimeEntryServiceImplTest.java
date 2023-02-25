@@ -65,6 +65,44 @@ class TimeEntryServiceImplTest {
     }
 
     @Test
+    void ensureFindTimeEntry() {
+
+        final LocalDateTime entryStart = LocalDateTime.of(LocalDate.of(2023, 2, 25), LocalTime.of(10, 0, 0));
+        final LocalDateTime entryEnd = LocalDateTime.of(LocalDate.of(2023, 2, 25), LocalTime.of(12, 0, 0));
+
+        final TimeEntryEntity entity = new TimeEntryEntity(
+            42L,
+            "batman",
+            "",
+            entryStart.toInstant(UTC),
+            ZONE_ID_UTC,
+            entryEnd.toInstant(UTC),
+            ZONE_ID_UTC,
+            Instant.now(),
+            false);
+
+        when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
+
+        final Optional<TimeEntry> actual = sut.findTimeEntry(42L);
+        assertThat(actual).isPresent();
+        assertThat(actual.get()).satisfies(timeEntry -> {
+            assertThat(timeEntry.id()).isEqualTo(new TimeEntryId(42L));
+            assertThat(timeEntry.userId()).isEqualTo(new UserId("batman"));
+            assertThat(timeEntry.comment()).isEqualTo("");
+            assertThat(timeEntry.start()).isEqualTo(ZonedDateTime.of(entryStart, ZONE_ID_UTC));
+            assertThat(timeEntry.end()).isEqualTo(ZonedDateTime.of(entryEnd, ZONE_ID_UTC));
+            assertThat(timeEntry.isBreak()).isFalse();
+            assertThat(timeEntry.workDuration().value()).isEqualTo(Duration.ofHours(2));
+        });
+    }
+
+    @Test
+    void ensureFindTimeEntryReturnsEmptyOptional() {
+        when(timeEntryRepository.findById(42L)).thenReturn(Optional.empty());
+        assertThat(sut.findTimeEntry(42L)).isEmpty();
+    }
+
+    @Test
     void ensureCreateTimeEntry() {
 
         final Instant now = Instant.now();

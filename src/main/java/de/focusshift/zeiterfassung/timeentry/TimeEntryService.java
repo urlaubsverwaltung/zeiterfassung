@@ -7,8 +7,17 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface TimeEntryService {
+
+    /**
+     * Find a {@linkplain TimeEntry} by id.
+     *
+     * @param id of the time entry
+     * @return the {@linkplain TimeEntry} or empty optional.
+     */
+    Optional<TimeEntry> findTimeEntry(long id);
 
     /**
      * {@linkplain TimeEntry}s for the given criteria sorted by {@linkplain TimeEntry#start()}, newest is the first item.
