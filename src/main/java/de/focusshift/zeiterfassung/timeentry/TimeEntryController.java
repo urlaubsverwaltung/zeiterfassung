@@ -240,7 +240,13 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         if (dto.getId() == null) {
             createTimeEntry(dto, userId, zoneId);
         } else {
-            updateTimeEntry(dto, zoneId);
+            try {
+                updateTimeEntry(dto, zoneId);
+            } catch (TimeEntryUpdateException e) {
+                LOG.debug("could not update time-entry", e);
+                bindingResult.reject("time-entry.validation.plausible");
+                return "timeentries/index";
+            }
         }
 
         final String referer = request.getHeader("referer");
@@ -271,19 +277,13 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         timeEntryService.createTimeEntry(userId, dto.getComment(), start, end, dto.isBreak());
     }
 
-    private void updateTimeEntry(TimeEntryDTO dto, ZoneId zoneId) {
+    private void updateTimeEntry(TimeEntryDTO dto, ZoneId zoneId) throws TimeEntryUpdateException {
 
         final Duration duration = toDuration(dto.getDuration());
         final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
         final ZonedDateTime end = getEndDate(dto, zoneId);
 
-        try {
-            timeEntryService.updateTimeEntry(new TimeEntryId(dto.getId()), dto.getComment(), start, end, duration, dto.isBreak());
-        } catch (TimeEntryUpdateException e) {
-            LOG.info("could not update time-entry", e);
-            // TODO provide user feedback somehow? or is an error page enough? should not happen often this case?
-            throw new RuntimeException(e);
-        }
+        timeEntryService.updateTimeEntry(new TimeEntryId(dto.getId()), dto.getComment(), start, end, duration, dto.isBreak());
     }
 
     private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {
