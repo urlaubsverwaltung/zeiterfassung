@@ -66,6 +66,7 @@
         <turbo-frame id="frame-time-entry">
           <th:block th:if="${turboEditedTimeEntry != null}">
             <turbo-stream
+              th:if="${turboEditedWeek != null}"
               action="replace"
               th:target="${'week-banner-'+ turboEditedWeek.calendarWeek}"
             >
@@ -74,6 +75,7 @@
               ></template>
             </turbo-stream>
             <turbo-stream
+              th:if="${turboEditedWeek != null}"
               action="replace"
               th:target="${'day-of-week-banner-'+ turboEditedWeek.calendarWeek + '-' + turboEditedTimeEntry.date.dayOfWeek}"
             >
@@ -464,6 +466,7 @@
                       th:value="${timeEntry.comment}"
                       placeholder="Woran arbeitest du gerade?"
                       th:placeholder="#{time-entry.form.comment.input.placeholder}"
+                      class="border border-gray-200"
                     />
                     <label
                       for="input-entry-comment"
@@ -482,8 +485,8 @@
                       th:value="${timeEntry.start}"
                       placeholder="Von"
                       th:placeholder="#{time-entry.form.start.input.placeholder}"
-                      class="peer invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
+                      class="peer border border-gray-200 invalid:border-red-600"
+                      th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
                     />
                     <label
                       for="input-entry-from"
@@ -504,8 +507,8 @@
                       th:value="${timeEntry.end}"
                       placeholder="Bis"
                       th:placeholder="#{time-entry.form.end.input.placeholder}"
-                      class="peer invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
+                      class="peer border border-gray-200 invalid:border-red-600"
+                      th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
                     />
                     <label
                       for="input-entry-to"
@@ -526,8 +529,8 @@
                       th:value="${timeEntry.duration}"
                       placeholder="hh:mm"
                       th:placeholder="#{time-entry.form.duration.input.placeholder}"
-                      class="peer invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-b border-red-600' : ''}"
+                      class="peer border border-gray-200 invalid:border-red-600"
+                      th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
                     />
                     <label
                       for="input-entry-duration"
@@ -568,7 +571,7 @@
           ></div>
         </div>
         <div
-          class="text-red-600 text-center"
+          class="text-red-600"
           data-error-container
           xtra:strip-whitespace="deep"
         >

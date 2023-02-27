@@ -239,8 +239,6 @@
     width: 100%;
     padding: 0.25rem 0.5rem;
     background-color: transparent;
-    @apply border;
-    @apply border-gray-200;
     @apply text-sm;
   }
 
@@ -623,9 +621,11 @@
     border-radius: 99999px;
   }
 
-  .timeslot-form-new [data-error-container]:not(:empty),
-  .timeslot-form-existing [data-error-container]:not(:empty) {
+  .timeslot-form-new [data-error-container]:not(:empty) {
     margin-top: 1rem;
+  }
+  .timeslot-form-existing [data-error-container]:not(:empty) {
+    margin-top: 0.5rem;
   }
 
   .report-graph {
