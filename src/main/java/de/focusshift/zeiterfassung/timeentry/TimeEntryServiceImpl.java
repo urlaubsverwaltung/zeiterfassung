@@ -165,12 +165,15 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final boolean startChanged = notEquals(existingTimeEntry.start(), start);
         final boolean endChanged = notEquals(existingTimeEntry.end(), end);
         final boolean durationChanged = !existingTimeEntry.duration().value().equals(duration);
+        final boolean plausibleUpdate = delta(start, end).equals(duration);
 
         if (startChanged && endChanged && durationChanged) {
-            throw new TimeEntryUpdateException("cannot update time-entry when start, end and duration should be changed. pick two of them.");
+            if (!plausibleUpdate) {
+                throw new TimeEntryUpdateException("cannot update time-entry when start, end and duration should be changed. pick two of them.");
+            }
         }
 
-        if (startChanged) {
+        if (plausibleUpdate || startChanged) {
             entity.setStart(start.toInstant());
             entity.setStartZoneId(start.getZone().getId());
             if (durationChanged) {
@@ -180,7 +183,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             }
         }
 
-        if (endChanged) {
+        if (plausibleUpdate || endChanged) {
             entity.setEnd(end.toInstant());
             entity.setEndZoneId(end.getZone().getId());
             if (durationChanged) {
@@ -200,6 +203,10 @@ class TimeEntryServiceImpl implements TimeEntryService {
         entity.setBreak(isBreak);
 
         return save(entity);
+    }
+
+    private Duration delta(ZonedDateTime first, ZonedDateTime second) {
+        return Duration.ofMinutes(MINUTES.between(first, second));
     }
 
     private boolean notEquals(ZonedDateTime one, ZonedDateTime two) {
