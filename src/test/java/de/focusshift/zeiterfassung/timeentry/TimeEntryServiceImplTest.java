@@ -548,7 +548,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
         assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
-        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
@@ -561,7 +561,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualPersisted.getId()).isEqualTo(42L);
         assertThat(actualPersisted.getOwner()).isEqualTo("batman");
-        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getComment()).isEmpty();
         assertThat(actualPersisted.getStart()).isEqualTo(newStart.toInstant());
         assertThat(actualPersisted.getStartZoneId()).isEqualTo(newStart.getZone().getId());
         assertThat(actualPersisted.getEnd()).isEqualTo(newEnd.toInstant());
