@@ -88,7 +88,7 @@ class TimeEntryServiceImplTest {
         assertThat(actual.get()).satisfies(timeEntry -> {
             assertThat(timeEntry.id()).isEqualTo(new TimeEntryId(42L));
             assertThat(timeEntry.userId()).isEqualTo(new UserId("batman"));
-            assertThat(timeEntry.comment()).isEqualTo("");
+            assertThat(timeEntry.comment()).isEmpty();
             assertThat(timeEntry.start()).isEqualTo(ZonedDateTime.of(entryStart, ZONE_ID_UTC));
             assertThat(timeEntry.end()).isEqualTo(ZonedDateTime.of(entryEnd, ZONE_ID_UTC));
             assertThat(timeEntry.isBreak()).isFalse();
@@ -109,8 +109,8 @@ class TimeEntryServiceImplTest {
         final Clock fixedClock = Clock.fixed(now, UTC);
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
 
-        final LocalDateTime entryStart = LocalDateTime.of(2023, 1, 1, 10, 0,0);
-        final LocalDateTime entryEnd = LocalDateTime.of(2023, 1, 1, 12, 0,0);
+        final LocalDateTime entryStart = LocalDateTime.of(2023, 1, 1, 10, 0, 0);
+        final LocalDateTime entryEnd = LocalDateTime.of(2023, 1, 1, 12, 0, 0);
 
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(invocationOnMock -> {
             final TimeEntryEntity entity = invocationOnMock.getArgument(0);
@@ -145,9 +145,9 @@ class TimeEntryServiceImplTest {
 
     @Test
     void ensureUpdateTimeEntryThrowsWhenTimeEntryIsUnknown() {
-        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(
-            () -> sut.updateTimeEntry(new TimeEntryId(42L), null, null, null, null, false)
-        );
+        final TimeEntryId id = new TimeEntryId(42L);
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> sut.updateTimeEntry(id, null, null, null, null, false));
     }
 
     @Test
@@ -181,7 +181,7 @@ class TimeEntryServiceImplTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true,false})
+    @ValueSource(booleans = {true, false})
     void ensureUpdateTimeEntryStart(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
@@ -214,7 +214,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
         assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
-        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
@@ -227,7 +227,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualPersisted.getId()).isEqualTo(42L);
         assertThat(actualPersisted.getOwner()).isEqualTo("batman");
-        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getComment()).isEmpty();
         assertThat(actualPersisted.getStart()).isEqualTo(newStart.toInstant());
         assertThat(actualPersisted.getStartZoneId()).isEqualTo(newStart.getZone().getId());
         assertThat(actualPersisted.getEnd()).isEqualTo(sameEnd.toInstant());
@@ -237,7 +237,7 @@ class TimeEntryServiceImplTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true,false})
+    @ValueSource(booleans = {true, false})
     void ensureUpdateTimeEntryStartAndEnd(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
@@ -270,7 +270,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
         assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
-        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
@@ -283,7 +283,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualPersisted.getId()).isEqualTo(42L);
         assertThat(actualPersisted.getOwner()).isEqualTo("batman");
-        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getComment()).isEmpty();
         assertThat(actualPersisted.getStart()).isEqualTo(newStart.toInstant());
         assertThat(actualPersisted.getStartZoneId()).isEqualTo(newStart.getZone().getId());
         assertThat(actualPersisted.getEnd()).isEqualTo(newEnd.toInstant());
@@ -293,7 +293,7 @@ class TimeEntryServiceImplTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true,false})
+    @ValueSource(booleans = {true, false})
     void ensureUpdateTimeEntryStartAndDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
@@ -326,7 +326,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
         assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
-        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newStart.plusHours(3));
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
@@ -339,7 +339,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualPersisted.getId()).isEqualTo(42L);
         assertThat(actualPersisted.getOwner()).isEqualTo("batman");
-        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getComment()).isEmpty();
         assertThat(actualPersisted.getStart()).isEqualTo(newStart.toInstant());
         assertThat(actualPersisted.getStartZoneId()).isEqualTo(newStart.getZone().getId());
         assertThat(actualPersisted.getEnd()).isEqualTo(newStart.plusHours(3).toInstant());
@@ -349,7 +349,7 @@ class TimeEntryServiceImplTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true,false})
+    @ValueSource(booleans = {true, false})
     void ensureUpdateTimeEntryEnd(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
@@ -382,7 +382,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
         assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
-        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
@@ -395,7 +395,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualPersisted.getId()).isEqualTo(42L);
         assertThat(actualPersisted.getOwner()).isEqualTo("batman");
-        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getComment()).isEmpty();
         assertThat(actualPersisted.getStart()).isEqualTo(sameStart.toInstant());
         assertThat(actualPersisted.getStartZoneId()).isEqualTo(sameStart.getZone().getId());
         assertThat(actualPersisted.getEnd()).isEqualTo(newEnd.toInstant());
@@ -405,7 +405,7 @@ class TimeEntryServiceImplTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true,false})
+    @ValueSource(booleans = {true, false})
     void ensureUpdateTimeEntryEndAndDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
@@ -438,7 +438,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
         assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
-        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newEnd.minusHours(3));
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
@@ -451,7 +451,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualPersisted.getId()).isEqualTo(42L);
         assertThat(actualPersisted.getOwner()).isEqualTo("batman");
-        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getComment()).isEmpty();
         assertThat(actualPersisted.getStart()).isEqualTo(newEnd.minusHours(3).toInstant());
         assertThat(actualPersisted.getStartZoneId()).isEqualTo(sameStart.getZone().getId());
         assertThat(actualPersisted.getEnd()).isEqualTo(newEnd.toInstant());
@@ -461,7 +461,7 @@ class TimeEntryServiceImplTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true,false})
+    @ValueSource(booleans = {true, false})
     void ensureUpdateTimeEntryDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
@@ -494,7 +494,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
         assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
-        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameStart.plusMinutes(newDuration.toMinutes()));
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
@@ -507,7 +507,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualPersisted.getId()).isEqualTo(42L);
         assertThat(actualPersisted.getOwner()).isEqualTo("batman");
-        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getComment()).isEmpty();
         assertThat(actualPersisted.getStart()).isEqualTo(sameStart.toInstant());
         assertThat(actualPersisted.getStartZoneId()).isEqualTo(sameStart.getZone().getId());
         assertThat(actualPersisted.getEnd()).isEqualTo(sameStart.plusMinutes(newDuration.toMinutes()).toInstant());
@@ -549,7 +549,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
         assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
-        assertThat(actualUpdatedTimeEntry.comment()).isEqualTo("");
+        assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isTrue();
@@ -562,7 +562,7 @@ class TimeEntryServiceImplTest {
 
         assertThat(actualPersisted.getId()).isEqualTo(42L);
         assertThat(actualPersisted.getOwner()).isEqualTo("batman");
-        assertThat(actualPersisted.getComment()).isEqualTo("");
+        assertThat(actualPersisted.getComment()).isEmpty();
         assertThat(actualPersisted.getStart()).isEqualTo(sameStart.toInstant());
         assertThat(actualPersisted.getStartZoneId()).isEqualTo(sameStart.getZone().getId());
         assertThat(actualPersisted.getEnd()).isEqualTo(sameEnd.toInstant());
@@ -784,29 +784,29 @@ class TimeEntryServiceImplTest {
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(new UserId("batman"), 2023, 5);
 
         assertThat(actual).isEqualTo(
-                new TimeEntryWeekPage(
-                        new TimeEntryWeek(
-                                LocalDate.of(2023, 1, 30),
-                                new PlannedWorkingHours(Duration.ofHours(40)),
-                                List.of(
-                                    new TimeEntryDay(
-                                        LocalDate.of(2023, 2, 5),
-                                        PlannedWorkingHours.ZERO,
-                                        List.of(
-                                            new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
-                                        )
-                                    ),
-                                    new TimeEntryDay(
-                                        LocalDate.of(2023, 1, 30),
-                                        PlannedWorkingHours.EIGHT,
-                                        List.of(
-                                            new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
-                                        )
-                                    )
-                                )
+            new TimeEntryWeekPage(
+                new TimeEntryWeek(
+                    LocalDate.of(2023, 1, 30),
+                    new PlannedWorkingHours(Duration.ofHours(40)),
+                    List.of(
+                        new TimeEntryDay(
+                            LocalDate.of(2023, 2, 5),
+                            PlannedWorkingHours.ZERO,
+                            List.of(
+                                new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
+                            )
                         ),
-                        6
-                )
+                        new TimeEntryDay(
+                            LocalDate.of(2023, 1, 30),
+                            PlannedWorkingHours.EIGHT,
+                            List.of(
+                                new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
+                            )
+                        )
+                    )
+                ),
+                6
+            )
         );
     }
 }
