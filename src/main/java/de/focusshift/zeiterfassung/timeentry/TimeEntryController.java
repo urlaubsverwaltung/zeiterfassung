@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -35,6 +34,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.WeekFields;
 import java.util.List;
+import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.Month.DECEMBER;
@@ -179,18 +179,39 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping(value = "/timeentries/{id}", params = "delete")
-    public String delete(@PathVariable("id") Long id, Model model, @AuthenticationPrincipal OidcUser principal) {
+    public String delete(@PathVariable("id") Long id, Model model,
+                         @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                         @AuthenticationPrincipal OidcUser principal) {
+
+        final TimeEntry timeEntry = timeEntryService.findTimeEntry(id)
+            .orElseThrow(() -> new IllegalStateException("could not find time entry with id=%s".formatted(id)));
 
         timeEntryService.deleteTimeEntry(id);
 
-        return "redirect:/timeentries";
-    }
+        final int year = timeEntry.start().getYear();
+        final int weekOfYear = timeEntry.start().get(WEEK_OF_WEEK_BASED_YEAR);
 
-    @ResponseBody
-    @PostMapping(value = "/timeentries/{id}", params = "delete", headers = {"X-Requested-With=ajax"})
-    public void deleteJs(@PathVariable("id") Long id, @AuthenticationPrincipal OidcUser principal) {
+        if (!hasText(turboFrame)) {
+            return "redirect:/timeentries/%s/%s".formatted(year, weekOfYear);
+        }
 
-        timeEntryService.deleteTimeEntry(id);
+        final UserId userId = new UserId(principal.getUserInfo().getSubject());
+        final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
+
+        final Optional<TimeEntryDay> timeEntryDay = entryWeekPage.timeEntryWeek().days()
+            .stream()
+            .filter(day -> day.date().equals(timeEntry.start().toLocalDate()))
+            .findFirst();
+
+        final TimeEntryWeek timeEntryWeek = entryWeekPage.timeEntryWeek();
+
+        addTimeEntriesToModel(year, weekOfYear, model, principal);
+
+        model.addAttribute("turboEditedWeek", toTimeEntryWeekDto(timeEntryWeek));
+        model.addAttribute("turboEditedDay", timeEntryDay.map(this::toTimeEntryDayDto).orElse(null));
+        model.addAttribute("turboDeletedTimeEntry", toTimeEntryDto(timeEntry));
+
+        return "timeentries/index::#" + turboFrame;
     }
 
     private String saveOrUpdate(TimeEntryDTO dto, BindingResult bindingResult, Model model, OidcUser principal, HttpServletRequest request) {

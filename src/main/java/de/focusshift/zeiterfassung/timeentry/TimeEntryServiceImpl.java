@@ -21,6 +21,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -47,6 +48,11 @@ class TimeEntryServiceImpl implements TimeEntryService {
         this.workingTimeService = workingTimeService;
         this.userDateService = userDateService;
         this.clock = clock;
+    }
+
+    @Override
+    public Optional<TimeEntry> findTimeEntry(long id) {
+        return timeEntryRepository.findById(id).map(TimeEntryServiceImpl::toTimeEntry);
     }
 
     @Override

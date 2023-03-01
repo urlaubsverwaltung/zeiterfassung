@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.web.context.SecurityContextPersistenceFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -21,8 +22,10 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -658,9 +661,161 @@ class TimeEntryControllerTest {
         verifyNoMoreInteractions(timeEntryService);
     }
 
+    @Test
+    void ensureDelete() throws Exception {
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+
+        final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
+        final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1337L), new UserId("batman"), "hard work extended", start, end, false);
+
+        when(timeEntryService.findTimeEntry(1337)).thenReturn(Optional.of(timeEntry));
+
+        perform(
+            post("/timeentries/1337")
+                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .param("delete", "")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/timeentries/2022/39"));
+
+        verify(timeEntryService).deleteTimeEntry(1337);
+    }
+
+    @Test
+    void ensureDeleteWithAjax() throws Exception {
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        final UserId userId = new UserId("batman");
+
+        final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
+        final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work", start, end, false);
+
+        final ZonedDateTime start2 = ZonedDateTime.of(2022, 9, 28, 16, 30, 0, 0, zoneIdBerlin);
+        final ZonedDateTime end2 = ZonedDateTime.of(2022, 9, 28, 17, 30, 0, 0, zoneIdBerlin);
+        final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userId, "hack the planet", start2, end2, false);
+
+        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 28), PlannedWorkingHours.EIGHT, List.of(timeEntry2));
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
+        final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
+        when(timeEntryService.getEntryWeekPage(userId, 2022, 39)).thenReturn(timeEntryWeekPage);
+
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+
+        final TimeEntryDTO expectedDeletedTimeEntryDto = TimeEntryDTO.builder()
+            .id(1L)
+            .date(LocalDate.of(2022, 9, 28))
+            .start(LocalTime.of(20, 30))
+            .end(LocalTime.of(21, 15))
+            .duration("00:45")
+            .comment("hard work")
+            .build();
+
+        final TimeEntryDayDto expectedDayDto = TimeEntryDayDto.builder()
+            .date("formatted-date")
+            .hoursWorked("01:00")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:00")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(13.0)
+            .timeEntries(List.of(
+                TimeEntryDTO.builder()
+                    .id(2L)
+                    .date(LocalDate.of(2022, 9, 28))
+                    .start(LocalTime.of(16, 30))
+                    .end(LocalTime.of(17, 30))
+                    .duration("01:00")
+                    .comment("hack the planet")
+                    .build()
+            ))
+            .build();
+
+        final TimeEntryWeekDto expectedWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(39)
+            .from("formatted-date")
+            .to("formatted-date")
+            .hoursWorked("01:00")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:00")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(13.0)
+            .days(List.of(expectedDayDto))
+            .build();
+
+        perform(
+            post("/timeentries/1")
+                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .param("delete", "")
+                .header("Turbo-Frame", "awesome-turbo-frame")
+        )
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("turboEditedWeek", expectedWeekDto))
+            .andExpect(model().attribute("turboEditedDay", expectedDayDto))
+            .andExpect(model().attribute("turboDeletedTimeEntry", expectedDeletedTimeEntryDto));
+
+        verify(timeEntryService).deleteTimeEntry(1);
+    }
+
+    @Test
+    void ensureDeleteWithAjaxLastTimeEntryOfDay() throws Exception {
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        final UserId userId = new UserId("batman");
+
+        final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
+        final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work", start, end, false);
+
+        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of());
+        final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
+        when(timeEntryService.getEntryWeekPage(userId, 2022, 39)).thenReturn(timeEntryWeekPage);
+
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+
+        final TimeEntryDTO expectedDeletedTimeEntryDto = TimeEntryDTO.builder()
+            .id(1L)
+            .date(LocalDate.of(2022, 9, 28))
+            .start(LocalTime.of(20, 30))
+            .end(LocalTime.of(21, 15))
+            .duration("00:45")
+            .comment("hard work")
+            .build();
+
+        final TimeEntryWeekDto expectedWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(39)
+            .from("formatted-date")
+            .to("formatted-date")
+            .hoursWorked("00:00")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("08:00")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(0)
+            .days(List.of())
+            .build();
+
+        perform(
+            post("/timeentries/1")
+                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .param("delete", "")
+                .header("Turbo-Frame", "awesome-turbo-frame")
+        )
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("turboEditedWeek", expectedWeekDto))
+            .andExpect(model().attribute("turboEditedDay", nullValue()))
+            .andExpect(model().attribute("turboDeletedTimeEntry", expectedDeletedTimeEntryDto));
+
+        verify(timeEntryService).deleteTimeEntry(1);
+    }
+
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
         return standaloneSetup(sut)
-            .addFilters(new SecurityContextPersistenceFilter())
+            .addFilters(new SecurityContextHolderFilter(new HttpSessionSecurityContextRepository()))
             .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
             .build()
             .perform(builder);
