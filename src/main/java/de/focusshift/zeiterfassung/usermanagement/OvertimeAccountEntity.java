@@ -15,7 +15,7 @@ import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "overtime_account")
-class OvertimeAccountEntity extends AbstractTenantAwareEntity {
+public class OvertimeAccountEntity extends AbstractTenantAwareEntity {
 
     @Id
     @Column(name = "user_id")

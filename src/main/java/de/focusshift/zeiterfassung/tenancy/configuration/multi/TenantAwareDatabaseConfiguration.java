@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserEntity;
 import de.focusshift.zeiterfassung.timeclock.TimeClockEntity;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryEntity;
+import de.focusshift.zeiterfassung.usermanagement.OvertimeAccountEntity;
 import de.focusshift.zeiterfassung.usermanagement.WorkingTimeEntity;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,7 +32,7 @@ import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
 @Configuration(proxyBeanMethods = false)
 @EnableTransactionManagement
 @EnableJpaRepositories(
-    basePackageClasses = {TimeEntryEntity.class, TimeClockEntity.class, TenantUserEntity.class, WorkingTimeEntity.class},
+    basePackageClasses = {TimeEntryEntity.class, TimeClockEntity.class, TenantUserEntity.class, WorkingTimeEntity.class, OvertimeAccountEntity.class},
     entityManagerFactoryRef = "tenantAwareEntityManagerFactory",
     transactionManagerRef = "tenantAwareTransactionManager"
 )
@@ -66,7 +67,7 @@ class TenantAwareDatabaseConfiguration {
         return builder
             .dataSource(tenantAwareDataSource)
             // List all tenant aware related entity packages here
-            .packages(TimeEntryEntity.class, TimeClockEntity.class, TenantUserEntity.class, WorkingTimeEntity.class)
+            .packages(TimeEntryEntity.class, TimeClockEntity.class, TenantUserEntity.class, WorkingTimeEntity.class, OvertimeAccountEntity.class)
             .persistenceUnit("tenantAware")
             // enable hibernate to access spring beans and inject them into jpa entity lifecycle events
             .properties(Map.of(BEAN_CONTAINER, new SpringBeanContainer(beanFactory)))
