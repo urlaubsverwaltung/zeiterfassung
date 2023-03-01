@@ -167,10 +167,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final boolean durationChanged = !existingTimeEntry.duration().value().equals(duration);
         final boolean plausibleUpdate = delta(start, end).equals(duration);
 
-        if (startChanged && endChanged && durationChanged) {
-            if (!plausibleUpdate) {
-                throw new TimeEntryUpdateException("cannot update time-entry when start, end and duration should be changed. pick two of them.");
-            }
+        if (startChanged && endChanged && durationChanged && !plausibleUpdate) {
+            throw new TimeEntryUpdateException("cannot update time-entry when start, end and duration should be changed. pick two of them.");
         }
 
         if (plausibleUpdate || startChanged) {
