@@ -88,9 +88,9 @@ public interface TimeEntryService {
      * @return the updated {@linkplain TimeEntry}.
      *
      * @throws IllegalStateException when there is no {@linkplain TimeEntry} with the given id.
-     * @throws TimeEntryUpdateException when {@code start}, {@code end} and {@code duration} has been changed. only a selection of two is possible.
+     * @throws TimeEntryUpdateNotPlausibleException when {@code start}, {@code end} and {@code duration} has been changed. only a selection of two is possible.
      */
-    TimeEntry updateTimeEntry(TimeEntryId id, String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end, @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateException;
+    TimeEntry updateTimeEntry(TimeEntryId id, String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end, @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateNotPlausibleException;
 
     void deleteTimeEntry(long timeEntryId);
 }

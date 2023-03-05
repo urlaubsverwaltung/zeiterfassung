@@ -177,7 +177,7 @@ class TimeEntryServiceImplTest {
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
 
-        assertThatExceptionOfType(TimeEntryUpdateException.class).isThrownBy(
+        assertThatExceptionOfType(TimeEntryUpdateNotPlausibleException.class).isThrownBy(
             () -> sut.updateTimeEntry(new TimeEntryId(42L), "", now, now, duration, false)
         );
     }

@@ -243,7 +243,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         } else {
             try {
                 updateTimeEntry(dto, zoneId);
-            } catch (TimeEntryUpdateException e) {
+            } catch (TimeEntryUpdateNotPlausibleException e) {
                 LOG.debug("could not update time-entry", e);
 
                 bindingResult.reject("time-entry.validation.plausible");
@@ -285,7 +285,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         timeEntryService.createTimeEntry(userId, dto.getComment(), start, end, dto.isBreak());
     }
 
-    private void updateTimeEntry(TimeEntryDTO dto, ZoneId zoneId) throws TimeEntryUpdateException {
+    private void updateTimeEntry(TimeEntryDTO dto, ZoneId zoneId) throws TimeEntryUpdateNotPlausibleException {
 
         final Duration duration = toDuration(dto.getDuration());
         final ZonedDateTime start = dto.getStart() == null ? null : ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);

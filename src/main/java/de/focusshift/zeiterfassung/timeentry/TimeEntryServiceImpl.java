@@ -157,7 +157,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     public TimeEntry updateTimeEntry(TimeEntryId id, String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end,
-                                     @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateException {
+                                     @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateNotPlausibleException {
 
         final TimeEntryEntity entity = timeEntryRepository.findById(id.value())
             .orElseThrow(() -> new IllegalStateException("could not find existing timeEntry id=%s".formatted(id)));
@@ -171,7 +171,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     private static void updateEntityTimeSpan(TimeEntryEntity entity, ZonedDateTime start, ZonedDateTime end, Duration duration)
-        throws TimeEntryUpdateException {
+        throws TimeEntryUpdateNotPlausibleException {
 
         final TimeEntry existingTimeEntry = toTimeEntry(entity);
 
@@ -183,7 +183,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             final boolean plausibleUpdate = duration.equals(Duration.ZERO) || delta(start, end).equals(duration);
 
             if (startChanged && endChanged && durationChanged && !plausibleUpdate) {
-                throw new TimeEntryUpdateException("cannot update time-entry when start, end and duration should be changed. pick two of them.");
+                throw new TimeEntryUpdateNotPlausibleException("cannot update time-entry when start, end and duration should be changed. pick two of them.");
             }
             if (plausibleUpdate || startChanged) {
                 setStart(entity, start);
