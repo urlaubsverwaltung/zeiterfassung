@@ -640,7 +640,7 @@ class TimeEntryServiceImplTest {
         final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
         final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "pinguin", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
 
-        when(timeEntryRepository.findAllByTouchingPeriod(from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+        when(timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
         final List<TimeEntry> actual = sut.getEntriesForAllUsers(from, toExclusive);
@@ -679,7 +679,7 @@ class TimeEntryServiceImplTest {
         final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
         final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "robin", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
 
-        when(timeEntryRepository.findAllByOwnerIsInAndTouchingPeriod(List.of("uuid-1", "uuid-2"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of("uuid-1", "uuid-2"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
         final List<TimeEntry> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId, robinLocalId));
@@ -716,7 +716,7 @@ class TimeEntryServiceImplTest {
 
         final Instant periodStartInstant = periodFrom.atStartOfDay(UTC).toInstant();
         final Instant periodEndInstant = periodToExclusive.atStartOfDay(UTC).toInstant();
-        when(timeEntryRepository.findAllByOwnerAndTouchingPeriod("batman", periodStartInstant, periodEndInstant))
+        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan("batman", periodStartInstant, periodEndInstant))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity, timeEntryEntity2));
 
         final List<TimeEntry> actualEntries = sut.getEntries(periodFrom, periodToExclusive, new UserId("batman"));
@@ -756,7 +756,9 @@ class TimeEntryServiceImplTest {
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
-        when(timeEntryRepository.findAllByOwnerAndTouchingPeriod("batman", from, to)).thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
+        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan("batman", from, to))
+            .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
+
         when(timeEntryRepository.countAllByOwner("batman")).thenReturn(3L);
 
         final User batman = new User(new UserId("batman"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
@@ -817,7 +819,9 @@ class TimeEntryServiceImplTest {
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
-        when(timeEntryRepository.findAllByOwnerAndTouchingPeriod("batman", from, to)).thenReturn(List.of(lastDayOfWeekTimeEntry, firstDayOfWeekTimeEntry));
+        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan("batman", from, to))
+            .thenReturn(List.of(lastDayOfWeekTimeEntry, firstDayOfWeekTimeEntry));
+
         when(timeEntryRepository.countAllByOwner("batman")).thenReturn(6L);
 
         final User batman = new User(new UserId("batman"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());

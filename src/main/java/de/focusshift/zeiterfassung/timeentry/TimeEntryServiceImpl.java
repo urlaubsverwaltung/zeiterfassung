@@ -22,11 +22,11 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.groupingBy;
 
 @Service
 class TimeEntryServiceImpl implements TimeEntryService {
@@ -62,7 +62,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final Instant toInstant = toInstant(toExclusive);
 
         final List<TimeEntryEntity> result = timeEntryRepository
-            .findAllByOwnerAndTouchingPeriod(userId.value(), fromInstant, toInstant);
+            .findAllByOwnerAndStartGreaterThanEqualAndStartLessThan(userId.value(), fromInstant, toInstant);
 
         return result
             .stream()
@@ -77,7 +77,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
 
-        return timeEntryRepository.findAllByTouchingPeriod(fromInstant, toInstant)
+        return timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(fromInstant, toInstant)
             .stream()
             .map(TimeEntryServiceImpl::toTimeEntry)
             .toList();
@@ -96,7 +96,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .toList();
 
         final List<TimeEntryEntity> result = timeEntryRepository
-            .findAllByOwnerIsInAndTouchingPeriod(userIdValues, fromInstant, toInstant);
+            .findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(userIdValues, fromInstant, toInstant);
 
         return result
             .stream()
@@ -111,7 +111,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
-        final List<TimeEntry> timeEntries = timeEntryRepository.findAllByOwnerAndTouchingPeriod(userId.value(), from, to)
+        final List<TimeEntry> timeEntries = timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan(userId.value(), from, to)
             .stream()
             .sorted(comparing(TimeEntryEntity::getStart).thenComparing(TimeEntryEntity::getUpdatedAt).reversed())
             .map(TimeEntryServiceImpl::toTimeEntry)
@@ -127,7 +127,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
 
         final List<TimeEntryDay> daysOfWeek = timeEntries.stream()
-            .collect(Collectors.groupingBy(timeEntry -> timeEntry.start().toLocalDate()))
+            .collect(groupingBy(timeEntry -> timeEntry.start().toLocalDate()))
             .entrySet().stream()
             .map(e -> new TimeEntryDay(e.getKey(), plannedByDate.get(e.getKey()), e.getValue()))
             .sorted(comparing(TimeEntryDay::date).reversed())
