@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.usermanagement.WorkingTimeService;
+import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -155,47 +156,13 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public TimeEntry updateTimeEntry(TimeEntryId id, String comment, ZonedDateTime start, ZonedDateTime end,
-                                     Duration duration, boolean isBreak) throws TimeEntryUpdateException {
+    public TimeEntry updateTimeEntry(TimeEntryId id, String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end,
+                                     @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateException {
 
         final TimeEntryEntity entity = timeEntryRepository.findById(id.value())
             .orElseThrow(() -> new IllegalStateException("could not find existing timeEntry id=%s".formatted(id)));
 
-        final TimeEntry existingTimeEntry = toTimeEntry(entity);
-        final boolean startChanged = notEquals(existingTimeEntry.start(), start);
-        final boolean endChanged = notEquals(existingTimeEntry.end(), end);
-        final boolean durationChanged = !duration.equals(Duration.ZERO) && !existingTimeEntry.duration().value().equals(duration);
-        final boolean plausibleUpdate = duration.equals(Duration.ZERO) || delta(start, end).equals(duration);
-
-        if (startChanged && endChanged && durationChanged && !plausibleUpdate) {
-            throw new TimeEntryUpdateException("cannot update time-entry when start, end and duration should be changed. pick two of them.");
-        }
-
-        if (plausibleUpdate || startChanged) {
-            entity.setStart(start.toInstant());
-            entity.setStartZoneId(start.getZone().getId());
-            if (durationChanged) {
-                final ZonedDateTime newEnd = start.plusMinutes(duration.toMinutes());
-                entity.setEnd(newEnd.toInstant());
-                entity.setEndZoneId(newEnd.getZone().getId());
-            }
-        }
-
-        if (plausibleUpdate || endChanged) {
-            entity.setEnd(end.toInstant());
-            entity.setEndZoneId(end.getZone().getId());
-            if (durationChanged) {
-                final ZonedDateTime newStart = end.minusMinutes(duration.toMinutes());
-                entity.setStart(newStart.toInstant());
-                entity.setStartZoneId(newStart.getZone().getId());
-            }
-        }
-
-        if (durationChanged && !startChanged && !endChanged) {
-            final ZonedDateTime newEnd = start.plusMinutes(duration.toMinutes());
-            entity.setEnd(newEnd.toInstant());
-            entity.setEndZoneId(newEnd.getZone().getId());
-        }
+        updateEntityTimeSpan(entity, start, end, duration);
 
         entity.setComment(comment.strip());
         entity.setBreak(isBreak);
@@ -203,11 +170,68 @@ class TimeEntryServiceImpl implements TimeEntryService {
         return save(entity);
     }
 
-    private Duration delta(ZonedDateTime first, ZonedDateTime second) {
+    private static void updateEntityTimeSpan(TimeEntryEntity entity, ZonedDateTime start, ZonedDateTime end, Duration duration)
+        throws TimeEntryUpdateException {
+
+        final TimeEntry existingTimeEntry = toTimeEntry(entity);
+
+        // start + end + duration (check if it is plausible)
+        if (start != null && end != null && duration != null) {
+            final boolean startChanged = notEquals(existingTimeEntry.start(), start);
+            final boolean endChanged = notEquals(existingTimeEntry.end(), end);
+            final boolean durationChanged = !duration.equals(Duration.ZERO) && !existingTimeEntry.duration().value().equals(duration);
+            final boolean plausibleUpdate = duration.equals(Duration.ZERO) || delta(start, end).equals(duration);
+
+            if (startChanged && endChanged && durationChanged && !plausibleUpdate) {
+                throw new TimeEntryUpdateException("cannot update time-entry when start, end and duration should be changed. pick two of them.");
+            }
+            if (plausibleUpdate || startChanged) {
+                setStart(entity, start);
+                if (durationChanged) {
+                    setEnd(entity, start.plusMinutes(duration.toMinutes()));
+                }
+            }
+            if (plausibleUpdate || endChanged) {
+                setEnd(entity, end);
+                if (durationChanged) {
+                    setStart(entity, end.minusMinutes(duration.toMinutes()));
+                }
+            }
+            if (durationChanged && !startChanged && !endChanged) {
+                setEnd(entity, start.plusMinutes(duration.toMinutes()));
+            }
+        }
+        // start + end
+        else if (start != null && end != null) {
+            setStart(entity, start);
+            setEnd(entity, end);
+        }
+        // start + duration
+        else if (start != null && duration != null) {
+            setStart(entity, start);
+            setEnd(entity, start.plusMinutes(duration.toMinutes()));
+        }
+        // end + duration
+        else if (start == null && end != null && duration != null) {
+            setStart(entity, end.minusMinutes(duration.toMinutes()));
+            setEnd(entity, end);
+        }
+    }
+
+    private static void setStart(TimeEntryEntity entity, ZonedDateTime start) {
+        entity.setStart(start.toInstant());
+        entity.setStartZoneId(start.getZone().getId());
+    }
+    private static void setEnd(TimeEntryEntity entity, ZonedDateTime end) {
+        entity.setEnd(end.toInstant());
+        entity.setEndZoneId(end.getZone().getId());
+    }
+
+    private static Duration delta(ZonedDateTime first, ZonedDateTime second) {
         return Duration.ofMinutes(MINUTES.between(first, second));
     }
 
-    private boolean notEquals(ZonedDateTime one, ZonedDateTime two) {
+    private static boolean notEquals(ZonedDateTime one, ZonedDateTime two) {
         return !one.toInstant().atZone(ZoneOffset.UTC).equals(two.toInstant().atZone(ZoneOffset.UTC));
     }
 
