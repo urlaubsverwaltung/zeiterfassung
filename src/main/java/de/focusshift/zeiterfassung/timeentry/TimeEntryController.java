@@ -288,14 +288,18 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private void updateTimeEntry(TimeEntryDTO dto, ZoneId zoneId) throws TimeEntryUpdateException {
 
         final Duration duration = toDuration(dto.getDuration());
-        final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
+        final ZonedDateTime start = dto.getStart() == null ? null : ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
         final ZonedDateTime end = getEndDate(dto, zoneId);
 
         timeEntryService.updateTimeEntry(new TimeEntryId(dto.getId()), dto.getComment(), start, end, duration, dto.isBreak());
     }
 
     private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {
-        if (dto.getEnd().isBefore(dto.getStart())) {
+        if (dto.getEnd() == null) {
+            return null;
+        } else if (dto.getStart() == null) {
+            return ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getEnd()), zoneId);
+        } else if (dto.getEnd().isBefore(dto.getStart())) {
             // end is on next day
             return ZonedDateTime.of(LocalDateTime.of(dto.getDate().plusDays(1), dto.getEnd()), zoneId);
         } else {
