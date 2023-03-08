@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
 import de.focusshift.zeiterfassung.security.SecurityRoles;
+import de.focusshift.zeiterfassung.user.UserId;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.InteractiveAuthenticationSuccessEvent;
 import org.springframework.security.core.GrantedAuthority;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Predicate;
 
 import static java.util.function.Predicate.not;
@@ -27,7 +27,6 @@ class TenantUserCreatorAndUpdater {
     @EventListener
     public void handle(InteractiveAuthenticationSuccessEvent interactiveAuthenticationSuccessEvent) {
         if (interactiveAuthenticationSuccessEvent.getAuthentication().getPrincipal() instanceof final DefaultOidcUser oidcUser) {
-            final UUID uuid = UUID.fromString(oidcUser.getSubject());
             final EMailAddress eMailAddress = new EMailAddress(oidcUser.getEmail());
 
             final Set<SecurityRoles> authorities = oidcUser.getAuthorities()
@@ -38,9 +37,9 @@ class TenantUserCreatorAndUpdater {
                 .map(SecurityRoles::valueOf)
                 .collect(toSet());
 
-            final Optional<TenantUser> maybeUser = tenantUserService.getUserByUuid(uuid);
+            final Optional<TenantUser> maybeUser = tenantUserService.findById(new UserId(oidcUser.getSubject()));
             if (maybeUser.isEmpty()) {
-                tenantUserService.createNewUser(uuid, oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, authorities);
+                tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, authorities);
             } else {
                 final TenantUser user = maybeUser.get();
                 final TenantUser tenantUser = new TenantUser(user.id(), user.localId(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, authorities);

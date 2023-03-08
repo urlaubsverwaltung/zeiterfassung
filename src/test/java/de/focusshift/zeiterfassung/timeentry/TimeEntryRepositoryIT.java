@@ -25,7 +25,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -51,8 +50,8 @@ class TimeEntryRepositoryIT extends TestContainersBase {
     @Test
     void countAllByOwner() {
 
-        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
+        final TenantUser batman = tenantUserService.createNewUser("1a432ba3-cb93-463b-813b-8e065c1e0a24", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final TenantUser superman = tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
         final LocalDateTime anyDate = LocalDateTime.of(2022, 9, 24, 14, 0, 0, 0);
 
@@ -71,8 +70,8 @@ class TimeEntryRepositoryIT extends TestContainersBase {
     @Test
     void countAllEnsureFindAllByOwnerAndStartGreaterThanEqualAndStartLessThan() {
 
-        final TenantUser batman = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final TenantUser superman = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
+        final TenantUser batman = tenantUserService.createNewUser("1a432ba3-cb93-463b-813b-8e065c1e0a24", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final TenantUser superman = tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
         final LocalDate periodFrom = LocalDate.of(2022, 1, 3);
         final LocalDate periodToExclusive = LocalDate.of(2022, 1, 10);
