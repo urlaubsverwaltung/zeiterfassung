@@ -40,39 +40,6 @@ class TenantUserServiceImplTest {
     }
 
     @Test
-    void ensureGetUserByUuidReturnsEmpty() {
-
-        final UUID uuid = UUID.randomUUID();
-
-        when(repository.findByUuid(uuid.toString())).thenReturn(Optional.empty());
-
-        final Optional<TenantUser> actual = sut.getUserByUuid(uuid);
-        assertThat(actual).isEmpty();
-    }
-
-    @Test
-    void ensureGetUserByUuid() {
-
-        final UUID uuid = UUID.randomUUID();
-
-        final UserId id = new UserId(uuid.toString());
-        final UserLocalId localId = new UserLocalId(1337L);
-        final EMailAddress email = new EMailAddress("mail@example.org");
-
-        final Instant firstLoginAt = clock.instant();
-        final TenantUserEntity entity = new TenantUserEntity(localId.value(), id.value(), firstLoginAt, clock.instant(), "givenName", "familyName", email.value(), Set.of());
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, firstLoginAt, Set.of());
-
-        when(repository.findByUuid(uuid.toString())).thenReturn(Optional.of(entity));
-
-        final Optional<TenantUser> actual = sut.getUserByUuid(uuid);
-
-        assertThat(actual)
-            .isPresent()
-            .hasValue(tenantUser);
-    }
-
-    @Test
     void ensureFindAllUsersWithQueryReturnsEmpty() {
 
         when(repository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase("batman", "batman"))

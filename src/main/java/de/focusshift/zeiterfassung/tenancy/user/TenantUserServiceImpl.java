@@ -13,7 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 @Service
 class TenantUserServiceImpl implements TenantUserService {
@@ -29,18 +28,12 @@ class TenantUserServiceImpl implements TenantUserService {
     }
 
     @Override
-    public Optional<TenantUser> getUserByUuid(UUID uuid) {
-        return tenantUserRepository.findByUuid(uuid.toString())
-            .map(TenantUserServiceImpl::entityToTenantUser);
-    }
-
-    @Override
-    public TenantUser createNewUser(UUID uuid, String givenName, String familyName, EMailAddress eMailAddress, Collection<SecurityRoles> authorities) {
+    public TenantUser createNewUser(String uuid, String givenName, String familyName, EMailAddress eMailAddress, Collection<SecurityRoles> authorities) {
 
         final Instant now = clock.instant();
 
         final TenantUserEntity tenantUserEntity =
-            new TenantUserEntity(null, uuid.toString(), now, now, givenName, familyName, eMailAddress.value(), distinct(authorities));
+            new TenantUserEntity(null, uuid, now, now, givenName, familyName, eMailAddress.value(), distinct(authorities));
 
         final TenantUserEntity persisted = tenantUserRepository.save(tenantUserEntity);
 

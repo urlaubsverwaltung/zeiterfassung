@@ -9,7 +9,6 @@ import org.springframework.test.annotation.Rollback;
 
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,8 +30,8 @@ class TenantUserRepositoryIT extends TestContainersBase {
     @Test
     void ensureFindAllByUuidIsInReturnsEmpty() {
 
-        tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
+        tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        tenantUserService.createNewUser("2256a744-31f9-4f87-8189-fe0d471e6537", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
         final List<TenantUserEntity> actual = sut.findAllByUuidIsIn(List.of("uuid"));
         assertThat(actual).isEmpty();
@@ -41,9 +40,9 @@ class TenantUserRepositoryIT extends TestContainersBase {
     @Test
     void ensureFindAllByUuidIsIn() {
 
-        final TenantUser bruce = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final TenantUser clark = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
-        tenantUserService.createNewUser(UUID.randomUUID(), "Clark", "Kent", new EMailAddress("kent@example.org"), Set.of());
+        final TenantUser bruce = tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final TenantUser clark = tenantUserService.createNewUser("2256a744-31f9-4f87-8189-fe0d471e6537", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
+        tenantUserService.createNewUser("1a432ba3-cb93-463b-813b-8e065c1e0a24", "Clark", "Kent", new EMailAddress("kent@example.org"), Set.of());
 
         final List<TenantUserEntity> actual = sut.findAllByUuidIsIn(List.of(bruce.id(), clark.id()));
         assertThat(actual).hasSize(2);
@@ -60,8 +59,8 @@ class TenantUserRepositoryIT extends TestContainersBase {
     @Test
     void ensureFindAllByIdIsInReturnsEmpty() {
 
-        tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
+        tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        tenantUserService.createNewUser("2256a744-31f9-4f87-8189-fe0d471e6537", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
         final List<TenantUserEntity> actual = sut.findAllByIdIsIn(List.of(42L));
         assertThat(actual).isEmpty();
@@ -70,9 +69,9 @@ class TenantUserRepositoryIT extends TestContainersBase {
     @Test
     void ensureFindAllByIdIsIn() {
 
-        final TenantUser bruce = tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final TenantUser clark = tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
-        tenantUserService.createNewUser(UUID.randomUUID(), "Clark", "Kent", new EMailAddress("kent@example.org"), Set.of());
+        final TenantUser bruce = tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final TenantUser clark = tenantUserService.createNewUser("2256a744-31f9-4f87-8189-fe0d471e6537", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
+        tenantUserService.createNewUser("1a432ba3-cb93-463b-813b-8e065c1e0a24", "Clark", "Kent", new EMailAddress("kent@example.org"), Set.of());
 
         final List<TenantUserEntity> actual = sut.findAllByIdIsIn(List.of(bruce.localId(), clark.localId()));
         assertThat(actual).hasSize(2);
@@ -89,8 +88,8 @@ class TenantUserRepositoryIT extends TestContainersBase {
     @Test
     void ensureFindAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCaseReturnsEmpty() {
 
-        tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
+        tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        tenantUserService.createNewUser("2256a744-31f9-4f87-8189-fe0d471e6537", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
         final List<TenantUserEntity> actual = sut.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase("xxx", "xxx");
         assertThat(actual).isEmpty();
@@ -99,9 +98,9 @@ class TenantUserRepositoryIT extends TestContainersBase {
     @Test
     void ensureFindAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase() {
 
-        tenantUserService.createNewUser(UUID.randomUUID(), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        tenantUserService.createNewUser(UUID.randomUUID(), "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
-        tenantUserService.createNewUser(UUID.randomUUID(), "Clark", "Kent", new EMailAddress("Kent@example.org"), Set.of());
+        tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        tenantUserService.createNewUser("2256a744-31f9-4f87-8189-fe0d471e6537", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
+        tenantUserService.createNewUser("1a432ba3-cb93-463b-813b-8e065c1e0a24", "Clark", "Kent", new EMailAddress("Kent@example.org"), Set.of());
 
         final List<TenantUserEntity> actual = sut.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase("cla", "cla");
         assertThat(actual).hasSize(2);
