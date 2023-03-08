@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.web;
 
-import de.focusshift.zeiterfassung.security.SecurityRoles;
+import de.focusshift.zeiterfassung.security.SecurityRole;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -12,10 +12,13 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.security.Principal;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import static de.focusshift.zeiterfassung.security.SecurityRoles.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static java.lang.invoke.MethodHandles.lookup;
 
 @Component
@@ -31,9 +34,9 @@ class AuthoritiesModelProvider implements HandlerInterceptor {
             final Principal userPrincipal = request.getUserPrincipal();
 
             if (userPrincipal instanceof OAuth2AuthenticationToken token) {
-                final List<SecurityRoles> roles = token.getAuthorities()
+                final List<SecurityRole> roles = token.getAuthorities()
                     .stream()
-                    .map(SecurityRoles::fromAuthority)
+                    .map(SecurityRole::fromAuthority)
                     .filter(Optional::isPresent)
                     .flatMap(Optional::stream)
                     .toList();
@@ -44,9 +47,14 @@ class AuthoritiesModelProvider implements HandlerInterceptor {
         }
     }
 
-    private static void setModelAttributes(ModelAndView modelAndView, List<SecurityRoles> roles) {
+    private static void setModelAttributes(ModelAndView modelAndView, List<SecurityRole> roles) {
 
-        modelAndView.addObject("showMainNavigationPersons", roles.contains(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL));
+        modelAndView.addObject("showMainNavigationPersons",
+            contains(roles, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL));
+    }
+
+    private static boolean contains(Collection<SecurityRole> roles, SecurityRole... anyOf) {
+        return Arrays.stream(anyOf).anyMatch(roles::contains);
     }
 
     private boolean navigationHeaderVisible(ModelAndView modelAndView) {

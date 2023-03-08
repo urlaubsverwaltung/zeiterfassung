@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+  <head>
+    <title>Zeiterfassung - Personen</title>
+  </head>
+  <body>
+    <th:block th:fragment="section(user)">
+      <form
+        action="#"
+        th:action="@{/users/{userId}/overtime-account (userId=${user.id})}"
+        method="post"
+        th:object="${overtimeAccount}"
+      >
+        <div id="overtime-form-hidden-inputs">
+          <input type="hidden" name="query" th:value="${query}" />
+        </div>
+        <div class="flex flex-col gap-8">
+          <fieldset class="border-t border-gray-100">
+            <legend
+              class="text-sm font-medium text-gray-400"
+              th:text="#{usermanagement.overtime-account.overtime-regulation.title}"
+            >
+              Überstundenregelung
+            </legend>
+            <div class="mt-2 sm:mt-4">
+              <div class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="overtime-allowed-input"
+                  th:field="*{allowed}"
+                />
+                <label
+                  for="overtime-allowed-input"
+                  th:text="#{usermanagement.overtime-account.overtime.allowed.label}"
+                >
+                  darf Überstunden machen.
+                </label>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="border-t border-gray-100">
+            <legend
+              class="text-sm font-medium text-gray-400"
+              th:text="#{usermanagement.overtime-account.overtime-account.title}"
+            >
+              Überstundenkonto
+            </legend>
+            <div
+              class="mt-2 sm:mt-4"
+              th:with="fieldName=${'maxAllowedOvertime'}, hasError=${#fields.hasErrors(fieldName)}"
+            >
+              <div
+                class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2"
+              >
+                <span>
+                  <span
+                    th:text="#{usermanagement.overtime-account.overtime-account.max.pre}"
+                  >
+                    Maximal
+                  </span>
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    id="overtime-account-max-allowed-input"
+                    class="border border-gray-300 px-2 py-1 w-14"
+                    th:field="*{maxAllowedOvertime}"
+                    th:classappend="${hasError ? 'invalid' : ''}"
+                    th:aria-invalid="${hasError}"
+                    th:aria-message="${hasError ? fieldName + '-error-message' : ''}"
+                  />
+                </span>
+                <label
+                  for="overtime-account-max-allowed-input"
+                  th:text="#{usermanagement.overtime-account.overtime-account.max.label}"
+                >
+                  Überstunden dürfen angesammelt werden.
+                </label>
+              </div>
+              <p
+                th:id="${fieldName + '-error-message'}"
+                th:text="${#fields.errors(fieldName)[0]}"
+                th:if="${hasError}"
+                class="invalid"
+              >
+                Max Überstunden Fehlernachricht
+              </p>
+              <p
+                class="mt-4 max-w-prose"
+                th:text="#{usermanagement.overtime-account.overtime-account.info-text(${user.fullName})}"
+              >
+                Stunden darüber hinaus werden Max Mustermann nicht als
+                Überstunden angezeigt. Kann leer gelassen werden, wenn beliebig
+                viele möglich sind.
+              </p>
+            </div>
+          </fieldset>
+          <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <button
+              type="submit"
+              class="bg-blue-700 border border-blue-700 text-white font-medium rounded px-4 py-2 flex items-center gap-2 justify-center sm:justify-start"
+            >
+              <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
+              <th:block th:text="#{usermanagement.save}">
+                Aktualisieren
+              </th:block>
+            </button>
+            <a
+              id="overtime-account-settings-reset-button"
+              href="#"
+              th:href="@{/users/{id} (id=${user.id}, query=${query})}"
+              class="whitespace-nowrap border border-blue-700 text-blue-700 font-medium rounded px-4 py-2 text-center sm:text-left"
+              th:text="#{usermanagement.revert}"
+            >
+              Änderungen verwerfen
+            </a>
+          </div>
+        </div>
+      </form>
+    </th:block>
+  </body>
+</html>

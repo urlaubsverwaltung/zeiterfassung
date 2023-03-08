@@ -14,5 +14,6 @@
     <include relativeToChangelogFile="true" file="changelog-1.2.0-add-working-time.xml"/>
     <include relativeToChangelogFile="true" file="changelog-1.2.0-add-authorities-to-tenant-user.xml"/>
     <include relativeToChangelogFile="true" file="changelog-1.2.1-enable-row-level-security-on-working-time.xml"/>
+    <include relativeToChangelogFile="true" file="changelog-1.4.0-add-overtime-account.xml"/>
 
 </databaseChangeLog>

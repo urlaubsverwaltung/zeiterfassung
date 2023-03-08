@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
-import de.focusshift.zeiterfassung.security.SecurityRoles;
+import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -64,17 +64,17 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
     @CollectionTable(name = "tenant_user_authorities", joinColumns = @JoinColumn(name = "tenant_user_id"))
     @ElementCollection(fetch = EAGER)
     @Enumerated(STRING)
-    private Set<SecurityRoles> authorities;
+    private Set<SecurityRole> authorities;
 
     protected TenantUserEntity() {
         this(null, null, null, null, null, null, null, null, Set.of());
     }
 
-    protected TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRoles> authorities) {
+    protected TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRole> authorities) {
         this(id, null, uuid, firstLoginAt, lastLoginAt, givenName, familyName, email, authorities);
     }
 
-    protected TenantUserEntity(Long id, String tenantId, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRoles> authorities) {
+    protected TenantUserEntity(Long id, String tenantId, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRole> authorities) {
         super(tenantId);
         this.id = id;
         this.uuid = uuid;
@@ -114,7 +114,7 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
         return email;
     }
 
-    public Set<SecurityRoles> getAuthorities() {
+    public Set<SecurityRole> getAuthorities() {
         return authorities;
     }
 

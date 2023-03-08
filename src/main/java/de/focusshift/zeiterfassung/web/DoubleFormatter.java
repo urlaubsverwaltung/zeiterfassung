@@ -27,11 +27,18 @@ public class DoubleFormatter implements Formatter<Double> {
             decimalFormatSymbols.setDecimalSeparator(',');
         }
 
-        return new DecimalFormat("", decimalFormatSymbols).parse(text).doubleValue();
+        final DecimalFormat decimalFormat = new DecimalFormat("", decimalFormatSymbols);
+        decimalFormat.setGroupingUsed(false);
+
+        return decimalFormat.parse(text).doubleValue();
     }
 
     @Override
     public String print(Double object, Locale locale) {
-        return NumberFormat.getInstance(locale).format(object);
+
+        final NumberFormat numberFormat = NumberFormat.getInstance(locale);
+        numberFormat.setGroupingUsed(false);
+
+        return numberFormat.format(object);
     }
 }

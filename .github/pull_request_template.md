@@ -1,3 +1,11 @@
+
+Here are some things you should have thought about:
+
+**Multi-Tenancy**
+- [ ] Extended new entities with `AbstractTenantAwareEntity`?
+- [ ] New entity added to `TenantAwareDatabaseConfiguration`?
+- [ ] Tested with `dev-multitenant` profile?
+
 <!--
 
 Thanks for contributing to the zeiterfassung.

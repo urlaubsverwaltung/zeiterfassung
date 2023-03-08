@@ -3,6 +3,8 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focusshift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -23,7 +25,9 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static de.focusshift.zeiterfassung.security.SecurityRules.ALLOW_EDIT_WORKING_TIME_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
+import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static java.math.BigDecimal.ZERO;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
@@ -35,7 +39,7 @@ import static java.time.DayOfWeek.WEDNESDAY;
 
 @Controller
 @RequestMapping("/users/{userId}/working-time")
-@PreAuthorize(ALLOW_EDIT_WORKING_TIME_ALL)
+@PreAuthorize("hasAuthority('ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL')")
 class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
     private final UserManagementService userManagementService;
@@ -51,7 +55,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     @GetMapping
     String get(@PathVariable("userId") Long userId, Model model,
                @RequestParam(value = "query", required = false, defaultValue = "") String query,
-               @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
+               @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+               @AuthenticationPrincipal OidcUser principal) {
 
         final List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()
@@ -67,10 +72,14 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         final WorkingTimeDto workingTimeDto = workingTimeToDto(workingTime);
 
         model.addAttribute("query", query);
+        model.addAttribute("slug", "working-time");
         model.addAttribute("users", users);
         model.addAttribute("selectedUser", selectedUser);
         model.addAttribute("workingTime", workingTimeDto);
         model.addAttribute("personSearchFormAction", "/users/" + selectedUser.id());
+
+        model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, principal));
+        model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal));
 
         if (StringUtils.hasText(turboFrame)) {
             return "usermanagement/users::#" + turboFrame;
@@ -84,6 +93,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                 @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
                 @RequestParam(value = "query", required = false, defaultValue = "") String query,
                 @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                @AuthenticationPrincipal OidcUser principal,
                 @RequestParam Map<String, Object> requestParameters) {
 
         final Object select = requestParameters.get("select");
@@ -115,10 +125,14 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                 .orElseThrow(() -> new IllegalArgumentException("could not find person=%s".formatted(userId)));
 
             model.addAttribute("query", query);
+            model.addAttribute("slug", "working-time");
             model.addAttribute("users", users);
             model.addAttribute("selectedUser", selectedUser);
             model.addAttribute("workingTime", workingTimeDto);
             model.addAttribute("personSearchFormAction", "/users/" + selectedUser.id());
+
+            model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, principal));
+            model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal));
 
             if (StringUtils.hasText(turboFrame)) {
                 return "usermanagement/users::#" + turboFrame;

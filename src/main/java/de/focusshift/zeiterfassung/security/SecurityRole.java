@@ -5,12 +5,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Optional;
 
-public enum SecurityRoles {
+public enum SecurityRole {
 
     ZEITERFASSUNG_OPERATOR, // used by fss employees only!
     ZEITERFASSUNG_USER,
     ZEITERFASSUNG_VIEW_REPORT_ALL,
-    ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
+    ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,
+    ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 
     private GrantedAuthority authority;
 
@@ -21,9 +22,9 @@ public enum SecurityRoles {
         return authority;
     }
 
-    public static Optional<SecurityRoles> fromAuthority(GrantedAuthority authority) {
+    public static Optional<SecurityRole> fromAuthority(GrantedAuthority authority) {
         try {
-            final SecurityRoles role = SecurityRoles.valueOf(authority.getAuthority().substring("ROLE_".length()));
+            final SecurityRole role = SecurityRole.valueOf(authority.getAuthority().substring("ROLE_".length()));
             return Optional.of(role);
         } catch(IllegalArgumentException exception) {
             return Optional.empty();
