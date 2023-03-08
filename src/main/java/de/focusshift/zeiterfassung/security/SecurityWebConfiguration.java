@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -25,16 +26,18 @@ class SecurityWebConfiguration {
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
     private final OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler;
     private final OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService;
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
     @Autowired
     SecurityWebConfiguration(AuthenticationEntryPoint authenticationEntryPoint,
                              AuthenticationSuccessHandler authenticationSuccessHandler,
                              OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler,
-                             OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService) {
+                             OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService, ClientRegistrationRepository clientRegistrationRepository) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.authenticationSuccessHandler = authenticationSuccessHandler;
         this.oidcClientInitiatedLogoutSuccessHandler = oidcClientInitiatedLogoutSuccessHandler;
         this.oidcUserService = oidcUserService;
+        this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
     @Bean
@@ -48,6 +51,9 @@ class SecurityWebConfiguration {
                 .anyRequest().authenticated()
             .and()
             .oauth2Login()
+                .authorizationEndpoint()
+                    .authorizationRequestResolver(new LoginHintAwareResolver(this.clientRegistrationRepository))
+                .and()
                 .successHandler(authenticationSuccessHandler)
                 .userInfoEndpoint()
                 .oidcUserService(oidcUserService);
@@ -69,4 +75,5 @@ class SecurityWebConfiguration {
         //@formatter:on
         return http.build();
     }
+
 }
