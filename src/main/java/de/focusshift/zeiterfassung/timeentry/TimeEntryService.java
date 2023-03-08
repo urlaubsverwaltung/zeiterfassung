@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import jakarta.annotation.Nullable;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -80,16 +81,16 @@ public interface TimeEntryService {
      * Updates the existing {@linkplain TimeEntry}
      *
      * @param id of the {@linkplain TimeEntry} to update
-     * @param start new start
-     * @param end new end
-     * @param duration new value.
+     * @param start new start. may be {@code null} when end and duration is given.
+     * @param end new end. may be {@code null} when start and duration is given.
+     * @param duration new value. may be {@code null} when start and end is given.
      * @param isBreak new isBreak
      * @return the updated {@linkplain TimeEntry}.
      *
      * @throws IllegalStateException when there is no {@linkplain TimeEntry} with the given id.
-     * @throws TimeEntryUpdateException when {@code start}, {@code end} and {@code duration} has been changed. only a selection of two is possible.
+     * @throws TimeEntryUpdateNotPlausibleException when {@code start}, {@code end} and {@code duration} has been changed. only a selection of two is possible.
      */
-    TimeEntry updateTimeEntry(TimeEntryId id, String comment, ZonedDateTime start, ZonedDateTime end, Duration duration, boolean isBreak) throws TimeEntryUpdateException;
+    TimeEntry updateTimeEntry(TimeEntryId id, String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end, @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateNotPlausibleException;
 
     void deleteTimeEntry(long timeEntryId);
 }

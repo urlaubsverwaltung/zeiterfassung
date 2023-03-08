@@ -150,25 +150,26 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final UserId userId = new UserId(principal.getUserInfo().getSubject());
 
         if (hasText(turboFrame)) {
-            final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
+            if (bindingResult.hasErrors()) {
+                model.addAttribute("turboEditedTimeEntry", timeEntryDTO);
+            } else {
+                final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
+                final TimeEntryDay timeEntryDay = entryWeekPage.timeEntryWeek().days()
+                    .stream()
+                    .filter(day -> day.date().equals(timeEntryDTO.getDate()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("expected a day"));
 
-            final TimeEntryDay timeEntryDay = entryWeekPage.timeEntryWeek().days()
-                .stream()
-                .filter(day -> day.date().equals(timeEntryDTO.getDate()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("expected a day"));
+                final TimeEntryWeek timeEntryWeek = entryWeekPage.timeEntryWeek();
+                final TimeEntry editedTimeEntry = timeEntryDay.timeEntries().stream()
+                    .filter(entry -> entry.id().value().equals(timeEntryDTO.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("could not find edited timeEntry=%s".formatted(timeEntryDTO.getId())));
 
-            final TimeEntryWeek timeEntryWeek = entryWeekPage.timeEntryWeek();
-
-            final TimeEntry editedTimeEntry = timeEntryDay.timeEntries().stream()
-                .filter(entry -> entry.id().value().equals(timeEntryDTO.getId()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("could not find edited timeEntry=%s".formatted(timeEntryDTO.getId())));
-
-            model.addAttribute("turboEditedWeek", toTimeEntryWeekDto(timeEntryWeek));
-            model.addAttribute("turboEditedDay", toTimeEntryDayDto(timeEntryDay));
-            model.addAttribute("turboEditedTimeEntry", toTimeEntryDto(editedTimeEntry));
-
+                model.addAttribute("turboEditedWeek", toTimeEntryWeekDto(timeEntryWeek));
+                model.addAttribute("turboEditedDay", toTimeEntryDayDto(timeEntryDay));
+                model.addAttribute("turboEditedTimeEntry", toTimeEntryDto(editedTimeEntry));
+            }
             return "timeentries/index::#frame-time-entry";
         } else {
             if (bindingResult.hasErrors()) {
@@ -217,7 +218,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private String saveOrUpdate(TimeEntryDTO dto, BindingResult bindingResult, Model model, OidcUser principal, HttpServletRequest request) {
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("timeEntryErrorId", dto);
+            model.addAttribute("timeEntryErrorId", dto.getId());
 
             final boolean hasErrorStart = bindingResult.hasFieldErrors("start");
             final boolean hasErrorEnd = bindingResult.hasFieldErrors("end");
@@ -240,7 +241,20 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         if (dto.getId() == null) {
             createTimeEntry(dto, userId, zoneId);
         } else {
-            updateTimeEntry(dto, zoneId);
+            try {
+                updateTimeEntry(dto, zoneId);
+            } catch (TimeEntryUpdateNotPlausibleException e) {
+                LOG.debug("could not update time-entry", e);
+
+                bindingResult.reject("time-entry.validation.plausible");
+                bindingResult.rejectValue("start", "");
+                bindingResult.rejectValue("end", "");
+                bindingResult.rejectValue("duration", "");
+
+                model.addAttribute("timeEntryErrorId", dto.getId());
+
+                return "timeentries/index";
+            }
         }
 
         final String referer = request.getHeader("referer");
@@ -271,23 +285,21 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         timeEntryService.createTimeEntry(userId, dto.getComment(), start, end, dto.isBreak());
     }
 
-    private void updateTimeEntry(TimeEntryDTO dto, ZoneId zoneId) {
+    private void updateTimeEntry(TimeEntryDTO dto, ZoneId zoneId) throws TimeEntryUpdateNotPlausibleException {
 
         final Duration duration = toDuration(dto.getDuration());
-        final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
+        final ZonedDateTime start = dto.getStart() == null ? null : ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
         final ZonedDateTime end = getEndDate(dto, zoneId);
 
-        try {
-            timeEntryService.updateTimeEntry(new TimeEntryId(dto.getId()), dto.getComment(), start, end, duration, dto.isBreak());
-        } catch (TimeEntryUpdateException e) {
-            LOG.info("could not update time-entry", e);
-            // TODO provide user feedback somehow? or is an error page enough? should not happen often this case?
-            throw new RuntimeException(e);
-        }
+        timeEntryService.updateTimeEntry(new TimeEntryId(dto.getId()), dto.getComment(), start, end, duration, dto.isBreak());
     }
 
     private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {
-        if (dto.getEnd().isBefore(dto.getStart())) {
+        if (dto.getEnd() == null) {
+            return null;
+        } else if (dto.getStart() == null) {
+            return ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getEnd()), zoneId);
+        } else if (dto.getEnd().isBefore(dto.getStart())) {
             // end is on next day
             return ZonedDateTime.of(LocalDateTime.of(dto.getDate().plusDays(1), dto.getEnd()), zoneId);
         } else {

@@ -392,7 +392,7 @@ class TimeEntryControllerTest {
     }
 
     @Test
-    void ensureTimeEntryEdit() throws Exception {
+    void ensureTimeEntryEditStartGivenAndEndGivenAndDurationNull() throws Exception {
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
@@ -417,6 +417,62 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
 
         verify(timeEntryService).updateTimeEntry(new TimeEntryId(1337L), "hard work extended", expectedStart, expectedEnd, Duration.ZERO, false);
+    }
+
+    @Test
+    void ensureTimeEntryEditStartNullAndEndGivenAndDurationGiven() throws Exception {
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
+
+        final ResultActions perform = perform(
+            post("/timeentries/1337")
+                .header("Referer", "/timeentries/2022/39")
+                .with(
+                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
+                )
+                .param("id", "1337")
+                .param("date", "2022-09-28")
+                .param("start", "")
+                .param("end", "21:15:00.000+01:00")
+                .param("duration", "01:00")
+                .param("comment", "")
+        );
+
+        perform
+            .andExpect(redirectedUrl("/timeentries/2022/39"));
+
+        final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
+
+        verify(timeEntryService).updateTimeEntry(new TimeEntryId(1337L), "", null, expectedEnd, Duration.ofHours(1), false);
+    }
+
+    @Test
+    void ensureTimeEntryEditStartGivenAndEndNullAndDurationGiven() throws Exception {
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
+
+        final ResultActions perform = perform(
+            post("/timeentries/1337")
+                .header("Referer", "/timeentries/2022/39")
+                .with(
+                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
+                )
+                .param("id", "1337")
+                .param("date", "2022-09-28")
+                .param("start", "21:15:00.000+01:00")
+                .param("end", "")
+                .param("duration", "01:00")
+                .param("comment", "")
+        );
+
+        perform
+            .andExpect(redirectedUrl("/timeentries/2022/39"));
+
+        final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
+
+        verify(timeEntryService).updateTimeEntry(new TimeEntryId(1337L), "", expectedStart, null, Duration.ofHours(1), false);
     }
 
     @Test
@@ -629,17 +685,6 @@ class TimeEntryControllerTest {
 
     @Test
     void ensureTimeEntryEditWithValidationErrorWithAjax() throws Exception {
-
-        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-
-        final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
-        final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1337L), new UserId("batman"), "hard work extended", start, end, false);
-
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 28), PlannedWorkingHours.EIGHT, List.of(timeEntry));
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
-        final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 39)).thenReturn(timeEntryWeekPage);
 
         final ResultActions perform = perform(
             post("/timeentries/1337")
