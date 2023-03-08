@@ -16,7 +16,7 @@ public final class DemoDataProperties {
     @PeriodUnit(DAYS)
     private Period past = Period.ofDays(30);
     @PeriodUnit(DAYS)
-    private Period future = Period.ofDays(14);
+    private Period future = Period.ofDays(0);
 
     public boolean isCreate() {
         return create;
