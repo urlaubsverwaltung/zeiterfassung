@@ -1,4 +1,6 @@
-package de.focusshift.zeiterfassung.usermanagement;
+package de.focusshift.zeiterfassung.overtime;
+
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 
 public interface OvertimeAccountService {
 

@@ -1,11 +1,11 @@
 package de.focusshift.zeiterfassung.tenancy.configuration.multi;
 
 import com.zaxxer.hikari.HikariDataSource;
+import de.focusshift.zeiterfassung.overtime.OvertimeAccountEntity;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserEntity;
 import de.focusshift.zeiterfassung.timeclock.TimeClockEntity;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryEntity;
-import de.focusshift.zeiterfassung.usermanagement.OvertimeAccountEntity;
 import de.focusshift.zeiterfassung.usermanagement.WorkingTimeEntity;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

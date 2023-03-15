@@ -1,4 +1,6 @@
-package de.focusshift.zeiterfassung.usermanagement;
+package de.focusshift.zeiterfassung.overtime;
+
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -17,11 +19,11 @@ public final class OvertimeAccount {
     private final boolean allowed;
     private final Duration maxAllowedOvertime;
 
-    OvertimeAccount(UserLocalId userLocalId, boolean allowed) {
+    public OvertimeAccount(UserLocalId userLocalId, boolean allowed) {
         this(userLocalId, allowed, null);
     }
 
-    OvertimeAccount(UserLocalId userLocalId, boolean allowed, Duration maxAllowedOvertime) {
+    public OvertimeAccount(UserLocalId userLocalId, boolean allowed, Duration maxAllowedOvertime) {
         this.userLocalId = userLocalId;
         this.allowed = allowed;
         this.maxAllowedOvertime = maxAllowedOvertime;

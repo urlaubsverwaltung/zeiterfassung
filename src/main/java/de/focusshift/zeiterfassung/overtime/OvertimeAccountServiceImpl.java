@@ -1,5 +1,6 @@
-package de.focusshift.zeiterfassung.usermanagement;
+package de.focusshift.zeiterfassung.overtime;
 
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;

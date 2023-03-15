@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.overtime.OvertimeAccount;
+import de.focusshift.zeiterfassung.overtime.OvertimeAccountService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.web.DoubleFormatter;
@@ -48,7 +50,7 @@ class OvertimeAccountControllerTest {
     private UserManagementService userManagementService;
 
     @Mock
-    private OvertimeAccountServiceImpl overtimeAccountService;
+    private OvertimeAccountService overtimeAccountService;
 
     @BeforeEach
     void setUp() {

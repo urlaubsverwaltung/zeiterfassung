@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.usermanagement;
+package de.focusshift.zeiterfassung.overtime;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserEntity;

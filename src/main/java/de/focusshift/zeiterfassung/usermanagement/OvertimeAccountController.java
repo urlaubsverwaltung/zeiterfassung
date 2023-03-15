@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
+import de.focusshift.zeiterfassung.overtime.OvertimeAccount;
+import de.focusshift.zeiterfassung.overtime.OvertimeAccountService;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,9 +37,9 @@ import static org.springframework.util.StringUtils.hasText;
 class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
 
     private final UserManagementService userManagementService;
-    private final OvertimeAccountServiceImpl overtimeAccountService;
+    private final OvertimeAccountService overtimeAccountService;
 
-    OvertimeAccountController(UserManagementService userManagementService, OvertimeAccountServiceImpl overtimeAccountService) {
+    OvertimeAccountController(UserManagementService userManagementService, OvertimeAccountService overtimeAccountService) {
         this.userManagementService = userManagementService;
         this.overtimeAccountService = overtimeAccountService;
     }
