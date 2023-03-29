@@ -225,7 +225,7 @@
                   <div
                     th:each="day: ${week.days}"
                     th:with="calendarWeek=${week.calendarWeek}"
-                    class="space-y-10 md:space-y-4"
+                    class="space-y-4"
                     th:classappend="${dayStat.first ? 'mt-2' : 'mt-4'}"
                     th:id="${'day-of-week-' + calendarWeek + '-' + day.timeEntries[0].date.dayOfWeek}"
                   >
