@@ -32,7 +32,7 @@ Wenn du mehr Informationen und Bilder über dieses Projekt sehen möchtest dann 
 
 ### Download
 
-The application is available as [Docker Image](https://github.com/urlaubsverwaltung/zeiterfassung/pkgs/container/zeiterfassung%2Fzeiterfassung).
+The application is available as docker image on [GitHub][docker-image-on-github] and [Docker Hub][docker-image-on-docker-hub]
 
 ### Configuration
 
@@ -291,3 +291,5 @@ Go to the GitHub action with the name [release trigger][github-action-release-tr
 * Sloth image: https://pixabay.com/de/illustrations/faultiere-säugetiere-pelzig-5599313/
 
 [github-action-release-trigger]: https://github.com/urlaubsverwaltung/zeiterfassung/actions/workflows/release-trigger.yml "Release Trigger"
+[docker-image-on-github]: https://github.com/urlaubsverwaltung/zeiterfassung/pkgs/container/zeiterfassung%2Fzeiterfassung "GitHub"
+[docker-image-on-docker-hub]: https://hub.docker.com/r/urlaubsverwaltung/zeiterfassung "Docker Hub"

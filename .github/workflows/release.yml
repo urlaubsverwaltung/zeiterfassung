@@ -42,6 +42,15 @@ jobs:
           body_path: .chglog/${{ steps.vars.outputs.version }}.md
           files: |
               ./target/zeiterfassung-*.jar
+      - name: Publish docker image to Docker Hub zeiterfassung
+        run: >
+          ./mvnw $MAVEN_CLI_OPTS
+          spring-boot:build-image
+          -Dspring-boot.build-image.publish=true
+          -Ddocker-publish-registry=registry.hub.docker.com
+          -Ddocker-publish-registry-path=${{ github.repository }}
+          -Ddocker-publish-registry-username=${{ secrets.DOCKER_ZE_USERNAME }}
+          -Ddocker-publish-registry-password=${{ secrets.DOCKER_ZE_TOKEN }}
       - name: Publish docker image to GitHub Container Registry
         run: >
           ./mvnw $MAVEN_CLI_OPTS
