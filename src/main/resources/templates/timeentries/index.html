@@ -225,8 +225,8 @@
                   <div
                     th:each="day: ${week.days}"
                     th:with="calendarWeek=${week.calendarWeek}"
-                    class="space-y-10 md:space-y-4"
-                    th:classappend="${dayStat.first ? 'mt-2' : 'mt-4'}"
+                    class="space-y-4"
+                    th:classappend="${dayStat.first ? 'mt-2' : 'mt-8 md:mt-4'}"
                     th:id="${'day-of-week-' + calendarWeek + '-' + day.timeEntries[0].date.dayOfWeek}"
                   >
                     <div class="px-4 sticky top-nav-header pt-px z-10">
@@ -299,7 +299,7 @@
                         <div class="md:ml-4 md:w-1/5 lg:w-1/6"></div>
                       </div>
                     </div>
-                    <div class="px-4 space-y-10 md:space-y-2">
+                    <div class="px-4 space-y-6 md:space-y-2">
                       <th:block th:each="timeEntry: ${day.timeEntries}">
                         <div
                           is="z-time-entry-element"
@@ -566,7 +566,7 @@
             </div>
           </div>
           <div
-            class="mt-4 flex items-center justify-center md:justify-start md:ml-4 md:w-1/5 md:mt-0 lg:w-1/6"
+            class="mt-2 flex items-center justify-center md:justify-start md:ml-4 md:w-1/5 md:mt-0 lg:w-1/6"
             th:insert="${actions}"
           ></div>
         </div>
