@@ -1,22 +1,22 @@
 package de.focusshift.zeiterfassung.launchpad;
 
-import de.focusshift.launchpad.api.LaunchpadAppUrlCustomizer;
+import de.focus_shift.launchpad.tenancy.LaunchpadTenantConfiguration;
+import de.focus_shift.launchpad.tenancy.TenantSupplier;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.net.URL;
+import org.springframework.context.annotation.Import;
 
 import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
 
 @Configuration
 @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
+@Import(LaunchpadTenantConfiguration.class)
 class LaunchpadConfiguration {
 
     @Bean
-    LaunchpadAppUrlCustomizer launchpadAppUrlCustomizer(TenantContextHolder tenantContextHolder) {
-        return url -> new URL(url.replace("{tenantId}", tenantContextHolder.getCurrentTenantId().map(TenantId::tenantId).orElseThrow()));
+    TenantSupplier tenantSupplier(TenantContextHolder tenantContextHolder) {
+        return new ZeiterfassungTenantSupplier(tenantContextHolder);
     }
 }
