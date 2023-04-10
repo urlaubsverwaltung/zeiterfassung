@@ -20,7 +20,7 @@
         <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
         <java.version>17</java.version>
         <node.env>production</node.env>
-        <testcontainers.version>1.17.6</testcontainers.version>
+        <testcontainers.version>1.18.0</testcontainers.version>
         <docker-publish-registry>registry.example.com</docker-publish-registry>
         <docker-publish-registry-path>path/example</docker-publish-registry-path>
         <docker-publish-registry-username>username</docker-publish-registry-username>
