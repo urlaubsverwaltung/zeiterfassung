@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung;
 
-import de.focusshift.launchpad.core.LaunchpadAutoConfiguration;
+import de.focus_shift.launchpad.core.LaunchpadAutoConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;

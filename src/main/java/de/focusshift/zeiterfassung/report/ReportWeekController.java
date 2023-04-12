@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
-import de.focusshift.launchpad.api.HasLaunchpad;
+import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletRequest;

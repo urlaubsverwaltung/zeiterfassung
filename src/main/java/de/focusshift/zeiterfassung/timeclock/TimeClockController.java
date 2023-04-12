@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.timeclock;
 
-import de.focusshift.launchpad.api.HasLaunchpad;
+import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.user.UserId;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

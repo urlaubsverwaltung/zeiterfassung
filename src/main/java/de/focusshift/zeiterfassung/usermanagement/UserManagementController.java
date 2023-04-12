@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
-import de.focusshift.launchpad.api.HasLaunchpad;
+import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import org.springframework.security.access.prepost.PreAuthorize;
