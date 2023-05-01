@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
-    th:replace="~{timeentries/_layout::head(~{::title}, ~{}, ~{::scriptsDeferred}, ~{})}"
+    th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{::scriptsDefer})}"
   >
     <title th:text="#{report.page.meta.title}">Zeiterfassung - Bericht</title>
-    <th:block th:fragment="scriptsDeferred">
+    <th:block th:fragment="scriptsDefer">
       <script type="module" src="" th:src="@{/assets/reports.js}"></script>
     </th:block>
   </head>
-  <body th:replace="~{timeentries/_layout::body(~{::content})}">
+  <body th:replace="~{_layout::body(~{::content})}">
     <th:block th:fragment="content">
       <main class="grow">
         <div
@@ -42,7 +42,10 @@
                 </li>
               </ul>
             </div>
-            <div class="mt-8" th:insert="~{__${chartNavigationFragment}__}"></div>
+            <div
+              class="mt-8"
+              th:insert="~{__${chartNavigationFragment}__}"
+            ></div>
           </div>
           <div class="px-8 grid grid-cols-1 2xl:grid-cols-2 2xl:gap-8">
             <div
