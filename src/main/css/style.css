@@ -3,12 +3,17 @@
 @tailwind utilities;
 
 @layer base {
-  html {
+  :root {
     --navigation-header-height: 3rem;
+  }
+
+  html {
+    height: --webkit-fill-available;
   }
 
   body {
     min-height: 100vh;
+    min-height: --webkit-fill-available;
     background-image: linear-gradient(#ffffff, #fafafa);
     background-attachment: fixed;
   }
@@ -408,31 +413,20 @@
   }
 
   .nav-popup-menu {
-    @apply scale-0;
-    @apply opacity-0;
     position: fixed;
+    top: 100%;
     bottom: 0;
     left: 0;
     right: 0;
     @apply transition-all;
     @apply duration-150;
 
+    @apply rounded-t-2xl;
     @apply bg-white;
-    @apply backdrop-blur;
-    @apply supports-backdrop-blur:bg-white/[0.95];
   }
 
   .nav-popup-menu.visible {
-    @apply scale-100;
-    @apply opacity-100;
-    @apply rounded-t-2xl;
-  }
-
-  /* screen xs */
-  @media screen and (max-width: 481px) {
-    .nav-popup-menu.visible {
-      height: calc(100vh - 4rem);
-    }
+    top: calc(var(--navigation-header-height) + 1.5rem);
   }
 
   .nav-popup-menu-inner {
@@ -489,10 +483,13 @@
       @apply left-auto;
       @apply right-0;
       @apply bottom-auto;
-      @apply top-full;
       @apply rounded-2xl;
       @apply dark:border-zinc-800;
       @apply dark:shadow-none;
+    }
+
+    .nav-popup-menu.visible {
+      @apply top-full;
     }
 
     .nav-popup-menu-inner {
