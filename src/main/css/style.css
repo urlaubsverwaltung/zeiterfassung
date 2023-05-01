@@ -80,33 +80,20 @@
   }
 
   #menu-toggle-checkbox ~ label ~ nav {
+    position: fixed;
+    top: 100%;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    @apply px-6;
+    @apply py-8;
     @apply transition-all;
-    @apply duration-500;
-    @apply origin-top-left;
-    @apply scale-x-0;
-    @apply scale-y-0;
-    @apply opacity-0;
-    @apply z-40;
-    @apply fixed;
-    @apply inset-0;
-    @apply bg-zinc-100;
-    @apply py-32;
-    @apply px-8;
+    @apply duration-150;
+    @apply bg-white;
   }
 
   #menu-toggle-checkbox:checked ~ label ~ nav {
-    @apply scale-x-100;
-    @apply scale-y-100;
-    @apply opacity-100;
-  }
-
-  #menu-toggle-checkbox ~ label ~ nav > ul {
-    overflow: hidden;
-    transition: max-height 150ms ease-in-out;
-    max-height: 0;
-  }
-  #menu-toggle-checkbox:checked ~ label ~ nav > ul {
-    max-height: 90vh;
+    top: calc(var(--navigation-header-height) + 1.5rem);
   }
 
   .navigation-content-spacer {
@@ -146,20 +133,6 @@
 
   .navigation-content-spacer--right::after {
     @apply rounded-tr-full;
-  }
-
-  @screen lg {
-    #menu-toggle-checkbox ~ label ~ nav {
-      @apply static;
-      @apply scale-x-100;
-      @apply scale-y-100;
-      @apply opacity-100;
-      @apply py-0;
-      @apply px-0;
-    }
-    #menu-toggle-checkbox ~ label ~ nav > ul {
-      max-height: unset;
-    }
   }
 
   #menu-toggle-checkbox + label > span:first-child {
@@ -231,6 +204,34 @@
   #menu-toggle-checkbox:checked + label > span > span:nth-child(5) {
     bottom: 6.5px;
     background-color: transparent !important;
+  }
+
+  @screen xs {
+    #menu-toggle-checkbox ~ label ~ nav {
+      overflow: hidden;
+      max-height: 0;
+      top: -100%;
+      @apply bg-zinc-100;
+      z-index: 10;
+    }
+
+    #menu-toggle-checkbox:checked ~ label ~ nav,
+    #menu-toggle-checkbox:checked ~ label ~ nav:focus-within {
+      top: var(--navigation-header-height);
+      max-height: 100vh !important;
+    }
+  }
+
+  @screen lg {
+    #menu-toggle-checkbox ~ label ~ nav {
+      max-height: unset;
+      @apply static;
+      @apply scale-x-100;
+      @apply scale-y-100;
+      @apply opacity-100;
+      @apply py-0;
+      @apply px-0;
+    }
   }
 }
 
