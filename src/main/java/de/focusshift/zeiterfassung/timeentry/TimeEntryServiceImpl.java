@@ -27,7 +27,9 @@ import java.util.Optional;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Comparator.comparing;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
 
 @Service
 class TimeEntryServiceImpl implements TimeEntryService {
@@ -73,28 +75,45 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public List<TimeEntry> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive) {
+    public Map<UserLocalId, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive) {
 
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
 
-        return timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(fromInstant, toInstant)
+        final Map<UserId, List<TimeEntry>> timeEntriesByUserId = timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(fromInstant, toInstant)
             .stream()
             .map(TimeEntryServiceImpl::toTimeEntry)
-            .toList();
+            .collect(groupingBy(TimeEntry::userId));
+
+        final Map<UserId, User> userById = userManagementService.findAllUsersByIds(timeEntriesByUserId.keySet())
+            .stream()
+            .collect(toMap(User::id, identity()));
+
+        return timeEntriesByUserId.entrySet()
+            .stream()
+            .collect(
+                toMap(
+                    entry -> userById.get(entry.getKey()).localId(),
+                    Map.Entry::getValue
+                )
+            );
     }
 
     @Override
-    public List<TimeEntry> getEntriesByUserLocalIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
+    public Map<UserLocalId, List<TimeEntry>> getEntriesByUserLocalIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
 
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
 
-        final List<String> userIdValues = userManagementService.findAllUsersByLocalIds(userLocalIds)
+        final List<User> users = userManagementService.findAllUsersByLocalIds(userLocalIds);
+
+        final List<String> userIdValues = users
             .stream()
             .map(User::id)
             .map(UserId::value)
             .toList();
+
+        final Map<UserId, UserLocalId> userLocalIdById = users.stream().collect(toMap(User::id, User::localId));
 
         final List<TimeEntryEntity> result = timeEntryRepository
             .findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(userIdValues, fromInstant, toInstant);
@@ -102,7 +121,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
         return result
             .stream()
             .map(TimeEntryServiceImpl::toTimeEntry)
-            .toList();
+            // TODO add empty list entry for users without time entries
+            .collect(groupingBy(timeEntry -> userLocalIdById.get(timeEntry.userId())));
     }
 
     @Override

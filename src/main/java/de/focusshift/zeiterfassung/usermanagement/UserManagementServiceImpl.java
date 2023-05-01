@@ -39,7 +39,7 @@ class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
-    public List<User> findAllUsersByIds(List<UserId> userIds) {
+    public List<User> findAllUsersByIds(Collection<UserId> userIds) {
         return mapToUser(tenantUserService.findAllUsersById(userIds));
     }
 
