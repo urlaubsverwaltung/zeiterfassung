@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
-  <head th:replace="~{timeentries/_layout::head(~{::title}, ~{}, ~{}, ~{})}">
+  <head th:replace="~{_layout::head(~{::title}, ~{}, ~{}, ~{})}">
     <title>Zeiterfassung</title>
   </head>
-  <body th:replace="~{timeentries/_layout::body(~{::content})}">
+  <body th:replace="~{_layout::body(~{::content})}">
     <th:block th:fragment="content">
       <main class="flex-1 flex flex-col">
         <div class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28">
@@ -21,7 +21,9 @@
                 type="submit"
                 class="bg-blue-700 text-white pl-3 pr-4 py-1 text-lg font-medium rounded-full flex items-center hover:bg-blue-600 transition-colors"
               >
-                <svg th:replace="~{icons/play::svg(className='w-6 h-6 mr-1.5')}" />
+                <svg
+                  th:replace="~{icons/play::svg(className='w-6 h-6 mr-1.5')}"
+                />
                 <span th:text="#{timeclock.start}">Start</span>
               </button>
             </form>

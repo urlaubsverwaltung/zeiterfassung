@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
-    th:replace="~{timeentries/_layout::head(~{::title}, ~{::scriptsSynchrounous}, ~{::scriptsDeferred}, ~{})}"
+    th:replace="~{_layout::head(~{::title}, ~{::scriptsSynchrounous}, ~{::scriptsDeferred}, ~{})}"
   >
     <title>Zeiterfassung</title>
     <th:block th:fragment="scriptsSynchrounous">
@@ -18,7 +18,7 @@
       <script type="module" src="" th:src="@{/assets/time-entries.js}"></script>
     </th:block>
   </head>
-  <body th:replace="~{timeentries/_layout::body(~{::content})}">
+  <body th:replace="~{_layout::body(~{::content})}">
     <th:block
       th:fragment="content"
       th:with="noTimeEntriesYet=${timeEntryWeeksPage.totalTimeEntryElements eq 0}"

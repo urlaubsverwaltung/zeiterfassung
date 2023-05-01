@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
-    th:replace="~{timeentries/_layout::head(~{::title}, ~{}, ~{::scriptsDeferred}, ~{})}"
+    th:replace="~{_layout::head(~{::title}, ~{}, ~{::scriptsDeferred}, ~{})}"
   >
     <title>Zeiterfassung - Personen</title>
     <th:block th:fragment="scriptsDeferred">
       <script type="module" src="" th:src="@{/assets/users.js}"></script>
     </th:block>
   </head>
-  <body th:replace="~{timeentries/_layout::body(~{::content})}">
+  <body th:replace="~{_layout::body(~{::content})}">
     <th:block th:fragment="content">
       <main
         class="flex-1 flex flex-col"
@@ -162,7 +162,7 @@
                 >
                   <!-- replace main-navigation-link to update aria-current -->
                   <template
-                    th:insert="~{timeentries/_navigation::#main-navigation-link-users}"
+                    th:insert="~{_navigation::#main-navigation-link-users}"
                   ></template>
                 </turbo-stream>
                 <turbo-stream

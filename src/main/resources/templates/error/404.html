@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
-  <head th:replace="~{timeentries/_layout::head(~{::title}, ~{}, ~{}, ~{})}">
+  <head th:replace="~{_layout::head(~{::title}, ~{}, ~{}, ~{})}">
     <title>Zeiterfassung</title>
   </head>
-  <body th:replace="~{timeentries/_layout::body(~{::content})}">
+  <body th:replace="~{_layout::body(~{::content})}">
     <th:block th:fragment="content">
       <main class="grow flex justify-center">
         <div
