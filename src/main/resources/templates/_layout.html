@@ -1,11 +1,23 @@
 <!DOCTYPE html>
 <html lang="de" th:lang="${lang}" xmlns:th="http://www.thymeleaf.org">
   <head
-    th:fragment="head(title, scriptsSynchronous, scriptsDeferred, stylesheetsSynchrounous)"
+    th:fragment="Chead(title)"
+    th:with="
+      preconnect=${preconnect}?:_,
+      scriptsAsync=${scriptsAsync}?:_,
+      scripts=${scripts}?:_,
+      styles=${styles}?:_,
+      preload=${preload}?:_,
+      scriptsDefer=${scriptsDefer}?:_,
+      prefetchOrPrerender=${prefetchOrPrerender}?:_,
+      additional=${additional}?:_"
   >
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title th:replace="${title}">Page Title</title>
+
+    <th:block th:replace="${preconnect}"></th:block>
+    <th:block th:replace="${scriptsAsync}"></th:block>
 
     <script th:inline="javascript">
       window.zeiterfassung = window.zeiterfassung || {};
@@ -30,8 +42,11 @@
         }
       }
     </script>
+    <script>
+      injectStyle("[data-js-hidden] { display: none; }");
+    </script>
     <script src="#" th:src="@{/assets/turbo.js}"></script>
-    <th:block th:replace="${scriptsSynchronous}"></th:block>
+    <th:block th:replace="${scripts}"></th:block>
 
     <link
       rel="stylesheet"
@@ -39,13 +54,13 @@
       href="/style.css"
       th:href="@{/style.css}"
     />
-    <th:block th:replace="${stylesheetsSynchrounous}"></th:block>
-    <script>
-      injectStyle("[data-js-hidden] { display: none; }");
-    </script>
+    <th:block th:replace="${styles}"></th:block>
 
+    <th:block th:replace="${preload}"></th:block>
     <script src="#" th:src="@{/assets/user-common.js}" type="module"></script>
-    <th:block th:replace="${scriptsDeferred}"></th:block>
+    <th:block th:replace="${scriptsDefer}"></th:block>
+    <th:block th:replace="${prefetchOrPrerender}"></th:block>
+    <th:block th:replace="${additional}"></th:block>
   </head>
   <body th:fragment="body(content)" class="flex flex-col">
     <noscript th:if="${showFeedbackKudo}">

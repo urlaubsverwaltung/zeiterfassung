@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
-    th:replace="~{_layout::head(~{::title}, ~{}, ~{::scriptsDeferred}, ~{})}"
+    th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{::scriptsDefer})}"
   >
     <title th:text="#{report.page.meta.title}">Zeiterfassung - Bericht</title>
-    <th:block th:fragment="scriptsDeferred">
+    <th:block th:fragment="scriptsDefer">
       <script type="module" src="" th:src="@{/assets/reports.js}"></script>
     </th:block>
   </head>

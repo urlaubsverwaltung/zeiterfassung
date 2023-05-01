@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
-    th:replace="~{_layout::head(~{::title}, ~{::scriptsSynchrounous}, ~{::scriptsDeferred}, ~{})}"
+    th:replace="~{_layout::head(title=~{::title}, scripts=~{::scripts}, scriptsDefer=~{::scriptsDefer})}"
   >
     <title>Zeiterfassung</title>
-    <th:block th:fragment="scriptsSynchrounous">
+    <th:block th:fragment="scripts">
       <script th:replace="~{fragments/i18n::date-picker}"></script>
       <script th:replace="~{fragments/i18n::time-entry}"></script>
       <script th:replace="~{fragments/i18n::time-slot-validation}"></script>
     </th:block>
-    <th:block th:fragment="scriptsDeferred">
+    <th:block th:fragment="scriptsDefer">
       <script
         type="module"
         src=""
