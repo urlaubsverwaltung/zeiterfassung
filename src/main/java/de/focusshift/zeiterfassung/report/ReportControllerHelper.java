@@ -139,6 +139,6 @@ class ReportControllerHelper {
     }
 
     private DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry) {
-        return new DetailDayEntryDto(reportDayEntry.user().fullName(), reportDayEntry.comment(), Date.from(reportDayEntry.start().toInstant()), Date.from(reportDayEntry.end().toInstant()));
+        return new DetailDayEntryDto(reportDayEntry.user().fullName(), reportDayEntry.comment(), reportDayEntry.start().toLocalTime(), reportDayEntry.end().toLocalTime());
     }
 }
