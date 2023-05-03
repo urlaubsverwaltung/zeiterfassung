@@ -848,6 +848,27 @@ class TimeEntryServiceImplTest {
     }
 
     @Test
+    void ensureGetEntriesByUserLocalIdsReturnsValuesForEveryAskedUserLocalId() {
+
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(batmanLocalId))).thenReturn(List.of());
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+        final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
+
+        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of(), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+            .thenReturn(List.of());
+
+        final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId));
+
+        assertThat(actual).hasSize(1);
+        assertThat(actual).hasEntrySatisfying(batmanLocalId, timeEntries -> {
+            assertThat(timeEntries).isEmpty();
+        });
+    }
+
+    @Test
     void ensureGetEntriesSortedByStart_NewestFirst() {
 
         final LocalDate periodFrom = LocalDate.of(2022, 1, 3);

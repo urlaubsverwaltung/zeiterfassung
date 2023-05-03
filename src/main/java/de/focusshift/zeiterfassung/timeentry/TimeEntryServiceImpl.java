@@ -115,14 +115,17 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         final Map<UserId, UserLocalId> userLocalIdById = users.stream().collect(toMap(User::id, User::localId));
 
-        final List<TimeEntryEntity> result = timeEntryRepository
-            .findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(userIdValues, fromInstant, toInstant);
-
-        return result
+        final Map<UserLocalId, List<TimeEntry>> result = timeEntryRepository
+            .findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(userIdValues, fromInstant, toInstant)
             .stream()
             .map(TimeEntryServiceImpl::toTimeEntry)
-            // TODO add empty list entry for users without time entries
             .collect(groupingBy(timeEntry -> userLocalIdById.get(timeEntry.userId())));
+
+        for (UserLocalId userLocalId : userLocalIds) {
+            result.computeIfAbsent(userLocalId, (unused) -> List.of());
+        }
+
+        return result;
     }
 
     @Override
