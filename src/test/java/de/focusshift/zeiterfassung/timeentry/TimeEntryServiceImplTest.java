@@ -788,17 +788,18 @@ class TimeEntryServiceImplTest {
         final ZonedDateTime expectedBreakStart = ZonedDateTime.of(entryBreakStart, ZONE_ID_UTC);
         final ZonedDateTime expectedBreakEnd = ZonedDateTime.of(entryBreakEnd, ZONE_ID_UTC);
 
-        assertThat(actual).hasSize(2);
-        assertThat(actual).hasEntrySatisfying(batmanLocalId, timeEntries -> {
-            assertThat(timeEntries).containsExactly(
-                new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", expectedStart, expectedEnd, false)
-            );
-        });
-        assertThat(actual).hasEntrySatisfying(pinguinLocalId, timeEntries -> {
-            assertThat(timeEntries).containsExactly(
-                new TimeEntry(new TimeEntryId(2L), new UserId("pinguin"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
-            );
-        });
+        assertThat(actual)
+            .hasSize(2)
+            .hasEntrySatisfying(batmanLocalId, timeEntries -> {
+                assertThat(timeEntries).containsExactly(
+                    new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", expectedStart, expectedEnd, false)
+                );
+            })
+            .hasEntrySatisfying(pinguinLocalId, timeEntries -> {
+                assertThat(timeEntries).containsExactly(
+                    new TimeEntry(new TimeEntryId(2L), new UserId("pinguin"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
+                );
+            });
     }
 
     @Test
@@ -834,17 +835,18 @@ class TimeEntryServiceImplTest {
         final ZonedDateTime expectedBreakStart = ZonedDateTime.of(entryBreakStart, ZONE_ID_UTC);
         final ZonedDateTime expectedBreakEnd = ZonedDateTime.of(entryBreakEnd, ZONE_ID_UTC);
 
-        assertThat(actual).hasSize(2);
-        assertThat(actual).hasEntrySatisfying(batmanLocalId, timeEntries -> {
-            assertThat(timeEntries).containsExactly(
-                new TimeEntry(new TimeEntryId(1L), new UserId("uuid-1"), "hard work", expectedStart, expectedEnd, false)
-            );
-        });
-        assertThat(actual).hasEntrySatisfying(robinLocalId, timeEntries -> {
-            assertThat(timeEntries).containsExactly(
-                new TimeEntry(new TimeEntryId(2L), new UserId("uuid-2"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
-            );
-        });
+        assertThat(actual)
+            .hasSize(2)
+            .hasEntrySatisfying(batmanLocalId, timeEntries -> {
+                assertThat(timeEntries).containsExactly(
+                    new TimeEntry(new TimeEntryId(1L), new UserId("uuid-1"), "hard work", expectedStart, expectedEnd, false)
+                );
+            })
+            .hasEntrySatisfying(robinLocalId, timeEntries -> {
+                assertThat(timeEntries).containsExactly(
+                    new TimeEntry(new TimeEntryId(2L), new UserId("uuid-2"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
+                );
+            });
     }
 
     @Test
@@ -862,10 +864,11 @@ class TimeEntryServiceImplTest {
 
         final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId));
 
-        assertThat(actual).hasSize(1);
-        assertThat(actual).hasEntrySatisfying(batmanLocalId, timeEntries -> {
-            assertThat(timeEntries).isEmpty();
-        });
+        assertThat(actual)
+            .hasSize(1)
+            .hasEntrySatisfying(batmanLocalId, timeEntries -> {
+                assertThat(timeEntries).isEmpty();
+            });
     }
 
     @Test
