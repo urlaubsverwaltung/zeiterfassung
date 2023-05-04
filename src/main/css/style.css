@@ -491,6 +491,7 @@
 
     .nav-popup-menu.visible {
       @apply top-full;
+      @apply z-10;
     }
 
     .nav-popup-menu-inner {
