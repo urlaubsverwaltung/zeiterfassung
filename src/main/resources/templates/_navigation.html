@@ -141,12 +141,12 @@
               </div>
               <div th:replace="~{launchpad/launchpad::navigation-item}"></div>
               <div class="shrink-0 relative flex">
-                <a
+                <z-nav-popup-menu-button>
+                  <a
                   href="#avatar-menu"
                   id="avatar-link"
                   aria-expanded="false"
                   aria-haspopup="true"
-                  is="z-nav-popup-menu-button"
                   class="flex flex-row items-center"
                 >
                   <span class="inline-flex text-blue-200">
@@ -159,6 +159,7 @@
                     th:replace="~{icons/chevron-down::svg(className='w-4 h-4')}"
                   ></svg>
                 </a>
+                </z-nav-popup-menu-button>
                 <div id="avatar-menu" class="nav-popup-menu xs:max-w-xs">
                   <div class="nav-popup-menu-inner">
                     <div class="nav-popup-menu-inner__header">
