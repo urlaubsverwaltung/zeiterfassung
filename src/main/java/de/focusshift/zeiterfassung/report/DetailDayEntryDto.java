@@ -1,11 +1,15 @@
 package de.focusshift.zeiterfassung.report;
 
-import java.time.Duration;
-import java.util.Date;
+import org.springframework.format.annotation.DateTimeFormat;
 
-record DetailDayEntryDto(String username, String comment, Date start, Date end) {
+import java.time.Duration;
+import java.time.LocalTime;
+
+import static org.springframework.format.annotation.DateTimeFormat.ISO.TIME;
+
+record DetailDayEntryDto(String username, String comment, @DateTimeFormat(iso = TIME) LocalTime start, @DateTimeFormat(iso = TIME) LocalTime end) {
 
     public Duration getDuration() {
-        return Duration.ofMillis(end.getTime() - start.getTime());
+        return Duration.between(start, end);
     }
 }
