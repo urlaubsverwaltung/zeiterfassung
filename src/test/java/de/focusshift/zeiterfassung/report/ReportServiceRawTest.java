@@ -24,6 +24,7 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -207,14 +208,15 @@ class ReportServiceRawTest {
     void ensureReportMonthFirstDayOfEveryWeekIsMonday() {
 
         final UserId userId = new UserId("batman");
-        final User user = new User(userId, new UserLocalId(1L), "givenName", "familyName", new EMailAddress(""), Set.of());
+        final UserLocalId localId = new UserLocalId(1L);
+        final User user = new User(userId, localId, "givenName", "familyName", new EMailAddress(""), Set.of());
         when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
 
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 1, 1)))
             .thenReturn(LocalDate.of(2020, 12, 28));
 
-        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), userId))
-            .thenReturn(List.of());
+        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(localId)))
+            .thenReturn(Map.of());
 
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), userId);
 
@@ -229,14 +231,15 @@ class ReportServiceRawTest {
     void ensureReportMonthDecemberWithoutTimeEntries() {
 
         final UserId userId = new UserId("batman");
-        final User user = new User(userId, new UserLocalId(1L), "givenName", "familyName", new EMailAddress(""), Set.of());
+        final UserLocalId localId = new UserLocalId(1L);
+        final User user = new User(userId, localId, "givenName", "familyName", new EMailAddress(""), Set.of());
         when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
 
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 12, 1)))
             .thenReturn(LocalDate.of(2021, 11, 29));
 
-        when(timeEntryService.getEntries(LocalDate.of(2021, 12, 1), LocalDate.of(2022, 1, 1), userId))
-            .thenReturn(List.of());
+        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 12, 1), LocalDate.of(2022, 1, 1), List.of(localId)))
+            .thenReturn(Map.of());
 
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 12), userId);
 
@@ -257,7 +260,8 @@ class ReportServiceRawTest {
     void ensureReportMonthDecemberWithOneTimeEntryAWeek() {
 
         final UserId userId = new UserId("batman");
-        final User user = new User(userId, new UserLocalId(1L), "givenName", "familyName", new EMailAddress(""), Set.of());
+        final UserLocalId localId = new UserLocalId(1L);
+        final User user = new User(userId, localId, "givenName", "familyName", new EMailAddress(""), Set.of());
         when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
 
         final ZonedDateTime w1_d1_From = dateTime(2021, 1, 4, 1, 0);
@@ -291,8 +295,8 @@ class ReportServiceRawTest {
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 1, 1)))
             .thenReturn(LocalDate.of(2020, 12, 28));
 
-        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), userId))
-            .thenReturn(List.of(w1_d1_TimeEntry, w1_d2_TimeEntry, w2_d1_TimeEntry, w2_d2_TimeEntry, w3_d1_TimeEntry, w3_d2_TimeEntry, w4_d1_TimeEntry, w4_d2_TimeEntry));
+        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(localId)))
+            .thenReturn(Map.of(localId, List.of(w1_d1_TimeEntry, w1_d2_TimeEntry, w2_d1_TimeEntry, w2_d2_TimeEntry, w3_d1_TimeEntry, w3_d2_TimeEntry, w4_d1_TimeEntry, w4_d2_TimeEntry)));
 
         when(userManagementService.findAllUsersByIds(List.of(userId))).thenReturn(List.of(user));
 

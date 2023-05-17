@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,7 +31,7 @@ class ReportDayTest {
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
         final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, true);
 
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), PlannedWorkingHours.EIGHT, List.of(reportDayEntry));
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batman.localId(), PlannedWorkingHours.EIGHT), Map.of(batman.localId(), List.of(reportDayEntry)));
 
         assertThat(reportDay.workDuration().value()).isEqualTo(Duration.ZERO);
     }

@@ -772,7 +772,15 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
-        final List<TimeEntry> actual = sut.getEntriesForAllUsers(from, toExclusive);
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserLocalId pinguinLocalId = new UserLocalId(2L);
+        final User batman = new User(new UserId("batman"), batmanLocalId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User pinguin = new User(new UserId("pinguin"), pinguinLocalId, "ping", "uin", new EMailAddress("pinguin@example.org"), Set.of());
+
+        when(userManagementService.findAllUsersByIds(Set.of(new UserId("batman"), new UserId("pinguin"))))
+            .thenReturn(List.of(batman, pinguin));
+
+        final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesForAllUsers(from, toExclusive);
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
@@ -780,10 +788,18 @@ class TimeEntryServiceImplTest {
         final ZonedDateTime expectedBreakStart = ZonedDateTime.of(entryBreakStart, ZONE_ID_UTC);
         final ZonedDateTime expectedBreakEnd = ZonedDateTime.of(entryBreakEnd, ZONE_ID_UTC);
 
-        assertThat(actual).containsExactly(
-            new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", expectedStart, expectedEnd, false),
-            new TimeEntry(new TimeEntryId(2L), new UserId("pinguin"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
-        );
+        assertThat(actual)
+            .hasSize(2)
+            .hasEntrySatisfying(batmanLocalId, timeEntries -> {
+                assertThat(timeEntries).containsExactly(
+                    new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", expectedStart, expectedEnd, false)
+                );
+            })
+            .hasEntrySatisfying(pinguinLocalId, timeEntries -> {
+                assertThat(timeEntries).containsExactly(
+                    new TimeEntry(new TimeEntryId(2L), new UserId("pinguin"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
+                );
+            });
     }
 
     @Test
@@ -802,16 +818,16 @@ class TimeEntryServiceImplTest {
 
         final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
         final LocalDateTime entryEnd = LocalDateTime.of(toExclusive, LocalTime.of(12, 0, 0));
-        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "batman", "hard work", entryStart.toInstant(UTC), ZONE_ID_UTC, entryEnd.toInstant(UTC), ZONE_ID_UTC, now, false);
+        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "uuid-1", "hard work", entryStart.toInstant(UTC), ZONE_ID_UTC, entryEnd.toInstant(UTC), ZONE_ID_UTC, now, false);
 
         final LocalDateTime entryBreakStart = LocalDateTime.of(from, LocalTime.of(12, 0, 0));
         final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
-        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "robin", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
+        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "uuid-2", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
 
         when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of("uuid-1", "uuid-2"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
-        final List<TimeEntry> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId, robinLocalId));
+        final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId, robinLocalId));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
@@ -819,10 +835,40 @@ class TimeEntryServiceImplTest {
         final ZonedDateTime expectedBreakStart = ZonedDateTime.of(entryBreakStart, ZONE_ID_UTC);
         final ZonedDateTime expectedBreakEnd = ZonedDateTime.of(entryBreakEnd, ZONE_ID_UTC);
 
-        assertThat(actual).containsExactly(
-            new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", expectedStart, expectedEnd, false),
-            new TimeEntry(new TimeEntryId(2L), new UserId("robin"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
-        );
+        assertThat(actual)
+            .hasSize(2)
+            .hasEntrySatisfying(batmanLocalId, timeEntries -> {
+                assertThat(timeEntries).containsExactly(
+                    new TimeEntry(new TimeEntryId(1L), new UserId("uuid-1"), "hard work", expectedStart, expectedEnd, false)
+                );
+            })
+            .hasEntrySatisfying(robinLocalId, timeEntries -> {
+                assertThat(timeEntries).containsExactly(
+                    new TimeEntry(new TimeEntryId(2L), new UserId("uuid-2"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
+                );
+            });
+    }
+
+    @Test
+    void ensureGetEntriesByUserLocalIdsReturnsValuesForEveryAskedUserLocalId() {
+
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(batmanLocalId))).thenReturn(List.of());
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+        final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
+
+        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of(), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+            .thenReturn(List.of());
+
+        final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId));
+
+        assertThat(actual)
+            .hasSize(1)
+            .hasEntrySatisfying(batmanLocalId, timeEntries -> {
+                assertThat(timeEntries).isEmpty();
+            });
     }
 
     @Test

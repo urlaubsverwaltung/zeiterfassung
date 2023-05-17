@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface TimeEntryService {
@@ -37,9 +38,9 @@ public interface TimeEntryService {
      * @param from first date of interval
      * @param toExclusive last date (exclusive) of interval
      *
-     * @return unsorted list of {@linkplain TimeEntry}s.
+     * @return unsorted list of {@linkplain TimeEntry}s grouped by user
      */
-    List<TimeEntry> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive);
+    Map<UserLocalId, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive);
 
     /**
      * {@linkplain TimeEntry}s for all given users and interval.
@@ -48,9 +49,9 @@ public interface TimeEntryService {
      * @param toExclusive last date (exclusive) of interval
      * @param userLocalIds {@linkplain UserLocalId}s of desired users
      *
-     * @return unsorted list of {@linkplain TimeEntry}s.
+     * @return unsorted list of {@linkplain TimeEntry}s grouped by user
      */
-    List<TimeEntry> getEntriesByUserLocalIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds);
+    Map<UserLocalId, List<TimeEntry>> getEntriesByUserLocalIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds);
 
     /**
      * {@linkplain TimeEntryWeekPage}s for the given user and week of year with sorted {@linkplain TimeEntry}s

@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static java.time.ZoneOffset.UTC;
@@ -30,13 +31,15 @@ class ReportWeekTest {
     @Test
     void ensureAverageDayWorkDurationIsEmptyWhenAllReportDaysHasNotPlannedWorkingHours() {
 
+        final UserLocalId userLocalId = new UserLocalId(1L);
+
         final ReportWeek sut = new ReportWeek(LocalDate.of(2023, 2, 13), List.of(
-            new ReportDay(LocalDate.of(2023, 2, 13), PlannedWorkingHours.ZERO, List.of()),
-            new ReportDay(LocalDate.of(2023, 2, 14), PlannedWorkingHours.ZERO, List.of()),
-            new ReportDay(LocalDate.of(2023, 2, 15), PlannedWorkingHours.ZERO, List.of()),
-            new ReportDay(LocalDate.of(2023, 2, 16), PlannedWorkingHours.ZERO, List.of()),
-            new ReportDay(LocalDate.of(2023, 2, 17), PlannedWorkingHours.ZERO, List.of()),
-            new ReportDay(LocalDate.of(2023, 2, 18), PlannedWorkingHours.ZERO, List.of())
+            new ReportDay(LocalDate.of(2023, 2, 13), Map.of(userLocalId, PlannedWorkingHours.ZERO), Map.of(userLocalId, List.of())),
+            new ReportDay(LocalDate.of(2023, 2, 14), Map.of(userLocalId, PlannedWorkingHours.ZERO), Map.of(userLocalId, List.of())),
+            new ReportDay(LocalDate.of(2023, 2, 15), Map.of(userLocalId, PlannedWorkingHours.ZERO), Map.of(userLocalId, List.of())),
+            new ReportDay(LocalDate.of(2023, 2, 16), Map.of(userLocalId, PlannedWorkingHours.ZERO), Map.of(userLocalId, List.of())),
+            new ReportDay(LocalDate.of(2023, 2, 17), Map.of(userLocalId, PlannedWorkingHours.ZERO), Map.of(userLocalId, List.of())),
+            new ReportDay(LocalDate.of(2023, 2, 18), Map.of(userLocalId, PlannedWorkingHours.ZERO), Map.of(userLocalId, List.of()))
         ));
 
         assertThat(sut.averageDayWorkDuration()).isEqualTo(WorkDuration.ZERO);
@@ -59,23 +62,23 @@ class ReportWeekTest {
         final LocalDate sunday = monday.plusDays(6);
 
         final ReportWeek sut = new ReportWeek(monday, List.of(
-            new ReportDay(monday, PlannedWorkingHours.EIGHT, List.of(
+            new ReportDay(monday, Map.of(user.localId(), PlannedWorkingHours.EIGHT), Map.of(user.localId(), List.of(
                 new ReportDayEntry(user, "", ZonedDateTime.of(LocalDateTime.of(monday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(monday, timeEnd), UTC), false)
-            )),
-            new ReportDay(tuesday, PlannedWorkingHours.EIGHT, List.of(
+            ))),
+            new ReportDay(tuesday, Map.of(user.localId(), PlannedWorkingHours.EIGHT), Map.of(user.localId(), List.of(
                 new ReportDayEntry(user, "", ZonedDateTime.of(LocalDateTime.of(tuesday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(tuesday, timeEnd), UTC), false)
-            )),
-            new ReportDay(wednesday, PlannedWorkingHours.EIGHT, List.of(
+            ))),
+            new ReportDay(wednesday, Map.of(user.localId(), PlannedWorkingHours.EIGHT), Map.of(user.localId(), List.of(
                 new ReportDayEntry(user, "", ZonedDateTime.of(LocalDateTime.of(wednesday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(wednesday, timeEnd), UTC), false)
-            )),
-            new ReportDay(thursday, PlannedWorkingHours.EIGHT, List.of(
+            ))),
+            new ReportDay(thursday, Map.of(user.localId(), PlannedWorkingHours.EIGHT), Map.of(user.localId(), List.of(
                 new ReportDayEntry(user, "", ZonedDateTime.of(LocalDateTime.of(thursday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(thursday, timeEnd), UTC), false)
-            )),
-            new ReportDay(friday, PlannedWorkingHours.EIGHT, List.of(
+            ))),
+            new ReportDay(friday, Map.of(user.localId(), PlannedWorkingHours.EIGHT), Map.of(user.localId(), List.of(
                 new ReportDayEntry(user, "", ZonedDateTime.of(LocalDateTime.of(friday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(friday, timeEnd), UTC), false)
-            )),
-            new ReportDay(saturday, PlannedWorkingHours.ZERO, List.of()),
-            new ReportDay(sunday, PlannedWorkingHours.ZERO, List.of())
+            ))),
+            new ReportDay(saturday, Map.of(user.localId(), PlannedWorkingHours.ZERO), Map.of(user.localId(), List.of())),
+            new ReportDay(sunday, Map.of(user.localId(), PlannedWorkingHours.ZERO), Map.of(user.localId(), List.of()))
         ));
 
         final WorkDuration actual = sut.averageDayWorkDuration();

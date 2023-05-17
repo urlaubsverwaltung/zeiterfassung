@@ -20,16 +20,15 @@ import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.temporal.ChronoUnit.MONTHS;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
@@ -60,9 +59,11 @@ class ReportServiceRaw {
         final User user = userManagementService.findUserById(userId)
             .orElseThrow(() -> new IllegalStateException("could not find user id=%s".formatted(userId)));
 
+        final UserLocalId userLocalId = user.localId();
+
         return createReportWeek(year, week,
-            period -> timeEntryService.getEntries(period.from(), period.toExclusive(), userId),
-            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(user.localId())));
+            period -> Map.of(userLocalId, timeEntryService.getEntries(period.from(), period.toExclusive(), userId)),
+            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(userLocalId)));
     }
 
     ReportWeek getReportWeek(Year year, int week, List<UserLocalId> userLocalIds) {
@@ -82,8 +83,10 @@ class ReportServiceRaw {
         final User user = userManagementService.findUserById(userId)
             .orElseThrow(() -> new IllegalStateException("could not find user id=%s".formatted(userId)));
 
+        final UserLocalId userLocalId = user.localId();
+
         return createReportMonth(yearMonth,
-            period -> timeEntryService.getEntries(period.from(), period.toExclusive(), userId),
+            period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), List.of(userLocalId)),
             period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(user.localId())));
     }
 
@@ -100,50 +103,61 @@ class ReportServiceRaw {
     }
 
     private ReportWeek createReportWeek(Year year, int week,
-                                        Function<Period, List<TimeEntry>> timeEntriesProvider,
+                                        Function<Period, Map<UserLocalId, List<TimeEntry>>> timeEntriesProvider,
                                         Function<Period, Map<UserLocalId, WorkingTimeCalendar>> workingTimeCalendarProvider) {
 
         final LocalDate firstDateOfWeek = userDateService.firstDayOfWeek(year, week);
 
         final Period period = new Period(firstDateOfWeek, firstDateOfWeek.plusWeeks(1));
 
-        final List<TimeEntry> timeEntries = timeEntriesProvider.apply(period);
-        final Map<UserId, User> userById = userByIdForTimeEntries(timeEntries);
+        final Map<UserLocalId, List<TimeEntry>> timeEntries = timeEntriesProvider.apply(period);
+        final Map<UserId, User> userById = userByIdForTimeEntries(timeEntries.values().stream().flatMap(Collection::stream).toList());
 
-        final Collection<WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period).values();
-        final Function<LocalDate, PlannedWorkingHours> plannedWorkingTimeByDate = plannedWorkingTimeForDate(workingTimeCalendars);
+        final Map<UserLocalId, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
+        final Function<LocalDate, Map<UserLocalId, PlannedWorkingHours>> plannedWorkingTimeByDate = plannedWorkingTimeForDate(workingTimeCalendars);
 
         return reportWeek(firstDateOfWeek, timeEntries, userById, plannedWorkingTimeByDate);
     }
 
     private ReportMonth createReportMonth(YearMonth yearMonth,
-                                          Function<Period, List<TimeEntry>> timeEntriesProvider,
+                                          Function<Period, Map<UserLocalId, List<TimeEntry>>> timeEntriesProvider,
                                           Function<Period, Map<UserLocalId, WorkingTimeCalendar>> workingTimeCalendarProvider) {
 
         final LocalDate firstOfMonth = LocalDate.of(yearMonth.getYear(), yearMonth.getMonthValue(), 1);
 
         final Period period = new Period(firstOfMonth, firstOfMonth.plusMonths(1));
 
-        final List<TimeEntry> timeEntries = timeEntriesProvider.apply(period);
-        final Map<UserId, User> userById = userByIdForTimeEntries(timeEntries);
+        final Map<UserLocalId, List<TimeEntry>> timeEntriesByUserId = timeEntriesProvider.apply(period);
+        final Map<UserId, User> userById = userByIdForTimeEntries(timeEntriesByUserId.values().stream().flatMap(Collection::stream).toList());
 
-        final Collection<WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period).values();
-        final Function<LocalDate, PlannedWorkingHours> plannedWorkingTimeForDate = plannedWorkingTimeForDate(workingTimeCalendars);
+        final Map<UserLocalId, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
+        final Function<LocalDate, Map<UserLocalId, PlannedWorkingHours>> plannedWorkingTimeForDate = plannedWorkingTimeForDate(workingTimeCalendars);
 
-        List<ReportWeek> weeks = getStartOfWeekDatesForMonth(yearMonth)
+        final List<ReportWeek> weeks = getStartOfWeekDatesForMonth(yearMonth)
             .stream()
-            .map(startOfWeekDate -> reportWeek(startOfWeekDate, timeEntries, userById, plannedWorkingTimeForDate))
+            .map(startOfWeekDate ->
+                reportWeek(
+                    startOfWeekDate,
+                    timeEntriesByUserId,
+                    userById,
+                    plannedWorkingTimeForDate
+                )
+            )
             .toList();
 
         return new ReportMonth(yearMonth, weeks);
     }
 
-    private Function<LocalDate, PlannedWorkingHours> plannedWorkingTimeForDate(Collection<WorkingTimeCalendar> workingTimeCalendars) {
-        return date -> workingTimeCalendars.stream()
-            .map(cal -> cal.plannedWorkingHours(date))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+    private Function<LocalDate, Map<UserLocalId, PlannedWorkingHours>> plannedWorkingTimeForDate(Map<UserLocalId, WorkingTimeCalendar> workingTimeCalendars) {
+        return date ->
+            workingTimeCalendars.entrySet()
+                .stream()
+                .collect(
+                    toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().plannedWorkingHours(date).orElse(PlannedWorkingHours.ZERO)
+                    )
+                );
     }
 
     private Map<UserId, User> userByIdForTimeEntries(List<TimeEntry> timeEntries) {
@@ -153,19 +167,42 @@ class ReportServiceRaw {
             .collect(toMap(User::id, Function.identity()));
     }
 
-    private ReportWeek reportWeek(LocalDate startOfWeekDate, List<TimeEntry> timeEntries, Map<UserId, User> userById,
-                                  Function<LocalDate, PlannedWorkingHours> plannedWorkingHoursProvider) {
+    private ReportWeek reportWeek(LocalDate startOfWeekDate,
+                                  Map<UserLocalId, List<TimeEntry>> timeEntriesByUserLocalId,
+                                  Map<UserId, User> userById,
+                                  Function<LocalDate, Map<UserLocalId, PlannedWorkingHours>> plannedWorkingHoursProvider) {
 
-        final Map<LocalDate, List<ReportDayEntry>> reportDayEntriesByDate = timeEntries
-            .stream()
-            .flatMap(timeEntry -> timeEntryToReportDayEntries(timeEntry, userById::get))
-            .collect(groupingBy(reportDayEntry -> reportDayEntry.start().toLocalDate()));
+        final Map<LocalDate, Map<UserLocalId, List<ReportDayEntry>>> reportEntriesByDate = new HashMap<>();
+        for (Map.Entry<UserLocalId, List<TimeEntry>> entry : timeEntriesByUserLocalId.entrySet()) {
 
-        final Function<LocalDate, List<ReportDayEntry>> resolveReportDayEntries =
-            (LocalDate date) -> reportDayEntriesByDate.getOrDefault(date, emptyList());
+            final UserLocalId userLocalId = entry.getKey();
+
+            final Map<LocalDate, List<ReportDayEntry>> collect = entry.getValue()
+                .stream()
+                .map(t -> timeEntryToReportDayEntry(t, userById::get))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(groupingBy(report -> report.start().toLocalDate()));
+
+            for (Map.Entry<LocalDate, List<ReportDayEntry>> localDateListEntry : collect.entrySet()) {
+                reportEntriesByDate.compute(localDateListEntry.getKey(), (localDate, userLocalIdListMap) -> {
+                    final Map<UserLocalId, List<ReportDayEntry>> map = userLocalIdListMap == null ? new HashMap<>() : userLocalIdListMap;
+                    map.put(userLocalId, collect.get(localDate));
+                    return map;
+                });
+            }
+        }
+
+        final Function<LocalDate, Map<UserLocalId, List<ReportDayEntry>>> resolveReportDayEntries =
+            (LocalDate date) -> reportEntriesByDate.getOrDefault(date, Map.of());
 
         final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
-            .mapToObj(daysToAdd -> toReportDay(startOfWeekDate.plusDays(daysToAdd), plannedWorkingHoursProvider, resolveReportDayEntries))
+            .mapToObj(daysToAdd ->
+                toReportDay(
+                    startOfWeekDate.plusDays(daysToAdd),
+                    plannedWorkingHoursProvider,
+                    resolveReportDayEntries
+                ))
             .toList();
 
         return new ReportWeek(startOfWeekDate, reportDays);
@@ -185,7 +222,7 @@ class ReportServiceRaw {
         return startOfWeekDates;
     }
 
-    private static Stream<ReportDayEntry> timeEntryToReportDayEntries(TimeEntry timeEntry, Function<UserId, User> userProvider) {
+    private static Optional<ReportDayEntry> timeEntryToReportDayEntry(TimeEntry timeEntry, Function<UserId, User> userProvider) {
 
         final String comment = timeEntry.comment();
         final ZonedDateTime startDateTime = timeEntry.start();
@@ -194,16 +231,16 @@ class ReportServiceRaw {
         final User user = userProvider.apply(timeEntry.userId());
         if (user == null) {
             LOG.info("could not find user with id={} for timeEntry={} while generating report.", timeEntry.userId(), timeEntry.id());
-            return Stream.empty();
+            return Optional.empty();
         }
 
         final ReportDayEntry first = new ReportDayEntry(user, comment, startDateTime, endDateTime, timeEntry.isBreak());
-        return Stream.of(first);
+        return Optional.of(first);
     }
 
     private static ReportDay toReportDay(LocalDate date,
-                                         Function<LocalDate, PlannedWorkingHours> plannedWorkingHoursProvider,
-                                         Function<LocalDate, List<ReportDayEntry>> resolveReportDayEntries) {
+                                         Function<LocalDate, Map<UserLocalId, PlannedWorkingHours>> plannedWorkingHoursProvider,
+                                         Function<LocalDate, Map<UserLocalId, List<ReportDayEntry>>> resolveReportDayEntries) {
 
         return new ReportDay(date, plannedWorkingHoursProvider.apply(date), resolveReportDayEntries.apply(date));
     }
