@@ -10,11 +10,11 @@
       th:if="${launchpad}"
       class="relative flex items-center"
     >
-      <a
+      <z-nav-popup-menu-button>
+        <a
         href="#launchpad"
         aria-expanded="false"
         aria-haspopup="true"
-        is="z-nav-popup-menu-button"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -44,6 +44,7 @@
           Anwendungen
         </span>
       </a>
+      </z-nav-popup-menu-button>
       <div id="launchpad" class="nav-popup-menu xs:-right-4">
         <div class="nav-popup-menu-inner">
           <div class="nav-popup-menu-inner__header">
