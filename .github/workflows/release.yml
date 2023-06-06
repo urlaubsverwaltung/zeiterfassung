@@ -48,7 +48,7 @@ jobs:
           spring-boot:build-image
           -Dspring-boot.build-image.publish=true
           -Ddocker-publish-registry=registry.hub.docker.com
-          -Ddocker-publish-registry-path=${{ github.repository }}
+          -Ddocker-publish-registry-path=urlaubsverwaltung
           -Ddocker-publish-registry-username=${{ secrets.DOCKER_ZE_USERNAME }}
           -Ddocker-publish-registry-password=${{ secrets.DOCKER_ZE_TOKEN }}
       - name: Publish docker image to GitHub Container Registry
