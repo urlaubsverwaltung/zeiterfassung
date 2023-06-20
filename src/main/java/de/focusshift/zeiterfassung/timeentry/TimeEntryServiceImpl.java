@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -40,16 +41,18 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private final UserManagementService userManagementService;
     private final WorkingTimeService workingTimeService;
     private final UserDateService userDateService;
+    private final UserSettingsProvider userSettingsProvider;
     private final Clock clock;
 
     @Autowired
     TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, UserManagementService userManagementService,
-                         WorkingTimeService workingTimeService, UserDateService userDateService, Clock clock) {
+                         WorkingTimeService workingTimeService, UserDateService userDateService, UserSettingsProvider userSettingsProvider, Clock clock) {
 
         this.timeEntryRepository = timeEntryRepository;
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
         this.userDateService = userDateService;
+        this.userSettingsProvider = userSettingsProvider;
         this.clock = clock;
     }
 
@@ -131,7 +134,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
     @Override
     public TimeEntryWeekPage getEntryWeekPage(UserId userId, int year, int weekOfYear) {
 
-        final ZonedDateTime fromDateTime = userDateService.firstDayOfWeek(Year.of(year), weekOfYear).atStartOfDay(UTC);
+        final ZoneId userZoneId = userSettingsProvider.zoneId();
+        final ZonedDateTime fromDateTime = userDateService.firstDayOfWeek(Year.of(year), weekOfYear).atStartOfDay(userZoneId);
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
