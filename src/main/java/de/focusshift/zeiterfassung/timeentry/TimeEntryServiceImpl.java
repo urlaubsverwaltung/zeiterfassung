@@ -18,12 +18,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.time.ZoneOffset.UTC;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Comparator.comparing;
@@ -131,7 +131,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
     @Override
     public TimeEntryWeekPage getEntryWeekPage(UserId userId, int year, int weekOfYear) {
 
-        final ZonedDateTime fromDateTime = userDateService.firstDayOfWeek(Year.of(year), weekOfYear).atStartOfDay(ZoneId.systemDefault());
+        final ZonedDateTime fromDateTime = userDateService.firstDayOfWeek(Year.of(year), weekOfYear).atStartOfDay(UTC);
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
@@ -255,7 +255,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     private static boolean notEquals(ZonedDateTime one, ZonedDateTime two) {
-        return !one.toInstant().atZone(ZoneOffset.UTC).equals(two.toInstant().atZone(ZoneOffset.UTC));
+        return !one.toInstant().atZone(UTC).equals(two.toInstant().atZone(UTC));
     }
 
     @Override
@@ -287,6 +287,6 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     private static Instant toInstant(LocalDate localDate) {
-        return localDate.atStartOfDay(ZoneOffset.UTC).toInstant();
+        return localDate.atStartOfDay(UTC).toInstant();
     }
 }

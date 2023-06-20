@@ -927,7 +927,7 @@ class TimeEntryServiceImplTest {
         final ZonedDateTime timeEntryBreakEnd = ZonedDateTime.of(2022, 1, 4, 13, 0, 0, 0, zoneIdBerlin);
         final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "batman", "deserved break", timeEntryBreakStart.toInstant(), zoneIdBerlin, timeEntryBreakEnd.toInstant(), zoneIdBerlin, Instant.now(), true);
 
-        final ZonedDateTime fromDateTime = LocalDate.of(2022, 1, 3).atStartOfDay(ZoneId.systemDefault());
+        final ZonedDateTime fromDateTime = LocalDate.of(2022, 1, 3).atStartOfDay(UTC);
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
@@ -990,7 +990,7 @@ class TimeEntryServiceImplTest {
         final TimeEntryEntity lastDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 2L, "batman", "hack the planet, second time!", lastDayOfWeekTimeEntryStart.toInstant(), zoneIdBerlin, lastDayOfWeekTimeEntryEnd.toInstant(), zoneIdBerlin, Instant.now(), false);
 
 
-        final ZonedDateTime fromDateTime = LocalDate.of(2023, 1, 30).atStartOfDay(ZoneId.systemDefault());
+        final ZonedDateTime fromDateTime = LocalDate.of(2023, 1, 30).atStartOfDay(UTC);
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
