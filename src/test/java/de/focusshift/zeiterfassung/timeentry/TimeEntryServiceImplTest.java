@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -49,21 +50,20 @@ class TimeEntryServiceImplTest {
 
     @Mock
     private TimeEntryRepository timeEntryRepository;
-
     @Mock
     private UserDateService userDateService;
-
     @Mock
     private WorkingTimeService workingTimeService;
-
     @Mock
     private UserManagementService userManagementService;
+    @Mock
+    private UserSettingsProvider userSettingsProvider;
 
     private final Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, clock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, clock);
     }
 
     @Test
@@ -109,7 +109,7 @@ class TimeEntryServiceImplTest {
 
         final Instant now = Instant.now();
         final Clock fixedClock = Clock.fixed(now, UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDateTime entryStart = LocalDateTime.of(2023, 1, 1, 10, 0, 0);
         final LocalDateTime entryEnd = LocalDateTime.of(2023, 1, 1, 12, 0, 0);
@@ -187,7 +187,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryStart(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -243,7 +243,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryStartAndEnd(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -299,7 +299,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryStartAndDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -355,7 +355,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryEnd(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -411,7 +411,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryEndAndDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -467,7 +467,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -522,7 +522,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryWhenStartEndDurationAreGivenAndPlausible() throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDate date = LocalDate.of(2023, 2, 27);
         final LocalDateTime previousStart = LocalDateTime.of(date, LocalTime.of(15, 0, 0));
@@ -576,7 +576,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryStartWithGivenEndAndDuration() throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDate date = LocalDate.of(2023, 2, 27);
         final LocalDateTime previousStart = LocalDateTime.of(date, LocalTime.of(15, 0, 0));
@@ -617,7 +617,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryEndWithGivenStartAndDuration() throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDate date = LocalDate.of(2023, 2, 27);
         final LocalDateTime previousStart = LocalDateTime.of(date, LocalTime.of(15, 0, 0));
@@ -663,7 +663,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryStartAndEndWithoutDuration(Duration givenDuration) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDate date = LocalDate.of(2023, 2, 27);
         final LocalDateTime previousStart = LocalDateTime.of(date, LocalTime.of(15, 0, 0));
@@ -703,7 +703,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryIsBreak() throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -915,19 +915,20 @@ class TimeEntryServiceImplTest {
     @Test
     void ensureGetEntryWeekPageWithFirstDayOfMonth() {
 
-        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
 
         when(userDateService.firstDayOfWeek(Year.of(2022), 1)).thenReturn(LocalDate.of(2022, 1, 3));
 
-        final ZonedDateTime timeEntryStart = ZonedDateTime.of(2022, 1, 4, 9, 0, 0, 0, zoneIdBerlin);
-        final ZonedDateTime timeEntryEnd = ZonedDateTime.of(2022, 1, 4, 12, 0, 0, 0, zoneIdBerlin);
-        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", timeEntryStart.toInstant(), zoneIdBerlin, timeEntryEnd.toInstant(), zoneIdBerlin, Instant.now(), false);
+        final ZonedDateTime timeEntryStart = ZonedDateTime.of(2022, 1, 4, 9, 0, 0, 0, userZoneId);
+        final ZonedDateTime timeEntryEnd = ZonedDateTime.of(2022, 1, 4, 12, 0, 0, 0, userZoneId);
+        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", timeEntryStart.toInstant(), userZoneId, timeEntryEnd.toInstant(), userZoneId, Instant.now(), false);
 
-        final ZonedDateTime timeEntryBreakStart = ZonedDateTime.of(2022, 1, 4, 12, 0, 0, 0, zoneIdBerlin);
-        final ZonedDateTime timeEntryBreakEnd = ZonedDateTime.of(2022, 1, 4, 13, 0, 0, 0, zoneIdBerlin);
-        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "batman", "deserved break", timeEntryBreakStart.toInstant(), zoneIdBerlin, timeEntryBreakEnd.toInstant(), zoneIdBerlin, Instant.now(), true);
+        final ZonedDateTime timeEntryBreakStart = ZonedDateTime.of(2022, 1, 4, 12, 0, 0, 0, userZoneId);
+        final ZonedDateTime timeEntryBreakEnd = ZonedDateTime.of(2022, 1, 4, 13, 0, 0, 0, userZoneId);
+        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "batman", "deserved break", timeEntryBreakStart.toInstant(), userZoneId, timeEntryBreakEnd.toInstant(), userZoneId, Instant.now(), true);
 
-        final ZonedDateTime fromDateTime = LocalDate.of(2022, 1, 3).atStartOfDay(ZoneId.systemDefault());
+        final ZonedDateTime fromDateTime = LocalDate.of(2022, 1, 3).atStartOfDay(userZoneId);
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
@@ -973,24 +974,24 @@ class TimeEntryServiceImplTest {
         );
     }
 
-
     @Test
     void ensureGetEntryWeekPageWithDaysInCorrectOrder() {
 
-        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
 
         when(userDateService.firstDayOfWeek(Year.of(2023), 5)).thenReturn(LocalDate.of(2023, 1, 30));
 
-        final ZonedDateTime firstDayOfWeekTimeEntryStart = ZonedDateTime.of(2023, 1, 30, 9, 0, 0, 0, zoneIdBerlin);
-        final ZonedDateTime firstDayOfWeekTimeEntryEnd = ZonedDateTime.of(2023, 1, 30, 12, 0, 0, 0, zoneIdBerlin);
-        final TimeEntryEntity firstDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", firstDayOfWeekTimeEntryStart.toInstant(), zoneIdBerlin, firstDayOfWeekTimeEntryEnd.toInstant(), zoneIdBerlin, Instant.now(), false);
+        final ZonedDateTime firstDayOfWeekTimeEntryStart = ZonedDateTime.of(2023, 1, 30, 9, 0, 0, 0, userZoneId);
+        final ZonedDateTime firstDayOfWeekTimeEntryEnd = ZonedDateTime.of(2023, 1, 30, 12, 0, 0, 0, userZoneId);
+        final TimeEntryEntity firstDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", firstDayOfWeekTimeEntryStart.toInstant(), userZoneId, firstDayOfWeekTimeEntryEnd.toInstant(), userZoneId, Instant.now(), false);
 
-        final ZonedDateTime lastDayOfWeekTimeEntryStart = ZonedDateTime.of(2023, 2, 5, 9, 0, 0, 0, zoneIdBerlin);
-        final ZonedDateTime lastDayOfWeekTimeEntryEnd = ZonedDateTime.of(2023, 2, 5, 12, 0, 0, 0, zoneIdBerlin);
-        final TimeEntryEntity lastDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 2L, "batman", "hack the planet, second time!", lastDayOfWeekTimeEntryStart.toInstant(), zoneIdBerlin, lastDayOfWeekTimeEntryEnd.toInstant(), zoneIdBerlin, Instant.now(), false);
+        final ZonedDateTime lastDayOfWeekTimeEntryStart = ZonedDateTime.of(2023, 2, 5, 9, 0, 0, 0, userZoneId);
+        final ZonedDateTime lastDayOfWeekTimeEntryEnd = ZonedDateTime.of(2023, 2, 5, 12, 0, 0, 0, userZoneId);
+        final TimeEntryEntity lastDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 2L, "batman", "hack the planet, second time!", lastDayOfWeekTimeEntryStart.toInstant(), userZoneId, lastDayOfWeekTimeEntryEnd.toInstant(), userZoneId, Instant.now(), false);
 
 
-        final ZonedDateTime fromDateTime = LocalDate.of(2023, 1, 30).atStartOfDay(ZoneId.systemDefault());
+        final ZonedDateTime fromDateTime = LocalDate.of(2023, 1, 30).atStartOfDay(userZoneId);
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
@@ -1037,6 +1038,52 @@ class TimeEntryServiceImplTest {
                             )
                         )
                     )
+                ),
+                6
+            )
+        );
+    }
+
+    @Test
+    void ensureGetEntryWeekPageWithTimeEntryActuallyNotInWeekOfYear() {
+
+        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
+
+        when(userDateService.firstDayOfWeek(Year.of(2023), 24)).thenReturn(LocalDate.of(2023, 6, 12));
+
+        final ZonedDateTime firstDateOfWeek = LocalDate.of(2023, 6, 12).atStartOfDay(userZoneId);
+        final Instant from = Instant.from(firstDateOfWeek);
+        final Instant to = Instant.from(firstDateOfWeek.plusWeeks(1));
+
+        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan("batman", from, to))
+            .thenReturn(List.of());
+
+        when(timeEntryRepository.countAllByOwner("batman")).thenReturn(6L);
+
+        final User batman = new User(new UserId("batman"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findUserById(new UserId("batman"))).thenReturn(Optional.of(batman));
+
+        // Map<LocalDate, PlannedWorkingHours>
+        when(workingTimeService.getWorkingHoursByUserAndYearWeek(new UserLocalId(1337L), Year.of(2023), 24))
+            .thenReturn(Map.of(
+                LocalDate.of(2023, 6, 12), PlannedWorkingHours.EIGHT,
+                LocalDate.of(2023, 6, 13), PlannedWorkingHours.EIGHT,
+                LocalDate.of(2023, 6, 14), PlannedWorkingHours.EIGHT,
+                LocalDate.of(2023, 6, 15), PlannedWorkingHours.EIGHT,
+                LocalDate.of(2023, 6, 16), PlannedWorkingHours.EIGHT,
+                LocalDate.of(2023, 6, 17), PlannedWorkingHours.ZERO,
+                LocalDate.of(2023, 6, 18), PlannedWorkingHours.ZERO
+            ));
+
+        final TimeEntryWeekPage actual = sut.getEntryWeekPage(new UserId("batman"), 2023, 24);
+
+        assertThat(actual).isEqualTo(
+            new TimeEntryWeekPage(
+                new TimeEntryWeek(
+                    LocalDate.of(2023, 6, 12),
+                    new PlannedWorkingHours(Duration.ofHours(40)),
+                    List.of()
                 ),
                 6
             )
