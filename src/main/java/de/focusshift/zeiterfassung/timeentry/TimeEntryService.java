@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.annotation.Nullable;
 
@@ -47,11 +48,11 @@ public interface TimeEntryService {
      *
      * @param from first date of interval
      * @param toExclusive last date (exclusive) of interval
-     * @param userLocalIds {@linkplain UserLocalId}s of desired users
+     * @param users desired users
      *
      * @return unsorted list of {@linkplain TimeEntry}s grouped by user
      */
-    Map<UserLocalId, List<TimeEntry>> getEntriesByUserLocalIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds);
+    Map<UserLocalId, List<TimeEntry>> getEntriesByUsers(LocalDate from, LocalDate toExclusive, List<User> users);
 
     /**
      * {@linkplain TimeEntryWeekPage}s for the given user and week of year with sorted {@linkplain TimeEntry}s

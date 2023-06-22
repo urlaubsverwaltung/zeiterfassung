@@ -35,6 +35,14 @@ public final class WorkDuration implements TimeEntryDuration {
         return timeEntryDuration.hoursDoubleValue();
     }
 
+    public WorkDuration plus(Duration duration) {
+        return new WorkDuration(value().plus(duration));
+    }
+
+    public WorkDuration plus(WorkDuration workDuration) {
+        return plus(workDuration.value());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

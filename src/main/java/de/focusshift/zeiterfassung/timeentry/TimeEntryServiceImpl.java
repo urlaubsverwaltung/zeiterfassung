@@ -103,12 +103,10 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public Map<UserLocalId, List<TimeEntry>> getEntriesByUserLocalIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
+    public Map<UserLocalId, List<TimeEntry>> getEntriesByUsers(LocalDate from, LocalDate toExclusive, List<User> users) {
 
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
-
-        final List<User> users = userManagementService.findAllUsersByLocalIds(userLocalIds);
 
         final List<String> userIdValues = users
             .stream()
@@ -124,6 +122,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .map(TimeEntryServiceImpl::toTimeEntry)
             .collect(groupingBy(timeEntry -> userLocalIdById.get(timeEntry.userId())));
 
+        final List<UserLocalId> userLocalIds = users.stream().map(User::localId).toList();
         for (UserLocalId userLocalId : userLocalIds) {
             result.computeIfAbsent(userLocalId, (unused) -> List.of());
         }

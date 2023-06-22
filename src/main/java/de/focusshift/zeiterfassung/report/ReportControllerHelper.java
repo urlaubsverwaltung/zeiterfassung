@@ -1,9 +1,12 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.overtime.OvertimeDuration;
+import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import org.apache.commons.collections4.SetUtils;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
@@ -14,10 +17,22 @@ import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 
+import static java.util.Comparator.comparing;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 
 @Component
 class ReportControllerHelper {
@@ -99,6 +114,75 @@ class ReportControllerHelper {
         final ZonedDateTime lastOfWeek = ZonedDateTime.of(last, LocalTime.MIN, ZoneId.systemDefault());
 
         return new DetailWeekDto(Date.from(firstOfWeek.toInstant()), Date.from(lastOfWeek.toInstant()), calendarWeek, dayReports);
+    }
+
+    ReportOvertimesDto reportOvertimesDto(ReportWeek reportWeek) {
+        // person | M | T | W | T | F | S | S |
+        // -----------------------------------
+        // john   | 1 | 2 | 2 | 3 | 4 | 4 | 4 |   <- `ReportOvertimeDto ( personName, overtimes )`
+        // jane   | 0 | 0 | 2 | 3 | 4 | 4 | 4 |   entries in the middle of the week
+        // jack   | 0 | 0 | 0 | 0 | 0 | 0 | 0 |   no entries this week
+        //
+        // note that the first overtime won't be empty actually, but the `accumulatedOvertimeToDate`.
+
+        // build up `users` peace by peace. one person could have the first working day in the middle of the week (jane).
+        final Set<User> users = new HashSet<>();
+
+        // {john} -> [1, 2, 2, 3, 4, 4, 4]
+        // {jane} -> [empty, empty, 2, 3, 4, 4, 4]
+        // {jack} -> [empty, empty, empty, empty, empty, empty, empty] (has no entries this week)
+        final Map<User, List<Optional<OvertimeDuration>>> overtimeDurationsByUser = new HashMap<>();
+
+        // used to initiate the persons list of overtimes.
+        // jane will be seen first on the third reportDay. she initially needs a list of `[null, null]`.
+        int nrOfHandledDays = 0;
+
+        for (ReportDay reportDay : reportWeek.reportDays()) {
+
+            // planned working hours contains all users. even users without time entries at this day
+            final Map<User, PlannedWorkingHours> plannedByUser = reportDay.plannedWorkingHoursByUser();
+            users.addAll(plannedByUser.keySet());
+
+            for (User user : users) {
+                final var durations = overtimeDurationsByUser.computeIfAbsent(user, prepareOvertimeDurationList(nrOfHandledDays));
+                durations.add(reportDay.accumulatedOvertimeToDateEndOfBusinessByUser(user.localId()));
+            }
+
+            nrOfHandledDays++;
+        }
+
+        final Set<UserLocalId> userIdsWithDayEntries = users.stream().map(User::localId).collect(toSet());
+        final Map<User, List<PlannedWorkingHours>> usersWithPlannedWorkingHours = reportWeek.plannedWorkingHoursByUser();
+        final Map<UserLocalId, User> usersWithPlannedWorkingHoursById = usersWithPlannedWorkingHours.keySet().stream().collect(toMap(User::localId, identity()));
+        final Set<UserLocalId> userIdsWithPlannedWorkingHours = usersWithPlannedWorkingHours.keySet().stream().map(User::localId).collect(toSet());
+        final SetUtils.SetView<UserLocalId> userIdsWithoutDayEntries = SetUtils.difference(userIdsWithPlannedWorkingHours, userIdsWithDayEntries);
+        for (UserLocalId userLocalId : userIdsWithoutDayEntries) {
+            overtimeDurationsByUser.computeIfAbsent(usersWithPlannedWorkingHoursById.get(userLocalId), prepareOvertimeDurationList(nrOfHandledDays));
+        }
+
+        final List<ReportOvertimeDto> overtimeDtos = overtimeDurationsByUser.entrySet().stream()
+            .map(entry -> new ReportOvertimeDto(entry.getKey().fullName(), overtimeDurationToDouble(entry.getValue())))
+            .sorted(comparing(ReportOvertimeDto::personName))
+            .collect(toList());
+
+        return new ReportOvertimesDto(reportWeek.dateOfWeeks(), overtimeDtos);
+    }
+
+    private static Function<User, List<Optional<OvertimeDuration>>> prepareOvertimeDurationList(int nrOfHandledDays) {
+        return (unused) -> {
+            final List<Optional<OvertimeDuration>> objects = new ArrayList<>();
+            for (int i = 0; i < nrOfHandledDays; i++) {
+                objects.add(Optional.empty());
+            }
+            return objects;
+        };
+    }
+
+    private static List<Double> overtimeDurationToDouble(List<Optional<OvertimeDuration>> overtimeDurations) {
+        return overtimeDurations.stream()
+            .map(maybe -> maybe.orElse(null))
+            .map(overtimeDuration -> overtimeDuration == null ? null : overtimeDuration.hoursDoubleValue())
+            .collect(toList());
     }
 
     String createUrl(String prefix, boolean allUsersSelected, List<UserLocalId> selectedUserLocalIds) {

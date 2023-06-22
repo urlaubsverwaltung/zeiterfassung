@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+  <head>
+    <title>Zeiterfassung - Bericht</title>
+  </head>
+  <body>
+    <th:block th:ref="data-table">
+      <table>
+        <caption class="sr-only" th:text="#{report.overtime.table.caption}">
+          Überstunden
+        </caption>
+        <thead>
+          <tr>
+            <th
+              class="text-left font-normal text-sm px-2 py-1 text-gray-500"
+              th:text="#{report.overtime.table.head.person}"
+            >
+              Person
+            </th>
+            <th
+              class="text-left font-normal text-sm px-2 py-1 text-gray-500"
+              th:each="dayOfWeek : ${weekReportOvertimes.dayOfWeeks}"
+              th:text="${#temporals.dayOfWeekNameShort(dayOfWeek)}"
+            ></th>
+            <th th:text="#{report.overtime.table.head.sum}">Summe</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="row : ${weekReportOvertimes.overtimes}">
+            <td class="px-2 py-1" th:text="${row.personName}"></td>
+            <td class="px-2 py-1" th:each="duration : ${row.overtimes}">
+              <th:block
+                th:if="${duration != null}"
+                th:text="${{duration}}"
+              ></th:block>
+              <th:block th:if="${duration == null}">-</th:block>
+            </td>
+            <td class="px-2 py-1" th:text="${row.overtimeSum}"></td>
+          </tr>
+        </tbody>
+      </table>
+    </th:block>
+  </body>
+</html>

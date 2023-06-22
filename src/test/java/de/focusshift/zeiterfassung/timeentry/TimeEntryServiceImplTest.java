@@ -810,8 +810,6 @@ class TimeEntryServiceImplTest {
         final User batman = new User(new UserId("uuid-1"), batmanLocalId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         final User robin = new User(new UserId("uuid-2"), robinLocalId, "Dick", "Grayson", new EMailAddress("robin@example.org"), Set.of());
 
-        when(userManagementService.findAllUsersByLocalIds(List.of(batmanLocalId, robinLocalId))).thenReturn(List.of(batman, robin));
-
         final Instant now = Instant.now();
         final LocalDate from = LocalDate.of(2023, 1, 1);
         final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
@@ -827,7 +825,7 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of("uuid-1", "uuid-2"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
-        final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId, robinLocalId));
+        final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesByUsers(from, toExclusive, List.of(batman, robin));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
@@ -853,16 +851,15 @@ class TimeEntryServiceImplTest {
     void ensureGetEntriesByUserLocalIdsReturnsValuesForEveryAskedUserLocalId() {
 
         final UserLocalId batmanLocalId = new UserLocalId(1L);
-
-        when(userManagementService.findAllUsersByLocalIds(List.of(batmanLocalId))).thenReturn(List.of());
+        final User batman = new User(new UserId("uuid-1"), batmanLocalId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
         final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
 
-        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of(), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of("uuid-1"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of());
 
-        final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId));
+        final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesByUsers(from, toExclusive, List.of(batman));
 
         assertThat(actual)
             .hasSize(1)

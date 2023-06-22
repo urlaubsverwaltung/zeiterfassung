@@ -73,15 +73,18 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, userLocalIds);
         final GraphWeekDto graphWeekDto = helper.toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
         final DetailWeekDto detailWeekDto = helper.toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
+        final ReportOvertimesDto reportOvertimesDto = helper.reportOvertimesDto(reportWeek);
 
         model.addAttribute("weekReport", graphWeekDto);
         model.addAttribute("weekReportDetail", detailWeekDto);
+        model.addAttribute("weekReportOvertimes", reportOvertimesDto);
 
         final YearWeek todayYearWeek = YearWeek.now(clock);
         model.addAttribute("isThisWeek", todayYearWeek.equals(reportYearWeek));
 
         model.addAttribute("chartNavigationFragment", "reports/user-report-week::chart-navigation");
         model.addAttribute("chartFragment", "reports/user-report-week::chart");
+        model.addAttribute("overtimeFragment", "reports/user-overtime-week::data-table");
         model.addAttribute("entriesFragment", "reports/user-report-week::entries");
         model.addAttribute("weekAriaCurrent", "location");
         model.addAttribute("monthAriaCurrent", "false");
