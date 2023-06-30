@@ -16,8 +16,6 @@ class ApplicationRabbitmqConfiguration {
 
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.allowed";
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.cancelled";
-    static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_DELETED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.deleted";
-
     @Bean
     ApplicationEventHandlerRabbitmq applicationEventHandlerRabbitmq() {
         return new ApplicationEventHandlerRabbitmq();
@@ -62,19 +60,6 @@ class ApplicationRabbitmqConfiguration {
             return BindingBuilder.bind(zeiterfassungUrlaubsverwaltungApplicationCancelledQueue())
                 .to(applicationTopic())
                 .with(routingKeyCancelled);
-        }
-
-        @Bean
-        Queue zeiterfassungUrlaubsverwaltungApplicationDeletedQueue() {
-            return new Queue(ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_DELETED_QUEUE, true);
-        }
-
-        @Bean
-        Binding bindZeiterfassungUrlaubsverwaltungApplicationDeletedQueue() {
-            final String routingKeyDeleted = applicationRabbitmqConfigurationProperties.getRoutingKeyDeleted();
-            return BindingBuilder.bind(zeiterfassungUrlaubsverwaltungApplicationDeletedQueue())
-                .to(applicationTopic())
-                .with(routingKeyDeleted);
         }
 
     }

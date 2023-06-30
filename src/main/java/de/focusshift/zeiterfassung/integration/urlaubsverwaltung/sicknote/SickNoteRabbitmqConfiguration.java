@@ -16,7 +16,6 @@ class SickNoteRabbitmqConfiguration {
 
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CANCELLED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.sicknote.cancelled";
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CREATED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.sicknote.created";
-    static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_DELETED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.sicknote.deleted";
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_UPDATED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.sicknote.updated";
 
     @Bean
@@ -63,19 +62,6 @@ class SickNoteRabbitmqConfiguration {
             return BindingBuilder.bind(zeiterfassungUrlaubsverwaltungSickNoteCreatedQueue())
                 .to(sickNoteTopic())
                 .with(routingKeyCreated);
-        }
-
-        @Bean
-        Queue zeiterfassungUrlaubsverwaltungSickNoteDeletedQueue() {
-            return new Queue(ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_DELETED_QUEUE, true);
-        }
-
-        @Bean
-        Binding bindZeiterfassungUrlaubsverwaltungSickNoteDeletedQueue() {
-            final String routingKeyDeleted = sickNoteRabbitmqConfigurationProperties.getRoutingKeyDeleted();
-            return BindingBuilder.bind(zeiterfassungUrlaubsverwaltungSickNoteDeletedQueue())
-                .to(sickNoteTopic())
-                .with(routingKeyDeleted);
         }
 
         @Bean
