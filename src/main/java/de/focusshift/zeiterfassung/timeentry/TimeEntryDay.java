@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.absence.Absence;
+
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -7,7 +9,7 @@ import java.util.List;
 
 import static java.math.RoundingMode.CEILING;
 
-record TimeEntryDay(LocalDate date, PlannedWorkingHours plannedWorkingHours, List<TimeEntry> timeEntries) {
+record TimeEntryDay(LocalDate date, PlannedWorkingHours plannedWorkingHours, List<TimeEntry> timeEntries, List<Absence> absences) {
 
     /**
      *

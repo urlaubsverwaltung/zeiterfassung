@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.absence.AbsenceService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -58,12 +59,15 @@ class TimeEntryServiceImplTest {
     private UserManagementService userManagementService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
+    @Mock
+    private AbsenceService absenceService;
 
     private final Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, clock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService,
+            userSettingsProvider, absenceService, clock);
     }
 
     @Test
@@ -109,7 +113,7 @@ class TimeEntryServiceImplTest {
 
         final Instant now = Instant.now();
         final Clock fixedClock = Clock.fixed(now, UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDateTime entryStart = LocalDateTime.of(2023, 1, 1, 10, 0, 0);
         final LocalDateTime entryEnd = LocalDateTime.of(2023, 1, 1, 12, 0, 0);
@@ -187,7 +191,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryStart(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -243,7 +247,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryStartAndEnd(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -299,7 +303,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryStartAndDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -355,7 +359,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryEnd(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -411,7 +415,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryEndAndDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -467,7 +471,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryDuration(boolean isBreak) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -522,7 +526,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryWhenStartEndDurationAreGivenAndPlausible() throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDate date = LocalDate.of(2023, 2, 27);
         final LocalDateTime previousStart = LocalDateTime.of(date, LocalTime.of(15, 0, 0));
@@ -576,7 +580,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryStartWithGivenEndAndDuration() throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDate date = LocalDate.of(2023, 2, 27);
         final LocalDateTime previousStart = LocalDateTime.of(date, LocalTime.of(15, 0, 0));
@@ -617,7 +621,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryEndWithGivenStartAndDuration() throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDate date = LocalDate.of(2023, 2, 27);
         final LocalDateTime previousStart = LocalDateTime.of(date, LocalTime.of(15, 0, 0));
@@ -663,7 +667,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryStartAndEndWithoutDuration(Duration givenDuration) throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDate date = LocalDate.of(2023, 2, 27);
         final LocalDateTime previousStart = LocalDateTime.of(date, LocalTime.of(15, 0, 0));
@@ -703,7 +707,7 @@ class TimeEntryServiceImplTest {
     void ensureUpdateTimeEntryIsBreak() throws Exception {
 
         final Clock fixedClock = Clock.fixed(Instant.now(), UTC);
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, fixedClock);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeService, userDateService, userSettingsProvider, absenceService, fixedClock);
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
 
@@ -965,7 +969,8 @@ class TimeEntryServiceImplTest {
                             List.of(
                                 new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
                                 new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet!", timeEntryStart, timeEntryEnd, false)
-                            )
+                            ),
+                            List.of()
                         )
                     )
                 ),
@@ -1028,14 +1033,16 @@ class TimeEntryServiceImplTest {
                             PlannedWorkingHours.ZERO,
                             List.of(
                                 new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
-                            )
+                            ),
+                            List.of()
                         ),
                         new TimeEntryDay(
                             LocalDate.of(2023, 1, 30),
                             PlannedWorkingHours.EIGHT,
                             List.of(
                                 new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
-                            )
+                            ),
+                            List.of()
                         )
                     )
                 ),

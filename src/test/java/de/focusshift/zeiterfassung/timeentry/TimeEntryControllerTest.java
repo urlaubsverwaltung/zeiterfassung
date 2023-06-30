@@ -64,7 +64,7 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntry));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
@@ -124,7 +124,7 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntry));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 42);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
@@ -525,12 +525,14 @@ class TimeEntryControllerTest {
                 new TimeEntryDay(
                     LocalDate.of(2022, 9, 28),
                     PlannedWorkingHours.EIGHT,
-                    List.of(timeEntry)
+                    List.of(timeEntry),
+                    List.of()
                 ),
                 new TimeEntryDay(
                     LocalDate.of(2022, 9, 29),
                     PlannedWorkingHours.EIGHT,
-                    List.of(timeEntryOtherDay)
+                    List.of(timeEntryOtherDay),
+                    List.of()
                 )
             )
         );
@@ -628,7 +630,7 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntry));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2021, 52)).thenReturn(timeEntryWeekPage);
@@ -744,7 +746,7 @@ class TimeEntryControllerTest {
 
         when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 28), PlannedWorkingHours.EIGHT, List.of(timeEntry2));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 28), PlannedWorkingHours.EIGHT, List.of(timeEntry2), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
         when(timeEntryService.getEntryWeekPage(userId, 2022, 39)).thenReturn(timeEntryWeekPage);
