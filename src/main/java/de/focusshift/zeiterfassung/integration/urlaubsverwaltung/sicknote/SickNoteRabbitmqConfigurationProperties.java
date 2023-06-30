@@ -27,6 +27,9 @@ class SickNoteRabbitmqConfigurationProperties {
     @NotEmpty
     private String routingKeyUpdated = "updated";
 
+    @NotEmpty
+    private String routingKeyConvertedToApplication = "converted_to_application";
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -81,5 +84,13 @@ class SickNoteRabbitmqConfigurationProperties {
 
     public void setRoutingKeyUpdated(String routingKeyUpdated) {
         this.routingKeyUpdated = routingKeyUpdated;
+    }
+
+    public String getRoutingKeyConvertedToApplication() {
+        return routingKeyConvertedToApplication;
+    }
+
+    public void setRoutingKeyConvertedToApplication(String routingKeyConvertedToApplication) {
+        this.routingKeyConvertedToApplication = routingKeyConvertedToApplication;
     }
 }

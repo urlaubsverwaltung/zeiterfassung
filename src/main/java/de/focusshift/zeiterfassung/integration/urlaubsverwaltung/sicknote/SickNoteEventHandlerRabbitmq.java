@@ -1,12 +1,14 @@
 package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote;
 
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteCancelledEventDTO;
+import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteConvertedToApplicationEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteCreatedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteUpdatedEventDTO;
 import org.slf4j.Logger;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote.SickNoteRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CANCELLED_QUEUE;
+import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote.SickNoteRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CONVERTED_TO_APPLICATION_QUEUE;
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote.SickNoteRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CREATED_QUEUE;
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote.SickNoteRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_UPDATED_QUEUE;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -28,5 +30,10 @@ public class SickNoteEventHandlerRabbitmq {
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_UPDATED_QUEUE})
     void on(SickNoteUpdatedEventDTO event) {
         LOG.info("Received SickNoteUpdatedEvent for person={} and tenantId={}", event.getPerson(), event.getTenantId());
+    }
+
+    @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CONVERTED_TO_APPLICATION_QUEUE})
+    void on(SickNoteConvertedToApplicationEventDTO event) {
+        LOG.info("Received SickNoteConvertedToApplicationEvent for person={} and tenantId={}", event.getPerson(), event.getTenantId());
     }
 }
