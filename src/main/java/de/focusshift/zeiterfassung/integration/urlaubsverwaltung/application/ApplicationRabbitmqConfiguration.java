@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application;
 
+import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
@@ -17,8 +18,8 @@ class ApplicationRabbitmqConfiguration {
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.allowed";
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.cancelled";
     @Bean
-    ApplicationEventHandlerRabbitmq applicationEventHandlerRabbitmq() {
-        return new ApplicationEventHandlerRabbitmq();
+    ApplicationEventHandlerRabbitmq applicationEventHandlerRabbitmq(AbsenceWriteService absenceWriteService) {
+        return new ApplicationEventHandlerRabbitmq(absenceWriteService);
     }
 
     @Configuration

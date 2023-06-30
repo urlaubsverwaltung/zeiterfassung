@@ -1,0 +1,52 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+    <changeSet author="bseber" id="add-absence">
+        <preConditions>
+            <not>
+                <tableExists tableName="absence" />
+            </not>
+        </preConditions>
+
+        <createSequence sequenceName="absence_seq" incrementBy="50" />
+
+        <createTable tableName="absence">
+
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_ABSENCE" />
+            </column>
+
+            <column name="tenant_id" type="VARCHAR(8)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="user_id" type="VARCHAR">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="start_date" type="TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="end_date" type="TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="day_length" type="VARCHAR">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="type" type="VARCHAR">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="color" type="VARCHAR">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>
