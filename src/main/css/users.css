@@ -1,0 +1,22 @@
+main[data-selected-user] [data-hidden-with-selected-user] {
+  display: none;
+}
+
+main:not([data-selected-user]) [data-hidden-without-selected-user] {
+  display: none;
+}
+
+@screen lg {
+  main[data-selected-user] [data-hidden-with-selected-user],
+  main:not([data-selected-user]) [data-hidden-without-selected-user] {
+    display: var(--display-when-visible);
+  }
+}
+
+.user-selection-list > li {
+  @apply hover:bg-gray-50;
+}
+
+.user-selection-list > li:has(a[aria-current="page"]) {
+  @apply bg-gray-100;
+}
