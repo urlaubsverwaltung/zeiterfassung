@@ -8,7 +8,8 @@ record TimeEntryDayDto(String date,
                        String hoursDelta,
                        boolean hoursDeltaNegative,
                        double hoursWorkedRatio,
-                       List<TimeEntryDTO> timeEntries) {
+                       List<TimeEntryDTO> timeEntries,
+                       List<AbsenceEntryDto> absenceEntries) {
 
     static Builder builder() {
         return new Builder();
@@ -22,6 +23,7 @@ record TimeEntryDayDto(String date,
         private boolean hoursDeltaNegative;
         private double hoursWorkedRatio;
         private List<TimeEntryDTO> timeEntries;
+        private List<AbsenceEntryDto> absenceEntries;
 
         public Builder date(String date) {
             this.date = date;
@@ -58,9 +60,14 @@ record TimeEntryDayDto(String date,
             return this;
         }
 
+        public Builder absenceEntries(List<AbsenceEntryDto> absenceEntries) {
+            this.absenceEntries = absenceEntries;
+            return this;
+        }
+
         public TimeEntryDayDto build() {
             return new TimeEntryDayDto(date, hoursWorked, hoursWorkedShould, hoursDelta, hoursDeltaNegative,
-                hoursWorkedRatio, timeEntries);
+                hoursWorkedRatio, timeEntries, absenceEntries);
         }
     }
 }

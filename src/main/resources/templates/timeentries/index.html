@@ -303,6 +303,44 @@
                       </div>
                     </div>
                     <div class="px-4 space-y-6 md:space-y-2">
+                      <th:block th:each="absenceEntry : ${day.absenceEntries}">
+                        <div class="flex flex-col md:flex-row">
+                          <div class="flex-1 flex flex-col md:flex-row">
+                            <div
+                              class="flex items-center bg-gray-200 rounded-t-[27px] px-5 py-3 md:rounded-tr-none md:rounded-bl-[27px] md:bg-gray-100"
+                            >
+                              <div class="flex items-center">
+                                <span
+                                  th:text="${#temporals.day(absenceEntry.date)}"
+                                  class="rounded-full w-6 h-6 p-5 flex items-center justify-center bg-white text-black mr-4 font-bold"
+                                ></span>
+                                <span
+                                  th:text="${#temporals.format(absenceEntry.date, 'dd. MMMM yyyy')}"
+                                  class="whitespace-nowrap text-sm md:font-bold"
+                                ></span>
+                              </div>
+                            </div>
+                            <div
+                              class="flex-1 border border-gray-200 rounded-b-[27px] flex overflow-hidden md:rounded-bl-none md:rounded-tr-[27px] md:bg-gray-100 md:border-gray-100"
+                            >
+                              <div
+                                class="inline-block w-6 bg-amber-200 md:my-2 md:rounded-lg md:w-3"
+                              ></div>
+                              <div class="px-5 py-6">
+                                <p
+                                  class="md:font-bold md:text-sm"
+                                  th:text="${#messages.msg(absenceEntry.nameMessageKey)}"
+                                >
+                                  Erholungsurlaub
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="md:ml-4 md:w-1/5 lg:w-1/6">
+                            <!-- dummy controls block -->
+                          </div>
+                        </div>
+                      </th:block>
                       <th:block th:each="timeEntry: ${day.timeEntries}">
                         <div
                           is="z-time-entry-element"

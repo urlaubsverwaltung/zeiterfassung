@@ -382,7 +382,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final String workedHoursShould = durationToTimeString(timeEntryDay.plannedWorkingHours().minutes());
         final Duration hoursDelta = timeEntryDay.overtime();
         final double ratio = timeEntryDay.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
-        final List<TimeEntryDTO> dayTimeEntryDTOs = timeEntryDay.timeEntries().stream().map(this::toTimeEntryDto).toList();
+        final List<TimeEntryDTO> dayTimeEntryDtos = timeEntryDay.timeEntries().stream().map(this::toTimeEntryDto).toList();
+        final List<AbsenceEntryDto> absenceEntryDtos = timeEntryDay.absences().stream()
+            .map(absence -> new AbsenceEntryDto(timeEntryDay.date(), absence.type().getMessageKey()))
+            .toList();
 
         return TimeEntryDayDto.builder()
             .date(dateString)
@@ -391,7 +394,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             .hoursDelta(durationToTimeString(hoursDelta))
             .hoursDeltaNegative(hoursDelta.isNegative())
             .hoursWorkedRatio(ratio)
-            .timeEntries(dayTimeEntryDTOs)
+            .timeEntries(dayTimeEntryDtos)
+            .absenceEntries(absenceEntryDtos)
             .build();
     }
 

@@ -4,5 +4,9 @@ public enum AbsenceType {
 
     HOLIDAY,
     SPECIALLEAVE,
-    UNPAIDLEAVE,
+    UNPAIDLEAVE;
+
+    public String getMessageKey() {
+        return "absence.type." + this.name();
+    }
 }

@@ -90,6 +90,7 @@ class TimeEntryControllerTest {
             .hoursDeltaNegative(true)
             .hoursWorkedRatio(7.0)
             .timeEntries(List.of(expectedTimeEntryDto))
+            .absenceEntries(List.of())
             .build();
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
@@ -150,6 +151,7 @@ class TimeEntryControllerTest {
             .hoursDeltaNegative(true)
             .hoursWorkedRatio(7.0)
             .timeEntries(List.of(expectedTimeEntryDto))
+            .absenceEntries(List.of())
             .build();
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
@@ -584,6 +586,7 @@ class TimeEntryControllerTest {
             .hoursDeltaNegative(true)
             .hoursWorkedRatio(10.0)
             .timeEntries(List.of(expectedTimeEntryDto))
+            .absenceEntries(List.of())
             .build();
 
         final TimeEntryDayDto otherDayDto = TimeEntryDayDto.builder()
@@ -594,6 +597,7 @@ class TimeEntryControllerTest {
             .hoursDeltaNegative(true)
             .hoursWorkedRatio(7.0)
             .timeEntries(List.of(otherTimeEntryDto))
+            .absenceEntries(List.of())
             .build();
 
         final TimeEntryWeekDto expectedWeekDto = TimeEntryWeekDto.builder()
@@ -654,6 +658,7 @@ class TimeEntryControllerTest {
             .hoursDeltaNegative(true)
             .hoursWorkedRatio(7.0)
             .timeEntries(List.of(expectedTimeEntryDto))
+            .absenceEntries(List.of())
             .build();
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
@@ -779,6 +784,7 @@ class TimeEntryControllerTest {
                     .comment("hack the planet")
                     .build()
             ))
+            .absenceEntries(List.of())
             .build();
 
         final TimeEntryWeekDto expectedWeekDto = TimeEntryWeekDto.builder()
