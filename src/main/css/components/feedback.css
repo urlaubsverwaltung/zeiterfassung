@@ -1,0 +1,14 @@
+.feedback-form {
+  max-height: 0;
+  --transition-duration: 300ms;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: opacity var(--transition-duration) ease-in-out,
+    transform var(--transition-duration) ease-in-out;
+}
+
+.feedback-form.feedback-form--visible {
+  max-height: revert;
+  opacity: 1;
+  transform: translateY(0);
+}

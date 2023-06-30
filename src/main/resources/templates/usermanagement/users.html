@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
-    th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{::scriptsDefer})}"
+    th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scriptsDefer=~{::scriptsDefer})}"
   >
     <title>Zeiterfassung - Personen</title>
+    <th:block th:fragment="styles">
+      <link rel="stylesheet" type="text/css" th:href="@{/users.css}" />
+    </th:block>
     <th:block th:fragment="scriptsDefer">
       <script type="module" src="" th:src="@{/assets/users.js}"></script>
     </th:block>

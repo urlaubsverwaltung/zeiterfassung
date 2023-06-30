@@ -48,13 +48,10 @@
     <script src="#" th:src="@{/assets/turbo.js}"></script>
     <th:block th:replace="${scripts}"></th:block>
 
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="/style.css"
-      th:href="@{/style.css}"
-    />
+    <link rel="stylesheet" type="text/css" th:href="@{/1-base.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/2-components.css}" />
     <th:block th:replace="${styles}"></th:block>
+    <link rel="stylesheet" type="text/css" th:href="@{/3-utilities.css}" />
 
     <th:block th:replace="${preload}"></th:block>
     <script src="#" th:src="@{/assets/user-common.js}" type="module"></script>

@@ -1,0 +1,30 @@
+@tailwind base;
+
+:root {
+  --navigation-header-height: 3rem;
+}
+
+html {
+  height: --webkit-fill-available;
+}
+
+body {
+  min-height: 100vh;
+  min-height: --webkit-fill-available;
+  background-image: linear-gradient(#ffffff, #fafafa);
+  background-attachment: fixed;
+}
+
+input:not([class*="rounded"]),
+textarea:not([class*="rounded"]) {
+  @apply rounded;
+}
+
+@font-face {
+  font-family: "KaushanScript";
+  src: local("KaushanScript"), local("KaushanScript Regular"),
+    local("KaushanScript-Regular"),
+    url("/fonts/kaushanscript/KaushanScript-Regular.woff2") format("woff2"),
+    url("/fonts/kaushanscript/KaushanScript-Regular.woff") format("woff");
+  font-display: swap;
+}

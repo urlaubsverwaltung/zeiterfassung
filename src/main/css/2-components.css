@@ -1,0 +1,21 @@
+@import "tailwindcss/components.css";
+@import "./components/ajax-loader.css";
+@import "./components/body-overlay.css";
+@import "./components/checkbox-switch.css";
+@import "./components/feedback.css";
+@import "./components/navigation.css";
+@import "./components/time-clock.css";
+
+.sloth-background {
+  background-image: url("/images/sloths_1280.png");
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: contain;
+  min-height: 350px;
+  max-height: 600px;
+  margin-top: auto;
+}
+
+duet-date-picker.edited ~ label > span {
+  color: theme("colors.blue.600");
+}
