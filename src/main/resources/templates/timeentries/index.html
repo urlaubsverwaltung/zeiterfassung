@@ -36,7 +36,7 @@
               >
                 Neuen Zeitslot erfassen
               </h1>
-              <div class="md:ml-4 md:w-1/5 lg:w-1/6"></div>
+              <div class="time-entry-box__controls"></div>
             </div>
             <th:block
               th:insert="~{::timeentry-slot-form(formAction=@{/timeentries}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
@@ -213,7 +213,7 @@
                         th:styleappend="${'width:' + week.hoursWorkedRatio + '%'}"
                       ></div>
                     </div>
-                    <div class="md:ml-4 md:w-1/5 lg:w-1/6"></div>
+                    <div class="time-entry-box__controls"></div>
                   </div>
                 </div>
                 <div class="mt-2" th:if="${#lists.isEmpty(week.timeEntries)}">
@@ -299,16 +299,14 @@
                             th:styleappend="${'width:' + day.hoursWorkedRatio + '%'}"
                           ></div>
                         </div>
-                        <div class="md:ml-4 md:w-1/5 lg:w-1/6"></div>
+                        <div class="time-entry-box__controls"></div>
                       </div>
                     </div>
                     <div class="px-4 space-y-6 md:space-y-2">
                       <th:block th:each="absenceEntry : ${day.absenceEntries}">
-                        <div class="flex flex-col md:flex-row">
-                          <div class="flex-1 flex flex-col md:flex-row">
-                            <div
-                              class="flex items-center bg-gray-200 rounded-t-[27px] px-5 py-3 md:rounded-tr-none md:rounded-bl-[27px] md:bg-gray-100"
-                            >
+                        <div class="time-entry-box-absence">
+                          <div class="time-entry-box-absence__input">
+                            <div class="time-entry-box-absence__input__date">
                               <div class="flex items-center">
                                 <span
                                   th:text="${#temporals.day(absenceEntry.date)}"
@@ -320,23 +318,17 @@
                                 ></span>
                               </div>
                             </div>
-                            <div
-                              class="flex-1 border border-gray-200 rounded-b-[27px] flex overflow-hidden md:rounded-bl-none md:rounded-tr-[27px] md:bg-gray-100 md:border-gray-100"
-                            >
-                              <div
-                                class="inline-block w-6 bg-amber-200 md:my-2 md:rounded-lg md:w-3"
-                              ></div>
-                              <div class="px-5 py-6">
-                                <p
-                                  class="md:font-bold md:text-sm"
-                                  th:text="${#messages.msg(absenceEntry.nameMessageKey)}"
-                                >
-                                  Erholungsurlaub
-                                </p>
-                              </div>
+                            <div class="time-entry-box-absence__input__fields">
+                              <div class="time-entry-box-absence__absence-color-box"></div>
+                              <p
+                                class="time-entry-box-absence__absence-text"
+                                th:text="${#messages.msg(absenceEntry.nameMessageKey)}"
+                              >
+                                Erholungsurlaub
+                              </p>
                             </div>
                           </div>
-                          <div class="md:ml-4 md:w-1/5 lg:w-1/6">
+                          <div class="time-entry-box-absence__controls">
                             <!-- dummy controls block -->
                           </div>
                         </div>
@@ -431,7 +423,7 @@
           <div class="flex-1 flex flex-col md:flex-row">
             <div
               is="z-time-entry-date-picker"
-              class="flex flex-col items-center bg-timeslot-form-datepicker text-timeslot-form-day py-6 px-5 rounded-t-[27px] md:rounded-tr-none md:rounded-l-[27px] md:w-56 border-r-timeslot-form"
+              class="time-entry-box__input__date flex flex-col items-center"
               data-js-class-remove="flex-col"
             >
               <input
@@ -477,7 +469,7 @@
                 </span>
               </label>
             </div>
-            <div class="flex flex-col md:flex-row flex-1">
+            <div class="time-entry-box__input__fields">
               <svg
                 class="hidden md:block h-full text-timeslot-form-datepicker-background border border-timeslot-form border-l-0 border-r-0"
                 width="28"
@@ -606,10 +598,7 @@
               </div>
             </div>
           </div>
-          <div
-            class="mt-2 flex items-center justify-center md:justify-start md:ml-4 md:w-1/5 md:mt-0 lg:w-1/6"
-            th:insert="${actions}"
-          ></div>
+          <div class="time-entry-box__controls" th:insert="${actions}"></div>
         </div>
         <div
           class="text-red-600"
