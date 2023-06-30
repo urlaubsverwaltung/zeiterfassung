@@ -4,7 +4,7 @@
   "scripts": {
     "build": "concurrently 'npm:lint:*' 'npm:build:*' -c 'bgRed.bold,bgBlue.bold'",
     "build:js": "rollup -c",
-    "build:css": "postcss src/main/css/**/*.css --base src/main/css --dir target/classes/static",
+    "build:css": "postcss src/main/css/*.css --base src/main/css --dir target/classes/static",
     "dev": "concurrently 'npm:lint:ts -- --watch' 'npm:dev:*' -c 'bgRed.bold,bgBlue.bold'",
     "dev:js": "npm run build:js -- -w",
     "dev:css": "npm run build:css -- --watch",
@@ -38,6 +38,7 @@
     "lint-staged": "13.2.3",
     "postcss": "8.4.21",
     "postcss-cli": "10.1.0",
+    "postcss-import": "15.1.0",
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "2.10.1",
     "rimraf": "5.0.0",

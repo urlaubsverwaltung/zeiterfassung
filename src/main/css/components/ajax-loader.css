@@ -1,0 +1,25 @@
+@keyframes to-max-width {
+  from {
+    max-width: 0;
+  }
+  to {
+    max-width: var(--animate-to-width);
+  }
+}
+
+.ajax-loader.ajax-loader--loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.ajax-loader.ajax-loader--loading::before {
+  --animate-to-width: 100%;
+  animation: to-max-width 8s infinite ease-out;
+  content: "";
+  @apply absolute;
+  @apply inset-0;
+  @apply bg-gradient-to-r;
+  @apply from-transparent;
+  @apply to-blue-600;
+  @apply opacity-10;
+}
