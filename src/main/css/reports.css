@@ -1,37 +1,44 @@
-.report-graph {
-}
 .report-graph-hover-background {
   fill: transparent;
 }
+
 .report-graph-hover-background.selected,
 .report-graph-hover-background:hover {
   fill: url(#gradient-background);
 }
+
 .report-graph-hour-line {
   @apply stroke-gray-200;
 }
+
 .report-graph-hour-text {
   @apply fill-gray-300;
 }
+
 .report-graph-avg-line {
   @apply stroke-teal-700;
 }
+
 .report-graph-avg-text {
   @apply fill-teal-700;
   @apply text-xs;
 }
+
 .report-graph-day-overtime-bar {
   @apply fill-teal-900;
   @apply stroke-emerald-600;
 }
+
 .report-graph-day-should-bar {
   @apply fill-green-100;
   @apply stroke-emerald-600;
 }
+
 .report-graph-day-text {
   @apply fill-gray-600;
   @apply font-medium;
 }
+
 .report-graph-date-text {
   @apply fill-gray-400;
   @apply text-sm;
@@ -40,6 +47,7 @@
 .report-graph-group--different-month .report-graph-day-bar {
   @apply fill-transparent;
 }
+
 .report-graph-group--different-month .report-graph-day-text {
   @apply fill-gray-400;
   @apply font-normal;
