@@ -319,7 +319,10 @@
                               </div>
                             </div>
                             <div class="time-entry-box-absence__input__fields">
-                              <div class="time-entry-box-absence__absence-color-box"></div>
+                              <div
+                                class="time-entry-box-absence__absence-color-box"
+                                th:style="|background-color:var(--absence-color-${absenceEntry.color})|"
+                              ></div>
                               <p
                                 class="time-entry-box-absence__absence-text"
                                 th:text="${#messages.msg(absenceEntry.nameMessageKey)}"
