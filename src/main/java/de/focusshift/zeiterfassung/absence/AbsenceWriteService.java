@@ -10,6 +10,13 @@ public interface AbsenceWriteService {
     void addAbsence(AbsenceWrite absence);
 
     /**
+     * Update an existing {@linkplain AbsenceWrite}
+     *
+     * @param absence to update
+     */
+    void updateAbsence(AbsenceWrite absence);
+
+    /**
      * Delete an {@linkplain AbsenceWrite}
      *
      * @param absence to delete
