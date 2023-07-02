@@ -38,7 +38,7 @@ public class ApplicationEventHandlerRabbitmq {
         LOG.info("Received ApplicationAllowedEvent id={} for person={} and tenantId={}",
             event.getId(), event.getPerson(), event.getTenantId());
 
-        toAbsence(event)
+        toAbsence(new ApplicationEventDtoAdapter(event))
             .ifPresentOrElse(
                 absenceWriteService::addAbsence,
                 () -> LOG.info("could not map ApplicationAllowedEvent to Absence -> could not add Absence"));
@@ -47,36 +47,14 @@ public class ApplicationEventHandlerRabbitmq {
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE})
     void on(ApplicationCancelledEventDTO event) {
         LOG.info("Received ApplicationCancelledEvent for person={} and tenantId={}", event.getPerson(), event.getTenantId());
-        toAbsence(event)
+        toAbsence(new ApplicationEventDtoAdapter(event))
             .ifPresentOrElse(
                 absenceWriteService::deleteAbsence,
                 () -> LOG.info("could not map ApplicationCancelledEvent to Absence -> could not delete Absence")
             );
     }
 
-    private static Optional<AbsenceWrite> toAbsence(ApplicationAllowedEventDTO event) {
-
-        final List<LocalDate> absentWorkingDays = event.getAbsentWorkingDays().stream().sorted().toList();
-        final Optional<DayLength> maybeDayLength = toDayLength(event.getPeriod().getDayLength());
-        final Optional<AbsenceType> maybeAbsenceType = toAbsenceType(event.getVacationType().getCategory());
-        final Optional<AbsenceColor> maybeAbsenceColor = toAbsenceColor(event.getVacationType().getColor());
-
-        if (absentWorkingDays.isEmpty() || maybeDayLength.isEmpty() || maybeAbsenceType.isEmpty() || maybeAbsenceColor.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return Optional.of(new AbsenceWrite(
-            new TenantId(event.getTenantId()),
-            new UserId(event.getPerson().getUsername()),
-            event.getPeriod().getStartDate(),
-            event.getPeriod().getEndDate(),
-            maybeDayLength.get(),
-            maybeAbsenceType.get(),
-            maybeAbsenceColor.get()
-        ));
-    }
-
-    private static Optional<AbsenceWrite> toAbsence(ApplicationCancelledEventDTO event) {
+    private static Optional<AbsenceWrite> toAbsence(ApplicationEventDtoAdapter event) {
 
         final List<LocalDate> absentWorkingDays = event.getAbsentWorkingDays().stream().sorted().toList();
         final Optional<DayLength> maybeDayLength = toDayLength(event.getPeriod().getDayLength());
