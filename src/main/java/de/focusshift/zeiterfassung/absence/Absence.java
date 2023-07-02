@@ -22,4 +22,8 @@ public record Absence(
     AbsenceType type,
     AbsenceColor color
 ) {
+
+    public String getMessageKey() {
+        return "absence.%s.%s".formatted(type.name(), dayLength.name());
+    }
 }
