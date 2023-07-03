@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.absence.DayLength;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -10,6 +11,22 @@ import java.util.List;
 import static java.math.RoundingMode.CEILING;
 
 record TimeEntryDay(LocalDate date, PlannedWorkingHours plannedWorkingHours, List<TimeEntry> timeEntries, List<Absence> absences) {
+
+    public PlannedWorkingHours plannedWorkingHours() {
+
+        final double absenceDayLengthValue = absences.stream()
+            .map(Absence::dayLength)
+            .map(DayLength::getValue)
+            .reduce(0.0, Double::sum);
+
+        if (absenceDayLengthValue >= 1.0) {
+            return PlannedWorkingHours.ZERO;
+        } else if (absenceDayLengthValue == 0.5) {
+            return new PlannedWorkingHours(plannedWorkingHours.value().dividedBy(2));
+        }
+
+        return plannedWorkingHours;
+    }
 
     /**
      *
