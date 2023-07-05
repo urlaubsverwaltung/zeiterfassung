@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application;
 
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationAllowedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCancelledEventDTO;
+import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCreatedFromSickNoteEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPeriodDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPersonDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
@@ -29,6 +30,14 @@ class ApplicationEventDtoAdapter {
     }
 
     ApplicationEventDtoAdapter(ApplicationCancelledEventDTO event) {
+        this.tenantId = event.getTenantId();
+        this.person = event.getPerson();
+        this.vacationType = event.getVacationType();
+        this.period = event.getPeriod();
+        this.absentWorkingDays = event.getAbsentWorkingDays();
+    }
+
+    ApplicationEventDtoAdapter(ApplicationCreatedFromSickNoteEventDTO event) {
         this.tenantId = event.getTenantId();
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();
