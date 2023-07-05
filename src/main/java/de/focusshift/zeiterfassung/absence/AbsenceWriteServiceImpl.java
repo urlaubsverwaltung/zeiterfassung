@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.absence;
 
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
@@ -48,6 +49,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
     }
 
     @Override
+    @Transactional
     public void deleteAbsence(AbsenceWrite absence) {
 
         repository.deleteAllByTenantIdAndUserIdAndStartDateAndEndDateAndDayLengthAndType(
