@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.absence;
 
-import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
@@ -9,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -17,7 +17,11 @@ import static jakarta.persistence.EnumType.STRING;
 
 @Entity
 @Table(name = "absence")
-class AbsenceWriteEntity extends AbstractTenantAwareEntity {
+class AbsenceWriteEntity {
+
+    @Size(max = 255)
+    @Column(name = "tenant_id")
+    private String tenantId;
 
     @Id
     @Column(name = "id", unique = true, nullable = false, updatable = false)
@@ -46,20 +50,12 @@ class AbsenceWriteEntity extends AbstractTenantAwareEntity {
     @Enumerated(STRING)
     private AbsenceColor color;
 
-    protected AbsenceWriteEntity() {
-        this(null, null, null, null, null, null, null, null);
+    public String getTenantId() {
+        return tenantId;
     }
 
-    AbsenceWriteEntity(String tenantId, Long id, String userId, Instant startDate, Instant endDate,
-                       DayLength dayLength, AbsenceType type, AbsenceColor color) {
-        super(tenantId);
-        this.id = id;
-        this.userId = userId;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.dayLength = dayLength;
-        this.type = type;
-        this.color = color;
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
     }
 
     public Long getId() {
