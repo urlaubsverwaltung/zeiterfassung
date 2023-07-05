@@ -45,13 +45,13 @@ class AbsenceServiceImpl implements AbsenceService {
         for (Absence absence : absences) {
             final LocalDate start = LocalDate.ofInstant(absence.startDate().toInstant(), zoneId);
             final LocalDate endExclusive = LocalDate.ofInstant(absence.endDate().toInstant(), zoneId).plusDays(1);
-            doFromUntil(start, endExclusive, (date) -> absencesByDate.computeIfAbsent(date, (unused) -> new ArrayList<>()).add(absence));
+            doFromUntil(start, endExclusive, date -> absencesByDate.computeIfAbsent(date, unused -> new ArrayList<>()).add(absence));
         }
 
         // add empty lists for dates without absences
         final LocalDate fromDate = LocalDate.ofInstant(from, zoneId);
         final LocalDate toDateExclusive = LocalDate.ofInstant(toExclusive, zoneId);
-        doFromUntil(fromDate, toDateExclusive, (date) -> absencesByDate.computeIfAbsent(date, (unused) -> new ArrayList<>()));
+        doFromUntil(fromDate, toDateExclusive, date -> absencesByDate.computeIfAbsent(date, unused -> new ArrayList<>()));
 
         return absencesByDate;
     }
