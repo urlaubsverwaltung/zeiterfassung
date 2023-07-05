@@ -199,7 +199,7 @@
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
-                <version>1.13.3</version>
+                <version>1.13.4</version>
                 <configuration>
                     <nodeVersion>v20.3.1</nodeVersion>
                     <npmVersion>9.6.7</npmVersion>
