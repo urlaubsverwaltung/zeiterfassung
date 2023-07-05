@@ -130,6 +130,7 @@ class AbsenceWriteEntity {
     @Override
     public String toString() {
         return "AbsenceEntity{" +
+            "tenantId=" + tenantId +
             "id=" + id +
             '}';
     }
