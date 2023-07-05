@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.AbsenceService;
+import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -167,6 +168,9 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         final List<TimeEntryDay> daysOfWeek = createTimeEntryDays(fromLocalDate, toLocalDateExclusive, timeEntriesByDate, absencesByDate, plannedByDate);
 
+        // TODO ShouldWorkingHours für die Woche hier berechnen
+        //      oder für alle Wochentage daysOfWeek erstellen und Should innerhalb TimeEntryWeek berechnen
+
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(fromLocalDate, weekPlannedHours, daysOfWeek);
         final long totalTimeEntries = timeEntryRepository.countAllByOwner(userId.value());
 
@@ -218,12 +222,30 @@ class TimeEntryServiceImpl implements TimeEntryService {
             final List<TimeEntry> timeEntries = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = absencesByDate.getOrDefault(date, List.of());
             if (!timeEntries.isEmpty() || !absences.isEmpty()) {
-                timeEntryDays.add(new TimeEntryDay(date, plannedWorkingHours, timeEntries, absences));
+                final ShouldWorkingHours shouldWorkingHours = dayShouldHoursWorked(plannedWorkingHours, absences);
+                timeEntryDays.add(new TimeEntryDay(date, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
             }
             date = date.minusDays(1);
         }
 
         return timeEntryDays;
+    }
+
+    private static ShouldWorkingHours dayShouldHoursWorked(PlannedWorkingHours plannedWorkingHours, List<Absence> absences) {
+
+        final double absenceDayLengthValue = absences.stream()
+            .map(Absence::dayLength)
+            .map(DayLength::getValue)
+            .reduce(0.0, Double::sum);
+
+        if (absenceDayLengthValue >= 1.0) {
+            return ShouldWorkingHours.ZERO;
+        } else if (absenceDayLengthValue == 0.5) {
+            return new ShouldWorkingHours(plannedWorkingHours.value().dividedBy(2));
+        }
+
+        return new ShouldWorkingHours(plannedWorkingHours.value());
+
     }
 
     private static void updateEntityTimeSpan(TimeEntryEntity entity, ZonedDateTime start, ZonedDateTime end, Duration duration)

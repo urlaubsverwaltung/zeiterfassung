@@ -359,7 +359,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             .toList();
 
         final String weekHoursWorked = durationToTimeString(timeEntryWeek.workDuration().minutes());
-        final String weekHoursWorkedShould = durationToTimeString(timeEntryWeek.plannedWorkingHours().minutes());
+        final String weekHoursWorkedShould = durationToTimeString(timeEntryWeek.shouldWorkingHours().minutes());
         final Duration weekOvertimeDuration = timeEntryWeek.overtime();
         final String weekOvertime = durationToTimeString(weekOvertimeDuration);
         final double weekRatio = timeEntryWeek.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
@@ -379,7 +379,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
         final String dateString = dateFormatter.formatDate(timeEntryDay.date(), MonthFormat.STRING, YearFormat.FULL);
         final String workedHours = durationToTimeString(timeEntryDay.workDuration().minutes());
-        final String workedHoursShould = durationToTimeString(timeEntryDay.plannedWorkingHours().minutes());
+        final String workedHoursShould = durationToTimeString(timeEntryDay.shouldWorkingHours().minutes());
         final Duration hoursDelta = timeEntryDay.overtime();
         final double ratio = timeEntryDay.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
         final List<TimeEntryDTO> dayTimeEntryDtos = timeEntryDay.timeEntries().stream().map(this::toTimeEntryDto).toList();

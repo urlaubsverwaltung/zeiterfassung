@@ -966,6 +966,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             LocalDate.of(2022, 1, 4),
                             PlannedWorkingHours.EIGHT,
+                            ShouldWorkingHours.EIGHT,
                             List.of(
                                 new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
                                 new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet!", timeEntryStart, timeEntryEnd, false)
@@ -1031,6 +1032,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             LocalDate.of(2023, 2, 5),
                             PlannedWorkingHours.ZERO,
+                            ShouldWorkingHours.ZERO,
                             List.of(
                                 new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
                             ),
@@ -1039,6 +1041,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             LocalDate.of(2023, 1, 30),
                             PlannedWorkingHours.EIGHT,
+                            ShouldWorkingHours.EIGHT,
                             List.of(
                                 new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
                             ),
