@@ -184,7 +184,7 @@
                           </span>
                         </p>
                         <p
-                          th:if="${not #lists.isEmpty(week.timeEntries)}"
+                          th:if="${not #lists.isEmpty(week.timeEntries) or not #lists.isEmpty(week.absenceEntries)}"
                           class="sr-only sm:not-sr-only"
                         >
                           <th:block
@@ -216,7 +216,10 @@
                     <div class="time-entry-box__controls"></div>
                   </div>
                 </div>
-                <div class="mt-2" th:if="${#lists.isEmpty(week.timeEntries)}">
+                <div
+                  class="mt-2"
+                  th:if="${#lists.isEmpty(week.timeEntries) and #lists.isEmpty(week.absenceEntries)}"
+                >
                   <p
                     class="m-8"
                     th:text="#{time-entry.no-entries-available.week}"
@@ -224,18 +227,20 @@
                     In dieser Woche sind keine Einträge vorhanden.
                   </p>
                 </div>
-                <div th:if="${not #lists.isEmpty(week.timeEntries())}">
+                <div
+                  th:if="${not #lists.isEmpty(week.timeEntries()) or not #lists.isEmpty(week.absenceEntries())}"
+                >
                   <div
                     th:each="day: ${week.days}"
                     th:with="calendarWeek=${week.calendarWeek}"
                     class="space-y-4"
                     th:classappend="${dayStat.first ? 'mt-2' : 'mt-8 md:mt-4'}"
-                    th:id="${'day-of-week-' + calendarWeek + '-' + day.timeEntries[0].date.dayOfWeek}"
+                    th:id="${'day-of-week-' + calendarWeek + '-' + day.dayOfWeek}"
                   >
                     <div class="px-4 sticky top-nav-header pt-px z-10">
                       <div
                         th:fragment="day-of-week-banner(calendarWeek, day)"
-                        th:id="${'day-of-week-banner-' + calendarWeek + '-' + day.timeEntries[0].date.dayOfWeek}"
+                        th:id="${'day-of-week-banner-' + calendarWeek + '-' + day.dayOfWeek}"
                         class="flex items-center"
                       >
                         <div
@@ -271,7 +276,7 @@
                               </span>
                             </p>
                             <p
-                              th:if="${not #lists.isEmpty(day.timeEntries)}"
+                              th:if="${not #lists.isEmpty(day.timeEntries) or not #lists.isEmpty(day.absenceEntries)}"
                               class="sr-only sm:not-sr-only"
                             >
                               <th:block

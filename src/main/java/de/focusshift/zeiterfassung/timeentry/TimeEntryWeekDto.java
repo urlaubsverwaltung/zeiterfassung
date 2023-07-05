@@ -17,6 +17,10 @@ record TimeEntryWeekDto(Integer calendarWeek,
         return days.stream().map(TimeEntryDayDto::timeEntries).flatMap(Collection::stream).toList();
     }
 
+    public List<AbsenceEntryDto> absenceEntries() {
+        return days.stream().map(TimeEntryDayDto::absenceEntries).flatMap(Collection::stream).toList();
+    }
+
     static Builder builder() {
         return new Builder();
     }

@@ -1,8 +1,10 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import java.time.DayOfWeek;
 import java.util.List;
 
 record TimeEntryDayDto(String date,
+                       DayOfWeek dayOfWeek,
                        String hoursWorked,
                        String hoursWorkedShould,
                        String hoursDelta,
@@ -17,6 +19,7 @@ record TimeEntryDayDto(String date,
 
     static class Builder {
         private String date;
+        private DayOfWeek dayOfWeek;
         private String hoursWorked;
         private String hoursWorkedShould;
         private String hoursDelta;
@@ -27,6 +30,11 @@ record TimeEntryDayDto(String date,
 
         public Builder date(String date) {
             this.date = date;
+            return this;
+        }
+
+        public Builder dayOfWeek(DayOfWeek dayOfWeek) {
+            this.dayOfWeek = dayOfWeek;
             return this;
         }
 
@@ -66,7 +74,7 @@ record TimeEntryDayDto(String date,
         }
 
         public TimeEntryDayDto build() {
-            return new TimeEntryDayDto(date, hoursWorked, hoursWorkedShould, hoursDelta, hoursDeltaNegative,
+            return new TimeEntryDayDto(date, dayOfWeek, hoursWorked, hoursWorkedShould, hoursDelta, hoursDeltaNegative,
                 hoursWorkedRatio, timeEntries, absenceEntries);
         }
     }

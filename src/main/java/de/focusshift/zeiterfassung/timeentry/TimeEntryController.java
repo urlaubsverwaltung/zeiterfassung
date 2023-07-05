@@ -389,6 +389,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
         return TimeEntryDayDto.builder()
             .date(dateString)
+            .dayOfWeek(timeEntryDay.date().getDayOfWeek())
             .hoursWorked(workedHours)
             .hoursWorkedShould(workedHoursShould)
             .hoursDelta(durationToTimeString(hoursDelta))
