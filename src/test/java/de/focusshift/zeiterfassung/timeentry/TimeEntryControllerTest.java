@@ -16,6 +16,7 @@ import org.springframework.security.web.method.annotation.AuthenticationPrincipa
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -84,6 +85,7 @@ class TimeEntryControllerTest {
 
         final TimeEntryDayDto expectedTimeEntryDayDto = TimeEntryDayDto.builder()
             .date("formatted-2022-9-19")
+            .dayOfWeek(DayOfWeek.MONDAY)
             .hoursWorked("00:30")
             .hoursWorkedShould("08:00")
             .hoursDelta("07:30")
@@ -145,6 +147,7 @@ class TimeEntryControllerTest {
 
         final TimeEntryDayDto expectedTimeEntryDayDto = TimeEntryDayDto.builder()
             .date("formatted-2022-9-19")
+            .dayOfWeek(DayOfWeek.MONDAY)
             .hoursWorked("00:30")
             .hoursWorkedShould("08:00")
             .hoursDelta("07:30")
@@ -580,6 +583,7 @@ class TimeEntryControllerTest {
 
         final TimeEntryDayDto expectedDayDto = TimeEntryDayDto.builder()
             .date("formatted-2022-9-28")
+            .dayOfWeek(DayOfWeek.WEDNESDAY)
             .hoursWorked("00:45")
             .hoursWorkedShould("08:00")
             .hoursDelta("07:15")
@@ -591,6 +595,7 @@ class TimeEntryControllerTest {
 
         final TimeEntryDayDto otherDayDto = TimeEntryDayDto.builder()
             .date("formatted-2022-9-29")
+            .dayOfWeek(DayOfWeek.THURSDAY)
             .hoursWorked("00:30")
             .hoursWorkedShould("08:00")
             .hoursDelta("07:30")
@@ -652,6 +657,7 @@ class TimeEntryControllerTest {
 
         final TimeEntryDayDto timeEntryDayDto = TimeEntryDayDto.builder()
             .date("formatted-date")
+            .dayOfWeek(DayOfWeek.MONDAY)
             .hoursWorked("00:30")
             .hoursWorkedShould("08:00")
             .hoursDelta("07:30")
@@ -769,6 +775,7 @@ class TimeEntryControllerTest {
 
         final TimeEntryDayDto expectedDayDto = TimeEntryDayDto.builder()
             .date("formatted-date")
+            .dayOfWeek(DayOfWeek.WEDNESDAY)
             .hoursWorked("01:00")
             .hoursWorkedShould("08:00")
             .hoursDelta("07:00")
