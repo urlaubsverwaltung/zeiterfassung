@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,10 +34,12 @@ class AbsenceServiceImplTest {
     private UserSettingsProvider userSettingsProvider;
     @Mock
     private TenantContextHolder tenantContextHolder;
+    @Mock
+    private UserManagementService userManagementService;
 
     @BeforeEach
     void setUp() {
-        sut = new AbsenceServiceImpl(repository, userSettingsProvider, tenantContextHolder);
+        sut = new AbsenceServiceImpl(repository, userSettingsProvider, tenantContextHolder, userManagementService);
     }
 
     @Test

@@ -13,7 +13,15 @@ interface AbsenceRepository extends CrudRepository<AbsenceWriteEntity, Long> {
     );
 
     List<AbsenceWriteEntity> findAllByTenantIdAndUserIdAndStartDateGreaterThanEqualAndEndDateLessThan(
-        String tenantId, String value, Instant from, Instant toExclusive
+        String tenantId, String userId, Instant from, Instant toExclusive
+    );
+
+    List<AbsenceWriteEntity> findAllByTenantIdAndUserIdInAndStartDateGreaterThanEqualAndEndDateLessThan(
+        String tenantId, List<String> userIds, Instant from, Instant toExclusive
+    );
+
+    List<AbsenceWriteEntity> findAllByTenantIdAndStartDateGreaterThanEqualAndEndDateLessThan(
+        String tenantId, Instant from, Instant toExclusive
     );
 
     @Modifying

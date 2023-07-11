@@ -16,7 +16,9 @@ import java.util.stream.Stream;
 record ReportDay(
     LocalDate date,
     Map<UserLocalId, PlannedWorkingHours> plannedWorkingHoursByUser,
-    Map<UserLocalId, List<ReportDayEntry>> reportDayEntriesByUser
+    Map<UserLocalId, List<ReportDayEntry>> reportDayEntriesByUser,
+    Map<UserLocalId, List<DetailDayAbsenceDto>> detailDayAbsencesByUser
+
 ) {
 
     public List<ReportDayEntry> reportDayEntries() {

@@ -111,7 +111,7 @@ class ReportServicePermissionAware implements ReportService {
 
     private ReportWeek emptyReportWeek(LocalDate startOfWeekDate) {
         final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
-            .mapToObj(daysToAdd -> new ReportDay(startOfWeekDate.plusDays(daysToAdd), Map.of(), Map.of()))
+            .mapToObj(daysToAdd -> new ReportDay(startOfWeekDate.plusDays(daysToAdd), Map.of(), Map.of(), Map.of()))
             .toList();
 
         return new ReportWeek(startOfWeekDate, reportDays);
