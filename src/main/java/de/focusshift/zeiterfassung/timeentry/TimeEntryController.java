@@ -355,6 +355,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
         final List<TimeEntryDayDto> daysDto = timeEntryWeek.days()
             .stream()
+            .filter(timeEntryDay -> !timeEntryDay.timeEntries().isEmpty() || !timeEntryDay.absences().isEmpty())
             .map(this::toTimeEntryDayDto)
             .toList();
 

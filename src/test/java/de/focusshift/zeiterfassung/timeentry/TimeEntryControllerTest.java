@@ -1,5 +1,9 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.absence.AbsenceColor;
+import de.focusshift.zeiterfassung.absence.AbsenceType;
+import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -22,6 +26,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,15 +69,21 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
+        final ZonedDateTime absenceStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
+        final ZonedDateTime absenceEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
+        final Absence absence = new Absence(new UserId("batman"), absenceStart, absenceEnd, DayLength.FULL, AbsenceType.HOLIDAY, AbsenceColor.BLUE);
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
+        final TimeEntryDay timeEntryDayWithAbsence = new TimeEntryDay(LocalDate.of(2022, 9, 20), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of(absence));
+        final TimeEntryDay timeEntryDayWithoutTimeEntriesAndWithoutAbsences = new TimeEntryDay(LocalDate.of(2022, 9, 21), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of());
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay, timeEntryDayWithAbsence, timeEntryDayWithoutTimeEntriesAndWithoutAbsences));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(LocalDate.of(2022, 9, 19), MonthFormat.NONE, YearFormat.NONE)).thenReturn("formatted-2022-9-19");
         when(dateFormatter.formatDate(LocalDate.of(2022, 9, 19), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-19");
         when(dateFormatter.formatDate(LocalDate.of(2022, 9, 25), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-25");
+        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 20), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-20");
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
@@ -83,7 +94,7 @@ class TimeEntryControllerTest {
             .comment("hack the planet")
             .build();
 
-        final TimeEntryDayDto expectedTimeEntryDayDto = TimeEntryDayDto.builder()
+        final TimeEntryDayDto expectedTimeEntryDayDtoMONDAY = TimeEntryDayDto.builder()
             .date("formatted-2022-9-19")
             .dayOfWeek(DayOfWeek.MONDAY)
             .hoursWorked("00:30")
@@ -95,16 +106,30 @@ class TimeEntryControllerTest {
             .absenceEntries(List.of())
             .build();
 
+        AbsenceEntryDto absenceDto = new AbsenceEntryDto(LocalDate.of(2022,9,20), "absence.HOLIDAY.FULL", AbsenceColor.BLUE);
+        final TimeEntryDayDto expectedTimeEntryDayDtoTUESDAY = TimeEntryDayDto.builder()
+            .date("formatted-2022-9-20")
+            .dayOfWeek(DayOfWeek.TUESDAY)
+            .hoursWorked("00:00")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("08:00")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(0.0)
+            .timeEntries(List.of())
+            .absenceEntries(List.of(absenceDto))
+            .build();
+
+
         final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
             .calendarWeek(38)
             .from("formatted-2022-9-19")
             .to("formatted-2022-9-25")
             .hoursWorked("00:30")
-            .hoursWorkedShould("08:00")
-            .hoursDelta("07:30")
+            .hoursWorkedShould("24:00")
+            .hoursDelta("23:30")
             .hoursDeltaNegative(true)
-            .hoursWorkedRatio(7.0)
-            .days(List.of(expectedTimeEntryDayDto))
+            .hoursWorkedRatio(3.0)
+            .days(List.of(expectedTimeEntryDayDtoMONDAY, expectedTimeEntryDayDtoTUESDAY))
             .build();
 
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(

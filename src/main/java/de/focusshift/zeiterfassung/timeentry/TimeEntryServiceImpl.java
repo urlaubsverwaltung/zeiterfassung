@@ -157,7 +157,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         final Map<LocalDate, List<Absence>> absencesByDate = absenceService.findAllAbsences(userId, from, toExclusive);
 
-        // TODO refactor getEntryWeekPage to accept UserLocalId
+        // TODO refactor getEntryWeekPage to accept UserLocalId to replace userManagementService call
         final User user = userManagementService.findUserById(userId).orElseThrow(() -> new IllegalStateException("expected user=%s to exist.".formatted(userId)));
         final UserLocalId userLocalId = user.localId();
         final Map<LocalDate, PlannedWorkingHours> plannedByDate = workingTimeService.getWorkingHoursByUserAndYearWeek(userLocalId, Year.of(year), weekOfYear);
@@ -167,9 +167,6 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
 
         final List<TimeEntryDay> daysOfWeek = createTimeEntryDays(fromLocalDate, toLocalDateExclusive, timeEntriesByDate, absencesByDate, plannedByDate);
-
-        // TODO ShouldWorkingHours für die Woche hier berechnen
-        //      oder für alle Wochentage daysOfWeek erstellen und Should innerhalb TimeEntryWeek berechnen
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(fromLocalDate, weekPlannedHours, daysOfWeek);
         final long totalTimeEntries = timeEntryRepository.countAllByOwner(userId.value());
@@ -221,10 +218,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
             final PlannedWorkingHours plannedWorkingHours = plannedByDate.get(date);
             final List<TimeEntry> timeEntries = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = absencesByDate.getOrDefault(date, List.of());
-            if (!timeEntries.isEmpty() || !absences.isEmpty()) {
-                final ShouldWorkingHours shouldWorkingHours = dayShouldHoursWorked(plannedWorkingHours, absences);
-                timeEntryDays.add(new TimeEntryDay(date, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
-            }
+            final ShouldWorkingHours shouldWorkingHours = dayShouldHoursWorked(plannedWorkingHours, absences);
+            timeEntryDays.add(new TimeEntryDay(date, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
             date = date.minusDays(1);
         }
 
