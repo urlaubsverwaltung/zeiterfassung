@@ -70,14 +70,14 @@ class ReportServiceRaw {
 
         return createReportWeek(year, week,
             period -> Map.of(userLocalId, timeEntryService.getEntries(period.from(), period.toExclusive(), userId)),
-            period -> Map.of(userLocalId, absenceService.getAbsencesByUserId(period.from(), period.toExclusive(), userId)),
+            period -> Map.of(userLocalId, absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
             period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(userLocalId)));
     }
 
     ReportWeek getReportWeek(Year year, int week, List<UserLocalId> userLocalIds) {
         return createReportWeek(year, week,
             period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), userLocalIds),
-            period -> absenceService.getAbsencesByUserIds(period.from(), period.toExclusive(), userLocalIds),
+            period -> absenceService.getAbsencesByUserIds(userLocalIds, period.from(), period.toExclusive()),
             period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), userLocalIds));
     }
 
@@ -97,14 +97,14 @@ class ReportServiceRaw {
 
         return createReportMonth(yearMonth,
             period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), List.of(userLocalId)),
-            period -> Map.of(userLocalId, absenceService.getAbsencesByUserId(period.from(), period.toExclusive(), userId)),
+            period -> Map.of(userLocalId, absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
             period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(user.localId())));
     }
 
     ReportMonth getReportMonth(YearMonth yearMonth, List<UserLocalId> userLocalIds) {
         return createReportMonth(yearMonth,
             period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), userLocalIds),
-            period -> absenceService.getAbsencesByUserIds(period.from(), period.toExclusive(), userLocalIds),
+            period -> absenceService.getAbsencesByUserIds(userLocalIds, period.from(), period.toExclusive()),
             period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), userLocalIds));
     }
 

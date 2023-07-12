@@ -66,7 +66,7 @@ class AbsenceServiceImpl implements AbsenceService {
     }
 
     @Override
-    public Map<UserLocalId, List<Absence>> getAbsencesByUserIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
+    public Map<UserLocalId, List<Absence>> getAbsencesByUserIds(List<UserLocalId> userLocalIds, LocalDate from, LocalDate toExclusive) {
         final ZoneId zoneId = userSettingsProvider.zoneId();
         final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
 
@@ -110,7 +110,7 @@ class AbsenceServiceImpl implements AbsenceService {
     }
 
     @Override
-    public List<Absence> getAbsencesByUserId(LocalDate from, LocalDate toExclusive, UserId userId) {
+    public List<Absence> getAbsencesByUserId(UserId userId, LocalDate from, LocalDate toExclusive) {
 
         final ZoneId zoneId = userSettingsProvider.zoneId();
         final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();

@@ -11,18 +11,41 @@ import java.util.Map;
 public interface AbsenceService {
 
     /**
-     * Fina all absences for teh given criteria
+     * Find all absences for the given criteria
      *
-     * @param userId user
-     * @param from from
+     * @param userId      user
+     * @param from        from
      * @param toExclusive to (exclusive)
      * @return absences grouped by date. empty list value when there are no absences on a date within the period.
      */
     Map<LocalDate, List<Absence>> findAllAbsences(UserId userId, Instant from, Instant toExclusive);
 
-    Map<UserLocalId, List<Absence>> getAbsencesByUserIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds);
-
+    /**
+     * Find all absences in a given date range for the given users
+     *
+     * @param from        from
+     * @param toExclusive to (exclusive)
+     * @return absences grouped by {@link UserLocalId}. empty list value when there are no absences on a date within the period.
+     */
     Map<UserLocalId, List<Absence>> getAbsencesForAllUsers(LocalDate from, LocalDate toExclusive);
 
-    List<Absence> getAbsencesByUserId(LocalDate from, LocalDate toExclusive, UserId userId);
+    /**
+     * Find all absences in a given date range for the given users
+     *
+     * @param userLocalIds users
+     * @param from         from
+     * @param toExclusive  to (exclusive)
+     * @return absences grouped by {@link UserLocalId}. empty list value when there are no absences on a date within the period.
+     */
+    Map<UserLocalId, List<Absence>> getAbsencesByUserIds(List<UserLocalId> userLocalIds, LocalDate from, LocalDate toExclusive);
+
+    /**
+     * Find all absences in a given date range for the given user
+     *
+     * @param userId      user
+     * @param from        from
+     * @param toExclusive to (exclusive)
+     * @return list of absences of {@link UserId}. empty list value when there are no absences on a date within the period.
+     */
+    List<Absence> getAbsencesByUserId(UserId userId, LocalDate from, LocalDate toExclusive);
 }
