@@ -2,9 +2,6 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="de">
   <head>
     <title>Zeiterfassung - Bericht</title>
-    <th:block th:fragment="styles">
-      <link rel="stylesheet" type="text/css" th:href="@{/time-entries.css}" />
-    </th:block>
   </head>
   <body>
     <div
@@ -391,7 +388,7 @@
               </li>
               <li th:each="absence : ${day.absences}">
                 <div
-                  class="group flex items-start gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
+                  class="group flex gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
                 >
                   <div class="flex items-center gap-1">
                     <span
@@ -407,13 +404,12 @@
                       Bruce Wayne
                     </span>
                   </div>
-                  <div class="time-entry-box-absence__input__fields">
+                  <div class="flex flex-1 items-center gap-3">
                     <div
-                      class="time-entry-box-absence__absence-color-box"
+                      class="report-view-entry-box-absence__absence-color-box"
                       th:style="|background-color:var(--absence-color-${absence.color})|"
                     ></div>
                     <p
-                      class="time-entry-box-absence__absence-text"
                       th:text="${#messages.msg(absence.nameMessageKey)}"
                     >
                       Erholungsurlaub
