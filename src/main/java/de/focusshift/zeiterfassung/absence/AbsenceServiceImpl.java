@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
@@ -119,9 +118,9 @@ class AbsenceServiceImpl implements AbsenceService {
         final Instant fromInstant = Instant.from(from.atStartOfDay().atZone(zoneId));
         final Instant toInstant = Instant.from(toExclusive.atStartOfDay().atZone(zoneId));
         return absenceRepository.findAllByTenantIdAndUserIdAndStartDateGreaterThanEqualAndEndDateLessThan(tenantId, userId.value(), fromInstant, toInstant)
-                .stream()
-                .map(entity -> toAbsence(entity, zoneId))
-                .toList();
+            .stream()
+            .map(entity -> toAbsence(entity, zoneId))
+            .toList();
     }
 
     private static void doFromUntil(LocalDate from, LocalDate toExclusive, Consumer<LocalDate> consumer) {
