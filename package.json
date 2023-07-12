@@ -36,7 +36,7 @@
     "eslint-plugin-unicorn": "46.0.0",
     "fast-glob": "3.3.0",
     "lint-staged": "13.2.3",
-    "postcss": "8.4.21",
+    "postcss": "8.4.25",
     "postcss-cli": "10.1.0",
     "postcss-import": "15.1.0",
     "prettier": "2.8.8",
