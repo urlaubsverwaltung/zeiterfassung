@@ -10,15 +10,18 @@ class WebConfiguration implements WebMvcConfigurer {
 
     private final AuthoritiesModelProvider authoritiesModelProvider;
     private final DoubleFormatter doubleFormatter;
+    private final CurrentTenantInterceptor currentTenantInterceptor;
 
-    WebConfiguration(AuthoritiesModelProvider authoritiesModelProvider, DoubleFormatter doubleFormatter) {
+    WebConfiguration(AuthoritiesModelProvider authoritiesModelProvider, CurrentTenantInterceptor currentTenantInterceptor, DoubleFormatter doubleFormatter) {
         this.authoritiesModelProvider = authoritiesModelProvider;
+        this.currentTenantInterceptor = currentTenantInterceptor;
         this.doubleFormatter = doubleFormatter;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authoritiesModelProvider);
+        registry.addInterceptor(currentTenantInterceptor);
     }
 
     @Override
