@@ -17,6 +17,7 @@ class ApplicationRabbitmqConfiguration {
 
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.allowed";
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.cancelled";
+    static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.createdFromSicknote";
     @Bean
     ApplicationEventHandlerRabbitmq applicationEventHandlerRabbitmq(AbsenceWriteService absenceWriteService) {
         return new ApplicationEventHandlerRabbitmq(absenceWriteService);
@@ -63,5 +64,17 @@ class ApplicationRabbitmqConfiguration {
                 .with(routingKeyCancelled);
         }
 
+        @Bean
+        Queue zeiterfassungUrlaubsverwaltungApplicationCreatedFromSicknoteQueue() {
+            return new Queue(ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE, true);
+        }
+
+        @Bean
+        Binding bindZeiterfassungUrlaubsverwaltungApplicationCreatedFromSicknoteQueue() {
+            final String routingKeyCreatedFromSicknote = applicationRabbitmqConfigurationProperties.getRoutingKeyCreatedFromSicknote();
+            return BindingBuilder.bind(zeiterfassungUrlaubsverwaltungApplicationCreatedFromSicknoteQueue())
+                .to(applicationTopic())
+                .with(routingKeyCreatedFromSicknote);
+        }
     }
 }

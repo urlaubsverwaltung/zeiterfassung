@@ -8,5 +8,6 @@ public enum AbsenceColor {
     CYAN,
     BLUE,
     VIOLET,
-    PINK;
+    PINK,
+    RED;
 }

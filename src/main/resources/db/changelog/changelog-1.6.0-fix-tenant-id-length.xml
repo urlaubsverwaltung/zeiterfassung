@@ -1,0 +1,53 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+    <changeSet author="honnel" id="change-type-tenant-id">
+
+        <preConditions>
+            <tableExists tableName="overtime_account"/>
+            <tableExists tableName="working_time"/>
+        </preConditions>
+
+        <sql dbms="postgresql">
+            DROP POLICY IF EXISTS overtime_account_tenant_isolation_policy ON overtime_account;
+        </sql>
+        <dropForeignKeyConstraint baseTableName="overtime_account" constraintName="FK_OVERTIME_ACCOUNT_TENANT_ID__TENANT_ID"/>
+        <dropForeignKeyConstraint baseTableName="overtime_account" constraintName="FK_OVERTIME_ACCOUNT_USER_ID__TENANT_USER_ID"/>
+        <modifyDataType columnName="tenant_id" newDataType="VARCHAR(255)" tableName="overtime_account"/>
+        <addForeignKeyConstraint
+                constraintName="FK_OVERTIME_ACCOUNT_TENANT_ID__TENANT_ID"
+                baseColumnNames="tenant_id"
+                baseTableName="overtime_account"
+                referencedColumnNames="tenant_id"
+                referencedTableName="tenant"
+                deferrable="false"
+                initiallyDeferred="false"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+        />
+        <addForeignKeyConstraint
+                constraintName="FK_OVERTIME_ACCOUNT_USER_ID__TENANT_USER_ID"
+                baseColumnNames="user_id"
+                baseTableName="overtime_account"
+                referencedColumnNames="id"
+                referencedTableName="tenant_user"
+                deferrable="false"
+                initiallyDeferred="false"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+        />
+        <sql dbms="postgresql">
+            CREATE POLICY overtime_account_tenant_isolation_policy ON overtime_account USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+        </sql>
+
+        <sql dbms="postgresql">
+            DROP POLICY IF EXISTS working_time_tenant_isolation_policy ON working_time;
+        </sql>
+        <modifyDataType columnName="tenant_id" newDataType="VARCHAR(255)" tableName="working_time"/>
+        <sql dbms="postgresql">
+            CREATE POLICY working_time_tenant_isolation_policy ON working_time USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+        </sql>
+    </changeSet>
+</databaseChangeLog>

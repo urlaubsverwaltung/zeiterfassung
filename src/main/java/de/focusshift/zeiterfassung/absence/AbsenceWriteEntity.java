@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.absence;
 
+import de.focusshift.zeiterfassung.tenancy.configuration.multi.AdminAware;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
@@ -17,7 +18,7 @@ import static jakarta.persistence.EnumType.STRING;
 
 @Entity
 @Table(name = "absence")
-class AbsenceWriteEntity {
+public class AbsenceWriteEntity implements AdminAware<Long> {
 
     @Size(max = 255)
     @Column(name = "tenant_id")
@@ -29,16 +30,16 @@ class AbsenceWriteEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "absence_seq")
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name="user_id", nullable = false)
     private String userId;
 
-    @Column(nullable = false)
+    @Column(name="start_date", nullable = false)
     private Instant startDate;
 
-    @Column(nullable = false)
+    @Column(name="end_date", nullable = false)
     private Instant endDate;
 
-    @Column(nullable = false)
+    @Column(name="day_length", nullable = false)
     @Enumerated(STRING)
     private DayLength dayLength;
 

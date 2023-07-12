@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application;
 
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationAllowedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCancelledEventDTO;
+import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCreatedFromSickNoteEventDTO;
 import de.focusshift.zeiterfassung.absence.AbsenceColor;
 import de.focusshift.zeiterfassung.absence.AbsenceType;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
@@ -20,6 +21,7 @@ import java.util.function.Supplier;
 
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE;
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE;
+import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -42,6 +44,16 @@ public class ApplicationEventHandlerRabbitmq {
             .ifPresentOrElse(
                 absenceWriteService::addAbsence,
                 () -> LOG.info("could not map ApplicationAllowedEvent to Absence -> could not add Absence"));
+    }
+
+    @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE})
+    void on(ApplicationCreatedFromSickNoteEventDTO event) {
+        LOG.info("Received ApplicationCreatedFromSicknoteEvent for person={} and tenantId={}", event.getPerson(), event.getTenantId());
+        toAbsence(new ApplicationEventDtoAdapter(event))
+            .ifPresentOrElse(
+                absenceWriteService::addAbsence,
+                () -> LOG.info("could not map ApplicationCreatedFromSicknoteEvent to Absence -> could not add Absence")
+            );
     }
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE})
