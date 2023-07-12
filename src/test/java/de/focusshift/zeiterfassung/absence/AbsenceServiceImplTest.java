@@ -93,13 +93,14 @@ class AbsenceServiceImplTest {
         );
 
         final Map<LocalDate, List<Absence>> actual = sut.findAllAbsences(new UserId("user"), startDate, endDateExclusive);
-        assertThat(actual).hasSize(7);
-        assertThat(actual).containsEntry(today.toLocalDate(), List.of());
-        assertThat(actual).containsEntry(today.plusDays(1).toLocalDate(), List.of(expectedAbsence_1));
-        assertThat(actual).containsEntry(today.plusDays(2).toLocalDate(), List.of(expectedAbsence_1));
-        assertThat(actual).containsEntry(today.plusDays(3).toLocalDate(), List.of());
-        assertThat(actual).containsEntry(today.plusDays(4).toLocalDate(), List.of(expectedAbsence_2));
-        assertThat(actual).containsEntry(today.plusDays(5).toLocalDate(), List.of());
-        assertThat(actual).containsEntry(today.plusDays(6).toLocalDate(), List.of());
+        assertThat(actual)
+            .hasSize(7)
+            .containsEntry(today.toLocalDate(), List.of())
+            .containsEntry(today.plusDays(1).toLocalDate(), List.of(expectedAbsence_1))
+            .containsEntry(today.plusDays(2).toLocalDate(), List.of(expectedAbsence_1))
+            .containsEntry(today.plusDays(3).toLocalDate(), List.of())
+            .containsEntry(today.plusDays(4).toLocalDate(), List.of(expectedAbsence_2))
+            .containsEntry(today.plusDays(5).toLocalDate(), List.of())
+            .containsEntry(today.plusDays(6).toLocalDate(), List.of());
     }
 }
