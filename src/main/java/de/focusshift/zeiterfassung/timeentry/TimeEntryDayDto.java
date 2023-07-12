@@ -1,14 +1,17 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import java.time.DayOfWeek;
 import java.util.List;
 
 record TimeEntryDayDto(String date,
+                       DayOfWeek dayOfWeek,
                        String hoursWorked,
                        String hoursWorkedShould,
                        String hoursDelta,
                        boolean hoursDeltaNegative,
                        double hoursWorkedRatio,
-                       List<TimeEntryDTO> timeEntries) {
+                       List<TimeEntryDTO> timeEntries,
+                       List<AbsenceEntryDto> absenceEntries) {
 
     static Builder builder() {
         return new Builder();
@@ -16,15 +19,22 @@ record TimeEntryDayDto(String date,
 
     static class Builder {
         private String date;
+        private DayOfWeek dayOfWeek;
         private String hoursWorked;
         private String hoursWorkedShould;
         private String hoursDelta;
         private boolean hoursDeltaNegative;
         private double hoursWorkedRatio;
         private List<TimeEntryDTO> timeEntries;
+        private List<AbsenceEntryDto> absenceEntries;
 
         public Builder date(String date) {
             this.date = date;
+            return this;
+        }
+
+        public Builder dayOfWeek(DayOfWeek dayOfWeek) {
+            this.dayOfWeek = dayOfWeek;
             return this;
         }
 
@@ -58,9 +68,14 @@ record TimeEntryDayDto(String date,
             return this;
         }
 
+        public Builder absenceEntries(List<AbsenceEntryDto> absenceEntries) {
+            this.absenceEntries = absenceEntries;
+            return this;
+        }
+
         public TimeEntryDayDto build() {
-            return new TimeEntryDayDto(date, hoursWorked, hoursWorkedShould, hoursDelta, hoursDeltaNegative,
-                hoursWorkedRatio, timeEntries);
+            return new TimeEntryDayDto(date, dayOfWeek, hoursWorked, hoursWorkedShould, hoursDelta, hoursDeltaNegative,
+                hoursWorkedRatio, timeEntries, absenceEntries);
         }
     }
 }

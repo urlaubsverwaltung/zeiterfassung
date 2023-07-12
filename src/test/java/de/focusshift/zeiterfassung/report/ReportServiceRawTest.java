@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.absence.AbsenceService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
@@ -51,9 +52,12 @@ class ReportServiceRawTest {
     @Mock
     private WorkingTimeCalendarService workingTimeCalendarService;
 
+    @Mock
+    private AbsenceService absenceService;
+
     @BeforeEach
     void setUp() {
-        sut = new ReportServiceRaw(timeEntryService, userManagementService, userDateService, workingTimeCalendarService);
+        sut = new ReportServiceRaw(timeEntryService, userManagementService, userDateService, workingTimeCalendarService, absenceService);
     }
 
     // ------------------------------------------------------------

@@ -16,6 +16,10 @@ import static java.util.function.Predicate.not;
 
 record TimeEntryWeek(LocalDate firstDateOfWeek, PlannedWorkingHours plannedWorkingHours, List<TimeEntryDay> days) {
 
+    public ShouldWorkingHours shouldWorkingHours() {
+        return days.stream().map(TimeEntryDay::shouldWorkingHours).reduce(ShouldWorkingHours.ZERO, ShouldWorkingHours::plus);
+    }
+
     /**
      * @return overtime {@linkplain Duration}. can be negative.
      */
@@ -26,7 +30,7 @@ record TimeEntryWeek(LocalDate firstDateOfWeek, PlannedWorkingHours plannedWorki
             .map(WorkDuration::minutes)
             .reduce(Duration.ZERO, Duration::plus);
 
-        return worked.minus(plannedWorkingHours.minutes());
+        return worked.minus(shouldWorkingHours().minutes());
     }
 
     public WorkDuration workDuration() {
@@ -50,7 +54,7 @@ record TimeEntryWeek(LocalDate firstDateOfWeek, PlannedWorkingHours plannedWorki
      */
     public BigDecimal workedHoursRatio() {
 
-        final double planned = plannedWorkingHours.minutes().toMinutes();
+        final double planned = shouldWorkingHours().minutes().toMinutes();
         final double worked = workDuration().minutes().toMinutes();
 
         if (worked == 0) {

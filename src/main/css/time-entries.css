@@ -1,3 +1,7 @@
+:root {
+  --time-entries-box-border-radius: 27px;
+}
+
 .time-entry-slot-form .ajax-loader.ajax-loader--loading {
   @apply rounded-b-3xl;
   @apply md:rounded-b-none;
@@ -211,4 +215,139 @@
 }
 .timeslot-form-existing [data-error-container]:not(:empty) {
   margin-top: 0.5rem;
+}
+
+.time-entry-box,
+.time-entry-box-absence {
+  display: flex;
+  flex-direction: column;
+}
+
+.time-entry-box__input__date {
+  padding: 1.5rem 1.25rem;
+  border-top-left-radius: var(--time-entries-box-border-radius);
+  border-top-right-radius: var(--time-entries-box-border-radius);
+  border-right-color: var(--timeslot-form-border-color);
+  background-color: var(--timeslot-form-datepicker-background-color);
+  color: var(--timeslot-form-day-color);
+}
+
+.time-entry-box__input,
+.time-entry-box-absence__input {
+  flex: 1 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.time-entry-box__input__fields {
+  flex: 1 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.time-entry-box-absence__input__date {
+  /* md:rounded-tr-none md:rounded-bl-[27px] md:bg-gray-100*/
+  display: flex;
+  align-items: center;
+  @apply bg-gray-200;
+  padding: 0.75rem 1.25rem;
+  border-top-left-radius: var(--time-entries-box-border-radius);
+  border-top-right-radius: var(--time-entries-box-border-radius);
+}
+
+.time-entry-box-absence__input__fields {
+  flex: 1 0 0;
+  @apply border;
+  @apply border-gray-200;
+  border-bottom-left-radius: var(--time-entries-box-border-radius);
+  border-bottom-right-radius: var(--time-entries-box-border-radius);
+  display: flex;
+}
+
+.time-entry-box__controls {
+  margin-top: 0.5rem;
+}
+
+.time-entry-box__controls,
+.time-entry-box-absence__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.time-entry-box-absence__absence-color-box {
+  display: inline-block;
+  width: 1.5rem;
+  @apply bg-amber-200;
+  border-bottom-left-radius: var(--time-entries-box-border-radius);
+}
+
+.time-entry-box-absence__absence-text {
+  padding: 1.5rem 1.25rem;
+}
+
+@screen md {
+  .time-entry-box,
+  .time-entry-box-absence {
+    flex-direction: row;
+  }
+
+  .time-entry-box__input,
+  .time-entry-box-absence__input {
+    flex-direction: row;
+  }
+
+  .time-entry-box__input__date {
+    border-top-right-radius: 0;
+    border-top-left-radius: var(--time-entries-box-border-radius);
+    border-bottom-left-radius: var(--time-entries-box-border-radius);
+    width: 14rem;
+  }
+
+  .time-entry-box-absence__input__date {
+    @apply bg-gray-100;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: var(--time-entries-box-border-radius);
+  }
+
+  .time-entry-box__input__fields {
+    flex-direction: row;
+  }
+
+  .time-entry-box-absence__input__fields {
+    border-bottom-left-radius: 0;
+    border-top-right-radius: var(--time-entries-box-border-radius);
+    @apply bg-gray-100;
+    @apply border-gray-100;
+  }
+
+  .time-entry-box__controls {
+    margin-top: 0;
+  }
+
+  .time-entry-box__controls,
+  .time-entry-box-absence__controls {
+    margin-left: 1rem;
+    justify-content: flex-start;
+    width: 20%;
+  }
+
+  .time-entry-box-absence__absence-color-box {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    width: 0.75rem;
+    @apply rounded-lg;
+  }
+
+  .time-entry-box-absence__absence-text {
+    @apply font-bold;
+    @apply text-sm;
+  }
+}
+
+@screen lg {
+  .time-entry-box__controls,
+  .time-entry-box-absence__controls {
+    width: 16.6666666667%;
+  }
 }

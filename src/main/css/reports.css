@@ -75,3 +75,11 @@
   background: url("/images/underlined-curved-black.svg") no-repeat top;
   height: 0.5rem;
 }
+
+.report-view-entry-box-absence__absence-color-box {
+  width: 0.75rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  height: 3rem;
+  @apply rounded-lg;
+}

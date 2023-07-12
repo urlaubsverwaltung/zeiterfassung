@@ -296,7 +296,9 @@
         <div
           th:each="day : ${weekReportDetail.dayReports}"
           th:data-date="${day.date}"
-          th:with="hasEntries=${not #lists.isEmpty(day.dayEntries)}, listLabelId=${'day-' + #strings.randomAlphanumeric(9)}"
+          th:with="hasEntries=${not #lists.isEmpty(day.dayEntries)},
+                   listLabelId=${'day-' + #strings.randomAlphanumeric(9)},
+                   hasAbsences=${not #lists.isEmpty(day.absences)}"
         >
           <p
             th:id="${listLabelId}"
@@ -306,7 +308,7 @@
           >
             Zeiten
           </p>
-          <th:block th:if="${not hasEntries}">
+          <th:block th:if="${not hasEntries && not hasAbsences}">
             <p
               class="px-2 text-sm text-gray-700"
               th:text="#{report.detail.no-entries}"
@@ -314,7 +316,7 @@
               Für diesen Tag wurden noch keine Zeiten erfasst.
             </p>
           </th:block>
-          <th:block th:if="${hasEntries}">
+          <th:block th:if="${hasEntries || hasAbsences}">
             <ol
               class="w-full divide-y divide-blue-50"
               th:aria-labelledby="${listLabelId}"
@@ -380,6 +382,37 @@
                       >
                         hard work!
                       </span>
+                    </p>
+                  </div>
+                </div>
+              </li>
+              <li th:each="absence : ${day.absences}">
+                <div
+                  class="group flex gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
+                >
+                  <div class="flex items-center gap-1">
+                    <span
+                      class="text-blue-100 transition-colors group-hover:text-blue-200"
+                      aria-hidden="true"
+                    >
+                      <img
+                        alt=""
+                        th:replace="~{fragments/avatar::avatar(${absence.username},42,42)}"
+                      />
+                    </span>
+                    <span class="sr-only" th:text="${absence.username}">
+                      Bruce Wayne
+                    </span>
+                  </div>
+                  <div class="flex flex-1 items-center gap-3">
+                    <div
+                      class="report-view-entry-box-absence__absence-color-box"
+                      th:style="|background-color:var(--absence-color-${absence.color})|"
+                    ></div>
+                    <p
+                      th:text="${#messages.msg(absence.nameMessageKey)}"
+                    >
+                      Erholungsurlaub
                     </p>
                   </div>
                 </div>

@@ -1,5 +1,8 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.absence.AbsenceService;
+import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -20,6 +23,7 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,17 +46,20 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private final WorkingTimeService workingTimeService;
     private final UserDateService userDateService;
     private final UserSettingsProvider userSettingsProvider;
+    private final AbsenceService absenceService;
     private final Clock clock;
 
     @Autowired
     TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, UserManagementService userManagementService,
-                         WorkingTimeService workingTimeService, UserDateService userDateService, UserSettingsProvider userSettingsProvider, Clock clock) {
+                         WorkingTimeService workingTimeService, UserDateService userDateService,
+                         UserSettingsProvider userSettingsProvider, AbsenceService absenceService, Clock clock) {
 
         this.timeEntryRepository = timeEntryRepository;
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
         this.userDateService = userDateService;
         this.userSettingsProvider = userSettingsProvider;
+        this.absenceService = absenceService;
         this.clock = clock;
     }
 
@@ -136,16 +143,21 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         final ZoneId userZoneId = userSettingsProvider.zoneId();
         final ZonedDateTime fromDateTime = userDateService.firstDayOfWeek(Year.of(year), weekOfYear).atStartOfDay(userZoneId);
+        final ZonedDateTime toDateTimeExclusive = fromDateTime.plusWeeks(1);
+        final LocalDate fromLocalDate = LocalDate.ofInstant(fromDateTime.toInstant(), userZoneId);
+        final LocalDate toLocalDateExclusive = LocalDate.ofInstant(toDateTimeExclusive.toInstant(), userZoneId);
         final Instant from = Instant.from(fromDateTime);
-        final Instant to = Instant.from(fromDateTime.plusWeeks(1));
+        final Instant toExclusive = Instant.from(toDateTimeExclusive);
 
-        final List<TimeEntry> timeEntries = timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan(userId.value(), from, to)
+        final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan(userId.value(), from, toExclusive)
             .stream()
             .sorted(comparing(TimeEntryEntity::getStart).thenComparing(TimeEntryEntity::getUpdatedAt).reversed())
             .map(TimeEntryServiceImpl::toTimeEntry)
-            .toList();
+            .collect(groupingBy(entry -> LocalDate.ofInstant(entry.start().toInstant(), userZoneId)));
 
-        // TODO refactor getEntryWeekPage to accept UserLocalId
+        final Map<LocalDate, List<Absence>> absencesByDate = absenceService.findAllAbsences(userId, from, toExclusive);
+
+        // TODO refactor getEntryWeekPage to accept UserLocalId to replace userManagementService call
         final User user = userManagementService.findUserById(userId).orElseThrow(() -> new IllegalStateException("expected user=%s to exist.".formatted(userId)));
         final UserLocalId userLocalId = user.localId();
         final Map<LocalDate, PlannedWorkingHours> plannedByDate = workingTimeService.getWorkingHoursByUserAndYearWeek(userLocalId, Year.of(year), weekOfYear);
@@ -154,14 +166,9 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .stream()
             .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
 
-        final List<TimeEntryDay> daysOfWeek = timeEntries.stream()
-            .collect(groupingBy(timeEntry -> timeEntry.start().toLocalDate()))
-            .entrySet().stream()
-            .map(e -> new TimeEntryDay(e.getKey(), plannedByDate.get(e.getKey()), e.getValue()))
-            .sorted(comparing(TimeEntryDay::date).reversed())
-            .toList();
+        final List<TimeEntryDay> daysOfWeek = createTimeEntryDays(fromLocalDate, toLocalDateExclusive, timeEntriesByDate, absencesByDate, plannedByDate);
 
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(fromDateTime.toLocalDate(), weekPlannedHours, daysOfWeek);
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(fromLocalDate, weekPlannedHours, daysOfWeek);
         final long totalTimeEntries = timeEntryRepository.countAllByOwner(userId.value());
 
         return new TimeEntryWeekPage(timeEntryWeek, totalTimeEntries);
@@ -195,6 +202,45 @@ class TimeEntryServiceImpl implements TimeEntryService {
         entity.setBreak(isBreak);
 
         return save(entity);
+    }
+
+    private static List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,
+                                                          Map<LocalDate, List<TimeEntry>> timeEntriesByDate,
+                                                          Map<LocalDate, List<Absence>> absencesByDate,
+                                                          Map<LocalDate, PlannedWorkingHours> plannedByDate) {
+
+        final List<TimeEntryDay> timeEntryDays = new ArrayList<>();
+
+        // iterate from end to start -> last entry should be on top of the list (the first element)
+        LocalDate date = toExclusive.minusDays(1);
+
+        while (date.isEqual(from) || date.isAfter(from)) {
+            final PlannedWorkingHours plannedWorkingHours = plannedByDate.get(date);
+            final List<TimeEntry> timeEntries = timeEntriesByDate.getOrDefault(date, List.of());
+            final List<Absence> absences = absencesByDate.getOrDefault(date, List.of());
+            final ShouldWorkingHours shouldWorkingHours = dayShouldHoursWorked(plannedWorkingHours, absences);
+            timeEntryDays.add(new TimeEntryDay(date, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
+            date = date.minusDays(1);
+        }
+
+        return timeEntryDays;
+    }
+
+    private static ShouldWorkingHours dayShouldHoursWorked(PlannedWorkingHours plannedWorkingHours, List<Absence> absences) {
+
+        final double absenceDayLengthValue = absences.stream()
+            .map(Absence::dayLength)
+            .map(DayLength::getValue)
+            .reduce(0.0, Double::sum);
+
+        if (absenceDayLengthValue >= 1.0) {
+            return ShouldWorkingHours.ZERO;
+        } else if (absenceDayLengthValue == 0.5) {
+            return new ShouldWorkingHours(plannedWorkingHours.value().dividedBy(2));
+        }
+
+        return new ShouldWorkingHours(plannedWorkingHours.value());
+
     }
 
     private static void updateEntityTimeSpan(TimeEntryEntity entity, ZonedDateTime start, ZonedDateTime end, Duration duration)

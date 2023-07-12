@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application;
 
+import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
@@ -16,9 +17,10 @@ class ApplicationRabbitmqConfiguration {
 
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.allowed";
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.cancelled";
+    static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.createdFromSicknote";
     @Bean
-    ApplicationEventHandlerRabbitmq applicationEventHandlerRabbitmq() {
-        return new ApplicationEventHandlerRabbitmq();
+    ApplicationEventHandlerRabbitmq applicationEventHandlerRabbitmq(AbsenceWriteService absenceWriteService) {
+        return new ApplicationEventHandlerRabbitmq(absenceWriteService);
     }
 
     @Configuration
@@ -62,5 +64,17 @@ class ApplicationRabbitmqConfiguration {
                 .with(routingKeyCancelled);
         }
 
+        @Bean
+        Queue zeiterfassungUrlaubsverwaltungApplicationCreatedFromSicknoteQueue() {
+            return new Queue(ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE, true);
+        }
+
+        @Bean
+        Binding bindZeiterfassungUrlaubsverwaltungApplicationCreatedFromSicknoteQueue() {
+            final String routingKeyCreatedFromSicknote = applicationRabbitmqConfigurationProperties.getRoutingKeyCreatedFromSicknote();
+            return BindingBuilder.bind(zeiterfassungUrlaubsverwaltungApplicationCreatedFromSicknoteQueue())
+                .to(applicationTopic())
+                .with(routingKeyCreatedFromSicknote);
+        }
     }
 }
