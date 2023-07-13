@@ -282,12 +282,12 @@
                     <div class="flex-1 p-6 bg-white">
                       <th:block th:if="${section == null}">
                         <div
-                          th:replace="~{/usermanagement/user/working-time-settings::section(${selectedUser}, ${workingTime})}"
+                          th:replace="~{usermanagement/user/working-time-settings::section(${selectedUser}, ${workingTime})}"
                         ></div>
                       </th:block>
                       <th:block th:if="${section == 'overtime'}">
                         <div
-                          th:replace="~{/usermanagement/user/overtime-account-settings::section(${selectedUser})}"
+                          th:replace="~{usermanagement/user/overtime-account-settings::section(${selectedUser})}"
                         ></div>
                       </th:block>
                     </div>
