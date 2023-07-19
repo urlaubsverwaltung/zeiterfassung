@@ -84,6 +84,7 @@ public class SickNoteEventHandlerRabbitmq {
 
         return Optional.of(new AbsenceWrite(
             new TenantId(event.getTenantId()),
+            event.getSourceId().longValue(),
             new UserId(event.getPerson().getUsername()),
             event.getPeriod().getStartDate(),
             event.getPeriod().getEndDate(),

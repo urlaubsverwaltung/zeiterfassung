@@ -16,6 +16,7 @@ import java.util.Set;
 class ApplicationEventDtoAdapter {
 
     private final String tenantId;
+    private final Integer sourceId;
     private final ApplicationPersonDTO person;
     private final VacationTypeDTO vacationType;
     private final ApplicationPeriodDTO period;
@@ -23,6 +24,7 @@ class ApplicationEventDtoAdapter {
 
     ApplicationEventDtoAdapter(ApplicationAllowedEventDTO event) {
         this.tenantId = event.getTenantId();
+        this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();
         this.period = event.getPeriod();
@@ -31,6 +33,7 @@ class ApplicationEventDtoAdapter {
 
     ApplicationEventDtoAdapter(ApplicationCancelledEventDTO event) {
         this.tenantId = event.getTenantId();
+        this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();
         this.period = event.getPeriod();
@@ -39,6 +42,7 @@ class ApplicationEventDtoAdapter {
 
     ApplicationEventDtoAdapter(ApplicationCreatedFromSickNoteEventDTO event) {
         this.tenantId = event.getTenantId();
+        this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();
         this.period = event.getPeriod();
@@ -47,6 +51,10 @@ class ApplicationEventDtoAdapter {
 
     public String getTenantId() {
         return tenantId;
+    }
+
+    public Integer getSourceId() {
+        return sourceId;
     }
 
     public ApplicationPersonDTO getPerson() {
