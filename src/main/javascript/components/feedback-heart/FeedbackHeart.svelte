@@ -15,6 +15,7 @@
   }
 </script>
 
+<!-- eslint-disable-next-line -->
 {#each { length: movingHeartsCount } as _}
   <FloatingHeart />
 {/each}
@@ -25,6 +26,8 @@
     on:keypress={() => {
       /**/
     }}
+    role="button"
+    tabindex="0"
     class="cursor-pointer"
   >
     <HeartIcon class="w-8 h-8" />
