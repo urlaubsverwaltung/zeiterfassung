@@ -5,7 +5,8 @@ export function animationInterval(
   signal: AbortSignal,
   callback: (time: number) => void,
 ) {
-  const start = document?.timeline?.currentTime || performance.now();
+  const start =
+    (document?.timeline?.currentTime as number) || performance.now();
 
   function frame(time: number) {
     if (signal.aborted) return;
