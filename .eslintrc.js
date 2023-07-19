@@ -23,13 +23,16 @@ module.exports = {
     radix: "error",
     "require-await": "error",
     eqeqeq: "error",
-    "unicorn/filename-case": ["error", {
-      cases: {
-        camelCase: true,
-        pascalCase: true,
-        kebabCase: true,
-      }
-    }],
+    "unicorn/filename-case": [
+      "error",
+      {
+        cases: {
+          camelCase: true,
+          pascalCase: true,
+          kebabCase: true,
+        },
+      },
+    ],
     "unicorn/number-literal-case": "off",
     "unicorn/no-array-reduce": "off",
   },
