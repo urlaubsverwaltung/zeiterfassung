@@ -1,4 +1,4 @@
-import rimraf from "rimraf";
+import {rimraf} from "rimraf";
 import postcss from "rollup-plugin-postcss";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
