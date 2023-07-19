@@ -30,6 +30,9 @@ public class AbsenceWriteEntity implements AdminAware<Long> {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "absence_seq")
     private Long id;
 
+    @Column(name="source_id", nullable = false)
+    private Long sourceId;
+
     @Column(name="user_id", nullable = false)
     private String userId;
 
@@ -65,6 +68,14 @@ public class AbsenceWriteEntity implements AdminAware<Long> {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getSourceId() {
+        return sourceId;
+    }
+
+    public void setSourceId(Long sourceId) {
+        this.sourceId = sourceId;
     }
 
     public String getUserId() {

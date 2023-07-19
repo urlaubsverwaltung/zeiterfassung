@@ -9,6 +9,7 @@ import java.time.Instant;
  * Describes the write model of an absence like holiday or sick.
  *
  * @param tenantId
+ * @param sourceId
  * @param userId
  * @param startDate
  * @param endDate
@@ -18,6 +19,7 @@ import java.time.Instant;
  */
 public record AbsenceWrite(
     TenantId tenantId,
+    Long sourceId,
     UserId userId,
     Instant startDate,
     Instant endDate,

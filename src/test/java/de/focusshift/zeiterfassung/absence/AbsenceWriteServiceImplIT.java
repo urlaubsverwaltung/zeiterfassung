@@ -36,6 +36,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
 
         final AbsenceWriteEntity existingEntity = new AbsenceWriteEntity();
         existingEntity.setTenantId("tenant");
+        existingEntity.setSourceId(42L);
         existingEntity.setUserId("user-id");
         existingEntity.setStartDate(startDate);
         existingEntity.setEndDate(endDate);
@@ -46,6 +47,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
 
         final AbsenceWrite absence = new AbsenceWrite(
             new TenantId("tenant"),
+            42L,
             new UserId("user-id"),
             startDate,
             endDate,
@@ -69,6 +71,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
 
         final AbsenceWriteEntity existingEntity = new AbsenceWriteEntity();
         existingEntity.setTenantId("tenant");
+        existingEntity.setSourceId(42L);
         existingEntity.setUserId("user-id");
         existingEntity.setStartDate(startDate);
         existingEntity.setEndDate(endDate);
@@ -79,6 +82,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
 
         final AbsenceWrite absence = new AbsenceWrite(
             new TenantId("tenant-2"),
+            42L,
             new UserId("user-id"),
             startDate,
             endDate,

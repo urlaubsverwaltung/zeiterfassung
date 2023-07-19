@@ -1,16 +1,16 @@
 package de.focusshift.zeiterfassung.absence;
 
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.CrudRepository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 interface AbsenceRepository extends CrudRepository<AbsenceWriteEntity, Long> {
 
-    List<AbsenceWriteEntity> findAllByTenantIdAndUserIdAndStartDateAndEndDateAndDayLengthAndType(
-        String tenantId, String userId, Instant startDate, Instant endDate, DayLength dayLength, AbsenceType type
-    );
+    Optional<AbsenceWriteEntity> findByTenantIdAndSourceIdAndType(String tenantId, Long sourceId, AbsenceType absenceType);
 
     List<AbsenceWriteEntity> findAllByTenantIdAndUserIdAndStartDateGreaterThanEqualAndEndDateLessThan(
         String tenantId, String userId, Instant from, Instant toExclusive
@@ -25,7 +25,6 @@ interface AbsenceRepository extends CrudRepository<AbsenceWriteEntity, Long> {
     );
 
     @Modifying
-    void deleteAllByTenantIdAndUserIdAndStartDateAndEndDateAndDayLengthAndType(
-        String tenantId, String userId, Instant startDate, Instant endDate, DayLength dayLength, AbsenceType type
-    );
+    @Transactional
+    int deleteByTenantIdAndSourceIdAndType(String tenantId, Long sourceId, AbsenceType type);
 }

@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.absence.AbsenceType.SPECIALLEAVE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,17 +38,12 @@ class AbsenceWriteServiceImplTest {
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
 
-        when(repository.findAllByTenantIdAndUserIdAndStartDateAndEndDateAndDayLengthAndType(
-            "tenant-id",
-            "user-id",
-            startDate,
-            endDate,
-            DayLength.FULL,
-            SPECIALLEAVE
-        )).thenReturn(List.of());
+        when(repository.findByTenantIdAndSourceIdAndType("tenant-id", 42L, SPECIALLEAVE))
+            .thenReturn(Optional.empty());
 
         final AbsenceWrite absence = new AbsenceWrite(
             new TenantId("tenant-id"),
+            42L,
             new UserId("user-id"),
             startDate,
             endDate,
@@ -73,24 +69,17 @@ class AbsenceWriteServiceImplTest {
     }
 
     @Test
-    void ensureAddAbsenceDoesNothingWhenAbsencePotentiallyExistsAlready() {
+    void ensureAddAbsenceDoesNothingWhenItExistsAlready() {
 
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
 
-        final AbsenceWriteEntity potentiallyExistingEntity = new AbsenceWriteEntity();
-
-        when(repository.findAllByTenantIdAndUserIdAndStartDateAndEndDateAndDayLengthAndType(
-            "tenant-id",
-            "user-id",
-            startDate,
-            endDate,
-            DayLength.FULL,
-            SPECIALLEAVE
-        )).thenReturn(List.of(potentiallyExistingEntity));
+        when(repository.findByTenantIdAndSourceIdAndType("tenant-id", 42L, SPECIALLEAVE))
+            .thenReturn(Optional.of(new AbsenceWriteEntity()));
 
         final AbsenceWrite absence = new AbsenceWrite(
             new TenantId("tenant-id"),
+            42L,
             new UserId("user-id"),
             startDate,
             endDate,
