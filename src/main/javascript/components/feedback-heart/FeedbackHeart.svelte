@@ -15,6 +15,7 @@
   }
 </script>
 
+<!-- eslint-disable-next-line -->
 {#each { length: movingHeartsCount } as _}
   <FloatingHeart />
 {/each}

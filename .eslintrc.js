@@ -69,10 +69,13 @@ module.exports = {
     },
     {
       files: ["*.svelte"],
-      processor: "svelte3/svelte3",
-      plugins: ["svelte3", "@typescript-eslint"],
-      settings: {
-        "svelte3/typescript": require("typescript"),
+      extends: ["plugin:svelte/recommended"],
+      parser: "svelte-eslint-parser",
+      parserOptions: {
+        parser: {
+          ts: "@typescript-eslint/parser",
+          typescript: "@typescript-eslint/parser",
+        },
       },
     },
   ],
