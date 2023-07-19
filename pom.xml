@@ -44,7 +44,7 @@
         <dependency>
             <groupId>de.focus-shift.urlaubsverwaltung.extension.api</groupId>
             <artifactId>model-events</artifactId>
-            <version>0.6.0</version>
+            <version>0.7.1</version>
         </dependency>
 
         <!-- Security -->
