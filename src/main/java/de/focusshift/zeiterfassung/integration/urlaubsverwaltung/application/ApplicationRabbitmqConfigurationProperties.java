@@ -25,7 +25,7 @@ class ApplicationRabbitmqConfigurationProperties {
     private String routingKeyDeleted = "deleted";
 
     @NotEmpty
-    private String routingKeyCreatedFromSicknote = "createdFromSicknote";
+    private String routingKeyCreatedFromSicknote = "created_from_sicknote";
 
     public boolean isEnabled() {
         return enabled;
