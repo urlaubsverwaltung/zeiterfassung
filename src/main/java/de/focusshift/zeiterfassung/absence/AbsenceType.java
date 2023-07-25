@@ -5,6 +5,8 @@ public enum AbsenceType {
     HOLIDAY,
     SPECIALLEAVE,
     UNPAIDLEAVE,
+    OTHER,
+
     SICK;
 
     public String getMessageKey() {
