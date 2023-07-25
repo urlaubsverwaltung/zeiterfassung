@@ -17,7 +17,7 @@ class ApplicationRabbitmqConfiguration {
 
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.allowed";
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.cancelled";
-    static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.createdFromSicknote";
+    static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.created_from_sicknote";
     @Bean
     ApplicationEventHandlerRabbitmq applicationEventHandlerRabbitmq(AbsenceWriteService absenceWriteService) {
         return new ApplicationEventHandlerRabbitmq(absenceWriteService);
