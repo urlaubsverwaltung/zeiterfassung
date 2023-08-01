@@ -70,7 +70,7 @@ public class ApplicationEventHandlerRabbitmq {
 
         final List<LocalDate> absentWorkingDays = event.getAbsentWorkingDays().stream().sorted().toList();
         final Optional<DayLength> maybeDayLength = toDayLength(event.getPeriod().getDayLength());
-        final Optional<AbsenceType> maybeAbsenceType = toAbsenceType(event.getVacationType().getCategory());
+        final Optional<AbsenceType> maybeAbsenceType = toAbsenceType(event.getVacationType().getCategory(), event.getVacationType().getSourceId());
         final Optional<AbsenceColor> maybeAbsenceColor = toAbsenceColor(event.getVacationType().getColor());
 
         if (absentWorkingDays.isEmpty() || maybeDayLength.isEmpty() || maybeAbsenceType.isEmpty() || maybeAbsenceColor.isEmpty()) {
@@ -94,9 +94,14 @@ public class ApplicationEventHandlerRabbitmq {
             .or(peek(() -> LOG.info("could not map dayLength")));
     }
 
-    private static Optional<AbsenceType> toAbsenceType(String vacationTypeCategory) {
-        return map(vacationTypeCategory, AbsenceType::valueOf)
-            .or(peek(() -> LOG.info("could not map vacationTypeCategory to AbsenceType")));
+    private static Optional<AbsenceType> toAbsenceType(String vacationTypeCategory, Integer sourceId) {
+
+        if (AbsenceType.isValidVacationTypeCategory(vacationTypeCategory)) {
+            LOG.info("could not map vacationTypeCategory to AbsenceType");
+            return Optional.empty();
+        }
+
+        return Optional.of(new AbsenceType(vacationTypeCategory, sourceId));
     }
 
     private static Optional<AbsenceColor> toAbsenceColor(String vacationTypeColor) {
