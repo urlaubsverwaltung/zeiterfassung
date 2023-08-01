@@ -71,7 +71,7 @@ class AbsenceServiceImplTest {
         entity_2.setType(AbsenceType.SPECIALLEAVE);
         entity_2.setColor(AbsenceColor.VIOLET);
 
-        when(repository.findAllByTenantIdAndUserIdAndStartDateGreaterThanEqualAndEndDateLessThan("tenant", "user", startDate, endDateExclusive))
+        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
             .thenReturn(List.of(entity_1, entity_2));
 
         final Absence expectedAbsence_1 = new Absence(

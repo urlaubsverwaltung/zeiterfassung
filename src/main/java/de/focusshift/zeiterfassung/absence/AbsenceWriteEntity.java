@@ -141,9 +141,12 @@ public class AbsenceWriteEntity implements AdminAware<Long> {
 
     @Override
     public String toString() {
-        return "AbsenceEntity{" +
-            "tenantId=" + tenantId +
-            "id=" + id +
-            '}';
+        return "AbsenceWriteEntity{" +
+                "tenantId='" + tenantId + '\'' +
+                ", sourceId=" + sourceId +
+                ", userId='" + userId + '\'' +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                '}';
     }
 }
