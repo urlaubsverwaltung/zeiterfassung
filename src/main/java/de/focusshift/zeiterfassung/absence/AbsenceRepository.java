@@ -12,16 +12,18 @@ interface AbsenceRepository extends CrudRepository<AbsenceWriteEntity, Long> {
 
     Optional<AbsenceWriteEntity> findByTenantIdAndSourceIdAndType(String tenantId, Long sourceId, AbsenceType absenceType);
 
-    List<AbsenceWriteEntity> findAllByTenantIdAndUserIdAndStartDateGreaterThanEqualAndEndDateLessThan(
-        String tenantId, String userId, Instant from, Instant toExclusive
+    /**
+     * Finds all absences of tenantId, userId of set and intersection with interval from and toExclusive-1
+     */
+    List<AbsenceWriteEntity> findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(
+        String tenantId, List<String> userIds, Instant toExclusive, Instant from
     );
 
-    List<AbsenceWriteEntity> findAllByTenantIdAndUserIdInAndStartDateGreaterThanEqualAndEndDateLessThan(
-        String tenantId, List<String> userIds, Instant from, Instant toExclusive
-    );
-
-    List<AbsenceWriteEntity> findAllByTenantIdAndStartDateGreaterThanEqualAndEndDateLessThan(
-        String tenantId, Instant from, Instant toExclusive
+    /**
+     * Finds all absences of tenantId and intersection with interval from and toExclusive-1
+     */
+    List<AbsenceWriteEntity> findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual(
+            String tenantId, Instant toExclusive, Instant from
     );
 
     @Modifying

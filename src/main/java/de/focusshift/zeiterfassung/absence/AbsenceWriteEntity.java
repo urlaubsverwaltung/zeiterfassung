@@ -143,7 +143,7 @@ public class AbsenceWriteEntity implements AdminAware<Long> {
     public String toString() {
         return "AbsenceEntity{" +
             "tenantId=" + tenantId +
-            "id=" + id +
+            ", id=" + id +
             '}';
     }
 }
