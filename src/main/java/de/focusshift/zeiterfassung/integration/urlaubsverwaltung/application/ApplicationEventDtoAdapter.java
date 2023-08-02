@@ -16,7 +16,7 @@ import java.util.Set;
 class ApplicationEventDtoAdapter {
 
     private final String tenantId;
-    private final Integer sourceId;
+    private final Long sourceId;
     private final ApplicationPersonDTO person;
     private final VacationTypeDTO vacationType;
     private final ApplicationPeriodDTO period;
@@ -53,7 +53,7 @@ class ApplicationEventDtoAdapter {
         return tenantId;
     }
 
-    public Integer getSourceId() {
+    public Long getSourceId() {
         return sourceId;
     }
 

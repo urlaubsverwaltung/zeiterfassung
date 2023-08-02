@@ -13,7 +13,7 @@ import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteUpdatedEv
 class SickNoteEventDtoAdapter {
 
     private final String tenantId;
-    private final Integer sourceId;
+    private final Long sourceId;
     private final SickNotePersonDTO person;
     private final String type;
     private final SickNotePeriodDTO period;
@@ -54,7 +54,7 @@ class SickNoteEventDtoAdapter {
         return tenantId;
     }
 
-    public Integer getSourceId() {
+    public Long getSourceId() {
         return sourceId;
     }
 
