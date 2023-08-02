@@ -1,0 +1,26 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+    <changeSet author="honnel" id="add-absence-type-source-id">
+        <preConditions>
+            <tableExists tableName="absence" />
+            <columnExists tableName="absence" columnName="type_category" />
+            <columnExists tableName="absence" columnName="type_source_id" />
+        </preConditions>
+        <update tableName="absence">
+            <column name="type_source_id" value="1000"/>
+            <where>type_category='HOLIDAY'</where>
+        </update>
+        <update tableName="absence">
+            <column name="type_source_id" value="2000"/>
+            <where>type_category='SPECIALLEAVE'</where>
+        </update>
+        <update tableName="absence">
+            <column name="type_source_id" value="3000"/>
+            <where>type_category='UNPAIDLEAVE'</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>
+

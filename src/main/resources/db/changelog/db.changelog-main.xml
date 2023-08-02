@@ -19,5 +19,6 @@
     <include relativeToChangelogFile="true" file="changelog-1.6.0-fix-tenant-id-length.xml"/>
     <include relativeToChangelogFile="true" file="changelog-1.6.2-add-absence-source-id.xml"/>
     <include relativeToChangelogFile="true" file="changelog-1.6.5-add-absence-type-source-id.xml"/>
+    <include relativeToChangelogFile="true" file="changelog-1.6.5-migrate-existing-absences-with-source-id.xml"/>
 
 </databaseChangeLog>
