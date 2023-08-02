@@ -3,7 +3,6 @@ package de.focusshift.zeiterfassung.absence;
 import de.focusshift.zeiterfassung.TestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,13 +21,6 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
 
     @Autowired
     private AbsenceRepository repository;
-
-    @AfterEach
-    void tearDown() {
-        // since we do not have a transaction we have to clean up after the test.
-        // (no transaction to ensure @Transactional annotation in the sut)
-        repository.deleteAll();
-    }
 
     @Test
     void ensureDeleteAbsence() {
