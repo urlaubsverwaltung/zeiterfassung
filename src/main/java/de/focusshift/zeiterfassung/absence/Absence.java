@@ -24,6 +24,6 @@ public record Absence(
 ) {
 
     public String getMessageKey() {
-        return "absence.%s.%s".formatted(type.name(), dayLength.name());
+        return "absence.%s.%s".formatted(type.category(), dayLength.name());
     }
 }

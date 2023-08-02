@@ -139,7 +139,7 @@ class AbsenceServiceImpl implements AbsenceService {
             entity.getStartDate().atZone(zoneId),
             entity.getEndDate().atZone(zoneId),
             entity.getDayLength(),
-            entity.getType(),
+            new AbsenceType(entity.getType().getCategory(), entity.getType().getSourceId()),
             entity.getColor()
         );
     }

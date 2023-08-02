@@ -5,6 +5,7 @@ import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCan
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCreatedFromSickNoteEventDTO;
 import de.focusshift.zeiterfassung.absence.AbsenceColor;
 import de.focusshift.zeiterfassung.absence.AbsenceType;
+import de.focusshift.zeiterfassung.absence.AbsenceTypeNotSupportedException;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
@@ -96,12 +97,13 @@ public class ApplicationEventHandlerRabbitmq {
 
     private static Optional<AbsenceType> toAbsenceType(String vacationTypeCategory, Integer sourceId) {
 
-        if (AbsenceType.isValidVacationTypeCategory(vacationTypeCategory)) {
+        try {
+            final AbsenceType absenceType = new AbsenceType(vacationTypeCategory, sourceId);
+            return Optional.of(absenceType);
+        } catch (AbsenceTypeNotSupportedException ex) {
             LOG.info("could not map vacationTypeCategory to AbsenceType");
             return Optional.empty();
         }
-
-        return Optional.of(new AbsenceType(vacationTypeCategory, sourceId));
     }
 
     private static Optional<AbsenceColor> toAbsenceColor(String vacationTypeColor) {

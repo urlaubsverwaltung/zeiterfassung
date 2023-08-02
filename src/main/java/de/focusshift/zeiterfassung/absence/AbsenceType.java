@@ -2,7 +2,7 @@ package de.focusshift.zeiterfassung.absence;
 
 import java.util.Set;
 
-public record AbsenceType(String name, Integer sourceId) {
+public record AbsenceType(String category, Integer sourceId) {
 
     private static final String VACATION_CATEGORY_HOLIDAY = "HOLIDAY";
     private static final String VACATION_CATEGORY_SPECIALLEAVE = "SPECIALLEAVE";
@@ -11,6 +11,12 @@ public record AbsenceType(String name, Integer sourceId) {
     private static final String VACATION_CATEGORY_SICK = "SICK";
     private static final Set<String> VALID_VACATION_CATEGORIES = Set.of(VACATION_CATEGORY_HOLIDAY, VACATION_CATEGORY_SPECIALLEAVE, VACATION_CATEGORY_UNPAIDLEAVE, VACATION_CATEGORY_OTHER, VACATION_CATEGORY_SICK);
 
+    public AbsenceType {
+        if (!isValidVacationTypeCategory(category)) {
+            throw new AbsenceTypeNotSupportedException(category);
+        }
+    }
+
     public static boolean isValidVacationTypeCategory(String vacationTypeCategory) {
         return VALID_VACATION_CATEGORIES.contains(vacationTypeCategory);
     }
@@ -18,9 +24,9 @@ public record AbsenceType(String name, Integer sourceId) {
 
     public String getMessageKey() {
         if(this.sourceId == null) {
-            return "absence.type.%s".formatted(this.name);
+            return "absence.type.%s".formatted(this.category);
         } else {
-            return "absence.type.%s.%s".formatted(this.name, this.sourceId);
+            return "absence.type.%s.%s".formatted(this.category, this.sourceId);
         }
     }
 

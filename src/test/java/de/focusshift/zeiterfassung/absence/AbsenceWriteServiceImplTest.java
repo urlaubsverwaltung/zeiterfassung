@@ -10,7 +10,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.absence.AbsenceType.SPECIALLEAVE;
@@ -38,7 +37,7 @@ class AbsenceWriteServiceImplTest {
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
 
-        when(repository.findByTenantIdAndSourceIdAndType("tenant-id", 42L, SPECIALLEAVE))
+        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, SPECIALLEAVE.category()))
             .thenReturn(Optional.empty());
 
         final AbsenceWrite absence = new AbsenceWrite(
@@ -64,7 +63,7 @@ class AbsenceWriteServiceImplTest {
         assertThat(actualPersistedEntity.getStartDate()).isEqualTo(startDate);
         assertThat(actualPersistedEntity.getEndDate()).isEqualTo(endDate);
         assertThat(actualPersistedEntity.getDayLength()).isEqualTo(DayLength.FULL);
-        assertThat(actualPersistedEntity.getType()).isEqualTo(SPECIALLEAVE);
+        assertThat(actualPersistedEntity.getType().getCategory()).isEqualTo(SPECIALLEAVE.category());
         assertThat(actualPersistedEntity.getColor()).isEqualTo(AbsenceColor.BLUE);
     }
 
@@ -74,7 +73,7 @@ class AbsenceWriteServiceImplTest {
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
 
-        when(repository.findByTenantIdAndSourceIdAndType("tenant-id", 42L, SPECIALLEAVE))
+        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, SPECIALLEAVE.category()))
             .thenReturn(Optional.of(new AbsenceWriteEntity()));
 
         final AbsenceWrite absence = new AbsenceWrite(
