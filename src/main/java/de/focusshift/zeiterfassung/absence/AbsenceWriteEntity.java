@@ -1,8 +1,6 @@
 package de.focusshift.zeiterfassung.absence;
 
 import de.focusshift.zeiterfassung.tenancy.configuration.multi.AdminAware;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
