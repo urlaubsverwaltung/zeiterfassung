@@ -21,15 +21,6 @@ public record AbsenceType(String category, Integer sourceId) {
         return VALID_VACATION_CATEGORIES.contains(vacationTypeCategory);
     }
 
-
-    public String getMessageKey() {
-        if(this.sourceId == null) {
-            return "absence.type.%s".formatted(this.category);
-        } else {
-            return "absence.type.%s.%s".formatted(this.category, this.sourceId);
-        }
-    }
-
     public static AbsenceType HOLIDAY = new AbsenceType(VACATION_CATEGORY_HOLIDAY, 1000);
     public static AbsenceType SPECIALLEAVE = new AbsenceType(VACATION_CATEGORY_SPECIALLEAVE, 2000);
     public static AbsenceType UNPAIDLEAVE = new AbsenceType(VACATION_CATEGORY_UNPAIDLEAVE, 3000);
