@@ -80,7 +80,7 @@ public class ApplicationEventHandlerRabbitmq {
 
         return Optional.of(new AbsenceWrite(
             new TenantId(event.getTenantId()),
-            event.getSourceId().longValue(),
+            event.getSourceId(),
             new UserId(event.getPerson().getUsername()),
             event.getPeriod().getStartDate(),
             event.getPeriod().getEndDate(),
@@ -95,7 +95,7 @@ public class ApplicationEventHandlerRabbitmq {
             .or(peek(() -> LOG.info("could not map dayLength")));
     }
 
-    private static Optional<AbsenceType> toAbsenceType(String vacationTypeCategory, Integer sourceId) {
+    private static Optional<AbsenceType> toAbsenceType(String vacationTypeCategory, Long sourceId) {
 
         try {
             final AbsenceType absenceType = new AbsenceType(vacationTypeCategory, sourceId);

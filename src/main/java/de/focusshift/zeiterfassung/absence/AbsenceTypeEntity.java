@@ -10,13 +10,13 @@ public class AbsenceTypeEntity {
     private String category;
 
     @Column(name = "type_source_id")
-    private Integer sourceId;
+    private Long sourceId;
 
     public String getCategory() {
         return category;
     }
 
-    public AbsenceTypeEntity(String name, Integer sourceId) {
+    public AbsenceTypeEntity(String name, Long sourceId) {
         this.category = name;
         this.sourceId = sourceId;
     }
@@ -29,11 +29,11 @@ public class AbsenceTypeEntity {
         this.category = name;
     }
 
-    public Integer getSourceId() {
+    public Long getSourceId() {
         return sourceId;
     }
 
-    public void setSourceId(Integer sourceId) {
+    public void setSourceId(Long sourceId) {
         this.sourceId = sourceId;
     }
 }
