@@ -29,7 +29,7 @@ public record AbsenceType(String category, Long sourceId) {
         }
     }
 
-    public static boolean isValidVacationTypeCategory(String vacationTypeCategory) {
+    private static boolean isValidVacationTypeCategory(String vacationTypeCategory) {
         return VALID_VACATION_CATEGORIES.contains(vacationTypeCategory);
     }
 

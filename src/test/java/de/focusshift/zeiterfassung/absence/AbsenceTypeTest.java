@@ -11,12 +11,6 @@ class AbsenceTypeTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"HOLIDAY", "SICK", "SPECIALLEAVE", "UNPAIDLEAVE", "OTHER"})
-    void isValidVacationTypeCategory(String vacationType) {
-        assertThat(AbsenceType.isValidVacationTypeCategory(vacationType)).isTrue();
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"HOLIDAY", "SICK", "SPECIALLEAVE", "UNPAIDLEAVE", "OTHER"})
     void ensureAbsenceTypeCanBeInstantiatedWith(String vacationType) {
         assertThat(new AbsenceType(vacationType, null)).isNotNull();
     }
