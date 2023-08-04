@@ -57,7 +57,7 @@ class AbsenceRepositoryIT extends TestContainersBase {
         oneDayBeforeRequestedWeek.setStartDate(Instant.parse(start));
         oneDayBeforeRequestedWeek.setEndDate(Instant.parse(end));
         oneDayBeforeRequestedWeek.setDayLength(DayLength.FULL);
-        oneDayBeforeRequestedWeek.setType(AbsenceType.HOLIDAY);
+        oneDayBeforeRequestedWeek.setType(new AbsenceTypeEntity("HOLIDAY", 1000L));
         oneDayBeforeRequestedWeek.setColor(AbsenceColor.PINK);
         return oneDayBeforeRequestedWeek;
     }
