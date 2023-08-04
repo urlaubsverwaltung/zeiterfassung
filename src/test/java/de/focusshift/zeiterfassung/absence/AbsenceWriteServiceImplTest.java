@@ -12,7 +12,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.Optional;
 
-import static de.focusshift.zeiterfassung.absence.AbsenceType.SPECIALLEAVE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -37,7 +36,7 @@ class AbsenceWriteServiceImplTest {
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
 
-        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, SPECIALLEAVE.category()))
+        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, AbsenceTypeCategory.SPECIALLEAVE))
             .thenReturn(Optional.empty());
 
         final AbsenceWrite absence = new AbsenceWrite(
@@ -47,7 +46,7 @@ class AbsenceWriteServiceImplTest {
             startDate,
             endDate,
             DayLength.FULL,
-            SPECIALLEAVE,
+            AbsenceType.SPECIALLEAVE,
             AbsenceColor.BLUE
         );
 
@@ -63,7 +62,7 @@ class AbsenceWriteServiceImplTest {
         assertThat(actualPersistedEntity.getStartDate()).isEqualTo(startDate);
         assertThat(actualPersistedEntity.getEndDate()).isEqualTo(endDate);
         assertThat(actualPersistedEntity.getDayLength()).isEqualTo(DayLength.FULL);
-        assertThat(actualPersistedEntity.getType().getCategory()).isEqualTo(SPECIALLEAVE.category());
+        assertThat(actualPersistedEntity.getType().getCategory()).isEqualTo(AbsenceTypeCategory.SPECIALLEAVE);
         assertThat(actualPersistedEntity.getColor()).isEqualTo(AbsenceColor.BLUE);
     }
 
@@ -73,7 +72,7 @@ class AbsenceWriteServiceImplTest {
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
 
-        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, SPECIALLEAVE.category()))
+        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, AbsenceTypeCategory.SPECIALLEAVE))
             .thenReturn(Optional.of(new AbsenceWriteEntity()));
 
         final AbsenceWrite absence = new AbsenceWrite(
@@ -83,7 +82,7 @@ class AbsenceWriteServiceImplTest {
             startDate,
             endDate,
             DayLength.FULL,
-            SPECIALLEAVE,
+            AbsenceType.SPECIALLEAVE,
             AbsenceColor.BLUE
         );
 
