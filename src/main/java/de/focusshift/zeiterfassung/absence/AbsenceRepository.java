@@ -10,7 +10,7 @@ import java.util.Optional;
 
 interface AbsenceRepository extends CrudRepository<AbsenceWriteEntity, Long> {
 
-    Optional<AbsenceWriteEntity> findByTenantIdAndSourceIdAndType(String tenantId, Long sourceId, AbsenceType absenceType);
+    Optional<AbsenceWriteEntity> findByTenantIdAndSourceIdAndType_Category(String tenantId, Long sourceId, AbsenceTypeCategory absenceTypeCategory);
 
     /**
      * Finds all absences of tenantId, userId of set and intersection with interval from and toExclusive-1
@@ -28,5 +28,5 @@ interface AbsenceRepository extends CrudRepository<AbsenceWriteEntity, Long> {
 
     @Modifying
     @Transactional
-    int deleteByTenantIdAndSourceIdAndType(String tenantId, Long sourceId, AbsenceType type);
+    int deleteByTenantIdAndSourceIdAndType_Category(String tenantId, Long sourceId, AbsenceTypeCategory absenceTypeCategory);
 }

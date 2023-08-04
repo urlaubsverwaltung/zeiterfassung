@@ -106,7 +106,7 @@ class TimeEntryControllerTest {
             .absenceEntries(List.of())
             .build();
 
-        AbsenceEntryDto absenceDto = new AbsenceEntryDto(LocalDate.of(2022,9,20), "absence.HOLIDAY.FULL", AbsenceColor.BLUE);
+        AbsenceEntryDto absenceDto = new AbsenceEntryDto(LocalDate.of(2022,9,20), "absence.HOLIDAY.1000.FULL", AbsenceColor.BLUE);
         final TimeEntryDayDto expectedTimeEntryDayDtoTUESDAY = TimeEntryDayDto.builder()
             .date("formatted-2022-9-20")
             .dayOfWeek(DayOfWeek.TUESDAY)

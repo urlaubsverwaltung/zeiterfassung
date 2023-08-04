@@ -12,7 +12,7 @@ import java.time.ZonedDateTime;
  * @param endDate
  * @param dayLength
  * @param type
- * @param color selected by the user to render the absence type
+ * @param color     selected by the user to render the absence type
  */
 public record Absence(
     UserId userId,
@@ -24,6 +24,10 @@ public record Absence(
 ) {
 
     public String getMessageKey() {
-        return "absence.%s.%s".formatted(type.name(), dayLength.name());
+        if (this.type.sourceId() == null) {
+            return "absence.%s.%s".formatted(type.category(), dayLength.name());
+        } else {
+            return "absence.%s.%s.%s".formatted(type.category(), this.type.sourceId(), dayLength.name());
+        }
     }
 }

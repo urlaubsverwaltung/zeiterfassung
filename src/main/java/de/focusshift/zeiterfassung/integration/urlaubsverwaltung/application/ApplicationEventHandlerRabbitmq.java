@@ -5,6 +5,7 @@ import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCan
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCreatedFromSickNoteEventDTO;
 import de.focusshift.zeiterfassung.absence.AbsenceColor;
 import de.focusshift.zeiterfassung.absence.AbsenceType;
+import de.focusshift.zeiterfassung.absence.AbsenceTypeCategory;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
@@ -70,7 +71,7 @@ public class ApplicationEventHandlerRabbitmq {
 
         final List<LocalDate> absentWorkingDays = event.getAbsentWorkingDays().stream().sorted().toList();
         final Optional<DayLength> maybeDayLength = toDayLength(event.getPeriod().getDayLength());
-        final Optional<AbsenceType> maybeAbsenceType = toAbsenceType(event.getVacationType().getCategory());
+        final Optional<AbsenceType> maybeAbsenceType = toAbsenceType(event.getVacationType().getCategory(), event.getVacationType().getSourceId());
         final Optional<AbsenceColor> maybeAbsenceColor = toAbsenceColor(event.getVacationType().getColor());
 
         if (absentWorkingDays.isEmpty() || maybeDayLength.isEmpty() || maybeAbsenceType.isEmpty() || maybeAbsenceColor.isEmpty()) {
@@ -79,7 +80,7 @@ public class ApplicationEventHandlerRabbitmq {
 
         return Optional.of(new AbsenceWrite(
             new TenantId(event.getTenantId()),
-            event.getSourceId().longValue(),
+            event.getSourceId(),
             new UserId(event.getPerson().getUsername()),
             event.getPeriod().getStartDate(),
             event.getPeriod().getEndDate(),
@@ -94,8 +95,9 @@ public class ApplicationEventHandlerRabbitmq {
             .or(peek(() -> LOG.info("could not map dayLength")));
     }
 
-    private static Optional<AbsenceType> toAbsenceType(String vacationTypeCategory) {
-        return map(vacationTypeCategory, AbsenceType::valueOf)
+    private static Optional<AbsenceType> toAbsenceType(String absenceTypeCategoryName, Long sourceId) {
+        return map(absenceTypeCategoryName, AbsenceTypeCategory::valueOf)
+            .map(category -> new AbsenceType(category, sourceId))
             .or(peek(() -> LOG.info("could not map vacationTypeCategory to AbsenceType")));
     }
 
