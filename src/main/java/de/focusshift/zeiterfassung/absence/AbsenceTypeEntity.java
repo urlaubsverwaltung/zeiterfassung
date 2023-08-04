@@ -2,22 +2,22 @@ package de.focusshift.zeiterfassung.absence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Enumerated;
+
+import static jakarta.persistence.EnumType.STRING;
 
 @Embeddable
 public class AbsenceTypeEntity {
 
     @Column(name = "type_category", nullable = false)
-    private String category;
+    @Enumerated(STRING)
+    private AbsenceTypeCategory category;
 
     @Column(name = "type_source_id")
     private Long sourceId;
 
-    public String getCategory() {
-        return category;
-    }
-
-    public AbsenceTypeEntity(String name, Long sourceId) {
-        this.category = name;
+    public AbsenceTypeEntity(AbsenceTypeCategory category, Long sourceId) {
+        this.category = category;
         this.sourceId = sourceId;
     }
 
@@ -25,8 +25,12 @@ public class AbsenceTypeEntity {
         // for @Embeddable
     }
 
-    public void setCategory(String name) {
-        this.category = name;
+    public AbsenceTypeCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(AbsenceTypeCategory category) {
+        this.category = category;
     }
 
     public Long getSourceId() {

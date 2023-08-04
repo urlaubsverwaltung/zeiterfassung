@@ -59,7 +59,7 @@ class AbsenceServiceImplTest {
         entity_1.setStartDate(today.plusDays(1).toInstant());
         entity_1.setEndDate(today.plusDays(2).toInstant());
         entity_1.setDayLength(DayLength.FULL);
-        entity_1.setType(new AbsenceTypeEntity(AbsenceType.HOLIDAY.category().name(), AbsenceType.HOLIDAY.sourceId()));
+        entity_1.setType(new AbsenceTypeEntity(AbsenceType.HOLIDAY.category(), AbsenceType.HOLIDAY.sourceId()));
         entity_1.setColor(AbsenceColor.PINK);
 
         final AbsenceWriteEntity entity_2 = new AbsenceWriteEntity();
@@ -68,7 +68,7 @@ class AbsenceServiceImplTest {
         entity_2.setStartDate(today.plusDays(4).toInstant());
         entity_2.setEndDate(today.plusDays(4).toInstant());
         entity_2.setDayLength(DayLength.MORNING);
-        entity_2.setType(new AbsenceTypeEntity(AbsenceType.SPECIALLEAVE.category().name(), AbsenceType.SPECIALLEAVE.sourceId()));
+        entity_2.setType(new AbsenceTypeEntity(AbsenceType.SPECIALLEAVE.category(), AbsenceType.SPECIALLEAVE.sourceId()));
         entity_2.setColor(AbsenceColor.VIOLET);
 
         when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))

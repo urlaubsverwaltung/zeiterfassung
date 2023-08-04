@@ -134,13 +134,12 @@ class AbsenceServiceImpl implements AbsenceService {
     }
 
     private static Absence toAbsence(AbsenceWriteEntity entity, ZoneId zoneId) {
-        final AbsenceTypeCategory category = AbsenceTypeCategory.valueOf(entity.getType().getCategory().toUpperCase());
         return new Absence(
             new UserId(entity.getUserId()),
             entity.getStartDate().atZone(zoneId),
             entity.getEndDate().atZone(zoneId),
             entity.getDayLength(),
-            new AbsenceType(category, entity.getType().getSourceId()),
+            new AbsenceType(entity.getType().getCategory(), entity.getType().getSourceId()),
             entity.getColor()
         );
     }

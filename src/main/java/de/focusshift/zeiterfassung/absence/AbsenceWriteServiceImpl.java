@@ -68,7 +68,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
         final Long sourceId = absence.sourceId();
         final AbsenceType type = absence.type();
 
-        final int countOfDeletedAbsences = repository.deleteByTenantIdAndSourceIdAndType_Category(tenantId, sourceId, type.category().name());
+        final int countOfDeletedAbsences = repository.deleteByTenantIdAndSourceIdAndType_Category(tenantId, sourceId, type.category());
 
         if (countOfDeletedAbsences >= 1) {
             LOG.info("successfully deleted {} absences. tenantId={} sourceId={} type={}", countOfDeletedAbsences, tenantId, sourceId, type);
@@ -78,7 +78,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
     }
 
     private Optional<AbsenceWriteEntity> findEntity(AbsenceWrite absence) {
-        return repository.findByTenantIdAndSourceIdAndType_Category(absence.tenantId().tenantId(), absence.sourceId(), absence.type().category().name());
+        return repository.findByTenantIdAndSourceIdAndType_Category(absence.tenantId().tenantId(), absence.sourceId(), absence.type().category());
     }
 
     private static void setEntityFields(AbsenceWriteEntity entity, AbsenceWrite absence) {
@@ -94,7 +94,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
 
     private static AbsenceTypeEntity setTypeEntityFields(AbsenceType absenceType) {
         final AbsenceTypeEntity absenceTypeEntity = new AbsenceTypeEntity();
-        absenceTypeEntity.setCategory(absenceType.category().name());
+        absenceTypeEntity.setCategory(absenceType.category());
         absenceTypeEntity.setSourceId(absenceType.sourceId());
         return absenceTypeEntity;
     }
