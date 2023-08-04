@@ -12,7 +12,7 @@ import java.time.ZonedDateTime;
  * @param endDate
  * @param dayLength
  * @param type
- * @param color selected by the user to render the absence type
+ * @param color     selected by the user to render the absence type
  */
 public record Absence(
     UserId userId,

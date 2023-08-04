@@ -9,7 +9,13 @@ public record AbsenceType(String category, Long sourceId) {
     private static final String VACATION_CATEGORY_UNPAIDLEAVE = "UNPAIDLEAVE";
     private static final String VACATION_CATEGORY_OTHER = "OTHER";
     private static final String VACATION_CATEGORY_SICK = "SICK";
-    private static final Set<String> VALID_VACATION_CATEGORIES = Set.of(VACATION_CATEGORY_HOLIDAY, VACATION_CATEGORY_SPECIALLEAVE, VACATION_CATEGORY_UNPAIDLEAVE, VACATION_CATEGORY_OTHER, VACATION_CATEGORY_SICK);
+    private static final Set<String> VALID_VACATION_CATEGORIES = Set.of(
+        VACATION_CATEGORY_HOLIDAY,
+        VACATION_CATEGORY_SPECIALLEAVE,
+        VACATION_CATEGORY_UNPAIDLEAVE,
+        VACATION_CATEGORY_OTHER,
+        VACATION_CATEGORY_SICK
+    );
 
     public AbsenceType {
         if (!isValidVacationTypeCategory(category)) {
