@@ -2,14 +2,19 @@ version: '3.8'
 services:
   postgres:
     image: postgres:9.6
-    ports:
-      - '5432:5432'
     environment:
       POSTGRES_DB: zeiterfassung
       POSTGRES_USER: admin_user
       POSTGRES_PASSWORD: admin_password
       POSTGRES_APP_USER: app_user
       POSTGRES_APP_PASSWORD: app_password
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 3s
+      timeout: 1s
+      retries: 5
     volumes:
         - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh:ro
   mailhog:
