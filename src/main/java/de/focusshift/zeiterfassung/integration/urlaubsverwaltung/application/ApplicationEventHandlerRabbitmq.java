@@ -101,7 +101,7 @@ public class ApplicationEventHandlerRabbitmq {
             final AbsenceType absenceType = new AbsenceType(vacationTypeCategory, sourceId);
             return Optional.of(absenceType);
         } catch (AbsenceTypeNotSupportedException ex) {
-            LOG.info("could not map vacationTypeCategory to AbsenceType");
+            LOG.info("could not map vacationTypeCategory to AbsenceType", ex);
             return Optional.empty();
         }
     }
