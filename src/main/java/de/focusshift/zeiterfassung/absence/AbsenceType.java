@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.absence;
 
-public record AbsenceType(AbsenceTypeCategory category, Long sourceId) {
+import org.springframework.lang.Nullable;
+
+public record AbsenceType(AbsenceTypeCategory category, @Nullable Long sourceId) {
 
     /**
      * implicitly known HOLIDAY absence to ease testing.
