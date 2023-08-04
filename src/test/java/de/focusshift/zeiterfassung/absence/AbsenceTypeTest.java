@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.absence;
 
-import de.focusshift.zeiterfassung.tenancy.tenant.MissingTenantException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -16,8 +15,16 @@ class AbsenceTypeTest {
         assertThat(AbsenceType.isValidVacationTypeCategory(vacationType)).isTrue();
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"HOLIDAY", "SICK", "SPECIALLEAVE", "UNPAIDLEAVE", "OTHER"})
+    void ensureAbsenceTypeCanBeInstantiatedWith(String vacationType) {
+        assertThat(new AbsenceType(vacationType, null)).isNotNull();
+    }
+
     @Test
     void isNotValidVacationTypeCategory() {
-        assertThatThrownBy(() -> new AbsenceType("FOOBAR", null)).isInstanceOf(AbsenceTypeNotSupportedException.class);
+        assertThatThrownBy(() -> new AbsenceType("FOOBAR", null))
+            .isInstanceOf(AbsenceTypeNotSupportedException.class)
+            .hasMessage("absence type=FOOBAR not supported.");
     }
 }
