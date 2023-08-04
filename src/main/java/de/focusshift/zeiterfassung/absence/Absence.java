@@ -24,7 +24,7 @@ public record Absence(
 ) {
 
     public String getMessageKey() {
-        if(this.type.sourceId() == null) {
+        if (this.type.sourceId() == null) {
             return "absence.%s.%s".formatted(type.category(), dayLength.name());
         } else {
             return "absence.%s.%s.%s".formatted(type.category(), this.type.sourceId(), dayLength.name());
