@@ -17,6 +17,12 @@ public record AbsenceType(String category, Long sourceId) {
         VACATION_CATEGORY_SICK
     );
 
+    /**
+     *
+     * @param name (category) of the absence type
+     * @param sourceId of the absence type
+     * @throws AbsenceTypeNotSupportedException when name is not supported / implemented yet
+     */
     public AbsenceType {
         if (!isValidVacationTypeCategory(category)) {
             throw new AbsenceTypeNotSupportedException(category);
