@@ -37,7 +37,7 @@ class AbsenceWriteServiceImplTest {
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
 
-        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, SPECIALLEAVE.category()))
+        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, SPECIALLEAVE.category().name()))
             .thenReturn(Optional.empty());
 
         final AbsenceWrite absence = new AbsenceWrite(
@@ -73,7 +73,7 @@ class AbsenceWriteServiceImplTest {
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
 
-        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, SPECIALLEAVE.category()))
+        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, SPECIALLEAVE.category().name()))
             .thenReturn(Optional.of(new AbsenceWriteEntity()));
 
         final AbsenceWrite absence = new AbsenceWrite(
