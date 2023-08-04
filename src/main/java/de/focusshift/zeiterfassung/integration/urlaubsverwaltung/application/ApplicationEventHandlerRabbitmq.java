@@ -44,7 +44,7 @@ public class ApplicationEventHandlerRabbitmq {
         toAbsence(new ApplicationEventDtoAdapter(event))
             .ifPresentOrElse(
                 absenceWriteService::addAbsence,
-                () -> LOG.info("could not map ApplicationAllowedEvent to Absence -> could not add Absence"));
+                () -> LOG.info("could not map ApplicationAllowedEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), event.getTenantId()));
     }
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE})
@@ -53,8 +53,7 @@ public class ApplicationEventHandlerRabbitmq {
         toAbsence(new ApplicationEventDtoAdapter(event))
             .ifPresentOrElse(
                 absenceWriteService::addAbsence,
-                () -> LOG.info("could not map ApplicationCreatedFromSicknoteEvent to Absence -> could not add Absence")
-            );
+                () -> LOG.info("could not map ApplicationCreatedFromSicknoteEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), event.getTenantId()));
     }
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE})
@@ -63,8 +62,7 @@ public class ApplicationEventHandlerRabbitmq {
         toAbsence(new ApplicationEventDtoAdapter(event))
             .ifPresentOrElse(
                 absenceWriteService::deleteAbsence,
-                () -> LOG.info("could not map ApplicationCancelledEvent to Absence -> could not delete Absence")
-            );
+                () -> LOG.info("could not map ApplicationCancelledEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), event.getTenantId()));
     }
 
     private static Optional<AbsenceWrite> toAbsence(ApplicationEventDtoAdapter event) {
