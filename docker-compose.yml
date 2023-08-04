@@ -1,28 +1,5 @@
 version: '3.8'
 services:
-  rabbitmq:
-    image: rabbitmq:3.10-management
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    ports:
-      - '5672:5672'
-      - '15672:15672'
-  mariadb:
-    image: mariadb:10.6.11
-    ports:
-      - '3308:3306'
-    environment:
-      - MYSQL_DATABASE=urlaubsverwaltung
-      - MYSQL_USER=urlaubsverwaltung
-      - MYSQL_PASSWORD=urlaubsverwaltung
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
-    ports:
-      - '1025:1025'
-      - '8025:8025'
   postgres:
     image: postgres:9.6
     ports:
@@ -34,7 +11,12 @@ services:
       POSTGRES_APP_USER: app_user
       POSTGRES_APP_PASSWORD: app_password
     volumes:
-      - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh:ro
+        - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh:ro
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+        - '1025:1025'
+        - '8025:8025'
   keycloak:
     build: ./docker/keycloak
     image: quay.io/keycloak/keycloak:20.0.1
