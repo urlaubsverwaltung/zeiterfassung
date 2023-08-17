@@ -29,7 +29,7 @@
     "date-fns": "2.30.0",
     "esbuild": "0.19.2",
     "eslint": "8.47.0",
-    "eslint-config-prettier": "8.8.0",
+    "eslint-config-prettier": "9.0.0",
     "eslint-plugin-import": "2.28.0",
     "eslint-plugin-prettier": "5.0.0",
     "eslint-plugin-svelte": "2.32.4",
