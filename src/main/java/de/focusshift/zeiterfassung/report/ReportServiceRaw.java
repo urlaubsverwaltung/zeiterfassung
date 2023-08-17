@@ -195,22 +195,24 @@ class ReportServiceRaw {
                     toMap(
                         Map.Entry::getKey,
                         entry -> {
-                            final Optional<PlannedWorkingHours> plannedWorkingHours = entry.getValue().plannedWorkingHours(date);
+
+                            final PlannedWorkingHours plannedWorkingHours = entry.getValue().plannedWorkingHours(date)
+                                .orElse(PlannedWorkingHours.ZERO);
+
                             if (absenceEntries != null) {
 
                                 final List<Absence> absences = absenceEntries.get(entry.getKey());
-
                                 if (absences != null) {
-
-                                    final List<Absence> absencesAtdate = absences.stream()
+                                    final List<Absence> absencesAtDate = absences.stream()
                                         .filter(isInAbsencePeriod(date))
                                         .toList();
-                                    if (!absencesAtdate.isEmpty()) {
-                                        return calculatePlannedWorkingHoursWithAbsences(plannedWorkingHours.get(), absencesAtdate);
+                                    if (!absencesAtDate.isEmpty()) {
+                                        return calculatePlannedWorkingHoursWithAbsences(plannedWorkingHours, absencesAtDate);
                                     }
                                 }
+
                             }
-                            return entry.getValue().plannedWorkingHours(date).orElse(PlannedWorkingHours.ZERO);
+                            return plannedWorkingHours;
                         }
                     )
                 );
