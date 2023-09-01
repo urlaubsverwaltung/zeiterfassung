@@ -18,7 +18,7 @@
     "@duetds/date-picker": "1.4.0",
     "@hotwired/turbo": "7.3.0",
     "@rollup/plugin-commonjs": "25.0.4",
-    "@rollup/plugin-node-resolve": "15.2.0",
+    "@rollup/plugin-node-resolve": "15.2.1",
     "@tsconfig/svelte": "5.0.0",
     "@typescript-eslint/eslint-plugin": "6.4.0",
     "@typescript-eslint/parser": "6.4.0",
