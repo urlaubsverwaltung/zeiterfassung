@@ -23,12 +23,15 @@ services:
         - '1025:1025'
         - '8025:8025'
   keycloak:
-    build: ./docker/keycloak
-    image: zeiterfassung/keycloak-with-demodata:20.0.1
+    image: quay.io/keycloak/keycloak:20.0.1
+    command: ["start-dev", "--import-realm"]
     environment:
-      KC_HTTP_PORT: 8090
-      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HTTP_PORT: '8090'
       KC_HOSTNAME_STRICT: 'false'
       KC_HOSTNAME_STRICT_HTTPS: 'false'
+      KC_CACHE: 'local'
     ports:
       - '8090:8090'
+    volumes:
+      - ./docker/keycloak/export:/opt/keycloak/data/import
+
