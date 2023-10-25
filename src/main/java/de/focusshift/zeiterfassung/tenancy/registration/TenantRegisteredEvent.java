@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.tenancy.registration.web;
+package de.focusshift.zeiterfassung.tenancy.registration;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.Tenant;
 

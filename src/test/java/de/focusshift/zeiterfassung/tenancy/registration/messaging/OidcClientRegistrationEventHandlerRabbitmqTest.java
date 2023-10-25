@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.tenancy.registration.messaging;
 
 
-import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistration;
-import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistrationService;
+import de.focusshift.zeiterfassung.tenancy.registration.TenantRegistration;
+import de.focusshift.zeiterfassung.tenancy.registration.TenantRegistrationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
