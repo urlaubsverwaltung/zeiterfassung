@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.tenancy.registration.messaging;
 
-import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistration;
-import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistrationService;
+import de.focusshift.zeiterfassung.tenancy.registration.TenantRegistration;
+import de.focusshift.zeiterfassung.tenancy.registration.TenantRegistrationService;
 import org.slf4j.Logger;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
@@ -10,7 +10,7 @@ import static de.focusshift.zeiterfassung.tenancy.registration.messaging.OidcCli
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class OidcClientRegistrationEventHandlerRabbitmq {
+class OidcClientRegistrationEventHandlerRabbitmq {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 

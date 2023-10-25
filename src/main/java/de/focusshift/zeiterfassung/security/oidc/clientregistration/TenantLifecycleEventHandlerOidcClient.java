@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
-import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegisteredEvent;
+import de.focusshift.zeiterfassung.tenancy.registration.TenantRegisteredEvent;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantDisabledEvent;
 import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

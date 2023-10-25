@@ -17,14 +17,14 @@ import static java.lang.invoke.MethodHandles.lookup;
 @Component
 @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = SINGLE, matchIfMissing = true)
 @EnableConfigurationProperties({TenantConfigurationProperties.class, SingleTenantConfigurationProperties.class})
-public class PropertyTenantInitializer {
+class PropertyTenantInitializer {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
     private final TenantService tenantService;
     private final String defaultTenantId;
 
-    public PropertyTenantInitializer(TenantService tenantService, SingleTenantConfigurationProperties singleTenantConfigurationProperties) {
+    PropertyTenantInitializer(TenantService tenantService, SingleTenantConfigurationProperties singleTenantConfigurationProperties) {
         this.tenantService = tenantService;
         this.defaultTenantId = singleTenantConfigurationProperties.getDefaultTenantId();
     }

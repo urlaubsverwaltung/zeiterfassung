@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.tenancy.registration.web;
+package de.focusshift.zeiterfassung.tenancy.registration;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.Tenant;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantService;
@@ -6,8 +6,6 @@ import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -22,8 +20,7 @@ public class TenantRegistrationService {
     private final TenantService tenantService;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public TenantRegistrationService(TenantService tenantService,
-                                     ApplicationEventPublisher applicationEventPublisher) {
+    TenantRegistrationService(TenantService tenantService, ApplicationEventPublisher applicationEventPublisher) {
         this.tenantService = tenantService;
         this.applicationEventPublisher = applicationEventPublisher;
     }
@@ -40,10 +37,6 @@ public class TenantRegistrationService {
         final Tenant tenant = tenantService.create(tenantId);
         applicationEventPublisher.publishEvent(new TenantRegisteredEvent(tenant, tenantRegistration.oidcClientSecret()));
         LOG.info("Finished registering new tenant with tenantId={} ...!", tenantId);
-    }
-
-    public List<String> findAll() {
-        return tenantService.findAllTenants().stream().map(Tenant::tenantId).toList();
     }
 
     public void disableTenant(String tenantId) {

@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.tenancy.registration.property;
 
-import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistration;
-import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistrationService;
+import de.focusshift.zeiterfassung.tenancy.registration.TenantRegistration;
+import de.focusshift.zeiterfassung.tenancy.registration.TenantRegistrationService;
 import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -34,7 +34,7 @@ class TenantRegistryFromOAuthPropertiesImporterService {
 
     @Async
     @EventListener(ApplicationReadyEvent.class)
-    void importOIDCClientsFromProperties() {
+    public void importOIDCClientsFromProperties() {
 
         if (oAuth2ClientProperties.getRegistration().isEmpty()) {
             LOG.warn("No registrations in oAuth2ClientProperties - going to skip oidc client import!");

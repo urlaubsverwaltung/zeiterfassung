@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.tenancy.registration.messaging;
 
-import de.focusshift.zeiterfassung.tenancy.registration.web.TenantRegistrationService;
+import de.focusshift.zeiterfassung.tenancy.registration.TenantRegistrationService;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
