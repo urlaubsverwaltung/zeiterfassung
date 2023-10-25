@@ -100,7 +100,7 @@ class ReportCsvServiceTest {
 
         assertThat(stringWriter).hasToString("""
             report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;0,50;hard work;false
+            04.01.2021;Bruce;Wayne;0,500;hard work;false
             """);
     }
 
@@ -137,9 +137,9 @@ class ReportCsvServiceTest {
 
         assertThat(stringWriter).hasToString("""
             report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;1,00;hard work;false
-            04.01.2021;Bruce;Wayne;1,00;hard work;false
-            05.01.2021;Bruce;Wayne;8,00;hard work;false
+            04.01.2021;Bruce;Wayne;1,000;hard work;false
+            04.01.2021;Bruce;Wayne;1,000;hard work;false
+            05.01.2021;Bruce;Wayne;8,000;hard work;false
             """);
     }
 
@@ -191,7 +191,7 @@ class ReportCsvServiceTest {
 
         assertThat(stringWriter).hasToString("""
             report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;0,50;hard work;false
+            04.01.2021;Bruce;Wayne;0,500;hard work;false
             """);
     }
 
@@ -233,9 +233,9 @@ class ReportCsvServiceTest {
 
         assertThat(stringWriter).hasToString("""
             report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;1,00;hard work;false
-            04.01.2021;Bruce;Wayne;1,00;hard work;false
-            05.01.2021;Bruce;Wayne;8,00;hard work;false
+            04.01.2021;Bruce;Wayne;1,000;hard work;false
+            04.01.2021;Bruce;Wayne;1,000;hard work;false
+            05.01.2021;Bruce;Wayne;8,000;hard work;false
             """);
     }
 

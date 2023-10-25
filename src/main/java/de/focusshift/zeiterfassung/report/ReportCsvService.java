@@ -17,6 +17,7 @@ import java.util.Locale;
 @Service
 class ReportCsvService {
 
+    private static final int FRACTION_DIGITS = 3;
     private final ReportService reportService;
     private final DateFormatter dateFormatter;
     private final MessageSource messageSource;
@@ -83,8 +84,8 @@ class ReportCsvService {
     private void writeWeek(ReportWeek reportWeek, Locale locale, PrintWriter writer) {
 
         final NumberFormat numberFormat = NumberFormat.getInstance(locale);
-        numberFormat.setMaximumFractionDigits(2);
-        numberFormat.setMinimumFractionDigits(2);
+        numberFormat.setMaximumFractionDigits(FRACTION_DIGITS);
+        numberFormat.setMinimumFractionDigits(FRACTION_DIGITS);
 
         reportWeek.reportDays()
             .stream()
