@@ -92,8 +92,8 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
         entity.setColor(absence.color());
     }
 
-    private static AbsenceTypeEntity setTypeEntityFields(AbsenceType absenceType) {
-        final AbsenceTypeEntity absenceTypeEntity = new AbsenceTypeEntity();
+    private static AbsenceTypeEntityEmbeddable setTypeEntityFields(AbsenceType absenceType) {
+        final AbsenceTypeEntityEmbeddable absenceTypeEntity = new AbsenceTypeEntityEmbeddable();
         absenceTypeEntity.setCategory(absenceType.category());
         absenceTypeEntity.setSourceId(absenceType.sourceId());
         return absenceTypeEntity;

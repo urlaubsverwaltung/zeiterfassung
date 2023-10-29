@@ -48,7 +48,7 @@ public class AbsenceWriteEntity implements AdminAware<Long> {
     private DayLength dayLength;
 
     @Embedded
-    private AbsenceTypeEntity type;
+    private AbsenceTypeEntityEmbeddable type;
 
     @Column(nullable = false)
     @Enumerated(STRING)
@@ -110,11 +110,11 @@ public class AbsenceWriteEntity implements AdminAware<Long> {
         this.dayLength = dayLength;
     }
 
-    public AbsenceTypeEntity getType() {
+    public AbsenceTypeEntityEmbeddable getType() {
         return type;
     }
 
-    public void setType(AbsenceTypeEntity type) {
+    public void setType(AbsenceTypeEntityEmbeddable type) {
         this.type = type;
     }
 

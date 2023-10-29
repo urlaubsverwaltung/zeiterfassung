@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.tenancy.configuration.multi;
 
 import com.zaxxer.hikari.HikariDataSource;
+import de.focusshift.zeiterfassung.absence.AbsenceTypeEntity;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteEntity;
 import de.focusshift.zeiterfassung.security.oidc.clientregistration.OidcClientEntity;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantEntity;
@@ -56,7 +57,7 @@ class AdminAwareDatabaseConfiguration {
         return builder
             .dataSource(adminDataSource)
             // List all admin related entity packages here
-            .packages(TenantEntity.class, OidcClientEntity.class, AbsenceWriteEntity.class)
+            .packages(TenantEntity.class, OidcClientEntity.class, AbsenceWriteEntity.class, AbsenceTypeEntity.class)
             .persistenceUnit("admin")
             .build();
     }
