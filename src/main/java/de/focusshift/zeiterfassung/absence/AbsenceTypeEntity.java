@@ -1,28 +1,66 @@
 package de.focusshift.zeiterfassung.absence;
 
+import de.focusshift.zeiterfassung.JpaJsonConverter;
+import de.focusshift.zeiterfassung.tenancy.configuration.multi.AdminAware;
 import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.validation.constraints.Size;
+
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 
 import static jakarta.persistence.EnumType.STRING;
 
-@Embeddable
-public class AbsenceTypeEntity {
+@Entity(name = "absence_type")
+public class AbsenceTypeEntity implements AdminAware<Long> {
 
-    @Column(name = "type_category", nullable = false)
+    @Size(max = 255)
+    @Column(name = "tenant_id")
+    private String tenantId;
+
+    @Id
+    @Column(name = "id", unique = true, nullable = false, updatable = false)
+    @SequenceGenerator(name = "absence_type_seq", sequenceName = "absence_type_seq")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "absence_type_seq")
+    private Long id;
+
+    @Column(name = "category", nullable = false)
     @Enumerated(STRING)
     private AbsenceTypeCategory category;
 
-    @Column(name = "type_source_id")
+    @Column(name = "source_id", nullable = false)
     private Long sourceId;
 
-    public AbsenceTypeEntity(AbsenceTypeCategory category, Long sourceId) {
-        this.category = category;
-        this.sourceId = sourceId;
+    @Column(name = "color", nullable = false)
+    @Enumerated(STRING)
+    private AbsenceColor color;
+
+    @Column(name = "label_by_locale", nullable = false)
+    @Convert(converter = JpaJsonConverter.class)
+    private Map<Locale, String> labelByLocale;
+
+    public String getTenantId() {
+        return tenantId;
     }
 
-    public AbsenceTypeEntity() {
-        // for @Embeddable
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public AbsenceTypeCategory getCategory() {
@@ -39,5 +77,34 @@ public class AbsenceTypeEntity {
 
     public void setSourceId(Long sourceId) {
         this.sourceId = sourceId;
+    }
+
+    public AbsenceColor getColor() {
+        return color;
+    }
+
+    public void setColor(AbsenceColor color) {
+        this.color = color;
+    }
+
+    public Map<Locale, String> getLabelByLocale() {
+        return labelByLocale;
+    }
+
+    public void setLabelByLocale(Map<Locale, String> labelByLocale) {
+        this.labelByLocale = labelByLocale;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AbsenceTypeEntity that = (AbsenceTypeEntity) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

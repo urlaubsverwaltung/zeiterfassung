@@ -1,0 +1,59 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+  <changeSet author="seber" id="add-absence-type">
+
+    <preConditions>
+      <not>
+        <tableExists tableName="absence_type" />
+      </not>
+    </preConditions>
+
+    <createSequence sequenceName="absence_type_seq" incrementBy="50" />
+
+    <createTable tableName="absence_type">
+      <column name="tenant_id" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+      <column name="id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="category" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+      <column name="source_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="color" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+      <column name="label_by_locale" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addUniqueConstraint
+      tableName="absence_type"
+      columnNames="tenant_id,source_id,category"
+      constraintName="UC_ABSENCE_TYPE"
+    />
+    <createIndex tableName="absence_type" indexName="INDEX_ABSENCE_TYPE_TENANT_ID">
+      <column name="tenant_id" />
+    </createIndex>
+    <createIndex tableName="absence_type" indexName="INDEX_ABSENCE_TYPE_SOURCE_ID">
+      <column name="source_id" />
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="bseber" id="enable-row-level-security-on-absence-type">
+    <sql dbms="postgresql">
+      ALTER TABLE absence_type ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS absence_type_tenant_isolation_policy ON absence_type;
+      CREATE POLICY absence_type_tenant_isolation_policy ON absence_type
+        USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+    </sql>
+  </changeSet>
+</databaseChangeLog>
+

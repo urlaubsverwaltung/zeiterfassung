@@ -72,7 +72,7 @@ class AbsenceServiceImplTest {
         entity_1.setStartDate(today.plusDays(1).toInstant());
         entity_1.setEndDate(today.plusDays(2).toInstant());
         entity_1.setDayLength(FULL);
-        entity_1.setType(new AbsenceTypeEntity(AbsenceType.HOLIDAY.category(), AbsenceType.HOLIDAY.sourceId()));
+        entity_1.setType(new AbsenceTypeEntityEmbeddable(AbsenceType.HOLIDAY.category(), AbsenceType.HOLIDAY.sourceId()));
         entity_1.setColor(AbsenceColor.PINK);
 
         final AbsenceWriteEntity entity_2 = new AbsenceWriteEntity();
@@ -81,7 +81,7 @@ class AbsenceServiceImplTest {
         entity_2.setStartDate(today.plusDays(4).toInstant());
         entity_2.setEndDate(today.plusDays(4).toInstant());
         entity_2.setDayLength(MORNING);
-        entity_2.setType(new AbsenceTypeEntity(AbsenceType.SPECIALLEAVE.category(), AbsenceType.SPECIALLEAVE.sourceId()));
+        entity_2.setType(new AbsenceTypeEntityEmbeddable(AbsenceType.SPECIALLEAVE.category(), AbsenceType.SPECIALLEAVE.sourceId()));
         entity_2.setColor(VIOLET);
 
         when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
@@ -177,7 +177,7 @@ class AbsenceServiceImplTest {
         absenceEntity_1.setStartDate(absence_1_start);
         absenceEntity_1.setEndDate(absence_1_end);
         absenceEntity_1.setDayLength(FULL);
-        absenceEntity_1.setType(new AbsenceTypeEntity(OTHER, 1000L));
+        absenceEntity_1.setType(new AbsenceTypeEntityEmbeddable(OTHER, 1000L));
         absenceEntity_1.setColor(YELLOW);
 
         final Instant absence_2_1_start = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
@@ -187,7 +187,7 @@ class AbsenceServiceImplTest {
         absenceEntity_2_1.setStartDate(absence_2_1_start);
         absenceEntity_2_1.setEndDate(absence_2_1_end);
         absenceEntity_2_1.setDayLength(MORNING);
-        absenceEntity_2_1.setType(new AbsenceTypeEntity(OTHER, 2000L));
+        absenceEntity_2_1.setType(new AbsenceTypeEntityEmbeddable(OTHER, 2000L));
         absenceEntity_2_1.setColor(VIOLET);
 
         final Instant absence_2_2_start = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
@@ -197,7 +197,7 @@ class AbsenceServiceImplTest {
         absenceEntity_2_2.setStartDate(absence_2_2_start);
         absenceEntity_2_2.setEndDate(absence_2_2_end);
         absenceEntity_2_2.setDayLength(NOON);
-        absenceEntity_2_2.setType(new AbsenceTypeEntity(OTHER, 3000L));
+        absenceEntity_2_2.setType(new AbsenceTypeEntityEmbeddable(OTHER, 3000L));
         absenceEntity_2_2.setColor(CYAN);
 
         when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of(userId_1.value(), userId_2.value()), toExclusiveStartOfDay, fromStartOfDay))
@@ -272,7 +272,7 @@ class AbsenceServiceImplTest {
         absenceEntity_1.setStartDate(absence_1_start);
         absenceEntity_1.setEndDate(absence_1_end);
         absenceEntity_1.setDayLength(FULL);
-        absenceEntity_1.setType(new AbsenceTypeEntity(OTHER, 1000L));
+        absenceEntity_1.setType(new AbsenceTypeEntityEmbeddable(OTHER, 1000L));
         absenceEntity_1.setColor(YELLOW);
 
         final Instant absence_2_1_start = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
@@ -282,7 +282,7 @@ class AbsenceServiceImplTest {
         absenceEntity_2_1.setStartDate(absence_2_1_start);
         absenceEntity_2_1.setEndDate(absence_2_1_end);
         absenceEntity_2_1.setDayLength(MORNING);
-        absenceEntity_2_1.setType(new AbsenceTypeEntity(OTHER, 2000L));
+        absenceEntity_2_1.setType(new AbsenceTypeEntityEmbeddable(OTHER, 2000L));
         absenceEntity_2_1.setColor(VIOLET);
 
         final Instant absence_2_2_start = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
@@ -292,7 +292,7 @@ class AbsenceServiceImplTest {
         absenceEntity_2_2.setStartDate(absence_2_2_start);
         absenceEntity_2_2.setEndDate(absence_2_2_end);
         absenceEntity_2_2.setDayLength(NOON);
-        absenceEntity_2_2.setType(new AbsenceTypeEntity(OTHER, 3000L));
+        absenceEntity_2_2.setType(new AbsenceTypeEntityEmbeddable(OTHER, 3000L));
         absenceEntity_2_2.setColor(CYAN);
 
         when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
