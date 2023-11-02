@@ -1,8 +1,11 @@
 package de.focusshift.zeiterfassung.timeclock;
 
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.web.DoubleFormatter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -53,7 +56,15 @@ class TimeClockControllerTest {
     private CurrentUserProvider currentUserProvider;
 
     @MockBean
+    private TenantContextHolder tenantContextHolder;
+
+    @MockBean
     private DoubleFormatter doubleFormatter;
+
+    @BeforeEach
+    void setUp() {
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("default")));
+    }
 
     @Test
     void ensureStartTimeClock() throws Exception {
