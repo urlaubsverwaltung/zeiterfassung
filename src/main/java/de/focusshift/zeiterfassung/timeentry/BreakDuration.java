@@ -6,28 +6,17 @@ import java.util.Objects;
 /**
  * Defines a {@linkplain Duration} of break time. Different to {@linkplain WorkDuration}.
  */
-public final class BreakDuration {
+public final class BreakDuration implements ZeitDuration {
 
-    private final ZeitDuration zeitDuration;
+    private final Duration duration;
 
-    public BreakDuration(Duration value) {
-        this(new ZeitDuration(value));
+    public BreakDuration(Duration duration) {
+        this.duration = duration;
     }
 
-    BreakDuration(ZeitDuration zeitDuration) {
-        this.zeitDuration = zeitDuration;
-    }
-
+    @Override
     public Duration duration() {
-        return zeitDuration.duration();
-    }
-
-    public Duration durationInMinutes() {
-        return zeitDuration.durationInMinutes();
-    }
-
-    public double hoursDoubleValue() {
-        return zeitDuration.hoursDoubleValue();
+        return duration;
     }
 
     @Override
@@ -35,18 +24,18 @@ public final class BreakDuration {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BreakDuration that = (BreakDuration) o;
-        return Objects.equals(zeitDuration, that.zeitDuration);
+        return Objects.equals(duration, that.duration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(zeitDuration);
+        return Objects.hash(duration);
     }
 
     @Override
     public String toString() {
         return "BreakDuration{" +
-            "zeitDuration=" + zeitDuration +
+            "duration=" + duration +
             '}';
     }
 }

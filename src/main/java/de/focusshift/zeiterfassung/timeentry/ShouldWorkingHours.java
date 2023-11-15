@@ -6,27 +6,20 @@ import java.util.Objects;
 /**
  * Hours that should be worked. (e.g. PlannedWorkingHours 40h - Absence 8h = ShouldWorkingHours 32h)
  */
-public final class ShouldWorkingHours {
+public final class ShouldWorkingHours implements ZeitDuration {
 
     public static final ShouldWorkingHours ZERO = new ShouldWorkingHours(Duration.ZERO);
     public static final ShouldWorkingHours EIGHT = new ShouldWorkingHours(Duration.ofHours(8));
 
-    private final ZeitDuration zeitDuration;
+    private final Duration duration;
 
     public ShouldWorkingHours(Duration duration) {
-        this.zeitDuration = new ZeitDuration(duration);
+        this.duration = duration;
     }
 
+    @Override
     public Duration duration() {
-        return zeitDuration.duration();
-    }
-
-    public Duration durationInMinutes() {
-        return zeitDuration.durationInMinutes();
-    }
-
-    public double hoursDoubleValue() {
-        return zeitDuration.hoursDoubleValue();
+        return duration;
     }
 
     /**
@@ -47,18 +40,18 @@ public final class ShouldWorkingHours {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ShouldWorkingHours that = (ShouldWorkingHours) o;
-        return Objects.equals(zeitDuration, that.zeitDuration);
+        return Objects.equals(duration, that.duration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(zeitDuration);
+        return Objects.hash(duration);
     }
 
     @Override
     public String toString() {
         return "ShouldWorkingHours{" +
-            "zeitDuration=" + zeitDuration +
+            "duration=" + duration +
             '}';
     }
 }

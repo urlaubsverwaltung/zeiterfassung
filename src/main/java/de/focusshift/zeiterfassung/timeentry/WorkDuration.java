@@ -6,30 +6,19 @@ import java.util.Objects;
 /**
  * Defines a {@linkplain Duration} of worked time. Different to {@linkplain BreakDuration}.
  */
-public final class WorkDuration {
+public final class WorkDuration implements ZeitDuration {
 
     public static final WorkDuration ZERO = new WorkDuration(Duration.ZERO);
 
-    private final ZeitDuration zeitDuration;
+    private final Duration duration;
 
-    public WorkDuration(Duration value) {
-        this(new ZeitDuration(value));
+    public WorkDuration(Duration duration) {
+        this.duration = duration;
     }
 
-    WorkDuration(ZeitDuration zeitDuration) {
-        this.zeitDuration = zeitDuration;
-    }
-
+    @Override
     public Duration duration() {
-        return zeitDuration.duration();
-    }
-
-    public Duration durationInMinutes() {
-        return zeitDuration.durationInMinutes();
-    }
-
-    public double hoursDoubleValue() {
-        return zeitDuration.hoursDoubleValue();
+        return duration;
     }
 
     @Override
@@ -37,18 +26,18 @@ public final class WorkDuration {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WorkDuration that = (WorkDuration) o;
-        return Objects.equals(zeitDuration, that.zeitDuration);
+        return Objects.equals(duration, that.duration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(zeitDuration);
+        return Objects.hash(duration);
     }
 
     @Override
     public String toString() {
         return "WorkDuration{" +
-            "zeitDuration=" + zeitDuration +
+            "duration=" + duration +
             '}';
     }
 }

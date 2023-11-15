@@ -6,31 +6,20 @@ import java.util.Objects;
 /**
  * Defines a {@linkplain Duration} of planned working hours.
  */
-public final class PlannedWorkingHours {
+public final class PlannedWorkingHours implements ZeitDuration {
 
     public static final PlannedWorkingHours ZERO = new PlannedWorkingHours(Duration.ZERO);
     public static final PlannedWorkingHours EIGHT = new PlannedWorkingHours(Duration.ofHours(8));
 
-    private final ZeitDuration zeitDuration;
+    private final Duration duration;
 
-    public PlannedWorkingHours(Duration value) {
-        this(new ZeitDuration(value));
+    public PlannedWorkingHours(Duration duration) {
+        this.duration = duration;
     }
 
-    PlannedWorkingHours(ZeitDuration zeitDuration) {
-        this.zeitDuration = zeitDuration;
-    }
-
+    @Override
     public Duration duration() {
-        return zeitDuration.duration();
-    }
-
-    public Duration durationInMinutes() {
-        return zeitDuration.durationInMinutes();
-    }
-
-    public double hoursDoubleValue() {
-        return zeitDuration.hoursDoubleValue();
+        return duration;
     }
 
     /**
@@ -51,18 +40,18 @@ public final class PlannedWorkingHours {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PlannedWorkingHours that = (PlannedWorkingHours) o;
-        return zeitDuration.equals(that.zeitDuration);
+        return duration.equals(that.duration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(zeitDuration);
+        return Objects.hash(duration);
     }
 
     @Override
     public String toString() {
         return "PlannedWorkingHours{" +
-            "value=" + zeitDuration.duration() +
+            "duration=" + duration +
             '}';
     }
 }
