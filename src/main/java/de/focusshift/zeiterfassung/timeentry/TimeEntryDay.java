@@ -34,14 +34,10 @@ record TimeEntryDay(
     }
 
     public WorkDuration workDuration() {
-
-        final Duration duration = timeEntries
+        return timeEntries
             .stream()
             .map(TimeEntry::workDuration)
-            .map(WorkDuration::duration)
-            .reduce(Duration.ZERO, Duration::plus);
-
-        return new WorkDuration(duration);
+            .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
 
     /**

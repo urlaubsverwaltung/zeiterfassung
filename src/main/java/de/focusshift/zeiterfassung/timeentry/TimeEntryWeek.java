@@ -24,27 +24,20 @@ record TimeEntryWeek(LocalDate firstDateOfWeek, PlannedWorkingHours plannedWorki
      * @return overtime {@linkplain Duration}. can be negative.
      */
     public Duration overtime() {
-
-        final Duration worked = days.stream()
+        return days.stream()
             .map(TimeEntryDay::workDuration)
-            .map(WorkDuration::durationInMinutes)
-            .reduce(Duration.ZERO, Duration::plus);
-
-        return worked.minus(shouldWorkingHours().durationInMinutes());
+            .reduce(WorkDuration.ZERO, WorkDuration::plus)
+            .durationInMinutes();
     }
 
     public WorkDuration workDuration() {
-
-        final Duration duration = days
+        return days
             .stream()
             .map(TimeEntryDay::timeEntries)
             .flatMap(Collection::stream)
             .filter(not(TimeEntry::isBreak))
             .map(TimeEntry::workDuration)
-            .map(WorkDuration::duration)
-            .reduce(Duration.ZERO, Duration::plus);
-
-        return new WorkDuration(duration);
+            .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
 
     /**

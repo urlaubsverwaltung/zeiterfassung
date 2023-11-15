@@ -4,7 +4,6 @@ import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -52,13 +51,9 @@ record ReportDay(
     }
 
     private WorkDuration calculateWorkDurationFrom(Stream<ReportDayEntry> reportDayEntries) {
-
-        final Duration duration = reportDayEntries
+        return reportDayEntries
             .map(ReportDayEntry::workDuration)
-            .map(WorkDuration::duration)
-            .reduce(Duration.ZERO, Duration::plus);
-
-        return new WorkDuration(duration);
+            .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
 
     private <K, T> Optional<T> findValueByFirstKeyMatch(Map<K, T> map, Predicate<K> predicate) {
