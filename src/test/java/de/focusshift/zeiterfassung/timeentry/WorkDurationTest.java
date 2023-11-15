@@ -15,21 +15,21 @@ class WorkDurationTest {
 
     @Test
     void ensureMinutesReturnsNewWorkDurationWithDurationZero() {
-        final Duration actual = new WorkDuration(Duration.ZERO).minutes();
+        final Duration actual = new WorkDuration(Duration.ZERO).durationInMinutes();
         assertThat(actual).isEqualTo(Duration.ZERO);
     }
 
     @ParameterizedTest
     @ValueSource(ints = {1, 59, 60})
     void ensureMinutesReturnsNewWorkDurationWithAtLeastOneMinuteDuration(int givenSeconds) {
-        final Duration actual = new WorkDuration(Duration.ofSeconds(givenSeconds)).minutes();
+        final Duration actual = new WorkDuration(Duration.ofSeconds(givenSeconds)).durationInMinutes();
         assertThat(actual).isEqualTo(Duration.ofMinutes(1));
     }
 
     @ParameterizedTest
     @ValueSource(ints = {61, 120})
     void ensureMinutesReturnsNewWorkDurationRoundedUpToNextFullMinute(int givenSeconds) {
-        final Duration actual = new WorkDuration(Duration.ofSeconds(givenSeconds)).minutes();
+        final Duration actual = new WorkDuration(Duration.ofSeconds(givenSeconds)).durationInMinutes();
         assertThat(actual).isEqualTo(Duration.ofMinutes(2));
     }
 

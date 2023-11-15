@@ -24,7 +24,7 @@ public final class WorkDuration {
         return zeitDuration.duration();
     }
 
-    public Duration minutes() {
+    public Duration durationInMinutes() {
         return zeitDuration.durationInMinutes();
     }
 

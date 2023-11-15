@@ -359,8 +359,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             .map(this::toTimeEntryDayDto)
             .toList();
 
-        final String weekHoursWorked = durationToTimeString(timeEntryWeek.workDuration().minutes());
-        final String weekHoursWorkedShould = durationToTimeString(timeEntryWeek.shouldWorkingHours().minutes());
+        final String weekHoursWorked = durationToTimeString(timeEntryWeek.workDuration().durationInMinutes());
+        final String weekHoursWorkedShould = durationToTimeString(timeEntryWeek.shouldWorkingHours().durationInMinutes());
         final Duration weekOvertimeDuration = timeEntryWeek.overtime();
         final String weekOvertime = durationToTimeString(weekOvertimeDuration);
         final double weekRatio = timeEntryWeek.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
@@ -379,8 +379,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private TimeEntryDayDto toTimeEntryDayDto(TimeEntryDay timeEntryDay) {
 
         final String dateString = dateFormatter.formatDate(timeEntryDay.date(), MonthFormat.STRING, YearFormat.FULL);
-        final String workedHours = durationToTimeString(timeEntryDay.workDuration().minutes());
-        final String workedHoursShould = durationToTimeString(timeEntryDay.shouldWorkingHours().minutes());
+        final String workedHours = durationToTimeString(timeEntryDay.workDuration().durationInMinutes());
+        final String workedHoursShould = durationToTimeString(timeEntryDay.shouldWorkingHours().durationInMinutes());
         final Duration hoursDelta = timeEntryDay.overtime();
         final double ratio = timeEntryDay.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
         final List<TimeEntryDTO> dayTimeEntryDtos = timeEntryDay.timeEntries().stream().map(this::toTimeEntryDto).toList();

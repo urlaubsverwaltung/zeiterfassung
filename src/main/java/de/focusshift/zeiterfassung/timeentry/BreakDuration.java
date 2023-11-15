@@ -22,10 +22,7 @@ public final class BreakDuration {
         return zeitDuration.duration();
     }
 
-    /**
-     * @return work value rounded up to full minutes.
-     */
-    public Duration minutes() {
+    public Duration durationInMinutes() {
         return zeitDuration.durationInMinutes();
     }
 

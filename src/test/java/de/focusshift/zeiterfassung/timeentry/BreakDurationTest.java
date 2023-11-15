@@ -15,21 +15,21 @@ class BreakDurationTest {
 
     @Test
     void ensureMinutesReturnsNewBreakDurationWithDurationZero() {
-        final Duration actual = new BreakDuration(Duration.ZERO).minutes();
+        final Duration actual = new BreakDuration(Duration.ZERO).durationInMinutes();
         assertThat(actual).isEqualTo(Duration.ZERO);
     }
 
     @ParameterizedTest
     @ValueSource(ints = {1, 59, 60})
     void ensureMinutesReturnsNewBreakDurationWithAtLeastOneMinuteDuration(int givenSeconds) {
-        final Duration actual = new BreakDuration(Duration.ofSeconds(givenSeconds)).minutes();
+        final Duration actual = new BreakDuration(Duration.ofSeconds(givenSeconds)).durationInMinutes();
         assertThat(actual).isEqualTo(Duration.ofMinutes(1));
     }
 
     @ParameterizedTest
     @ValueSource(ints = {61, 120})
     void ensureMinutesReturnsNewBreakDurationRoundedUpToNextFullMinute(int givenSeconds) {
-        final Duration actual = new BreakDuration(Duration.ofSeconds(givenSeconds)).minutes();
+        final Duration actual = new BreakDuration(Duration.ofSeconds(givenSeconds)).durationInMinutes();
         assertThat(actual).isEqualTo(Duration.ofMinutes(2));
     }
 

@@ -25,10 +25,7 @@ public final class PlannedWorkingHours {
         return zeitDuration.duration();
     }
 
-    /**
-     * @return work value rounded up to full minutes.
-     */
-    public Duration minutes() {
+    public Duration durationInMinutes() {
         return zeitDuration.durationInMinutes();
     }
 
@@ -46,7 +43,7 @@ public final class PlannedWorkingHours {
      * @throws ArithmeticException if numeric overflow occurs
      */
     public PlannedWorkingHours plus(PlannedWorkingHours plannedWorkingHours) {
-        return new PlannedWorkingHours(this.duration().plus(plannedWorkingHours.minutes()));
+        return new PlannedWorkingHours(this.duration().plus(plannedWorkingHours.durationInMinutes()));
     }
 
     @Override

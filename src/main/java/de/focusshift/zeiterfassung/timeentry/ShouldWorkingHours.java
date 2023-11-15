@@ -21,7 +21,7 @@ public final class ShouldWorkingHours {
         return zeitDuration.duration();
     }
 
-    public Duration minutes() {
+    public Duration durationInMinutes() {
         return zeitDuration.durationInMinutes();
     }
 
@@ -39,7 +39,7 @@ public final class ShouldWorkingHours {
      * @throws ArithmeticException if numeric overflow occurs
      */
     public ShouldWorkingHours plus(ShouldWorkingHours shouldWorkingHours) {
-        return new ShouldWorkingHours(this.duration().plus(shouldWorkingHours.minutes()));
+        return new ShouldWorkingHours(this.duration().plus(shouldWorkingHours.durationInMinutes()));
     }
 
     @Override
