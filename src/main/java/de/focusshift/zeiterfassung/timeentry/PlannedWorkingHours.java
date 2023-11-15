@@ -20,6 +20,6 @@ public record PlannedWorkingHours(Duration duration) implements ZeitDuration {
      * @throws ArithmeticException if numeric overflow occurs
      */
     public PlannedWorkingHours plus(PlannedWorkingHours plannedWorkingHours) {
-        return new PlannedWorkingHours(this.duration().plus(plannedWorkingHours.durationInMinutes()));
+        return new PlannedWorkingHours(duration().plus(plannedWorkingHours.duration()));
     }
 }

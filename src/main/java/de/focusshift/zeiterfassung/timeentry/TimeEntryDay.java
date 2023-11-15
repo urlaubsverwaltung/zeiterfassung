@@ -30,7 +30,7 @@ record TimeEntryDay(
      * @return overtime {@linkplain Duration}. can be negative.
      */
     public Duration overtime() {
-        return workDuration().durationInMinutes().minus(shouldWorkingHours.durationInMinutes());
+        return workDuration().duration().minus(shouldWorkingHours.duration());
     }
 
     public WorkDuration workDuration() {

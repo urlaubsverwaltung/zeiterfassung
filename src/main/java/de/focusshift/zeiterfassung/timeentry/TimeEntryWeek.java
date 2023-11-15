@@ -24,10 +24,13 @@ record TimeEntryWeek(LocalDate firstDateOfWeek, PlannedWorkingHours plannedWorki
      * @return overtime {@linkplain Duration}. can be negative.
      */
     public Duration overtime() {
-        return days.stream()
+
+        final Duration worked = days.stream()
             .map(TimeEntryDay::workDuration)
             .reduce(WorkDuration.ZERO, WorkDuration::plus)
-            .durationInMinutes();
+            .duration();
+
+        return worked.minus(shouldWorkingHours().duration());
     }
 
     public WorkDuration workDuration() {
