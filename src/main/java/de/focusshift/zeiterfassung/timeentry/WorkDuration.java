@@ -10,26 +10,26 @@ public final class WorkDuration {
 
     public static final WorkDuration ZERO = new WorkDuration(Duration.ZERO);
 
-    private final SimpleTimeEntryDuration timeEntryDuration;
+    private final ZeitDuration zeitDuration;
 
     public WorkDuration(Duration value) {
-        this(new SimpleTimeEntryDuration(value));
+        this(new ZeitDuration(value));
     }
 
-    WorkDuration(SimpleTimeEntryDuration timeEntryDuration) {
-        this.timeEntryDuration = timeEntryDuration;
+    WorkDuration(ZeitDuration zeitDuration) {
+        this.zeitDuration = zeitDuration;
     }
 
     public Duration value() {
-        return timeEntryDuration.value();
+        return zeitDuration.duration();
     }
 
     public Duration minutes() {
-        return timeEntryDuration.minutes();
+        return zeitDuration.durationInMinutes();
     }
 
     public double hoursDoubleValue() {
-        return timeEntryDuration.hoursDoubleValue();
+        return zeitDuration.hoursDoubleValue();
     }
 
     @Override
@@ -37,18 +37,18 @@ public final class WorkDuration {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WorkDuration that = (WorkDuration) o;
-        return Objects.equals(timeEntryDuration, that.timeEntryDuration);
+        return Objects.equals(zeitDuration, that.zeitDuration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(timeEntryDuration);
+        return Objects.hash(zeitDuration);
     }
 
     @Override
     public String toString() {
         return "WorkDuration{" +
-            "timeEntryDuration=" + timeEntryDuration +
+            "durationExtended=" + zeitDuration +
             '}';
     }
 }

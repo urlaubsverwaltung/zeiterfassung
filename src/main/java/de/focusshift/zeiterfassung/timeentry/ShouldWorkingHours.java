@@ -11,22 +11,22 @@ public final class ShouldWorkingHours {
     public static final ShouldWorkingHours ZERO = new ShouldWorkingHours(Duration.ZERO);
     public static final ShouldWorkingHours EIGHT = new ShouldWorkingHours(Duration.ofHours(8));
 
-    private final SimpleTimeEntryDuration timeEntryDuration;
+    private final ZeitDuration zeitDuration;
 
     public ShouldWorkingHours(Duration duration) {
-        this.timeEntryDuration = new SimpleTimeEntryDuration(duration);
+        this.zeitDuration = new ZeitDuration(duration);
     }
 
     public Duration value() {
-        return timeEntryDuration.value();
+        return zeitDuration.duration();
     }
 
     public Duration minutes() {
-        return timeEntryDuration.minutes();
+        return zeitDuration.durationInMinutes();
     }
 
     public double hoursDoubleValue() {
-        return timeEntryDuration.hoursDoubleValue();
+        return zeitDuration.hoursDoubleValue();
     }
 
     /**
@@ -47,18 +47,18 @@ public final class ShouldWorkingHours {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ShouldWorkingHours that = (ShouldWorkingHours) o;
-        return Objects.equals(timeEntryDuration, that.timeEntryDuration);
+        return Objects.equals(zeitDuration, that.zeitDuration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(timeEntryDuration);
+        return Objects.hash(zeitDuration);
     }
 
     @Override
     public String toString() {
         return "ShouldWorkingHours{" +
-            "value=" + timeEntryDuration.value() +
+            "durationExtended=" + zeitDuration +
             '}';
     }
 }

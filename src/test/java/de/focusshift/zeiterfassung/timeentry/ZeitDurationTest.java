@@ -11,36 +11,36 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class SimpleTimeEntryDurationTest {
+class ZeitDurationTest {
 
     @Test
     void ensureMinutesReturnsNewWorkDurationWithDurationZero() {
-        final Duration actual = new SimpleTimeEntryDuration(Duration.ZERO).minutes();
+        final Duration actual = new ZeitDuration(Duration.ZERO).durationInMinutes();
         assertThat(actual).isEqualTo(Duration.ZERO);
     }
 
     @ParameterizedTest
     @ValueSource(ints = {1, 59, 60})
     void ensureMinutesReturnsNewWorkDurationWithAtLeastOneMinuteDuration(int givenSeconds) {
-        final Duration actual = new SimpleTimeEntryDuration(Duration.ofSeconds(givenSeconds)).minutes();
+        final Duration actual = new ZeitDuration(Duration.ofSeconds(givenSeconds)).durationInMinutes();
         assertThat(actual).isEqualTo(Duration.ofMinutes(1));
     }
 
     @ParameterizedTest
     @ValueSource(ints = {61, 120})
     void ensureMinutesReturnsNewWorkDurationRoundedUpToNextFullMinute(int givenSeconds) {
-        final Duration actual = new SimpleTimeEntryDuration(Duration.ofSeconds(givenSeconds)).minutes();
+        final Duration actual = new ZeitDuration(Duration.ofSeconds(givenSeconds)).durationInMinutes();
         assertThat(actual).isEqualTo(Duration.ofMinutes(2));
     }
 
     @Test
     void ensureHoursDoubleValueReturnsZero() {
-        assertThat(new SimpleTimeEntryDuration(Duration.ZERO).hoursDoubleValue()).isEqualTo(0d);
+        assertThat(new ZeitDuration(Duration.ZERO).hoursDoubleValue()).isEqualTo(0d);
     }
 
     @Test
     void ensureHoursDoubleValueReturnsOne() {
-        assertThat(new SimpleTimeEntryDuration(Duration.ofHours(1)).hoursDoubleValue()).isEqualTo(1d);
+        assertThat(new ZeitDuration(Duration.ofHours(1)).hoursDoubleValue()).isEqualTo(1d);
     }
 
     static Stream<Arguments> workDurationToHoursArguments() {
@@ -55,6 +55,6 @@ class SimpleTimeEntryDurationTest {
     @ParameterizedTest
     @MethodSource("workDurationToHoursArguments")
     void ensureHoursDoubleValueReturnsRoundedToTwoDigits(int givenMinutes, double expectedHours) {
-        assertThat(new SimpleTimeEntryDuration(Duration.ofMinutes(givenMinutes)).hoursDoubleValue()).isEqualTo(expectedHours);
+        assertThat(new ZeitDuration(Duration.ofMinutes(givenMinutes)).hoursDoubleValue()).isEqualTo(expectedHours);
     }
 }

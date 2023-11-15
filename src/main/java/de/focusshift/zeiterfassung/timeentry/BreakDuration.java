@@ -8,29 +8,29 @@ import java.util.Objects;
  */
 public final class BreakDuration {
 
-    private final SimpleTimeEntryDuration timeEntryDuration;
+    private final ZeitDuration zeitDuration;
 
     public BreakDuration(Duration value) {
-        this(new SimpleTimeEntryDuration(value));
+        this(new ZeitDuration(value));
     }
 
-    BreakDuration(SimpleTimeEntryDuration timeEntryDuration) {
-        this.timeEntryDuration = timeEntryDuration;
+    BreakDuration(ZeitDuration zeitDuration) {
+        this.zeitDuration = zeitDuration;
     }
 
     public Duration value() {
-        return timeEntryDuration.value();
+        return zeitDuration.duration();
     }
 
     /**
      * @return work value rounded up to full minutes.
      */
     public Duration minutes() {
-        return timeEntryDuration.minutes();
+        return zeitDuration.durationInMinutes();
     }
 
     public double hoursDoubleValue() {
-        return timeEntryDuration.hoursDoubleValue();
+        return zeitDuration.hoursDoubleValue();
     }
 
     @Override
@@ -38,18 +38,18 @@ public final class BreakDuration {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BreakDuration that = (BreakDuration) o;
-        return Objects.equals(timeEntryDuration, that.timeEntryDuration);
+        return Objects.equals(zeitDuration, that.zeitDuration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(timeEntryDuration);
+        return Objects.hash(zeitDuration);
     }
 
     @Override
     public String toString() {
         return "BreakDuration{" +
-            "timeEntryDuration=" + timeEntryDuration +
+            "durationExtended=" + zeitDuration +
             '}';
     }
 }

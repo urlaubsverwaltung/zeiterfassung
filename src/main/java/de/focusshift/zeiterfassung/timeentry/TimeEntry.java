@@ -25,7 +25,7 @@ public record TimeEntry(
      * @return duration in minutes without context if it is a {@linkplain BreakDuration} or {@linkplain WorkDuration}
      */
     public Duration durationInMinutes() {
-        return new SimpleTimeEntryDuration(Duration.between(start, end)).minutes();
+        return new ZeitDuration(Duration.between(start, end)).durationInMinutes();
     }
 
     public BreakDuration breakDuration() {

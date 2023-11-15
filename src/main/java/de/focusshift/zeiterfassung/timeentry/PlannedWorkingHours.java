@@ -11,29 +11,29 @@ public final class PlannedWorkingHours {
     public static final PlannedWorkingHours ZERO = new PlannedWorkingHours(Duration.ZERO);
     public static final PlannedWorkingHours EIGHT = new PlannedWorkingHours(Duration.ofHours(8));
 
-    private final SimpleTimeEntryDuration timeEntryDuration;
+    private final ZeitDuration zeitDuration;
 
     public PlannedWorkingHours(Duration value) {
-        this(new SimpleTimeEntryDuration(value));
+        this(new ZeitDuration(value));
     }
 
-    PlannedWorkingHours(SimpleTimeEntryDuration timeEntryDuration) {
-        this.timeEntryDuration = timeEntryDuration;
+    PlannedWorkingHours(ZeitDuration zeitDuration) {
+        this.zeitDuration = zeitDuration;
     }
 
     public Duration value() {
-        return timeEntryDuration.value();
+        return zeitDuration.duration();
     }
 
     /**
      * @return work value rounded up to full minutes.
      */
     public Duration minutes() {
-        return timeEntryDuration.minutes();
+        return zeitDuration.durationInMinutes();
     }
 
     public double hoursDoubleValue() {
-        return timeEntryDuration.hoursDoubleValue();
+        return zeitDuration.hoursDoubleValue();
     }
 
     /**
@@ -54,18 +54,18 @@ public final class PlannedWorkingHours {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PlannedWorkingHours that = (PlannedWorkingHours) o;
-        return timeEntryDuration.equals(that.timeEntryDuration);
+        return zeitDuration.equals(that.zeitDuration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(timeEntryDuration);
+        return Objects.hash(zeitDuration);
     }
 
     @Override
     public String toString() {
         return "PlannedWorkingHours{" +
-            "value=" + timeEntryDuration.value() +
+            "value=" + zeitDuration.duration() +
             '}';
     }
 }
