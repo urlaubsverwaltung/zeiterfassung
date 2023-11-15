@@ -48,7 +48,7 @@ class BreakDurationTest {
             Arguments.of(15, 0.25),
             Arguments.of(30, 0.5),
             Arguments.of(90, 1.5),
-            Arguments.of(110, 1.84)
+            Arguments.of(110, 1.834)
         );
     }
 

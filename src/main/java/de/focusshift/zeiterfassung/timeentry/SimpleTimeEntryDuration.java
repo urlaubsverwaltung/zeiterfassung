@@ -28,6 +28,6 @@ record SimpleTimeEntryDuration(Duration value) implements TimeEntryDuration {
     }
 
     private static double minutesToHours(long minutes) {
-        return BigDecimal.valueOf(minutes).divide(BigDecimal.valueOf(60), 2, RoundingMode.CEILING).doubleValue();
+        return BigDecimal.valueOf(minutes).divide(BigDecimal.valueOf(60), 3, RoundingMode.CEILING).doubleValue();
     }
 }
