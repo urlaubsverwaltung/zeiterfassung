@@ -15,6 +15,9 @@ public record TimeEntry(
 ) {
 
     /**
+     * Returns the exact duration between {@code start} and {@code end} date.
+     * Consider using {@linkplain TimeEntry#durationInMinutes()} if you are interested in a value rounded to minutes.
+     *
      * @return duration without context if it is a {@linkplain BreakDuration} or {@linkplain WorkDuration}
      */
     public Duration duration() {
@@ -22,6 +25,9 @@ public record TimeEntry(
     }
 
     /**
+     * Returns the duration between {@code start} and {@code end} rounded up to full minutes
+     * (e.g. {@code "PT30S"} -> {@code "PT1M"}).
+     *
      * @return duration in minutes without context if it is a {@linkplain BreakDuration} or {@linkplain WorkDuration}
      */
     public Duration durationInMinutes() {

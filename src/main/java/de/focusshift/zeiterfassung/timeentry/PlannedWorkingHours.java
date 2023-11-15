@@ -4,6 +4,8 @@ import java.time.Duration;
 
 /**
  * Defines a {@linkplain Duration} of planned working hours.
+ *
+ * @param duration the exact duration. not rounded up to minutes.
  */
 public record PlannedWorkingHours(Duration duration) implements ZeitDuration {
 

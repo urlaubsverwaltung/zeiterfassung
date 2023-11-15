@@ -26,7 +26,7 @@ interface ZeitDuration {
     /**
      * Returns a new Duration rounded up to full minutes (e.g. {@code "PT30S"} -> {@code "PT1M"}).
      *
-     * @return duration rounded to full minutes
+     * @return duration rounded up to full minutes
      */
     default Duration durationInMinutes() {
         final Duration duration = duration();

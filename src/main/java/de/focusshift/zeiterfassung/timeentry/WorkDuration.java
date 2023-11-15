@@ -4,6 +4,8 @@ import java.time.Duration;
 
 /**
  * Defines a {@linkplain Duration} of worked time. Different to {@linkplain BreakDuration}.
+ *
+ * @param duration the exact duration. not rounded up to minutes.
  */
 public record WorkDuration(Duration duration) implements ZeitDuration {
 

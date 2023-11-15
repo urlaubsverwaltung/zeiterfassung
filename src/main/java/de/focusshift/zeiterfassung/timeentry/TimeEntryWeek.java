@@ -28,9 +28,9 @@ record TimeEntryWeek(LocalDate firstDateOfWeek, PlannedWorkingHours plannedWorki
         final Duration worked = days.stream()
             .map(TimeEntryDay::workDuration)
             .reduce(WorkDuration.ZERO, WorkDuration::plus)
-            .duration();
+            .durationInMinutes();
 
-        return worked.minus(shouldWorkingHours().duration());
+        return worked.minus(shouldWorkingHours().durationInMinutes());
     }
 
     public WorkDuration workDuration() {

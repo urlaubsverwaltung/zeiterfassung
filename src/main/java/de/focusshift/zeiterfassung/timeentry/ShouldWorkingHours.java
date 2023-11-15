@@ -4,6 +4,8 @@ import java.time.Duration;
 
 /**
  * Hours that should be worked. (e.g. PlannedWorkingHours 40h - Absence 8h = ShouldWorkingHours 32h)
+ *
+ * @param duration the exact duration. not rounded up to minutes.
  */
 public record ShouldWorkingHours(Duration duration) implements ZeitDuration {
 

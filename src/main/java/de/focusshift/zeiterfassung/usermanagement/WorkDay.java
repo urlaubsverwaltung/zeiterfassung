@@ -17,7 +17,7 @@ import static java.time.DayOfWeek.WEDNESDAY;
  * Defines working hours on a dayOfWeek. May be used with {@linkplain WorkingTime} to benefit from a user context.
  *
  * @param dayOfWeek
- * @param duration
+ * @param duration the exact duration. not rounded up to minutes.
  */
 public record WorkDay(DayOfWeek dayOfWeek, Duration duration) {
 
