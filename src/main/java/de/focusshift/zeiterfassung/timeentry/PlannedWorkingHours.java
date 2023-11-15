@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * Defines a {@linkplain Duration} of planned working hours.
  */
-public final class PlannedWorkingHours implements TimeEntryDuration {
+public final class PlannedWorkingHours {
 
     public static final PlannedWorkingHours ZERO = new PlannedWorkingHours(Duration.ZERO);
     public static final PlannedWorkingHours EIGHT = new PlannedWorkingHours(Duration.ofHours(8));
@@ -21,7 +21,6 @@ public final class PlannedWorkingHours implements TimeEntryDuration {
         this.timeEntryDuration = timeEntryDuration;
     }
 
-    @Override
     public Duration value() {
         return timeEntryDuration.value();
     }
@@ -29,12 +28,10 @@ public final class PlannedWorkingHours implements TimeEntryDuration {
     /**
      * @return work value rounded up to full minutes.
      */
-    @Override
     public Duration minutes() {
         return timeEntryDuration.minutes();
     }
 
-    @Override
     public double hoursDoubleValue() {
         return timeEntryDuration.hoursDoubleValue();
     }

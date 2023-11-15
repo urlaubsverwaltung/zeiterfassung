@@ -10,9 +10,8 @@ import java.time.Duration;
  *
  * @param value
  */
-record SimpleTimeEntryDuration(Duration value) implements TimeEntryDuration {
+record SimpleTimeEntryDuration(Duration value) {
 
-    @Override
     public Duration minutes() {
         final long seconds = value.toSeconds();
 
@@ -21,7 +20,6 @@ record SimpleTimeEntryDuration(Duration value) implements TimeEntryDuration {
             : Duration.ofMinutes(value.toMinutes() + 1);
     }
 
-    @Override
     public double hoursDoubleValue() {
         final long minutes = minutes().toMinutes();
         return minutesToHours(minutes);

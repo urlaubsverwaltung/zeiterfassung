@@ -14,11 +14,25 @@ public record TimeEntry(
     boolean isBreak
 ) {
 
-    public TimeEntryDuration duration() {
-        return new SimpleTimeEntryDuration(Duration.between(start, end));
+    /**
+     * @return duration without context if it is a {@linkplain BreakDuration} or {@linkplain WorkDuration}
+     */
+    public Duration duration() {
+        return Duration.between(start, end);
+    }
+
+    /**
+     * @return duration in minutes without context if it is a {@linkplain BreakDuration} or {@linkplain WorkDuration}
+     */
+    public Duration durationInMinutes() {
+        return new SimpleTimeEntryDuration(Duration.between(start, end)).minutes();
+    }
+
+    public BreakDuration breakDuration() {
+        return new BreakDuration(isBreak ? duration() : Duration.ZERO);
     }
 
     public WorkDuration workDuration() {
-        return new WorkDuration(isBreak ? Duration.ZERO : Duration.between(start, end));
+        return new WorkDuration(isBreak ? Duration.ZERO : duration());
     }
 }

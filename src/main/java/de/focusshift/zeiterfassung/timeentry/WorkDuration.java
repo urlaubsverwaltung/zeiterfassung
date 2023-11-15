@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * Defines a {@linkplain Duration} of worked time. Different to {@linkplain BreakDuration}.
  */
-public final class WorkDuration implements TimeEntryDuration {
+public final class WorkDuration {
 
     public static final WorkDuration ZERO = new WorkDuration(Duration.ZERO);
 
@@ -20,17 +20,14 @@ public final class WorkDuration implements TimeEntryDuration {
         this.timeEntryDuration = timeEntryDuration;
     }
 
-    @Override
     public Duration value() {
         return timeEntryDuration.value();
     }
 
-    @Override
     public Duration minutes() {
         return timeEntryDuration.minutes();
     }
 
-    @Override
     public double hoursDoubleValue() {
         return timeEntryDuration.hoursDoubleValue();
     }

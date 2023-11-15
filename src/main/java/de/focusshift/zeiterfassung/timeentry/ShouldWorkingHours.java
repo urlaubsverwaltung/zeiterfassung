@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * Hours that should be worked. (e.g. PlannedWorkingHours 40h - Absence 8h = ShouldWorkingHours 32h)
  */
-public final class ShouldWorkingHours implements TimeEntryDuration {
+public final class ShouldWorkingHours {
 
     public static final ShouldWorkingHours ZERO = new ShouldWorkingHours(Duration.ZERO);
     public static final ShouldWorkingHours EIGHT = new ShouldWorkingHours(Duration.ofHours(8));
@@ -17,17 +17,14 @@ public final class ShouldWorkingHours implements TimeEntryDuration {
         this.timeEntryDuration = new SimpleTimeEntryDuration(duration);
     }
 
-    @Override
     public Duration value() {
         return timeEntryDuration.value();
     }
 
-    @Override
     public Duration minutes() {
         return timeEntryDuration.minutes();
     }
 
-    @Override
     public double hoursDoubleValue() {
         return timeEntryDuration.hoursDoubleValue();
     }

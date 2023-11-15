@@ -252,7 +252,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         if (start != null && end != null && duration != null) {
             final boolean startChanged = notEquals(existingTimeEntry.start(), start);
             final boolean endChanged = notEquals(existingTimeEntry.end(), end);
-            final boolean durationChanged = !duration.equals(Duration.ZERO) && !existingTimeEntry.duration().value().equals(duration);
+            final boolean durationChanged = !duration.equals(Duration.ZERO) && !existingTimeEntry.duration().equals(duration);
             final boolean plausibleUpdate = duration.equals(Duration.ZERO) || delta(start, end).equals(duration);
 
             if (startChanged && endChanged && durationChanged && !plausibleUpdate) {
