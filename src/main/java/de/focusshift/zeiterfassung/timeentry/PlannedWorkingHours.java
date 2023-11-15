@@ -21,7 +21,7 @@ public final class PlannedWorkingHours {
         this.zeitDuration = zeitDuration;
     }
 
-    public Duration value() {
+    public Duration duration() {
         return zeitDuration.duration();
     }
 
@@ -46,7 +46,7 @@ public final class PlannedWorkingHours {
      * @throws ArithmeticException if numeric overflow occurs
      */
     public PlannedWorkingHours plus(PlannedWorkingHours plannedWorkingHours) {
-        return new PlannedWorkingHours(this.value().plus(plannedWorkingHours.minutes()));
+        return new PlannedWorkingHours(this.duration().plus(plannedWorkingHours.minutes()));
     }
 
     @Override

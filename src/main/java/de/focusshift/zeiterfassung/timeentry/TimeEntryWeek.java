@@ -41,7 +41,7 @@ record TimeEntryWeek(LocalDate firstDateOfWeek, PlannedWorkingHours plannedWorki
             .flatMap(Collection::stream)
             .filter(not(TimeEntry::isBreak))
             .map(TimeEntry::workDuration)
-            .map(WorkDuration::value)
+            .map(WorkDuration::duration)
             .reduce(Duration.ZERO, Duration::plus);
 
         return new WorkDuration(duration);

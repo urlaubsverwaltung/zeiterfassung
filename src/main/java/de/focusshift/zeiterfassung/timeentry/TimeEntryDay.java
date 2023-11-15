@@ -38,7 +38,7 @@ record TimeEntryDay(
         final Duration duration = timeEntries
             .stream()
             .map(TimeEntry::workDuration)
-            .map(WorkDuration::value)
+            .map(WorkDuration::duration)
             .reduce(Duration.ZERO, Duration::plus);
 
         return new WorkDuration(duration);

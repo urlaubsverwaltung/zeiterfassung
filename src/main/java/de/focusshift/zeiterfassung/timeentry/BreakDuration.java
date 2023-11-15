@@ -18,7 +18,7 @@ public final class BreakDuration {
         this.zeitDuration = zeitDuration;
     }
 
-    public Duration value() {
+    public Duration duration() {
         return zeitDuration.duration();
     }
 
@@ -49,7 +49,7 @@ public final class BreakDuration {
     @Override
     public String toString() {
         return "BreakDuration{" +
-            "durationExtended=" + zeitDuration +
+            "zeitDuration=" + zeitDuration +
             '}';
     }
 }

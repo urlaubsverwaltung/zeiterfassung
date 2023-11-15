@@ -20,7 +20,7 @@ public final class WorkDuration {
         this.zeitDuration = zeitDuration;
     }
 
-    public Duration value() {
+    public Duration duration() {
         return zeitDuration.duration();
     }
 
@@ -48,7 +48,7 @@ public final class WorkDuration {
     @Override
     public String toString() {
         return "WorkDuration{" +
-            "durationExtended=" + zeitDuration +
+            "zeitDuration=" + zeitDuration +
             '}';
     }
 }

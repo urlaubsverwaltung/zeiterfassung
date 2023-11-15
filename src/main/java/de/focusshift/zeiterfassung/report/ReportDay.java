@@ -55,7 +55,7 @@ record ReportDay(
 
         final Duration duration = reportDayEntries
             .map(ReportDayEntry::workDuration)
-            .map(WorkDuration::value)
+            .map(WorkDuration::duration)
             .reduce(Duration.ZERO, Duration::plus);
 
         return new WorkDuration(duration);

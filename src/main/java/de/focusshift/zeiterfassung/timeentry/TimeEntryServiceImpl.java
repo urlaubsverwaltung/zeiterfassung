@@ -236,10 +236,10 @@ class TimeEntryServiceImpl implements TimeEntryService {
         if (absenceDayLengthValue >= 1.0) {
             return ShouldWorkingHours.ZERO;
         } else if (absenceDayLengthValue == 0.5) {
-            return new ShouldWorkingHours(plannedWorkingHours.value().dividedBy(2));
+            return new ShouldWorkingHours(plannedWorkingHours.duration().dividedBy(2));
         }
 
-        return new ShouldWorkingHours(plannedWorkingHours.value());
+        return new ShouldWorkingHours(plannedWorkingHours.duration());
 
     }
 

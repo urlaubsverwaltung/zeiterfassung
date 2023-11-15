@@ -33,7 +33,7 @@ class ReportDayTest {
 
         final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batman.localId(), PlannedWorkingHours.EIGHT), Map.of(batman.localId(), List.of(reportDayEntry)), Map.of());
 
-        assertThat(reportDay.workDuration().value()).isEqualTo(Duration.ZERO);
+        assertThat(reportDay.workDuration().duration()).isEqualTo(Duration.ZERO);
     }
 
     private static ZonedDateTime dateTime(int year, int month, int dayOfMonth, int hour, int minute) {

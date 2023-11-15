@@ -233,7 +233,7 @@ class ReportServiceRaw {
         if (absenceDayLengthValue >= 1.0) {
             return PlannedWorkingHours.ZERO;
         } else if (absenceDayLengthValue == 0.5) {
-            return new PlannedWorkingHours(actuallyPlanned.value().dividedBy(2));
+            return new PlannedWorkingHours(actuallyPlanned.duration().dividedBy(2));
         }
 
         return actuallyPlanned;
