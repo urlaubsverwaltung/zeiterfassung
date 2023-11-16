@@ -116,6 +116,34 @@ class AbsenceServiceImplTest {
     }
 
     @Test
+    void ensureGetAbsencesByUserIdsReturnsEmptyListForAskedUsersWithoutAbsences() {
+
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(berlin);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+
+        final LocalDate from = LocalDate.of(2023, 11, 16);
+        final LocalDate toExclusive = LocalDate.of(2023, 11, 16);
+        final Instant fromStartOfDay = Instant.from(from.atStartOfDay().atZone(berlin));
+        final Instant toExclusiveStartOfDay = Instant.from(toExclusive.atStartOfDay().atZone(berlin));
+
+        final UserId userId = new UserId(UUID.randomUUID().toString());
+        final UserLocalId userLocalId = new UserLocalId(1L);
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId))).thenReturn(List.of(
+            new User(userId, userLocalId, null, null, null, Set.of()))
+        );
+
+        final List<String> userIdsValues = List.of(userId.value());
+
+        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", userIdsValues, toExclusiveStartOfDay, fromStartOfDay))
+            .thenReturn(List.of());
+
+        final Map<UserLocalId, List<Absence>> actual = sut.getAbsencesByUserIds(List.of(userLocalId), from, toExclusive);
+        assertThat(actual).containsEntry(userLocalId, List.of());
+    }
+
+    @Test
     void ensureGetAbsencesByUserIds() {
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");

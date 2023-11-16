@@ -83,11 +83,15 @@ class AbsenceServiceImpl implements AbsenceService {
 
         final Map<UserId, UserLocalId> userLocalIdById = users.stream().collect(toMap(User::id, User::localId));
 
-
-        return absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, userIdValues, toExclusiveStartOfDay, fromStartOfDay)
+        final Map<UserLocalId, List<Absence>> result = absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, userIdValues, toExclusiveStartOfDay, fromStartOfDay)
             .stream()
             .map(absenceWriteEntity -> toAbsence(absenceWriteEntity, zoneId))
             .collect(groupingBy(absence -> userLocalIdById.get(absence.userId())));
+
+        // add empty lists for users without absences
+        userLocalIds.forEach(id -> result.computeIfAbsent(id, (unused) -> List.of()));
+
+        return result;
     }
 
     @Override
