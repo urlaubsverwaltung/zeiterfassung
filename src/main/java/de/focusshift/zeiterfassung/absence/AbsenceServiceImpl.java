@@ -66,10 +66,8 @@ class AbsenceServiceImpl implements AbsenceService {
 
     @Override
     public Map<UserLocalId, List<Absence>> getAbsencesByUserIds(List<UserLocalId> userLocalIds, LocalDate from, LocalDate toExclusive) {
-        final ZoneId zoneId = userSettingsProvider.zoneId();
-        final Instant fromStartOfDay = Instant.from(from.atStartOfDay().atZone(zoneId));
-        final Instant toExclusiveStartOfDay = Instant.from(toExclusive.atStartOfDay().atZone(zoneId));
 
+        final InstantPeriod period = getInstantPeriod(from, toExclusive);
         final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
 
         final List<User> users = userManagementService.findAllUsersByLocalIds(userLocalIds);
@@ -82,9 +80,9 @@ class AbsenceServiceImpl implements AbsenceService {
 
         final Map<UserId, UserLocalId> userLocalIdById = users.stream().collect(toMap(User::id, User::localId));
 
-        final Map<UserLocalId, List<Absence>> result = absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, userIdValues, toExclusiveStartOfDay, fromStartOfDay)
+        final Map<UserLocalId, List<Absence>> result = absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, userIdValues, period.toExclusive, period.from)
             .stream()
-            .map(absenceWriteEntity -> toAbsence(absenceWriteEntity, zoneId))
+            .map(absenceWriteEntity -> toAbsence(absenceWriteEntity, period.zoneId))
             .collect(groupingBy(absence -> userLocalIdById.get(absence.userId())));
 
         // add empty lists for users without absences
@@ -95,15 +93,13 @@ class AbsenceServiceImpl implements AbsenceService {
 
     @Override
     public Map<UserLocalId, List<Absence>> getAbsencesForAllUsers(LocalDate from, LocalDate toExclusive) {
-        final ZoneId zoneId = userSettingsProvider.zoneId();
-        final Instant fromStartOfDay = Instant.from(from.atStartOfDay().atZone(zoneId));
-        final Instant toExclusiveStartOfDay = Instant.from(toExclusive.atStartOfDay().atZone(zoneId));
 
+        final InstantPeriod period = getInstantPeriod(from, toExclusive);
         final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
 
-        final Map<UserId, List<Absence>> absenceByUserId = absenceRepository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, toExclusiveStartOfDay, fromStartOfDay)
+        final Map<UserId, List<Absence>> absenceByUserId = absenceRepository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, period.toExclusive, period.from)
             .stream()
-            .map(entity -> toAbsence(entity, zoneId))
+            .map(entity -> toAbsence(entity, period.zoneId))
             .collect(groupingBy(Absence::userId));
 
         final Map<UserId, UserLocalId> allUserLocalIdsGroupedByUserId = userManagementService.findAllUserLocalIdsGroupedByUserId();
@@ -120,15 +116,13 @@ class AbsenceServiceImpl implements AbsenceService {
 
     @Override
     public List<Absence> getAbsencesByUserId(UserId userId, LocalDate from, LocalDate toExclusive) {
-        final ZoneId zoneId = userSettingsProvider.zoneId();
-        final Instant fromStartOfDay = Instant.from(from.atStartOfDay().atZone(zoneId));
-        final Instant toExclusiveStartOfDay = Instant.from(toExclusive.atStartOfDay().atZone(zoneId));
 
+        final InstantPeriod period = getInstantPeriod(from, toExclusive);
         final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
 
-        return absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, List.of(userId.value()), toExclusiveStartOfDay, fromStartOfDay)
+        return absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, List.of(userId.value()), period.toExclusive, period.from)
             .stream()
-            .map(entity -> toAbsence(entity, zoneId))
+            .map(entity -> toAbsence(entity, period.zoneId))
             .toList();
     }
 
@@ -149,5 +143,16 @@ class AbsenceServiceImpl implements AbsenceService {
             new AbsenceType(entity.getType().getCategory(), entity.getType().getSourceId()),
             entity.getColor()
         );
+    }
+
+    private record InstantPeriod(ZoneId zoneId, Instant from, Instant toExclusive) {}
+
+    private InstantPeriod getInstantPeriod(LocalDate from, LocalDate toExclusive) {
+
+        final ZoneId zoneId = userSettingsProvider.zoneId();
+        final Instant fromStartOfDay = Instant.from(from.atStartOfDay().atZone(zoneId));
+        final Instant toExclusiveStartOfDay = Instant.from(toExclusive.atStartOfDay().atZone(zoneId));
+
+        return new InstantPeriod(zoneId, fromStartOfDay, toExclusiveStartOfDay);
     }
 }
