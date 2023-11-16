@@ -212,6 +212,31 @@ class AbsenceServiceImplTest {
     }
 
     @Test
+    void ensureGetAbsencesForAllUsersReturnsEmptyListForUsersWithoutAbsences() {
+
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(berlin);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+
+        final LocalDate from = LocalDate.of(2023, 11, 1);
+        final LocalDate toExclusive = LocalDate.of(2023, 11, 30);
+        final Instant fromStartOfDay = Instant.from(from.atStartOfDay().atZone(berlin));
+        final Instant toExclusiveStartOfDay = Instant.from(toExclusive.atStartOfDay().atZone(berlin));
+
+        final UserId userId = new UserId(UUID.randomUUID().toString());
+        final UserLocalId userLocalId = new UserLocalId(1L);
+
+        when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
+            .thenReturn(List.of());
+
+        when(userManagementService.findAllUserLocalIdsGroupedByUserId())
+            .thenReturn(Map.of(userId, userLocalId));
+
+        final Map<UserLocalId, List<Absence>> actual = sut.getAbsencesForAllUsers(from, toExclusive);
+        assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(userLocalId, List.of()));
+    }
+
+    @Test
     void ensureGetAbsencesForAllUsers() {
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
@@ -261,13 +286,13 @@ class AbsenceServiceImplTest {
         when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity_1, absenceEntity_2_1, absenceEntity_2_2));
 
-        when(userManagementService.findAllUsersByIds(Set.of(userId_1, userId_2))).thenReturn(List.of(
-            new User(userId_1, userLocalId_1, "Bruce", null, null, Set.of()),
-            new User(userId_2, userLocalId_2, "Alfred", null, null, Set.of())
-        ));
+        when(userManagementService.findAllUserLocalIdsGroupedByUserId())
+            .thenReturn(Map.of(
+                userId_1, userLocalId_1,
+                userId_2, userLocalId_2
+            ));
 
         final Map<UserLocalId, List<Absence>> actual = sut.getAbsencesForAllUsers(from, toExclusive);
-
         assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
             userLocalId_1, List.of(
                 new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, new AbsenceType(OTHER, 1000L), YELLOW)

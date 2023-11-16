@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
@@ -107,12 +106,16 @@ class AbsenceServiceImpl implements AbsenceService {
             .map(entity -> toAbsence(entity, zoneId))
             .collect(groupingBy(Absence::userId));
 
-        final Map<UserId, User> userIdUserMap = userManagementService.findAllUsersByIds(absenceByUserId.keySet())
-            .stream().collect(toMap(User::id, identity()));
+        final Map<UserId, UserLocalId> allUserLocalIdsGroupedByUserId = userManagementService.findAllUserLocalIdsGroupedByUserId();
 
-        return absenceByUserId.entrySet().stream()
-            .collect(
-                toMap(userIdListEntry -> userIdUserMap.get(userIdListEntry.getKey()).localId(), Map.Entry::getValue));
+        final Map<UserLocalId, List<Absence>> result = absenceByUserId.entrySet()
+            .stream()
+            .collect(toMap(entry -> allUserLocalIdsGroupedByUserId.get(entry.getKey()), Map.Entry::getValue));
+
+        // add empty lists for users without absences
+        allUserLocalIdsGroupedByUserId.values().forEach(localId -> result.computeIfAbsent(localId, (unused) -> List.of()));
+
+        return result;
     }
 
     @Override
