@@ -210,4 +210,72 @@ class AbsenceServiceImplTest {
             )
         ));
     }
+
+    @Test
+    void ensureGetAbsencesForAllUsers() {
+
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(berlin);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+
+        final LocalDate from = LocalDate.of(2023, 11, 1);
+        final LocalDate toExclusive = LocalDate.of(2023, 11, 30);
+        final Instant fromStartOfDay = Instant.from(from.atStartOfDay().atZone(berlin));
+        final Instant toExclusiveStartOfDay = Instant.from(toExclusive.atStartOfDay().atZone(berlin));
+
+        final UserId userId_1 = new UserId(UUID.randomUUID().toString());
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserId userId_2 = new UserId(UUID.randomUUID().toString());
+        final UserLocalId userLocalId_2 = new UserLocalId(2L);
+
+        final Instant absence_1_start = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
+        final Instant absence_1_end = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
+        final AbsenceWriteEntity absenceEntity_1 = new AbsenceWriteEntity();
+        absenceEntity_1.setUserId(userId_1.value());
+        absenceEntity_1.setStartDate(absence_1_start);
+        absenceEntity_1.setEndDate(absence_1_end);
+        absenceEntity_1.setDayLength(FULL);
+        absenceEntity_1.setType(new AbsenceTypeEntity(OTHER, 1000L));
+        absenceEntity_1.setColor(YELLOW);
+
+        final Instant absence_2_1_start = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
+        final Instant absence_2_1_end = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
+        final AbsenceWriteEntity absenceEntity_2_1 = new AbsenceWriteEntity();
+        absenceEntity_2_1.setUserId(userId_2.value());
+        absenceEntity_2_1.setStartDate(absence_2_1_start);
+        absenceEntity_2_1.setEndDate(absence_2_1_end);
+        absenceEntity_2_1.setDayLength(MORNING);
+        absenceEntity_2_1.setType(new AbsenceTypeEntity(OTHER, 2000L));
+        absenceEntity_2_1.setColor(VIOLET);
+
+        final Instant absence_2_2_start = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
+        final Instant absence_2_2_end = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
+        final AbsenceWriteEntity absenceEntity_2_2 = new AbsenceWriteEntity();
+        absenceEntity_2_2.setUserId(userId_2.value());
+        absenceEntity_2_2.setStartDate(absence_2_2_start);
+        absenceEntity_2_2.setEndDate(absence_2_2_end);
+        absenceEntity_2_2.setDayLength(NOON);
+        absenceEntity_2_2.setType(new AbsenceTypeEntity(OTHER, 3000L));
+        absenceEntity_2_2.setColor(CYAN);
+
+        when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
+            .thenReturn(List.of(absenceEntity_1, absenceEntity_2_1, absenceEntity_2_2));
+
+        when(userManagementService.findAllUsersByIds(Set.of(userId_1, userId_2))).thenReturn(List.of(
+            new User(userId_1, userLocalId_1, "Bruce", null, null, Set.of()),
+            new User(userId_2, userLocalId_2, "Alfred", null, null, Set.of())
+        ));
+
+        final Map<UserLocalId, List<Absence>> actual = sut.getAbsencesForAllUsers(from, toExclusive);
+
+        assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
+            userLocalId_1, List.of(
+                new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, new AbsenceType(OTHER, 1000L), YELLOW)
+            ),
+            userLocalId_2, List.of(
+                new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, new AbsenceType(OTHER, 2000L), VIOLET),
+                new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, new AbsenceType(OTHER, 3000L), CYAN)
+            )
+        ));
+    }
 }
