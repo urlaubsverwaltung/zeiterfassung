@@ -86,7 +86,7 @@ class AbsenceServiceImpl implements AbsenceService {
             .collect(groupingBy(absence -> userLocalIdById.get(absence.userId())));
 
         // add empty lists for users without absences
-        userLocalIds.forEach(id -> result.computeIfAbsent(id, (unused) -> List.of()));
+        userLocalIds.forEach(id -> result.computeIfAbsent(id, unused -> List.of()));
 
         return result;
     }
@@ -109,7 +109,7 @@ class AbsenceServiceImpl implements AbsenceService {
             .collect(toMap(entry -> allUserLocalIdsGroupedByUserId.get(entry.getKey()), Map.Entry::getValue));
 
         // add empty lists for users without absences
-        allUserLocalIdsGroupedByUserId.values().forEach(localId -> result.computeIfAbsent(localId, (unused) -> List.of()));
+        allUserLocalIdsGroupedByUserId.values().forEach(localId -> result.computeIfAbsent(localId, unused -> List.of()));
 
         return result;
     }
