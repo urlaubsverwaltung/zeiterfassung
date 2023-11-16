@@ -50,10 +50,12 @@ The application uses a [PostgresSQL](https://www.postgresql.org/) database manag
 Create a database in your PostgresSQL database management system with e.g. the name `zeiterfassung`.
 and a user with access rights for this database and configure it
 
-```properties
-spring.datasource.url=jdbc:postgresql://$HOST:$PORT/$DATABASENAME
-spring.datasource.username=$USER
-spring.datasource.password=$PASSWORD
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://$HOST:$PORT/$DATABASENAME
+    username: $USER
+    password: $PASSWORD
 ```
 
 When you start the application for the first time, all database tables are created automatically.
@@ -62,16 +64,20 @@ When you start the application for the first time, all database tables are creat
 
 To configure the e-mail server, the following configurations must be made.
 
-```properties
-zeiterfassung.mail.from=zeiterfassung@example.org
-zeiterfassung.mail.fromDisplayName=zeiterfassung
-zeiterfassung.mail.replyTo=replyto@example.org
-zeiterfassung.mail.replyToDisplayName=replyto
+```yaml
+zeiterfassung:
+  mail:
+    from: zeiterfassung@example.org
+    fromDisplayName: zeiterfassung
+    replyTo: replyto@example.org
+    replyToDisplayName: replyto
 
-spring.mail.host=$HOST
-spring.mail.port=$PORT
-spring.mail.username=$USERNAME
-spring.mail.password=$PASSWORD
+spring:
+  mail:
+    host: $HOST
+    port: $PORT
+    username: $USERNAME
+    password: $PASSWORD
 ```
 
 All other `spring.mail.*` configurations can be found in the [Spring Documentation E-Mail](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#io.email)
@@ -82,16 +88,25 @@ be viewed.
 As security provider OIDC-based security providers are possible to use (e.g. [Keycloak](https://www.keycloak.org/), Microsoft Azure AD or other 'OpenID Connect providers').
 To configure the security provider, the following configurations must be made.
 
-```properties
-spring.security.oauth2.client.registration.default.client-id=zeiterfassung
-spring.security.oauth2.client.registration.default.client-secret=$OIDC_CLIENT_SECRET
-spring.security.oauth2.client.registration.default.client-name=zeiterfassung
-spring.security.oauth2.client.registration.default.provider=default
-spring.security.oauth2.client.registration.default.scope=openid,profile,email,roles
-spring.security.oauth2.client.registration.default.authorization-grant-type=authorization_code
-spring.security.oauth2.client.registration.default.redirect-uri=$OIDC_REDIRECT_URI
-spring.security.oauth2.client.provider.default.issuer-uri=$OIDC_ISSUER_URI
-zeiterfassung.security.oidc.login-form-url=$OIDC_LOGIN_FORM_URL
+```yaml
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          default:
+            client-id: zeiterfassung
+            client-secret: $OIDC_CLIENT_SECRET
+            client-name: zeiterfassung
+            provider: default
+            scope: openid,profile,email,roles
+            authorization-grant-type: authorization_code
+            redirect-uri: $OIDC_REDIRECT_URI
+        provider:
+          default:
+            issuer-uri: $OIDC_ISSUER_URI
+    oidc:
+      login-form-url: $OIDC_LOGIN_FORM_URL
 ```
 
 ##### Permissions
@@ -110,9 +125,11 @@ Create both permissions as `Realm roles` and assign user to those roles.
 Sollten beim Starten der Anwendung Probleme auftreten, lässt sich in der Konfigurationsdatei eine
 ausführliche Debug-Ausgabe konfigurieren, indem das `logging.level.*` pro Paket konfiguriert wird,
 
-```properties
-logging.level.de.focusshift.zeiterfassung=TRACE
-logging.level.org.springframework.security=TRACE
+```yaml
+logging:
+  level:
+    de.focusshift.zeiterfassung: TRACE
+    org.springframework.security: TRACE
 ```
 
 All other `logging.*` configurations can be found in the [Spring Documentation Logging](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#features.logging)
@@ -131,18 +148,19 @@ works, can be found in the corresponding chapters of the Spring Boot documentati
 
 You can configure a launchpad that shows other applications the user can navigate to.
 
-```properties
-launchpad.name-default-locale=de
-
-launchpad.apps[0].url=https://example.org
-launchpad.apps[0].name.de=Anwendung 1
-launchpad.apps[0].name.en=App 1
-launchpad.apps[0].icon=
-
-launchpad.apps[1].url=https://example-2.org
-launchpad.apps[1].name.de=Anwendung 2
-launchpad.apps[1].name.en=App 2
-launchpad.apps[1].icon=
+```yaml
+launchpad:
+  name-default-locale: de
+  apps[0]:
+    url: https://example.org
+    name.de: Anwendung 1
+    name.en: App 1
+    icon:
+  apps[1]:
+    url: https://example-2.org
+    name.de: Anwendung 2
+    name.en: App 2
+    icon:
 ```
 
 | Property                        | Type     | Description                                                                                                                                       |
@@ -156,8 +174,10 @@ launchpad.apps[1].icon=
 
 Launchpad has custom messages. So you have to tell Spring about the messages file:
 
-```properties
-spring.messages.basename=messages,launchpad-core
+```yaml
+spring:
+  messages:
+    basename: messages,launchpad-core
 ```
 
 * **(required)** `messages` is the default application messages properties
