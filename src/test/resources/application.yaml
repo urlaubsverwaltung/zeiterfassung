@@ -1,0 +1,72 @@
+zeiterfassung:
+  feedback:
+    email:
+      to: feedback@example.org
+  mail:
+    from: zeiterfassung@localhost
+    fromDisplayName: zeiterfassung
+    replyTo: replyto@localhost
+    replyToDisplayName: replyto
+  security:
+    oidc:
+      claim-mapper: keycloak
+      login-form-url: http://localhost:8070/login/redirect
+      redirect-uri-template: '{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}'
+      serverUrl: http://localhost:8090/auth
+  tenant:
+    single:
+      defaultTenantId: default
+
+admin:
+  datasource:
+    password: admin_password
+    url: ${spring.datasource.url}
+    username: admin_user
+
+server:
+  compression:
+    enabled: true
+
+spring:
+  datasource:
+    password: app_password
+    url: jdbc:postgresql://localhost:5432/zeiterfassung
+    username: app_user
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-main.xml
+    parameters:
+      database: zeiterfassung
+      password: ${spring.datasource.password}
+      restricteduser: ${spring.datasource.username}
+      schema: public
+  mail:
+    host: localhost
+    port: 1025
+    test-connection: false
+  main:
+    banner-mode: 'off'
+  messages:
+    fallback-to-system-locale: false
+  security:
+    oauth2:
+      client:
+        provider:
+          2657fdc6:
+            authorization-uri: https://auth.example.org/realms/2657fdc6/protocol/openid-connect/auth
+            jwk-set-uri: https://auth.example.org/realms/2657fdc6/protocol/openid-connect/certs
+            token-uri: https://auth.example.org/realms/2657fdc6/protocol/openid-connect/token
+            user-info-uri: https://auth.example.org/realms/2657fdc6/protocol/openid-connect/userinfo
+        registration:
+          2657fdc6:
+            authorization-grant-type: authorization_code
+            client-id: zeiterfassung
+            client-name: zeiterfassung
+            client-secret: 4db5664f-82ee-4d77-8272-08c0c12a57fb
+            provider: 2657fdc6
+            redirect-uri: http://localhost/login/oauth2/code/{registrationId}
+            scope: openid,profile,email,roles
+

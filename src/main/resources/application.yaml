@@ -1,0 +1,58 @@
+zeiterfassung:
+  feedback:
+    email:
+      to: feedback@urlaubsverwaltung.cloud
+  mail:
+    from: zeiterfassung@localhost
+    fromDisplayName: zeiterfassung
+    replyTo: replyto@localhost
+    replyToDisplayName: replyto
+  security:
+    oidc:
+      claim-mapper: groups
+      login-form-url: ''
+
+server:
+  compression:
+    enabled: true
+
+spring:
+  datasource:
+    password: zeiterfassung_app_password
+    url: jdbc:postgresql://localhost:5432/zeiterfassung
+    username: zeiterfassung_app_user
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-main.xml
+  mail:
+    host: localhost
+    password:
+    port:
+    username:
+  messages:
+    basename: messages,launchpad-core
+    fallback-to-system-locale: false
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          no-cache: false
+          no-store: false
+        period: 365
+      chain:
+        strategy:
+          content:
+            enabled: true
+            paths: /**
+
+management:
+  endpoint:
+    prometheus:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info
