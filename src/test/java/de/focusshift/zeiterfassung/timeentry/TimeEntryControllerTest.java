@@ -26,7 +26,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -542,7 +541,7 @@ class TimeEntryControllerTest {
 
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1337L), new UserId("batman"), "hard work extended", start, end, false);
+        final TimeEntry timeEntryToEdit = new TimeEntry(new TimeEntryId(1337L), new UserId("batman"), "hard work extended", start, end, false);
 
         final ZonedDateTime startOtherDay = ZonedDateTime.of(2022, 9, 29, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime endOtherDay = ZonedDateTime.of(2022, 9, 29, 15, 0, 0, 0, zoneIdBerlin);
@@ -556,7 +555,7 @@ class TimeEntryControllerTest {
                     LocalDate.of(2022, 9, 28),
                     PlannedWorkingHours.EIGHT,
                     ShouldWorkingHours.EIGHT,
-                    List.of(timeEntry),
+                    List.of(timeEntryToEdit),
                     List.of()
                 ),
                 new TimeEntryDay(
@@ -590,7 +589,7 @@ class TimeEntryControllerTest {
                 .param("comment", "hard work extended")
         );
 
-        final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
+        final TimeEntryDTO expectedUpdatedTimeEntryDto = TimeEntryDTO.builder()
             .id(1337L)
             .date(LocalDate.of(2022, 9, 28))
             .start(LocalTime.of(20, 30))
@@ -616,7 +615,7 @@ class TimeEntryControllerTest {
             .hoursDelta("07:15")
             .hoursDeltaNegative(true)
             .hoursWorkedRatio(10.0)
-            .timeEntries(List.of(expectedTimeEntryDto))
+            .timeEntries(List.of(expectedUpdatedTimeEntryDto))
             .absenceEntries(List.of())
             .build();
 
@@ -648,7 +647,7 @@ class TimeEntryControllerTest {
             .andExpect(status().isOk())
             .andExpect(model().attribute("turboEditedWeek", expectedWeekDto))
             .andExpect(model().attribute("turboEditedDay", expectedDayDto))
-            .andExpect(model().attribute("turboEditedTimeEntry", expectedTimeEntryDto))
+            .andExpect(model().attribute("turboEditedTimeEntry", expectedUpdatedTimeEntryDto))
             .andExpect(view().name("timeentries/index::#frame-time-entry"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);

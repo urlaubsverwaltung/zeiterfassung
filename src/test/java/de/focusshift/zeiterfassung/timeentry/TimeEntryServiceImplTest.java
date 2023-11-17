@@ -98,7 +98,7 @@ class TimeEntryServiceImplTest {
             assertThat(timeEntry.start()).isEqualTo(ZonedDateTime.of(entryStart, ZONE_ID_UTC));
             assertThat(timeEntry.end()).isEqualTo(ZonedDateTime.of(entryEnd, ZONE_ID_UTC));
             assertThat(timeEntry.isBreak()).isFalse();
-            assertThat(timeEntry.workDuration().value()).isEqualTo(Duration.ofHours(2));
+            assertThat(timeEntry.workDuration().duration()).isEqualTo(Duration.ofHours(2));
         });
     }
 
@@ -224,7 +224,7 @@ class TimeEntryServiceImplTest {
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
-        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(Duration.ofMinutes(90));
+        assertThat(actualUpdatedTimeEntry.workDuration().duration()).isEqualTo(Duration.ofMinutes(90));
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -280,7 +280,7 @@ class TimeEntryServiceImplTest {
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
-        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(Duration.ofHours(3));
+        assertThat(actualUpdatedTimeEntry.workDuration().duration()).isEqualTo(Duration.ofHours(3));
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -336,7 +336,7 @@ class TimeEntryServiceImplTest {
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newStart.plusHours(3));
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
-        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(Duration.ofHours(3));
+        assertThat(actualUpdatedTimeEntry.workDuration().duration()).isEqualTo(Duration.ofHours(3));
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -392,7 +392,7 @@ class TimeEntryServiceImplTest {
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
-        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(Duration.ofMinutes(90));
+        assertThat(actualUpdatedTimeEntry.workDuration().duration()).isEqualTo(Duration.ofMinutes(90));
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -448,7 +448,7 @@ class TimeEntryServiceImplTest {
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newEnd.minusHours(3));
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
-        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(newDuration);
+        assertThat(actualUpdatedTimeEntry.workDuration().duration()).isEqualTo(newDuration);
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -504,7 +504,7 @@ class TimeEntryServiceImplTest {
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameStart.plusMinutes(newDuration.toMinutes()));
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
-        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(newDuration);
+        assertThat(actualUpdatedTimeEntry.workDuration().duration()).isEqualTo(newDuration);
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -558,7 +558,7 @@ class TimeEntryServiceImplTest {
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
-        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(newDuration);
+        assertThat(actualUpdatedTimeEntry.workDuration().duration()).isEqualTo(newDuration);
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -740,7 +740,7 @@ class TimeEntryServiceImplTest {
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isTrue();
-        assertThat(actualUpdatedTimeEntry.workDuration().value()).isEqualTo(Duration.ZERO);
+        assertThat(actualUpdatedTimeEntry.workDuration().duration()).isEqualTo(Duration.ZERO);
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());

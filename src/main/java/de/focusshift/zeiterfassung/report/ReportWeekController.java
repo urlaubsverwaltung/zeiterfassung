@@ -25,6 +25,7 @@ import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
@@ -51,7 +52,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
         final YearWeek yearWeek = YearWeek.now(clock);
 
-        return String.format("forward:/report/year/%s/week/%s", yearWeek.getYear(), yearWeek.getWeek());
+        return format("forward:/report/year/%s/week/%s", yearWeek.getYear(), yearWeek.getWeek());
     }
 
     @GetMapping("/report/year/{year}/week/{week}")
@@ -88,17 +89,17 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
         final int previousYear = reportYearWeek.minusWeeks(1).getYear();
         final int previousWeek = reportYearWeek.minusWeeks(1).getWeek();
-        final String previousSectionUrl = helper.createUrl(String.format("/report/year/%d/week/%d", previousYear, previousWeek), allUsersSelected, userLocalIds);
+        final String previousSectionUrl = helper.createUrl(format("/report/year/%d/week/%d", previousYear, previousWeek), allUsersSelected, userLocalIds);
 
         final String todaySectionUrl = helper.createUrl("/report/week", allUsersSelected, userLocalIds);
 
         final int nextYear = reportYearWeek.plusWeeks(1).getYear();
         final int nextWeek = reportYearWeek.plusWeeks(1).getWeek();
-        final String nextSectionUrl = helper.createUrl(String.format("/report/year/%d/week/%d", nextYear, nextWeek), allUsersSelected, userLocalIds);
+        final String nextSectionUrl = helper.createUrl(format("/report/year/%d/week/%d", nextYear, nextWeek), allUsersSelected, userLocalIds);
 
         final int selectedYear = reportYearWeek.getYear();
         final int selectedWeek = reportYearWeek.getWeek();
-        final String selectedYearWeekUrl = helper.createUrl(String.format("/report/year/%d/week/%d", selectedYear, selectedWeek), allUsersSelected, userLocalIds);
+        final String selectedYearWeekUrl = helper.createUrl(format("/report/year/%d/week/%d", selectedYear, selectedWeek), allUsersSelected, userLocalIds);
         final String csvDownloadUrl = selectedYearWeekUrl.contains("?") ? selectedYearWeekUrl + "&csv" : selectedYearWeekUrl + "?csv";
 
         model.addAttribute("userReportPreviousSectionUrl", previousSectionUrl);
@@ -106,7 +107,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         model.addAttribute("userReportNextSectionUrl", nextSectionUrl);
         model.addAttribute("userReportCsvDownloadUrl", csvDownloadUrl);
 
-        helper.addUserFilterModelAttributes(model, allUsersSelected, userLocalIds, String.format("/report/year/%d/week/%d", year, week));
+        helper.addUserFilterModelAttributes(model, allUsersSelected, userLocalIds, format("/report/year/%d/week/%d", year, week));
 
         return "reports/user-report";
     }

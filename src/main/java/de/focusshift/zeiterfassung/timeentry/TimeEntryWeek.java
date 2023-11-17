@@ -27,24 +27,20 @@ record TimeEntryWeek(LocalDate firstDateOfWeek, PlannedWorkingHours plannedWorki
 
         final Duration worked = days.stream()
             .map(TimeEntryDay::workDuration)
-            .map(WorkDuration::minutes)
-            .reduce(Duration.ZERO, Duration::plus);
+            .reduce(WorkDuration.ZERO, WorkDuration::plus)
+            .durationInMinutes();
 
-        return worked.minus(shouldWorkingHours().minutes());
+        return worked.minus(shouldWorkingHours().durationInMinutes());
     }
 
     public WorkDuration workDuration() {
-
-        final Duration duration = days
+        return days
             .stream()
             .map(TimeEntryDay::timeEntries)
             .flatMap(Collection::stream)
             .filter(not(TimeEntry::isBreak))
             .map(TimeEntry::workDuration)
-            .map(WorkDuration::value)
-            .reduce(Duration.ZERO, Duration::plus);
-
-        return new WorkDuration(duration);
+            .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
 
     /**
@@ -54,8 +50,8 @@ record TimeEntryWeek(LocalDate firstDateOfWeek, PlannedWorkingHours plannedWorki
      */
     public BigDecimal workedHoursRatio() {
 
-        final double planned = shouldWorkingHours().minutes().toMinutes();
-        final double worked = workDuration().minutes().toMinutes();
+        final double planned = shouldWorkingHours().durationInMinutes().toMinutes();
+        final double worked = workDuration().durationInMinutes().toMinutes();
 
         if (worked == 0) {
             return BigDecimal.ZERO;

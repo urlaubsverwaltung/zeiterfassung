@@ -1,36 +1,16 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import java.time.Duration;
-import java.util.Objects;
 
 /**
  * Hours that should be worked. (e.g. PlannedWorkingHours 40h - Absence 8h = ShouldWorkingHours 32h)
+ *
+ * @param duration the exact duration. not rounded up to minutes.
  */
-public final class ShouldWorkingHours implements TimeEntryDuration {
+public record ShouldWorkingHours(Duration duration) implements ZeitDuration {
 
     public static final ShouldWorkingHours ZERO = new ShouldWorkingHours(Duration.ZERO);
     public static final ShouldWorkingHours EIGHT = new ShouldWorkingHours(Duration.ofHours(8));
-
-    private final SimpleTimeEntryDuration timeEntryDuration;
-
-    public ShouldWorkingHours(Duration duration) {
-        this.timeEntryDuration = new SimpleTimeEntryDuration(duration);
-    }
-
-    @Override
-    public Duration value() {
-        return timeEntryDuration.value();
-    }
-
-    @Override
-    public Duration minutes() {
-        return timeEntryDuration.minutes();
-    }
-
-    @Override
-    public double hoursDoubleValue() {
-        return timeEntryDuration.hoursDoubleValue();
-    }
 
     /**
      * Returns a copy of this shouldWorkingHours with the specified shouldWorkingHours added.
@@ -42,26 +22,6 @@ public final class ShouldWorkingHours implements TimeEntryDuration {
      * @throws ArithmeticException if numeric overflow occurs
      */
     public ShouldWorkingHours plus(ShouldWorkingHours shouldWorkingHours) {
-        return new ShouldWorkingHours(this.value().plus(shouldWorkingHours.minutes()));
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ShouldWorkingHours that = (ShouldWorkingHours) o;
-        return Objects.equals(timeEntryDuration, that.timeEntryDuration);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(timeEntryDuration);
-    }
-
-    @Override
-    public String toString() {
-        return "ShouldWorkingHours{" +
-            "value=" + timeEntryDuration.value() +
-            '}';
+        return new ShouldWorkingHours(duration().plus(shouldWorkingHours.duration()));
     }
 }

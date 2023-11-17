@@ -31,7 +31,7 @@ class TimeEntryWeekTest {
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(startOfWeek, PlannedWorkingHours.EIGHT, List.of(new TimeEntryDay(startOfWeek, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(firstTimeEntry, secondTimeEntry), List.of())));
 
-        final Duration actualDuration = timeEntryWeek.workDuration().value();
+        final Duration actualDuration = timeEntryWeek.workDuration().duration();
         assertThat(actualDuration).isEqualTo(Duration.ofHours(2).plusMinutes(45));
     }
 
@@ -47,7 +47,7 @@ class TimeEntryWeekTest {
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(startOfWeek, PlannedWorkingHours.EIGHT, List.of(new TimeEntryDay(startOfWeek, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of())));
 
-        final Duration actualDuration = timeEntryWeek.workDuration().value();
+        final Duration actualDuration = timeEntryWeek.workDuration().duration();
         assertThat(actualDuration).isEqualTo(Duration.ofHours(3));
     }
 

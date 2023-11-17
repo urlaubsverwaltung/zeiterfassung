@@ -30,18 +30,14 @@ record TimeEntryDay(
      * @return overtime {@linkplain Duration}. can be negative.
      */
     public Duration overtime() {
-        return workDuration().minutes().minus(shouldWorkingHours.minutes());
+        return workDuration().durationInMinutes().minus(shouldWorkingHours.durationInMinutes());
     }
 
     public WorkDuration workDuration() {
-
-        final Duration duration = timeEntries
+        return timeEntries
             .stream()
             .map(TimeEntry::workDuration)
-            .map(WorkDuration::value)
-            .reduce(Duration.ZERO, Duration::plus);
-
-        return new WorkDuration(duration);
+            .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
 
     /**

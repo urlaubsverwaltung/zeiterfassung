@@ -22,7 +22,7 @@ record ReportWeek(LocalDate firstDateOfWeek, List<ReportDay> reportDays) {
         final double averageMinutes = reportDays().stream()
             .map(ReportDay::workDuration)
             .filter(not(WorkDuration.ZERO::equals))
-            .map(WorkDuration::minutes)
+            .map(WorkDuration::durationInMinutes)
             .mapToLong(Duration::toMinutes)
             .average()
             .orElse(0.0);// o.O
@@ -33,13 +33,10 @@ record ReportWeek(LocalDate firstDateOfWeek, List<ReportDay> reportDays) {
     }
 
     public WorkDuration workDuration() {
-        final Duration duration = reportDays
+        return reportDays
             .stream()
             .map(ReportDay::workDuration)
-            .map(WorkDuration::value)
-            .reduce(Duration.ZERO, Duration::plus);
-
-        return new WorkDuration(duration);
+            .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
 
     public LocalDate lastDateOfWeek() {

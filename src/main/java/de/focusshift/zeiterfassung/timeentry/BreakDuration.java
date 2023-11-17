@@ -1,58 +1,26 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import java.time.Duration;
-import java.util.Objects;
 
 /**
  * Defines a {@linkplain Duration} of break time. Different to {@linkplain WorkDuration}.
+ *
+ * @param duration the exact duration. not rounded up to minutes.
  */
-public final class BreakDuration implements TimeEntryDuration {
+public record BreakDuration(Duration duration) implements ZeitDuration {
 
-    private final SimpleTimeEntryDuration timeEntryDuration;
-
-    public BreakDuration(Duration value) {
-        this(new SimpleTimeEntryDuration(value));
-    }
-
-    BreakDuration(SimpleTimeEntryDuration timeEntryDuration) {
-        this.timeEntryDuration = timeEntryDuration;
-    }
-
-    @Override
-    public Duration value() {
-        return timeEntryDuration.value();
-    }
+    public static final BreakDuration ZERO = new BreakDuration(Duration.ZERO);
 
     /**
-     * @return work value rounded up to full minutes.
+     * Returns a copy of this breakDuration with the specified breakDuration added.
+     * <p>
+     * This instance is immutable and unaffected by this method call.
+     *
+     * @param breakDuration  the breakDuration to add, not null
+     * @return a {@code BreakDuration} based on this breakDuration with the specified breakDuration added, not null
+     * @throws ArithmeticException if numeric overflow occurs
      */
-    @Override
-    public Duration minutes() {
-        return timeEntryDuration.minutes();
-    }
-
-    @Override
-    public double hoursDoubleValue() {
-        return timeEntryDuration.hoursDoubleValue();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        BreakDuration that = (BreakDuration) o;
-        return Objects.equals(timeEntryDuration, that.timeEntryDuration);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(timeEntryDuration);
-    }
-
-    @Override
-    public String toString() {
-        return "BreakDuration{" +
-            "timeEntryDuration=" + timeEntryDuration +
-            '}';
+    public BreakDuration plus(BreakDuration breakDuration) {
+        return new BreakDuration(duration().plus(breakDuration.duration()));
     }
 }
