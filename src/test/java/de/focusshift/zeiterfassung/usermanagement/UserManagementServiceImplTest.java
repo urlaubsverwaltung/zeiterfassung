@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -184,5 +185,28 @@ class UserManagementServiceImplTest {
 
         final List<User> actual = sut.findAllUsersByLocalIds((List.of(localId, localId2)));
         assertThat(actual).containsExactly(user, user2);
+    }
+
+    @Test
+    void ensureFindAllUserLocalIdsGroupedByUserId() {
+
+        final UserId id_1 = new UserId("user-id");
+        final UserLocalId localId_1 = new UserLocalId(42L);
+        final EMailAddress email_1 = new EMailAddress("mail@example.org");
+
+        final UserId id_2 = new UserId("user-id-2");
+        final UserLocalId localId_2 = new UserLocalId(1337L);
+        final EMailAddress email_2 = new EMailAddress("mail-2@example.org");
+
+        final TenantUser tenantUser_1 = new TenantUser(id_1.value(), localId_1.value(), "givenName", "familyName", email_1, Set.of());
+        final TenantUser tenantUser_2 = new TenantUser(id_2.value(), localId_2.value(), "givenName-2", "familyName-2", email_2, Set.of());
+
+        when(tenantUserService.findAllUsers()).thenReturn(List.of(tenantUser_1, tenantUser_2));
+
+        final Map<UserId, UserLocalId> actual = sut.findAllUserLocalIdsGroupedByUserId();
+        assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
+            id_1, localId_1,
+            id_2, localId_2
+        ));
     }
 }
