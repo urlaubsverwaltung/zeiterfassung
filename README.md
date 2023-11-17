@@ -105,6 +105,9 @@ spring:
         provider:
           default:
             issuer-uri: $OIDC_ISSUER_URI
+
+zeiterfassung:
+  security:
     oidc:
       login-form-url: $OIDC_LOGIN_FORM_URL
 ```
