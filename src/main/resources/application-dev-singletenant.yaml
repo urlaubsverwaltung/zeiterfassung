@@ -20,46 +20,46 @@ launchpad:
   name-default-locale: de
 
 server:
-    port: 8060
+  port: 8060
 
 spring:
-    datasource:
-        password: app_password
-        username: app_user
-    jpa:
-        hibernate:
-            ddl-auto: validate
-    mail:
-        host: localhost
-        port: 1025
-    security:
-        oauth2:
-            client:
-                provider:
-                    default:
-                        issuer-uri: http://localhost:8090/realms/zeiterfassung-realm
-                registration:
-                    default:
-                        authorization-grant-type: authorization_code
-                        client-id: zeiterfassung
-                        client-name: zeiterfassung
-                        client-secret: zeiterfassung-secret
-                        provider: default
-                        redirect-uri: http://{baseHost}:8060/login/oauth2/code/{registrationId}
-                        scope: openid,profile,email,roles
-    thymeleaf:
-        cache: false
-    web:
-        resources:
-            cache:
-                cachecontrol:
-                    no-cache: true
-                    no-store: true
-                period: 0
-            chain:
-                strategy:
-                    content:
-                        enabled: false
+  datasource:
+    password: app_password
+    username: app_user
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  mail:
+    host: localhost
+    port: 1025
+  security:
+    oauth2:
+      client:
+        provider:
+          default:
+            issuer-uri: http://localhost:8090/realms/zeiterfassung-realm
+        registration:
+          default:
+            authorization-grant-type: authorization_code
+            client-id: zeiterfassung
+            client-name: zeiterfassung
+            client-secret: zeiterfassung-secret
+            provider: default
+            redirect-uri: http://{baseHost}:8060/login/oauth2/code/{registrationId}
+            scope: openid,profile,email,roles
+  thymeleaf:
+    cache: false
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          no-cache: true
+          no-store: true
+        period: 0
+      chain:
+        strategy:
+          content:
+            enabled: false
 
 management:
   health:

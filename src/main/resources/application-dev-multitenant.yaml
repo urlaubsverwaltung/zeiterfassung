@@ -36,7 +36,7 @@ launchpad:
   name-default-locale: de
 
 server:
-    port: 8060
+  port: 8060
 
 spring:
   datasource:
@@ -46,8 +46,8 @@ spring:
     hibernate:
       ddl-auto: validate
   mail:
-      host: localhost
-      port: 1025
+    host: localhost
+    port: 1025
   security:
     oauth2:
       client:
@@ -74,7 +74,7 @@ spring:
             redirect-uri: http://{baseHost}:8060/login/oauth2/code/{registrationId}
             scope: openid,profile,email,roles
   thymeleaf:
-      cache: false
+    cache: false
   web:
     resources:
       cache:

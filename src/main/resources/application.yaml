@@ -1,7 +1,7 @@
 zeiterfassung:
   feedback:
     email:
-        to: feedback@urlaubsverwaltung.cloud
+      to: feedback@urlaubsverwaltung.cloud
   mail:
     from: zeiterfassung@localhost
     fromDisplayName: zeiterfassung
