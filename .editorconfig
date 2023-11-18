@@ -17,5 +17,5 @@ trim_trailing_whitespace = false
 [*.{yml,yaml}]
 indent_size = 2
 
-[*.{html,css,js,ts,svelte,json,svg}]
+[*.{html,css,js,mjs,ts,svelte,json,svg}]
 indent_size = 2

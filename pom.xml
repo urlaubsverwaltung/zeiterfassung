@@ -237,6 +237,17 @@
                             <arguments>run lint</arguments>
                         </configuration>
                     </execution>
+                    <!-- run Tests -->
+                    <execution>
+                        <id>npm-test</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>test</phase>
+                        <configuration>
+                            <arguments>run test:coverage</arguments>
+                        </configuration>
+                    </execution>
                     <!-- Build -->
                     <execution>
                         <id>npm-build</id>

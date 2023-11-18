@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
     th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scripts=~{::scripts}, scriptsDefer=~{::scriptsDefer})}"
@@ -563,6 +563,7 @@
                   </div>
                   <div class="time-entry-cell time-entry-cell__duration">
                     <input
+                      is="z-time-entry-duration-input"
                       type="text"
                       id="input-entry-duration"
                       th:id="|${rnd}-input-entry-duration|"

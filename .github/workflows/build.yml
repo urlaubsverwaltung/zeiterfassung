@@ -53,9 +53,9 @@ jobs:
             -Dsonar.projectKey=urlaubsverwaltung_zeiterfassung
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml,target/site/jacoco-it/jacoco.xml
             -Dsonar.javascript.lcov.reportPaths=target/js-coverage/lcov.info
-            -Dsonar.javascript.exclusions=**/__tests__/**,**/*-spec.js,**/*.spec.js,**/*-test.js,**/*.test.js
+            -Dsonar.javascript.exclusions=**/*.spec.ts,**/*.test.ts,**/*.spec.js,**/*.test.js
             -Dsonar.eslint.reportPaths=target/js-eslint/report.json
-            -Dsonar.coverage.exclusions=**/__tests__/**,**/*-spec.js,**/*.spec.js,**/*-test.js,**/*.test.js
+            -Dsonar.coverage.exclusions=**/*.spec.ts,**/*.test.ts,**/*.spec.js,**/*.test.js
             -Dsonar.sources=src/main
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
