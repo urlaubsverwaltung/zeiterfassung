@@ -20,7 +20,7 @@ launchpad:
     name:
       de: Urlaubsverwaltung
       en: Vacation Management
-      url: https://demo.urlaubsverwaltung.cloud
+    url: https://demo.urlaubsverwaltung.cloud
 
 server:
   port: 8060
