@@ -1,8 +1,10 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Optional;
 
 @Service
 class OvertimeAccountServiceImpl implements OvertimeAccountService {
@@ -21,13 +23,13 @@ class OvertimeAccountServiceImpl implements OvertimeAccountService {
     }
 
     @Override
-    public OvertimeAccount updateOvertimeAccount(OvertimeAccount overtimeAccount) {
+    public OvertimeAccount updateOvertimeAccount(UserLocalId userLocalId, boolean isOvertimeAllowed, @Nullable Duration maxAllowedOvertime) {
 
-        final OvertimeAccountEntity entity = repository.findById(overtimeAccount.getUserLocalId().value()).orElseGet(OvertimeAccountEntity::new);
+        final OvertimeAccountEntity entity = repository.findById(userLocalId.value()).orElseGet(OvertimeAccountEntity::new);
 
-        entity.setUserId(overtimeAccount.getUserLocalId().value());
-        entity.setAllowed(overtimeAccount.isAllowed());
-        entity.setMaxAllowedOvertime(overtimeAccount.getMaxAllowedOvertime().map(Duration::toString).orElse(null));
+        entity.setUserId(userLocalId.value());
+        entity.setAllowed(isOvertimeAllowed);
+        entity.setMaxAllowedOvertime(Optional.ofNullable(maxAllowedOvertime).map(Duration::toString).orElse(null));
 
         return toOvertimeAccount(repository.save(entity));
     }

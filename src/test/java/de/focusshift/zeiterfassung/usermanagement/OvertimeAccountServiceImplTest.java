@@ -71,9 +71,7 @@ class OvertimeAccountServiceImplTest {
         when(repository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(repository.save(any())).thenAnswer(returnsFirstArg());
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(new UserLocalId(42L), false, Duration.ofHours(10));
-
-        sut.updateOvertimeAccount(overtimeAccount);
+        sut.updateOvertimeAccount(new UserLocalId(42L), false, Duration.ofHours(10));
 
         final ArgumentCaptor<OvertimeAccountEntity> captor = ArgumentCaptor.forClass(OvertimeAccountEntity.class);
         verify(repository).save(captor.capture());
@@ -94,9 +92,7 @@ class OvertimeAccountServiceImplTest {
         when(repository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(repository.save(any())).thenAnswer(returnsFirstArg());
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(new UserLocalId(42L), false);
-
-        sut.updateOvertimeAccount(overtimeAccount);
+        sut.updateOvertimeAccount(new UserLocalId(42L), false, null);
 
         final ArgumentCaptor<OvertimeAccountEntity> captor = ArgumentCaptor.forClass(OvertimeAccountEntity.class);
         verify(repository).save(captor.capture());
@@ -111,9 +107,7 @@ class OvertimeAccountServiceImplTest {
         when(repository.findById(42L)).thenReturn(Optional.empty());
         when(repository.save(any())).thenAnswer(returnsFirstArg());
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(new UserLocalId(42L), false, Duration.ofHours(10));
-
-        sut.updateOvertimeAccount(overtimeAccount);
+        sut.updateOvertimeAccount(new UserLocalId(42L), false, Duration.ofHours(10));
 
         final ArgumentCaptor<OvertimeAccountEntity> captor = ArgumentCaptor.forClass(OvertimeAccountEntity.class);
         verify(repository).save(captor.capture());

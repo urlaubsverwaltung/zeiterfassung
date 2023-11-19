@@ -77,7 +77,11 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
             }
         }
 
-        overtimeAccountService.updateOvertimeAccount(toOvertimeAccount(userId, overtimeAccountDto));
+        final UserLocalId userLocalId = new UserLocalId(userId);
+        final boolean allowed = overtimeAccountDto.isAllowed();
+        final Duration maxAllowedOvertime = hoursToDuration(overtimeAccountDto.getMaxAllowedOvertime());
+
+        overtimeAccountService.updateOvertimeAccount(userLocalId, allowed, maxAllowedOvertime);
 
         return "redirect:/users/%s/overtime-account".formatted(userId);
     }

@@ -9,7 +9,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.format.support.FormattingConversionService;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -260,14 +258,7 @@ class OvertimeAccountControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/1337/overtime-account"));
 
-        final ArgumentCaptor<OvertimeAccount> captor = ArgumentCaptor.forClass(OvertimeAccount.class);
-        verify(overtimeAccountService).updateOvertimeAccount(captor.capture());
-
-        final OvertimeAccount actualOvertimeAccount = captor.getValue();
-        assertThat(actualOvertimeAccount).isNotNull();
-        assertThat(actualOvertimeAccount.getUserLocalId()).isEqualTo(new UserLocalId(1337L));
-        assertThat(actualOvertimeAccount.isAllowed()).isTrue();
-        assertThat(actualOvertimeAccount.getMaxAllowedOvertime()).hasValue(Duration.ofHours(5).plusMinutes(15));
+        verify(overtimeAccountService).updateOvertimeAccount(new UserLocalId(1337L), true, Duration.ofHours(5).plusMinutes(15));
     }
 
     @ParameterizedTest
@@ -284,14 +275,7 @@ class OvertimeAccountControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/1337/overtime-account"));
 
-        final ArgumentCaptor<OvertimeAccount> captor = ArgumentCaptor.forClass(OvertimeAccount.class);
-        verify(overtimeAccountService).updateOvertimeAccount(captor.capture());
-
-        final OvertimeAccount actualOvertimeAccount = captor.getValue();
-        assertThat(actualOvertimeAccount).isNotNull();
-        assertThat(actualOvertimeAccount.getUserLocalId()).isEqualTo(new UserLocalId(1337L));
-        assertThat(actualOvertimeAccount.isAllowed()).isTrue();
-        assertThat(actualOvertimeAccount.getMaxAllowedOvertime()).hasValue(Duration.ofHours(5).plusMinutes(15));
+        verify(overtimeAccountService).updateOvertimeAccount(new UserLocalId(1337L), true, Duration.ofHours(5).plusMinutes(15));
     }
 
     @Test
