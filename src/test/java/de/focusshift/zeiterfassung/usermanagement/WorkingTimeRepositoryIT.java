@@ -28,8 +28,8 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
     void ensureFindAllByUserIdIsIn() {
 
         workingTimeService.updateWorkingTime(
-            WorkingTime.builder()
-                .userId(new UserLocalId(1L))
+            new UserLocalId(1L),
+            WorkWeekUpdate.builder()
                 .monday(1)
                 .tuesday(2)
                 .wednesday(3)
@@ -41,8 +41,8 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
         );
 
         workingTimeService.updateWorkingTime(
-            WorkingTime.builder()
-                .userId(new UserLocalId(2L))
+            new UserLocalId(2L),
+            WorkWeekUpdate.builder()
                 .monday(10)
                 .tuesday(10)
                 .wednesday(10)
@@ -54,8 +54,8 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
         );
 
         workingTimeService.updateWorkingTime(
-            WorkingTime.builder()
-                .userId(new UserLocalId(3L))
+            new UserLocalId(3L),
+            WorkWeekUpdate.builder()
                 .monday(8)
                 .tuesday(8)
                 .wednesday(8)

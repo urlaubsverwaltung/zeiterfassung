@@ -35,8 +35,9 @@ public interface WorkingTimeService {
     /**
      * Update the {@linkplain WorkingTime}
      *
-     * @param workingTime {@linkplain WorkingTime} to update
+     * @param userLocalId account of this user should be updated
+     * @param workWeekUpdate new working time values
      * @return the updated {@linkplain WorkingTime}
      */
-    WorkingTime updateWorkingTime(WorkingTime workingTime);
+    WorkingTime updateWorkingTime(UserLocalId userLocalId, WorkWeekUpdate workWeekUpdate);
 }

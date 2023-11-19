@@ -307,8 +307,7 @@ class WorkTimeServiceImplTest {
         when(workingTimeRepository.findByUserId(42L)).thenReturn(Optional.of(entity));
         when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+        final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
             .monday(BigDecimal.valueOf(1))
             .tuesday(BigDecimal.valueOf(2))
             .wednesday(BigDecimal.valueOf(3))
@@ -318,9 +317,8 @@ class WorkTimeServiceImplTest {
             .sunday(BigDecimal.valueOf(7))
             .build();
 
-        final WorkingTime actual = sut.updateWorkingTime(workingTime);
+        final WorkingTime actual = sut.updateWorkingTime(new UserLocalId(42L), workWeekUpdate);
 
-        assertThat(actual).isNotSameAs(workingTime);
         assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
@@ -350,8 +348,7 @@ class WorkTimeServiceImplTest {
         when(workingTimeRepository.findByUserId(42L)).thenReturn(Optional.empty());
         when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+        final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
             .monday(BigDecimal.valueOf(1))
             .tuesday(BigDecimal.valueOf(2))
             .wednesday(BigDecimal.valueOf(3))
@@ -361,9 +358,8 @@ class WorkTimeServiceImplTest {
             .sunday(BigDecimal.valueOf(7))
             .build();
 
-        final WorkingTime actual = sut.updateWorkingTime(workingTime);
+        final WorkingTime actual = sut.updateWorkingTime(new UserLocalId(42L), workWeekUpdate);
 
-        assertThat(actual).isNotSameAs(workingTime);
         assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));

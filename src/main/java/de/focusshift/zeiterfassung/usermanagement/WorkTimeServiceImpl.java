@@ -74,20 +74,20 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     }
 
     @Override
-    public WorkingTime updateWorkingTime(WorkingTime workingTime) {
+    public WorkingTime updateWorkingTime(UserLocalId userLocalId, WorkWeekUpdate workWeekUpdate) {
 
-        final WorkingTimeEntity entity = repository.findByUserId(workingTime.getUserId().value()).orElseGet(WorkingTimeEntity::new);
+        final WorkingTimeEntity entity = repository.findByUserId(userLocalId.value()).orElseGet(WorkingTimeEntity::new);
 
-        entity.setMonday(toDurationString(workingTime.getMonday()));
-        entity.setTuesday(toDurationString(workingTime.getTuesday()));
-        entity.setWednesday(toDurationString(workingTime.getWednesday()));
-        entity.setThursday(toDurationString(workingTime.getThursday()));
-        entity.setFriday(toDurationString(workingTime.getFriday()));
-        entity.setSaturday(toDurationString(workingTime.getSaturday()));
-        entity.setSunday(toDurationString(workingTime.getSunday()));
+        entity.setMonday(toDurationString(workWeekUpdate.monday()));
+        entity.setTuesday(toDurationString(workWeekUpdate.tuesday()));
+        entity.setWednesday(toDurationString(workWeekUpdate.wednesday()));
+        entity.setThursday(toDurationString(workWeekUpdate.thursday()));
+        entity.setFriday(toDurationString(workWeekUpdate.friday()));
+        entity.setSaturday(toDurationString(workWeekUpdate.saturday()));
+        entity.setSunday(toDurationString(workWeekUpdate.sunday()));
 
         if (entity.getId() == null) {
-            entity.setUserId(workingTime.getUserId().value());
+            entity.setUserId(userLocalId.value());
         }
 
         return entityToWorkingTime(repository.save(entity));

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,11 +27,9 @@ import java.util.Set;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
-import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -420,18 +417,17 @@ class WorkingTimeControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/42/working-time"));
 
-        final ArgumentCaptor<WorkingTime> captor = ArgumentCaptor.forClass(WorkingTime.class);
-        verify(workingTimeService).updateWorkingTime(captor.capture());
+        final WorkWeekUpdate expectedWorkWeekUpdate = WorkWeekUpdate.builder()
+            .monday(Duration.ofHours(0))
+            .tuesday(Duration.ofHours(1))
+            .wednesday(Duration.ofHours(2))
+            .thursday(Duration.ofHours(3))
+            .friday(Duration.ofHours(4))
+            .saturday(Duration.ofHours(5))
+            .sunday(Duration.ofHours(6))
+            .build();
 
-        final WorkingTime actual = captor.getValue();
-        assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
-        assertThat(actual.getMonday()).hasValue(new WorkDay(MONDAY, Duration.ofHours(0)));
-        assertThat(actual.getTuesday()).hasValue(new WorkDay(TUESDAY, Duration.ofHours(1)));
-        assertThat(actual.getWednesday()).hasValue(new WorkDay(WEDNESDAY, Duration.ofHours(2)));
-        assertThat(actual.getThursday()).hasValue(new WorkDay(THURSDAY, Duration.ofHours(3)));
-        assertThat(actual.getFriday()).hasValue(new WorkDay(FRIDAY, Duration.ofHours(4)));
-        assertThat(actual.getSaturday()).hasValue(new WorkDay(SATURDAY, Duration.ofHours(5)));
-        assertThat(actual.getSunday()).hasValue(new WorkDay(SUNDAY, Duration.ofHours(6)));
+        verify(workingTimeService).updateWorkingTime(new UserLocalId(42L), expectedWorkWeekUpdate);
     }
 
     @Test
@@ -453,18 +449,17 @@ class WorkingTimeControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/42/working-time"));
 
-        final ArgumentCaptor<WorkingTime> captor = ArgumentCaptor.forClass(WorkingTime.class);
-        verify(workingTimeService).updateWorkingTime(captor.capture());
+        final WorkWeekUpdate expectedWorkWeekUpdate = WorkWeekUpdate.builder()
+            .monday(Duration.ofHours(0))
+            .tuesday(Duration.ofHours(1))
+            .wednesday(Duration.ofHours(2))
+            .thursday(Duration.ofHours(3))
+            .friday(Duration.ofHours(4))
+            .saturday(Duration.ofHours(5))
+            .sunday(Duration.ofHours(6))
+            .build();
 
-        final WorkingTime actual = captor.getValue();
-        assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
-        assertThat(actual.getMonday()).hasValue(new WorkDay(MONDAY, Duration.ofHours(0)));
-        assertThat(actual.getTuesday()).hasValue(new WorkDay(TUESDAY, Duration.ofHours(1)));
-        assertThat(actual.getWednesday()).hasValue(new WorkDay(WEDNESDAY, Duration.ofHours(2)));
-        assertThat(actual.getThursday()).hasValue(new WorkDay(THURSDAY, Duration.ofHours(3)));
-        assertThat(actual.getFriday()).hasValue(new WorkDay(FRIDAY, Duration.ofHours(4)));
-        assertThat(actual.getSaturday()).hasValue(new WorkDay(SATURDAY, Duration.ofHours(5)));
-        assertThat(actual.getSunday()).hasValue(new WorkDay(SUNDAY, Duration.ofHours(6)));
+        verify(workingTimeService).updateWorkingTime(new UserLocalId(42L), expectedWorkWeekUpdate);
     }
 
     @Test
