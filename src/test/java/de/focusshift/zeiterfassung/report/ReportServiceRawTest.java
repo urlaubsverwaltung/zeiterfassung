@@ -7,6 +7,7 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -67,23 +68,21 @@ class ReportServiceRawTest {
     @Test
     void ensureReportWeekFirstDateOfWeekIsMonday() {
 
-        final UserId userId = new UserId("batman");
-        final User user = new User(userId, new UserLocalId(1L), "givenName", "familyName", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        final User user = anyUser();
+        when(userManagementService.findUserById(user.id())).thenReturn(Optional.of(user));
 
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, userId);
+        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.id());
         assertThat(actualReportWeek.firstDateOfWeek().getDayOfWeek()).isEqualTo(MONDAY);
     }
 
     @Test
     void ensureReportWeekWithoutTimeEntriesFirstWeekOfYear() {
 
-        final UserId userId = new UserId("batman");
-        final User user = new User(userId, new UserLocalId(1L), "givenName", "familyName", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        final User user = anyUser();
+        when(userManagementService.findUserById(user.id())).thenReturn(Optional.of(user));
 
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
@@ -91,7 +90,7 @@ class ReportServiceRawTest {
         when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), new UserId("batman")))
             .thenReturn(List.of());
 
-        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, userId);
+        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.id());
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
@@ -103,27 +102,26 @@ class ReportServiceRawTest {
     @Test
     void ensureReportWeekWithOneTimeEntryADay() {
 
-        final UserId userId = new UserId("batman");
-        final User user = new User(userId, new UserLocalId(1L), "givenName", "familyName", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        final User user = anyUser();
+        when(userManagementService.findUserById(user.id())).thenReturn(Optional.of(user));
 
         final ZonedDateTime firstFrom = dateTime(2021, 1, 4, 10, 0);
         final ZonedDateTime firstTo = dateTime(2021, 1, 4, 11, 0);
-        final TimeEntry firstTimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work", firstFrom, firstTo, false);
+        final TimeEntry firstTimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work", firstFrom, firstTo, false);
 
         final ZonedDateTime secondFrom = dateTime(2021, 1, 7, 8, 0);
         final ZonedDateTime secondTo = dateTime(2021, 1, 7, 11, 0);
-        final TimeEntry secondTimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work", secondFrom, secondTo, false);
+        final TimeEntry secondTimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work", secondFrom, secondTo, false);
 
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), userId))
+        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.id()))
             .thenReturn(List.of(firstTimeEntry, secondTimeEntry));
 
-        when(userManagementService.findAllUsersByIds(List.of(userId))).thenReturn(List.of(user));
+        when(userManagementService.findAllUsersByIds(List.of(user.id()))).thenReturn(List.of(user));
 
-        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, userId);
+        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.id());
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
@@ -139,25 +137,24 @@ class ReportServiceRawTest {
     @Test
     void ensureReportWeekWithMultipleTimeEntriesADay() {
 
-        final UserId userId = new UserId("batman");
-        final User user = new User(userId, new UserLocalId(1L), "givenName", "familyName", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        final User user = anyUser();
+        when(userManagementService.findUserById(user.id())).thenReturn(Optional.of(user));
 
         final ZonedDateTime morningFrom = dateTime(2021, 1, 5, 10, 0);
         final ZonedDateTime morningTo = dateTime(2021, 1, 5, 11, 0);
-        final TimeEntry morningTimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work in the morning", morningFrom, morningTo, false);
+        final TimeEntry morningTimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work in the morning", morningFrom, morningTo, false);
 
         final ZonedDateTime noonFrom = dateTime(2021, 1, 5, 15, 0);
         final ZonedDateTime noonTo = dateTime(2021, 1, 5, 19, 0);
-        final TimeEntry noonTimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work in the noon", noonFrom, noonTo, false);
+        final TimeEntry noonTimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work in the noon", noonFrom, noonTo, false);
 
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), userId))
+        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.id()))
             .thenReturn(List.of(morningTimeEntry, noonTimeEntry));
 
-        when(userManagementService.findAllUsersByIds(List.of(userId))).thenReturn(List.of(user));
+        when(userManagementService.findAllUsersByIds(List.of(user.id()))).thenReturn(List.of(user));
 
         final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, new UserId("batman"));
 
@@ -175,23 +172,22 @@ class ReportServiceRawTest {
     @Test
     void ensureReportWeekWithTimeEntryTouchingNextDayIsReportedForStartingDate() {
 
-        final UserId userId = new UserId("batman");
-        final User user = new User(userId, new UserLocalId(1L), "givenName", "familyName", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        final User user = anyUser();
+        when(userManagementService.findUserById(user.id())).thenReturn(Optional.of(user));
 
         final ZonedDateTime from = dateTime(2021, 1, 4, 22, 0);
         final ZonedDateTime to = dateTime(2021, 1, 5, 3, 0);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work in the night", from, to, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work in the night", from, to, false);
 
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), userId))
+        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.id()))
             .thenReturn(List.of(timeEntry));
 
-        when(userManagementService.findAllUsersByIds(List.of(userId))).thenReturn(List.of(user));
+        when(userManagementService.findAllUsersByIds(List.of(user.id()))).thenReturn(List.of(user));
 
-        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, userId);
+        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.id());
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
@@ -211,18 +207,16 @@ class ReportServiceRawTest {
     @Test
     void ensureReportMonthFirstDayOfEveryWeekIsMonday() {
 
-        final UserId userId = new UserId("batman");
-        final UserLocalId localId = new UserLocalId(1L);
-        final User user = new User(userId, localId, "givenName", "familyName", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        final User user = anyUser();
+        when(userManagementService.findUserById(user.id())).thenReturn(Optional.of(user));
 
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 1, 1)))
             .thenReturn(LocalDate.of(2020, 12, 28));
 
-        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(localId)))
+        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.localId())))
             .thenReturn(Map.of());
 
-        final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), userId);
+        final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), user.id());
 
         assertThat(actualReportMonth.weeks()).hasSize(5);
 
@@ -234,18 +228,16 @@ class ReportServiceRawTest {
     @Test
     void ensureReportMonthDecemberWithoutTimeEntries() {
 
-        final UserId userId = new UserId("batman");
-        final UserLocalId localId = new UserLocalId(1L);
-        final User user = new User(userId, localId, "givenName", "familyName", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        final User user = anyUser();
+        when(userManagementService.findUserById(user.id())).thenReturn(Optional.of(user));
 
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 12, 1)))
             .thenReturn(LocalDate.of(2021, 11, 29));
 
-        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 12, 1), LocalDate.of(2022, 1, 1), List.of(localId)))
+        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 12, 1), LocalDate.of(2022, 1, 1), List.of(user.localId())))
             .thenReturn(Map.of());
 
-        final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 12), userId);
+        final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 12), user.id());
 
         assertThat(actualReportMonth.yearMonth()).isEqualTo(YearMonth.of(2021, 12));
         assertThat(actualReportMonth.weeks()).hasSize(5);
@@ -263,48 +255,46 @@ class ReportServiceRawTest {
     @Test
     void ensureReportMonthDecemberWithOneTimeEntryAWeek() {
 
-        final UserId userId = new UserId("batman");
-        final UserLocalId localId = new UserLocalId(1L);
-        final User user = new User(userId, localId, "givenName", "familyName", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        final User user = anyUser();
+        when(userManagementService.findUserById(user.id())).thenReturn(Optional.of(user));
 
         final ZonedDateTime w1_d1_From = dateTime(2021, 1, 4, 1, 0);
         final ZonedDateTime w1_d1_To = dateTime(2021, 1, 4, 2, 0);
-        final TimeEntry w1_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work w1_d1", w1_d1_From, w1_d1_To, false);
+        final TimeEntry w1_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work w1_d1", w1_d1_From, w1_d1_To, false);
         final ZonedDateTime w1_d2_From = dateTime(2021, 1, 5, 3, 0);
         final ZonedDateTime w1_d2_To = dateTime(2021, 1, 5, 4, 0);
-        final TimeEntry w1_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work w1_d2", w1_d2_From, w1_d2_To, false);
+        final TimeEntry w1_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work w1_d2", w1_d2_From, w1_d2_To, false);
 
         final ZonedDateTime w2_d1_From = dateTime(2021, 1, 11, 1, 0);
         final ZonedDateTime w2_d1_To = dateTime(2021, 1, 11, 3, 0);
-        final TimeEntry w2_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work w2_d1", w2_d1_From, w2_d1_To, false);
+        final TimeEntry w2_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work w2_d1", w2_d1_From, w2_d1_To, false);
         final ZonedDateTime w2_d2_From = dateTime(2021, 1, 12, 4, 0);
         final ZonedDateTime w2_d2_To = dateTime(2021, 1, 12, 6, 0);
-        final TimeEntry w2_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work w2_d2", w2_d2_From, w2_d2_To, false);
+        final TimeEntry w2_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work w2_d2", w2_d2_From, w2_d2_To, false);
 
         final ZonedDateTime w3_d1_From = dateTime(2021, 1, 18, 1, 0);
         final ZonedDateTime w3_d1_To = dateTime(2021, 1, 18, 4, 0);
-        final TimeEntry w3_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work w3_d1", w3_d1_From, w3_d1_To, false);
+        final TimeEntry w3_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work w3_d1", w3_d1_From, w3_d1_To, false);
         final ZonedDateTime w3_d2_From = dateTime(2021, 1, 19, 5, 0);
         final ZonedDateTime w3_d2_To = dateTime(2021, 1, 19, 8, 0);
-        final TimeEntry w3_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work w3_d2", w3_d2_From, w3_d2_To, false);
+        final TimeEntry w3_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work w3_d2", w3_d2_From, w3_d2_To, false);
 
         final ZonedDateTime w4_d1_From = dateTime(2021, 1, 25, 1, 0);
         final ZonedDateTime w4_d1_To = dateTime(2021, 1, 25, 5, 0);
-        final TimeEntry w4_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work w4_d1", w4_d1_From, w4_d1_To, false);
+        final TimeEntry w4_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work w4_d1", w4_d1_From, w4_d1_To, false);
         final ZonedDateTime w4_d2_From = dateTime(2021, 1, 26, 6, 0);
         final ZonedDateTime w4_d2_To = dateTime(2021, 1, 26, 10, 0);
-        final TimeEntry w4_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work w4_d2", w4_d2_From, w4_d2_To, false);
+        final TimeEntry w4_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.id(), "hard work w4_d2", w4_d2_From, w4_d2_To, false);
 
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 1, 1)))
             .thenReturn(LocalDate.of(2020, 12, 28));
 
-        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(localId)))
-            .thenReturn(Map.of(localId, List.of(w1_d1_TimeEntry, w1_d2_TimeEntry, w2_d1_TimeEntry, w2_d2_TimeEntry, w3_d1_TimeEntry, w3_d2_TimeEntry, w4_d1_TimeEntry, w4_d2_TimeEntry)));
+        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.localId())))
+            .thenReturn(Map.of(user.localId(), List.of(w1_d1_TimeEntry, w1_d2_TimeEntry, w2_d1_TimeEntry, w2_d2_TimeEntry, w3_d1_TimeEntry, w3_d2_TimeEntry, w4_d1_TimeEntry, w4_d2_TimeEntry)));
 
-        when(userManagementService.findAllUsersByIds(List.of(userId))).thenReturn(List.of(user));
+        when(userManagementService.findAllUsersByIds(List.of(user.id()))).thenReturn(List.of(user));
 
-        final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), userId);
+        final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), user.id());
 
         assertThat(actualReportMonth.yearMonth()).isEqualTo(YearMonth.of(2021, 1));
         assertThat(actualReportMonth.weeks()).hasSize(5);
@@ -314,6 +304,15 @@ class ReportServiceRawTest {
         assertThat(actualReportMonth.weeks().get(2).workDuration().duration()).isEqualTo(Duration.ofHours(4));
         assertThat(actualReportMonth.weeks().get(3).workDuration().duration()).isEqualTo(Duration.ofHours(6));
         assertThat(actualReportMonth.weeks().get(4).workDuration().duration()).isEqualTo(Duration.ofHours(8));
+    }
+
+    private static User anyUser() {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        return new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
     }
 
     private static ZonedDateTime dateTime(int year, int month, int dayOfMonth, int hour, int minute) {

@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.absence.AbsenceService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -776,12 +777,18 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
+        final UserId batmanId = new UserId("batman");
         final UserLocalId batmanLocalId = new UserLocalId(1L);
-        final UserLocalId pinguinLocalId = new UserLocalId(2L);
-        final User batman = new User(new UserId("batman"), batmanLocalId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User pinguin = new User(new UserId("pinguin"), pinguinLocalId, "ping", "uin", new EMailAddress("pinguin@example.org"), Set.of());
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
 
-        when(userManagementService.findAllUsersByIds(Set.of(new UserId("batman"), new UserId("pinguin"))))
+        final UserId pinguinId = new UserId("pinguin");
+        final UserLocalId pinguinLocalId = new UserLocalId(2L);
+        final UserIdComposite pinguinIdComposite = new UserIdComposite(pinguinId, pinguinLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User pinguin = new User(pinguinIdComposite, "ping", "uin", new EMailAddress("pinguin@example.org"), Set.of());
+
+        when(userManagementService.findAllUsersByIds(Set.of(batmanId, pinguinId)))
             .thenReturn(List.of(batman, pinguin));
 
         final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesForAllUsers(from, toExclusive);
@@ -796,12 +803,12 @@ class TimeEntryServiceImplTest {
             .hasSize(2)
             .hasEntrySatisfying(batmanLocalId, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", expectedStart, expectedEnd, false)
+                    new TimeEntry(new TimeEntryId(1L), batmanId, "hard work", expectedStart, expectedEnd, false)
                 );
             })
             .hasEntrySatisfying(pinguinLocalId, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(2L), new UserId("pinguin"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
+                    new TimeEntry(new TimeEntryId(2L), pinguinId, "deserved break", expectedBreakStart, expectedBreakEnd, true)
                 );
             });
     }
@@ -809,10 +816,16 @@ class TimeEntryServiceImplTest {
     @Test
     void ensureGetEntriesByUserLocalIds() {
 
+        final UserId batmanId = new UserId("uuid-1");
         final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId robinId = new UserId("uuid-2");
         final UserLocalId robinLocalId = new UserLocalId(2L);
-        final User batman = new User(new UserId("uuid-1"), batmanLocalId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User robin = new User(new UserId("uuid-2"), robinLocalId, "Dick", "Grayson", new EMailAddress("robin@example.org"), Set.of());
+        final UserIdComposite robinIdComposite = new UserIdComposite(robinId, robinLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User robin = new User(robinIdComposite, "Dick", "Grayson", new EMailAddress("robin@example.org"), Set.of());
 
         when(userManagementService.findAllUsersByLocalIds(List.of(batmanLocalId, robinLocalId))).thenReturn(List.of(batman, robin));
 
@@ -843,12 +856,12 @@ class TimeEntryServiceImplTest {
             .hasSize(2)
             .hasEntrySatisfying(batmanLocalId, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(1L), new UserId("uuid-1"), "hard work", expectedStart, expectedEnd, false)
+                    new TimeEntry(new TimeEntryId(1L), batmanId, "hard work", expectedStart, expectedEnd, false)
                 );
             })
             .hasEntrySatisfying(robinLocalId, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(2L), new UserId("uuid-2"), "deserved break", expectedBreakStart, expectedBreakEnd, true)
+                    new TimeEntry(new TimeEntryId(2L), robinId, "deserved break", expectedBreakStart, expectedBreakEnd, true)
                 );
             });
     }
@@ -941,10 +954,14 @@ class TimeEntryServiceImplTest {
 
         when(timeEntryRepository.countAllByOwner("batman")).thenReturn(3L);
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserById(new UserId("batman"))).thenReturn(Optional.of(batman));
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
 
-        when(workingTimeService.getWorkingHoursByUserAndYearWeek(new UserLocalId(1337L), Year.of(2022), 1))
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findUserById(batmanId)).thenReturn(Optional.of(batman));
+
+        when(workingTimeService.getWorkingHoursByUserAndYearWeek(batmanLocalId, Year.of(2022), 1))
             .thenReturn(Map.of(
                 LocalDate.of(2022, 1, 3), PlannedWorkingHours.EIGHT,
                 LocalDate.of(2022, 1, 4), PlannedWorkingHours.EIGHT,
@@ -955,7 +972,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2022, 1, 9), PlannedWorkingHours.ZERO  // sunday
             ));
 
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(new UserId("batman"), 2022, 1);
+        final TimeEntryWeekPage actual = sut.getEntryWeekPage(batmanId, 2022, 1);
 
         assertThat(actual).isEqualTo(
             new TimeEntryWeekPage(
@@ -1003,8 +1020,8 @@ class TimeEntryServiceImplTest {
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(
-                                new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
-                                new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet!", timeEntryStart, timeEntryEnd, false)
+                                new TimeEntry(new TimeEntryId(2L), batmanId, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
+                                new TimeEntry(new TimeEntryId(1L), batmanId, "hack the planet!", timeEntryStart, timeEntryEnd, false)
                             ),
                             List.of()
                         ),
@@ -1048,11 +1065,15 @@ class TimeEntryServiceImplTest {
 
         when(timeEntryRepository.countAllByOwner("batman")).thenReturn(6L);
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserById(new UserId("batman"))).thenReturn(Optional.of(batman));
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findUserById(batmanId)).thenReturn(Optional.of(batman));
 
         // Map<LocalDate, PlannedWorkingHours>
-        when(workingTimeService.getWorkingHoursByUserAndYearWeek(new UserLocalId(1337L), Year.of(2023), 5))
+        when(workingTimeService.getWorkingHoursByUserAndYearWeek(batmanLocalId, Year.of(2023), 5))
             .thenReturn(Map.of(
                 LocalDate.of(2023, 1, 30), PlannedWorkingHours.EIGHT,
                 LocalDate.of(2023, 1, 31), PlannedWorkingHours.EIGHT,
@@ -1063,7 +1084,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2023, 2, 5), PlannedWorkingHours.ZERO
             ));
 
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(new UserId("batman"), 2023, 5);
+        final TimeEntryWeekPage actual = sut.getEntryWeekPage(batmanId, 2023, 5);
 
         assertThat(actual).isEqualTo(
             new TimeEntryWeekPage(
@@ -1076,7 +1097,7 @@ class TimeEntryServiceImplTest {
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(
-                                new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
+                                new TimeEntry(new TimeEntryId(2L), batmanId, "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
                             ),
                             List.of()
                         ),
@@ -1120,7 +1141,7 @@ class TimeEntryServiceImplTest {
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(
-                                new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
+                                new TimeEntry(new TimeEntryId(1L), batmanId, "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
                             ),
                             List.of()
                         )
@@ -1148,11 +1169,15 @@ class TimeEntryServiceImplTest {
 
         when(timeEntryRepository.countAllByOwner("batman")).thenReturn(6L);
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserById(new UserId("batman"))).thenReturn(Optional.of(batman));
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findUserById(batmanId)).thenReturn(Optional.of(batman));
 
         // Map<LocalDate, PlannedWorkingHours>
-        when(workingTimeService.getWorkingHoursByUserAndYearWeek(new UserLocalId(1337L), Year.of(2023), 24))
+        when(workingTimeService.getWorkingHoursByUserAndYearWeek(batmanLocalId, Year.of(2023), 24))
             .thenReturn(Map.of(
                 LocalDate.of(2023, 6, 12), PlannedWorkingHours.EIGHT,
                 LocalDate.of(2023, 6, 13), PlannedWorkingHours.EIGHT,
@@ -1163,7 +1188,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2023, 6, 18), PlannedWorkingHours.ZERO
             ));
 
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(new UserId("batman"), 2023, 24);
+        final TimeEntryWeekPage actual = sut.getEntryWeekPage(batmanId, 2023, 24);
 
         assertThat(actual).isEqualTo(
             new TimeEntryWeekPage(

@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.absence;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -129,9 +130,10 @@ class AbsenceServiceImplTest {
 
         final UserId userId = new UserId(UUID.randomUUID().toString());
         final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId))).thenReturn(List.of(
-            new User(userId, userLocalId, null, null, null, Set.of()))
+            new User(userIdComposite, null, null, null, Set.of()))
         );
 
         final List<String> userIdsValues = List.of(userId.value());
@@ -157,12 +159,14 @@ class AbsenceServiceImplTest {
 
         final UserId userId_1 = new UserId(UUID.randomUUID().toString());
         final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
         final UserId userId_2 = new UserId(UUID.randomUUID().toString());
         final UserLocalId userLocalId_2 = new UserLocalId(2L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
 
         when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1, userLocalId_2))).thenReturn(List.of(
-            new User(userId_1, userLocalId_1, "Bruce", null, null, Set.of()),
-            new User(userId_2, userLocalId_2, "Alfred", null, null, Set.of())
+            new User(userIdComposite_1, "Bruce", null, null, Set.of()),
+            new User(userIdComposite_2, "Alfred", null, null, Set.of())
         ));
 
         final Instant absence_1_start = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));

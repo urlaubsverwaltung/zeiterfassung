@@ -2,6 +2,8 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.UserDateService;
+import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -183,9 +186,12 @@ class WorkTimeServiceImplTest {
         entity_2.setSaturday("PT2H");
         entity_2.setSunday("PT1H");
 
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserLocalId userLocalId_2 = new UserLocalId(2L);
+
         when(userManagementService.findAllUsers()).thenReturn(List.of(
-            new User(null, new UserLocalId(1L), "", "", null, Set.of()),
-            new User(null, new UserLocalId(2L), "", "", null, Set.of())
+            new User(new UserIdComposite(new UserId(UUID.randomUUID().toString()), userLocalId_1), "", "", null, Set.of()),
+            new User(new UserIdComposite(new UserId(UUID.randomUUID().toString()), userLocalId_2), "", "", null, Set.of())
         ));
 
         when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L, 2L))).thenReturn(List.of(entity_1, entity_2));
@@ -193,8 +199,8 @@ class WorkTimeServiceImplTest {
         final Map<UserLocalId, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
 
         assertThat(actual)
-            .containsEntry(new UserLocalId(1L), WorkingTime.builder()
-                .userId(new UserLocalId(1L))
+            .containsEntry(userLocalId_1, WorkingTime.builder()
+                .userId(userLocalId_1)
                 .monday(1)
                 .tuesday(2)
                 .wednesday(3)
@@ -204,8 +210,8 @@ class WorkTimeServiceImplTest {
                 .sunday(8)
                 .build()
             )
-            .containsEntry(new UserLocalId(2L), WorkingTime.builder()
-                .userId(new UserLocalId(2L))
+            .containsEntry(userLocalId_2, WorkingTime.builder()
+                .userId(userLocalId_2)
                 .monday(7)
                 .tuesday(6)
                 .wednesday(5)
@@ -220,16 +226,18 @@ class WorkTimeServiceImplTest {
     @Test
     void ensureGetAllWorkingTimeByUsersAddsDefaultWorkingTimeForUsersWithoutExplicitOne() {
 
+        final UserLocalId userLocalId = new UserLocalId(1L);
+
         when(userManagementService.findAllUsers())
-            .thenReturn(List.of(new User(null, new UserLocalId(1L), "", "", null, Set.of())));
+            .thenReturn(List.of(new User(new UserIdComposite(new UserId(UUID.randomUUID().toString()), userLocalId), "", "", null, Set.of())));
 
         when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L))).thenReturn(List.of());
 
         final Map<UserLocalId, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
 
         assertThat(actual)
-            .containsEntry(new UserLocalId(1L), WorkingTime.builder()
-                .userId(new UserLocalId(1L))
+            .containsEntry(userLocalId, WorkingTime.builder()
+                .userId(userLocalId)
                 .monday(8)
                 .tuesday(8)
                 .wednesday(8)

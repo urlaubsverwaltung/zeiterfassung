@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.TestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -37,7 +38,9 @@ class ReportCsvServiceIT extends TestContainersBase {
         final PrintWriter printWriter = mock(PrintWriter.class);
 
         final UserId userId = new UserId("user");
-        final User user = new User(userId, new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
         when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
 

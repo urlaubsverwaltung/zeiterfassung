@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,10 @@ class ReportDayTest {
     @Test
     void ensureToRemoveBreaks() {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
 
         final ZonedDateTime from = dateTime(2021, 1, 4, 1, 0);
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);

@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -69,6 +70,11 @@ class UserManagementServiceImpl implements UserManagementService {
     }
 
     private static User tenantUserToUser(TenantUser tenantUser) {
-        return new User(new UserId(tenantUser.id()), new UserLocalId(tenantUser.localId()), tenantUser.givenName(), tenantUser.familyName(), tenantUser.eMail(), tenantUser.authorities());
+
+        final UserId userId = new UserId(tenantUser.id());
+        final UserLocalId userLocalId = new UserLocalId(tenantUser.localId());
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        return new User(userIdComposite, tenantUser.givenName(), tenantUser.familyName(), tenantUser.eMail(), tenantUser.authorities());
     }
 }

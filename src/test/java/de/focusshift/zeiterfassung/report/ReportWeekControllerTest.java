@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.BeforeEach;
@@ -152,10 +153,10 @@ class ReportWeekControllerTest {
     @Test
     void ensureWeekReportUserFilterRelatedUrlsAreNotAddedWhenCurrentUserHasNoPermission() throws Exception {
 
-        when(reportPermissionService.findAllPermittedUsersForCurrentUser())
-            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "", "", new EMailAddress(""), Set.of())));
+        final User user = anyUser();
+        when(reportPermissionService.findAllPermittedUsersForCurrentUser()).thenReturn(List.of(user));
 
-        when(reportService.getReportWeek(Year.of(2022), 1, new UserId("batman")))
+        when(reportService.getReportWeek(Year.of(2022), 1, user.id()))
             .thenReturn(anyReportWeek());
 
         perform(get("/report/year/2022/week/1").with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))))
@@ -165,14 +166,25 @@ class ReportWeekControllerTest {
     @Test
     void ensureWeekReportUserFilterRelatedUrls() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
+        final UserId userId_1 = new UserId("batman");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        final UserId userId_2 = new UserId("joker");
+        final UserLocalId userLocalId_2 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+        final User user_2 = new User(userIdComposite_2, "Jack", "Napier", new EMailAddress(""), Set.of());
+
+        final UserId userId_3 = new UserId("robin");
+        final UserLocalId userLocalId_3 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
+        final User user_3 = new User(userIdComposite_3, "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
-            .thenReturn(List.of(batman, joker, robin));
+            .thenReturn(List.of(user_1, user_2, user_3));
 
-        when(reportService.getReportWeek(Year.of(2022), 1, new UserId("batman")))
+        when(reportService.getReportWeek(Year.of(2022), 1, userId_1))
             .thenReturn(anyReportWeek());
 
         perform(get("/report/year/2022/week/1").with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))))
@@ -189,12 +201,23 @@ class ReportWeekControllerTest {
     @Test
     void ensureWeekReportUserFilterRelatedUrlsForEveryone() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
+        final UserId userId_1 = new UserId("batman");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        final UserId userId_2 = new UserId("joker");
+        final UserLocalId userLocalId_2 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+        final User user_2 = new User(userIdComposite_2, "Jack", "Napier", new EMailAddress(""), Set.of());
+
+        final UserId userId_3 = new UserId("robin");
+        final UserLocalId userLocalId_3 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
+        final User user_3 = new User(userIdComposite_3, "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
-            .thenReturn(List.of(batman, joker, robin));
+            .thenReturn(List.of(user_1, user_2, user_3));
 
         when(reportService.getReportWeekForAllUsers(Year.of(2022), 1))
             .thenReturn(anyReportWeek());
@@ -217,14 +240,25 @@ class ReportWeekControllerTest {
     @Test
     void ensureWeekReportUserFilterRelatedUrlsForWithSelectedUser() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
+        final UserId userId_1 = new UserId("batman");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        final UserId userId_2 = new UserId("joker");
+        final UserLocalId userLocalId_2 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+        final User user_2 = new User(userIdComposite_2, "Jack", "Napier", new EMailAddress(""), Set.of());
+
+        final UserId userId_3 = new UserId("robin");
+        final UserLocalId userLocalId_3 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
+        final User user_3 = new User(userIdComposite_3, "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
-            .thenReturn(List.of(batman, joker, robin));
+            .thenReturn(List.of(user_1, user_2, user_3));
 
-        when(reportService.getReportWeek(Year.of(2022), 1, List.of(new UserLocalId(2L), new UserLocalId(3L))))
+        when(reportService.getReportWeek(Year.of(2022), 1, List.of(userLocalId_2, userLocalId_3)))
             .thenReturn(anyReportWeek());
 
         perform(
@@ -241,9 +275,20 @@ class ReportWeekControllerTest {
             .andExpect(model().attribute("allUsersSelected", false))
             .andExpect(model().attribute("userReportFilterUrl", "/report/year/2022/week/1"));
     }
+
+    private static User anyUser() {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        return new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+    }
+
     private static ReportWeek anyReportWeek() {
         return new ReportWeek(LocalDate.of(2022, 1, 1), List.of());
     }
+
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
         return standaloneSetup(sut)
             .addFilters(new SecurityContextPersistenceFilter())
