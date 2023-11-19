@@ -203,8 +203,8 @@
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.14.2</version>
                 <configuration>
-                    <nodeVersion>v20.5.0</nodeVersion>
-                    <npmVersion>9.8.0</npmVersion>
+                    <nodeVersion>v20.9.0</nodeVersion>
+                    <npmVersion>10.1.0</npmVersion>
                     <environmentVariables>
                         <NODE_ENV>${node.env}</NODE_ENV>
                     </environmentVariables>
