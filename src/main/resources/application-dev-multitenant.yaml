@@ -9,7 +9,7 @@ zeiterfassung:
       client:
         registration:
           redirect-uri-template: '{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}'
-          server-url: http://localhost:8090/
+          server-url: http://localhost:8090
   tenant:
     mode: multi
     registration:

@@ -12,7 +12,7 @@ zeiterfassung:
       claim-mapper: keycloak
       login-form-url: http://localhost:8070/login/redirect
       redirect-uri-template: '{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}'
-      serverUrl: http://localhost:8090/auth
+      server-url: http://localhost:8090
   tenant:
     single:
       defaultTenantId: default
