@@ -69,7 +69,7 @@ class OvertimeAccountControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanLocalId, true, Duration.ofHours(10).plusMinutes(30));
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
         when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
@@ -111,7 +111,7 @@ class OvertimeAccountControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanLocalId, true, Duration.ofHours(10).plusMinutes(30));
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
         when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         perform(
@@ -137,7 +137,7 @@ class OvertimeAccountControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanLocalId, true, Duration.ofHours(10).plusMinutes(30));
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
         when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
@@ -171,7 +171,7 @@ class OvertimeAccountControllerTest {
         final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         when(userManagementService.findAllUsers("awesome-query")).thenReturn(List.of(batman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanLocalId, true, Duration.ofHours(10).plusMinutes(30));
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
         when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         perform(
@@ -194,7 +194,7 @@ class OvertimeAccountControllerTest {
         final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         when(userManagementService.findAllUsers("awesome-query")).thenReturn(List.of(batman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanLocalId, true, Duration.ofHours(10).plusMinutes(30));
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
         when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         perform(
@@ -223,7 +223,7 @@ class OvertimeAccountControllerTest {
         when(userManagementService.findAllUsers("super")).thenReturn(List.of(superman));
         when(userManagementService.findUserByLocalId(batmanLocalId)).thenReturn(Optional.of(batman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanLocalId, true, Duration.ofHours(10).plusMinutes(30));
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
         when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
@@ -259,7 +259,7 @@ class OvertimeAccountControllerTest {
         when(userManagementService.findAllUsers("super")).thenReturn(List.of(superman));
         when(userManagementService.findUserByLocalId(batmanLocalId)).thenReturn(Optional.of(batman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanLocalId, true, Duration.ofHours(10).plusMinutes(30));
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
         when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");

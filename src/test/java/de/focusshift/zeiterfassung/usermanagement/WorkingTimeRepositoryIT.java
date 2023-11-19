@@ -1,12 +1,19 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,6 +25,8 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
 
     @Autowired
     private WorkingTimeService workingTimeService;
+    @MockBean
+    private UserManagementService userManagementService;
 
     @AfterEach
     void tearDown() {
@@ -27,8 +36,27 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
     @Test
     void ensureFindAllByUserIdIsIn() {
 
+        final UserId userId_1 = new UserId("uuid-1");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "", "", new EMailAddress(""), Set.of());
+
+        final UserId userId_2 = new UserId("uuid-2");
+        final UserLocalId userLocalId_2 = new UserLocalId(2L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+        final User user_2 = new User(userIdComposite_2, "", "", new EMailAddress(""), Set.of());
+
+        final UserId userId_3 = new UserId("uuid-3");
+        final UserLocalId userLocalId_3 = new UserLocalId(3L);
+        final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
+        final User user_3 = new User(userIdComposite_3, "", "", new EMailAddress(""), Set.of());
+
+        Mockito.when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
+        Mockito.when(userManagementService.findUserByLocalId(userLocalId_2)).thenReturn(Optional.of(user_2));
+        Mockito.when(userManagementService.findUserByLocalId(userLocalId_3)).thenReturn(Optional.of(user_3));
+
         workingTimeService.updateWorkingTime(
-            new UserLocalId(1L),
+            userLocalId_1,
             WorkWeekUpdate.builder()
                 .monday(1)
                 .tuesday(2)
@@ -41,7 +69,7 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
         );
 
         workingTimeService.updateWorkingTime(
-            new UserLocalId(2L),
+            userLocalId_2,
             WorkWeekUpdate.builder()
                 .monday(10)
                 .tuesday(10)
@@ -54,7 +82,7 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
         );
 
         workingTimeService.updateWorkingTime(
-            new UserLocalId(3L),
+            userLocalId_3,
             WorkWeekUpdate.builder()
                 .monday(8)
                 .tuesday(8)

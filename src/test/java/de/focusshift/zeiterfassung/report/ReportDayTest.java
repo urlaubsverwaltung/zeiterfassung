@@ -35,7 +35,7 @@ class ReportDayTest {
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
         final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, true);
 
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batman.localId(), PlannedWorkingHours.EIGHT), Map.of(batman.localId(), List.of(reportDayEntry)), Map.of());
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
 
         assertThat(reportDay.workDuration().duration()).isEqualTo(Duration.ZERO);
     }

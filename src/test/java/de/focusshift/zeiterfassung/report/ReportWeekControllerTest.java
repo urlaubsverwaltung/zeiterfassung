@@ -172,12 +172,12 @@ class ReportWeekControllerTest {
         final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
         final UserId userId_2 = new UserId("joker");
-        final UserLocalId userLocalId_2 = new UserLocalId(1L);
+        final UserLocalId userLocalId_2 = new UserLocalId(2L);
         final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
         final User user_2 = new User(userIdComposite_2, "Jack", "Napier", new EMailAddress(""), Set.of());
 
         final UserId userId_3 = new UserId("robin");
-        final UserLocalId userLocalId_3 = new UserLocalId(1L);
+        final UserLocalId userLocalId_3 = new UserLocalId(3L);
         final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
         final User user_3 = new User(userIdComposite_3, "Dick", "Grayson", new EMailAddress(""), Set.of());
 
@@ -207,12 +207,12 @@ class ReportWeekControllerTest {
         final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
         final UserId userId_2 = new UserId("joker");
-        final UserLocalId userLocalId_2 = new UserLocalId(1L);
+        final UserLocalId userLocalId_2 = new UserLocalId(2L);
         final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
         final User user_2 = new User(userIdComposite_2, "Jack", "Napier", new EMailAddress(""), Set.of());
 
         final UserId userId_3 = new UserId("robin");
-        final UserLocalId userLocalId_3 = new UserLocalId(1L);
+        final UserLocalId userLocalId_3 = new UserLocalId(3L);
         final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
         final User user_3 = new User(userIdComposite_3, "Dick", "Grayson", new EMailAddress(""), Set.of());
 
@@ -246,12 +246,12 @@ class ReportWeekControllerTest {
         final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
         final UserId userId_2 = new UserId("joker");
-        final UserLocalId userLocalId_2 = new UserLocalId(1L);
+        final UserLocalId userLocalId_2 = new UserLocalId(2L);
         final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
         final User user_2 = new User(userIdComposite_2, "Jack", "Napier", new EMailAddress(""), Set.of());
 
         final UserId userId_3 = new UserId("robin");
-        final UserLocalId userLocalId_3 = new UserLocalId(1L);
+        final UserLocalId userLocalId_3 = new UserLocalId(3L);
         final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
         final User user_3 = new User(userIdComposite_3, "Dick", "Grayson", new EMailAddress(""), Set.of());
 

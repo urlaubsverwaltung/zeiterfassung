@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.absence;
 
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 
 import java.time.Instant;
@@ -25,9 +26,9 @@ public interface AbsenceService {
      *
      * @param from        from
      * @param toExclusive to (exclusive)
-     * @return absences grouped by {@link UserLocalId}. empty list value when there are no absences on a date within the period.
+     * @return absences grouped by {@link UserIdComposite}. empty list value when there are no absences on a date within the period.
      */
-    Map<UserLocalId, List<Absence>> getAbsencesForAllUsers(LocalDate from, LocalDate toExclusive);
+    Map<UserIdComposite, List<Absence>> getAbsencesForAllUsers(LocalDate from, LocalDate toExclusive);
 
     /**
      * Find all absences in a given date range for the given users
@@ -35,9 +36,9 @@ public interface AbsenceService {
      * @param userLocalIds users
      * @param from         from
      * @param toExclusive  to (exclusive)
-     * @return absences grouped by {@link UserLocalId}. empty list value when there are no absences on a date within the period.
+     * @return absences grouped by {@link UserIdComposite}. empty list value when there are no absences on a date within the period.
      */
-    Map<UserLocalId, List<Absence>> getAbsencesByUserIds(List<UserLocalId> userLocalIds, LocalDate from, LocalDate toExclusive);
+    Map<UserIdComposite, List<Absence>> getAbsencesByUserIds(List<UserLocalId> userLocalIds, LocalDate from, LocalDate toExclusive);
 
     /**
      * Find all absences in a given date range for the given user

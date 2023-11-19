@@ -1,5 +1,8 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
+
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -30,7 +33,7 @@ import static java.util.stream.Collectors.toSet;
  */
 public final class WorkingTime {
 
-    private final UserLocalId userId;
+    private final UserIdComposite userIdComposite;
     private final WorkDay monday;
     private final WorkDay tuesday;
     private final WorkDay wednesday;
@@ -39,10 +42,10 @@ public final class WorkingTime {
     private final WorkDay saturday;
     private final WorkDay sunday;
 
-    private WorkingTime(UserLocalId userId, WorkDay monday, WorkDay tuesday, WorkDay wednesday, WorkDay thursday,
+    private WorkingTime(UserIdComposite userIdComposite, WorkDay monday, WorkDay tuesday, WorkDay wednesday, WorkDay thursday,
                         WorkDay friday, WorkDay saturday, WorkDay sunday) {
 
-        this.userId = userId;
+        this.userIdComposite = userIdComposite;
         this.monday = monday;
         this.tuesday = tuesday;
         this.wednesday = wednesday;
@@ -52,8 +55,16 @@ public final class WorkingTime {
         this.sunday = sunday;
     }
 
-    public UserLocalId getUserId() {
-        return userId;
+    public UserIdComposite getUserIdComposite() {
+        return userIdComposite;
+    }
+
+    public UserLocalId getUserLocalId() {
+        return userIdComposite.localId();
+    }
+
+    public UserId getUserId() {
+        return userIdComposite.id();
     }
 
     /**
@@ -175,18 +186,18 @@ public final class WorkingTime {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WorkingTime that = (WorkingTime) o;
-        return Objects.equals(userId, that.userId);
+        return Objects.equals(userIdComposite, that.userIdComposite);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId);
+        return Objects.hash(userIdComposite);
     }
 
     @Override
     public String toString() {
         return "WorkingTime{" +
-            "userId=" + userId +
+            "userIdComposite=" + userIdComposite +
             ", monday=" + monday +
             ", tuesday=" + tuesday +
             ", wednesday=" + wednesday +
@@ -202,11 +213,11 @@ public final class WorkingTime {
     }
 
     public static class Builder {
-        private UserLocalId userId;
+        private UserIdComposite userIdComposite;
         private final EnumMap<DayOfWeek, Duration> workDays = new EnumMap<>(DayOfWeek.class);
 
-        public Builder userId(UserLocalId userId) {
-            this.userId = userId;
+        public Builder userIdComposite(UserIdComposite userIdComposite) {
+            this.userIdComposite = userIdComposite;
             return this;
         }
 
@@ -302,7 +313,7 @@ public final class WorkingTime {
         }
 
         public WorkingTime build() {
-            return new WorkingTime(userId, getWorkDay(MONDAY), getWorkDay(TUESDAY), getWorkDay(WEDNESDAY),
+            return new WorkingTime(userIdComposite, getWorkDay(MONDAY), getWorkDay(TUESDAY), getWorkDay(WEDNESDAY),
                 getWorkDay(THURSDAY), getWorkDay(FRIDAY), getWorkDay(SATURDAY), getWorkDay(SUNDAY));
         }
 

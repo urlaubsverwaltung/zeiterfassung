@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.timeclock;
 
-import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -80,16 +79,6 @@ class TimeClockService {
         final ZonedDateTime stoppedAt = timeClockEntity.getStoppedAt() == null ? null : ZonedDateTime.ofInstant(timeClockEntity.getStoppedAt(), ZoneId.of(timeClockEntity.getStoppedAtZoneId()));
 
         return new TimeClock(id, userId, startedAt, timeClockEntity.getComment(), timeClockEntity.isBreak(), Optional.ofNullable(stoppedAt));
-    }
-
-    private static TimeEntry timeClockToTimeEntry(TimeClock timeClock) {
-
-        final UserId userId = timeClock.userId();
-        final ZonedDateTime startedAt = timeClock.startedAt();
-        final ZonedDateTime stoppedAt = timeClock.stoppedAt()
-            .orElseThrow(() -> new IllegalArgumentException("expected timeClock with stoppedAt field."));
-
-        return new TimeEntry(null, userId, timeClock.comment(), startedAt, stoppedAt, timeClock.isBreak());
     }
 
     private static TimeClock prepareTimeClockUpdate(TimeClock existingTimeClock, TimeClockUpdate timeClockUpdate) {

@@ -7,8 +7,10 @@ import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.YearFormat;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,10 +66,14 @@ class TimeEntryControllerTest {
     @Test
     void ensureTimeEntriesForYearAndWeekOfYear() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
         final ZonedDateTime absenceStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime absenceEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final Absence absence = new Absence(new UserId("batman"), absenceStart, absenceEnd, DayLength.FULL, AbsenceType.HOLIDAY, AbsenceColor.BLUE);
@@ -146,10 +152,14 @@ class TimeEntryControllerTest {
     @Test
     void ensureTimeEntriesForYearAndWeekOfYearWithTurboFrame() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
@@ -536,16 +546,20 @@ class TimeEntryControllerTest {
     @Test
     void ensureTimeEntryEditForAjax() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
 
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntryToEdit = new TimeEntry(new TimeEntryId(1337L), new UserId("batman"), "hard work extended", start, end, false);
+        final TimeEntry timeEntryToEdit = new TimeEntry(new TimeEntryId(1337L), userIdComposite, "hard work extended", start, end, false);
 
         final ZonedDateTime startOtherDay = ZonedDateTime.of(2022, 9, 29, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime endOtherDay = ZonedDateTime.of(2022, 9, 29, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntryOtherDay = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", startOtherDay, endOtherDay, false);
+        final TimeEntry timeEntryOtherDay = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", startOtherDay, endOtherDay, false);
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(
             LocalDate.of(2022, 9, 26),
@@ -659,11 +673,15 @@ class TimeEntryControllerTest {
     @Test
     void ensureTimeEntryEditWithValidationError() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hack the planet", expectedStart, expectedEnd, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
@@ -748,11 +766,15 @@ class TimeEntryControllerTest {
     @Test
     void ensureDelete() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
 
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1337L), new UserId("batman"), "hard work extended", start, end, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1337L), userIdComposite, "hard work extended", start, end, false);
 
         when(timeEntryService.findTimeEntry(1337)).thenReturn(Optional.of(timeEntry));
 
@@ -770,16 +792,19 @@ class TimeEntryControllerTest {
     @Test
     void ensureDeleteWithAjax() throws Exception {
 
-        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
 
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work", start, end, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", start, end, false);
 
         final ZonedDateTime start2 = ZonedDateTime.of(2022, 9, 28, 16, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end2 = ZonedDateTime.of(2022, 9, 28, 17, 30, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userId, "hack the planet", start2, end2, false);
+        final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet", start2, end2, false);
 
         when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
 
@@ -849,12 +874,15 @@ class TimeEntryControllerTest {
     @Test
     void ensureDeleteWithAjaxLastTimeEntryOfDay() throws Exception {
 
-        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
 
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userId, "hard work", start, end, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", start, end, false);
 
         when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
 

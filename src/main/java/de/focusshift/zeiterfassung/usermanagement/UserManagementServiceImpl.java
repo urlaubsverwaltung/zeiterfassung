@@ -8,10 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-
-import static java.util.stream.Collectors.toMap;
 
 @Service
 class UserManagementServiceImpl implements UserManagementService {
@@ -48,14 +45,7 @@ class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
-    public Map<UserId, UserLocalId> findAllUserLocalIdsGroupedByUserId() {
-        return mapToUser(tenantUserService.findAllUsers())
-            .stream()
-            .collect(toMap(User::id, User::localId));
-    }
-
-    @Override
-    public List<User> findAllUsersByLocalIds(List<UserLocalId> localIds) {
+    public List<User> findAllUsersByLocalIds(Collection<UserLocalId> localIds) {
         return mapToUser(tenantUserService.findAllUsersByLocalId(localIds));
     }
 

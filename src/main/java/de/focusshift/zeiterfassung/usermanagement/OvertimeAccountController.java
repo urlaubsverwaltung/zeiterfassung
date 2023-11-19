@@ -121,10 +121,6 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
         return dto;
     }
 
-    private static OvertimeAccount toOvertimeAccount(Long userId, OvertimeAccountDto dto) {
-        return new OvertimeAccount(new UserLocalId(userId), dto.isAllowed(), hoursToDuration(dto.getMaxAllowedOvertime()));
-    }
-
     private static Duration hoursToDuration(Double hours) {
         if (hours == null) {
             return null;

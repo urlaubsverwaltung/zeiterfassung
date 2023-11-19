@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.absence.AbsenceService;
 import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -24,6 +25,7 @@ import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,12 +67,13 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     public Optional<TimeEntry> findTimeEntry(long id) {
-        return timeEntryRepository.findById(id).map(TimeEntryServiceImpl::toTimeEntry);
+        return timeEntryRepository.findById(id).map(this::toTimeEntry);
     }
 
     @Override
     public List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserId userId) {
 
+        final User user = findUser(userId);
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
 
@@ -79,61 +82,52 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         return result
             .stream()
-            .map(TimeEntryServiceImpl::toTimeEntry)
+            .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, user))
             .sorted(comparing(TimeEntry::start).reversed())
             .toList();
     }
 
     @Override
-    public Map<UserLocalId, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive) {
+    public Map<UserIdComposite, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive) {
 
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
 
-        final Map<UserId, List<TimeEntry>> timeEntriesByUserId = timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(fromInstant, toInstant)
-            .stream()
-            .map(TimeEntryServiceImpl::toTimeEntry)
-            .collect(groupingBy(TimeEntry::userId));
-
-        final Map<UserId, User> userById = userManagementService.findAllUsersByIds(timeEntriesByUserId.keySet())
+        final Map<UserId, User> userByUserId = userManagementService.findAllUsers()
             .stream()
             .collect(toMap(User::id, identity()));
 
-        return timeEntriesByUserId.entrySet()
+        return timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(fromInstant, toInstant)
             .stream()
-            .collect(
-                toMap(
-                    entry -> userById.get(entry.getKey()).localId(),
-                    Map.Entry::getValue
-                )
-            );
+            // TODO handle map.get == null
+            .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, userByUserId.get(new UserId(timeEntryEntity.getOwner()))))
+            .collect(groupingBy(TimeEntry::userIdComposite));
     }
 
     @Override
-    public Map<UserLocalId, List<TimeEntry>> getEntriesByUserLocalIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
+    public Map<UserIdComposite, List<TimeEntry>> getEntriesByUserLocalIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
 
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
 
         final List<User> users = userManagementService.findAllUsersByLocalIds(userLocalIds);
 
-        final List<String> userIdValues = users
-            .stream()
-            .map(User::id)
-            .map(UserId::value)
-            .toList();
+        final List<String> userIdValues = new ArrayList<>();
+        final Map<UserId, User> userByUserId = new HashMap<>();
+        for (User user : users) {
+            userIdValues.add(user.idComposite().id().value());
+            userByUserId.put(user.id(), user);
+        }
 
-        final Map<UserId, UserLocalId> userLocalIdById = users.stream().collect(toMap(User::id, User::localId));
-
-        final Map<UserLocalId, List<TimeEntry>> result = timeEntryRepository
+        final Map<UserIdComposite, List<TimeEntry>> result = timeEntryRepository
             .findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(userIdValues, fromInstant, toInstant)
             .stream()
-            .map(TimeEntryServiceImpl::toTimeEntry)
-            .collect(groupingBy(timeEntry -> userLocalIdById.get(timeEntry.userId())));
+            // TODO handle map.get == null
+            .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, userByUserId.get(new UserId(timeEntryEntity.getOwner()))))
+            .collect(groupingBy(TimeEntry::userIdComposite));
 
-        for (UserLocalId userLocalId : userLocalIds) {
-            result.computeIfAbsent(userLocalId, (unused) -> List.of());
-        }
+        // add empty list for users without time entries
+        users.forEach(user -> result.computeIfAbsent(user.idComposite(), unused -> List.of()));
 
         return result;
     }
@@ -141,6 +135,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
     @Override
     public TimeEntryWeekPage getEntryWeekPage(UserId userId, int year, int weekOfYear) {
 
+        final User user = findUser(userId);
         final ZoneId userZoneId = userSettingsProvider.zoneId();
         final ZonedDateTime fromDateTime = userDateService.firstDayOfWeek(Year.of(year), weekOfYear).atStartOfDay(userZoneId);
         final ZonedDateTime toDateTimeExclusive = fromDateTime.plusWeeks(1);
@@ -152,13 +147,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan(userId.value(), from, toExclusive)
             .stream()
             .sorted(comparing(TimeEntryEntity::getStart).thenComparing(TimeEntryEntity::getUpdatedAt).reversed())
-            .map(TimeEntryServiceImpl::toTimeEntry)
+            .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, user))
             .collect(groupingBy(entry -> LocalDate.ofInstant(entry.start().toInstant(), userZoneId)));
 
         final Map<LocalDate, List<Absence>> absencesByDate = absenceService.findAllAbsences(userId, from, toExclusive);
 
         // TODO refactor getEntryWeekPage to accept UserLocalId to replace userManagementService call
-        final User user = userManagementService.findUserById(userId).orElseThrow(() -> new IllegalStateException("expected user=%s to exist.".formatted(userId)));
         final UserLocalId userLocalId = user.localId();
         final Map<LocalDate, PlannedWorkingHours> plannedByDate = workingTimeService.getWorkingHoursByUserAndYearWeek(userLocalId, Year.of(year), weekOfYear);
 
@@ -243,7 +237,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     }
 
-    private static void updateEntityTimeSpan(TimeEntryEntity entity, ZonedDateTime start, ZonedDateTime end, Duration duration)
+    private void updateEntityTimeSpan(TimeEntryEntity entity, ZonedDateTime start, ZonedDateTime end, Duration duration)
         throws TimeEntryUpdateNotPlausibleException {
 
         final TimeEntry existingTimeEntry = toTimeEntry(entity);
@@ -318,7 +312,18 @@ class TimeEntryServiceImpl implements TimeEntryService {
         return toTimeEntry(timeEntryRepository.save(entity));
     }
 
-    private static TimeEntry toTimeEntry(TimeEntryEntity entity) {
+    private User findUser(UserId userId) {
+        return userManagementService.findUserById(userId)
+            .orElseThrow(() -> new IllegalStateException("expected user=%s to exist but got nothing.".formatted(userId)));
+    }
+
+    private TimeEntry toTimeEntry(TimeEntryEntity entity) {
+        final User user = findUser(new UserId(entity.getOwner()));
+        return toTimeEntry(entity, user);
+    }
+
+    private TimeEntry toTimeEntry(TimeEntryEntity entity, User user) {
+
         final Instant actualStart = entity.getStart();
         final Instant actualEnd = entity.getEnd();
 
@@ -331,9 +336,9 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final ZonedDateTime startDateTime = ZonedDateTime.ofInstant(start, ZoneId.of(entity.getStartZoneId()));
         final ZonedDateTime endDateTime = ZonedDateTime.ofInstant(end, ZoneId.of(entity.getEndZoneId()));
 
-        final UserId userId = new UserId(entity.getOwner());
+        final UserIdComposite userIdComposite = user.idComposite();
 
-        return new TimeEntry(new TimeEntryId(entity.getId()), userId, entity.getComment(), startDateTime, endDateTime, entity.isBreak());
+        return new TimeEntry(new TimeEntryId(entity.getId()), userIdComposite, entity.getComment(), startDateTime, endDateTime, entity.isBreak());
     }
 
     private static Instant toInstant(LocalDate localDate) {

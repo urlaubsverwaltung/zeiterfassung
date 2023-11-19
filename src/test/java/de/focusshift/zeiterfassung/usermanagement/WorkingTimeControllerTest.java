@@ -85,7 +85,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(supermanLocalId)
+            .userIdComposite(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -96,7 +96,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getWorkingTimeByUser(supermanLocalId)).thenReturn(workingTime);
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(workingTime.getUserId().value())
+            .userId(workingTime.getUserIdComposite().localId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
             .build();
@@ -140,7 +140,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+            .userIdComposite(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -175,7 +175,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(supermanLocalId)
+            .userIdComposite(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -186,7 +186,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(workingTime.getUserId().value())
+            .userId(workingTime.getUserIdComposite().localId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
             .build();
@@ -221,7 +221,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(userLocalId)
+            .userIdComposite(userIdComposite)
             .monday(BigDecimal.valueOf(4))
             .wednesday(BigDecimal.valueOf(5))
             .saturday(BigDecimal.valueOf(6))
@@ -230,7 +230,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getWorkingTimeByUser(new UserLocalId(1L))).thenReturn(workingTime);
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(workingTime.getUserId().value())
+            .userId(workingTime.getUserIdComposite().localId().value())
             .workday(List.of(MONDAY, WEDNESDAY, SATURDAY))
             .workingTimeMonday(4.0)
             .workingTimeWednesday(5.0)
@@ -263,7 +263,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("super")).thenReturn(List.of(user));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+            .userIdComposite(userIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -274,7 +274,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(workingTime.getUserId().value())
+            .userId(workingTime.getUserIdComposite().localId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
             .build();
@@ -308,7 +308,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("super")).thenReturn(List.of(user));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(userLocalId)
+            .userIdComposite(userIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -361,7 +361,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findUserByLocalId(new UserLocalId(42L))).thenReturn(Optional.of(superman));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(supermanLocalId)
+            .userIdComposite(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -413,7 +413,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findUserByLocalId(supermanLocalId)).thenReturn(Optional.of(superman));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(supermanLocalId)
+            .userIdComposite(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)

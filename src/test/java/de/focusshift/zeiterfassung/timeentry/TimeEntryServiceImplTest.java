@@ -90,11 +90,17 @@ class TimeEntryServiceImplTest {
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final Optional<TimeEntry> actual = sut.findTimeEntry(42L);
         assertThat(actual).isPresent();
         assertThat(actual.get()).satisfies(timeEntry -> {
             assertThat(timeEntry.id()).isEqualTo(new TimeEntryId(42L));
-            assertThat(timeEntry.userId()).isEqualTo(new UserId("batman"));
+            assertThat(timeEntry.userIdComposite()).isEqualTo(userIdComposite);
             assertThat(timeEntry.comment()).isEmpty();
             assertThat(timeEntry.start()).isEqualTo(ZonedDateTime.of(entryStart, ZONE_ID_UTC));
             assertThat(timeEntry.end()).isEqualTo(ZonedDateTime.of(entryEnd, ZONE_ID_UTC));
@@ -125,15 +131,21 @@ class TimeEntryServiceImplTest {
             return entity;
         });
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final TimeEntry actual = sut.createTimeEntry(
-            new UserId("batman"),
+            userId,
             "hard work",
             ZonedDateTime.of(entryStart, ZONE_ID_UTC),
             ZonedDateTime.of(entryEnd, ZONE_ID_UTC),
             false
         );
 
-        assertThat(actual).isEqualTo(new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", ZonedDateTime.of(entryStart, ZONE_ID_UTC), ZonedDateTime.of(entryEnd, ZONE_ID_UTC), false));
+        assertThat(actual).isEqualTo(new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", ZonedDateTime.of(entryStart, ZONE_ID_UTC), ZonedDateTime.of(entryEnd, ZONE_ID_UTC), false));
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -182,6 +194,12 @@ class TimeEntryServiceImplTest {
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         assertThatExceptionOfType(TimeEntryUpdateNotPlausibleException.class).isThrownBy(
             () -> sut.updateTimeEntry(new TimeEntryId(42L), "", now, now, duration, false)
         );
@@ -213,6 +231,12 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final ZonedDateTime newStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC).plusMinutes(30);
         final ZonedDateTime sameEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC);
         final Duration sameDuration = Duration.ofHours(2);
@@ -220,7 +244,7 @@ class TimeEntryServiceImplTest {
         final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", newStart, sameEnd, sameDuration, false);
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
-        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameEnd);
@@ -269,6 +293,12 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final ZonedDateTime newStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC).minusMinutes(30);
         final ZonedDateTime newEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC).plusMinutes(30);
         final Duration sameDuration = Duration.ofHours(2);
@@ -276,7 +306,7 @@ class TimeEntryServiceImplTest {
         final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", newStart, newEnd, sameDuration, false);
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
-        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
@@ -325,6 +355,12 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final ZonedDateTime newStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC).minusMinutes(30);
         final ZonedDateTime sameEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC);
         final Duration newDuration = Duration.ofHours(3);
@@ -332,7 +368,7 @@ class TimeEntryServiceImplTest {
         final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", newStart, sameEnd, newDuration, false);
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
-        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newStart.plusHours(3));
@@ -381,6 +417,12 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final ZonedDateTime sameStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC);
         final ZonedDateTime newEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC).minusMinutes(30);
         final Duration sameDuration = Duration.ofHours(2);
@@ -388,7 +430,7 @@ class TimeEntryServiceImplTest {
         final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", sameStart, newEnd, sameDuration, false);
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
-        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
@@ -437,6 +479,12 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final ZonedDateTime sameStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC);
         final ZonedDateTime newEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC).minusMinutes(30);
         final Duration newDuration = Duration.ofHours(3);
@@ -444,7 +492,7 @@ class TimeEntryServiceImplTest {
         final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", sameStart, newEnd, newDuration, false);
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
-        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newEnd.minusHours(3));
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
@@ -493,6 +541,12 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final ZonedDateTime sameStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC);
         final ZonedDateTime sameEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC);
         final Duration newDuration = Duration.ofHours(4);
@@ -500,7 +554,7 @@ class TimeEntryServiceImplTest {
         final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", sameStart, sameEnd, newDuration, false);
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
-        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameStart.plusMinutes(newDuration.toMinutes()));
@@ -547,6 +601,12 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final ZonedDateTime newStart = previousStart.minusHours(1).atZone(ZONE_ID_UTC);
         final ZonedDateTime newEnd = previousEnd.plusHours(1).atZone(ZONE_ID_UTC);
         final Duration newDuration = Duration.ofHours(3);
@@ -554,7 +614,7 @@ class TimeEntryServiceImplTest {
         final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", newStart, newEnd, newDuration, false);
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
-        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(newStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
@@ -601,6 +661,12 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final ZonedDateTime newEnd = previousEnd.plusHours(1).atZone(ZONE_ID_UTC);
         final Duration newDuration = Duration.ofHours(3);
 
@@ -641,6 +707,12 @@ class TimeEntryServiceImplTest {
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
 
         final ZonedDateTime newStart = previousStart.minusHours(1).atZone(ZONE_ID_UTC);
         final Duration newDuration = Duration.ofHours(3);
@@ -688,6 +760,12 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final ZonedDateTime newStart = previousStart.minusHours(1).atZone(ZONE_ID_UTC);
         final ZonedDateTime newEnd = previousEnd.plusHours(1).atZone(ZONE_ID_UTC);
 
@@ -729,6 +807,12 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
         final ZonedDateTime sameStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC);
         final ZonedDateTime sameEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC);
         final Duration sameDuration = Duration.ofHours(2);
@@ -736,7 +820,7 @@ class TimeEntryServiceImplTest {
         final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", sameStart, sameEnd, sameDuration, true);
 
         assertThat(actualUpdatedTimeEntry.id()).isEqualTo(new TimeEntryId(42L));
-        assertThat(actualUpdatedTimeEntry.userId()).isEqualTo(new UserId("batman"));
+        assertThat(actualUpdatedTimeEntry.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actualUpdatedTimeEntry.comment()).isEmpty();
         assertThat(actualUpdatedTimeEntry.start()).isEqualTo(sameStart);
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(sameEnd);
@@ -787,11 +871,9 @@ class TimeEntryServiceImplTest {
 
         final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         final User pinguin = new User(pinguinIdComposite, "ping", "uin", new EMailAddress("pinguin@example.org"), Set.of());
+        when(userManagementService.findAllUsers()).thenReturn(List.of(batman, pinguin));
 
-        when(userManagementService.findAllUsersByIds(Set.of(batmanId, pinguinId)))
-            .thenReturn(List.of(batman, pinguin));
-
-        final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesForAllUsers(from, toExclusive);
+        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntriesForAllUsers(from, toExclusive);
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
@@ -801,14 +883,14 @@ class TimeEntryServiceImplTest {
 
         assertThat(actual)
             .hasSize(2)
-            .hasEntrySatisfying(batmanLocalId, timeEntries -> {
+            .hasEntrySatisfying(batmanIdComposite, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(1L), batmanId, "hard work", expectedStart, expectedEnd, false)
+                    new TimeEntry(new TimeEntryId(1L), batmanIdComposite, "hard work", expectedStart, expectedEnd, false)
                 );
             })
-            .hasEntrySatisfying(pinguinLocalId, timeEntries -> {
+            .hasEntrySatisfying(pinguinIdComposite, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(2L), pinguinId, "deserved break", expectedBreakStart, expectedBreakEnd, true)
+                    new TimeEntry(new TimeEntryId(2L), pinguinIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true)
                 );
             });
     }
@@ -844,7 +926,7 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of("uuid-1", "uuid-2"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
-        final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId, robinLocalId));
+        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId, robinLocalId));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
@@ -854,14 +936,14 @@ class TimeEntryServiceImplTest {
 
         assertThat(actual)
             .hasSize(2)
-            .hasEntrySatisfying(batmanLocalId, timeEntries -> {
+            .hasEntrySatisfying(batmanIdComposite, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(1L), batmanId, "hard work", expectedStart, expectedEnd, false)
+                    new TimeEntry(new TimeEntryId(1L), batmanIdComposite, "hard work", expectedStart, expectedEnd, false)
                 );
             })
-            .hasEntrySatisfying(robinLocalId, timeEntries -> {
+            .hasEntrySatisfying(robinIdComposite, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(2L), robinId, "deserved break", expectedBreakStart, expectedBreakEnd, true)
+                    new TimeEntry(new TimeEntryId(2L), robinIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true)
                 );
             });
     }
@@ -869,21 +951,23 @@ class TimeEntryServiceImplTest {
     @Test
     void ensureGetEntriesByUserLocalIdsReturnsValuesForEveryAskedUserLocalId() {
 
-        final UserLocalId batmanLocalId = new UserLocalId(1L);
-
-        when(userManagementService.findAllUsersByLocalIds(List.of(batmanLocalId))).thenReturn(List.of());
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId))).thenReturn(List.of(user));
 
         final LocalDate from = LocalDate.of(2023, 1, 1);
         final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
 
-        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of(), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of("batman"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of());
 
-        final Map<UserLocalId, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId));
+        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(userLocalId));
 
         assertThat(actual)
             .hasSize(1)
-            .hasEntrySatisfying(batmanLocalId, timeEntries -> {
+            .hasEntrySatisfying(userIdComposite, timeEntries -> {
                 assertThat(timeEntries).isEmpty();
             });
     }
@@ -911,7 +995,13 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan("batman", periodStartInstant, periodEndInstant))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity, timeEntryEntity2));
 
-        final List<TimeEntry> actualEntries = sut.getEntries(periodFrom, periodToExclusive, new UserId("batman"));
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
+        final List<TimeEntry> actualEntries = sut.getEntries(periodFrom, periodToExclusive, userId);
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
@@ -923,9 +1013,9 @@ class TimeEntryServiceImplTest {
         final ZonedDateTime expectedEnd2 = ZonedDateTime.of(entryEnd2, ZONE_ID_UTC);
 
         assertThat(actualEntries).containsExactly(
-            new TimeEntry(new TimeEntryId(2L), new UserId("batman"), "deserved break", expectedBreakStart, expectedBreakEnd, true),
-            new TimeEntry(new TimeEntryId(1L), new UserId("batman"), "hard work", expectedStart, expectedEnd, false),
-            new TimeEntry(new TimeEntryId(3L), new UserId("batman"), "waking up *zzzz", expectedStart2, expectedEnd2, false)
+            new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true),
+            new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", expectedStart, expectedEnd, false),
+            new TimeEntry(new TimeEntryId(3L), userIdComposite, "waking up *zzzz", expectedStart2, expectedEnd2, false)
         );
     }
 
@@ -1020,8 +1110,8 @@ class TimeEntryServiceImplTest {
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(
-                                new TimeEntry(new TimeEntryId(2L), batmanId, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
-                                new TimeEntry(new TimeEntryId(1L), batmanId, "hack the planet!", timeEntryStart, timeEntryEnd, false)
+                                new TimeEntry(new TimeEntryId(2L), batmanIdComposite, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
+                                new TimeEntry(new TimeEntryId(1L), batmanIdComposite, "hack the planet!", timeEntryStart, timeEntryEnd, false)
                             ),
                             List.of()
                         ),
@@ -1097,7 +1187,7 @@ class TimeEntryServiceImplTest {
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(
-                                new TimeEntry(new TimeEntryId(2L), batmanId, "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
+                                new TimeEntry(new TimeEntryId(2L), batmanIdComposite, "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
                             ),
                             List.of()
                         ),
@@ -1141,7 +1231,7 @@ class TimeEntryServiceImplTest {
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(
-                                new TimeEntry(new TimeEntryId(1L), batmanId, "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
+                                new TimeEntry(new TimeEntryId(1L), batmanIdComposite, "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
                             ),
                             List.of()
                         )

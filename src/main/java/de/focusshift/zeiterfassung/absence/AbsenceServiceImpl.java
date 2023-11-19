@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.absence;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -65,7 +66,7 @@ class AbsenceServiceImpl implements AbsenceService {
     }
 
     @Override
-    public Map<UserLocalId, List<Absence>> getAbsencesByUserIds(List<UserLocalId> userLocalIds, LocalDate from, LocalDate toExclusive) {
+    public Map<UserIdComposite, List<Absence>> getAbsencesByUserIds(List<UserLocalId> userLocalIds, LocalDate from, LocalDate toExclusive) {
 
         final InstantPeriod period = getInstantPeriod(from, toExclusive);
         final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
@@ -78,21 +79,21 @@ class AbsenceServiceImpl implements AbsenceService {
             .map(UserId::value)
             .toList();
 
-        final Map<UserId, UserLocalId> userLocalIdById = users.stream().collect(toMap(User::id, User::localId));
+        final Map<UserId, UserIdComposite> idCompositeByUserId = users.stream().collect(toMap(User::id, User::idComposite));
 
-        final Map<UserLocalId, List<Absence>> result = absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, userIdValues, period.toExclusive, period.from)
+        final Map<UserIdComposite, List<Absence>> result = absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, userIdValues, period.toExclusive, period.from)
             .stream()
             .map(absenceWriteEntity -> toAbsence(absenceWriteEntity, period.zoneId))
-            .collect(groupingBy(absence -> userLocalIdById.get(absence.userId())));
+            .collect(groupingBy(absence -> idCompositeByUserId.get(absence.userId())));
 
         // add empty lists for users without absences
-        userLocalIds.forEach(id -> result.computeIfAbsent(id, unused -> List.of()));
+        idCompositeByUserId.values().forEach(userIdComposite -> result.computeIfAbsent(userIdComposite, unused -> List.of()));
 
         return result;
     }
 
     @Override
-    public Map<UserLocalId, List<Absence>> getAbsencesForAllUsers(LocalDate from, LocalDate toExclusive) {
+    public Map<UserIdComposite, List<Absence>> getAbsencesForAllUsers(LocalDate from, LocalDate toExclusive) {
 
         final InstantPeriod period = getInstantPeriod(from, toExclusive);
         final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
@@ -102,14 +103,15 @@ class AbsenceServiceImpl implements AbsenceService {
             .map(entity -> toAbsence(entity, period.zoneId))
             .collect(groupingBy(Absence::userId));
 
-        final Map<UserId, UserLocalId> allUserLocalIdsGroupedByUserId = userManagementService.findAllUserLocalIdsGroupedByUserId();
+        final Map<UserId, UserIdComposite> idCompositeByUserId = userManagementService.findAllUsers().stream()
+            .collect(toMap(User::id, User::idComposite));
 
-        final Map<UserLocalId, List<Absence>> result = absenceByUserId.entrySet()
+        final Map<UserIdComposite, List<Absence>> result = absenceByUserId.entrySet()
             .stream()
-            .collect(toMap(entry -> allUserLocalIdsGroupedByUserId.get(entry.getKey()), Map.Entry::getValue));
+            .collect(toMap(entry -> idCompositeByUserId.get(entry.getKey()), Map.Entry::getValue));
 
         // add empty lists for users without absences
-        allUserLocalIdsGroupedByUserId.values().forEach(localId -> result.computeIfAbsent(localId, unused -> List.of()));
+        idCompositeByUserId.values().forEach(userIdComposite -> result.computeIfAbsent(userIdComposite, unused -> List.of()));
 
         return result;
     }

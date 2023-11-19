@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.user.UserIdComposite;
+
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Objects;
@@ -13,22 +15,22 @@ import static java.math.RoundingMode.CEILING;
  */
 public final class OvertimeAccount {
 
-    private final UserLocalId userLocalId;
+    private final UserIdComposite userIdComposite;
     private final boolean allowed;
     private final Duration maxAllowedOvertime;
 
-    OvertimeAccount(UserLocalId userLocalId, boolean allowed) {
-        this(userLocalId, allowed, null);
+    OvertimeAccount(UserIdComposite userIdComposite, boolean allowed) {
+        this(userIdComposite, allowed, null);
     }
 
-    OvertimeAccount(UserLocalId userLocalId, boolean allowed, Duration maxAllowedOvertime) {
-        this.userLocalId = userLocalId;
+    OvertimeAccount(UserIdComposite userIdComposite, boolean allowed, Duration maxAllowedOvertime) {
+        this.userIdComposite = userIdComposite;
         this.allowed = allowed;
         this.maxAllowedOvertime = maxAllowedOvertime;
     }
 
-    public UserLocalId getUserLocalId() {
-        return userLocalId;
+    public UserIdComposite getUserIdComposite() {
+        return userIdComposite;
     }
 
     public boolean isAllowed() {
@@ -60,18 +62,18 @@ public final class OvertimeAccount {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OvertimeAccount that = (OvertimeAccount) o;
-        return userLocalId.equals(that.userLocalId);
+        return userIdComposite.equals(that.userIdComposite);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userLocalId);
+        return Objects.hash(userIdComposite);
     }
 
     @Override
     public String toString() {
         return "OvertimeSettings{" +
-            "userLocalId=" + userLocalId +
+            "userIdComposite=" + userIdComposite +
             ", allowed=" + allowed +
             ", maxAllowedOvertime=" + maxAllowedOvertime +
             '}';

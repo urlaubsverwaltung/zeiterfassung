@@ -8,6 +8,7 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -67,12 +68,10 @@ class ReportServiceRaw {
         final User user = userManagementService.findUserById(userId)
             .orElseThrow(() -> new IllegalStateException("could not find user id=%s".formatted(userId)));
 
-        final UserLocalId userLocalId = user.localId();
-
         return createReportWeek(year, week,
-            period -> Map.of(userLocalId, timeEntryService.getEntries(period.from(), period.toExclusive(), userId)),
-            period -> Map.of(userLocalId, absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
-            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(userLocalId)));
+            period -> Map.of(user.idComposite(), timeEntryService.getEntries(period.from(), period.toExclusive(), userId)),
+            period -> Map.of(user.idComposite(), absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
+            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(user.localId())));
     }
 
     ReportWeek getReportWeek(Year year, int week, List<UserLocalId> userLocalIds) {
@@ -94,11 +93,9 @@ class ReportServiceRaw {
         final User user = userManagementService.findUserById(userId)
             .orElseThrow(() -> new IllegalStateException("could not find user id=%s".formatted(userId)));
 
-        final UserLocalId userLocalId = user.localId();
-
         return createReportMonth(yearMonth,
-            period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), List.of(userLocalId)),
-            period -> Map.of(userLocalId, absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
+            period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), List.of(user.localId())),
+            period -> Map.of(user.idComposite(), absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
             period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(user.localId())));
     }
 
@@ -117,27 +114,27 @@ class ReportServiceRaw {
     }
 
     private ReportWeek createReportWeek(Year year, int week,
-                                        Function<Period, Map<UserLocalId, List<TimeEntry>>> timeEntriesProvider,
-                                        Function<Period, Map<UserLocalId, List<Absence>>> absenceProvider,
-                                        Function<Period, Map<UserLocalId, WorkingTimeCalendar>> workingTimeCalendarProvider) {
+                                        Function<Period, Map<UserIdComposite, List<TimeEntry>>> timeEntriesProvider,
+                                        Function<Period, Map<UserIdComposite, List<Absence>>> absenceProvider,
+                                        Function<Period, Map<UserIdComposite, WorkingTimeCalendar>> workingTimeCalendarProvider) {
 
         final LocalDate firstDateOfWeek = userDateService.firstDayOfWeek(year, week);
 
         final Period period = new Period(firstDateOfWeek, firstDateOfWeek.plusWeeks(1));
 
-        final Map<UserLocalId, List<TimeEntry>> timeEntries = timeEntriesProvider.apply(period);
-        final Map<UserLocalId, List<Absence>> absenceEntries = absenceProvider.apply(period);
+        final Map<UserIdComposite, List<TimeEntry>> timeEntries = timeEntriesProvider.apply(period);
+        final Map<UserIdComposite, List<Absence>> absenceEntries = absenceProvider.apply(period);
 
         final Map<UserId, User> userById = userByIdFor(timeEntries, absenceEntries);
 
-        final Map<UserLocalId, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
-        final Function<LocalDate, Map<UserLocalId, PlannedWorkingHours>> plannedWorkingTimeByDate = plannedWorkingTimeForDate(workingTimeCalendars, absenceEntries);
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
+        final Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingTimeByDate = plannedWorkingTimeForDate(workingTimeCalendars, absenceEntries);
 
 
         return reportWeek(firstDateOfWeek, timeEntries, userById, plannedWorkingTimeByDate, absenceEntries);
     }
 
-    private Function<LocalDate, Map<UserLocalId, List<DetailDayAbsenceDto>>> getLocalDateMapFunction(Map<UserLocalId, List<Absence>> absenceEntries, Map<UserId, User> userById) {
+    private Function<LocalDate, Map<UserIdComposite, List<DetailDayAbsenceDto>>> getLocalDateMapFunction(Map<UserIdComposite, List<Absence>> absenceEntries, Map<UserId, User> userById) {
         return date -> absenceEntries.entrySet().stream()
             .collect(
                 toMap(
@@ -145,7 +142,7 @@ class ReportServiceRaw {
                     entry -> entry.getValue().stream()
                         .filter(isInAbsencePeriod(date))
                         .map(absence -> new DetailDayAbsenceDto(userById.values().stream()
-                            .filter(user -> user.localId().equals(entry.getKey()))
+                            .filter(user -> user.idComposite().equals(entry.getKey()))
                             .map(User::fullName).findFirst().orElse(""),
                             absence.dayLength().name(), absence.getMessageKey(), absence.color().name()))
                         .toList())
@@ -153,21 +150,21 @@ class ReportServiceRaw {
     }
 
     private ReportMonth createReportMonth(YearMonth yearMonth,
-                                          Function<Period, Map<UserLocalId, List<TimeEntry>>> timeEntriesProvider,
-                                          Function<Period, Map<UserLocalId, List<Absence>>> absenceProvider,
-                                          Function<Period, Map<UserLocalId, WorkingTimeCalendar>> workingTimeCalendarProvider) {
+                                          Function<Period, Map<UserIdComposite, List<TimeEntry>>> timeEntriesProvider,
+                                          Function<Period, Map<UserIdComposite, List<Absence>>> absenceProvider,
+                                          Function<Period, Map<UserIdComposite, WorkingTimeCalendar>> workingTimeCalendarProvider) {
 
         final LocalDate firstOfMonth = LocalDate.of(yearMonth.getYear(), yearMonth.getMonthValue(), 1);
 
         final Period period = new Period(firstOfMonth, firstOfMonth.plusMonths(1));
 
-        final Map<UserLocalId, List<TimeEntry>> timeEntries = timeEntriesProvider.apply(period);
-        final Map<UserLocalId, List<Absence>> absenceEntries = absenceProvider.apply(period);
+        final Map<UserIdComposite, List<TimeEntry>> timeEntries = timeEntriesProvider.apply(period);
+        final Map<UserIdComposite, List<Absence>> absenceEntries = absenceProvider.apply(period);
 
         final Map<UserId, User> userById = userByIdFor(timeEntries, absenceEntries);
 
-        final Map<UserLocalId, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
-        final Function<LocalDate, Map<UserLocalId, PlannedWorkingHours>> plannedWorkingTimeForDate = plannedWorkingTimeForDate(workingTimeCalendars, absenceEntries);
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
+        final Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingTimeForDate = plannedWorkingTimeForDate(workingTimeCalendars, absenceEntries);
 
         final List<ReportWeek> weeks = getStartOfWeekDatesForMonth(yearMonth)
             .stream()
@@ -185,8 +182,8 @@ class ReportServiceRaw {
         return new ReportMonth(yearMonth, weeks);
     }
 
-    private Function<LocalDate, Map<UserLocalId, PlannedWorkingHours>> plannedWorkingTimeForDate(
-        Map<UserLocalId, WorkingTimeCalendar> workingTimeCalendars, Map<UserLocalId, List<Absence>> absenceEntries) {
+    private Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingTimeForDate(
+        Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars, Map<UserIdComposite, List<Absence>> absenceEntries) {
 
         return date ->
             workingTimeCalendars.entrySet()
@@ -239,8 +236,8 @@ class ReportServiceRaw {
         return actuallyPlanned;
     }
 
-    private Map<UserId, User> userByIdFor(Map<UserLocalId, List<TimeEntry>> timeEntries, Map<UserLocalId, List<Absence>> absenceEntries) {
-        final List<UserId> timeEntriesUserIds = timeEntries.values().stream().flatMap(Collection::stream).map(TimeEntry::userId).distinct().toList();
+    private Map<UserId, User> userByIdFor(Map<UserIdComposite, List<TimeEntry>> timeEntries, Map<UserIdComposite, List<Absence>> absenceEntries) {
+        final List<UserId> timeEntriesUserIds = timeEntries.values().stream().flatMap(Collection::stream).map(TimeEntry::userIdComposite).map(UserIdComposite::id).distinct().toList();
         final List<UserId> absencesUserIds = absenceEntries.values().stream().flatMap(Collection::stream).map(Absence::userId).distinct().toList();
         final List<UserId> allUserIds = Stream.concat(timeEntriesUserIds.stream(), absencesUserIds.stream()).distinct().toList();
         return userManagementService.findAllUsersByIds(allUserIds)
@@ -249,15 +246,15 @@ class ReportServiceRaw {
     }
 
     private ReportWeek reportWeek(final LocalDate startOfWeekDate,
-                                  final Map<UserLocalId, List<TimeEntry>> timeEntriesByUserLocalId,
+                                  final Map<UserIdComposite, List<TimeEntry>> timeEntriesByUserLocalId,
                                   final Map<UserId, User> userById,
-                                  final Function<LocalDate, Map<UserLocalId, PlannedWorkingHours>> plannedWorkingHoursProvider,
-                                  final Map<UserLocalId, List<Absence>> absenceEntries) {
+                                  final Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingHoursProvider,
+                                  final Map<UserIdComposite, List<Absence>> absenceEntries) {
 
-        final Map<LocalDate, Map<UserLocalId, List<ReportDayEntry>>> reportEntriesByDate = new HashMap<>();
-        for (Map.Entry<UserLocalId, List<TimeEntry>> entry : timeEntriesByUserLocalId.entrySet()) {
+        final Map<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportEntriesByDate = new HashMap<>();
+        for (Map.Entry<UserIdComposite, List<TimeEntry>> entry : timeEntriesByUserLocalId.entrySet()) {
 
-            final UserLocalId userLocalId = entry.getKey();
+            final UserIdComposite userIdComposite = entry.getKey();
 
             final Map<LocalDate, List<ReportDayEntry>> collect = entry.getValue()
                 .stream()
@@ -268,17 +265,17 @@ class ReportServiceRaw {
 
             for (Map.Entry<LocalDate, List<ReportDayEntry>> localDateListEntry : collect.entrySet()) {
                 reportEntriesByDate.compute(localDateListEntry.getKey(), (localDate, userLocalIdListMap) -> {
-                    final Map<UserLocalId, List<ReportDayEntry>> map = userLocalIdListMap == null ? new HashMap<>() : userLocalIdListMap;
-                    map.put(userLocalId, collect.get(localDate));
+                    final Map<UserIdComposite, List<ReportDayEntry>> map = userLocalIdListMap == null ? new HashMap<>() : userLocalIdListMap;
+                    map.put(userIdComposite, collect.get(localDate));
                     return map;
                 });
             }
         }
 
-        final Function<LocalDate, Map<UserLocalId, List<ReportDayEntry>>> resolveReportDayEntries =
+        final Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> resolveReportDayEntries =
             (LocalDate date) -> reportEntriesByDate.getOrDefault(date, Map.of());
 
-        final Function<LocalDate, Map<UserLocalId, List<DetailDayAbsenceDto>>> detailDayAbsenceDto =
+        final Function<LocalDate, Map<UserIdComposite, List<DetailDayAbsenceDto>>> detailDayAbsenceDto =
             getLocalDateMapFunction(absenceEntries, userById);
 
         final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
@@ -314,9 +311,10 @@ class ReportServiceRaw {
         final ZonedDateTime startDateTime = timeEntry.start();
         final ZonedDateTime endDateTime = timeEntry.end();
 
-        final User user = userProvider.apply(timeEntry.userId());
+        final UserId userId = timeEntry.userIdComposite().id();
+        final User user = userProvider.apply(userId);
         if (user == null) {
-            LOG.info("could not find user with id={} for timeEntry={} while generating report.", timeEntry.userId(), timeEntry.id());
+            LOG.info("could not find user with id={} for timeEntry={} while generating report.", userId, timeEntry.id());
             return Optional.empty();
         }
 
@@ -325,9 +323,9 @@ class ReportServiceRaw {
     }
 
     private static ReportDay toReportDay(LocalDate date,
-                                         Function<LocalDate, Map<UserLocalId, PlannedWorkingHours>> plannedWorkingHoursProvider,
-                                         Function<LocalDate, Map<UserLocalId, List<DetailDayAbsenceDto>>> absences,
-                                         Function<LocalDate, Map<UserLocalId, List<ReportDayEntry>>> resolveReportDayEntries) {
+                                         Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingHoursProvider,
+                                         Function<LocalDate, Map<UserIdComposite, List<DetailDayAbsenceDto>>> absences,
+                                         Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> resolveReportDayEntries) {
 
         return new ReportDay(date, plannedWorkingHoursProvider.apply(date), resolveReportDayEntries.apply(date), absences.apply(date));
     }

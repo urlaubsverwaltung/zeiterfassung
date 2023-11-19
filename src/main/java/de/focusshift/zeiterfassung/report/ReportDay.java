@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 
 import java.time.LocalDate;
@@ -14,9 +15,9 @@ import java.util.stream.Stream;
 
 record ReportDay(
     LocalDate date,
-    Map<UserLocalId, PlannedWorkingHours> plannedWorkingHoursByUser,
-    Map<UserLocalId, List<ReportDayEntry>> reportDayEntriesByUser,
-    Map<UserLocalId, List<DetailDayAbsenceDto>> detailDayAbsencesByUser
+    Map<UserIdComposite, PlannedWorkingHours> plannedWorkingHoursByUser,
+    Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser,
+    Map<UserIdComposite, List<DetailDayAbsenceDto>> detailDayAbsencesByUser
 
 ) {
 
@@ -29,7 +30,8 @@ record ReportDay(
     }
 
     public PlannedWorkingHours plannedWorkingHoursByUser(UserLocalId userLocalId) {
-        return findValueByFirstKeyMatch(plannedWorkingHoursByUser, userLocalId::equals).orElse(PlannedWorkingHours.ZERO);
+        return findValueByFirstKeyMatch(plannedWorkingHoursByUser, userIdComposite -> userLocalId.equals(userIdComposite.localId()))
+            .orElse(PlannedWorkingHours.ZERO);
     }
 
     public WorkDuration workDuration() {
@@ -42,10 +44,10 @@ record ReportDay(
     }
 
     public WorkDuration workDurationByUser(UserLocalId userLocalId) {
-        return workDurationByUserPredicate(userLocalId::equals);
+        return workDurationByUserPredicate(userIdComposite -> userLocalId.equals(userIdComposite.localId()));
     }
 
-    private WorkDuration workDurationByUserPredicate(Predicate<UserLocalId> predicate) {
+    private WorkDuration workDurationByUserPredicate(Predicate<UserIdComposite> predicate) {
         final List<ReportDayEntry> reportDayEntries = findValueByFirstKeyMatch(reportDayEntriesByUser, predicate).orElse(List.of());
         return calculateWorkDurationFrom(reportDayEntries.stream());
     }
