@@ -162,4 +162,12 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+    @Override
+    public String toString() {
+        return "TimeEntryEntity{" +
+            "id=" + id +
+            ", owner='" + owner + '\'' +
+            '}';
+    }
 }

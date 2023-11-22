@@ -12,6 +12,8 @@ import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.usermanagement.WorkingTimeService;
 import jakarta.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,8 +30,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
+import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.ZoneOffset.UTC;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -40,6 +44,8 @@ import static java.util.stream.Collectors.toMap;
 
 @Service
 class TimeEntryServiceImpl implements TimeEntryService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
     public static final BigDecimal ONE_MINUTE_IN_SECONDS = BigDecimal.valueOf(60);
 
@@ -99,8 +105,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         return timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(fromInstant, toInstant)
             .stream()
-            // TODO handle map.get == null
-            .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, userByUserId.get(new UserId(timeEntryEntity.getOwner()))))
+            .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, userByUserId))
+            .filter(Objects::nonNull)
             .collect(groupingBy(TimeEntry::userIdComposite));
     }
 
@@ -122,8 +128,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final Map<UserIdComposite, List<TimeEntry>> result = timeEntryRepository
             .findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(userIdValues, fromInstant, toInstant)
             .stream()
-            // TODO handle map.get == null
-            .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, userByUserId.get(new UserId(timeEntryEntity.getOwner()))))
+            .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, userByUserId))
+            .filter(Objects::nonNull)
             .collect(groupingBy(TimeEntry::userIdComposite));
 
         // add empty list for users without time entries
@@ -320,6 +326,18 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private TimeEntry toTimeEntry(TimeEntryEntity entity) {
         final User user = findUser(new UserId(entity.getOwner()));
         return toTimeEntry(entity, user);
+    }
+
+    @Nullable
+    private TimeEntry toTimeEntry(TimeEntryEntity timeEntryEntity, Map<UserId, User> userByUserId) {
+        final UserId userId = new UserId(timeEntryEntity.getOwner());
+        final User user = userByUserId.get(userId);
+        if (user == null) {
+            LOG.info("cannot map TimeEntryEntity with user={} because user does not exist anymore.", userId);
+            LOG.info("ignoring {}", timeEntryEntity);
+            return null;
+        }
+        return toTimeEntry(timeEntryEntity, user);
     }
 
     private TimeEntry toTimeEntry(TimeEntryEntity entity, User user) {
