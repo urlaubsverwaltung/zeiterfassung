@@ -134,17 +134,15 @@ class ReportServiceRaw {
         return reportWeek(firstDateOfWeek, timeEntries, userById, plannedWorkingTimeByDate, absenceEntries);
     }
 
-    private Function<LocalDate, Map<UserIdComposite, List<DetailDayAbsenceDto>>> getLocalDateMapFunction(Map<UserIdComposite, List<Absence>> absenceEntries, Map<UserId, User> userById) {
+    private Function<LocalDate, Map<UserIdComposite, List<ReportDayAbsence>>> getLocalDateMapFunction(Map<UserIdComposite, List<Absence>> absenceEntries, Map<UserId, User> userById) {
         return date -> absenceEntries.entrySet().stream()
             .collect(
                 toMap(
                     Map.Entry::getKey,
-                    entry -> entry.getValue().stream()
+                    entry -> entry.getValue()
+                        .stream()
                         .filter(isInAbsencePeriod(date))
-                        .map(absence -> new DetailDayAbsenceDto(userById.values().stream()
-                            .filter(user -> user.userIdComposite().equals(entry.getKey()))
-                            .map(User::fullName).findFirst().orElse(""),
-                            absence.dayLength().name(), absence.getMessageKey(), absence.color().name()))
+                        .map(absence -> new ReportDayAbsence(userById.get(absence.userId()), absence))
                         .toList())
             );
     }
@@ -275,7 +273,7 @@ class ReportServiceRaw {
         final Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> resolveReportDayEntries =
             (LocalDate date) -> reportEntriesByDate.getOrDefault(date, Map.of());
 
-        final Function<LocalDate, Map<UserIdComposite, List<DetailDayAbsenceDto>>> detailDayAbsenceDto =
+        final Function<LocalDate, Map<UserIdComposite, List<ReportDayAbsence>>> absencesProvider =
             getLocalDateMapFunction(absenceEntries, userById);
 
         final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
@@ -283,7 +281,7 @@ class ReportServiceRaw {
                 toReportDay(
                     startOfWeekDate.plusDays(daysToAdd),
                     plannedWorkingHoursProvider,
-                    detailDayAbsenceDto,
+                    absencesProvider,
                     resolveReportDayEntries
                 ))
             .toList();
@@ -324,7 +322,7 @@ class ReportServiceRaw {
 
     private static ReportDay toReportDay(LocalDate date,
                                          Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingHoursProvider,
-                                         Function<LocalDate, Map<UserIdComposite, List<DetailDayAbsenceDto>>> absences,
+                                         Function<LocalDate, Map<UserIdComposite, List<ReportDayAbsence>>> absences,
                                          Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> resolveReportDayEntries) {
 
         return new ReportDay(date, plannedWorkingHoursProvider.apply(date), resolveReportDayEntries.apply(date), absences.apply(date));
