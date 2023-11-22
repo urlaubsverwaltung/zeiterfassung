@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
-import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.HasUserIdComposite;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 
 import java.math.BigDecimal;
@@ -31,7 +31,7 @@ import static java.util.stream.Collectors.toSet;
 /**
  * Contractual working time. This representation has no context of absences like public holidays.
  */
-public final class WorkingTime {
+public final class WorkingTime implements HasUserIdComposite {
 
     private final UserIdComposite userIdComposite;
     private final WorkDay monday;
@@ -55,16 +55,9 @@ public final class WorkingTime {
         this.sunday = sunday;
     }
 
-    public UserIdComposite getUserIdComposite() {
+    @Override
+    public UserIdComposite userIdComposite() {
         return userIdComposite;
-    }
-
-    public UserLocalId getUserLocalId() {
-        return userIdComposite.localId();
-    }
-
-    public UserId getUserId() {
-        return userIdComposite.id();
     }
 
     /**

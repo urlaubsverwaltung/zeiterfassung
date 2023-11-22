@@ -40,8 +40,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final User user = findUser(userLocalId);
 
         return repository.findByUserId(userLocalId.value())
-            .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, user.idComposite()))
-            .orElseGet(() -> defaultWorkingTime(user.idComposite()));
+            .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, user.userIdComposite()))
+            .orElseGet(() -> defaultWorkingTime(user.userIdComposite()));
     }
 
     @Override
@@ -85,7 +85,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             entity.setUserId(userLocalId.value());
         }
 
-        return entityToWorkingTime(repository.save(entity), user.idComposite());
+        return entityToWorkingTime(repository.save(entity), user.userIdComposite());
     }
 
     private Map<UserIdComposite, WorkingTime> getWorkingTime(Collection<User> users) {
@@ -93,17 +93,17 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final List<Long> localIdValues = new ArrayList<>();
         final Map<Long, UserIdComposite> userIdCompositeByLocalIdValue = new HashMap<>();
         for (User user : users) {
-            localIdValues.add(user.localId().value());
-            userIdCompositeByLocalIdValue.put(user.localId().value(), user.idComposite());
+            localIdValues.add(user.userLocalId().value());
+            userIdCompositeByLocalIdValue.put(user.userLocalId().value(), user.userIdComposite());
         }
 
         final Map<UserIdComposite, WorkingTime> result = repository.findAllByUserIdIsIn(localIdValues)
             .stream()
             .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, userIdCompositeByLocalIdValue.get(workingTimeEntity.getUserId())))
-            .collect(toMap(WorkingTime::getUserIdComposite, identity()));
+            .collect(toMap(WorkingTime::userIdComposite, identity()));
 
         for (User user : users) {
-            result.computeIfAbsent(user.idComposite(), this::defaultWorkingTime);
+            result.computeIfAbsent(user.userIdComposite(), this::defaultWorkingTime);
         }
 
         return result;

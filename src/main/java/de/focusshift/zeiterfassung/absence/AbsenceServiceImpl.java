@@ -75,11 +75,11 @@ class AbsenceServiceImpl implements AbsenceService {
 
         final List<String> userIdValues = users
             .stream()
-            .map(User::id)
+            .map(User::userId)
             .map(UserId::value)
             .toList();
 
-        final Map<UserId, UserIdComposite> idCompositeByUserId = users.stream().collect(toMap(User::id, User::idComposite));
+        final Map<UserId, UserIdComposite> idCompositeByUserId = users.stream().collect(toMap(User::userId, User::userIdComposite));
 
         final Map<UserIdComposite, List<Absence>> result = absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, userIdValues, period.toExclusive, period.from)
             .stream()
@@ -104,7 +104,7 @@ class AbsenceServiceImpl implements AbsenceService {
             .collect(groupingBy(Absence::userId));
 
         final Map<UserId, UserIdComposite> idCompositeByUserId = userManagementService.findAllUsers().stream()
-            .collect(toMap(User::id, User::idComposite));
+            .collect(toMap(User::userId, User::userIdComposite));
 
         final Map<UserIdComposite, List<Absence>> result = absenceByUserId.entrySet()
             .stream()

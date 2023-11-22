@@ -69,9 +69,9 @@ class ReportServiceRaw {
             .orElseThrow(() -> new IllegalStateException("could not find user id=%s".formatted(userId)));
 
         return createReportWeek(year, week,
-            period -> Map.of(user.idComposite(), timeEntryService.getEntries(period.from(), period.toExclusive(), userId)),
-            period -> Map.of(user.idComposite(), absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
-            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(user.localId())));
+            period -> Map.of(user.userIdComposite(), timeEntryService.getEntries(period.from(), period.toExclusive(), userId)),
+            period -> Map.of(user.userIdComposite(), absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
+            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
     ReportWeek getReportWeek(Year year, int week, List<UserLocalId> userLocalIds) {
@@ -94,9 +94,9 @@ class ReportServiceRaw {
             .orElseThrow(() -> new IllegalStateException("could not find user id=%s".formatted(userId)));
 
         return createReportMonth(yearMonth,
-            period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), List.of(user.localId())),
-            period -> Map.of(user.idComposite(), absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
-            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(user.localId())));
+            period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), List.of(user.userLocalId())),
+            period -> Map.of(user.userIdComposite(), absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
+            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
     ReportMonth getReportMonth(YearMonth yearMonth, List<UserLocalId> userLocalIds) {
@@ -142,7 +142,7 @@ class ReportServiceRaw {
                     entry -> entry.getValue().stream()
                         .filter(isInAbsencePeriod(date))
                         .map(absence -> new DetailDayAbsenceDto(userById.values().stream()
-                            .filter(user -> user.idComposite().equals(entry.getKey()))
+                            .filter(user -> user.userIdComposite().equals(entry.getKey()))
                             .map(User::fullName).findFirst().orElse(""),
                             absence.dayLength().name(), absence.getMessageKey(), absence.color().name()))
                         .toList())
@@ -242,7 +242,7 @@ class ReportServiceRaw {
         final List<UserId> allUserIds = Stream.concat(timeEntriesUserIds.stream(), absencesUserIds.stream()).distinct().toList();
         return userManagementService.findAllUsersByIds(allUserIds)
             .stream()
-            .collect(toMap(User::id, Function.identity()));
+            .collect(toMap(User::userId, Function.identity()));
     }
 
     private ReportWeek reportWeek(final LocalDate startOfWeekDate,

@@ -95,7 +95,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         final Map<UserId, User> userByUserId = userManagementService.findAllUsers()
             .stream()
-            .collect(toMap(User::id, identity()));
+            .collect(toMap(User::userId, identity()));
 
         return timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(fromInstant, toInstant)
             .stream()
@@ -115,8 +115,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final List<String> userIdValues = new ArrayList<>();
         final Map<UserId, User> userByUserId = new HashMap<>();
         for (User user : users) {
-            userIdValues.add(user.idComposite().id().value());
-            userByUserId.put(user.id(), user);
+            userIdValues.add(user.userIdComposite().id().value());
+            userByUserId.put(user.userId(), user);
         }
 
         final Map<UserIdComposite, List<TimeEntry>> result = timeEntryRepository
@@ -127,7 +127,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .collect(groupingBy(TimeEntry::userIdComposite));
 
         // add empty list for users without time entries
-        users.forEach(user -> result.computeIfAbsent(user.idComposite(), unused -> List.of()));
+        users.forEach(user -> result.computeIfAbsent(user.userIdComposite(), unused -> List.of()));
 
         return result;
     }
@@ -153,7 +153,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final Map<LocalDate, List<Absence>> absencesByDate = absenceService.findAllAbsences(userId, from, toExclusive);
 
         // TODO refactor getEntryWeekPage to accept UserLocalId to replace userManagementService call
-        final UserLocalId userLocalId = user.localId();
+        final UserLocalId userLocalId = user.userLocalId();
         final Map<LocalDate, PlannedWorkingHours> plannedByDate = workingTimeService.getWorkingHoursByUserAndYearWeek(userLocalId, Year.of(year), weekOfYear);
 
         final PlannedWorkingHours weekPlannedHours = plannedByDate.values()
@@ -336,7 +336,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final ZonedDateTime startDateTime = ZonedDateTime.ofInstant(start, ZoneId.of(entity.getStartZoneId()));
         final ZonedDateTime endDateTime = ZonedDateTime.ofInstant(end, ZoneId.of(entity.getEndZoneId()));
 
-        final UserIdComposite userIdComposite = user.idComposite();
+        final UserIdComposite userIdComposite = user.userIdComposite();
 
         return new TimeEntry(new TimeEntryId(entity.getId()), userIdComposite, entity.getComment(), startDateTime, endDateTime, entity.isBreak());
     }

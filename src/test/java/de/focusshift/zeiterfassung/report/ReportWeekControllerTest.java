@@ -156,7 +156,7 @@ class ReportWeekControllerTest {
         final User user = anyUser();
         when(reportPermissionService.findAllPermittedUsersForCurrentUser()).thenReturn(List.of(user));
 
-        when(reportService.getReportWeek(Year.of(2022), 1, user.id()))
+        when(reportService.getReportWeek(Year.of(2022), 1, user.userId()))
             .thenReturn(anyReportWeek());
 
         perform(get("/report/year/2022/week/1").with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))))

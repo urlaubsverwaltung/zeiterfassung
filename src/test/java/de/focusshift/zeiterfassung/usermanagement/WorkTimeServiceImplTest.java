@@ -70,7 +70,7 @@ class WorkTimeServiceImplTest {
 
         final WorkingTime actual = sut.getWorkingTimeByUser(userLocalId_1);
 
-        assertThat(actual.getUserIdComposite()).isEqualTo(userIdComposite_1);
+        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
         assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));
@@ -94,7 +94,7 @@ class WorkTimeServiceImplTest {
 
         final WorkingTime actual = sut.getWorkingTimeByUser(userLocalId_1);
 
-        assertThat(actual.getUserIdComposite()).isEqualTo(userIdComposite_1);
+        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(8)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(8)));
         assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(8)));
@@ -384,7 +384,7 @@ class WorkTimeServiceImplTest {
 
         final WorkingTime actual = sut.updateWorkingTime(userLocalId_1, workWeekUpdate);
 
-        assertThat(actual.getUserIdComposite()).isEqualTo(userIdComposite_1);
+        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
         assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));
@@ -431,7 +431,7 @@ class WorkTimeServiceImplTest {
 
         final WorkingTime actual = sut.updateWorkingTime(userLocalId_1, workWeekUpdate);
 
-        assertThat(actual.getUserIdComposite()).isEqualTo(userIdComposite_1);
+        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
         assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));

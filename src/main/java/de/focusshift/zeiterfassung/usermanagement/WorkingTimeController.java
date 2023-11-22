@@ -190,7 +190,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         }
 
         return builder
-            .userId(workingTime.getUserIdComposite().localId().value())
+            .userId(workingTime.userIdComposite().localId().value())
             .workday(workingTime.getWorkingDays().stream().map(WorkDay::dayOfWeek).toList())
             .build();
     }

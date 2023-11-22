@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.user.HasUserIdComposite;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 
 import java.math.BigDecimal;
@@ -13,7 +14,7 @@ import static java.math.RoundingMode.CEILING;
  * Describes the overtime account of a user. Like whether overtime is allowed or not.
  * Or how much overtime may be accumulated.
  */
-public final class OvertimeAccount {
+public final class OvertimeAccount implements HasUserIdComposite {
 
     private final UserIdComposite userIdComposite;
     private final boolean allowed;
@@ -29,7 +30,8 @@ public final class OvertimeAccount {
         this.maxAllowedOvertime = maxAllowedOvertime;
     }
 
-    public UserIdComposite getUserIdComposite() {
+    @Override
+    public UserIdComposite userIdComposite() {
         return userIdComposite;
     }
 

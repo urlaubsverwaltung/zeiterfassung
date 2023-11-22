@@ -54,7 +54,7 @@ class OvertimeAccountServiceImplTest {
         final OvertimeAccount overtimeAccount = sut.getOvertimeAccount(userLocalId);
 
         assertThat(overtimeAccount).isNotNull();
-        assertThat(overtimeAccount.getUserIdComposite()).isEqualTo(userIdComposite);
+        assertThat(overtimeAccount.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(overtimeAccount.isAllowed()).isTrue();
         assertThat(overtimeAccount.getMaxAllowedOvertime()).hasValue(Duration.ofHours(1337));
     }
@@ -73,7 +73,7 @@ class OvertimeAccountServiceImplTest {
         final OvertimeAccount overtimeAccount = sut.getOvertimeAccount(userLocalId);
 
         assertThat(overtimeAccount).isNotNull();
-        assertThat(overtimeAccount.getUserIdComposite()).isEqualTo(userIdComposite);
+        assertThat(overtimeAccount.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(overtimeAccount.isAllowed()).isTrue();
         assertThat(overtimeAccount.getMaxAllowedOvertime()).isEmpty();
     }
@@ -97,7 +97,7 @@ class OvertimeAccountServiceImplTest {
 
         final OvertimeAccount actualUpdatedOvertimeAccount = sut.updateOvertimeAccount(userLocalId, false, Duration.ofHours(10));
 
-        assertThat(actualUpdatedOvertimeAccount.getUserIdComposite()).isEqualTo(userIdComposite);
+        assertThat(actualUpdatedOvertimeAccount.userIdComposite()).isEqualTo(userIdComposite);
 
         final ArgumentCaptor<OvertimeAccountEntity> captor = ArgumentCaptor.forClass(OvertimeAccountEntity.class);
         verify(repository).save(captor.capture());
@@ -126,7 +126,7 @@ class OvertimeAccountServiceImplTest {
 
         final OvertimeAccount actualUpdatedOvertimeAccount = sut.updateOvertimeAccount(userLocalId, false, null);
 
-        assertThat(actualUpdatedOvertimeAccount.getUserIdComposite()).isEqualTo(userIdComposite);
+        assertThat(actualUpdatedOvertimeAccount.userIdComposite()).isEqualTo(userIdComposite);
 
         final ArgumentCaptor<OvertimeAccountEntity> captor = ArgumentCaptor.forClass(OvertimeAccountEntity.class);
         verify(repository).save(captor.capture());
@@ -149,7 +149,7 @@ class OvertimeAccountServiceImplTest {
 
         final OvertimeAccount actualUpdatedOvertime = sut.updateOvertimeAccount(userLocalId, false, Duration.ofHours(10));
 
-        assertThat(actualUpdatedOvertime.getUserIdComposite()).isEqualTo(userIdComposite);
+        assertThat(actualUpdatedOvertime.userIdComposite()).isEqualTo(userIdComposite);
 
         final ArgumentCaptor<OvertimeAccountEntity> captor = ArgumentCaptor.forClass(OvertimeAccountEntity.class);
         verify(repository).save(captor.capture());

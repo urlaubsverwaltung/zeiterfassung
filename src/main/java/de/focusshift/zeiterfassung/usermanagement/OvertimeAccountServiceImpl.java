@@ -24,8 +24,8 @@ class OvertimeAccountServiceImpl implements OvertimeAccountService {
         final User user = findUser(userLocalId);
 
         return repository.findById(userLocalId.value())
-            .map(overtimeAccountEntity -> toOvertimeAccount(overtimeAccountEntity, user.idComposite()))
-            .orElseGet(() -> defaultOvertimeAccount(user.idComposite()));
+            .map(overtimeAccountEntity -> toOvertimeAccount(overtimeAccountEntity, user.userIdComposite()))
+            .orElseGet(() -> defaultOvertimeAccount(user.userIdComposite()));
     }
 
     @Override
@@ -38,7 +38,7 @@ class OvertimeAccountServiceImpl implements OvertimeAccountService {
         entity.setAllowed(isOvertimeAllowed);
         entity.setMaxAllowedOvertime(Optional.ofNullable(maxAllowedOvertime).map(Duration::toString).orElse(null));
 
-        return toOvertimeAccount(repository.save(entity), user.idComposite());
+        return toOvertimeAccount(repository.save(entity), user.userIdComposite());
     }
 
     private User findUser(UserLocalId userLocalId) {

@@ -43,7 +43,7 @@ class ReportPermissionService {
             return userLocalIds;
         }
 
-        final UserLocalId currentUserLocaleId = currentUserProvider.getCurrentUser().localId();
+        final UserLocalId currentUserLocaleId = currentUserProvider.getCurrentUser().userLocalId();
         if (userLocalIds.contains(currentUserLocaleId)) {
             return List.of(currentUserLocaleId);
         }
@@ -53,10 +53,10 @@ class ReportPermissionService {
 
     List<UserLocalId> findAllPermittedUserLocalIdsForCurrentUser() {
         if (currentUserHasPermissionForAllUsers()) {
-            return userManagementService.findAllUsers().stream().map(User::localId).toList();
+            return userManagementService.findAllUsers().stream().map(User::userLocalId).toList();
         }
 
-        final UserLocalId currentUserLocaleId = currentUserProvider.getCurrentUser().localId();
+        final UserLocalId currentUserLocaleId = currentUserProvider.getCurrentUser().userLocalId();
         return List.of(currentUserLocaleId);
     }
 
