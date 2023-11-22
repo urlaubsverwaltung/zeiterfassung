@@ -18,8 +18,4 @@ public record User(
     public String fullName() {
         return givenName + " " + familyName;
     }
-
-    public boolean hasAuthority(SecurityRole authority) {
-        return authorities().contains(authority);
-    }
 }

@@ -4,7 +4,6 @@ zeiterfassung:
       create: true
   security:
     oidc:
-      claim-mapper: groups
       login-form-url: http://localhost:8060/oauth2/authorization/zeiterfassung-realm
       client:
         registration:

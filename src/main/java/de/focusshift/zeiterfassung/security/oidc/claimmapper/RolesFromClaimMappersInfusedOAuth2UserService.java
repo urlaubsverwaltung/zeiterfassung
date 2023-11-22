@@ -10,14 +10,14 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class ClaimBasedOAuth2UserService implements OAuth2UserService<OidcUserRequest, OidcUser> {
+public class RolesFromClaimMappersInfusedOAuth2UserService implements OAuth2UserService<OidcUserRequest, OidcUser> {
 
     private final OAuth2UserService<OidcUserRequest, OidcUser> delegate;
-    private final RolesFromClaimMapper rolesFromClaimMapper;
+    private final List<RolesFromClaimMapper> claimMappers;
 
-    public ClaimBasedOAuth2UserService(OAuth2UserService<OidcUserRequest, OidcUser> delegate, RolesFromClaimMapper rolesFromClaimMapper) {
+    public RolesFromClaimMappersInfusedOAuth2UserService(OAuth2UserService<OidcUserRequest, OidcUser> delegate, List<RolesFromClaimMapper> claimMappers) {
         this.delegate = delegate;
-        this.rolesFromClaimMapper = rolesFromClaimMapper;
+        this.claimMappers = claimMappers;
     }
 
     @Override
@@ -26,9 +26,14 @@ public class ClaimBasedOAuth2UserService implements OAuth2UserService<OidcUserRe
 
         final List<GrantedAuthority> combinedAuthorities = Stream.concat(
             oidcUser.getAuthorities().stream(),
-            rolesFromClaimMapper.mapClaimToRoles(oidcUser.getClaims()).stream()
+            getAuthoritiesFromClaimMappers(oidcUser)
         ).toList();
 
         return new DefaultOidcUser(combinedAuthorities, oidcUser.getIdToken(), oidcUser.getUserInfo());
+    }
+
+    private Stream<GrantedAuthority> getAuthoritiesFromClaimMappers(OidcUser oidcUser) {
+        return claimMappers.stream()
+            .flatMap(rolesFromClaimMapper -> rolesFromClaimMapper.mapClaimToRoles(oidcUser.getClaims()).stream());
     }
 }
