@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'forest',
+    });
+  </script>
+</head>
+<body>
+
+<pre class="mermaid">
+sankey-beta
+
+%% source,target,value
+Montag,Soll,16
+Montag,"Uberstunden","0.25"
+Dienstag,Soll,16
+Dienstag,"Uberstunden","0.25"
+Mittwoch,Soll,16
+Mittwoch,"Uberstunden","3"
+Donnerstag,Soll,16
+Donnerstag,"Uberstunden","3"
+Freitag,Soll,16
+Freitag,"Uberstunden","3"
+Samstag,Soll,0
+Samstag,"Uberstunden","0"
+Sonntag,Soll,0
+Sonntag,"Uberstunden","0"
+Uberstunden,Max,3
+Soll,Max,40
+Uberstunden,Marlene,0
+Soll,Marlene,40
+</pre>
+
+</body>
+</html>

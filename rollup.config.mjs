@@ -7,6 +7,9 @@ import svelte from "rollup-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
 import glob from "fast-glob";
 
+const isProd = process.env.NODE_ENV === "production";
+const isDev = !isProd;
+
 const paths = {
   src: "src/main/javascript",
   dist: "target/classes/static/assets",
@@ -27,6 +30,8 @@ export default {
         "@duetds/date-picker/custom-element",
       ],
       "date-fns": ["date-fns"],
+      "mermaid": ["mermaid"],
+      "d3": ["d3", "d3-sankey"],
     },
   },
   plugins: [
@@ -39,15 +44,20 @@ export default {
     svelte({
       include: `${paths.src}/**/*.svelte`,
       preprocess: sveltePreprocess(),
+      compilerOptions: {
+        dev: isDev,
+        errorMode: "warn",
+      },
     }),
     postcss(),
     resolve({
       preferBuiltins: false,
     }),
-    commonjs(),
+    commonjs({
+    }),
     esbuild({
       sourceMap: true,
-      minify: process.env.NODE_ENV === "production",
+      minify: isProd,
     }),
   ],
 };
