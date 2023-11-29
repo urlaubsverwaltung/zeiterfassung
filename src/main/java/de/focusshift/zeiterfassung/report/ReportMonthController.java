@@ -29,7 +29,7 @@ import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Controller
-@PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
+@PreAuthorize("hasAuthority('ZEITERFASSUNG_USER')")
 class ReportMonthController implements HasTimeClock, HasLaunchpad {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());

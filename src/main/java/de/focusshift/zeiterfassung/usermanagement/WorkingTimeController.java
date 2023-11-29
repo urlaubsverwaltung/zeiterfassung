@@ -57,7 +57,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 @Controller
 @RequestMapping("/users/{userId}/working-time")
-@PreAuthorize("hasAuthority('ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL')")
+@PreAuthorize("hasAuthority('ZEITERFASSUNG_WORKING_TIME_EDIT_ALL')")
 class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
     private final UserManagementService userManagementService;

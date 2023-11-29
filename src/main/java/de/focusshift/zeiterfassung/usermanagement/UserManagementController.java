@@ -25,7 +25,7 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Controller
 @RequestMapping("/users")
-@PreAuthorize("hasAnyAuthority('ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL', 'ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL')")
+@PreAuthorize("hasAnyAuthority('ZEITERFASSUNG_WORKING_TIME_EDIT_ALL', 'ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL')")
 class UserManagementController implements HasTimeClock, HasLaunchpad {
 
     private final UserManagementService userManagementService;
@@ -82,6 +82,6 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
     }
 
     static boolean hasAuthority(SecurityRole securityRole, OidcUser principal) {
-        return principal.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_" + securityRole));
+        return principal.getAuthorities().contains(new SimpleGrantedAuthority(securityRole.name()));
     }
 }

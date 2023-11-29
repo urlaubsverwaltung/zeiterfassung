@@ -76,7 +76,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             get("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -94,8 +94,8 @@ class OvertimeAccountControllerTest {
 
     @ParameterizedTest
     @CsvSource({
-        "ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
-        "ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
+        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
+        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
     })
     void ensureSimpleGetAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
 
@@ -144,7 +144,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             get("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-turbo-frame")
         )
             .andExpect(status().isOk())
@@ -176,7 +176,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             get("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .param("query", "awesome-query")
         )
             .andExpect(status().isOk())
@@ -199,7 +199,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             get("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-turbo-frame")
                 .param("query", "awesome-query")
         )
@@ -230,7 +230,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             get("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .param("query", "super")
         )
             .andExpect(status().isOk())
@@ -266,7 +266,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             get("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-turbo-frame")
                 .param("query", "super")
         )
@@ -286,7 +286,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             post("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .param("allowed", "true")
                 .param("maxAllowedOvertime", "5%s25".formatted(separator))
         )
@@ -302,7 +302,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             post("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-turbo-frame")
                 .param("allowed", "true")
                 .param("maxAllowedOvertime", "5%s25".formatted(separator))
@@ -332,7 +332,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             post("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .param("allowed", "true")
                 .param("maxAllowedOvertime", "must-be-a-number")
         )
@@ -354,8 +354,8 @@ class OvertimeAccountControllerTest {
 
     @ParameterizedTest
     @CsvSource({
-        "ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
-        "ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
+        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
+        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
     })
     void ensurePostWithValidationErrorAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
 
@@ -395,7 +395,7 @@ class OvertimeAccountControllerTest {
 
         perform(
             post("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-turbo-frame")
                 .param("allowed", "true")
                 .param("maxAllowedOvertime", "must-be-a-number")

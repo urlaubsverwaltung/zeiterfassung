@@ -29,7 +29,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 @Controller
 @RequestMapping("timeclock")
-@PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
+@PreAuthorize("hasAuthority('ZEITERFASSUNG_USER')")
 class TimeClockController implements HasTimeClock, HasLaunchpad {
 
     private final TimeClockService timeClockService;

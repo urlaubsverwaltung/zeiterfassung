@@ -33,7 +33,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 @Controller
 @RequestMapping("/users/{userId}/overtime-account")
-@PreAuthorize("hasAuthority('ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL')")
+@PreAuthorize("hasAuthority('ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL')")
 class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
 
     private final UserManagementService userManagementService;

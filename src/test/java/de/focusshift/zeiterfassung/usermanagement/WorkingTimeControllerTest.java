@@ -138,7 +138,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -243,8 +243,8 @@ class WorkingTimeControllerTest {
 
     @ParameterizedTest
     @CsvSource({
-        "ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
-        "ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
+        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
+        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
     })
     void ensureSimpleGetAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
 
@@ -325,7 +325,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
         )
             .andExpect(status().isOk())
@@ -383,7 +383,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/1/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -439,7 +439,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("query", "super")
         )
             .andExpect(status().isOk())
@@ -498,7 +498,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("query", "super")
         )
@@ -565,7 +565,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("query", "bat")
         )
             .andExpect(status().isOk())
@@ -631,7 +631,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("query", "bat")
         )
@@ -654,7 +654,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("id", workingTimeId.value())
                 .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
                 .param("worksOnPublicHoliday", "true")
@@ -690,7 +690,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("id", workingTimeId.value())
                 .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
@@ -754,7 +754,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("id", workingTimeId.value())
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
                 .param("workingTime", "48")
@@ -776,8 +776,8 @@ class WorkingTimeControllerTest {
 
     @ParameterizedTest
     @CsvSource({
-        "ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
-        "ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
+        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
+        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
     })
     void ensurePostWithValidationErrorAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
 
@@ -851,7 +851,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("id", workingTimeId.value())
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")

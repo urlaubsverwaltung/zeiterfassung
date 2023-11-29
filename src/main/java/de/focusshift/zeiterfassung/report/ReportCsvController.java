@@ -31,7 +31,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 @Controller
-@PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
+@PreAuthorize("hasAuthority('ZEITERFASSUNG_USER')")
 class ReportCsvController {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());

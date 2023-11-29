@@ -45,7 +45,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.util.StringUtils.hasText;
 
 @Controller
-@PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
+@PreAuthorize("hasAuthority('ZEITERFASSUNG_USER')")
 class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());

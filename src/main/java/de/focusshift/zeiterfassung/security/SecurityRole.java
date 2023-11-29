@@ -17,15 +17,14 @@ public enum SecurityRole {
 
     public GrantedAuthority authority() {
         if (authority == null) {
-            authority = new SimpleGrantedAuthority("ROLE_" + this.name());
+            authority = new SimpleGrantedAuthority(this.name());
         }
         return authority;
     }
 
     public static Optional<SecurityRole> fromAuthority(GrantedAuthority authority) {
         try {
-            final SecurityRole role = SecurityRole.valueOf(authority.getAuthority().substring("ROLE_".length()));
-            return Optional.of(role);
+            return Optional.of(SecurityRole.valueOf(authority.getAuthority()));
         } catch(IllegalArgumentException exception) {
             return Optional.empty();
         }
