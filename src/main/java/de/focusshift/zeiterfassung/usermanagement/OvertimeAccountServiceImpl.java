@@ -1,43 +1,57 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.user.UserIdComposite;
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Optional;
 
 @Service
 class OvertimeAccountServiceImpl implements OvertimeAccountService {
 
     private final OvertimeAccountRepository repository;
+    private final UserManagementService userManagementService;
 
-    OvertimeAccountServiceImpl(OvertimeAccountRepository repository) {
+    OvertimeAccountServiceImpl(OvertimeAccountRepository repository, UserManagementService userManagementService) {
         this.repository = repository;
+        this.userManagementService = userManagementService;
     }
 
     @Override
     public OvertimeAccount getOvertimeAccount(UserLocalId userLocalId) {
+
+        final User user = findUser(userLocalId);
+
         return repository.findById(userLocalId.value())
-            .map(OvertimeAccountServiceImpl::toOvertimeAccount)
-            .orElseGet(() -> defaultOvertimeAccount(userLocalId));
+            .map(overtimeAccountEntity -> toOvertimeAccount(overtimeAccountEntity, user.userIdComposite()))
+            .orElseGet(() -> defaultOvertimeAccount(user.userIdComposite()));
     }
 
     @Override
-    public OvertimeAccount updateOvertimeAccount(OvertimeAccount overtimeAccount) {
+    public OvertimeAccount updateOvertimeAccount(UserLocalId userLocalId, boolean isOvertimeAllowed, @Nullable Duration maxAllowedOvertime) {
 
-        final OvertimeAccountEntity entity = repository.findById(overtimeAccount.getUserLocalId().value()).orElseGet(OvertimeAccountEntity::new);
+        final User user = findUser(userLocalId);
+        final OvertimeAccountEntity entity = repository.findById(userLocalId.value()).orElseGet(OvertimeAccountEntity::new);
 
-        entity.setUserId(overtimeAccount.getUserLocalId().value());
-        entity.setAllowed(overtimeAccount.isAllowed());
-        entity.setMaxAllowedOvertime(overtimeAccount.getMaxAllowedOvertime().map(Duration::toString).orElse(null));
+        entity.setUserId(userLocalId.value());
+        entity.setAllowed(isOvertimeAllowed);
+        entity.setMaxAllowedOvertime(Optional.ofNullable(maxAllowedOvertime).map(Duration::toString).orElse(null));
 
-        return toOvertimeAccount(repository.save(entity));
+        return toOvertimeAccount(repository.save(entity), user.userIdComposite());
     }
 
-    private static OvertimeAccount defaultOvertimeAccount(UserLocalId userLocalId) {
-        return new OvertimeAccount(userLocalId, true);
+    private User findUser(UserLocalId userLocalId) {
+        return userManagementService.findUserByLocalId(userLocalId)
+            .orElseThrow(() -> new IllegalStateException("expected user=%s to exist. But got nothing.".formatted(userLocalId)));
     }
 
-    private static OvertimeAccount toOvertimeAccount(OvertimeAccountEntity entity) {
-        return new OvertimeAccount(new UserLocalId(entity.getUserId()), entity.isAllowed(), toDuration(entity.getMaxAllowedOvertime()));
+    private static OvertimeAccount defaultOvertimeAccount(UserIdComposite userIdComposite) {
+        return new OvertimeAccount(userIdComposite, true);
+    }
+
+    private static OvertimeAccount toOvertimeAccount(OvertimeAccountEntity entity, UserIdComposite userIdComposite) {
+        return new OvertimeAccount(userIdComposite, entity.isAllowed(), toDuration(entity.getMaxAllowedOvertime()));
     }
 
     private static Duration toDuration(String durationValue) {

@@ -1,7 +1,10 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.UserDateService;
+import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,6 +49,13 @@ class WorkTimeServiceImplTest {
     @Test
     void ensureWorkingTimeByUser() {
 
+        final UserId userId_1 = new UserId("uuid-1");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
+
         final WorkingTimeEntity entity = new WorkingTimeEntity();
         entity.setUserId(42L);
         entity.setMonday("PT1H");
@@ -56,11 +66,11 @@ class WorkTimeServiceImplTest {
         entity.setSaturday("PT6H");
         entity.setSunday("PT7H");
 
-        when(workingTimeRepository.findByUserId(42L)).thenReturn(Optional.of(entity));
+        when(workingTimeRepository.findByUserId(userLocalId_1.value())).thenReturn(Optional.of(entity));
 
-        final WorkingTime actual = sut.getWorkingTimeByUser(new UserLocalId(42L));
+        final WorkingTime actual = sut.getWorkingTimeByUser(userLocalId_1);
 
-        assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
+        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
         assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));
@@ -73,11 +83,18 @@ class WorkTimeServiceImplTest {
     @Test
     void ensureWorkingTimeByUserReturnsDefault() {
 
-        when(workingTimeRepository.findByUserId(42L)).thenReturn(Optional.empty());
+        final UserId userId_1 = new UserId("uuid-1");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
-        final WorkingTime actual = sut.getWorkingTimeByUser(new UserLocalId(42L));
+        when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
 
-        assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
+        when(workingTimeRepository.findByUserId(userLocalId_1.value())).thenReturn(Optional.empty());
+
+        final WorkingTime actual = sut.getWorkingTimeByUser(userLocalId_1);
+
+        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(8)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(8)));
         assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(8)));
@@ -112,11 +129,24 @@ class WorkTimeServiceImplTest {
 
         when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L, 2L))).thenReturn(List.of(entity_1, entity_2));
 
-        final Map<UserLocalId, WorkingTime> actual = sut.getWorkingTimeByUsers(List.of(new UserLocalId(1L), new UserLocalId(2L)));
+        final UserId userId_1 = new UserId("uuid-1");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        final UserId userId_2 = new UserId("uuid-2");
+        final UserLocalId userLocalId_2 = new UserLocalId(2L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+        final User user_2 = new User(userIdComposite_2, "Clark", "Kent", new EMailAddress(""), Set.of());
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1, userLocalId_2)))
+            .thenReturn(List.of(user_1, user_2));
+
+        final Map<UserIdComposite, WorkingTime> actual = sut.getWorkingTimeByUsers(List.of(new UserLocalId(1L), new UserLocalId(2L)));
 
         assertThat(actual)
-            .containsEntry(new UserLocalId(1L), WorkingTime.builder()
-                .userId(new UserLocalId(1L))
+            .containsEntry(userIdComposite_1, WorkingTime.builder()
+                .userIdComposite(userIdComposite_1)
                 .monday(1)
                 .tuesday(2)
                 .wednesday(3)
@@ -126,8 +156,8 @@ class WorkTimeServiceImplTest {
                 .sunday(8)
                 .build()
             )
-            .containsEntry(new UserLocalId(2L), WorkingTime.builder()
-                .userId(new UserLocalId(2L))
+            .containsEntry(userIdComposite_2, WorkingTime.builder()
+                .userIdComposite(userIdComposite_2)
                 .monday(7)
                 .tuesday(6)
                 .wednesday(5)
@@ -144,11 +174,19 @@ class WorkTimeServiceImplTest {
 
         when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L))).thenReturn(List.of());
 
-        final Map<UserLocalId, WorkingTime> actual = sut.getWorkingTimeByUsers(List.of(new UserLocalId(1L)));
+        final UserId userId_1 = new UserId("uuid-1");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1)))
+            .thenReturn(List.of(user_1));
+
+        final Map<UserIdComposite, WorkingTime> actual = sut.getWorkingTimeByUsers(List.of(new UserLocalId(1L)));
 
         assertThat(actual)
-            .containsEntry(new UserLocalId(1L), WorkingTime.builder()
-                .userId(new UserLocalId(1L))
+            .containsEntry(userIdComposite_1, WorkingTime.builder()
+                .userIdComposite(userIdComposite_1)
                 .monday(8)
                 .tuesday(8)
                 .wednesday(8)
@@ -183,18 +221,24 @@ class WorkTimeServiceImplTest {
         entity_2.setSaturday("PT2H");
         entity_2.setSunday("PT1H");
 
-        when(userManagementService.findAllUsers()).thenReturn(List.of(
-            new User(null, new UserLocalId(1L), "", "", null, Set.of()),
-            new User(null, new UserLocalId(2L), "", "", null, Set.of())
-        ));
+        final UserId userId_1 = new UserId("uuid-1");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
+        final UserId userId_2 = new UserId("uuid-2");
+        final UserLocalId userLocalId_2 = new UserLocalId(2L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+        final User user_2 = new User(userIdComposite_2, "Clark", "Kent", new EMailAddress(""), Set.of());
+
+        when(userManagementService.findAllUsers()).thenReturn(List.of(user_1, user_2));
         when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L, 2L))).thenReturn(List.of(entity_1, entity_2));
 
-        final Map<UserLocalId, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
+        final Map<UserIdComposite, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
 
         assertThat(actual)
-            .containsEntry(new UserLocalId(1L), WorkingTime.builder()
-                .userId(new UserLocalId(1L))
+            .containsEntry(userIdComposite_1, WorkingTime.builder()
+                .userIdComposite(userIdComposite_1)
                 .monday(1)
                 .tuesday(2)
                 .wednesday(3)
@@ -204,8 +248,8 @@ class WorkTimeServiceImplTest {
                 .sunday(8)
                 .build()
             )
-            .containsEntry(new UserLocalId(2L), WorkingTime.builder()
-                .userId(new UserLocalId(2L))
+            .containsEntry(userIdComposite_2, WorkingTime.builder()
+                .userIdComposite(userIdComposite_2)
                 .monday(7)
                 .tuesday(6)
                 .wednesday(5)
@@ -220,16 +264,19 @@ class WorkTimeServiceImplTest {
     @Test
     void ensureGetAllWorkingTimeByUsersAddsDefaultWorkingTimeForUsersWithoutExplicitOne() {
 
-        when(userManagementService.findAllUsers())
-            .thenReturn(List.of(new User(null, new UserLocalId(1L), "", "", null, Set.of())));
+        final UserId userId_1 = new UserId("uuid-1");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
+        when(userManagementService.findAllUsers()).thenReturn(List.of(user_1));
         when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L))).thenReturn(List.of());
 
-        final Map<UserLocalId, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
+        final Map<UserIdComposite, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
 
         assertThat(actual)
-            .containsEntry(new UserLocalId(1L), WorkingTime.builder()
-                .userId(new UserLocalId(1L))
+            .containsEntry(userIdComposite_1, WorkingTime.builder()
+                .userIdComposite(userIdComposite_1)
                 .monday(8)
                 .tuesday(8)
                 .wednesday(8)
@@ -244,8 +291,14 @@ class WorkTimeServiceImplTest {
     @Test
     void ensureGetWorkingHoursByUserAndYearWeek() {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
         final WorkingTimeEntity entity = new WorkingTimeEntity();
-        entity.setUserId(42L);
+        entity.setUserId(userLocalId.value());
         entity.setMonday("PT1H");
         entity.setTuesday("PT2H");
         entity.setWednesday("PT3H");
@@ -254,12 +307,12 @@ class WorkTimeServiceImplTest {
         entity.setSaturday("PT6H");
         entity.setSunday("PT7H");
 
-        when(workingTimeRepository.findByUserId(42L)).thenReturn(Optional.of(entity));
+        when(workingTimeRepository.findByUserId(userLocalId.value())).thenReturn(Optional.of(entity));
 
         when(userDateService.firstDayOfWeek(Year.of(2023), 7))
             .thenReturn(LocalDate.of(2023, 2, 13));
 
-        final Map<LocalDate, PlannedWorkingHours> actual = sut.getWorkingHoursByUserAndYearWeek(new UserLocalId(42L), Year.of(2023), 7);
+        final Map<LocalDate, PlannedWorkingHours> actual = sut.getWorkingHoursByUserAndYearWeek(userLocalId, Year.of(2023), 7);
 
         assertThat(actual)
             .containsEntry(LocalDate.of(2023, 2, 13), new PlannedWorkingHours(Duration.ofHours(1)))
@@ -274,12 +327,18 @@ class WorkTimeServiceImplTest {
     @Test
     void ensureGetWorkingHoursByUserAndYearWeekUsesDefault() {
 
-        when(workingTimeRepository.findByUserId(42L)).thenReturn(Optional.empty());
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+        when(workingTimeRepository.findByUserId(1L)).thenReturn(Optional.empty());
 
         when(userDateService.firstDayOfWeek(Year.of(2023), 7))
             .thenReturn(LocalDate.of(2023, 2, 13));
 
-        final Map<LocalDate, PlannedWorkingHours> actual = sut.getWorkingHoursByUserAndYearWeek(new UserLocalId(42L), Year.of(2023), 7);
+        final Map<LocalDate, PlannedWorkingHours> actual = sut.getWorkingHoursByUserAndYearWeek(userLocalId, Year.of(2023), 7);
 
         assertThat(actual)
             .containsEntry(LocalDate.of(2023, 2, 13), PlannedWorkingHours.EIGHT)
@@ -294,6 +353,12 @@ class WorkTimeServiceImplTest {
     @Test
     void ensureUpdateWorkingTime() {
 
+        final UserId userId_1 = new UserId("uuid-1");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
+
         final WorkingTimeEntity entity = new WorkingTimeEntity();
         entity.setUserId(42L);
         entity.setMonday("PT24H");
@@ -304,11 +369,10 @@ class WorkTimeServiceImplTest {
         entity.setSaturday("PT24H");
         entity.setSunday("PT24H");
 
-        when(workingTimeRepository.findByUserId(42L)).thenReturn(Optional.of(entity));
+        when(workingTimeRepository.findByUserId(userLocalId_1.value())).thenReturn(Optional.of(entity));
         when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+        final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
             .monday(BigDecimal.valueOf(1))
             .tuesday(BigDecimal.valueOf(2))
             .wednesday(BigDecimal.valueOf(3))
@@ -318,10 +382,9 @@ class WorkTimeServiceImplTest {
             .sunday(BigDecimal.valueOf(7))
             .build();
 
-        final WorkingTime actual = sut.updateWorkingTime(workingTime);
+        final WorkingTime actual = sut.updateWorkingTime(userLocalId_1, workWeekUpdate);
 
-        assertThat(actual).isNotSameAs(workingTime);
-        assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
+        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
         assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));
@@ -334,7 +397,7 @@ class WorkTimeServiceImplTest {
         verify(workingTimeRepository).save(captor.capture());
 
         final WorkingTimeEntity actualEntity = captor.getValue();
-        assertThat(actualEntity.getUserId()).isEqualTo(42L);
+        assertThat(actualEntity.getUserId()).isEqualTo(1L);
         assertThat(actualEntity.getMonday()).isEqualTo("PT1H");
         assertThat(actualEntity.getTuesday()).isEqualTo("PT2H");
         assertThat(actualEntity.getWednesday()).isEqualTo("PT3H");
@@ -347,11 +410,16 @@ class WorkTimeServiceImplTest {
     @Test
     void ensureUpdateWorkingTimeWithNewItem() {
 
-        when(workingTimeRepository.findByUserId(42L)).thenReturn(Optional.empty());
+        final UserId userId_1 = new UserId("uuid-1");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
+        when(workingTimeRepository.findByUserId(userLocalId_1.value())).thenReturn(Optional.empty());
         when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+        final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
             .monday(BigDecimal.valueOf(1))
             .tuesday(BigDecimal.valueOf(2))
             .wednesday(BigDecimal.valueOf(3))
@@ -361,10 +429,9 @@ class WorkTimeServiceImplTest {
             .sunday(BigDecimal.valueOf(7))
             .build();
 
-        final WorkingTime actual = sut.updateWorkingTime(workingTime);
+        final WorkingTime actual = sut.updateWorkingTime(userLocalId_1, workWeekUpdate);
 
-        assertThat(actual).isNotSameAs(workingTime);
-        assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
+        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
         assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));
@@ -377,7 +444,7 @@ class WorkTimeServiceImplTest {
         verify(workingTimeRepository).save(captor.capture());
 
         final WorkingTimeEntity actualEntity = captor.getValue();
-        assertThat(actualEntity.getUserId()).isEqualTo(42L);
+        assertThat(actualEntity.getUserId()).isEqualTo(1L);
         assertThat(actualEntity.getMonday()).isEqualTo("PT1H");
         assertThat(actualEntity.getTuesday()).isEqualTo("PT2H");
         assertThat(actualEntity.getWednesday()).isEqualTo("PT3H");

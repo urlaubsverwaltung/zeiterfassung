@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.BeforeEach;
@@ -153,10 +154,13 @@ class ReportMonthControllerTest {
     @Test
     void ensureMonthReportUserFilterRelatedUrlsAreNotAddedWhenCurrentUserHasNoPermission() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
-            .thenReturn(List.of(new User(new UserId("batman"), new UserLocalId(1L), "", "", new EMailAddress(""), Set.of())));
+            .thenReturn(List.of(new User(userIdComposite, "", "", new EMailAddress(""), Set.of())));
 
-        when(reportService.getReportMonth(YearMonth.of(2022, 1), new UserId("batman")))
+        when(reportService.getReportMonth(YearMonth.of(2022, 1), userId))
             .thenReturn(anyReportMonth());
 
         perform(get("/report/year/2022/month/1").with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))))
@@ -166,9 +170,20 @@ class ReportMonthControllerTest {
     @Test
     void ensureMonthReportUserFilterRelatedUrls() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        final UserId jokerId = new UserId("joker");
+        final UserLocalId jokerLocalId = new UserLocalId(2L);
+        final UserIdComposite jokerIdComposite = new UserIdComposite(jokerId, jokerLocalId);
+        final User joker = new User(jokerIdComposite, "Jack", "Napier", new EMailAddress(""), Set.of());
+
+        final UserId robinId = new UserId("robin");
+        final UserLocalId robinLocalId = new UserLocalId(3L);
+        final UserIdComposite robinIdComposite = new UserIdComposite(robinId, robinLocalId);
+        final User robin = new User(robinIdComposite, "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
             .thenReturn(List.of(batman, joker, robin));
@@ -190,9 +205,20 @@ class ReportMonthControllerTest {
     @Test
     void ensureMonthReportUserFilterRelatedUrlsForEveryone() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        final UserId jokerId = new UserId("joker");
+        final UserLocalId jokerLocalId = new UserLocalId(2L);
+        final UserIdComposite jokerIdComposite = new UserIdComposite(jokerId, jokerLocalId);
+        final User joker = new User(jokerIdComposite, "Jack", "Napier", new EMailAddress(""), Set.of());
+
+        final UserId robinId = new UserId("robin");
+        final UserLocalId robinLocalId = new UserLocalId(3L);
+        final UserIdComposite robinIdComposite = new UserIdComposite(robinId, robinLocalId);
+        final User robin = new User(robinIdComposite, "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
             .thenReturn(List.of(batman, joker, robin));
@@ -218,9 +244,20 @@ class ReportMonthControllerTest {
     @Test
     void ensureMonthReportUserFilterRelatedUrlsForWithSelectedUser() throws Exception {
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        final User joker = new User(new UserId("joker"), new UserLocalId(2L), "Jack", "Napier", new EMailAddress(""), Set.of());
-        final User robin = new User(new UserId("robin"), new UserLocalId(3L), "Dick", "Grayson", new EMailAddress(""), Set.of());
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        final UserId jokerId = new UserId("joker");
+        final UserLocalId jokerLocalId = new UserLocalId(2L);
+        final UserIdComposite jokerIdComposite = new UserIdComposite(jokerId, jokerLocalId);
+        final User joker = new User(jokerIdComposite, "Jack", "Napier", new EMailAddress(""), Set.of());
+
+        final UserId robinId = new UserId("robin");
+        final UserLocalId robinLocalId = new UserLocalId(3L);
+        final UserIdComposite robinIdComposite = new UserIdComposite(robinId, robinLocalId);
+        final User robin = new User(robinIdComposite, "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
             .thenReturn(List.of(batman, joker, robin));

@@ -2,7 +2,9 @@ package de.focusshift.zeiterfassung.absence;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -129,9 +131,10 @@ class AbsenceServiceImplTest {
 
         final UserId userId = new UserId(UUID.randomUUID().toString());
         final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId))).thenReturn(List.of(
-            new User(userId, userLocalId, null, null, null, Set.of()))
+            new User(userIdComposite, null, null, null, Set.of()))
         );
 
         final List<String> userIdsValues = List.of(userId.value());
@@ -139,8 +142,8 @@ class AbsenceServiceImplTest {
         when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", userIdsValues, toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of());
 
-        final Map<UserLocalId, List<Absence>> actual = sut.getAbsencesByUserIds(List.of(userLocalId), from, toExclusive);
-        assertThat(actual).containsEntry(userLocalId, List.of());
+        final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesByUserIds(List.of(userLocalId), from, toExclusive);
+        assertThat(actual).containsEntry(userIdComposite, List.of());
     }
 
     @Test
@@ -157,12 +160,14 @@ class AbsenceServiceImplTest {
 
         final UserId userId_1 = new UserId(UUID.randomUUID().toString());
         final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
         final UserId userId_2 = new UserId(UUID.randomUUID().toString());
         final UserLocalId userLocalId_2 = new UserLocalId(2L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
 
         when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1, userLocalId_2))).thenReturn(List.of(
-            new User(userId_1, userLocalId_1, "Bruce", null, null, Set.of()),
-            new User(userId_2, userLocalId_2, "Alfred", null, null, Set.of())
+            new User(userIdComposite_1, "Bruce", null, null, Set.of()),
+            new User(userIdComposite_2, "Alfred", null, null, Set.of())
         ));
 
         final Instant absence_1_start = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
@@ -198,13 +203,13 @@ class AbsenceServiceImplTest {
         when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of(userId_1.value(), userId_2.value()), toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity_1, absenceEntity_2_1, absenceEntity_2_2));
 
-        final Map<UserLocalId, List<Absence>> actual = sut.getAbsencesByUserIds(List.of(userLocalId_1, userLocalId_2), from, toExclusive);
+        final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesByUserIds(List.of(userLocalId_1, userLocalId_2), from, toExclusive);
 
         assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
-            userLocalId_1, List.of(
+            userIdComposite_1, List.of(
                 new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, new AbsenceType(OTHER, 1000L), YELLOW)
             ),
-            userLocalId_2, List.of(
+            userIdComposite_2, List.of(
                 new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, new AbsenceType(OTHER, 2000L), VIOLET),
                 new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, new AbsenceType(OTHER, 3000L), CYAN)
             )
@@ -225,15 +230,15 @@ class AbsenceServiceImplTest {
 
         final UserId userId = new UserId(UUID.randomUUID().toString());
         final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+        when(userManagementService.findAllUsers()).thenReturn(List.of(user));
 
         when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of());
 
-        when(userManagementService.findAllUserLocalIdsGroupedByUserId())
-            .thenReturn(Map.of(userId, userLocalId));
-
-        final Map<UserLocalId, List<Absence>> actual = sut.getAbsencesForAllUsers(from, toExclusive);
-        assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(userLocalId, List.of()));
+        final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesForAllUsers(from, toExclusive);
+        assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(userIdComposite, List.of()));
     }
 
     @Test
@@ -250,8 +255,15 @@ class AbsenceServiceImplTest {
 
         final UserId userId_1 = new UserId(UUID.randomUUID().toString());
         final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+        final User user_1 = new User(userIdComposite_1, "", "", new EMailAddress(""), Set.of());
+
         final UserId userId_2 = new UserId(UUID.randomUUID().toString());
         final UserLocalId userLocalId_2 = new UserLocalId(2L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+        final User user_2 = new User(userIdComposite_2, "", "", new EMailAddress(""), Set.of());
+
+        when(userManagementService.findAllUsers()).thenReturn(List.of(user_1, user_2));
 
         final Instant absence_1_start = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
         final Instant absence_1_end = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
@@ -286,18 +298,12 @@ class AbsenceServiceImplTest {
         when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity_1, absenceEntity_2_1, absenceEntity_2_2));
 
-        when(userManagementService.findAllUserLocalIdsGroupedByUserId())
-            .thenReturn(Map.of(
-                userId_1, userLocalId_1,
-                userId_2, userLocalId_2
-            ));
-
-        final Map<UserLocalId, List<Absence>> actual = sut.getAbsencesForAllUsers(from, toExclusive);
+        final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesForAllUsers(from, toExclusive);
         assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
-            userLocalId_1, List.of(
+            userIdComposite_1, List.of(
                 new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, new AbsenceType(OTHER, 1000L), YELLOW)
             ),
-            userLocalId_2, List.of(
+            userIdComposite_2, List.of(
                 new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, new AbsenceType(OTHER, 2000L), VIOLET),
                 new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, new AbsenceType(OTHER, 3000L), CYAN)
             )

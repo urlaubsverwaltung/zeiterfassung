@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.web.DoubleFormatter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.format.support.FormattingConversionService;
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -58,14 +57,20 @@ class OvertimeAccountControllerTest {
     @Test
     void ensureSimpleGet() throws Exception {
 
-        final UserLocalId batmanId = new UserLocalId(1337L);
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
 
-        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("superman"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId supermanId = new UserId("superman");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanId, true, Duration.ofHours(10).plusMinutes(30));
-        when(overtimeAccountService.getOvertimeAccount(batmanId)).thenReturn(overtimeAccount);
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
+        when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
 
@@ -94,14 +99,20 @@ class OvertimeAccountControllerTest {
     })
     void ensureSimpleGetAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
 
-        final UserLocalId batmanId = new UserLocalId(1337L);
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
 
-        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("superman"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId supermanId = new UserId("superman");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanId, true, Duration.ofHours(10).plusMinutes(30));
-        when(overtimeAccountService.getOvertimeAccount(batmanId)).thenReturn(overtimeAccount);
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
+        when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         perform(
             get("/users/1337/overtime-account")
@@ -114,14 +125,20 @@ class OvertimeAccountControllerTest {
     @Test
     void ensureSimpleGetWithJavaScript() throws Exception {
 
-        final UserLocalId batmanId = new UserLocalId(1337L);
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
 
-        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("superman"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId supermanId = new UserId("superman");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanId, true, Duration.ofHours(10).plusMinutes(30));
-        when(overtimeAccountService.getOvertimeAccount(batmanId)).thenReturn(overtimeAccount);
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
+        when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
 
@@ -147,13 +164,15 @@ class OvertimeAccountControllerTest {
     @Test
     void ensureSearch() throws Exception {
 
-        final UserLocalId batmanId = new UserLocalId(1337L);
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
 
-        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         when(userManagementService.findAllUsers("awesome-query")).thenReturn(List.of(batman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanId, true, Duration.ofHours(10).plusMinutes(30));
-        when(overtimeAccountService.getOvertimeAccount(batmanId)).thenReturn(overtimeAccount);
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
+        when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         perform(
             get("/users/1337/overtime-account")
@@ -168,13 +187,15 @@ class OvertimeAccountControllerTest {
     @Test
     void ensureSearchWithJavaScript() throws Exception {
 
-        final UserLocalId batmanId = new UserLocalId(1337L);
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
 
-        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         when(userManagementService.findAllUsers("awesome-query")).thenReturn(List.of(batman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanId, true, Duration.ofHours(10).plusMinutes(30));
-        when(overtimeAccountService.getOvertimeAccount(batmanId)).thenReturn(overtimeAccount);
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
+        when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         perform(
             get("/users/1337/overtime-account")
@@ -189,15 +210,21 @@ class OvertimeAccountControllerTest {
     @Test
     void ensureSearchWithSelectedUserNotInQuery() throws Exception {
 
-        final UserLocalId batmanId = new UserLocalId(1337L);
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
 
-        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("superman"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId supermanId = new UserId("superman");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("super")).thenReturn(List.of(superman));
-        when(userManagementService.findUserByLocalId(new UserLocalId(1337L))).thenReturn(Optional.of(batman));
+        when(userManagementService.findUserByLocalId(batmanLocalId)).thenReturn(Optional.of(batman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanId, true, Duration.ofHours(10).plusMinutes(30));
-        when(overtimeAccountService.getOvertimeAccount(batmanId)).thenReturn(overtimeAccount);
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
+        when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
 
@@ -219,15 +246,21 @@ class OvertimeAccountControllerTest {
     @Test
     void ensureSearchWithSelectedUserNotInQueryWithJavaScript() throws Exception {
 
-        final UserLocalId batmanId = new UserLocalId(1337L);
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
 
-        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("superman"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId supermanId = new UserId("superman");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("super")).thenReturn(List.of(superman));
-        when(userManagementService.findUserByLocalId(new UserLocalId(1337L))).thenReturn(Optional.of(batman));
+        when(userManagementService.findUserByLocalId(batmanLocalId)).thenReturn(Optional.of(batman));
 
-        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanId, true, Duration.ofHours(10).plusMinutes(30));
-        when(overtimeAccountService.getOvertimeAccount(batmanId)).thenReturn(overtimeAccount);
+        final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
+        when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
         final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
 
@@ -260,14 +293,7 @@ class OvertimeAccountControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/1337/overtime-account"));
 
-        final ArgumentCaptor<OvertimeAccount> captor = ArgumentCaptor.forClass(OvertimeAccount.class);
-        verify(overtimeAccountService).updateOvertimeAccount(captor.capture());
-
-        final OvertimeAccount actualOvertimeAccount = captor.getValue();
-        assertThat(actualOvertimeAccount).isNotNull();
-        assertThat(actualOvertimeAccount.getUserLocalId()).isEqualTo(new UserLocalId(1337L));
-        assertThat(actualOvertimeAccount.isAllowed()).isTrue();
-        assertThat(actualOvertimeAccount.getMaxAllowedOvertime()).hasValue(Duration.ofHours(5).plusMinutes(15));
+        verify(overtimeAccountService).updateOvertimeAccount(new UserLocalId(1337L), true, Duration.ofHours(5).plusMinutes(15));
     }
 
     @ParameterizedTest
@@ -284,23 +310,22 @@ class OvertimeAccountControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/1337/overtime-account"));
 
-        final ArgumentCaptor<OvertimeAccount> captor = ArgumentCaptor.forClass(OvertimeAccount.class);
-        verify(overtimeAccountService).updateOvertimeAccount(captor.capture());
-
-        final OvertimeAccount actualOvertimeAccount = captor.getValue();
-        assertThat(actualOvertimeAccount).isNotNull();
-        assertThat(actualOvertimeAccount.getUserLocalId()).isEqualTo(new UserLocalId(1337L));
-        assertThat(actualOvertimeAccount.isAllowed()).isTrue();
-        assertThat(actualOvertimeAccount.getMaxAllowedOvertime()).hasValue(Duration.ofHours(5).plusMinutes(15));
+        verify(overtimeAccountService).updateOvertimeAccount(new UserLocalId(1337L), true, Duration.ofHours(5).plusMinutes(15));
     }
 
     @Test
     void ensurePostWithValidationError() throws Exception {
 
-        final UserLocalId batmanId = new UserLocalId(1337L);
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
 
-        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("superman"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId supermanId = new UserId("superman");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
@@ -334,8 +359,11 @@ class OvertimeAccountControllerTest {
     })
     void ensurePostWithValidationErrorAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
 
-        final UserLocalId batmanId = new UserLocalId(1337L);
-        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman));
 
         perform(
@@ -351,10 +379,16 @@ class OvertimeAccountControllerTest {
     @Test
     void ensurePostWithValidationErrorWithJavaScript() throws Exception {
 
-        final UserLocalId batmanId = new UserLocalId(1337L);
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
 
-        final User batman = new User(new UserId("batman"), batmanId, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("superman"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId supermanId = new UserId("superman");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");

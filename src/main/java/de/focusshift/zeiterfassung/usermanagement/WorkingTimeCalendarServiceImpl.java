@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -19,20 +20,20 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
     }
 
     @Override
-    public Map<UserLocalId, WorkingTimeCalendar> getWorkingTimes(LocalDate from, LocalDate toExclusive) {
+    public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimes(LocalDate from, LocalDate toExclusive) {
         return entitiesToWorkingTime(from, toExclusive, workingTimeService.getAllWorkingTimeByUsers());
     }
 
     @Override
-    public Map<UserLocalId, WorkingTimeCalendar> getWorkingTimes(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
+    public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimes(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
         return entitiesToWorkingTime(from, toExclusive, workingTimeService.getWorkingTimeByUsers(userLocalIds));
     }
 
-    private Map<UserLocalId, WorkingTimeCalendar> entitiesToWorkingTime(LocalDate from, LocalDate toExclusive, Map<UserLocalId, WorkingTime> workingTimes) {
+    private Map<UserIdComposite, WorkingTimeCalendar> entitiesToWorkingTime(LocalDate from, LocalDate toExclusive, Map<UserIdComposite, WorkingTime> workingTimes) {
 
-        final HashMap<UserLocalId, WorkingTimeCalendar> result = new HashMap<>();
+        final HashMap<UserIdComposite, WorkingTimeCalendar> result = new HashMap<>();
 
-        for (Map.Entry<UserLocalId, WorkingTime> entry : workingTimes.entrySet()) {
+        for (Map.Entry<UserIdComposite, WorkingTime> entry : workingTimes.entrySet()) {
             final WorkingTimeCalendar workingTimeCalendar = toWorkingTimeCalendar(from, toExclusive, entry.getValue());
             result.put(entry.getKey(), workingTimeCalendar);
         }

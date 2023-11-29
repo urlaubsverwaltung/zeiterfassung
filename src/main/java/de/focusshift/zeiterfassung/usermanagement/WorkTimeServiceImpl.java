@@ -2,12 +2,15 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.UserDateService;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,32 +36,23 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
     @Override
     public WorkingTime getWorkingTimeByUser(UserLocalId userLocalId) {
+
+        final User user = findUser(userLocalId);
+
         return repository.findByUserId(userLocalId.value())
-            .map(WorkTimeServiceImpl::entityToWorkingTime)
-            .orElseGet(() -> defaultWorkingTime(userLocalId));
+            .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, user.userIdComposite()))
+            .orElseGet(() -> defaultWorkingTime(user.userIdComposite()));
     }
 
     @Override
-    public Map<UserLocalId, WorkingTime> getWorkingTimeByUsers(Collection<UserLocalId> userLocalIds) {
-
-        final List<Long> idValues = userLocalIds.stream().map(UserLocalId::value).toList();
-
-        final Map<UserLocalId, WorkingTime> result = repository.findAllByUserIdIsIn(idValues)
-            .stream()
-            .map(WorkTimeServiceImpl::entityToWorkingTime)
-            .collect(toMap(WorkingTime::getUserId, identity()));
-
-        for (UserLocalId userLocalId : userLocalIds) {
-            result.computeIfAbsent(userLocalId, this::defaultWorkingTime);
-        }
-
-        return result;
+    public Map<UserIdComposite, WorkingTime> getWorkingTimeByUsers(Collection<UserLocalId> userLocalIds) {
+        final List<User> users = userManagementService.findAllUsersByLocalIds(userLocalIds);
+        return getWorkingTime(users);
     }
 
     @Override
-    public Map<UserLocalId, WorkingTime> getAllWorkingTimeByUsers() {
-        final List<UserLocalId> userIds = userManagementService.findAllUsers().stream().map(User::localId).toList();
-        return getWorkingTimeByUsers(userIds);
+    public Map<UserIdComposite, WorkingTime> getAllWorkingTimeByUsers() {
+        return getWorkingTime(userManagementService.findAllUsers());
     }
 
     @Override
@@ -74,33 +68,60 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     }
 
     @Override
-    public WorkingTime updateWorkingTime(WorkingTime workingTime) {
+    public WorkingTime updateWorkingTime(UserLocalId userLocalId, WorkWeekUpdate workWeekUpdate) {
 
-        final WorkingTimeEntity entity = repository.findByUserId(workingTime.getUserId().value()).orElseGet(WorkingTimeEntity::new);
+        final User user = findUser(userLocalId);
+        final WorkingTimeEntity entity = repository.findByUserId(userLocalId.value()).orElseGet(WorkingTimeEntity::new);
 
-        entity.setMonday(toDurationString(workingTime.getMonday()));
-        entity.setTuesday(toDurationString(workingTime.getTuesday()));
-        entity.setWednesday(toDurationString(workingTime.getWednesday()));
-        entity.setThursday(toDurationString(workingTime.getThursday()));
-        entity.setFriday(toDurationString(workingTime.getFriday()));
-        entity.setSaturday(toDurationString(workingTime.getSaturday()));
-        entity.setSunday(toDurationString(workingTime.getSunday()));
+        entity.setMonday(toDurationString(workWeekUpdate.monday()));
+        entity.setTuesday(toDurationString(workWeekUpdate.tuesday()));
+        entity.setWednesday(toDurationString(workWeekUpdate.wednesday()));
+        entity.setThursday(toDurationString(workWeekUpdate.thursday()));
+        entity.setFriday(toDurationString(workWeekUpdate.friday()));
+        entity.setSaturday(toDurationString(workWeekUpdate.saturday()));
+        entity.setSunday(toDurationString(workWeekUpdate.sunday()));
 
         if (entity.getId() == null) {
-            entity.setUserId(workingTime.getUserId().value());
+            entity.setUserId(userLocalId.value());
         }
 
-        return entityToWorkingTime(repository.save(entity));
+        return entityToWorkingTime(repository.save(entity), user.userIdComposite());
+    }
+
+    private Map<UserIdComposite, WorkingTime> getWorkingTime(Collection<User> users) {
+
+        final List<Long> localIdValues = new ArrayList<>();
+        final Map<Long, UserIdComposite> userIdCompositeByLocalIdValue = new HashMap<>();
+        for (User user : users) {
+            localIdValues.add(user.userLocalId().value());
+            userIdCompositeByLocalIdValue.put(user.userLocalId().value(), user.userIdComposite());
+        }
+
+        final Map<UserIdComposite, WorkingTime> result = repository.findAllByUserIdIsIn(localIdValues)
+            .stream()
+            .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, userIdCompositeByLocalIdValue.get(workingTimeEntity.getUserId())))
+            .collect(toMap(WorkingTime::userIdComposite, identity()));
+
+        for (User user : users) {
+            result.computeIfAbsent(user.userIdComposite(), this::defaultWorkingTime);
+        }
+
+        return result;
+    }
+
+    private User findUser(UserLocalId userLocalId) {
+        return userManagementService.findUserByLocalId(userLocalId)
+            .orElseThrow(() -> new IllegalStateException("expected user=%s to exist. but got nothing.".formatted(userLocalId)));
     }
 
     private String toDurationString(Optional<WorkDay> workDay) {
         return workDay.map(WorkDay::duration).map(Duration::toString).orElse(Duration.ZERO.toString());
     }
 
-    private WorkingTime defaultWorkingTime(UserLocalId userLocalId) {
+    private WorkingTime defaultWorkingTime(UserIdComposite userIdComposite) {
         final Duration eight = Duration.ofHours(8);
         return WorkingTime.builder()
-            .userId(userLocalId)
+            .userIdComposite(userIdComposite)
             .monday(eight)
             .tuesday(eight)
             .wednesday(eight)
@@ -111,9 +132,9 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             .build();
     }
 
-    private static WorkingTime entityToWorkingTime(WorkingTimeEntity entity) {
+    private static WorkingTime entityToWorkingTime(WorkingTimeEntity entity, UserIdComposite userIdComposite) {
         return WorkingTime.builder()
-            .userId(new UserLocalId(entity.getUserId()))
+            .userIdComposite(userIdComposite)
             .monday(orZero(entity.getMonday()))
             .tuesday(orZero(entity.getTuesday()))
             .wednesday(orZero(entity.getWednesday()))

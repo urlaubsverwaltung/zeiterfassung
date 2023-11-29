@@ -2,12 +2,12 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,11 +28,9 @@ import java.util.Set;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
-import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -74,12 +72,20 @@ class WorkingTimeControllerTest {
     @Test
     void ensureSimpleGet() throws Exception {
 
-        final User batman = new User(new UserId("uuid"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId supermanId = new UserId("uuid-2");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+            .userIdComposite(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -87,10 +93,10 @@ class WorkingTimeControllerTest {
             .friday(EIGHT)
             .build();
 
-        when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
+        when(workingTimeService.getWorkingTimeByUser(supermanLocalId)).thenReturn(workingTime);
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(workingTime.getUserId().value())
+            .userId(workingTime.userIdComposite().localId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
             .build();
@@ -121,12 +127,20 @@ class WorkingTimeControllerTest {
     })
     void ensureSimpleGetAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
 
-        final User batman = new User(new UserId("uuid"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId supermanId = new UserId("uuid-2");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+            .userIdComposite(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -134,7 +148,7 @@ class WorkingTimeControllerTest {
             .friday(EIGHT)
             .build();
 
-        when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
+        when(workingTimeService.getWorkingTimeByUser(supermanLocalId)).thenReturn(workingTime);
 
 
         perform(
@@ -148,12 +162,20 @@ class WorkingTimeControllerTest {
     @Test
     void ensureSimpleGetJavaScript() throws Exception {
 
-        final User batman = new User(new UserId("uuid"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId supermanId = new UserId("uuid-2");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+            .userIdComposite(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -164,7 +186,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(workingTime.getUserId().value())
+            .userId(workingTime.userIdComposite().localId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
             .build();
@@ -192,11 +214,14 @@ class WorkingTimeControllerTest {
     @Test
     void ensureSimpleGetForWorkingTimeWithSpecialWorkingDays() throws Exception {
 
-        final User alfred = new User(new UserId("uuid"), new UserLocalId(1L), "Alfred", "Pennyworth", new EMailAddress("alfred@example.org"), Set.of());
-        when(userManagementService.findAllUsers("")).thenReturn(List.of(alfred));
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Alfred", "Pennyworth", new EMailAddress("alfred@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(1L))
+            .userIdComposite(userIdComposite)
             .monday(BigDecimal.valueOf(4))
             .wednesday(BigDecimal.valueOf(5))
             .saturday(BigDecimal.valueOf(6))
@@ -205,7 +230,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getWorkingTimeByUser(new UserLocalId(1L))).thenReturn(workingTime);
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(workingTime.getUserId().value())
+            .userId(workingTime.userIdComposite().localId().value())
             .workday(List.of(MONDAY, WEDNESDAY, SATURDAY))
             .workingTimeMonday(4.0)
             .workingTimeWednesday(5.0)
@@ -231,11 +256,14 @@ class WorkingTimeControllerTest {
     @Test
     void ensureSearch() throws Exception {
 
-        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
-        when(userManagementService.findAllUsers("super")).thenReturn(List.of(superman));
+        final UserId userId = new UserId("uuid-2");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("super")).thenReturn(List.of(user));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+            .userIdComposite(userIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -246,7 +274,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(workingTime.getUserId().value())
+            .userId(workingTime.userIdComposite().localId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
             .build();
@@ -273,11 +301,14 @@ class WorkingTimeControllerTest {
     @Test
     void ensureSearchJavaScript() throws Exception {
 
-        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
-        when(userManagementService.findAllUsers("super")).thenReturn(List.of(superman));
+        final UserId userId = new UserId("uuid-2");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("super")).thenReturn(List.of(user));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+            .userIdComposite(userIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -288,7 +319,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(workingTime.getUserId().value())
+            .userId(userLocalId.value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
             .build();
@@ -316,13 +347,21 @@ class WorkingTimeControllerTest {
     @Test
     void ensureSearchWithSelectedUserNotInQuery() throws Exception {
 
-        final User batman = new User(new UserId("uuid"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId supermanId = new UserId("uuid-2");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("bat")).thenReturn(List.of(batman));
         when(userManagementService.findUserByLocalId(new UserLocalId(42L))).thenReturn(Optional.of(superman));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+            .userIdComposite(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -330,10 +369,10 @@ class WorkingTimeControllerTest {
             .friday(EIGHT)
             .build();
 
-        when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
+        when(workingTimeService.getWorkingTimeByUser(supermanLocalId)).thenReturn(workingTime);
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(workingTime.getUserId().value())
+            .userId(supermanLocalId.value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
             .build();
@@ -360,13 +399,21 @@ class WorkingTimeControllerTest {
     @Test
     void ensureSearchWithSelectedUserNotInQueryJavaScript() throws Exception {
 
-        final User batman = new User(new UserId("uuid"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId supermanId = new UserId("uuid-2");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("bat")).thenReturn(List.of(batman));
-        when(userManagementService.findUserByLocalId(new UserLocalId(42L))).thenReturn(Optional.of(superman));
+        when(userManagementService.findUserByLocalId(supermanLocalId)).thenReturn(Optional.of(superman));
 
         final WorkingTime workingTime = WorkingTime.builder()
-            .userId(new UserLocalId(42L))
+            .userIdComposite(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -377,7 +424,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(workingTime.getUserId().value())
+            .userId(supermanLocalId.value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
             .build();
@@ -420,18 +467,17 @@ class WorkingTimeControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/42/working-time"));
 
-        final ArgumentCaptor<WorkingTime> captor = ArgumentCaptor.forClass(WorkingTime.class);
-        verify(workingTimeService).updateWorkingTime(captor.capture());
+        final WorkWeekUpdate expectedWorkWeekUpdate = WorkWeekUpdate.builder()
+            .monday(Duration.ofHours(0))
+            .tuesday(Duration.ofHours(1))
+            .wednesday(Duration.ofHours(2))
+            .thursday(Duration.ofHours(3))
+            .friday(Duration.ofHours(4))
+            .saturday(Duration.ofHours(5))
+            .sunday(Duration.ofHours(6))
+            .build();
 
-        final WorkingTime actual = captor.getValue();
-        assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
-        assertThat(actual.getMonday()).hasValue(new WorkDay(MONDAY, Duration.ofHours(0)));
-        assertThat(actual.getTuesday()).hasValue(new WorkDay(TUESDAY, Duration.ofHours(1)));
-        assertThat(actual.getWednesday()).hasValue(new WorkDay(WEDNESDAY, Duration.ofHours(2)));
-        assertThat(actual.getThursday()).hasValue(new WorkDay(THURSDAY, Duration.ofHours(3)));
-        assertThat(actual.getFriday()).hasValue(new WorkDay(FRIDAY, Duration.ofHours(4)));
-        assertThat(actual.getSaturday()).hasValue(new WorkDay(SATURDAY, Duration.ofHours(5)));
-        assertThat(actual.getSunday()).hasValue(new WorkDay(SUNDAY, Duration.ofHours(6)));
+        verify(workingTimeService).updateWorkingTime(new UserLocalId(42L), expectedWorkWeekUpdate);
     }
 
     @Test
@@ -453,18 +499,17 @@ class WorkingTimeControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/42/working-time"));
 
-        final ArgumentCaptor<WorkingTime> captor = ArgumentCaptor.forClass(WorkingTime.class);
-        verify(workingTimeService).updateWorkingTime(captor.capture());
+        final WorkWeekUpdate expectedWorkWeekUpdate = WorkWeekUpdate.builder()
+            .monday(Duration.ofHours(0))
+            .tuesday(Duration.ofHours(1))
+            .wednesday(Duration.ofHours(2))
+            .thursday(Duration.ofHours(3))
+            .friday(Duration.ofHours(4))
+            .saturday(Duration.ofHours(5))
+            .sunday(Duration.ofHours(6))
+            .build();
 
-        final WorkingTime actual = captor.getValue();
-        assertThat(actual.getUserId()).isEqualTo(new UserLocalId(42L));
-        assertThat(actual.getMonday()).hasValue(new WorkDay(MONDAY, Duration.ofHours(0)));
-        assertThat(actual.getTuesday()).hasValue(new WorkDay(TUESDAY, Duration.ofHours(1)));
-        assertThat(actual.getWednesday()).hasValue(new WorkDay(WEDNESDAY, Duration.ofHours(2)));
-        assertThat(actual.getThursday()).hasValue(new WorkDay(THURSDAY, Duration.ofHours(3)));
-        assertThat(actual.getFriday()).hasValue(new WorkDay(FRIDAY, Duration.ofHours(4)));
-        assertThat(actual.getSaturday()).hasValue(new WorkDay(SATURDAY, Duration.ofHours(5)));
-        assertThat(actual.getSunday()).hasValue(new WorkDay(SUNDAY, Duration.ofHours(6)));
+        verify(workingTimeService).updateWorkingTime(new UserLocalId(42L), expectedWorkWeekUpdate);
     }
 
     @Test
@@ -484,8 +529,16 @@ class WorkingTimeControllerTest {
             }
         ).when(workingTimeDtoValidator).validate(eq(expectedWorkingTimeDto), any(BindingResult.class));
 
-        final User batman = new User(new UserId("uuid"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId supermanId = new UserId("uuid-2");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         perform(
@@ -530,8 +583,16 @@ class WorkingTimeControllerTest {
             }
         ).when(workingTimeDtoValidator).validate(eq(expectedWorkingTimeDto), any(BindingResult.class));
 
-        final User batman = new User(new UserId("uuid"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId supermanId = new UserId("uuid-2");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         perform(
@@ -561,8 +622,16 @@ class WorkingTimeControllerTest {
             }
         ).when(workingTimeDtoValidator).validate(eq(expectedWorkingTimeDto), any(BindingResult.class));
 
-        final User batman = new User(new UserId("uuid"), new UserLocalId(1337L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(new UserId("uuid-2"), new UserLocalId(42L), "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId supermanId = new UserId("uuid-2");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         perform(

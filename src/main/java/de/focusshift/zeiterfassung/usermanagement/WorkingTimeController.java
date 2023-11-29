@@ -141,9 +141,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             }
         }
 
-        final WorkingTime workingTime = dtoToWorkingTime(workingTimeDto);
-
-        workingTimeService.updateWorkingTime(workingTime);
+        final WorkWeekUpdate workWeekUpdate = dtoToWorkWeekUpdate(workingTimeDto);
+        workingTimeService.updateWorkingTime(new UserLocalId(userId), workWeekUpdate);
 
         return "redirect:/users/%s/working-time".formatted(userId);
     }
@@ -191,14 +190,14 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         }
 
         return builder
-            .userId(workingTime.getUserId().value())
+            .userId(workingTime.userIdComposite().localId().value())
             .workday(workingTime.getWorkingDays().stream().map(WorkDay::dayOfWeek).toList())
             .build();
     }
 
-    private WorkingTime dtoToWorkingTime(WorkingTimeDto workingTimeDto) {
+    private WorkWeekUpdate dtoToWorkWeekUpdate(WorkingTimeDto workingTimeDto) {
 
-        final WorkingTime.Builder builder = WorkingTime.builder();
+        final WorkWeekUpdate.Builder builder = WorkWeekUpdate.builder();
 
         final Map<String, Supplier<Double>> values = Map.of(
             "monday", workingTimeDto::getWorkingTimeMonday,
@@ -231,8 +230,6 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             setter.get(day).accept(hours);
         }
 
-        return builder
-            .userId(new UserLocalId(workingTimeDto.getUserId()))
-            .build();
+        return builder.build();
     }
 }

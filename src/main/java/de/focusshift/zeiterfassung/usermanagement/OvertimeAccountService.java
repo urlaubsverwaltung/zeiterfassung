@@ -1,5 +1,9 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import jakarta.annotation.Nullable;
+
+import java.time.Duration;
+
 public interface OvertimeAccountService {
 
     /**
@@ -13,8 +17,10 @@ public interface OvertimeAccountService {
     /**
      * Update the {@linkplain OvertimeAccount}
      *
-     * @param overtimeAccount {@linkplain OvertimeAccount} to update
+     * @param userLocalId account of this user should be updated
+     * @param isOvertimeAllowed whether overtime is allowed for the user or not
+     * @param maxAllowedOvertime optionally maximum allowed overtime duration. may be {@code null}.
      * @return the updated {@linkplain OvertimeAccount}
      */
-    OvertimeAccount updateOvertimeAccount(OvertimeAccount overtimeAccount);
+    OvertimeAccount updateOvertimeAccount(UserLocalId userLocalId, boolean isOvertimeAllowed, @Nullable Duration maxAllowedOvertime);
 }

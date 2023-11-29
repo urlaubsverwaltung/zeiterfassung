@@ -4,7 +4,6 @@ import de.focusshift.zeiterfassung.user.UserId;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public interface UserManagementService {
@@ -19,7 +18,5 @@ public interface UserManagementService {
 
     List<User> findAllUsersByIds(Collection<UserId> ids);
 
-    Map<UserId, UserLocalId> findAllUserLocalIdsGroupedByUserId();
-
-    List<User> findAllUsersByLocalIds(List<UserLocalId> localIds);
+    List<User> findAllUsersByLocalIds(Collection<UserLocalId> localIds);
 }

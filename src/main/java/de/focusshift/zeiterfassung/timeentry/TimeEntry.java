@@ -1,13 +1,13 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
 
 public record TimeEntry(
     TimeEntryId id,
-    UserId userId,
+    UserIdComposite userIdComposite,
     String comment,
     ZonedDateTime start,
     ZonedDateTime end,

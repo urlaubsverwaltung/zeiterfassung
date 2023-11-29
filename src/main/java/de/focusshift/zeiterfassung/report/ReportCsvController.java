@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.threeten.extra.YearWeek;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.DateTimeException;
@@ -58,12 +58,12 @@ class ReportCsvController {
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Invalid week."));
 
         final UserId userId = principalToUserId(principal);
-        final List<UserLocalId> userIds = optionalUserIds.orElse(List.of()).stream().map(UserLocalId::new).toList();
+        final List<UserLocalId> userLocalIds = optionalUserIds.orElse(List.of()).stream().map(UserLocalId::new).toList();
         final String fileName = messageSource.getMessage("report.weekly.csv.filename", new Object[]{year, week}, locale);
 
-        final Consumer<PrintWriter> csvWriteConsumer = userIds.isEmpty()
+        final Consumer<PrintWriter> csvWriteConsumer = userLocalIds.isEmpty()
             ? writer -> reportCsvService.writeWeekReportCsv(Year.of(reportYearWeek.getYear()), reportYearWeek.getWeek(), locale, userId, writer)
-            : writer -> reportCsvService.writeWeekReportCsvForUserLocalIds(Year.of(reportYearWeek.getYear()), reportYearWeek.getWeek(), locale, userIds, writer);
+            : writer -> reportCsvService.writeWeekReportCsvForUserLocalIds(Year.of(reportYearWeek.getYear()), reportYearWeek.getWeek(), locale, userLocalIds, writer);
 
         writeCsv(fileName, response, csvWriteConsumer);
     }

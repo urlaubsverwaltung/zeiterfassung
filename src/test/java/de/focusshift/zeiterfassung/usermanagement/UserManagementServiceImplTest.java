@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -43,16 +43,17 @@ class UserManagementServiceImplTest {
     @Test
     void ensureFindUserById() {
 
-        final UserId id = new UserId("user-id");
-        final UserLocalId localId = new UserLocalId(42L);
+        final UserId userId = new UserId("user-id");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         final EMailAddress email = new EMailAddress("mail@example.org");
 
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, Set.of());
-        final User user = new User(id, localId, "givenName", "familyName", email, Set.of());
+        final TenantUser tenantUser = new TenantUser(userId.value(), userLocalId.value(), "givenName", "familyName", email, Set.of());
+        final User user = new User(userIdComposite, "givenName", "familyName", email, Set.of());
 
-        when(tenantUserService.findById(new UserId("user-id"))).thenReturn(Optional.of(tenantUser));
+        when(tenantUserService.findById(userId)).thenReturn(Optional.of(tenantUser));
 
-        final Optional<User> actual = sut.findUserById(new UserId("user-id"));
+        final Optional<User> actual = sut.findUserById(userId);
 
         assertThat(actual)
             .isPresent()
@@ -71,16 +72,17 @@ class UserManagementServiceImplTest {
     @Test
     void ensureFindUserByLocalId() {
 
-        final UserId id = new UserId("user-id");
-        final UserLocalId localId = new UserLocalId(42L);
+        final UserId userId = new UserId("user-id");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         final EMailAddress email = new EMailAddress("mail@example.org");
 
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, Set.of());
-        final User user = new User(id, localId, "givenName", "familyName", email, Set.of());
+        final TenantUser tenantUser = new TenantUser(userId.value(), userLocalId.value(), "givenName", "familyName", email, Set.of());
+        final User user = new User(userIdComposite, "givenName", "familyName", email, Set.of());
 
-        when(tenantUserService.findByLocalId(new UserLocalId(42L))).thenReturn(Optional.of(tenantUser));
+        when(tenantUserService.findByLocalId(userLocalId)).thenReturn(Optional.of(tenantUser));
 
-        final Optional<User> actual = sut.findUserByLocalId(new UserLocalId(42L));
+        final Optional<User> actual = sut.findUserByLocalId(userLocalId);
 
         assertThat(actual)
             .isPresent()
@@ -99,19 +101,21 @@ class UserManagementServiceImplTest {
     @Test
     void ensureFindAllUsersWithQuery() {
 
-        final UserId id = new UserId("user-id");
-        final UserLocalId localId = new UserLocalId(42L);
+        final UserId userId_1 = new UserId("user-id");
+        final UserLocalId userLocalId_1 = new UserLocalId(42L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
         final EMailAddress email = new EMailAddress("mail@example.org");
 
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, Set.of());
-        final User user = new User(id, localId, "givenName", "familyName", email, Set.of());
+        final TenantUser tenantUser = new TenantUser(userId_1.value(), userLocalId_1.value(), "givenName", "familyName", email, Set.of());
+        final User user = new User(userIdComposite_1, "givenName", "familyName", email, Set.of());
 
-        final UserId id2 = new UserId("user-id-2");
-        final UserLocalId localId2 = new UserLocalId(1337L);
+        final UserId userId_2 = new UserId("user-id-2");
+        final UserLocalId userLocalId_2 = new UserLocalId(1337L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
         final EMailAddress email2 = new EMailAddress("mail-2@example.org");
 
-        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2, Set.of());
-        final User user2 = new User(id2, localId2, "givenName-2", "familyName-2", email2, Set.of());
+        final TenantUser tenantUser2 = new TenantUser(userId_2.value(), userLocalId_2.value(), "givenName-2", "familyName-2", email2, Set.of());
+        final User user2 = new User(userIdComposite_2, "givenName-2", "familyName-2", email2, Set.of());
 
         when(tenantUserService.findAllUsers("batman")).thenReturn(List.of(tenantUser, tenantUser2));
 
@@ -133,23 +137,25 @@ class UserManagementServiceImplTest {
     @Test
     void ensureFindAllByIds() {
 
-        final UserId id = new UserId("user-id");
-        final UserLocalId localId = new UserLocalId(42L);
+        final UserId userId_1 = new UserId("user-id");
+        final UserLocalId userLocalId_1 = new UserLocalId(42L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
         final EMailAddress email = new EMailAddress("mail@example.org");
 
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, Set.of());
-        final User user = new User(id, localId, "givenName", "familyName", email, Set.of());
+        final TenantUser tenantUser = new TenantUser(userId_1.value(), userLocalId_1.value(), "givenName", "familyName", email, Set.of());
+        final User user = new User(userIdComposite_1, "givenName", "familyName", email, Set.of());
 
-        final UserId id2 = new UserId("user-id-2");
-        final UserLocalId localId2 = new UserLocalId(1337L);
+        final UserId userId_2 = new UserId("user-id-2");
+        final UserLocalId userLocalId_2 = new UserLocalId(1337L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
         final EMailAddress email2 = new EMailAddress("mail-2@example.org");
 
-        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2, Set.of());
-        final User user2 = new User(id2, localId2, "givenName-2", "familyName-2", email2, Set.of());
+        final TenantUser tenantUser2 = new TenantUser(userId_2.value(), userLocalId_2.value(), "givenName-2", "familyName-2", email2, Set.of());
+        final User user2 = new User(userIdComposite_2, "givenName-2", "familyName-2", email2, Set.of());
 
-        when(tenantUserService.findAllUsersById(List.of(id, id2))).thenReturn(List.of(tenantUser, tenantUser2));
+        when(tenantUserService.findAllUsersById(List.of(userId_1, userId_2))).thenReturn(List.of(tenantUser, tenantUser2));
 
-        final List<User> actual = sut.findAllUsersByIds(List.of(id, id2));
+        final List<User> actual = sut.findAllUsersByIds(List.of(userId_1, userId_2));
         assertThat(actual).containsExactly(user, user2);
     }
 
@@ -167,46 +173,25 @@ class UserManagementServiceImplTest {
     @Test
     void ensureFindAllByLocalIds() {
 
-        final UserId id = new UserId("user-id");
-        final UserLocalId localId = new UserLocalId(42L);
+        final UserId userId_1 = new UserId("user-id");
+        final UserLocalId userLocalId_1 = new UserLocalId(42L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
         final EMailAddress email = new EMailAddress("mail@example.org");
 
-        final TenantUser tenantUser = new TenantUser(id.value(), localId.value(), "givenName", "familyName", email, Set.of());
-        final User user = new User(id, localId, "givenName", "familyName", email, Set.of());
+        final TenantUser tenantUser = new TenantUser(userId_1.value(), userLocalId_1.value(), "givenName", "familyName", email, Set.of());
+        final User user = new User(userIdComposite_1, "givenName", "familyName", email, Set.of());
 
-        final UserId id2 = new UserId("user-id-2");
-        final UserLocalId localId2 = new UserLocalId(1337L);
+        final UserId userId_2 = new UserId("user-id-2");
+        final UserLocalId userLocalId_2 = new UserLocalId(1337L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
         final EMailAddress email2 = new EMailAddress("mail-2@example.org");
 
-        final TenantUser tenantUser2 = new TenantUser(id2.value(), localId2.value(), "givenName-2", "familyName-2", email2, Set.of());
-        final User user2 = new User(id2, localId2, "givenName-2", "familyName-2", email2, Set.of());
+        final TenantUser tenantUser2 = new TenantUser(userId_2.value(), userLocalId_2.value(), "givenName-2", "familyName-2", email2, Set.of());
+        final User user2 = new User(userIdComposite_2, "givenName-2", "familyName-2", email2, Set.of());
 
-        when(tenantUserService.findAllUsersByLocalId(List.of(localId, localId2))).thenReturn(List.of(tenantUser, tenantUser2));
+        when(tenantUserService.findAllUsersByLocalId(List.of(userLocalId_1, userLocalId_2))).thenReturn(List.of(tenantUser, tenantUser2));
 
-        final List<User> actual = sut.findAllUsersByLocalIds((List.of(localId, localId2)));
+        final List<User> actual = sut.findAllUsersByLocalIds((List.of(userLocalId_1, userLocalId_2)));
         assertThat(actual).containsExactly(user, user2);
-    }
-
-    @Test
-    void ensureFindAllUserLocalIdsGroupedByUserId() {
-
-        final UserId id_1 = new UserId("user-id");
-        final UserLocalId localId_1 = new UserLocalId(42L);
-        final EMailAddress email_1 = new EMailAddress("mail@example.org");
-
-        final UserId id_2 = new UserId("user-id-2");
-        final UserLocalId localId_2 = new UserLocalId(1337L);
-        final EMailAddress email_2 = new EMailAddress("mail-2@example.org");
-
-        final TenantUser tenantUser_1 = new TenantUser(id_1.value(), localId_1.value(), "givenName", "familyName", email_1, Set.of());
-        final TenantUser tenantUser_2 = new TenantUser(id_2.value(), localId_2.value(), "givenName-2", "familyName-2", email_2, Set.of());
-
-        when(tenantUserService.findAllUsers()).thenReturn(List.of(tenantUser_1, tenantUser_2));
-
-        final Map<UserId, UserLocalId> actual = sut.findAllUserLocalIdsGroupedByUserId();
-        assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
-            id_1, localId_1,
-            id_2, localId_2
-        ));
     }
 }

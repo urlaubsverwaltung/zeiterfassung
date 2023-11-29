@@ -78,7 +78,7 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
     }
 
     static UserDto userToDto(User user) {
-        return new UserDto(user.localId().value(), user.givenName(), user.familyName(), user.givenName() + " " + user.familyName(), user.email().value());
+        return new UserDto(user.userLocalId().value(), user.givenName(), user.familyName(), user.givenName() + " " + user.familyName(), user.email().value());
     }
 
     static boolean hasAuthority(SecurityRole securityRole, OidcUser principal) {

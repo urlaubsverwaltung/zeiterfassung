@@ -3,14 +3,12 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-
-import static java.util.stream.Collectors.toMap;
 
 @Service
 class UserManagementServiceImpl implements UserManagementService {
@@ -47,14 +45,7 @@ class UserManagementServiceImpl implements UserManagementService {
     }
 
     @Override
-    public Map<UserId, UserLocalId> findAllUserLocalIdsGroupedByUserId() {
-        return mapToUser(tenantUserService.findAllUsers())
-            .stream()
-            .collect(toMap(User::id, User::localId));
-    }
-
-    @Override
-    public List<User> findAllUsersByLocalIds(List<UserLocalId> localIds) {
+    public List<User> findAllUsersByLocalIds(Collection<UserLocalId> localIds) {
         return mapToUser(tenantUserService.findAllUsersByLocalId(localIds));
     }
 
@@ -69,6 +60,11 @@ class UserManagementServiceImpl implements UserManagementService {
     }
 
     private static User tenantUserToUser(TenantUser tenantUser) {
-        return new User(new UserId(tenantUser.id()), new UserLocalId(tenantUser.localId()), tenantUser.givenName(), tenantUser.familyName(), tenantUser.eMail(), tenantUser.authorities());
+
+        final UserId userId = new UserId(tenantUser.id());
+        final UserLocalId userLocalId = new UserLocalId(tenantUser.localId());
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        return new User(userIdComposite, tenantUser.givenName(), tenantUser.familyName(), tenantUser.eMail(), tenantUser.authorities());
     }
 }

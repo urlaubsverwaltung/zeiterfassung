@@ -41,7 +41,7 @@ class ReportControllerHelper {
         if (permittedUsers.size() > 1) {
             final List<SelectableUserDto> selectableUserDtos = permittedUsers
                 .stream()
-                .map(user -> userToSelectableUserDto(user, selectedUserLocalIds.contains(user.localId())))
+                .map(user -> userToSelectableUserDto(user, selectedUserLocalIds.contains(user.userLocalId())))
                 .toList();
 
             model.addAttribute("users", selectableUserDtos);
@@ -52,7 +52,7 @@ class ReportControllerHelper {
     }
 
     private static SelectableUserDto userToSelectableUserDto(User user, boolean selected) {
-        return new SelectableUserDto(user.localId().value(), user.givenName() + " " + user.familyName(), selected);
+        return new SelectableUserDto(user.userLocalId().value(), user.givenName() + " " + user.familyName(), selected);
     }
 
     GraphWeekDto toGraphWeekDto(ReportWeek reportWeek, Month monthPivot) {

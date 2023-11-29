@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,20 +84,23 @@ class ReportCsvServiceTest {
 
         mockDateFormatter("dd.MM.yyyy");
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
 
         final ZonedDateTime from = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime to = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 30), ZONE_ID_BERLIN);
         final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, false);
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batman.localId(), PlannedWorkingHours.EIGHT), Map.of(batman.localId(), List.of(reportDayEntry)), Map.of());
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
 
-        when(reportService.getReportWeek(Year.of(2021), 1, new UserId("batman")))
+        when(reportService.getReportWeek(Year.of(2021), 1, batmanId))
             .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDay)));
 
         final StringWriter stringWriter = new StringWriter();
         final PrintWriter printWriter = new PrintWriter(stringWriter);
 
-        sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, new UserId("batman"), printWriter);
+        sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, batmanId, printWriter);
 
         assertThat(stringWriter).hasToString("""
             report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
@@ -109,7 +113,10 @@ class ReportCsvServiceTest {
 
         mockDateFormatter("dd.MM.yyyy");
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
 
         // day one
         final ZonedDateTime d1_1_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
@@ -118,22 +125,22 @@ class ReportCsvServiceTest {
         final ZonedDateTime d1_2_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 14, 0), ZONE_ID_BERLIN);
         final ZonedDateTime d1_2_To = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 15, 0), ZONE_ID_BERLIN);
         final ReportDayEntry d1_2_ReportDayEntry = new ReportDayEntry(batman, "hard work", d1_2_From, d1_2_To, false);
-        final ReportDay reportDayOne = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batman.localId(), PlannedWorkingHours.EIGHT), Map.of(batman.localId(), List.of(d1_1_ReportDayEntry, d1_2_ReportDayEntry)), Map.of());
+        final ReportDay reportDayOne = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT), Map.of(batmanIdComposite, List.of(d1_1_ReportDayEntry, d1_2_ReportDayEntry)), Map.of());
 
         // day two
         final ZonedDateTime d2_1_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 9, 0), ZONE_ID_BERLIN);
         final ZonedDateTime d2_1_To = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 17, 0), ZONE_ID_BERLIN);
         final ReportDayEntry d2_1_ReportDayEntry = new ReportDayEntry(batman, "hard work", d2_1_From, d2_1_To, false);
-        final ReportDay reportDayTwo = new ReportDay(LocalDate.of(2021, 1, 5), Map.of(batman.localId(), PlannedWorkingHours.EIGHT), Map.of(batman.localId(), List.of(d2_1_ReportDayEntry)), Map.of());
+        final ReportDay reportDayTwo = new ReportDay(LocalDate.of(2021, 1, 5), Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT), Map.of(batmanIdComposite, List.of(d2_1_ReportDayEntry)), Map.of());
 
 
-        when(reportService.getReportWeek(Year.of(2021), 1, new UserId("batman")))
+        when(reportService.getReportWeek(Year.of(2021), 1, batmanId))
             .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDayOne, reportDayTwo)));
 
         final StringWriter stringWriter = new StringWriter();
         final PrintWriter printWriter = new PrintWriter(stringWriter);
 
-        sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, new UserId("batman"), printWriter);
+        sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, batmanId, printWriter);
 
         assertThat(stringWriter).hasToString("""
             report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
@@ -168,12 +175,15 @@ class ReportCsvServiceTest {
 
         mockDateFormatter("dd.MM.yyyy");
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
 
         final ZonedDateTime from = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime to = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 30), ZONE_ID_BERLIN);
         final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, false);
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batman.localId(), PlannedWorkingHours.EIGHT), Map.of(batman.localId(), List.of(reportDayEntry)), Map.of());
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
 
         final ReportWeek firstWeek = new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDay));
         final ReportWeek secondWeek = new ReportWeek(LocalDate.of(2021, 1, 4), List.of());
@@ -181,13 +191,13 @@ class ReportCsvServiceTest {
         final ReportWeek fourthWeek = new ReportWeek(LocalDate.of(2021, 1, 18), List.of());
         final ReportWeek fifthWeek = new ReportWeek(LocalDate.of(2021, 1, 25), List.of());
 
-        when(reportService.getReportMonth(YearMonth.of(2021, 1), new UserId("batman")))
+        when(reportService.getReportMonth(YearMonth.of(2021, 1), batmanId))
             .thenReturn(new ReportMonth(YearMonth.of(2021, 1), List.of(firstWeek, secondWeek, thirdWeek, fourthWeek, fifthWeek)));
 
         final StringWriter stringWriter = new StringWriter();
         final PrintWriter printWriter = new PrintWriter(stringWriter);
 
-        sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, new UserId("batman"), printWriter);
+        sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, batmanId, printWriter);
 
         assertThat(stringWriter).hasToString("""
             report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
@@ -200,7 +210,10 @@ class ReportCsvServiceTest {
 
         mockDateFormatter("dd.MM.yyyy");
 
-        final User batman = new User(new UserId("batman"), new UserLocalId(1L), "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
 
         // week one, day one
         final ZonedDateTime d1_1_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
@@ -209,13 +222,13 @@ class ReportCsvServiceTest {
         final ZonedDateTime d1_2_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 14, 0), ZONE_ID_BERLIN);
         final ZonedDateTime d1_2_To = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 15, 0), ZONE_ID_BERLIN);
         final ReportDayEntry d1_2_ReportDayEntry = new ReportDayEntry(batman, "hard work", d1_2_From, d1_2_To, false);
-        final ReportDay w1_reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batman.localId(), PlannedWorkingHours.EIGHT), Map.of(batman.localId(), List.of(d1_1_ReportDayEntry, d1_2_ReportDayEntry)), Map.of());
+        final ReportDay w1_reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT), Map.of(batmanIdComposite, List.of(d1_1_ReportDayEntry, d1_2_ReportDayEntry)), Map.of());
 
         // week two, day one
         final ZonedDateTime d2_1_From = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 9, 0), ZONE_ID_BERLIN);
         final ZonedDateTime d2_1_To = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 17, 0), ZONE_ID_BERLIN);
         final ReportDayEntry d2_1_ReportDayEntry = new ReportDayEntry(batman, "hard work", d2_1_From, d2_1_To, false);
-        final ReportDay w2_reportDay = new ReportDay(LocalDate.of(2021, 1, 5), Map.of(batman.localId(), PlannedWorkingHours.EIGHT), Map.of(batman.localId(), List.of(d2_1_ReportDayEntry)), Map.of());
+        final ReportDay w2_reportDay = new ReportDay(LocalDate.of(2021, 1, 5), Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT), Map.of(batmanIdComposite, List.of(d2_1_ReportDayEntry)), Map.of());
 
         final ReportWeek firstWeek = new ReportWeek(LocalDate.of(2020, 12, 28), List.of(w1_reportDay));
         final ReportWeek secondWeek = new ReportWeek(LocalDate.of(2021, 1, 4), List.of(w2_reportDay));
@@ -223,13 +236,13 @@ class ReportCsvServiceTest {
         final ReportWeek fourthWeek = new ReportWeek(LocalDate.of(2021, 1, 18), List.of());
         final ReportWeek fifthWeek = new ReportWeek(LocalDate.of(2021, 1, 25), List.of());
 
-        when(reportService.getReportMonth(YearMonth.of(2021, 1), new UserId("batman")))
+        when(reportService.getReportMonth(YearMonth.of(2021, 1), batmanId))
             .thenReturn(new ReportMonth(YearMonth.of(2021, 1), List.of(firstWeek, secondWeek, thirdWeek, fourthWeek, fifthWeek)));
 
         final StringWriter stringWriter = new StringWriter();
         final PrintWriter printWriter = new PrintWriter(stringWriter);
 
-        sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, new UserId("batman"), printWriter);
+        sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, batmanId, printWriter);
 
         assertThat(stringWriter).hasToString("""
             report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break

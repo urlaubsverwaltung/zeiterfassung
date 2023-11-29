@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -72,13 +73,16 @@ class ReportPermissionServiceTest {
         when(currentUserProvider.getCurrentAuthentication())
             .thenReturn(new TestingAuthenticationToken("", "", List.of()));
 
+        final UserId userId = new UserId("");
+        final UserLocalId userLocalId = new UserLocalId(2L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         when(currentUserProvider.getCurrentUser())
-            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()));
+            .thenReturn(new User(userIdComposite, "", "", new EMailAddress(""), Set.of()));
 
         final List<UserLocalId> actual = sut.filterUserLocalIdsByCurrentUserHasPermissionFor(
-            List.of(new UserLocalId(1L), new UserLocalId(2L), new UserLocalId(3L)));
+            List.of(new UserLocalId(1L), userLocalId, new UserLocalId(3L)));
 
-        assertThat(actual).containsOnly(new UserLocalId(2L));
+        assertThat(actual).containsOnly(userLocalId);
     }
 
     @Test
@@ -87,8 +91,11 @@ class ReportPermissionServiceTest {
         when(currentUserProvider.getCurrentAuthentication())
             .thenReturn(new TestingAuthenticationToken("", "", List.of()));
 
+        final UserId userId = new UserId("");
+        final UserLocalId userLocalId = new UserLocalId(2L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         when(currentUserProvider.getCurrentUser())
-            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()));
+            .thenReturn(new User(userIdComposite, "", "", new EMailAddress(""), Set.of()));
 
         final List<UserLocalId> actual = sut.filterUserLocalIdsByCurrentUserHasPermissionFor(
             List.of(new UserLocalId(1L), new UserLocalId(3L)));
@@ -102,15 +109,27 @@ class ReportPermissionServiceTest {
         when(currentUserProvider.getCurrentAuthentication())
             .thenReturn(new TestingAuthenticationToken("", "", List.of(ZEITERFASSUNG_VIEW_REPORT_ALL.authority())));
 
+        final UserId userId_1 = new UserId("");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+
+        final UserId userId_2 = new UserId("");
+        final UserLocalId userLocalId_2 = new UserLocalId(2L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+
+        final UserId userId_3 = new UserId("");
+        final UserLocalId userLocalId_3 = new UserLocalId(3L);
+        final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
+
         when(userManagementService.findAllUsers())
             .thenReturn(List.of(
-                new User(new UserId(""), new UserLocalId(1L), "", "", new EMailAddress(""), Set.of()),
-                new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()),
-                new User(new UserId(""), new UserLocalId(3L), "", "", new EMailAddress(""), Set.of())
+                new User(userIdComposite_1, "", "", new EMailAddress(""), Set.of()),
+                new User(userIdComposite_2, "", "", new EMailAddress(""), Set.of()),
+                new User(userIdComposite_3, "", "", new EMailAddress(""), Set.of())
             ));
 
         assertThat(sut.findAllPermittedUserLocalIdsForCurrentUser())
-            .containsExactly(new UserLocalId(1L), new UserLocalId(2L), new UserLocalId(3L));
+            .containsExactly(userLocalId_1, userLocalId_2, userLocalId_3);
     }
 
     @Test
@@ -119,10 +138,13 @@ class ReportPermissionServiceTest {
         when(currentUserProvider.getCurrentAuthentication())
             .thenReturn(new TestingAuthenticationToken("", "", List.of()));
 
+        final UserId userId = new UserId("");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         when(currentUserProvider.getCurrentUser())
-            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()));
+            .thenReturn(new User(userIdComposite, "", "", new EMailAddress(""), Set.of()));
 
-        assertThat(sut.findAllPermittedUserLocalIdsForCurrentUser()).containsOnly(new UserLocalId(2L));
+        assertThat(sut.findAllPermittedUserLocalIdsForCurrentUser()).containsOnly(userLocalId);
     }
 
     @Test
@@ -131,10 +153,22 @@ class ReportPermissionServiceTest {
         when(currentUserProvider.getCurrentAuthentication())
             .thenReturn(new TestingAuthenticationToken("", "", List.of(ZEITERFASSUNG_VIEW_REPORT_ALL.authority())));
 
+        final UserId userId_1 = new UserId("");
+        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+
+        final UserId userId_2 = new UserId("");
+        final UserLocalId userLocalId_2 = new UserLocalId(2L);
+        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+
+        final UserId userId_3 = new UserId("");
+        final UserLocalId userLocalId_3 = new UserLocalId(3L);
+        final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
+
         final List<User> userList = List.of(
-            new User(new UserId(""), new UserLocalId(1L), "", "", new EMailAddress(""), Set.of()),
-            new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()),
-            new User(new UserId(""), new UserLocalId(3L), "", "", new EMailAddress(""), Set.of())
+            new User(userIdComposite_1, "", "", new EMailAddress(""), Set.of()),
+            new User(userIdComposite_2, "", "", new EMailAddress(""), Set.of()),
+            new User(userIdComposite_3, "", "", new EMailAddress(""), Set.of())
         );
 
         when(userManagementService.findAllUsers()).thenReturn(userList);
@@ -148,10 +182,12 @@ class ReportPermissionServiceTest {
         when(currentUserProvider.getCurrentAuthentication())
             .thenReturn(new TestingAuthenticationToken("", "", List.of()));
 
-        when(currentUserProvider.getCurrentUser())
-            .thenReturn(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()));
+        final UserId userId = new UserId("");
+        final UserLocalId userLocalId = new UserLocalId(2L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+        when(currentUserProvider.getCurrentUser()).thenReturn(user);
 
-        assertThat(sut.findAllPermittedUsersForCurrentUser())
-            .containsOnly(new User(new UserId(""), new UserLocalId(2L), "", "", new EMailAddress(""), Set.of()));
+        assertThat(sut.findAllPermittedUsersForCurrentUser()).containsOnly(user);
     }
 }
