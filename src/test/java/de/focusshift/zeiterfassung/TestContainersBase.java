@@ -8,16 +8,11 @@ import static org.testcontainers.containers.PostgreSQLContainer.IMAGE;
 
 public abstract class TestContainersBase {
 
-    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(IMAGE + ":9.6")
-        .withDatabaseName("zeiterfassung")
-        .withInitScript("init-user-db.sql");
+    static final TestPostgreSQLContainer postgre = new TestPostgreSQLContainer();
 
     @DynamicPropertySource
-    static void postgresDBProperties(DynamicPropertyRegistry registry) {
-        postgres.start();
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.liquibase.parameters.database", postgres::getDatabaseName);
-        registry.add("admin.datasource.username", postgres::getUsername);
-        registry.add("admin.datasource.password", postgres::getPassword);
+    static void registerProperties(DynamicPropertyRegistry registry) {
+        postgre.start();
+        postgre.configureSpringDataSource(registry);
     }
 }
