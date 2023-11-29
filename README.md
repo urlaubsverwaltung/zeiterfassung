@@ -24,7 +24,7 @@ Wenn du mehr Informationen und Bilder über dieses Projekt sehen möchtest dann 
 
 ### Prerequisites
 
-* [JDK 17](https://adoptium.net)
+* [JDK 21](https://adoptium.net)
 * [Docker 20.10+](https://www.docker.com/)
 * [PostgreSQL 9.6+](#database)
 * [E-Mail-Server](#e-mail-server)
@@ -206,7 +206,7 @@ An example for an environment of Zeiterfassung with [docker-compose](https://doc
 
 ### Prerequisites
 
-* [JDK 17](https://adoptium.net)
+* [JDK 21](https://adoptium.net)
 * [Docker 20.10.+](https://docs.docker.com/get-docker/)
 * [Docker Compose](https://docs.docker.com/compose/install/)
 

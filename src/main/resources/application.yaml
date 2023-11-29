@@ -47,6 +47,9 @@ spring:
           content:
             enabled: true
             paths: /**
+  threads:
+    virtual:
+      enabled: true
 
 management:
   endpoint:
