@@ -1,8 +1,9 @@
 <script lang="ts">
-    import Sankey from "../graph/Sankey.svelte"
-    import type {SankeyExtraProperties, SankeyGraph, SankeyLink, SankeyNode} from "d3-sankey";
+  import Sankey from "../graph/Sankey.svelte"
+  import type {SankeyExtraProperties, SankeyGraph, SankeyLink, SankeyNode} from "d3-sankey";
+  import {onMount} from "svelte";
 
-    type Node = SankeyExtraProperties & {
+  type Node = SankeyExtraProperties & {
     name: string;
     asd?: number;
   };
@@ -26,7 +27,7 @@
       { source: "Montag 20.11.2023", target: "Soll", value: 8 },
       { source: "Montag 20.11.2023", target: "Minusstunden", value: 0 },
       { source: "Montag 20.11.2023", target: "Überstunden", value: 0 },
-      { source: "Dienstag 21.11.2023", target: "Soll", value: 8 },
+      { source: "Dienstag 21.11.2023", target: "Soll", value: 0 },
       { source: "Dienstag 21.11.2023", target: "Minusstunden", value: 0 },
       { source: "Dienstag 21.11.2023", target: "Überstunden", value: 0 },
       { source: "Mittwoch 22.11.2023", target: "Soll", value: 7 },
@@ -56,6 +57,8 @@
                 ? "#7eb796"
                 : "#49de80");
     }
+
+    onMount(() => console.log("overtime mount"))
 </script>
 
 <Sankey {data} {nodeColor} {linkColor} {nodeId} />

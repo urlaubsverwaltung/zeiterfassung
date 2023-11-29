@@ -52,6 +52,7 @@ export default {
     postcss(),
     resolve({
       preferBuiltins: false,
+      browser: true,
     }),
     commonjs({
     }),
