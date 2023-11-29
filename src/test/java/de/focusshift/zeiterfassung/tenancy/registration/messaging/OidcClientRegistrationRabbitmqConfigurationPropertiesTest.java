@@ -50,17 +50,6 @@ class OidcClientRegistrationRabbitmqConfigurationPropertiesTest {
     @ParameterizedTest
     @ValueSource(strings = {""})
     @NullSource
-    void ensureRoutingKeyDeletedTwoCannotBeEmptyOrNull(String routingKeyDeletedTwo) {
-        final OidcClientRegistrationRabbitmqConfigurationProperties sut = new OidcClientRegistrationRabbitmqConfigurationProperties();
-        sut.setRoutingKeyDeletedTwo(routingKeyDeletedTwo);
-        final Set<ConstraintViolation<OidcClientRegistrationRabbitmqConfigurationProperties>> violations = validator.validate(sut);
-
-        assertThat(violations.size()).isOne();
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {""})
-    @NullSource
     void ensureRoutingKeyDeletedTemplateCannotBeEmptyOrNull(String routingKeyDeletedTemplate) {
         final OidcClientRegistrationRabbitmqConfigurationProperties sut = new OidcClientRegistrationRabbitmqConfigurationProperties();
         sut.setRoutingKeyDeletedTemplate(routingKeyDeletedTemplate);

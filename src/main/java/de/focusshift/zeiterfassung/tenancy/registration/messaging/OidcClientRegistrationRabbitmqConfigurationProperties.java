@@ -58,11 +58,6 @@ class OidcClientRegistrationRabbitmqConfigurationProperties {
         return routingKeyDeletedTemplate;
     }
 
-    @Deprecated
-    public void setRoutingKeyDeletedTwo(String routingKeyDeletedTemplate) {
-        this.routingKeyDeletedTemplate = routingKeyDeletedTemplate;
-    }
-
     public void setRoutingKeyDeletedTemplate(String routingKeyDeletedTemplate) {
         this.routingKeyDeletedTemplate = routingKeyDeletedTemplate;
     }
