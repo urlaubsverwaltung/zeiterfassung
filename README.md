@@ -26,7 +26,7 @@ Wenn du mehr Informationen und Bilder über dieses Projekt sehen möchtest dann 
 
 * [JDK 21](https://adoptium.net)
 * [Docker 20.10+](https://www.docker.com/)
-* [PostgreSQL 9.6+](#database)
+* [PostgreSQL 16.1+](#database)
 * [E-Mail-Server](#e-mail-server)
 * [OpenID Connect identity provider](#openid-connect-identity-provider)
 
