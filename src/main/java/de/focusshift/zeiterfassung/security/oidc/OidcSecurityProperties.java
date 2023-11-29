@@ -1,10 +1,8 @@
 package de.focusshift.zeiterfassung.security.oidc;
 
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
 @Validated
 @ConfigurationProperties("zeiterfassung.security.oidc")

@@ -1,8 +1,6 @@
 package de.focusshift.zeiterfassung.security.oidc;
 
 import de.focusshift.zeiterfassung.security.SecurityRole;
-import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
-import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
