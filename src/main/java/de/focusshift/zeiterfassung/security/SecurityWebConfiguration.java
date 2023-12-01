@@ -16,7 +16,7 @@ import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 @Configuration
 @EnableMethodSecurity
-class SecurityWebConfiguration {
+public class SecurityWebConfiguration {
 
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler;

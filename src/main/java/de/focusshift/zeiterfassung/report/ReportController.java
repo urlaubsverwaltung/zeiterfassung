@@ -1,13 +1,11 @@
 package de.focusshift.zeiterfassung.report;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@PreAuthorize("hasAuthority('ZEITERFASSUNG_USER')")
 class ReportController {
 
     @GetMapping("/report")
