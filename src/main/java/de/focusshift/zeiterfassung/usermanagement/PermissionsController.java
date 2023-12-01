@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -40,11 +41,18 @@ class PermissionsController {
     @GetMapping
     String get(@PathVariable("userId") Long userId, Model model,
                @RequestParam(value = "query", required = false, defaultValue = "") String query,
+               @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
                @CurrentSecurityContext SecurityContext securityContext) {
 
         prepareGetRequestModel(model, query, userId, this::userToPermissionsDto, securityContext);
 
-        return "usermanagement/users";
+        if ("person-frame".equals(turboFrame)) {
+            return "usermanagement/users::#person-frame";
+        } else if ("person-list-frame".equals(turboFrame)) {
+            return "usermanagement/users::#person-list-frame";
+        } else {
+            return "usermanagement/users";
+        }
     }
 
     @PostMapping

@@ -165,6 +165,48 @@ class PermissionsControllerTest {
     }
 
     @Test
+    void ensureSimpleGetWithJavaScript() throws Exception {
+
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId supermanId = new UserId("superman");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
+
+        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
+
+        final PermissionsDto expectedPermissionsDto = new PermissionsDto();
+        expectedPermissionsDto.setViewReportAll(false);
+        expectedPermissionsDto.setWorkingTimeEditAll(false);
+        expectedPermissionsDto.setOvertimeEditAll(false);
+        expectedPermissionsDto.setPermissionsEditAll(false);
+
+        perform(
+            get("/users/1337/permissions")
+                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .header("Turbo-Frame", "person-frame")
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("usermanagement/users::#person-frame"))
+            .andExpect(model().attribute("section", "permissions"))
+            .andExpect(model().attribute("query", ""))
+            .andExpect(model().attribute("slug", "permissions"))
+            .andExpect(model().attribute("users", contains(
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+            )))
+            .andExpect(model().attribute("selectedUser", expectedSelectedUser))
+            .andExpect(model().attribute("personSearchFormAction", "/users/1337/permissions"))
+            .andExpect(model().attribute("permissions", expectedPermissionsDto));
+    }
+
+    @Test
     void ensureSearch() throws Exception {
 
         final UserId batmanId = new UserId("batman");
@@ -181,6 +223,27 @@ class PermissionsControllerTest {
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
+            .andExpect(model().attribute("query", "awesome-query"));
+    }
+
+    @Test
+    void ensureSearchWithJavascript() throws Exception {
+
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("awesome-query")).thenReturn(List.of(batman));
+
+        perform(
+            get("/users/1337/permissions")
+                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .param("query", "awesome-query")
+                .header("Turbo-Frame", "person-list-frame")
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("usermanagement/users::#person-list-frame"))
             .andExpect(model().attribute("query", "awesome-query"));
     }
 
