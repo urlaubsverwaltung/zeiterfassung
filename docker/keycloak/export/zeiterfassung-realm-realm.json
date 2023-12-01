@@ -48,7 +48,7 @@
   "roles" : {
     "realm" : [ {
       "id" : "de218f25-24cc-44d6-b3a7-922c0b0d5bf5",
-      "name" : "ZEITERFASSUNG_USER",
+      "name" : "zeiterfassung_user",
       "description" : "",
       "composite" : false,
       "clientRole" : false,
@@ -86,7 +86,7 @@
       "attributes" : { }
     }, {
       "id" : "50fb145a-25f6-4384-a023-1367ac7cfd39",
-      "name" : "ZEITERFASSUNG_VIEW_REPORT_ALL",
+      "name" : "zeiterfassung_view_report_all",
       "description" : "",
       "composite" : false,
       "clientRole" : false,
@@ -94,7 +94,7 @@
       "attributes" : { }
     }, {
       "id" : "fefac8c1-9618-4375-9c8e-55db784f222a",
-      "name" : "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL",
+      "name" : "zeiterfassung_working_time_edit_all",
       "description" : "",
       "composite" : false,
       "clientRole" : false,
@@ -102,7 +102,7 @@
       "attributes" : { }
     }, {
       "id" : "d0fcc3dd-7e1e-46fa-89ce-f7727e1a46f3",
-      "name" : "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL",
+      "name" : "zeiterfassung_overtime_account_edit_all",
       "description" : "",
       "composite" : false,
       "clientRole" : false,
@@ -373,7 +373,7 @@
     "name" : "ZEITERFASSUNG_ACCESS",
     "path" : "/ZEITERFASSUNG_ACCESS",
     "attributes" : { },
-    "realmRoles" : [ "ZEITERFASSUNG_USER" ],
+    "realmRoles" : [ "zeiterfassung_user" ],
     "clientRoles" : { },
     "subGroups" : [ ]
   }, {
@@ -382,9 +382,9 @@
     "path" : "/ZEITERFASSUNG_PRIVILEGED",
     "attributes" : { },
     "realmRoles" : [
-      "ZEITERFASSUNG_VIEW_REPORT_ALL",
-      "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL",
-      "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL"
+      "zeiterfassung_view_report_all",
+      "zeiterfassung_working_time_edit_all",
+      "zeiterfassung_overtime_account_edit_all"
     ],
     "clientRoles" : { },
     "subGroups" : [ ]
