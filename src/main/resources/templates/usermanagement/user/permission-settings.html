@@ -1,0 +1,136 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+  <head>
+    <title>Zeiterfassung - Personen</title>
+  </head>
+  <body>
+    <th:block th:fragment="section(user)">
+      <form
+        action="#"
+        th:action="@{/users/{userId}/permissions (userId=${user.id})}"
+        method="post"
+        th:object="${permissions}"
+      >
+        <div id="overtime-form-hidden-inputs">
+          <input type="hidden" name="query" th:value="${query}" />
+        </div>
+        <div class="flex flex-col gap-8">
+          <fieldset class="border-t border-gray-100">
+            <legend
+              class="text-sm font-medium text-gray-400"
+              th:text="#{usermanagement.permissions.reports.title}"
+            >
+              Berichte
+            </legend>
+            <div class="mt-2 sm:mt-4">
+              <div class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="permissions-view-report-all-checkbox"
+                  th:field="*{viewReportAll}"
+                />
+                <label
+                  for="permissions-view-report-all-checkbox"
+                  th:text="#{usermanagement.permissions.view-report-all.allowed.label}"
+                >
+                  darf die Berichte aller Personen sehen
+                </label>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="border-t border-gray-100">
+            <legend
+              class="text-sm font-medium text-gray-400"
+              th:text="#{usermanagement.permissions.working-time.title}"
+            >
+              Arbeitszeiten
+            </legend>
+            <div class="mt-2 sm:mt-4">
+              <div class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="permissions-working-time-edit-all-checkbox"
+                  th:field="*{workingTimeEditAll}"
+                />
+                <label
+                  for="permissions-working-time-edit-all-checkbox"
+                  th:text="#{usermanagement.permissions.working-time-edit-all.allowed.label}"
+                >
+                  darf die Arbeitszeiten aller Personen bearbeiten
+                </label>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="border-t border-gray-100">
+            <legend
+              class="text-sm font-medium text-gray-400"
+              th:text="#{usermanagement.permissions.overtime.title}"
+            >
+              Überstundenregelung
+            </legend>
+            <div class="mt-2 sm:mt-4">
+              <div class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="permissions-overtime-edit-all-checkbox"
+                  th:field="*{overtimeEditAll}"
+                />
+                <label
+                  for="permissions-overtime-edit-all-checkbox"
+                  th:text="#{usermanagement.permissions.overtime-edit-all.allowed.label}"
+                >
+                  darf die Überstundenregelung aller Personen bearbeiten
+                </label>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="border-t border-gray-100">
+            <legend
+              class="text-sm font-medium text-gray-400"
+              th:text="#{usermanagement.permissions.permissions.title}"
+            >
+              Berechtigungen
+            </legend>
+            <div class="mt-2 sm:mt-4">
+              <div class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="permissions-permissions-edit-all-checkbox"
+                  th:field="*{permissionsEditAll}"
+                />
+                <label
+                  for="permissions-permissions-edit-all-checkbox"
+                  th:text="#{usermanagement.permissions.permissions-edit-all.allowed.label}"
+                >
+                  darf die Berechtigungen aller Personen bearbeiten
+                </label>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+        <div class="flex flex-col gap-8">
+          <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <button
+              type="submit"
+              class="bg-blue-700 border border-blue-700 text-white font-medium rounded px-4 py-2 flex items-center gap-2 justify-center sm:justify-start"
+            >
+              <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
+              <th:block th:text="#{usermanagement.save}">
+                Aktualisieren
+              </th:block>
+            </button>
+            <a
+              id="overtime-account-settings-reset-button"
+              href="#"
+              th:href="@{/users/{id} (id=${user.id}, query=${query})}"
+              class="whitespace-nowrap border border-blue-700 text-blue-700 font-medium rounded px-4 py-2 text-center sm:text-left"
+              th:text="#{usermanagement.revert}"
+            >
+              Änderungen verwerfen
+            </a>
+          </div>
+        </div>
+      </form>
+    </th:block>
+  </body>
+</html>

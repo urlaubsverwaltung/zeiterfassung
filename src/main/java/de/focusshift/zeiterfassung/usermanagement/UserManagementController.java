@@ -20,12 +20,13 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Controller
 @RequestMapping("/users")
-@PreAuthorize("hasAnyAuthority('ZEITERFASSUNG_WORKING_TIME_EDIT_ALL', 'ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL')")
+@PreAuthorize("hasAnyAuthority('ZEITERFASSUNG_WORKING_TIME_EDIT_ALL', 'ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL', 'ZEITERFASSUNG_PERMISSIONS_EDIT_ALL')")
 class UserManagementController implements HasTimeClock, HasLaunchpad {
 
     private final UserManagementService userManagementService;
@@ -66,6 +67,8 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
             slug = "working-time";
         } else if (hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, securityContext)) {
             slug = "overtime-account";
+        } else if (hasAuthority(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, securityContext)) {
+            slug = "permissions";
         } else {
             slug = null;
         }

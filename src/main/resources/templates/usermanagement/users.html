@@ -259,6 +259,19 @@
                             Überstundenregelung
                           </a>
                         </li>
+                        <li th:if="${allowedToEditPermissions}">
+                          <a
+                            href="#"
+                            th:href="@{/users/{userId}/permissions (userId=${selectedUser.id})}"
+                            class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-opacity-100"
+                            th:classappend="${section == 'permissions' ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
+                            data-turbo-frame="person-frame"
+                            data-turbo-action="advance"
+                            th:text="#{usermanagement.navigation.permissions}"
+                          >
+                            Berechtigungen
+                          </a>
+                        </li>
                         <li role="separator" class="flex-1 border-b-2"></li>
                       </ul>
                     </div>
@@ -276,6 +289,11 @@
                       <th:block th:if="${section == 'overtime'}">
                         <div
                           th:replace="~{usermanagement/user/overtime-account-settings::section(${selectedUser})}"
+                        ></div>
+                      </th:block>
+                      <th:block th:if="${section == 'permissions'}">
+                        <div
+                          th:replace="~{usermanagement/user/permission-settings::section(${selectedUser})}"
                         ></div>
                       </th:block>
                     </div>

@@ -243,10 +243,11 @@ class WorkingTimeControllerTest {
 
     @ParameterizedTest
     @CsvSource({
-        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
-        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
+        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false,false",
+        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true,false",
+        "ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,false,false,true"
     })
-    void ensureSimpleGetAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
+    void ensureSimpleGetAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount, boolean editPermissions) throws Exception {
 
         final UserId batmanId = new UserId("uuid");
         final UserLocalId batmanLocalId = new UserLocalId(1337L);
@@ -272,7 +273,8 @@ class WorkingTimeControllerTest {
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority(authority)))
         )
             .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTime))
-            .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount));
+            .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount))
+            .andExpect(model().attribute("allowedToEditPermissions", editPermissions));
     }
 
     @Test
@@ -776,10 +778,11 @@ class WorkingTimeControllerTest {
 
     @ParameterizedTest
     @CsvSource({
-        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false",
-        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true"
+        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false,false",
+        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true,false",
+        "ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,false,false,true"
     })
-    void ensurePostWithValidationErrorAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount) throws Exception {
+    void ensurePostWithValidationErrorAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount, boolean editPermissions) throws Exception {
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(42L)
@@ -814,7 +817,8 @@ class WorkingTimeControllerTest {
                 .param("workingTime", "48")
         )
             .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTime))
-            .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount));
+            .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount))
+            .andExpect(model().attribute("allowedToEditPermissions", editPermissions));
     }
 
     @Test

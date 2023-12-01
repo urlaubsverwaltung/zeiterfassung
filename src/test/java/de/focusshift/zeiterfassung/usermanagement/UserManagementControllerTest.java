@@ -170,6 +170,15 @@ class UserManagementControllerTest {
             .andExpect(view().name("forward:/users/42/overtime-account"));
     }
 
+    @Test
+    void ensureUserForwardsToPermissions() throws Exception {
+        perform(
+            get("/users/42")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_PERMISSIONS_EDIT_ALL")))
+        )
+            .andExpect(view().name("forward:/users/42/permissions"));
+    }
+
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
         return standaloneSetup(sut)
             .addFilters(new SecurityContextHolderFilter(new HttpSessionSecurityContextRepository()))
