@@ -64,7 +64,9 @@ class OidcPersonAuthoritiesMapperTest {
         when(userManagementService.findUserById(userId_1)).thenReturn(Optional.of(user_1));
 
         final Collection<? extends GrantedAuthority> grantedAuthorities = sut.mapAuthorities(List.of(oidcUserAuthority));
-        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority)).containsOnly(ZEITERFASSUNG_USER.name());
+
+        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority))
+            .containsExactlyInAnyOrder("OIDC_USER", ZEITERFASSUNG_USER.name());
     }
 
     @Test
@@ -84,7 +86,9 @@ class OidcPersonAuthoritiesMapperTest {
         when(userManagementService.findUserById(new UserId(uniqueID))).thenReturn(Optional.empty());
 
         final Collection<? extends GrantedAuthority> grantedAuthorities = sut.mapAuthorities(List.of(oidcUserAuthorities));
-        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority)).contains(ZEITERFASSUNG_USER.name());
+
+        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority))
+            .containsExactlyInAnyOrder("OIDC_USER", ZEITERFASSUNG_USER.name());
     }
 
     @Test
@@ -104,7 +108,9 @@ class OidcPersonAuthoritiesMapperTest {
         when(userManagementService.findUserById(new UserId(uniqueID))).thenReturn(Optional.empty());
 
         final Collection<? extends GrantedAuthority> grantedAuthorities = sut.mapAuthorities(List.of(oidcUserAuthorities));
-        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority)).contains(ZEITERFASSUNG_USER.name());
+
+        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority))
+            .containsExactlyInAnyOrder("OIDC_USER", ZEITERFASSUNG_USER.name());
     }
 
     @Test
@@ -128,7 +134,9 @@ class OidcPersonAuthoritiesMapperTest {
         when(userManagementService.findUserById(new UserId(uniqueID))).thenReturn(Optional.empty());
 
         final Collection<? extends GrantedAuthority> grantedAuthorities = sut.mapAuthorities(List.of(oidcUserAuthorities));
-        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority)).contains(ZEITERFASSUNG_USER.name());
+
+        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority))
+            .containsExactlyInAnyOrder("OIDC_USER", ZEITERFASSUNG_USER.name());
     }
 
     @Test
@@ -151,7 +159,9 @@ class OidcPersonAuthoritiesMapperTest {
         when(userManagementService.findUserById(new UserId(uniqueID))).thenReturn(Optional.empty());
 
         final Collection<? extends GrantedAuthority> grantedAuthorities = sut.mapAuthorities(List.of(oidcUserAuthority));
-        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority)).contains(ZEITERFASSUNG_USER.name());
+
+        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority))
+            .containsExactlyInAnyOrder("OIDC_USER", ZEITERFASSUNG_USER.name());
     }
 
     @Test
@@ -174,7 +184,9 @@ class OidcPersonAuthoritiesMapperTest {
         when(userManagementService.findUserById(new UserId(uniqueID))).thenReturn(Optional.empty());
 
         final Collection<? extends GrantedAuthority> grantedAuthorities = sut.mapAuthorities(List.of(oidcUserAuthority));
-        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority)).contains(ZEITERFASSUNG_USER.name());
+
+        assertThat(grantedAuthorities.stream().map(GrantedAuthority::getAuthority))
+            .containsExactlyInAnyOrder("OIDC_USER", ZEITERFASSUNG_USER.name());
     }
 
     @Test
