@@ -5,6 +5,9 @@ zeiterfassung:
   security:
     oidc:
       login-form-url: http://localhost:8060/oauth2/authorization/zeiterfassung-realm
+      claim-mappers:
+        group-claim:
+          enabled: true
       client:
         registration:
           redirect-uri-template: '{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}'
