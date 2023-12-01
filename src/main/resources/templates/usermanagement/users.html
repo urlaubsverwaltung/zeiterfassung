@@ -235,7 +235,7 @@
                         <li th:if="${allowedToEditWorkingTime}">
                           <a
                             href="#"
-                            th:href="@{/users/{userId} (userId=${selectedUser.id})}"
+                            th:href="@{/users/{userId} (userId=${selectedUser.id}, query=${query})}"
                             class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-opacity-100"
                             th:classappend="${(section == null or section == 'working-time-edit') ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
                             data-turbo-frame="person-frame"
@@ -248,7 +248,7 @@
                         <li th:if="${allowedToEditOvertimeAccount}">
                           <a
                             href="#"
-                            th:href="@{/users/{userId}/overtime-account (userId=${selectedUser.id})}"
+                            th:href="@{/users/{userId}/overtime-account (userId=${selectedUser.id}, query=${query})}"
                             class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-opacity-100"
                             th:classappend="${section == 'overtime' ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
                             data-turbo-frame="person-frame"
@@ -262,7 +262,7 @@
                         <li th:if="${allowedToEditPermissions}">
                           <a
                             href="#"
-                            th:href="@{/users/{userId}/permissions (userId=${selectedUser.id})}"
+                            th:href="@{/users/{userId}/permissions (userId=${selectedUser.id}, query=${query})}"
                             class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-opacity-100"
                             th:classappend="${section == 'permissions' ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
                             data-turbo-frame="person-frame"
