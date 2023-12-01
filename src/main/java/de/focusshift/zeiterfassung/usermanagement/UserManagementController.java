@@ -4,9 +4,9 @@ import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -58,13 +58,13 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping("/{id}")
-    String user(@PathVariable("id") Long id, @AuthenticationPrincipal OidcUser principal) {
+    String user(@PathVariable("id") Long id, @CurrentSecurityContext SecurityContext securityContext) {
 
         final String slug;
 
-        if (hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, principal)) {
+        if (hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, securityContext)) {
             slug = "working-time";
-        } else if (hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal)) {
+        } else if (hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, securityContext)) {
             slug = "overtime-account";
         } else {
             slug = null;
@@ -81,7 +81,8 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
         return new UserDto(user.userLocalId().value(), user.givenName(), user.familyName(), user.givenName() + " " + user.familyName(), user.email().value());
     }
 
-    static boolean hasAuthority(SecurityRole securityRole, OidcUser principal) {
-        return principal.getAuthorities().contains(new SimpleGrantedAuthority(securityRole.name()));
+    static boolean hasAuthority(SecurityRole securityRole, SecurityContext securityContext) {
+        final Authentication authentication = securityContext.getAuthentication();
+        return authentication.getAuthorities().contains(securityRole.authority());
     }
 }

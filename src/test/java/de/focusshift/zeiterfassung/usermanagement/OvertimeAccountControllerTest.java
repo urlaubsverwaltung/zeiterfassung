@@ -16,7 +16,7 @@ import org.springframework.format.support.FormattingConversionService;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
-import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
+import org.springframework.security.web.method.annotation.CurrentSecurityContextArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
@@ -425,7 +425,7 @@ class OvertimeAccountControllerTest {
         return standaloneSetup(sut)
             .setConversionService(formattingConversionService)
             .addFilters(new SecurityContextHolderFilter(new HttpSessionSecurityContextRepository()))
-            .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+            .setCustomArgumentResolvers(new CurrentSecurityContextArgumentResolver())
             .build()
             .perform(builder);
     }
