@@ -29,10 +29,13 @@ import java.util.stream.Stream;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static org.hamcrest.Matchers.contains;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -212,6 +215,37 @@ class PermissionsControllerTest {
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "ZEITERFASSUNG_VIEW_REPORT_ALL,true,false,false,false",
+        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,false,true,false,false",
+        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,false,true,false",
+        "ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,false,false,false,true"
+    })
+    void ensurePost(String roleName, boolean viewReportAll, boolean workingTimeEditAll, boolean overtimeEditAll, boolean permissionsEditAll) throws Exception {
+
+        final SecurityRole securityRole = SecurityRole.valueOf(roleName);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1337L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
+
+        perform(
+            post("/users/1337/permissions")
+                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .param("viewReportAll", String.valueOf(viewReportAll))
+                .param("workingTimeEditAll", String.valueOf(workingTimeEditAll))
+                .param("overtimeEditAll", String.valueOf(overtimeEditAll))
+                .param("permissionsEditAll", String.valueOf(permissionsEditAll))
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/users/1337/permissions"));
+
+        verify(userManagementService).updateUserPermissions(new UserLocalId(1337L), Set.of(securityRole));
     }
 
 
