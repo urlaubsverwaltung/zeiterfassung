@@ -116,7 +116,7 @@ zeiterfassung:
 
 Zeiterfassung is using user permissions from oidc claim `groups` for mapping possible permissions:
 
-* `ZEITERFASSUNG_USER`: General access to the application aund time tracking features
+* `ZEITERFASSUNG_USER`: General access to the application and time tracking features
 * `ZEITERFASSUNG_VIEW_REPORT_ALL`: Access to reports of other users
 * `ZEITERFASSUNG_WORKING_TIME_EDIT_ALL`: Allowed to edit working time of all users
 * `ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL`: Allowed to edit overtime account of all users
