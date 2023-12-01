@@ -23,9 +23,11 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static org.hamcrest.Matchers.contains;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
@@ -73,7 +75,7 @@ class PermissionsControllerTest {
 
         perform(
             get("/users/1337/permissions")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_PERMISSIONS_EDIT_ALL")))
+                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -107,7 +109,7 @@ class PermissionsControllerTest {
             Arguments.of(SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL, reportPermissionDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, workingTimePermissionDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, overtimePermissionDto),
-            Arguments.of(SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, permissionsPermissionDto)
+            Arguments.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, permissionsPermissionDto)
         );
     }
 
@@ -124,7 +126,7 @@ class PermissionsControllerTest {
 
         perform(
             get("/users/1337/permissions")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_PERMISSIONS_EDIT_ALL")))
+                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
         )
             .andExpect(status().isOk())
             .andExpect(model().attribute("permissions", permissionsDto));
@@ -158,6 +160,60 @@ class PermissionsControllerTest {
             .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount))
             .andExpect(model().attribute("allowedToEditPermissions", editPermissions));
     }
+
+    @Test
+    void ensureSearch() throws Exception {
+
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("awesome-query")).thenReturn(List.of(batman));
+
+        perform(
+            get("/users/1337/permissions")
+                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .param("query", "awesome-query")
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("usermanagement/users"))
+            .andExpect(model().attribute("query", "awesome-query"));
+    }
+
+    @Test
+    void ensureSearchWithSelectedUserNotInQuery() throws Exception {
+
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId supermanId = new UserId("superman");
+        final UserLocalId supermanLocalId = new UserLocalId(42L);
+        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("super")).thenReturn(List.of(superman));
+        when(userManagementService.findUserByLocalId(batmanLocalId)).thenReturn(Optional.of(batman));
+
+        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
+
+        perform(
+            get("/users/1337/permissions")
+                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .param("query", "super")
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("usermanagement/users"))
+            .andExpect(model().attribute("query", "super"))
+            .andExpect(model().attribute("slug", "permissions"))
+            .andExpect(model().attribute("users", contains(
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+            )))
+            .andExpect(model().attribute("selectedUser", expectedSelectedUser));
+    }
+
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
 
