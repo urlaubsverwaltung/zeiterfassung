@@ -1,7 +1,8 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
-import de.focusshift.zeiterfassung.user.DateFormatter;
+import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.user.DateFormatterImpl;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -22,8 +23,11 @@ import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import static java.time.ZoneOffset.UTC;
+import static java.util.Locale.GERMAN;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -38,17 +42,14 @@ class ReportMonthControllerTest {
 
     @Mock
     private ReportService reportService;
-
     @Mock
     private ReportPermissionService reportPermissionService;
-
-    @Mock
-    private DateFormatter dateFormatter;
 
     private final Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
+        final DateFormatterImpl dateFormatter = new DateFormatterImpl();
         final ReportControllerHelper helper = new ReportControllerHelper(reportPermissionService, dateFormatter);
         sut = new ReportMonthController(reportService, dateFormatter, helper, clock);
     }
@@ -61,6 +62,54 @@ class ReportMonthControllerTest {
 
         perform(get("/report/month"))
             .andExpect(forwardedUrl(String.format("/report/year/%d/month/%d", nowYear, nowMonth)));
+    }
+
+    @Test
+    void ensureReportMonth() throws Exception {
+
+        final UserId userId = new UserId("user-id");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        final ReportMonth reportMonth = new ReportMonth(
+            YearMonth.of(2023, 2),
+            List.of(
+                fourtyHourWeek(user, LocalDate.of(2023, 1, 30))
+            )
+        );
+
+        when(reportService.getReportMonth(YearMonth.of(2023, 2), new UserId("batman")))
+            .thenReturn(reportMonth);
+
+        final GraphMonthDto graphMonthDto = new GraphMonthDto(
+            "Februar 2023",
+            List.of(
+                new GraphWeekDto(
+                    "Januar 2023 KW 5",
+                    List.of(
+                        new GraphDayDto(true, "M", "Montag", "30.01.2023", 8d, 8d),
+                        new GraphDayDto(true, "D", "Dienstag", "31.01.2023", 8d, 8d),
+                        new GraphDayDto(false, "M", "Mittwoch", "01.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "D", "Donnerstag", "02.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "F", "Freitag", "03.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "S", "Samstag", "04.02.2023", 0d, 0d),
+                        new GraphDayDto(false, "S", "Sonntag", "05.02.2023", 0d, 0d)
+                    ),
+                    8d,
+                    8d
+                )
+            ),
+            8d,
+            8d
+        );
+
+        perform(
+            get("/report/year/2023/month/2")
+                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .locale(GERMAN)
+        )
+            .andExpect(model().attribute("monthReport", graphMonthDto));
     }
 
     @Test
@@ -282,6 +331,41 @@ class ReportMonthControllerTest {
 
     private static ReportMonth anyReportMonth() {
         return new ReportMonth(YearMonth.of(2022, 1), List.of());
+    }
+
+    private ReportWeek fourtyHourWeek(User user, LocalDate firstDateOfWeek) {
+        return new ReportWeek(firstDateOfWeek, List.of(
+            eightHoursDay(firstDateOfWeek, user),
+            eightHoursDay(firstDateOfWeek.plusDays(1), user),
+            eightHoursDay(firstDateOfWeek.plusDays(2), user),
+            eightHoursDay(firstDateOfWeek.plusDays(3), user),
+            eightHoursDay(firstDateOfWeek.plusDays(4), user),
+            new ReportDay(
+                firstDateOfWeek.plusDays(5),
+                Map.of(user.userIdComposite(), PlannedWorkingHours.ZERO),
+                Map.of(user.userIdComposite(), List.of()),
+                Map.of(user.userIdComposite(), List.of())
+            ),
+            new ReportDay(
+                firstDateOfWeek.plusDays(6),
+                Map.of(user.userIdComposite(), PlannedWorkingHours.ZERO),
+                Map.of(user.userIdComposite(), List.of()),
+                Map.of(user.userIdComposite(), List.of())
+            )
+        ));
+    }
+
+    private ReportDay eightHoursDay(LocalDate date, User user) {
+        return new ReportDay(
+            date,
+            Map.of(user.userIdComposite(), PlannedWorkingHours.EIGHT),
+            Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
+            Map.of(user.userIdComposite(), List.of())
+        );
+    }
+
+    private ReportDayEntry reportDayEntry(User user, LocalDate date) {
+        return new ReportDayEntry(user, "", date.atStartOfDay().plusHours(8).atZone(UTC), date.atStartOfDay().plusHours(16).atZone(UTC), false);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {

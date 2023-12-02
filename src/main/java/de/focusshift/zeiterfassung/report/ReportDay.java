@@ -17,7 +17,7 @@ record ReportDay(
     LocalDate date,
     Map<UserIdComposite, PlannedWorkingHours> plannedWorkingHoursByUser,
     Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser,
-    Map<UserIdComposite, List<DetailDayAbsenceDto>> detailDayAbsencesByUser
+    Map<UserIdComposite, List<ReportDayAbsence>> detailDayAbsencesByUser
 
 ) {
 

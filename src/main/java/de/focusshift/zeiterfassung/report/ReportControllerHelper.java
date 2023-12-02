@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -138,6 +139,7 @@ class ReportControllerHelper {
 
         final List<DetailDayAbsenceDto> detailDayAbsenceDto = reportDay.detailDayAbsencesByUser().values().stream()
             .flatMap(Collection::stream)
+            .map(this::toDetailDayAbsenceDto)
             .toList();
 
         return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, dayEntryDtos, detailDayAbsenceDto);
@@ -145,5 +147,11 @@ class ReportControllerHelper {
 
     private DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry) {
         return new DetailDayEntryDto(reportDayEntry.user().fullName(), reportDayEntry.comment(), reportDayEntry.start().toLocalTime(), reportDayEntry.end().toLocalTime());
+    }
+
+    private DetailDayAbsenceDto toDetailDayAbsenceDto(ReportDayAbsence reportDayAbsence) {
+        final User user = reportDayAbsence.user();
+        final Absence absence = reportDayAbsence.absence();
+        return new DetailDayAbsenceDto(user.fullName(), absence.dayLength().name(), absence.getMessageKey(), absence.color().name());
     }
 }

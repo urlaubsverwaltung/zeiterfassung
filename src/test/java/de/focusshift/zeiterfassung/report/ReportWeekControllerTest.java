@@ -1,7 +1,12 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.absence.AbsenceColor;
+import de.focusshift.zeiterfassung.absence.AbsenceType;
+import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
-import de.focusshift.zeiterfassung.user.DateFormatter;
+import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.user.DateFormatterImpl;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -17,12 +22,19 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.threeten.extra.YearWeek;
 
+import java.sql.Date;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.Year;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import static java.time.ZoneOffset.UTC;
+import static java.util.Locale.GERMAN;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,17 +49,14 @@ class ReportWeekControllerTest {
 
     @Mock
     private ReportService reportService;
-
     @Mock
     private ReportPermissionService reportPermissionService;
-
-    @Mock
-    private DateFormatter dateFormatter;
 
     private final Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
+        final DateFormatterImpl dateFormatter = new DateFormatterImpl();
         final ReportControllerHelper helper = new ReportControllerHelper(reportPermissionService, dateFormatter);
         sut = new ReportWeekController(reportService, helper, clock);
     }
@@ -60,6 +69,117 @@ class ReportWeekControllerTest {
 
         perform(get("/report/week"))
             .andExpect(forwardedUrl(String.format("/report/year/%d/week/%d", nowYear, nowWeek)));
+    }
+
+    @Test
+    void ensureReportWeek() throws Exception {
+
+        final UserId userId = new UserId("user-id");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        final ReportWeek reportWeek = new ReportWeek(LocalDate.of(2023, 1, 30), List.of(
+            eightHoursDay(LocalDate.of(2023, 1, 30), user),
+            eightHoursDay(LocalDate.of(2023, 1, 31), user),
+            eightHoursDay(LocalDate.of(2023, 2, 1), user),
+            eightHoursDay(LocalDate.of(2023, 2, 2), user),
+            eightHoursDay(LocalDate.of(2023, 2, 3), user),
+            new ReportDay(
+                LocalDate.of(2023, 2, 4),
+                Map.of(userIdComposite, PlannedWorkingHours.ZERO),
+                Map.of(userIdComposite, List.of()),
+                Map.of(userIdComposite, List.of())
+            ),
+            new ReportDay(
+                LocalDate.of(2023, 2, 5),
+                Map.of(userIdComposite, PlannedWorkingHours.ZERO),
+                Map.of(userIdComposite, List.of()),
+                Map.of(userIdComposite, List.of())
+            )
+        ));
+
+        when(reportService.getReportWeek(Year.of(2023), 5, new UserId("batman")))
+            .thenReturn(reportWeek);
+
+        final GraphWeekDto graphWeekDto = new GraphWeekDto(
+            "Januar 2023 KW 5",
+            List.of(
+                new GraphDayDto(false, "M", "Montag", "30.01.2023", 8d, 8d),
+                new GraphDayDto(false, "D", "Dienstag", "31.01.2023", 8d, 8d),
+                new GraphDayDto(true, "M", "Mittwoch", "01.02.2023", 8d, 8d),
+                new GraphDayDto(true, "D", "Donnerstag", "02.02.2023", 8d, 8d),
+                new GraphDayDto(true, "F", "Freitag", "03.02.2023", 8d, 8d),
+                new GraphDayDto(true, "S", "Samstag", "04.02.2023", 0d, 0d),
+                new GraphDayDto(true, "S", "Sonntag", "05.02.2023", 0d, 0d)
+            ),
+            8d,
+            8d
+        );
+
+        perform(
+            get("/report/year/2023/week/5")
+                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .locale(GERMAN)
+        )
+            .andExpect(model().attribute("weekReport", graphWeekDto));
+    }
+
+    @Test
+    void ensureReportWeekWithAbsences() throws Exception {
+
+        final UserId userId = new UserId("user-id");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        final LocalDate absenceDate = LocalDate.of(2023, 2, 3);
+
+        final ReportWeek reportWeek = new ReportWeek(LocalDate.of(2023, 1, 30), List.of(
+            new ReportDay(
+                absenceDate,
+                Map.of(userIdComposite, PlannedWorkingHours.EIGHT),
+                Map.of(userIdComposite, List.of()),
+                Map.of(userIdComposite, List.of(
+                    new ReportDayAbsence(user, new Absence(
+                        user.userId(),
+                        absenceDate.atStartOfDay(UTC),
+                        absenceDate.atStartOfDay(UTC),
+                        DayLength.FULL,
+                        AbsenceType.HOLIDAY,
+                        AbsenceColor.VIOLET
+                    ))
+                ))
+            )
+        ));
+
+        when(reportService.getReportWeek(Year.of(2023), 5, new UserId("batman")))
+            .thenReturn(reportWeek);
+
+        final DetailWeekDto detailWeekDto = new DetailWeekDto(
+            Date.from(ZonedDateTime.of(LocalDate.of(2023, 1,30), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
+            Date.from(ZonedDateTime.of(LocalDate.of(2023, 2,5), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
+            5,
+            List.of(
+                new DetailDayDto(true, "F", "Freitag", "03.02.2023", 0d, List.of(),
+                    List.of(
+                        new DetailDayAbsenceDto(
+                            "Bruce Wayne",
+                            "FULL",
+                            "absence.HOLIDAY.1000.FULL",
+                            "VIOLET"
+                        )
+                    )
+                )
+            )
+        );
+
+        perform(
+            get("/report/year/2023/week/5")
+                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .locale(GERMAN)
+        )
+            .andExpect(model().attribute("weekReportDetail", detailWeekDto));
     }
 
     @Test
@@ -287,6 +407,19 @@ class ReportWeekControllerTest {
 
     private static ReportWeek anyReportWeek() {
         return new ReportWeek(LocalDate.of(2022, 1, 1), List.of());
+    }
+
+    private ReportDay eightHoursDay(LocalDate date, User user) {
+        return new ReportDay(
+            date,
+            Map.of(user.userIdComposite(), PlannedWorkingHours.EIGHT),
+            Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
+            Map.of(user.userIdComposite(), List.of())
+        );
+    }
+
+    private ReportDayEntry reportDayEntry(User user, LocalDate date) {
+        return new ReportDayEntry(user, "", date.atStartOfDay().plusHours(8).atZone(UTC), date.atStartOfDay().plusHours(16).atZone(UTC), false);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
