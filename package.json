@@ -38,7 +38,7 @@
     "eslint-plugin-svelte": "2.35.0",
     "eslint-plugin-unicorn": "49.0.0",
     "fast-glob": "3.3.2",
-    "jsdom": "22.1.0",
+    "jsdom": "23.0.1",
     "lint-staged": "15.1.0",
     "postcss": "8.4.31",
     "postcss-cli": "10.1.0",
