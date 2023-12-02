@@ -14,7 +14,13 @@
         <div id="overtime-form-hidden-inputs">
           <input type="hidden" name="query" th:value="${query}" />
         </div>
-        <div class="flex flex-col gap-8">
+        <div class="flex gap-1 bg-amber-50 rounded text-gray-500 p-4 text-sm">
+          <svg
+            th:replace="~{icons/info::svg(className='w-4 h-4 shrink-0 mt-0.5')}"
+          ></svg>
+          <p th:text="#{usermanagement.permissions.amend-permissions-hint}"></p>
+        </div>
+        <div class="mt-8 flex flex-col gap-8">
           <fieldset class="border-t border-gray-100">
             <legend
               class="text-sm font-medium text-gray-400"
