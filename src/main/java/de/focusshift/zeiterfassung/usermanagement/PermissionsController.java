@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.security.SecurityRole;
+import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -30,7 +32,7 @@ import static de.focusshift.zeiterfassung.usermanagement.UserManagementControlle
 @Controller
 @RequestMapping("/users/{userId}/permissions")
 @PreAuthorize("hasAuthority('ZEITERFASSUNG_PERMISSIONS_EDIT_ALL')")
-class PermissionsController {
+class PermissionsController implements HasLaunchpad, HasTimeClock {
 
     private final UserManagementService userManagementService;
 
