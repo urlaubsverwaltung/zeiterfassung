@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
@@ -55,10 +56,8 @@ class WorkingTimeControllerTest {
 
     @Mock
     private UserManagementService userManagementService;
-
     @Mock
     private WorkingTimeService workingTimeService;
-
     @Mock
     private WorkingTimeDtoValidator workingTimeDtoValidator;
 
@@ -84,7 +83,8 @@ class WorkingTimeControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite)
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -95,6 +95,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getAllWorkingTimesByUser(supermanLocalId)).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
+            .id(workingTimeId.value())
             .userId(workingTime.userIdComposite().localId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
@@ -138,7 +139,7 @@ class WorkingTimeControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite)
+        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, new WorkingTimeId(UUID.randomUUID()))
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -172,7 +173,8 @@ class WorkingTimeControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite)
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -183,6 +185,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
+            .id(workingTimeId.value())
             .userId(workingTime.userIdComposite().localId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
@@ -217,7 +220,8 @@ class WorkingTimeControllerTest {
         final User user = new User(userIdComposite, "Alfred", "Pennyworth", new EMailAddress("alfred@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
 
-        final WorkingTime workingTime = WorkingTime.builder(userIdComposite)
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .monday(BigDecimal.valueOf(4))
             .wednesday(BigDecimal.valueOf(5))
             .saturday(BigDecimal.valueOf(6))
@@ -226,6 +230,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(1L))).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
+            .id(workingTimeId.value())
             .userId(workingTime.userIdComposite().localId().value())
             .workday(List.of(MONDAY, WEDNESDAY, SATURDAY))
             .workingTimeMonday(4.0)
@@ -258,7 +263,8 @@ class WorkingTimeControllerTest {
         final User user = new User(userIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("super")).thenReturn(List.of(user));
 
-        final WorkingTime workingTime = WorkingTime.builder(userIdComposite)
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -269,6 +275,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
+            .id(workingTimeId.value())
             .userId(workingTime.userIdComposite().localId().value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
@@ -302,7 +309,8 @@ class WorkingTimeControllerTest {
         final User user = new User(userIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("super")).thenReturn(List.of(user));
 
-        final WorkingTime workingTime = WorkingTime.builder(userIdComposite)
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -313,6 +321,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
+            .id(workingTimeId.value())
             .userId(userLocalId.value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
@@ -354,7 +363,8 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("bat")).thenReturn(List.of(batman));
         when(userManagementService.findUserByLocalId(new UserLocalId(42L))).thenReturn(Optional.of(superman));
 
-        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite)
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -365,6 +375,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getAllWorkingTimesByUser(supermanLocalId)).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
+            .id(workingTimeId.value())
             .userId(supermanLocalId.value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
@@ -405,7 +416,8 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("bat")).thenReturn(List.of(batman));
         when(userManagementService.findUserByLocalId(supermanLocalId)).thenReturn(Optional.of(superman));
 
-        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite)
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -416,6 +428,7 @@ class WorkingTimeControllerTest {
         when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
+            .id(workingTimeId.value())
             .userId(supermanLocalId.value())
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(8.0)
@@ -445,7 +458,7 @@ class WorkingTimeControllerTest {
     void ensurePost() throws Exception {
 
         perform(
-            post("/users/42/working-time")
+            post("/users/42/working-time/" + UUID.randomUUID())
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
                 .param("workingTimeMonday", "0")
@@ -475,8 +488,10 @@ class WorkingTimeControllerTest {
     @Test
     void ensurePostJavaScript() throws Exception {
 
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+
         perform(
-            post("/users/42/working-time")
+            post("/users/42/working-time/" + workingTimeId.value())
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
@@ -507,7 +522,10 @@ class WorkingTimeControllerTest {
     @Test
     void ensurePostWithValidationError() throws Exception {
 
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
+            .id(workingTimeId.value())
             .userId(42L)
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(48.0)
@@ -534,8 +552,9 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         perform(
-            post("/users/42/working-time")
+            post("/users/42/working-time/" + workingTimeId.value())
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .param("id", workingTimeId.value())
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
                 .param("workingTime", "48")
         )
@@ -588,7 +607,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         perform(
-            post("/users/42/working-time")
+            post("/users/42/working-time/" + UUID.randomUUID())
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority(authority)))
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
                 .param("workingTime", "48")
@@ -600,7 +619,10 @@ class WorkingTimeControllerTest {
     @Test
     void ensurePostWithValidationErrorJavaScript() throws Exception {
 
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
+            .id(workingTimeId.value())
             .userId(42L)
             .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
             .workingTime(48.0)
@@ -627,9 +649,10 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         perform(
-            post("/users/42/working-time")
+            post("/users/42/working-time/" + workingTimeId.value())
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
+                .param("id", workingTimeId.value())
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
                 .param("workingTime", "48")
         )

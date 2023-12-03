@@ -10,7 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.internal.stubbing.answers.ReturnsArgumentAt;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -57,6 +60,7 @@ class WorkTimeServiceImplTest {
         when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
 
         final WorkingTimeEntity entity = new WorkingTimeEntity();
+        entity.setId(UUID.randomUUID());
         entity.setUserId(42L);
         entity.setMonday("PT1H");
         entity.setTuesday("PT2H");
@@ -89,6 +93,7 @@ class WorkTimeServiceImplTest {
         final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
         when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
+        when(workingTimeRepository.save(any())).thenAnswer(returnsWorkingTimeEntityWithId(UUID.randomUUID()));
 
         when(workingTimeRepository.findByUserId(userLocalId_1.value())).thenReturn(Optional.empty());
 
@@ -108,6 +113,7 @@ class WorkTimeServiceImplTest {
     void ensureGetWorkingTimeByUsers() {
 
         final WorkingTimeEntity entity_1 = new WorkingTimeEntity();
+        entity_1.setId(UUID.randomUUID());
         entity_1.setUserId(1L);
         entity_1.setMonday("PT1H");
         entity_1.setTuesday("PT2H");
@@ -118,6 +124,7 @@ class WorkTimeServiceImplTest {
         entity_1.setSunday("PT7H");
 
         final WorkingTimeEntity entity_2 = new WorkingTimeEntity();
+        entity_2.setId(UUID.randomUUID());
         entity_2.setUserId(2L);
         entity_2.setMonday("PT7H");
         entity_2.setTuesday("PT6H");
@@ -145,7 +152,7 @@ class WorkTimeServiceImplTest {
         final Map<UserIdComposite, WorkingTime> actual = sut.getWorkingTimeByUsers(List.of(new UserLocalId(1L), new UserLocalId(2L)));
 
         assertThat(actual)
-            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1)
+            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1, new WorkingTimeId(UUID.randomUUID()))
                 .monday(1)
                 .tuesday(2)
                 .wednesday(3)
@@ -155,7 +162,7 @@ class WorkTimeServiceImplTest {
                 .sunday(8)
                 .build()
             )
-            .containsEntry(userIdComposite_2, WorkingTime.builder(userIdComposite_2)
+            .containsEntry(userIdComposite_2, WorkingTime.builder(userIdComposite_2, new WorkingTimeId(UUID.randomUUID()))
                 .monday(7)
                 .tuesday(6)
                 .wednesday(5)
@@ -183,7 +190,7 @@ class WorkTimeServiceImplTest {
         final Map<UserIdComposite, WorkingTime> actual = sut.getWorkingTimeByUsers(List.of(new UserLocalId(1L)));
 
         assertThat(actual)
-            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1)
+            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1, null)
                 .monday(8)
                 .tuesday(8)
                 .wednesday(8)
@@ -199,6 +206,7 @@ class WorkTimeServiceImplTest {
     void ensureGetAllWorkingTimeByUsers() {
 
         final WorkingTimeEntity entity_1 = new WorkingTimeEntity();
+        entity_1.setId(UUID.randomUUID());
         entity_1.setUserId(1L);
         entity_1.setMonday("PT1H");
         entity_1.setTuesday("PT2H");
@@ -209,6 +217,7 @@ class WorkTimeServiceImplTest {
         entity_1.setSunday("PT7H");
 
         final WorkingTimeEntity entity_2 = new WorkingTimeEntity();
+        entity_2.setId(UUID.randomUUID());
         entity_2.setUserId(2L);
         entity_2.setMonday("PT7H");
         entity_2.setTuesday("PT6H");
@@ -234,7 +243,7 @@ class WorkTimeServiceImplTest {
         final Map<UserIdComposite, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
 
         assertThat(actual)
-            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1)
+            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1, new WorkingTimeId(UUID.randomUUID()))
                 .monday(1)
                 .tuesday(2)
                 .wednesday(3)
@@ -244,7 +253,7 @@ class WorkTimeServiceImplTest {
                 .sunday(8)
                 .build()
             )
-            .containsEntry(userIdComposite_2, WorkingTime.builder(userIdComposite_2)
+            .containsEntry(userIdComposite_2, WorkingTime.builder(userIdComposite_2, new WorkingTimeId(UUID.randomUUID()))
                 .monday(7)
                 .tuesday(6)
                 .wednesday(5)
@@ -270,7 +279,7 @@ class WorkTimeServiceImplTest {
         final Map<UserIdComposite, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
 
         assertThat(actual)
-            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1)
+            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1, null)
                 .monday(8)
                 .tuesday(8)
                 .wednesday(8)
@@ -292,6 +301,7 @@ class WorkTimeServiceImplTest {
         when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
 
         final WorkingTimeEntity entity = new WorkingTimeEntity();
+        entity.setId(UUID.randomUUID());
         entity.setUserId(userLocalId.value());
         entity.setMonday("PT1H");
         entity.setTuesday("PT2H");
@@ -328,6 +338,7 @@ class WorkTimeServiceImplTest {
         when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
 
         when(workingTimeRepository.findByUserId(1L)).thenReturn(Optional.empty());
+        when(workingTimeRepository.save(any())).thenAnswer(returnsWorkingTimeEntityWithId(UUID.randomUUID()));
 
         when(userDateService.firstDayOfWeek(Year.of(2023), 7))
             .thenReturn(LocalDate.of(2023, 2, 13));
@@ -353,7 +364,9 @@ class WorkTimeServiceImplTest {
         final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
         when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
 
+        final UUID id = UUID.randomUUID();
         final WorkingTimeEntity entity = new WorkingTimeEntity();
+        entity.setId(id);
         entity.setUserId(42L);
         entity.setMonday("PT24H");
         entity.setTuesday("PT24H");
@@ -391,7 +404,8 @@ class WorkTimeServiceImplTest {
         verify(workingTimeRepository).save(captor.capture());
 
         final WorkingTimeEntity actualEntity = captor.getValue();
-        assertThat(actualEntity.getUserId()).isEqualTo(1L);
+        assertThat(actualEntity.getId()).isEqualTo(id);
+        assertThat(actualEntity.getUserId()).isEqualTo(42L);
         assertThat(actualEntity.getMonday()).isEqualTo("PT1H");
         assertThat(actualEntity.getTuesday()).isEqualTo("PT2H");
         assertThat(actualEntity.getWednesday()).isEqualTo("PT3H");
@@ -411,7 +425,7 @@ class WorkTimeServiceImplTest {
 
         when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
         when(workingTimeRepository.findByUserId(userLocalId_1.value())).thenReturn(Optional.empty());
-        when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
+        when(workingTimeRepository.save(any())).thenAnswer(returnsWorkingTimeEntityWithId(UUID.randomUUID()));
 
         final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
             .monday(BigDecimal.valueOf(1))
@@ -446,5 +460,13 @@ class WorkTimeServiceImplTest {
         assertThat(actualEntity.getFriday()).isEqualTo("PT5H");
         assertThat(actualEntity.getSaturday()).isEqualTo("PT6H");
         assertThat(actualEntity.getSunday()).isEqualTo("PT7H");
+    }
+
+    public static Answer<WorkingTimeEntity> returnsWorkingTimeEntityWithId(UUID uuid) {
+        return invocation -> {
+            final WorkingTimeEntity entity = (WorkingTimeEntity)new ReturnsArgumentAt(0).answer(invocation);
+            entity.setId(uuid);
+            return entity;
+        };
     }
 }

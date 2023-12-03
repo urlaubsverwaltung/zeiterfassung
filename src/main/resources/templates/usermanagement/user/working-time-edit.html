@@ -5,12 +5,24 @@
   </head>
   <body>
     <th:block th:fragment="section(user, workingTime)">
+      <div>
+        <a
+          href="#"
+          th:href="@{/users/{id}/working-time (id=${user.id})}"
+          class="flex gap-2 items-center underline"
+        >
+          <svg th:replace="~{icons/arrow-left::svg(className='w-5 h-5')}"></svg>
+          <th:block>zurück zu Arbeitszeiten</th:block>
+        </a>
+      </div>
       <form
         action="#"
-        th:action="@{/users/{userId}/working-time (userId=${user.id})}"
+        th:action="@{/users/{userId}/working-time/{workingTimeIdOrNew} (userId=${user.id}, workingTimeIdOrNew=${#objects.nullSafe(workingTime.id, 'new')})}"
         method="post"
         th:object="${workingTime}"
+        class="mt-8"
       >
+        <input type="hidden" th:field="*{id}" />
         <div id="working-time-form-hidden-inputs">
           <input type="hidden" name="query" th:value="${query}" />
         </div>
@@ -23,6 +35,28 @@
               Leeres Formular Fehlernachricht.
             </p>
           </div>
+          <fieldset
+            class="border-t border-gray-100"
+            th:with="hasError=${#fields.hasErrors('validFrom') or #fields.hasErrors('validFrom')}"
+          >
+            <legend class="text-sm font-medium text-gray-400">
+              Gültigkeit
+            </legend>
+            <div class="mt-2 sm:mt-4 flex items-center gap-2">
+              <div class="flex items-center gap-2">
+                <span>
+                  Die Arbeitszeit ist
+                  <label for="working-time-valid-from-input">gültig ab</label>
+                </span>
+                <input
+                  type="date"
+                  th:field="*{validFrom}"
+                  id="working-time-valid-from-input"
+                  class="px-2 border border-gray-300"
+                />
+              </div>
+            </div>
+          </fieldset>
           <fieldset
             class="border-t border-gray-100"
             th:with="hasError=${#fields.hasErrors('workday') or #fields.hasErrors('workDayMonday') or #fields.hasErrors('workDayTuesday') or #fields.hasErrors('workDayWednesday') or #fields.hasErrors('workDayThursday') or #fields.hasErrors('workDayFriday') or #fields.hasErrors('workDaySaturday') or #fields.hasErrors('workDaySunday')}"
@@ -203,20 +237,20 @@
             <button
               type="submit"
               class="bg-blue-700 border border-blue-700 text-white font-medium rounded px-4 py-2 flex items-center gap-2 justify-center sm:justify-start"
+              data-turbo-action="advance"
             >
               <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
-              <th:block th:text="#{usermanagement.save}"
-                >Aktualisieren</th:block
-              >
+              <th:block th:text="#{usermanagement.create}"> Anlegen </th:block>
             </button>
             <a
               id="working-time-edit-reset-button"
               href="#"
               th:href="@{/users/{id} (id=${user.id}, query=${query})}"
               class="whitespace-nowrap border border-blue-700 text-blue-700 font-medium rounded px-4 py-2 text-center sm:text-left"
-              th:text="#{usermanagement.revert}"
+              th:text="#{usermanagement.abort}"
+              data-turbo-action="advance"
             >
-              Änderungen verwerfen
+              Abbrechen
             </a>
           </div>
         </div>

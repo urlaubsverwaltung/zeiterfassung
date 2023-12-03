@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,7 +15,7 @@ class WorkingTimeTest {
     @Test
     void ensureGetWorkingDaysReturnsDaysWithDurationNotZero() {
 
-        final List<WorkDay> all = WorkingTime.builder(anyUserIdComposite())
+        final List<WorkDay> all = WorkingTime.builder(anyUserIdComposite(), new WorkingTimeId(UUID.randomUUID()))
             .monday(1)
             .tuesday(1)
             .wednesday(1)
@@ -24,7 +25,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> noMonday = WorkingTime.builder(anyUserIdComposite())
+        final List<WorkDay> noMonday = WorkingTime.builder(anyUserIdComposite(), new WorkingTimeId(UUID.randomUUID()))
             .monday(0)
             .tuesday(1)
             .wednesday(1)
@@ -34,7 +35,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> noTuesday = WorkingTime.builder(anyUserIdComposite())
+        final List<WorkDay> noTuesday = WorkingTime.builder(anyUserIdComposite(), new WorkingTimeId(UUID.randomUUID()))
             .monday(1)
             .tuesday(0)
             .wednesday(1)
@@ -44,7 +45,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> notWednesday = WorkingTime.builder(anyUserIdComposite())
+        final List<WorkDay> notWednesday = WorkingTime.builder(anyUserIdComposite(), new WorkingTimeId(UUID.randomUUID()))
             .monday(1)
             .tuesday(1)
             .wednesday(0)
@@ -54,7 +55,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> noThursday = WorkingTime.builder(anyUserIdComposite())
+        final List<WorkDay> noThursday = WorkingTime.builder(anyUserIdComposite(), new WorkingTimeId(UUID.randomUUID()))
             .monday(1)
             .tuesday(1)
             .wednesday(1)
@@ -64,7 +65,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> noFriday = WorkingTime.builder(anyUserIdComposite())
+        final List<WorkDay> noFriday = WorkingTime.builder(anyUserIdComposite(), new WorkingTimeId(UUID.randomUUID()))
             .monday(1)
             .tuesday(1)
             .wednesday(1)
@@ -74,7 +75,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> noSaturday = WorkingTime.builder(anyUserIdComposite())
+        final List<WorkDay> noSaturday = WorkingTime.builder(anyUserIdComposite(), new WorkingTimeId(UUID.randomUUID()))
             .monday(1)
             .tuesday(1)
             .wednesday(1)
@@ -84,7 +85,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> noSunday = WorkingTime.builder(anyUserIdComposite())
+        final List<WorkDay> noSunday = WorkingTime.builder(anyUserIdComposite(), new WorkingTimeId(UUID.randomUUID()))
             .monday(1)
             .tuesday(1)
             .wednesday(1)
@@ -164,10 +165,12 @@ class WorkingTimeTest {
     @Test
     void ensureHasDifferentWorkingHours() {
 
-        final WorkingTime differentWorkingHours = WorkingTime.builder(anyUserIdComposite()).monday(1).tuesday(2).build();
+        final WorkingTimeId id_1 = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime differentWorkingHours = WorkingTime.builder(anyUserIdComposite(), id_1).monday(1).tuesday(2).build();
         assertThat(differentWorkingHours.hasDifferentWorkingHours()).isTrue();
 
-        final WorkingTime notDifferentWorkingHours = WorkingTime.builder(anyUserIdComposite()).monday(1).build();
+        final WorkingTimeId id_2 = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime notDifferentWorkingHours = WorkingTime.builder(anyUserIdComposite(), id_2).monday(1).build();
         assertThat(notDifferentWorkingHours.hasDifferentWorkingHours()).isFalse();
     }
 

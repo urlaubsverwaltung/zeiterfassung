@@ -34,11 +34,14 @@ import static java.util.stream.Collectors.toSet;
 public final class WorkingTime implements HasUserIdComposite {
 
     private final UserIdComposite userIdComposite;
+    private final WorkingTimeId id;
     private final LocalDate validFrom;
     private final EnumMap<DayOfWeek, WorkDay> workdays;
 
-    private WorkingTime(UserIdComposite userIdComposite, @Nullable LocalDate validFrom, EnumMap<DayOfWeek, WorkDay> workdays) {
+    private WorkingTime(UserIdComposite userIdComposite, WorkingTimeId id, @Nullable LocalDate validFrom,
+                         EnumMap<DayOfWeek, WorkDay> workdays) {
         this.userIdComposite = userIdComposite;
+        this.id = id;
         this.validFrom = validFrom;
         this.workdays = workdays;
     }
@@ -46,6 +49,10 @@ public final class WorkingTime implements HasUserIdComposite {
     @Override
     public UserIdComposite userIdComposite() {
         return userIdComposite;
+    }
+
+    public WorkingTimeId id() {
+        return id;
     }
 
     /**
@@ -162,22 +169,23 @@ public final class WorkingTime implements HasUserIdComposite {
     public String toString() {
         return "WorkingTime{" +
             "userIdComposite=" + userIdComposite +
-            ", validFrom=" + validFrom +
-            ", workdays=" + workdays +
+            ", id=" + id +
             '}';
     }
 
-    public static Builder builder(UserIdComposite userIdComposite) {
-        return new Builder(userIdComposite);
+    public static Builder builder(UserIdComposite userIdComposite, WorkingTimeId id) {
+        return new Builder(userIdComposite, id);
     }
 
     public static class Builder {
         private final UserIdComposite userIdComposite;
+        private final WorkingTimeId id;
         private LocalDate validFrom;
         private final EnumMap<DayOfWeek, WorkDay> workDays = new EnumMap<>(DayOfWeek.class);
 
-        public Builder(UserIdComposite userIdComposite) {
+        public Builder(UserIdComposite userIdComposite, WorkingTimeId id) {
             this.userIdComposite = userIdComposite;
+            this.id = id;
         }
 
         public Builder validFrom(LocalDate validFrom) {
@@ -277,7 +285,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public WorkingTime build() {
-            return new WorkingTime(userIdComposite, validFrom, workDays);
+            return new WorkingTime(userIdComposite, id, validFrom, workDays);
         }
 
         private static Duration hoursToDuration(BigDecimal hours) {

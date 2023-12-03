@@ -10,6 +10,7 @@
           href="#"
           th:href="@{/users/{id}/working-time/new (id=${user.id}, query=${query})}"
           class="flex items-center gap-1"
+          data-turbo-action="advance"
         >
           <svg th:replace="~{icons/plus::svg(className='w-5 h-5')}"></svg>
           <span
@@ -48,7 +49,7 @@
                 >
                   <a
                     href="#"
-                    th:href="@{/users/{id}/working-time/{index} (id=${user.id},index=${index})}"
+                    th:href="@{/users/{id}/working-time/{workingTimeId} (id=${user.id},workingTimeId=${workingTime.id})}"
                     class="flex items-center gap-2 py-1 pl-3 pr-4 text-gray-400 border border-gray-300 bg-white rounded-lg transition-colors hover:text-gray-500 hover:border-gray-500 focus:text-gray-500 focus:border-gray-500"
                     data-turbo-action="advance"
                   >
@@ -59,7 +60,7 @@
                   </a>
                   <form
                     action="#"
-                    th:action="@{/users/{id}/working-time/{index}/delete (id=${user.id},index=${index})}"
+                    th:action="@{/users/{id}/working-time/{workingTimeId}/delete (id=${user.id},workingTimeId=${workingTime.id})}"
                   >
                     <button
                       type="submit"

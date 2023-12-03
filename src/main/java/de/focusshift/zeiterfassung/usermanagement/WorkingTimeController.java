@@ -79,18 +79,40 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
 
-        prepareNewWorkingTimeEntryModel(model, query, userId, workingTimeDto, principal);
+        prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
 
         return "usermanagement/users";
     }
 
-    @PostMapping
-    ModelAndView post(@PathVariable("userId") Long userId, Model model,
-                      @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
-                      @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                      @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                      @AuthenticationPrincipal OidcUser principal,
-                      @RequestParam Map<String, Object> requestParameters) {
+    @GetMapping("/{workingTimeId}")
+    String getWorkingTime(@PathVariable("userId") Long userId, Model model,
+                          @PathVariable("workingTimeId") String workingTimeId,
+                          @RequestParam(value = "query", required = false, defaultValue = "") String query,
+                          @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                          @AuthenticationPrincipal OidcUser principal) {
+
+        final WorkingTime workingTime = workingTimeService.getWorkingTimeById(WorkingTimeId.fromString(workingTimeId))
+            // TODO nice frontend message/page instead of "no-content" in case of ajax call
+            .orElseThrow(() -> new IllegalStateException("could not find working time with id=" + workingTimeId));
+
+        final WorkingTimeDto workingTimeDto = workingTimeToDto(workingTime);
+
+        prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
+
+        if (hasText(turboFrame)) {
+            return "usermanagement/users::#" + turboFrame;
+        } else {
+            return "usermanagement/users";
+        }
+    }
+
+    @PostMapping({"/new", "/{workingTimeId}"})
+    ModelAndView createNewWorkingTime(@PathVariable("userId") Long userId, Model model,
+                                      @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
+                                      @RequestParam(value = "query", required = false, defaultValue = "") String query,
+                                      @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                                      @AuthenticationPrincipal OidcUser principal,
+                                      @RequestParam Map<String, Object> requestParameters) {
 
         final Object select = requestParameters.get("select");
         if (select instanceof String selectValue) {
@@ -107,9 +129,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         }
 
         validator.validate(workingTimeDto, result);
-
         if (result.hasErrors()) {
-            prepareNewWorkingTimeEntryModel(model, query, userId, workingTimeDto, principal);
+            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
             if (hasText(turboFrame)) {
                 return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
             } else {
@@ -147,8 +168,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal));
     }
 
-    private void prepareNewWorkingTimeEntryModel(Model model, String query, Long userId, WorkingTimeDto workingTimeDto,
-                                                 OidcUser principal) {
+    private void prepareWorkingTimeCreateOrEditModel(Model model, String query, Long userId, WorkingTimeDto workingTimeDto, OidcUser principal) {
 
         prepareGetWorkingTimesModel(model, query, userId, List.of(), principal);
 
@@ -203,6 +223,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         }
 
         return builder
+            .id(workingTime.id().value())
             // TODO validFrom
             .validFrom(null)
             .userId(workingTime.userIdComposite().localId().value())

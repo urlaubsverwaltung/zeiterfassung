@@ -9,6 +9,7 @@ import java.util.Objects;
 class WorkingTimeDto {
 
     private Long userId;
+    private String id;
     private Date validFrom;
     private List<String> workday = new ArrayList<>();
     private Double workingTime;
@@ -26,6 +27,14 @@ class WorkingTimeDto {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public Date getValidFrom() {
@@ -185,16 +194,7 @@ class WorkingTimeDto {
     public String toString() {
         return "WorkingTimeDto{" +
             "userId=" + userId +
-            ", validFrom=" + validFrom +
-            ", workday=" + workday +
-            ", workingtime=" + workingTime +
-            ", workingtimeMonday=" + workingTimeMonday +
-            ", workingtimeTuesday=" + workingTimeTuesday +
-            ", workingtimeWednesday=" + workingTimeWednesday +
-            ", workingtimeThursday=" + workingTimeThursday +
-            ", workingtimeFriday=" + workingTimeFriday +
-            ", workingtimeSaturday=" + workingTimeSaturday +
-            ", workingtimeSunday=" + workingTimeSunday +
+            ", id=" + id +
             '}';
     }
 
@@ -204,6 +204,7 @@ class WorkingTimeDto {
         if (o == null || getClass() != o.getClass()) return false;
         WorkingTimeDto that = (WorkingTimeDto) o;
         return userId.equals(that.userId)
+            && Objects.equals(id, that.id)
             && Objects.equals(validFrom, that.validFrom)
             && workday.equals(that.workday)
             && Objects.equals(workingTime, that.workingTime)
@@ -218,7 +219,7 @@ class WorkingTimeDto {
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, validFrom, workday, workingTime, workingTimeMonday, workingTimeTuesday,
+        return Objects.hash(userId, id, validFrom, workday, workingTime, workingTimeMonday, workingTimeTuesday,
             workingTimeWednesday, workingTimeThursday, workingTimeFriday, workingTimeSaturday, workingTimeSunday);
     }
 
@@ -228,6 +229,7 @@ class WorkingTimeDto {
 
     static class Builder {
         private Long userId;
+        private String uuid;
         private Date validFrom;
         private List<DayOfWeek> workday = new ArrayList<>();
         private Double workingTime;
@@ -241,6 +243,11 @@ class WorkingTimeDto {
 
         Builder userId(Long userId) {
             this.userId = userId;
+            return this;
+        }
+
+        Builder id(String uuid) {
+            this.uuid = uuid;
             return this;
         }
 
@@ -297,6 +304,7 @@ class WorkingTimeDto {
         WorkingTimeDto build() {
             final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
             workingTimeDto.setUserId(userId);
+            workingTimeDto.setId(uuid);
             workingTimeDto.setValidFrom(validFrom);
             workingTimeDto.setWorkday(workday.stream().map(DayOfWeek::name).map(String::toLowerCase).toList());
             workingTimeDto.setWorkingTime(workingTime);

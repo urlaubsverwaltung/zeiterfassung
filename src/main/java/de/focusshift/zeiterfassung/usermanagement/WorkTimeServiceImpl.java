@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.IntStream;
 
 import static java.util.function.Function.identity;
@@ -42,7 +41,15 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
         return repository.findByUserId(userLocalId.value())
             .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, user.userIdComposite()))
-            .orElseGet(() -> defaultWorkingTime(user.userIdComposite()));
+            .orElseGet(() -> createDefaultWorkingTime(user.userIdComposite()));
+    }
+
+    @Override
+    public Optional<WorkingTime> getWorkingTimeById(WorkingTimeId workingTimeId) {
+        return repository.findById(workingTimeId.uuid()).map(entity -> {
+            final User user = findUser(new UserLocalId(entity.getUserId()));
+            return entityToWorkingTime(entity, user.userIdComposite());
+        });
     }
 
     @Override
@@ -54,7 +61,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, user.userIdComposite()))
             .toList();
 
-        return workingTimes.isEmpty() ? List.of(defaultWorkingTime(user.userIdComposite())) : workingTimes;
+        return workingTimes.isEmpty() ? List.of(createDefaultWorkingTime(user.userIdComposite())) : workingTimes;
     }
 
     @Override
@@ -94,7 +101,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         entity.setSaturday(toDurationString(workWeekUpdate.saturday()));
         entity.setSunday(toDurationString(workWeekUpdate.sunday()));
 
-        if (entity.getId() == null) {
+        if (entity.getUserId() == null) {
             entity.setUserId(userLocalId.value());
         }
 
@@ -133,7 +140,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
     private WorkingTime defaultWorkingTime(UserIdComposite userIdComposite) {
         final Duration eight = Duration.ofHours(8);
-        return WorkingTime.builder(userIdComposite)
+        return WorkingTime.builder(userIdComposite, null)
             .monday(eight)
             .tuesday(eight)
             .wednesday(eight)
@@ -144,8 +151,14 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             .build();
     }
 
+    private WorkingTime createDefaultWorkingTime(UserIdComposite userIdComposite) {
+        final WorkingTime defaultWorkingTime = defaultWorkingTime(userIdComposite);
+        final WorkingTimeEntity persisted = repository.save(workingTimeToEntity(defaultWorkingTime));
+        return entityToWorkingTime(persisted, userIdComposite);
+    }
+
     private static WorkingTime entityToWorkingTime(WorkingTimeEntity entity, UserIdComposite userIdComposite) {
-        return WorkingTime.builder(userIdComposite)
+        return WorkingTime.builder(userIdComposite, new WorkingTimeId(entity.getId()))
             .validFrom(entity.getValidFrom())
             .monday(orZero(entity.getMonday()))
             .tuesday(orZero(entity.getTuesday()))
@@ -155,6 +168,27 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             .saturday(orZero(entity.getSaturday()))
             .sunday(orZero(entity.getSunday()))
             .build();
+    }
+
+    private WorkingTimeEntity workingTimeToEntity(WorkingTime workingTime) {
+
+        final WorkingTimeEntity entity = new WorkingTimeEntity();
+
+        if (workingTime.id() != null) {
+            entity.setId(workingTime.id().uuid());
+        }
+
+        entity.setUserId(workingTime.userLocalId().value());
+        entity.setValidFrom(workingTime.validFrom().orElse(null));
+        entity.setMonday(toDurationString(workingTime.getMonday()));
+        entity.setTuesday(toDurationString(workingTime.getTuesday()));
+        entity.setWednesday(toDurationString(workingTime.getWednesday()));
+        entity.setThursday(toDurationString(workingTime.getThursday()));
+        entity.setFriday(toDurationString(workingTime.getFriday()));
+        entity.setSaturday(toDurationString(workingTime.getSaturday()));
+        entity.setSunday(toDurationString(workingTime.getSunday()));
+
+        return entity;
     }
 
     private PlannedWorkingHours workDayToPlannedHours(Optional<WorkDay> workDay) {

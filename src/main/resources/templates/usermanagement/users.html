@@ -236,7 +236,7 @@
                             href="#"
                             th:href="@{/users/{userId} (userId=${selectedUser.id})}"
                             class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-opacity-100"
-                            th:classappend="${section == null ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
+                            th:classappend="${(section == null or section == 'working-time-edit') ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
                             data-turbo-frame="person-frame"
                             data-turbo-action="advance"
                             th:text="#{usermanagement.navigation.working-time}"

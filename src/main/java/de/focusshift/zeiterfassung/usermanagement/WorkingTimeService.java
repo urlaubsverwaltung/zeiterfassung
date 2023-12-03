@@ -8,6 +8,7 @@ import java.time.Year;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface WorkingTimeService {
 
@@ -19,6 +20,8 @@ public interface WorkingTimeService {
      * @return {@linkplain WorkingTime} for the user, never {@code null}.
      */
     WorkingTime getWorkingTimeByUser(UserLocalId userLocalId);
+
+    Optional<WorkingTime> getWorkingTimeById(WorkingTimeId workingTimeId);
 
     List<WorkingTime> getAllWorkingTimesByUser(UserLocalId userLocalId);
 
