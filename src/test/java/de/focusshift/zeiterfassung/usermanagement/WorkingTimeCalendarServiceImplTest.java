@@ -42,8 +42,7 @@ class WorkingTimeCalendarServiceImplTest {
         final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
 
         when(workingTimeService.getAllWorkingTimeByUsers()).thenReturn(Map.of(
-                userIdComposite_1, WorkingTime.builder()
-                    .userIdComposite(userIdComposite_1)
+                userIdComposite_1, WorkingTime.builder(userIdComposite_1)
                     .monday(1)
                     .tuesday(2)
                     .wednesday(3)
@@ -52,8 +51,7 @@ class WorkingTimeCalendarServiceImplTest {
                     .saturday(6)
                     .sunday(7)
                     .build(),
-            userIdComposite_2, WorkingTime.builder()
-                    .userIdComposite(userIdComposite_2)
+            userIdComposite_2, WorkingTime.builder(userIdComposite_2)
                     .monday(7)
                     .tuesday(6)
                     .wednesday(5)
@@ -100,8 +98,7 @@ class WorkingTimeCalendarServiceImplTest {
         final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
 
         when(workingTimeService.getWorkingTimeByUsers(List.of(userLocalId_1, userLocalId_2))).thenReturn(Map.of(
-            userIdComposite_1, WorkingTime.builder()
-                .userIdComposite(userIdComposite_1)
+            userIdComposite_1, WorkingTime.builder(userIdComposite_1)
                 .monday(1)
                 .tuesday(2)
                 .wednesday(3)
@@ -110,8 +107,7 @@ class WorkingTimeCalendarServiceImplTest {
                 .saturday(6)
                 .sunday(7)
                 .build(),
-            userIdComposite_2, WorkingTime.builder()
-                .userIdComposite(userIdComposite_2)
+            userIdComposite_2, WorkingTime.builder(userIdComposite_2)
                 .monday(7)
                 .tuesday(6)
                 .wednesday(5)

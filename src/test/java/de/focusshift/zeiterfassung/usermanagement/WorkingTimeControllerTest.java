@@ -84,8 +84,7 @@ class WorkingTimeControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userIdComposite(supermanIdComposite)
+        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -139,8 +138,7 @@ class WorkingTimeControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userIdComposite(supermanIdComposite)
+        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -174,8 +172,7 @@ class WorkingTimeControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userIdComposite(supermanIdComposite)
+        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -220,8 +217,7 @@ class WorkingTimeControllerTest {
         final User user = new User(userIdComposite, "Alfred", "Pennyworth", new EMailAddress("alfred@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userIdComposite(userIdComposite)
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite)
             .monday(BigDecimal.valueOf(4))
             .wednesday(BigDecimal.valueOf(5))
             .saturday(BigDecimal.valueOf(6))
@@ -262,8 +258,7 @@ class WorkingTimeControllerTest {
         final User user = new User(userIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("super")).thenReturn(List.of(user));
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userIdComposite(userIdComposite)
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -307,8 +302,7 @@ class WorkingTimeControllerTest {
         final User user = new User(userIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("super")).thenReturn(List.of(user));
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userIdComposite(userIdComposite)
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -360,8 +354,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("bat")).thenReturn(List.of(batman));
         when(userManagementService.findUserByLocalId(new UserLocalId(42L))).thenReturn(Optional.of(superman));
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userIdComposite(supermanIdComposite)
+        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -412,8 +405,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("bat")).thenReturn(List.of(batman));
         when(userManagementService.findUserByLocalId(supermanLocalId)).thenReturn(Optional.of(superman));
 
-        final WorkingTime workingTime = WorkingTime.builder()
-            .userIdComposite(supermanIdComposite)
+        final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)

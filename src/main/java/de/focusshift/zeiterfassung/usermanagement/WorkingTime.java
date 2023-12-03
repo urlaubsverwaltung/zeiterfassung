@@ -155,17 +155,16 @@ public final class WorkingTime implements HasUserIdComposite {
             '}';
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder builder(UserIdComposite userIdComposite) {
+        return new Builder(userIdComposite);
     }
 
     public static class Builder {
-        private UserIdComposite userIdComposite;
+        private final UserIdComposite userIdComposite;
         private final EnumMap<DayOfWeek, WorkDay> workDays = new EnumMap<>(DayOfWeek.class);
 
-        public Builder userIdComposite(UserIdComposite userIdComposite) {
+        Builder(UserIdComposite userIdComposite) {
             this.userIdComposite = userIdComposite;
-            return this;
         }
 
         public Builder monday(Duration duration) {

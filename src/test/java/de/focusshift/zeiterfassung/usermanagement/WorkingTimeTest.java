@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -12,7 +14,7 @@ class WorkingTimeTest {
     @Test
     void ensureGetWorkingDaysReturnsDaysWithDurationNotZero() {
 
-        final List<WorkDay> all = WorkingTime.builder()
+        final List<WorkDay> all = WorkingTime.builder(anyUserIdComposite())
             .monday(1)
             .tuesday(1)
             .wednesday(1)
@@ -22,7 +24,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> noMonday = WorkingTime.builder()
+        final List<WorkDay> noMonday = WorkingTime.builder(anyUserIdComposite())
             .monday(0)
             .tuesday(1)
             .wednesday(1)
@@ -32,7 +34,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> noTuesday = WorkingTime.builder()
+        final List<WorkDay> noTuesday = WorkingTime.builder(anyUserIdComposite())
             .monday(1)
             .tuesday(0)
             .wednesday(1)
@@ -42,7 +44,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> notWednesday = WorkingTime.builder()
+        final List<WorkDay> notWednesday = WorkingTime.builder(anyUserIdComposite())
             .monday(1)
             .tuesday(1)
             .wednesday(0)
@@ -52,7 +54,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> noThursday = WorkingTime.builder()
+        final List<WorkDay> noThursday = WorkingTime.builder(anyUserIdComposite())
             .monday(1)
             .tuesday(1)
             .wednesday(1)
@@ -62,7 +64,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> noFriday = WorkingTime.builder()
+        final List<WorkDay> noFriday = WorkingTime.builder(anyUserIdComposite())
             .monday(1)
             .tuesday(1)
             .wednesday(1)
@@ -71,7 +73,8 @@ class WorkingTimeTest {
             .saturday(1)
             .sunday(1)
             .build().getWorkingDays();
-        final List<WorkDay> noSaturday = WorkingTime.builder()
+
+        final List<WorkDay> noSaturday = WorkingTime.builder(anyUserIdComposite())
             .monday(1)
             .tuesday(1)
             .wednesday(1)
@@ -81,7 +84,7 @@ class WorkingTimeTest {
             .sunday(1)
             .build().getWorkingDays();
 
-        final List<WorkDay> noSunday = WorkingTime.builder()
+        final List<WorkDay> noSunday = WorkingTime.builder(anyUserIdComposite())
             .monday(1)
             .tuesday(1)
             .wednesday(1)
@@ -161,11 +164,14 @@ class WorkingTimeTest {
     @Test
     void ensureHasDifferentWorkingHours() {
 
-        final WorkingTime differentWorkingHours = WorkingTime.builder().monday(1).tuesday(2).build();
+        final WorkingTime differentWorkingHours = WorkingTime.builder(anyUserIdComposite()).monday(1).tuesday(2).build();
         assertThat(differentWorkingHours.hasDifferentWorkingHours()).isTrue();
 
-        final WorkingTime notDifferentWorkingHours = WorkingTime.builder().monday(1).build();
+        final WorkingTime notDifferentWorkingHours = WorkingTime.builder(anyUserIdComposite()).monday(1).build();
         assertThat(notDifferentWorkingHours.hasDifferentWorkingHours()).isFalse();
+    }
 
+    private static UserIdComposite anyUserIdComposite() {
+        return new UserIdComposite(new UserId("user-id"), new UserLocalId(1L));
     }
 }

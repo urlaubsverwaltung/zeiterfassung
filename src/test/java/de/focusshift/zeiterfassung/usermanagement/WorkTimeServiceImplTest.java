@@ -145,8 +145,7 @@ class WorkTimeServiceImplTest {
         final Map<UserIdComposite, WorkingTime> actual = sut.getWorkingTimeByUsers(List.of(new UserLocalId(1L), new UserLocalId(2L)));
 
         assertThat(actual)
-            .containsEntry(userIdComposite_1, WorkingTime.builder()
-                .userIdComposite(userIdComposite_1)
+            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1)
                 .monday(1)
                 .tuesday(2)
                 .wednesday(3)
@@ -156,8 +155,7 @@ class WorkTimeServiceImplTest {
                 .sunday(8)
                 .build()
             )
-            .containsEntry(userIdComposite_2, WorkingTime.builder()
-                .userIdComposite(userIdComposite_2)
+            .containsEntry(userIdComposite_2, WorkingTime.builder(userIdComposite_2)
                 .monday(7)
                 .tuesday(6)
                 .wednesday(5)
@@ -185,8 +183,7 @@ class WorkTimeServiceImplTest {
         final Map<UserIdComposite, WorkingTime> actual = sut.getWorkingTimeByUsers(List.of(new UserLocalId(1L)));
 
         assertThat(actual)
-            .containsEntry(userIdComposite_1, WorkingTime.builder()
-                .userIdComposite(userIdComposite_1)
+            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1)
                 .monday(8)
                 .tuesday(8)
                 .wednesday(8)
@@ -237,8 +234,7 @@ class WorkTimeServiceImplTest {
         final Map<UserIdComposite, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
 
         assertThat(actual)
-            .containsEntry(userIdComposite_1, WorkingTime.builder()
-                .userIdComposite(userIdComposite_1)
+            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1)
                 .monday(1)
                 .tuesday(2)
                 .wednesday(3)
@@ -248,8 +244,7 @@ class WorkTimeServiceImplTest {
                 .sunday(8)
                 .build()
             )
-            .containsEntry(userIdComposite_2, WorkingTime.builder()
-                .userIdComposite(userIdComposite_2)
+            .containsEntry(userIdComposite_2, WorkingTime.builder(userIdComposite_2)
                 .monday(7)
                 .tuesday(6)
                 .wednesday(5)
@@ -275,8 +270,7 @@ class WorkTimeServiceImplTest {
         final Map<UserIdComposite, WorkingTime> actual = sut.getAllWorkingTimeByUsers();
 
         assertThat(actual)
-            .containsEntry(userIdComposite_1, WorkingTime.builder()
-                .userIdComposite(userIdComposite_1)
+            .containsEntry(userIdComposite_1, WorkingTime.builder(userIdComposite_1)
                 .monday(8)
                 .tuesday(8)
                 .wednesday(8)

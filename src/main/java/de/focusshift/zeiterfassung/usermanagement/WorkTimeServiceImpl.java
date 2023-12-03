@@ -120,8 +120,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
     private WorkingTime defaultWorkingTime(UserIdComposite userIdComposite) {
         final Duration eight = Duration.ofHours(8);
-        return WorkingTime.builder()
-            .userIdComposite(userIdComposite)
+        return WorkingTime.builder(userIdComposite)
             .monday(eight)
             .tuesday(eight)
             .wednesday(eight)
@@ -133,8 +132,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     }
 
     private static WorkingTime entityToWorkingTime(WorkingTimeEntity entity, UserIdComposite userIdComposite) {
-        return WorkingTime.builder()
-            .userIdComposite(userIdComposite)
+        return WorkingTime.builder(userIdComposite)
             .monday(orZero(entity.getMonday()))
             .tuesday(orZero(entity.getTuesday()))
             .wednesday(orZero(entity.getWednesday()))
