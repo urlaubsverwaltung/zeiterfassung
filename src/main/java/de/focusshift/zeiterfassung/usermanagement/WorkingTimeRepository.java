@@ -11,5 +11,7 @@ interface WorkingTimeRepository extends CrudRepository<WorkingTimeEntity, UUID> 
 
     Optional<WorkingTimeEntity> findByUserId(Long userId);
 
+    List<WorkingTimeEntity> findAllByUserIdOrderByValidFrom(Long userId);
+
     List<WorkingTimeEntity> findAllByUserIdIsIn(Collection<Long> userIds);
 }

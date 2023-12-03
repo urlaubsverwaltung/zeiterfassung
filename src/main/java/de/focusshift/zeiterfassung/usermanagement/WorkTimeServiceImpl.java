@@ -46,6 +46,18 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     }
 
     @Override
+    public List<WorkingTime> getAllWorkingTimesByUser(UserLocalId userLocalId) {
+
+        final User user = findUser(userLocalId);
+
+        final List<WorkingTime> workingTimes = repository.findAllByUserIdOrderByValidFrom(userLocalId.value()).stream()
+            .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, user.userIdComposite()))
+            .toList();
+
+        return workingTimes.isEmpty() ? List.of(defaultWorkingTime(user.userIdComposite())) : workingTimes;
+    }
+
+    @Override
     public Map<UserIdComposite, WorkingTime> getWorkingTimeByUsers(Collection<UserLocalId> userLocalIds) {
         final List<User> users = userManagementService.findAllUsersByLocalIds(userLocalIds);
         return getWorkingTime(users);

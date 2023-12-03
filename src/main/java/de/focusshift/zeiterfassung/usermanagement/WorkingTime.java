@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.user.HasUserIdComposite;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import jakarta.annotation.Nullable;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -36,7 +37,7 @@ public final class WorkingTime implements HasUserIdComposite {
     private final LocalDate validFrom;
     private final EnumMap<DayOfWeek, WorkDay> workdays;
 
-    private WorkingTime(UserIdComposite userIdComposite, LocalDate validFrom, EnumMap<DayOfWeek, WorkDay> workdays) {
+    private WorkingTime(UserIdComposite userIdComposite, @Nullable LocalDate validFrom, EnumMap<DayOfWeek, WorkDay> workdays) {
         this.userIdComposite = userIdComposite;
         this.validFrom = validFrom;
         this.workdays = workdays;
@@ -48,7 +49,7 @@ public final class WorkingTime implements HasUserIdComposite {
     }
 
     /**
-     * @return empty optional when this is the very first {@linkplain WorkingTime} of a person, valid from date otherwise.
+     * @return empty optional when this is the very first {@linkplain WorkingTime} of a person, validFrom date otherwise.
      */
     public Optional<LocalDate> validFrom() {
         return Optional.ofNullable(validFrom);

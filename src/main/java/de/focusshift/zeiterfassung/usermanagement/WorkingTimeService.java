@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public interface WorkingTimeService {
@@ -18,6 +19,8 @@ public interface WorkingTimeService {
      * @return {@linkplain WorkingTime} for the user, never {@code null}.
      */
     WorkingTime getWorkingTimeByUser(UserLocalId userLocalId);
+
+    List<WorkingTime> getAllWorkingTimesByUser(UserLocalId userLocalId);
 
     Map<UserIdComposite, WorkingTime> getWorkingTimeByUsers(Collection<UserLocalId> userLocalIds);
 

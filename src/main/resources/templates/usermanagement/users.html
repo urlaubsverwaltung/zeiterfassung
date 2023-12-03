@@ -94,25 +94,6 @@
               is="z-user-selection-list"
             >
               <turbo-frame id="person-list-frame">
-                <th:block th:if="${selectedUser}">
-                  <turbo-stream
-                    target="working-time-form-hidden-inputs"
-                    action="replace"
-                  >
-                    <template
-                      th:insert="~{usermanagement/user/working-time-settings::#working-time-form-hidden-inputs}"
-                    ></template>
-                  </turbo-stream>
-                  <turbo-stream
-                    target="working-time-settings-reset-button"
-                    action="replace"
-                    th:with="user=${selectedUser}"
-                  >
-                    <template
-                      th:insert="~{usermanagement/user/working-time-settings::#working-time-settings-reset-button}"
-                    ></template>
-                  </turbo-stream>
-                </th:block>
                 <ol class="flex flex-col user-selection-list">
                   <th:block th:each="user : ${users}">
                     <li
@@ -282,7 +263,12 @@
                     <div class="flex-1 p-6 bg-white">
                       <th:block th:if="${section == null}">
                         <div
-                          th:replace="~{usermanagement/user/working-time-settings::section(${selectedUser}, ${workingTime})}"
+                          th:replace="~{usermanagement/user/working-time-settings::section(${selectedUser}, ${workingTimes})}"
+                        ></div>
+                      </th:block>
+                      <th:block th:if="${section == 'working-time-edit'}">
+                        <div
+                          th:replace="~{usermanagement/user/working-time-edit::section(${selectedUser}, ${workingTime})}"
                         ></div>
                       </th:block>
                       <th:block th:if="${section == 'overtime'}">

@@ -2,12 +2,14 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import java.time.DayOfWeek;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 class WorkingTimeDto {
 
     private Long userId;
+    private Date validFrom;
     private List<String> workday = new ArrayList<>();
     private Double workingTime;
     private Double workingTimeMonday;
@@ -24,6 +26,14 @@ class WorkingTimeDto {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Date getValidFrom() {
+        return validFrom;
+    }
+
+    public void setValidFrom(Date validFrom) {
+        this.validFrom = validFrom;
     }
 
     public List<String> getWorkday() {
@@ -175,6 +185,7 @@ class WorkingTimeDto {
     public String toString() {
         return "WorkingTimeDto{" +
             "userId=" + userId +
+            ", validFrom=" + validFrom +
             ", workday=" + workday +
             ", workingtime=" + workingTime +
             ", workingtimeMonday=" + workingTimeMonday +
@@ -193,6 +204,7 @@ class WorkingTimeDto {
         if (o == null || getClass() != o.getClass()) return false;
         WorkingTimeDto that = (WorkingTimeDto) o;
         return userId.equals(that.userId)
+            && Objects.equals(validFrom, that.validFrom)
             && workday.equals(that.workday)
             && Objects.equals(workingTime, that.workingTime)
             && Objects.equals(workingTimeMonday, that.workingTimeMonday)
@@ -206,16 +218,17 @@ class WorkingTimeDto {
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, workday, workingTime, workingTimeMonday, workingTimeTuesday,
+        return Objects.hash(userId, validFrom, workday, workingTime, workingTimeMonday, workingTimeTuesday,
             workingTimeWednesday, workingTimeThursday, workingTimeFriday, workingTimeSaturday, workingTimeSunday);
     }
 
-    public static Builder builder() {
+    static Builder builder() {
         return new Builder();
     }
 
-    public static class Builder {
+    static class Builder {
         private Long userId;
+        private Date validFrom;
         private List<DayOfWeek> workday = new ArrayList<>();
         private Double workingTime;
         private Double workingTimeMonday;
@@ -226,59 +239,65 @@ class WorkingTimeDto {
         private Double workingTimeSaturday;
         private Double workingTimeSunday;
 
-        public Builder userId(Long userId) {
+        Builder userId(Long userId) {
             this.userId = userId;
             return this;
         }
 
-        public Builder workday(List<DayOfWeek> workday) {
+        Builder validFrom(Date validFrom) {
+            this.validFrom = validFrom;
+            return this;
+        }
+
+        Builder workday(List<DayOfWeek> workday) {
             this.workday = workday;
             return this;
         }
 
-        public Builder workingTime(Double workingTime) {
+        Builder workingTime(Double workingTime) {
             this.workingTime = workingTime;
             return this;
         }
 
-        public Builder workingTimeMonday(Double workingTimeMonday) {
+        Builder workingTimeMonday(Double workingTimeMonday) {
             this.workingTimeMonday = workingTimeMonday;
             return this;
         }
 
-        public Builder workingTimeTuesday(Double workingTimeTuesday) {
+        Builder workingTimeTuesday(Double workingTimeTuesday) {
             this.workingTimeTuesday = workingTimeTuesday;
             return this;
         }
 
-        public Builder workingTimeWednesday(Double workingTimeWednesday) {
+        Builder workingTimeWednesday(Double workingTimeWednesday) {
             this.workingTimeWednesday = workingTimeWednesday;
             return this;
         }
 
-        public Builder workingTimeThursday(Double workingTimeThursday) {
+        Builder workingTimeThursday(Double workingTimeThursday) {
             this.workingTimeThursday = workingTimeThursday;
             return this;
         }
 
-        public Builder workingTimeFriday(Double workingTimeFriday) {
+        Builder workingTimeFriday(Double workingTimeFriday) {
             this.workingTimeFriday = workingTimeFriday;
             return this;
         }
 
-        public Builder workingTimeSaturday(Double workingTimeSaturday) {
+        Builder workingTimeSaturday(Double workingTimeSaturday) {
             this.workingTimeSaturday = workingTimeSaturday;
             return this;
         }
 
-        public Builder workingTimeSunday(Double workingTimeSunday) {
+        Builder workingTimeSunday(Double workingTimeSunday) {
             this.workingTimeSunday = workingTimeSunday;
             return this;
         }
 
-        public WorkingTimeDto build() {
+        WorkingTimeDto build() {
             final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
             workingTimeDto.setUserId(userId);
+            workingTimeDto.setValidFrom(validFrom);
             workingTimeDto.setWorkday(workday.stream().map(DayOfWeek::name).map(String::toLowerCase).toList());
             workingTimeDto.setWorkingTime(workingTime);
             workingTimeDto.setWorkingTimeMonday(workingTimeMonday);

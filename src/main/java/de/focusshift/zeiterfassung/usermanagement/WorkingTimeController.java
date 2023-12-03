@@ -60,34 +60,28 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
                @AuthenticationPrincipal OidcUser principal) {
 
-        final List<UserDto> users = userManagementService.findAllUsers(query)
-            .stream()
-            .map(UserManagementController::userToDto)
-            .toList();
+        final List<WorkingTime> workingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(userId));
+        final List<WorkingTimeDto> workingTimeDtos = workingTimesToDtos(workingTimes);
 
-        final UserDto selectedUser = users.stream().filter(u -> u.id() == userId)
-            .findFirst()
-            .or(() -> userManagementService.findUserByLocalId(new UserLocalId(userId)).map(UserManagementController::userToDto))
-            .orElseThrow(() -> new IllegalArgumentException("could not find person=%s".formatted(userId)));
-
-        final WorkingTime workingTime = workingTimeService.getWorkingTimeByUser(new UserLocalId(userId));
-        final WorkingTimeDto workingTimeDto = workingTimeToDto(workingTime);
-
-        model.addAttribute("query", query);
-        model.addAttribute("slug", "working-time");
-        model.addAttribute("users", users);
-        model.addAttribute("selectedUser", selectedUser);
-        model.addAttribute("workingTime", workingTimeDto);
-        model.addAttribute("personSearchFormAction", "/users/" + selectedUser.id());
-
-        model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, principal));
-        model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal));
+        prepareGetWorkingTimesModel(model, query, userId, workingTimeDtos, principal);
 
         if (hasText(turboFrame)) {
             return "usermanagement/users::#" + turboFrame;
         } else {
             return "usermanagement/users";
         }
+    }
+
+    @GetMapping("/new")
+    String newWorkingTime(@PathVariable("userId") Long userId, Model model,
+                          @RequestParam(value = "query", required = false, defaultValue = "") String query,
+                          @AuthenticationPrincipal OidcUser principal) {
+
+        final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
+
+        prepareNewWorkingTimeEntryModel(model, query, userId, workingTimeDto, principal);
+
+        return "usermanagement/users";
     }
 
     @PostMapping
@@ -115,27 +109,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         validator.validate(workingTimeDto, result);
 
         if (result.hasErrors()) {
-
-            final List<UserDto> users = userManagementService.findAllUsers(query)
-                .stream()
-                .map(UserManagementController::userToDto)
-                .toList();
-
-            final UserDto selectedUser = users.stream().filter(u -> u.id() == userId)
-                .findFirst()
-                .or(() -> userManagementService.findUserByLocalId(new UserLocalId(userId)).map(UserManagementController::userToDto))
-                .orElseThrow(() -> new IllegalArgumentException("could not find person=%s".formatted(userId)));
-
-            model.addAttribute("query", query);
-            model.addAttribute("slug", "working-time");
-            model.addAttribute("users", users);
-            model.addAttribute("selectedUser", selectedUser);
-            model.addAttribute("workingTime", workingTimeDto);
-            model.addAttribute("personSearchFormAction", "/users/" + selectedUser.id());
-
-            model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, principal));
-            model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal));
-
+            prepareNewWorkingTimeEntryModel(model, query, userId, workingTimeDto, principal);
             if (hasText(turboFrame)) {
                 return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
             } else {
@@ -147,6 +121,39 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         workingTimeService.updateWorkingTime(new UserLocalId(userId), workWeekUpdate);
 
         return new ModelAndView("redirect:/users/%s/working-time".formatted(userId));
+    }
+
+    private void prepareGetWorkingTimesModel(Model model, String query, Long userId, List<WorkingTimeDto> workingTimeDtos,
+                                             OidcUser principal) {
+
+        final List<UserDto> users = userManagementService.findAllUsers(query)
+            .stream()
+            .map(UserManagementController::userToDto)
+            .toList();
+
+        final UserDto selectedUser = users.stream().filter(u -> u.id() == userId)
+            .findFirst()
+            .or(() -> userManagementService.findUserByLocalId(new UserLocalId(userId)).map(UserManagementController::userToDto))
+            .orElseThrow(() -> new IllegalArgumentException("could not find person=%s".formatted(userId)));
+
+        model.addAttribute("query", query);
+        model.addAttribute("slug", "working-time");
+        model.addAttribute("users", users);
+        model.addAttribute("selectedUser", selectedUser);
+        model.addAttribute("workingTimes", workingTimeDtos);
+        model.addAttribute("personSearchFormAction", "/users/" + selectedUser.id());
+
+        model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, principal));
+        model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal));
+    }
+
+    private void prepareNewWorkingTimeEntryModel(Model model, String query, Long userId, WorkingTimeDto workingTimeDto,
+                                                 OidcUser principal) {
+
+        prepareGetWorkingTimesModel(model, query, userId, List.of(), principal);
+
+        model.addAttribute("section", "working-time-edit");
+        model.addAttribute("workingTime", workingTimeDto);
     }
 
     private void clearWorkDayHours(String dayOfWeek, WorkingTimeDto workingTimeDto) {
@@ -165,6 +172,10 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         if (consumer != null) {
             consumer.accept(0.0); // o.O`
         }
+    }
+
+    private static List<WorkingTimeDto> workingTimesToDtos(List<WorkingTime> workingTimes) {
+        return workingTimes.stream().map(WorkingTimeController::workingTimeToDto).toList();
     }
 
     private static WorkingTimeDto workingTimeToDto(WorkingTime workingTime) {
@@ -192,6 +203,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         }
 
         return builder
+            // TODO validFrom
+            .validFrom(null)
             .userId(workingTime.userIdComposite().localId().value())
             .workday(workingTime.getWorkingDays().stream().map(WorkDay::dayOfWeek).toList())
             .build();

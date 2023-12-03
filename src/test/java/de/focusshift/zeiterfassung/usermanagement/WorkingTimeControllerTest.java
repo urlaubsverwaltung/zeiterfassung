@@ -92,7 +92,7 @@ class WorkingTimeControllerTest {
             .friday(EIGHT)
             .build();
 
-        when(workingTimeService.getWorkingTimeByUser(supermanLocalId)).thenReturn(workingTime);
+        when(workingTimeService.getAllWorkingTimesByUser(supermanLocalId)).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(workingTime.userIdComposite().localId().value())
@@ -115,7 +115,7 @@ class WorkingTimeControllerTest {
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
@@ -146,7 +146,7 @@ class WorkingTimeControllerTest {
             .friday(EIGHT)
             .build();
 
-        when(workingTimeService.getWorkingTimeByUser(supermanLocalId)).thenReturn(workingTime);
+        when(workingTimeService.getAllWorkingTimesByUser(supermanLocalId)).thenReturn(List.of(workingTime));
 
 
         perform(
@@ -180,7 +180,7 @@ class WorkingTimeControllerTest {
             .friday(EIGHT)
             .build();
 
-        when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
+        when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(workingTime.userIdComposite().localId().value())
@@ -204,7 +204,7 @@ class WorkingTimeControllerTest {
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
@@ -223,7 +223,7 @@ class WorkingTimeControllerTest {
             .saturday(BigDecimal.valueOf(6))
             .build();
 
-        when(workingTimeService.getWorkingTimeByUser(new UserLocalId(1L))).thenReturn(workingTime);
+        when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(1L))).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(workingTime.userIdComposite().localId().value())
@@ -245,7 +245,7 @@ class WorkingTimeControllerTest {
             .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(expectedSelectedUser)))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/1"));
     }
 
@@ -266,7 +266,7 @@ class WorkingTimeControllerTest {
             .friday(EIGHT)
             .build();
 
-        when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
+        when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(workingTime.userIdComposite().localId().value())
@@ -289,7 +289,7 @@ class WorkingTimeControllerTest {
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
@@ -310,7 +310,7 @@ class WorkingTimeControllerTest {
             .friday(EIGHT)
             .build();
 
-        when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
+        when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(userLocalId.value())
@@ -334,7 +334,7 @@ class WorkingTimeControllerTest {
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
@@ -362,7 +362,7 @@ class WorkingTimeControllerTest {
             .friday(EIGHT)
             .build();
 
-        when(workingTimeService.getWorkingTimeByUser(supermanLocalId)).thenReturn(workingTime);
+        when(workingTimeService.getAllWorkingTimesByUser(supermanLocalId)).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(supermanLocalId.value())
@@ -385,7 +385,7 @@ class WorkingTimeControllerTest {
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
@@ -413,7 +413,7 @@ class WorkingTimeControllerTest {
             .friday(EIGHT)
             .build();
 
-        when(workingTimeService.getWorkingTimeByUser(new UserLocalId(42L))).thenReturn(workingTime);
+        when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(supermanLocalId.value())
@@ -437,7 +437,7 @@ class WorkingTimeControllerTest {
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
