@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Objects;
@@ -32,16 +33,25 @@ import static java.util.stream.Collectors.toSet;
 public final class WorkingTime implements HasUserIdComposite {
 
     private final UserIdComposite userIdComposite;
+    private final LocalDate validFrom;
     private final EnumMap<DayOfWeek, WorkDay> workdays;
 
-    private WorkingTime(UserIdComposite userIdComposite, EnumMap<DayOfWeek, WorkDay> workdays) {
+    private WorkingTime(UserIdComposite userIdComposite, LocalDate validFrom, EnumMap<DayOfWeek, WorkDay> workdays) {
         this.userIdComposite = userIdComposite;
+        this.validFrom = validFrom;
         this.workdays = workdays;
     }
 
     @Override
     public UserIdComposite userIdComposite() {
         return userIdComposite;
+    }
+
+    /**
+     * @return empty optional when this is the very first {@linkplain WorkingTime} of a person, valid from date otherwise.
+     */
+    public Optional<LocalDate> validFrom() {
+        return Optional.ofNullable(validFrom);
     }
 
     /**
@@ -139,18 +149,19 @@ public final class WorkingTime implements HasUserIdComposite {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WorkingTime that = (WorkingTime) o;
-        return Objects.equals(userIdComposite, that.userIdComposite);
+        return Objects.equals(userIdComposite, that.userIdComposite) && Objects.equals(validFrom, that.validFrom);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userIdComposite);
+        return Objects.hash(userIdComposite, validFrom);
     }
 
     @Override
     public String toString() {
         return "WorkingTime{" +
             "userIdComposite=" + userIdComposite +
+            ", validFrom=" + validFrom +
             ", workdays=" + workdays +
             '}';
     }
@@ -161,10 +172,16 @@ public final class WorkingTime implements HasUserIdComposite {
 
     public static class Builder {
         private final UserIdComposite userIdComposite;
+        private LocalDate validFrom;
         private final EnumMap<DayOfWeek, WorkDay> workDays = new EnumMap<>(DayOfWeek.class);
 
-        Builder(UserIdComposite userIdComposite) {
+        public Builder(UserIdComposite userIdComposite) {
             this.userIdComposite = userIdComposite;
+        }
+
+        public Builder validFrom(LocalDate validFrom) {
+            this.validFrom = validFrom;
+            return this;
         }
 
         public Builder monday(Duration duration) {
@@ -259,7 +276,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public WorkingTime build() {
-            return new WorkingTime(userIdComposite, workDays);
+            return new WorkingTime(userIdComposite, validFrom, workDays);
         }
 
         private static Duration hoursToDuration(BigDecimal hours) {

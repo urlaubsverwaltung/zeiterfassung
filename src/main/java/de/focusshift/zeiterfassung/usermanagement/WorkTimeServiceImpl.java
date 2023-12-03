@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 import static java.util.function.Function.identity;
@@ -133,6 +134,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
     private static WorkingTime entityToWorkingTime(WorkingTimeEntity entity, UserIdComposite userIdComposite) {
         return WorkingTime.builder(userIdComposite)
+            .validFrom(entity.getValidFrom())
             .monday(orZero(entity.getMonday()))
             .tuesday(orZero(entity.getTuesday()))
             .wednesday(orZero(entity.getWednesday()))
