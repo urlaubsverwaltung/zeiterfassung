@@ -378,16 +378,16 @@
   },
   "groups" : [ {
     "id" : "22a2468b-05d4-442d-bca1-03b167d12afb",
-    "name" : "ZEITERFASSUNG_ACCESS",
-    "path" : "/ZEITERFASSUNG_ACCESS",
+    "name" : "zeiterfassung_user",
+    "path" : "/zeiterfassung_user",
     "attributes" : { },
     "realmRoles" : [ "zeiterfassung_user" ],
     "clientRoles" : { },
     "subGroups" : [ ]
   }, {
     "id" : "f845401c-8811-42b5-87bf-053a491284bf",
-    "name" : "ZEITERFASSUNG_PRIVILEGED",
-    "path" : "/ZEITERFASSUNG_PRIVILEGED",
+    "name" : "zeiterfassung_privileged",
+    "path" : "/zeiterfassung_privileged",
     "attributes" : { },
     "realmRoles" : [
       "zeiterfassung_view_report_all",
@@ -406,7 +406,7 @@
     "clientRole" : false,
     "containerId" : "zeiterfassung-realm"
   },
-  "defaultGroups" : [ "/ZEITERFASSUNG_ACCESS" ],
+  "defaultGroups" : [ "/zeiterfassung_user" ],
   "requiredCredentials" : [ "password" ],
   "otpPolicyType" : "totp",
   "otpPolicyAlgorithm" : "HmacSHA1",
