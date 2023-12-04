@@ -18,4 +18,11 @@ public record User(
     public String fullName() {
         return givenName + " " + familyName;
     }
+
+    @Override
+    public String toString() {
+        return "User{" +
+            "userIdComposite=" + userIdComposite +
+            '}';
+    }
 }
