@@ -10,4 +10,12 @@ public record TenantUser(String id, Long localId, String givenName, String famil
     public TenantUser(String id, Long localId, String givenName, String familyName, EMailAddress eMail, Set<SecurityRole> authorities) {
         this(id, localId, givenName, familyName, eMail, null, authorities);
     }
+
+    @Override
+    public String toString() {
+        return "TenantUser{" +
+            "id='" + id + '\'' +
+            ", localId=" + localId +
+            '}';
+    }
 }
