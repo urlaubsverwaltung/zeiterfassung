@@ -1,16 +1,21 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+
+import static de.focusshift.zeiterfassung.DateAndTimeFormat.ISO_DATE;
 
 class WorkingTimeDto {
 
     private Long userId;
     private String id;
-    private Date validFrom;
+    @DateTimeFormat(pattern = ISO_DATE)
+    private LocalDate validFrom;
     private List<String> workday = new ArrayList<>();
     private Double workingTime;
     private Double workingTimeMonday;
@@ -37,11 +42,11 @@ class WorkingTimeDto {
         this.id = id;
     }
 
-    public Date getValidFrom() {
+    public LocalDate getValidFrom() {
         return validFrom;
     }
 
-    public void setValidFrom(Date validFrom) {
+    public void setValidFrom(LocalDate validFrom) {
         this.validFrom = validFrom;
     }
 
@@ -230,7 +235,7 @@ class WorkingTimeDto {
     static class Builder {
         private Long userId;
         private String uuid;
-        private Date validFrom;
+        private LocalDate validFrom;
         private List<DayOfWeek> workday = new ArrayList<>();
         private Double workingTime;
         private Double workingTimeMonday;
@@ -251,7 +256,7 @@ class WorkingTimeDto {
             return this;
         }
 
-        Builder validFrom(Date validFrom) {
+        Builder validFrom(LocalDate validFrom) {
             this.validFrom = validFrom;
             return this;
         }

@@ -12,6 +12,7 @@ import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
+import static org.springframework.util.Assert.notNull;
 
 /**
  * Defines working hours on a dayOfWeek. May be used with {@linkplain WorkingTime} to benefit from a user context.
@@ -20,6 +21,11 @@ import static java.time.DayOfWeek.WEDNESDAY;
  * @param duration the exact duration. not rounded up to minutes.
  */
 public record WorkDay(DayOfWeek dayOfWeek, Duration duration) {
+
+    public WorkDay {
+        notNull(dayOfWeek, "expected dayOfWeek not to be null");
+        notNull(duration, "expected duration not to be null");
+    }
 
     public BigDecimal hours() {
         return BigDecimal.valueOf(duration.toMinutes()).divide(BigDecimal.valueOf(60), 2, CEILING);

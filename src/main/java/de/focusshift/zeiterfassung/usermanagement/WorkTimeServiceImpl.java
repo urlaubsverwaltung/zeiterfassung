@@ -3,6 +3,8 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -16,11 +18,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
 @Service
 class WorkTimeServiceImpl implements WorkingTimeService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
     private final WorkingTimeRepository repository;
     private final UserDateService userDateService;
@@ -88,10 +93,19 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     }
 
     @Override
-    public WorkingTime updateWorkingTime(UserLocalId userLocalId, WorkWeekUpdate workWeekUpdate) {
+    public WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, WorkWeekUpdate workWeekUpdate) {
 
-        final User user = findUser(userLocalId);
-        final WorkingTimeEntity entity = repository.findByUserId(userLocalId.value()).orElseGet(WorkingTimeEntity::new);
+        final WorkingTimeEntity entity = repository.findById(workingTimeId.uuid())
+            .orElseThrow(() -> new IllegalStateException("could not find working-time with id=%s".formatted(workingTimeId)));
+
+        final LocalDate nextValidFrom = workWeekUpdate.validFrom().orElse(null);
+        if (entity.getValidFrom() == null) {
+            LOG.info("ignore updating validFrom of very first workingTime={} to validFrom={}", workingTimeId, nextValidFrom);
+        } else if (nextValidFrom != null) {
+            entity.setValidFrom(nextValidFrom);
+        } else {
+            throw new WorkingTimeUpdateException("cannot update WorkingTime=%s without validFrom".formatted(workingTimeId));
+        }
 
         entity.setMonday(toDurationString(workWeekUpdate.monday()));
         entity.setTuesday(toDurationString(workWeekUpdate.tuesday()));
@@ -101,9 +115,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         entity.setSaturday(toDurationString(workWeekUpdate.saturday()));
         entity.setSunday(toDurationString(workWeekUpdate.sunday()));
 
-        if (entity.getUserId() == null) {
-            entity.setUserId(userLocalId.value());
-        }
+        final User user = findUser(new UserLocalId(entity.getUserId()));
 
         return entityToWorkingTime(repository.save(entity), user.userIdComposite());
     }

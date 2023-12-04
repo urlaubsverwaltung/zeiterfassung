@@ -139,7 +139,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         }
 
         final WorkWeekUpdate workWeekUpdate = dtoToWorkWeekUpdate(workingTimeDto);
-        workingTimeService.updateWorkingTime(new UserLocalId(userId), workWeekUpdate);
+        workingTimeService.updateWorkingTime(WorkingTimeId.fromString(workingTimeDto.getId()), workWeekUpdate);
 
         return new ModelAndView("redirect:/users/%s/working-time".formatted(userId));
     }
@@ -233,7 +233,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
     private WorkWeekUpdate dtoToWorkWeekUpdate(WorkingTimeDto workingTimeDto) {
 
-        final WorkWeekUpdate.Builder builder = WorkWeekUpdate.builder();
+        final WorkWeekUpdate.Builder builder = WorkWeekUpdate.builder()
+            .validFrom(workingTimeDto.getValidFrom());
 
         final Map<String, Supplier<Double>> values = Map.of(
             "monday", workingTimeDto::getWorkingTimeMonday,

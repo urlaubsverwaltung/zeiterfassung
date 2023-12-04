@@ -457,9 +457,12 @@ class WorkingTimeControllerTest {
     @Test
     void ensurePost() throws Exception {
 
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+
         perform(
-            post("/users/42/working-time/" + UUID.randomUUID())
+            post("/users/42/working-time/" + workingTimeId.value())
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .param("id", workingTimeId.value())
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
                 .param("workingTimeMonday", "0")
                 .param("workingTimeTuesday", "1")
@@ -482,7 +485,7 @@ class WorkingTimeControllerTest {
             .sunday(Duration.ofHours(6))
             .build();
 
-        verify(workingTimeService).updateWorkingTime(new UserLocalId(42L), expectedWorkWeekUpdate);
+        verify(workingTimeService).updateWorkingTime(workingTimeId, expectedWorkWeekUpdate);
     }
 
     @Test
@@ -494,6 +497,7 @@ class WorkingTimeControllerTest {
             post("/users/42/working-time/" + workingTimeId.value())
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
+                .param("id", workingTimeId.value())
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
                 .param("workingTimeMonday", "0")
                 .param("workingTimeTuesday", "1")
@@ -516,7 +520,7 @@ class WorkingTimeControllerTest {
             .sunday(Duration.ofHours(6))
             .build();
 
-        verify(workingTimeService).updateWorkingTime(new UserLocalId(42L), expectedWorkWeekUpdate);
+        verify(workingTimeService).updateWorkingTime(workingTimeId, expectedWorkWeekUpdate);
     }
 
     @Test

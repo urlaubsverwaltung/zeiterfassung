@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -356,10 +357,47 @@ class WorkTimeServiceImplTest {
     }
 
     @Test
+    void ensureUpdateWorkingTimeThrowsWhenWorkingTimeIdIsUnknown() {
+
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.empty());
+
+        final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
+            .monday(BigDecimal.valueOf(1))
+            .tuesday(BigDecimal.valueOf(2))
+            .wednesday(BigDecimal.valueOf(3))
+            .thursday(BigDecimal.valueOf(4))
+            .friday(BigDecimal.valueOf(5))
+            .saturday(BigDecimal.valueOf(6))
+            .sunday(BigDecimal.valueOf(7))
+            .build();
+
+        assertThatThrownBy(() -> sut.updateWorkingTime(workingTimeId, workWeekUpdate))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void ensureUpdateWorkingTimeThrowsWhenValidFromIsNotSet() {
+
+        final UUID id = UUID.randomUUID();
+        final WorkingTimeEntity entity = new WorkingTimeEntity();
+        entity.setId(id);
+        entity.setValidFrom(LocalDate.of(2023, 12, 9));
+
+        when(workingTimeRepository.findById(id)).thenReturn(Optional.of(entity));
+
+        final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
+            .build();
+
+        assertThatThrownBy(() -> sut.updateWorkingTime(new WorkingTimeId(id), workWeekUpdate))
+            .isInstanceOf(WorkingTimeUpdateException.class);
+    }
+
+    @Test
     void ensureUpdateWorkingTime() {
 
         final UserId userId_1 = new UserId("uuid-1");
-        final UserLocalId userLocalId_1 = new UserLocalId(1L);
+        final UserLocalId userLocalId_1 = new UserLocalId(42L);
         final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
         final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
         when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
@@ -376,7 +414,7 @@ class WorkTimeServiceImplTest {
         entity.setSaturday("PT24H");
         entity.setSunday("PT24H");
 
-        when(workingTimeRepository.findByUserId(userLocalId_1.value())).thenReturn(Optional.of(entity));
+        when(workingTimeRepository.findById(id)).thenReturn(Optional.of(entity));
         when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
 
         final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
@@ -389,7 +427,7 @@ class WorkTimeServiceImplTest {
             .sunday(BigDecimal.valueOf(7))
             .build();
 
-        final WorkingTime actual = sut.updateWorkingTime(userLocalId_1, workWeekUpdate);
+        final WorkingTime actual = sut.updateWorkingTime(new WorkingTimeId(id), workWeekUpdate);
 
         assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
@@ -415,52 +453,6 @@ class WorkTimeServiceImplTest {
         assertThat(actualEntity.getSunday()).isEqualTo("PT7H");
     }
 
-    @Test
-    void ensureUpdateWorkingTimeWithNewItem() {
-
-        final UserId userId_1 = new UserId("uuid-1");
-        final UserLocalId userLocalId_1 = new UserLocalId(1L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
-
-        when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
-        when(workingTimeRepository.findByUserId(userLocalId_1.value())).thenReturn(Optional.empty());
-        when(workingTimeRepository.save(any())).thenAnswer(returnsWorkingTimeEntityWithId(UUID.randomUUID()));
-
-        final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
-            .monday(BigDecimal.valueOf(1))
-            .tuesday(BigDecimal.valueOf(2))
-            .wednesday(BigDecimal.valueOf(3))
-            .thursday(BigDecimal.valueOf(4))
-            .friday(BigDecimal.valueOf(5))
-            .saturday(BigDecimal.valueOf(6))
-            .sunday(BigDecimal.valueOf(7))
-            .build();
-
-        final WorkingTime actual = sut.updateWorkingTime(userLocalId_1, workWeekUpdate);
-
-        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
-        assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
-        assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
-        assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));
-        assertThat(actual.getThursday()).hasValue(WorkDay.thursday(Duration.ofHours(4)));
-        assertThat(actual.getFriday()).hasValue(WorkDay.friday(Duration.ofHours(5)));
-        assertThat(actual.getSaturday()).hasValue(WorkDay.saturday(Duration.ofHours(6)));
-        assertThat(actual.getSunday()).hasValue(WorkDay.sunday(Duration.ofHours(7)));
-
-        final ArgumentCaptor<WorkingTimeEntity> captor = ArgumentCaptor.forClass(WorkingTimeEntity.class);
-        verify(workingTimeRepository).save(captor.capture());
-
-        final WorkingTimeEntity actualEntity = captor.getValue();
-        assertThat(actualEntity.getUserId()).isEqualTo(1L);
-        assertThat(actualEntity.getMonday()).isEqualTo("PT1H");
-        assertThat(actualEntity.getTuesday()).isEqualTo("PT2H");
-        assertThat(actualEntity.getWednesday()).isEqualTo("PT3H");
-        assertThat(actualEntity.getThursday()).isEqualTo("PT4H");
-        assertThat(actualEntity.getFriday()).isEqualTo("PT5H");
-        assertThat(actualEntity.getSaturday()).isEqualTo("PT6H");
-        assertThat(actualEntity.getSunday()).isEqualTo("PT7H");
-    }
 
     public static Answer<WorkingTimeEntity> returnsWorkingTimeEntityWithId(UUID uuid) {
         return invocation -> {

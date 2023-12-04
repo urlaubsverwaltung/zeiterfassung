@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.Optional;
 
@@ -17,7 +18,20 @@ import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 
+/**
+ * Used to update a {@linkplain WorkingTime}.
+ *
+ * @param validFrom empty Optional when updating the very first {@linkplain WorkingTime}, a date otherwise
+ * @param monday {@linkplain WorkDay} or empty Optional when this is not a working day
+ * @param tuesday  {@linkplain WorkDay} or empty Optional when this is not a working day
+ * @param wednesday  {@linkplain WorkDay} or empty Optional when this is not a working day
+ * @param thursday  {@linkplain WorkDay} or empty Optional when this is not a working day
+ * @param friday  {@linkplain WorkDay} or empty Optional when this is not a working day
+ * @param saturday  {@linkplain WorkDay} or empty Optional when this is not a working day
+ * @param sunday  {@linkplain WorkDay} or empty Optional when this is not a working day
+ */
 public record WorkWeekUpdate(
+    Optional<LocalDate> validFrom,
     Optional<WorkDay> monday,
     Optional<WorkDay> tuesday,
     Optional<WorkDay> wednesday,
@@ -32,7 +46,13 @@ public record WorkWeekUpdate(
     }
 
     public static class Builder {
+        private LocalDate validFrom;
         private final EnumMap<DayOfWeek, Duration> workDays = new EnumMap<>(DayOfWeek.class);
+
+        public Builder validFrom(LocalDate validFrom) {
+            this.validFrom = validFrom;
+            return this;
+        }
 
         public Builder monday(Duration duration) {
             this.workDays.put(MONDAY, duration);
@@ -126,8 +146,9 @@ public record WorkWeekUpdate(
         }
 
         public WorkWeekUpdate build() {
-            return new WorkWeekUpdate(getWorkDay(MONDAY), getWorkDay(TUESDAY), getWorkDay(WEDNESDAY),
-                getWorkDay(THURSDAY), getWorkDay(FRIDAY), getWorkDay(SATURDAY), getWorkDay(SUNDAY));
+            return new WorkWeekUpdate(Optional.ofNullable(validFrom), getWorkDay(MONDAY),
+                getWorkDay(TUESDAY), getWorkDay(WEDNESDAY), getWorkDay(THURSDAY), getWorkDay(FRIDAY),
+                getWorkDay(SATURDAY), getWorkDay(SUNDAY));
         }
 
         private Optional<WorkDay> getWorkDay(DayOfWeek dayOfWeek) {
