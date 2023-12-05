@@ -61,6 +61,7 @@
                   <form
                     action="#"
                     th:action="@{/users/{id}/working-time/{workingTimeId}/delete (id=${user.id},workingTimeId=${workingTime.id})}"
+                    th:if="${#lists.size(workingTimes) > 1}"
                   >
                     <button
                       type="submit"
