@@ -641,7 +641,7 @@ class WorkingTimeControllerTest {
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
                 .param("workingTime", "48")
         )
-            .andExpect(status().isOk())
+            .andExpect(status().isUnprocessableEntity())
             .andExpect(view().name("usermanagement/users::#awesome-frame"))
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "working-time"))

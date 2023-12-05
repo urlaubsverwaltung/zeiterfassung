@@ -400,7 +400,7 @@ class OvertimeAccountControllerTest {
                 .param("allowed", "true")
                 .param("maxAllowedOvertime", "must-be-a-number")
         )
-            .andExpect(status().isOk())
+            .andExpect(status().isUnprocessableEntity())
             .andExpect(view().name("usermanagement/users::#awesome-turbo-frame"))
             .andExpect(model().attribute("section", "overtime"))
             .andExpect(model().attribute("query", ""))

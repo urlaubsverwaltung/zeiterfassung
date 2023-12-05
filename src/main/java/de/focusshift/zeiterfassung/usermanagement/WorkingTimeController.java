@@ -7,7 +7,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -36,6 +36,8 @@ import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.springframework.util.StringUtils.hasText;
 
 @Controller
 @RequestMapping("/users/{userId}/working-time")
@@ -81,7 +83,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, principal));
         model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal));
 
-        if (StringUtils.hasText(turboFrame)) {
+        if (hasText(turboFrame)) {
             return "usermanagement/users::#" + turboFrame;
         } else {
             return "usermanagement/users";
@@ -89,12 +91,12 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping
-    String post(@PathVariable("userId") Long userId, Model model,
-                @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
-                @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                @AuthenticationPrincipal OidcUser principal,
-                @RequestParam Map<String, Object> requestParameters) {
+    ModelAndView post(@PathVariable("userId") Long userId, Model model,
+                      @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
+                      @RequestParam(value = "query", required = false, defaultValue = "") String query,
+                      @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                      @AuthenticationPrincipal OidcUser principal,
+                      @RequestParam Map<String, Object> requestParameters) {
 
         final Object select = requestParameters.get("select");
         if (select instanceof String selectValue) {
@@ -134,17 +136,17 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, principal));
             model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal));
 
-            if (StringUtils.hasText(turboFrame)) {
-                return "usermanagement/users::#" + turboFrame;
+            if (hasText(turboFrame)) {
+                return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
             } else {
-                return "usermanagement/users";
+                return new ModelAndView("usermanagement/users");
             }
         }
 
         final WorkWeekUpdate workWeekUpdate = dtoToWorkWeekUpdate(workingTimeDto);
         workingTimeService.updateWorkingTime(new UserLocalId(userId), workWeekUpdate);
 
-        return "redirect:/users/%s/working-time".formatted(userId);
+        return new ModelAndView("redirect:/users/%s/working-time".formatted(userId));
     }
 
     private void clearWorkDayHours(String dayOfWeek, WorkingTimeDto workingTimeDto) {

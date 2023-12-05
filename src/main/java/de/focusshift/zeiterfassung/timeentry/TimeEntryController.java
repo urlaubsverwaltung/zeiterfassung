@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -124,7 +125,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping(value = "/timeentries/{id}")
-    public String update(
+    public ModelAndView update(
         @PathVariable("id") Long id,
         @Valid @ModelAttribute(name = "timeEntry") TimeEntryDTO timeEntryDTO,
         BindingResult bindingResult,
@@ -170,12 +171,12 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
                 model.addAttribute("turboEditedDay", toTimeEntryDayDto(timeEntryDay));
                 model.addAttribute("turboEditedTimeEntry", toTimeEntryDto(editedTimeEntry));
             }
-            return "timeentries/index::#frame-time-entry";
+            return new ModelAndView("timeentries/index::#frame-time-entry");
         } else {
             if (bindingResult.hasErrors()) {
                 addTimeEntriesToModel(year, weekOfYear, model, principal);
             }
-            return viewName;
+            return new ModelAndView(viewName);
         }
     }
 

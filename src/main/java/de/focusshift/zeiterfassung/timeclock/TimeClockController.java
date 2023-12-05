@@ -9,7 +9,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -17,12 +16,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.springframework.util.StringUtils.hasText;
 
 @Controller
 @RequestMapping("timeclock")
@@ -48,15 +51,15 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping
-    public String editTimeClock(@Valid @ModelAttribute("timeClockUpdate") TimeClockDto timeClockUpdateDto, BindingResult errors,
+    public ModelAndView editTimeClock(@Valid @ModelAttribute("timeClockUpdate") TimeClockDto timeClockUpdateDto, BindingResult errors,
                                 @AuthenticationPrincipal DefaultOidcUser principal, HttpServletRequest request,
                                 @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
 
         if (errors.hasErrors()) {
-            if (StringUtils.hasText(turboFrame)) {
-                return "timeclock/timeclock-edit-form::navigation-box-update";
+            if (hasText(turboFrame)) {
+                return new ModelAndView("timeclock/timeclock-edit-form::navigation-box-update", UNPROCESSABLE_ENTITY);
             } else {
-                return "timeclock/timeclock-edit";
+                return new ModelAndView("timeclock/timeclock-edit");
             }
         }
 
@@ -69,7 +72,7 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
             throw new ResponseStatusException(PRECONDITION_REQUIRED, "Time clock has not been started yet.");
         }
 
-        return redirectToPreviousPage(request);
+        return new ModelAndView(redirectToPreviousPage(request));
     }
 
     @PostMapping("/start")
@@ -99,7 +102,7 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
     }
 
     private String redirectToPreviousPage(HttpServletRequest request) {
-        return String.format("redirect:%s", getReferer(request));
+        return format("redirect:%s", getReferer(request));
     }
 
     private String getReferer(HttpServletRequest request) {

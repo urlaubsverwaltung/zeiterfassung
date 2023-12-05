@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -27,6 +28,7 @@ import static de.focusshift.zeiterfassung.usermanagement.UserManagementControlle
 import static java.math.BigDecimal.ONE;
 import static java.math.RoundingMode.DOWN;
 import static java.math.RoundingMode.HALF_EVEN;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.util.StringUtils.hasText;
 
 @Controller
@@ -62,18 +64,18 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
     }
 
     @PostMapping
-    String post(@PathVariable("userId") Long userId, Model model,
-                @ModelAttribute("overtimeAccount") OvertimeAccountDto overtimeAccountDto, BindingResult result,
-                @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                @AuthenticationPrincipal DefaultOidcUser principal) {
+    ModelAndView post(@PathVariable("userId") Long userId, Model model,
+                      @ModelAttribute("overtimeAccount") OvertimeAccountDto overtimeAccountDto, BindingResult result,
+                      @RequestParam(value = "query", required = false, defaultValue = "") String query,
+                      @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                      @AuthenticationPrincipal DefaultOidcUser principal) {
 
         if (result.hasErrors()) {
             prepareGetRequestModel(model, query, userId, overtimeAccountDto, principal);
             if (hasText(turboFrame)) {
-                return "usermanagement/users::#" + turboFrame;
+                return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
             } else {
-                return "usermanagement/users";
+                return new ModelAndView("usermanagement/users");
             }
         }
 
@@ -83,7 +85,7 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
 
         overtimeAccountService.updateOvertimeAccount(userLocalId, allowed, maxAllowedOvertime);
 
-        return "redirect:/users/%s/overtime-account".formatted(userId);
+        return new ModelAndView("redirect:/users/%s/overtime-account".formatted(userId));
     }
 
     private void prepareGetRequestModel(Model model, String query, Long userId, OvertimeAccountDto overtimeAccountDto,
