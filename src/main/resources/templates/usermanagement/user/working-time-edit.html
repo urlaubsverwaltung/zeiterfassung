@@ -22,7 +22,11 @@
         th:object="${workingTime}"
         class="mt-8"
       >
-        <input type="hidden" th:field="*{id}" />
+        <input
+          th:if="${workingTime.id != null}"
+          type="hidden"
+          th:field="*{id}"
+        />
         <div id="working-time-form-hidden-inputs">
           <input type="hidden" name="query" th:value="${query}" />
         </div>
@@ -240,7 +244,18 @@
               data-turbo-action="advance"
             >
               <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
-              <th:block th:text="#{usermanagement.create}"> Anlegen </th:block>
+              <th:block
+                th:if="${#bools.isTrue(createMode)}"
+                th:text="#{usermanagement.create}"
+              >
+                Anlegen
+              </th:block>
+              <th:block
+                th:if="${#bools.isFalse(createMode)}"
+                th:text="#{usermanagement.save}"
+              >
+                Aktualisieren
+              </th:block>
             </button>
             <a
               id="working-time-edit-reset-button"

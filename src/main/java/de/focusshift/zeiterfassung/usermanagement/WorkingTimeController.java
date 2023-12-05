@@ -80,6 +80,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
 
         prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
+        model.addAttribute("createMode", true);
 
         return "usermanagement/users";
     }
@@ -98,6 +99,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         final WorkingTimeDto workingTimeDto = workingTimeToDto(workingTime);
 
         prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
+        model.addAttribute("createMode", false);
 
         if (hasText(turboFrame)) {
             return "usermanagement/users::#" + turboFrame;
@@ -131,6 +133,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         validator.validate(workingTimeDto, result);
         if (result.hasErrors()) {
             prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
+            model.addAttribute("createMode", workingTimeDto.getId() == null);
             if (hasText(turboFrame)) {
                 return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
             } else {
