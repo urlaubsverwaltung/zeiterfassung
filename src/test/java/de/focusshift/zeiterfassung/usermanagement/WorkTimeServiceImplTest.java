@@ -15,15 +15,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import static java.time.DayOfWeek.FRIDAY;
+import static java.time.DayOfWeek.MONDAY;
+import static java.time.DayOfWeek.SATURDAY;
+import static java.time.DayOfWeek.SUNDAY;
+import static java.time.DayOfWeek.THURSDAY;
+import static java.time.DayOfWeek.TUESDAY;
+import static java.time.DayOfWeek.WEDNESDAY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -453,6 +462,81 @@ class WorkTimeServiceImplTest {
         assertThat(actualEntity.getSunday()).isEqualTo("PT7H");
     }
 
+    @Test
+    void ensureCreateWorkingTimeWithNullableDays() {
+
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserId userId = new UserId("user-id");
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+
+        when(userManagementService.findUserByLocalId(userLocalId))
+            .thenReturn(Optional.of(user));
+
+        final UUID uuid = UUID.randomUUID();
+        when(workingTimeRepository.save(any(WorkingTimeEntity.class))).thenAnswer(invocation -> {
+            final WorkingTimeEntity entity = invocation.getArgument(0);
+            entity.setId(uuid);
+            return entity;
+        });
+
+        final EnumMap<DayOfWeek, Duration> durations = new EnumMap<>(Map.of(
+            MONDAY, Duration.ofHours(1)
+        ));
+
+        final WorkingTime actual = sut.createWorkingTime(userLocalId, LocalDate.of(2023, 12, 9), durations);
+        assertThat(actual.id()).isEqualTo(new WorkingTimeId(uuid));
+        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
+        assertThat(actual.validFrom()).hasValue(LocalDate.of(2023, 12, 9));
+        assertThat(actual.getMonday().map(WorkDay::duration)).hasValue(Duration.ofHours(1));
+        assertThat(actual.getTuesday().map(WorkDay::duration)).hasValue(Duration.ZERO);
+        assertThat(actual.getWednesday().map(WorkDay::duration)).hasValue(Duration.ZERO);
+        assertThat(actual.getThursday().map(WorkDay::duration)).hasValue(Duration.ZERO);
+        assertThat(actual.getFriday().map(WorkDay::duration)).hasValue(Duration.ZERO);
+        assertThat(actual.getSaturday().map(WorkDay::duration)).hasValue(Duration.ZERO);
+        assertThat(actual.getSunday().map(WorkDay::duration)).hasValue(Duration.ZERO);
+    }
+
+    @Test
+    void ensureCreateWorkingTime() {
+
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserId userId = new UserId("user-id");
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+
+        when(userManagementService.findUserByLocalId(userLocalId))
+            .thenReturn(Optional.of(user));
+
+        final UUID uuid = UUID.randomUUID();
+        when(workingTimeRepository.save(any(WorkingTimeEntity.class))).thenAnswer(invocation -> {
+            final WorkingTimeEntity entity = invocation.getArgument(0);
+            entity.setId(uuid);
+            return entity;
+        });
+
+        final EnumMap<DayOfWeek, Duration> durations = new EnumMap<>(Map.of(
+            MONDAY, Duration.ofHours(1),
+            TUESDAY, Duration.ofHours(2),
+            WEDNESDAY, Duration.ofHours(3),
+            THURSDAY, Duration.ofHours(4),
+            FRIDAY, Duration.ofHours(5),
+            SATURDAY, Duration.ofHours(6),
+            SUNDAY, Duration.ofHours(7)
+        ));
+
+        final WorkingTime actual = sut.createWorkingTime(userLocalId, LocalDate.of(2023, 12, 9), durations);
+        assertThat(actual.id()).isEqualTo(new WorkingTimeId(uuid));
+        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
+        assertThat(actual.validFrom()).hasValue(LocalDate.of(2023, 12, 9));
+        assertThat(actual.getMonday().map(WorkDay::duration)).hasValue(Duration.ofHours(1));
+        assertThat(actual.getTuesday().map(WorkDay::duration)).hasValue(Duration.ofHours(2));
+        assertThat(actual.getWednesday().map(WorkDay::duration)).hasValue(Duration.ofHours(3));
+        assertThat(actual.getThursday().map(WorkDay::duration)).hasValue(Duration.ofHours(4));
+        assertThat(actual.getFriday().map(WorkDay::duration)).hasValue(Duration.ofHours(5));
+        assertThat(actual.getSaturday().map(WorkDay::duration)).hasValue(Duration.ofHours(6));
+        assertThat(actual.getSunday().map(WorkDay::duration)).hasValue(Duration.ofHours(7));
+    }
 
     public static Answer<WorkingTimeEntity> returnsWorkingTimeEntityWithId(UUID uuid) {
         return invocation -> {

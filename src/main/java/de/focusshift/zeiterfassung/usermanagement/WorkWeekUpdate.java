@@ -7,9 +7,7 @@ import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.Optional;
 
-import static java.math.BigDecimal.ONE;
-import static java.math.RoundingMode.DOWN;
-import static java.math.RoundingMode.HALF_EVEN;
+import static de.focusshift.zeiterfassung.usermanagement.WorkingTime.hoursToDuration;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
@@ -154,12 +152,6 @@ public record WorkWeekUpdate(
         private Optional<WorkDay> getWorkDay(DayOfWeek dayOfWeek) {
             final Duration hours = workDays.get(dayOfWeek);
             return hours == null ? Optional.empty() : Optional.of(new WorkDay(dayOfWeek, hours));
-        }
-
-        private static Duration hoursToDuration(BigDecimal hours) {
-            final int hoursPart = hours.setScale(0, DOWN).abs().intValue();
-            final int minutesPart = hours.remainder(ONE).multiply(BigDecimal.valueOf(60)).setScale(0, HALF_EVEN).abs().intValueExact();
-            return Duration.ofHours(hoursPart).plusMinutes(minutesPart);
         }
     }
 }

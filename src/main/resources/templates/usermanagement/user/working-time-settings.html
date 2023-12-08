@@ -26,7 +26,7 @@
           <li th:each="workingTime : ${workingTimes}">
             <details
               th:fragment="working-time-block(opened)"
-              th:attrappend="open=${opened ? 'true' : null}"
+              th:attrappend="open=${#objects.nullSafe(opened, false) ? 'true' : null}"
             >
               <summary class="cursor-pointer font-bold">
                 <th:block

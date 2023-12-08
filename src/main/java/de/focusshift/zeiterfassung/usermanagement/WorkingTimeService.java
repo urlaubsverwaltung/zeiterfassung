@@ -3,9 +3,12 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,6 +41,16 @@ public interface WorkingTimeService {
      * @return {@linkplain PlannedWorkingHours} for every day.
      */
     Map<LocalDate, PlannedWorkingHours> getWorkingHoursByUserAndYearWeek(UserLocalId userLocalId, Year year, int weekOfYear);
+
+    /**
+     * Create a new {@linkplain WorkingTime} entry for the {@linkplain User}.
+     *
+     * @param userLocalId id of the user
+     * @param validFrom date the created working time is valid from
+     * @param workdays workdays info
+     * @return the created {@linkplain WorkingTime}
+     */
+    WorkingTime createWorkingTime(UserLocalId userLocalId, LocalDate validFrom, EnumMap<DayOfWeek, Duration> workdays);
 
     /**
      * Update the {@linkplain WorkingTime}

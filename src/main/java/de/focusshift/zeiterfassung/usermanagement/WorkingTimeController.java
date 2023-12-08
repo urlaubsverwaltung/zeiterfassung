@@ -19,15 +19,20 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
+import static de.focusshift.zeiterfassung.usermanagement.WorkingTime.hoursToDuration;
 import static java.math.BigDecimal.ZERO;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
@@ -36,6 +41,7 @@ import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
+import static java.util.Objects.requireNonNullElseGet;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.util.StringUtils.hasText;
 
@@ -108,7 +114,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         }
     }
 
-    @PostMapping({"/new", "/{workingTimeId}"})
+    @PostMapping("/new")
     ModelAndView createNewWorkingTime(@PathVariable("userId") Long userId, Model model,
                                       @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
                                       @RequestParam(value = "query", required = false, defaultValue = "") String query,
@@ -141,10 +147,89 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             }
         }
 
+        final UserLocalId userLocalId = new UserLocalId(workingTimeDto.getUserId());
+        final LocalDate validFrom = workingTimeDto.getValidFrom();
+        final EnumMap<DayOfWeek, Duration> workdays = workingTimeDtoToWorkdays(workingTimeDto);
+
+        workingTimeService.createWorkingTime(userLocalId, validFrom, workdays);
+
+        return new ModelAndView("redirect:/users/%s/working-time".formatted(userId));
+    }
+
+    @PostMapping("/{workingTimeId}")
+    ModelAndView updateWorkingTime(@PathVariable("userId") Long userId, Model model,
+                                   @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
+                                   @RequestParam(value = "query", required = false, defaultValue = "") String query,
+                                   @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                                   @CurrentSecurityContext SecurityContext securityContext,
+                                   @RequestParam Map<String, Object> requestParameters) {
+
+        final Object select = requestParameters.get("select");
+        if (select instanceof String selectValue) {
+            // the <form> offers buttons to select a day without choosing the <input type=checkbox>
+            // this button has been selected by the user -> add the workday
+            workingTimeDto.getWorkday().add(selectValue);
+        }
+
+        final Object clear = requestParameters.get("clear");
+        if (clear instanceof String clearValue) {
+            // the <form> offers buttons to quickly clear a day
+            // this button has been selected by the user -> clear the workday
+            clearWorkDayHours(clearValue, workingTimeDto);
+        }
+
+        validator.validate(workingTimeDto, result);
+        if (result.hasErrors()) {
+            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
+            model.addAttribute("createMode", workingTimeDto.getId() == null);
+            if (hasText(turboFrame)) {
+                return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
+            } else {
+                return new ModelAndView("usermanagement/users");
+            }
+        }
+
         final WorkWeekUpdate workWeekUpdate = dtoToWorkWeekUpdate(workingTimeDto);
         workingTimeService.updateWorkingTime(WorkingTimeId.fromString(workingTimeDto.getId()), workWeekUpdate);
 
         return new ModelAndView("redirect:/users/%s/working-time".formatted(userId));
+    }
+
+    private EnumMap<DayOfWeek, Duration> workingTimeDtoToWorkdays(WorkingTimeDto workingTimeDto) {
+
+        final EnumMap<DayOfWeek, Boolean> checked = new EnumMap<>(Map.of(
+            MONDAY, workingTimeDto.isWorkDayMonday(),
+            TUESDAY, workingTimeDto.isWorkDayTuesday(),
+            WEDNESDAY, workingTimeDto.isWorkDayWednesday(),
+            THURSDAY, workingTimeDto.isWorkDayThursday(),
+            FRIDAY, workingTimeDto.isWorkDayFriday(),
+            SATURDAY, workingTimeDto.isWorkDaySaturday(),
+            SUNDAY, workingTimeDto.isWorkDaySunday()
+        ));
+
+        final EnumMap<DayOfWeek, Supplier<Double>> dayWorkingTime = new EnumMap<>(Map.of(
+            MONDAY, workingTimeDto::getWorkingTimeMonday,
+            TUESDAY, workingTimeDto::getWorkingTimeTuesday,
+            WEDNESDAY, workingTimeDto::getWorkingTimeWednesday,
+            THURSDAY, workingTimeDto::getWorkingTimeThursday,
+            FRIDAY, workingTimeDto::getWorkingTimeFriday,
+            SATURDAY, workingTimeDto::getWorkingTimeSaturday,
+            SUNDAY, workingTimeDto::getWorkingTimeSunday
+        ));
+
+        final Function<DayOfWeek, Double> duration = dayOfWeek -> checked.get(dayOfWeek)
+            ? requireNonNullElseGet(dayWorkingTime.get(dayOfWeek).get(), workingTimeDto::getWorkingTime)
+            : 0d;
+
+        return new EnumMap<>(Map.of(
+            MONDAY, hoursToDuration(duration.apply(MONDAY)),
+            TUESDAY, hoursToDuration(duration.apply(TUESDAY)),
+            WEDNESDAY, hoursToDuration(duration.apply(WEDNESDAY)),
+            THURSDAY, hoursToDuration(duration.apply(THURSDAY)),
+            FRIDAY, hoursToDuration(duration.apply(FRIDAY)),
+            SATURDAY, hoursToDuration(duration.apply(SATURDAY)),
+            SUNDAY, hoursToDuration(duration.apply(SUNDAY))
+        ));
     }
 
     private void prepareGetWorkingTimesModel(Model model, String query, Long userId, List<WorkingTimeDto> workingTimeDtos,

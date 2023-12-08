@@ -173,6 +173,16 @@ public final class WorkingTime implements HasUserIdComposite {
             '}';
     }
 
+    public static Duration hoursToDuration(@Nullable Double hours) {
+        return hours == null ? ZERO : hoursToDuration(BigDecimal.valueOf(hours));
+    }
+
+    public static Duration hoursToDuration(BigDecimal hours) {
+        final int hoursPart = hours.setScale(0, DOWN).abs().intValue();
+        final int minutesPart = hours.remainder(ONE).multiply(BigDecimal.valueOf(60)).setScale(0, HALF_EVEN).abs().intValueExact();
+        return Duration.ofHours(hoursPart).plusMinutes(minutesPart);
+    }
+
     public static Builder builder(UserIdComposite userIdComposite, WorkingTimeId id) {
         return new Builder(userIdComposite, id);
     }
@@ -286,12 +296,6 @@ public final class WorkingTime implements HasUserIdComposite {
 
         public WorkingTime build() {
             return new WorkingTime(userIdComposite, id, validFrom, workDays);
-        }
-
-        private static Duration hoursToDuration(BigDecimal hours) {
-            final int hoursPart = hours.setScale(0, DOWN).abs().intValue();
-            final int minutesPart = hours.remainder(ONE).multiply(BigDecimal.valueOf(60)).setScale(0, HALF_EVEN).abs().intValueExact();
-            return Duration.ofHours(hoursPart).plusMinutes(minutesPart);
         }
     }
 }
