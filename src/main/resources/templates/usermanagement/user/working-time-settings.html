@@ -22,7 +22,7 @@
         </a>
       </div>
       <th:block th:if="${#lists.size(workingTimes) > 1}">
-        <ul class="mt-8">
+        <ul class="mt-8 space-y-1">
           <li th:each="workingTime : ${workingTimes}">
             <details
               th:fragment="working-time-block(opened)"
@@ -31,18 +31,18 @@
               <summary class="cursor-pointer font-bold">
                 <th:block
                   th:if="${workingTime.validFrom == null}"
-                  th:text="#{usermanagement.working-time.single-working-time-summary}"
+                  th:text="#{usermanagement.working-time.multiple-working-time-summary.without-valid-from(${workingTime.validFrom})}"
                 >
-                  gültige Arbeitszeit
+                  erste Arbeitszeit
                 </th:block>
                 <th:block
                   th:if="${workingTime.validFrom != null}"
                   th:text="#{usermanagement.working-time.multiple-working-time-summary(${workingTime.validFrom})}"
                 >
-                  gültig von XX.XX.XXXX bis endlos
+                  gültig ab XX.XX.XXXX
                 </th:block>
               </summary>
-              <div class="mt-4 flex flex-col gap-8">
+              <div class="mt-4 mb-8 flex flex-col gap-8">
                 <div
                   class="flex items-center gap-2"
                   th:with="index=${workingTimeStat == null ? 0 : workingTimeStat.index}"
@@ -74,110 +74,51 @@
                     </button>
                   </form>
                 </div>
-                <fieldset class="border-t border-gray-100">
-                  <legend
-                    class="text-sm font-medium text-gray-400"
-                    th:text="#{usermanagement.working-time.workdays.title}"
-                  >
-                    Arbeitstage
-                  </legend>
-                  <div class="mt-2 sm:mt-4">
-                    <ul class="flex flex-wrap gap-4">
-                      <li
-                        class="flex items-center gap-1"
-                        th:fragment="workday(dayOfWeek)"
-                        th:with="dayOfWeek=${dayOfWeek ?: 'monday'}"
-                      >
-                        <input
-                          type="checkbox"
-                          name="workday"
-                          value="monday"
-                          th:value="${dayOfWeek}"
-                          id="workday-monday"
-                          th:id="${'workday-' + dayOfWeek}"
-                          th:checked="${#lists.contains(workingTime.workday, dayOfWeek)}"
-                          disabled
-                        />
-                        <label
-                          for="workday-monday"
-                          th:for="${'workday-' + dayOfWeek}"
-                          th:text="${#messages.msg(dayOfWeek.toUpperCase())}"
-                        >
-                          Montag
-                        </label>
-                      </li>
-                      <li th:replace="~{::workday('tuesday')}"></li>
-                      <li th:replace="~{::workday('wednesday')}"></li>
-                      <li th:replace="~{::workday('thursday')}"></li>
-                      <li th:replace="~{::workday('friday')}"></li>
-                      <li th:replace="~{::workday('saturday')}"></li>
-                      <li th:replace="~{::workday('sunday')}"></li>
-                    </ul>
-                  </div>
-                </fieldset>
-                <fieldset class="border-t border-gray-100">
-                  <legend
-                    class="text-sm font-medium text-gray-400"
-                    th:text="#{usermanagement.working-time.hours.common.title}"
-                  >
-                    Arbeitszeit
-                  </legend>
-                  <div class="mt-2 sm:mt-4">
-                    <div
-                      class="flex items-center gap-2 sm:grid sm:grid-cols-7 sm:gap-4"
+                <div>
+                  <ul class="text-sm">
+                    <li
+                      th:fragment="blubb(dayOfWeek, hours)"
+                      class="flex items-center gap-4 first:border-t-0 border-t border-gray-100 p-1 transition-colors hover:bg-gray-50"
+                      th:with="dayOfWeek=${#objects.nullSafe(dayOfWeek, 'MONDAY')}, hours=${#objects.nullSafe(hours, workingTime.workingTimeMonday)}"
                     >
-                      <input
-                        type="text"
-                        inputmode="numeric"
-                        name="workingTime"
-                        id="input-workingtime"
-                        class="border border-gray-300 px-2 py-1 w-14 sm:w-full"
-                        th:value="${workingTime.workingTime}"
-                        disabled
-                      />
-                      <label
-                        for="input-workingtime"
-                        class="col-span-6"
-                        th:text="#{usermanagement.working-time.hours.common.input.label}"
+                      <span
+                        class="w-32 font-bold"
+                        th:text="${#messages.msg(dayOfWeek)}"
+                        >Montag</span
                       >
-                        Stunden am Tag
-                      </label>
-                    </div>
-                  </div>
-                </fieldset>
-                <fieldset class="border-t border-gray-100">
-                  <legend
-                    class="text-sm font-medium text-gray-400"
-                    th:text="#{usermanagement.working-time.hours.individual.title}"
-                  >
-                    Individuelle Arbeitszeit
-                  </legend>
-                  <div
-                    class="mt-2 flex flex-col gap-2 sm:mt-4 sm:grid sm:grid-cols-7 sm:gap-4"
-                  >
-                    <div
-                      th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('monday', ${workingTime.workingTimeMonday})}"
-                    ></div>
-                    <div
-                      th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('tuesday', ${workingTime.workingTimeTuesday})}"
-                    ></div>
-                    <div
-                      th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('wednesday', ${workingTime.workingTimeWednesday})}"
-                    ></div>
-                    <div
-                      th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('thursday', ${workingTime.workingTimeThursday})}"
-                    ></div>
-                    <div
-                      th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('friday', ${workingTime.workingTimeFriday})}"
-                    ></div>
-                    <div
-                      th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('saturday', ${workingTime.workingTimeSaturday})}"
-                    ></div>
-                    <div
-                      th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('sunday', ${workingTime.workingTimeSunday})}"
-                    ></div>
-                  </div>
-                </fieldset>
+                      <span
+                        class="inline-flex rounded-lg border border-green-300 bg-white w-[180px]"
+                      >
+                        <span
+                          class="rounded-lg bg-green-300 h-4"
+                          th:with="max=${workingTime.max}, width=${((hours eq 0) or (max eq 0)) ? 0 : #numbers.formatDecimal((hours/max)*100, 2, 'POINT', 3, 'POINT')}"
+                          th:styleappend="${'width:' + width + '%'}"
+                        ></span>
+                      </span>
+                      <span
+                        th:text="#{usermanagement.working-time.multiple-working-time.entry.hours(${hours})}"
+                      ></span>
+                    </li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='TUESDAY', hours=${workingTime.workingTimeTuesday})}"
+                    ></li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='WEDNESDAY', hours=${workingTime.workingTimeWednesday})}"
+                    ></li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='THURSDAY', hours=${workingTime.workingTimeThursday})}"
+                    ></li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='FRIDAY', hours=${workingTime.workingTimeFriday})}"
+                    ></li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='SATURDAY', hours=${workingTime.workingTimeSaturday})}"
+                    ></li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='SUNDAY', hours=${workingTime.workingTimeSunday})}"
+                    ></li>
+                  </ul>
+                </div>
               </div>
             </details>
           </li>

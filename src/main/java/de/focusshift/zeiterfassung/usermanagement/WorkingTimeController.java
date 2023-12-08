@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
+import static java.time.ZoneOffset.UTC;
 import static java.util.Objects.requireNonNullElseGet;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.util.StringUtils.hasText;
@@ -67,7 +69,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                @AuthenticationPrincipal OidcUser principal) {
 
         final List<WorkingTime> workingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(userId));
-        final List<WorkingTimeDto> workingTimeDtos = workingTimesToDtos(workingTimes);
+        final List<WorkingTimeListEntryDto> workingTimeDtos = workingTimesToDtos(workingTimes);
 
         prepareGetWorkingTimesModel(model, query, userId, workingTimeDtos, principal);
 
@@ -161,7 +163,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                                    @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
                                    @RequestParam(value = "query", required = false, defaultValue = "") String query,
                                    @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                                   @CurrentSecurityContext SecurityContext securityContext,
+                                   @AuthenticationPrincipal OidcUser principal,
                                    @RequestParam Map<String, Object> requestParameters) {
 
         final Object select = requestParameters.get("select");
@@ -180,7 +182,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         validator.validate(workingTimeDto, result);
         if (result.hasErrors()) {
-            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
+            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
             model.addAttribute("createMode", workingTimeDto.getId() == null);
             if (hasText(turboFrame)) {
                 return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
@@ -232,8 +234,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         ));
     }
 
-    private void prepareGetWorkingTimesModel(Model model, String query, Long userId, List<WorkingTimeDto> workingTimeDtos,
-                                             OidcUser principal) {
+    private void prepareGetWorkingTimesModel(Model model, String query, Long userId,
+                                             List<WorkingTimeListEntryDto> workingTimeDtos, OidcUser principal) {
 
         final List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()
@@ -282,8 +284,24 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         }
     }
 
-    private static List<WorkingTimeDto> workingTimesToDtos(List<WorkingTime> workingTimes) {
-        return workingTimes.stream().map(WorkingTimeController::workingTimeToDto).toList();
+
+    private static List<WorkingTimeListEntryDto> workingTimesToDtos(List<WorkingTime> workingTimes) {
+        return workingTimes.stream().map(WorkingTimeController::workingTimeListEntryDto).toList();
+    }
+
+    private static WorkingTimeListEntryDto workingTimeListEntryDto(WorkingTime workingTime) {
+        return new WorkingTimeListEntryDto(
+            workingTime.id().value(),
+            workingTime.userLocalId().value(),
+            workingTime.validFrom().map(localDate -> Date.from(localDate.atStartOfDay().toInstant(UTC))).orElse(null),
+            workingTime.getMonday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
+            workingTime.getTuesday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
+            workingTime.getWednesday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
+            workingTime.getThursday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
+            workingTime.getFriday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
+            workingTime.getSaturday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
+            workingTime.getSunday().map(WorkDay::hours).orElse(ZERO).doubleValue()
+        );
     }
 
     private static WorkingTimeDto workingTimeToDto(WorkingTime workingTime) {
@@ -312,8 +330,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         return builder
             .id(workingTime.id().value())
-            // TODO validFrom
-            .validFrom(null)
+            .validFrom(workingTime.validFrom().orElse(null))
             .userId(workingTime.userIdComposite().localId().value())
             .workday(workingTime.getWorkingDays().stream().map(WorkDay::dayOfWeek).toList())
             .build();

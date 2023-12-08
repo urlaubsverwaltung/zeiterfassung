@@ -28,7 +28,6 @@ import java.util.UUID;
 
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
-import static java.time.DayOfWeek.SATURDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
@@ -94,12 +93,18 @@ class WorkingTimeControllerTest {
 
         when(workingTimeService.getAllWorkingTimesByUser(supermanLocalId)).thenReturn(List.of(workingTime));
 
-        final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .id(workingTimeId.value())
-            .userId(workingTime.userIdComposite().localId().value())
-            .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(8.0)
-            .build();
+        final WorkingTimeListEntryDto expectedWorkingTimeListEntryDto = new WorkingTimeListEntryDto(
+            workingTimeId.value(),
+            workingTime.userIdComposite().localId().value(),
+            null,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            0d,
+            0d
+        );
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
 
@@ -116,7 +121,7 @@ class WorkingTimeControllerTest {
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
@@ -184,12 +189,18 @@ class WorkingTimeControllerTest {
 
         when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
-        final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .id(workingTimeId.value())
-            .userId(workingTime.userIdComposite().localId().value())
-            .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(8.0)
-            .build();
+        final WorkingTimeListEntryDto expectedWorkingTimeListEntryDto = new WorkingTimeListEntryDto(
+            workingTimeId.value(),
+            workingTime.userIdComposite().localId().value(),
+            null,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            0d,
+            0d
+        );
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
 
@@ -207,7 +218,7 @@ class WorkingTimeControllerTest {
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
@@ -229,14 +240,18 @@ class WorkingTimeControllerTest {
 
         when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(1L))).thenReturn(List.of(workingTime));
 
-        final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .id(workingTimeId.value())
-            .userId(workingTime.userIdComposite().localId().value())
-            .workday(List.of(MONDAY, WEDNESDAY, SATURDAY))
-            .workingTimeMonday(4.0)
-            .workingTimeWednesday(5.0)
-            .workingTimeSaturday(6.0)
-            .build();
+        final WorkingTimeListEntryDto expectedWorkingTimeListEntryDto = new WorkingTimeListEntryDto(
+            workingTimeId.value(),
+            workingTime.userIdComposite().localId().value(),
+            null,
+            4.0,
+            0d,
+            5.0,
+            0d,
+            0d,
+            6.0,
+            0d
+        );
 
         final UserDto expectedSelectedUser = new UserDto(1, "Alfred", "Pennyworth", "Alfred Pennyworth", "alfred@example.org");
 
@@ -250,7 +265,7 @@ class WorkingTimeControllerTest {
             .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(expectedSelectedUser)))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/1"));
     }
 
@@ -274,12 +289,18 @@ class WorkingTimeControllerTest {
 
         when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
-        final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .id(workingTimeId.value())
-            .userId(workingTime.userIdComposite().localId().value())
-            .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(8.0)
-            .build();
+        final WorkingTimeListEntryDto expectedWorkingTimeListEntryDto = new WorkingTimeListEntryDto(
+            workingTimeId.value(),
+            workingTime.userIdComposite().localId().value(),
+            null,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            0d,
+            0d
+        );
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
 
@@ -296,7 +317,7 @@ class WorkingTimeControllerTest {
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
@@ -320,12 +341,18 @@ class WorkingTimeControllerTest {
 
         when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
-        final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .id(workingTimeId.value())
-            .userId(userLocalId.value())
-            .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(8.0)
-            .build();
+        final WorkingTimeListEntryDto expectedWorkingTimeListEntryDto = new WorkingTimeListEntryDto(
+            workingTimeId.value(),
+            workingTime.userIdComposite().localId().value(),
+            null,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            0d,
+            0d
+        );
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
 
@@ -343,7 +370,7 @@ class WorkingTimeControllerTest {
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
@@ -374,12 +401,18 @@ class WorkingTimeControllerTest {
 
         when(workingTimeService.getAllWorkingTimesByUser(supermanLocalId)).thenReturn(List.of(workingTime));
 
-        final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .id(workingTimeId.value())
-            .userId(supermanLocalId.value())
-            .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(8.0)
-            .build();
+        final WorkingTimeListEntryDto expectedWorkingTimeListEntryDto = new WorkingTimeListEntryDto(
+            workingTimeId.value(),
+            workingTime.userIdComposite().localId().value(),
+            null,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            0d,
+            0d
+        );
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
 
@@ -396,7 +429,7 @@ class WorkingTimeControllerTest {
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
@@ -427,12 +460,18 @@ class WorkingTimeControllerTest {
 
         when(workingTimeService.getAllWorkingTimesByUser(new UserLocalId(42L))).thenReturn(List.of(workingTime));
 
-        final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .id(workingTimeId.value())
-            .userId(supermanLocalId.value())
-            .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(8.0)
-            .build();
+        final WorkingTimeListEntryDto expectedWorkingTimeListEntryDto = new WorkingTimeListEntryDto(
+            workingTimeId.value(),
+            workingTime.userIdComposite().localId().value(),
+            null,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            8.0,
+            0d,
+            0d
+        );
 
         final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
 
@@ -450,7 +489,7 @@ class WorkingTimeControllerTest {
                 new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeDto)))
+            .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
