@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -55,11 +56,17 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     private final UserManagementService userManagementService;
     private final WorkingTimeService workingTimeService;
     private final WorkingTimeDtoValidator validator;
+    private final Clock clock;
 
-    WorkingTimeController(UserManagementService userManagementService, WorkingTimeService workingTimeService, WorkingTimeDtoValidator validator) {
+    WorkingTimeController(UserManagementService userManagementService,
+                          WorkingTimeService workingTimeService,
+                          WorkingTimeDtoValidator validator,
+                          Clock clock) {
+
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
         this.validator = validator;
+        this.clock = clock;
     }
 
     @GetMapping
@@ -284,17 +291,20 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         }
     }
 
-
-    private static List<WorkingTimeListEntryDto> workingTimesToDtos(List<WorkingTime> workingTimes) {
-        return workingTimes.stream().map(WorkingTimeController::workingTimeListEntryDto).toList();
+    private List<WorkingTimeListEntryDto> workingTimesToDtos(List<WorkingTime> workingTimes) {
+        return workingTimes.stream().map(this::workingTimeListEntryDto).toList();
     }
 
-    private static WorkingTimeListEntryDto workingTimeListEntryDto(WorkingTime workingTime) {
+    private WorkingTimeListEntryDto workingTimeListEntryDto(WorkingTime workingTime) {
+
+        final LocalDate today = LocalDate.now(clock);
+
         return new WorkingTimeListEntryDto(
             workingTime.id().value(),
             workingTime.userLocalId().value(),
             workingTime.validFrom().map(localDate -> Date.from(localDate.atStartOfDay().toInstant(UTC))).orElse(null),
             workingTime.isCurrent(),
+            workingTime.validFrom().map(validFrom -> validFrom.isAfter(today)).orElse(false),
             workingTime.getMonday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
             workingTime.getTuesday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
             workingTime.getWednesday().map(WorkDay::hours).orElse(ZERO).doubleValue(),

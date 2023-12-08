@@ -7,7 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,19 +20,27 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
+import static java.time.ZoneOffset.UTC;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,11 +70,12 @@ class WorkingTimeControllerTest {
     @Mock
     private WorkingTimeDtoValidator workingTimeDtoValidator;
 
+    private static final Clock clockFixed = Clock.fixed(Instant.now(), UTC);
     private static final BigDecimal EIGHT = BigDecimal.valueOf(8);
 
     @BeforeEach
     void setUp() {
-        sut = new WorkingTimeController(userManagementService, workingTimeService, workingTimeDtoValidator);
+        sut = new WorkingTimeController(userManagementService, workingTimeService, workingTimeDtoValidator, clockFixed);
     }
 
     @Test
@@ -99,6 +110,7 @@ class WorkingTimeControllerTest {
             workingTime.userIdComposite().localId().value(),
             null,
             true,
+            false,
             8.0,
             8.0,
             8.0,
@@ -125,6 +137,66 @@ class WorkingTimeControllerTest {
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
+    }
+
+    @Test
+    void ensureSimpleGetWithDeletableWorkingTimeBecauseValidFromIsInTheFuture() throws Exception {
+
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(1337L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(batman));
+
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
+            .validFrom(LocalDate.now(clockFixed).plusDays(1))
+            .build();
+
+        when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
+
+        final ResultActions result = perform(
+            get("/users/1337/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        );
+
+        final List<WorkingTimeListEntryDto> workingTimes = getModelAttribute("workingTimes", result);
+        assertThat(workingTimes).extracting(WorkingTimeListEntryDto::isDeletable).contains(true);
+    }
+
+    static Stream<Arguments> nowAndPastDate() {
+        return Stream.of(
+            Arguments.of(LocalDate.now(clockFixed)),
+            Arguments.of(LocalDate.now(clockFixed).minusDays(1))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("nowAndPastDate")
+    void ensureSimpleGetWithNotDeletableWorkingTimeBecauseValidFromIsNowOrInThePast(LocalDate givenValidFrom) throws Exception {
+
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(1337L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(batman));
+
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
+            .validFrom(givenValidFrom)
+            .build();
+
+        when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
+
+        final ResultActions result = perform(
+            get("/users/1337/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        );
+
+        final List<WorkingTimeListEntryDto> workingTimes = getModelAttribute("workingTimes", result);
+        assertThat(workingTimes).extracting(WorkingTimeListEntryDto::isDeletable).contains(false);
     }
 
     @ParameterizedTest
@@ -197,6 +269,7 @@ class WorkingTimeControllerTest {
             workingTime.userIdComposite().localId().value(),
             null,
             true,
+            false,
             8.0,
             8.0,
             8.0,
@@ -250,6 +323,7 @@ class WorkingTimeControllerTest {
             workingTime.userIdComposite().localId().value(),
             null,
             true,
+            false,
             4.0,
             0d,
             5.0,
@@ -301,6 +375,7 @@ class WorkingTimeControllerTest {
             workingTime.userIdComposite().localId().value(),
             null,
             true,
+            false,
             8.0,
             8.0,
             8.0,
@@ -355,6 +430,7 @@ class WorkingTimeControllerTest {
             workingTime.userIdComposite().localId().value(),
             null,
             true,
+            false,
             8.0,
             8.0,
             8.0,
@@ -417,6 +493,7 @@ class WorkingTimeControllerTest {
             workingTime.userIdComposite().localId().value(),
             null,
             true,
+            false,
             8.0,
             8.0,
             8.0,
@@ -478,6 +555,7 @@ class WorkingTimeControllerTest {
             workingTime.userIdComposite().localId().value(),
             null,
             true,
+            false,
             8.0,
             8.0,
             8.0,
@@ -726,6 +804,12 @@ class WorkingTimeControllerTest {
             .andExpect(model().attribute("personSearchFormAction", is("/users/42")));
 
         verifyNoInteractions(workingTimeService);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T getModelAttribute(String attributeName, ResultActions result) {
+        final ModelAndView modelAndView = Objects.requireNonNull(result.andReturn().getModelAndView());
+        return (T) modelAndView.getModel().get(attributeName);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {

@@ -8,6 +8,7 @@ record WorkingTimeListEntryDto(
     Long userId,
     Date validFrom,
     boolean isCurrent,
+    boolean isDeletable,
     Double workingTimeMonday,
     Double workingTimeTuesday,
     Double workingTimeWednesday,
