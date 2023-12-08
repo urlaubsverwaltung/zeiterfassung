@@ -35,7 +35,7 @@
           <li th:each="workingTime : ${workingTimes}">
             <details
               class="group"
-              th:attrappend="open=${#objects.nullSafe(opened, false) ? 'true' : null}"
+              th:attrappend="open=${workingTime.isCurrent ? 'true' : null}"
             >
               <summary
                 class="flex gap-1 items-center cursor-pointer"
