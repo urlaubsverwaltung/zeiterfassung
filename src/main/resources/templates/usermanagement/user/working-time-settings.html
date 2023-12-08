@@ -31,12 +31,16 @@
         </a>
       </div>
       <th:block th:if="${#lists.size(workingTimes) > 1}">
-        <ul class="mt-8 space-y-1">
+        <ul class="mt-8 space-y-1.5">
           <li th:each="workingTime : ${workingTimes}">
             <details
+              class="group"
               th:attrappend="open=${#objects.nullSafe(opened, false) ? 'true' : null}"
             >
-              <summary class="cursor-pointer font-bold">
+              <summary class="flex gap-1 items-center cursor-pointer">
+                <svg
+                  th:replace="~{icons/chevron-right::svg(className='w-5 h-5 transition-transform group-open:rotate-90')}"
+                ></svg>
                 <th:block
                   th:if="${workingTime.validFrom == null}"
                   th:text="#{usermanagement.working-time.multiple-working-time-summary.without-valid-from(${workingTime.validFrom})}"
