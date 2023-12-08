@@ -35,13 +35,16 @@ public final class WorkingTime implements HasUserIdComposite {
 
     private final UserIdComposite userIdComposite;
     private final WorkingTimeId id;
+    private final boolean current;
     private final LocalDate validFrom;
     private final EnumMap<DayOfWeek, WorkDay> workdays;
 
-    private WorkingTime(UserIdComposite userIdComposite, WorkingTimeId id, @Nullable LocalDate validFrom,
-                         EnumMap<DayOfWeek, WorkDay> workdays) {
+    private WorkingTime(UserIdComposite userIdComposite, WorkingTimeId id, boolean current,
+                        @Nullable LocalDate validFrom,
+                        EnumMap<DayOfWeek, WorkDay> workdays) {
         this.userIdComposite = userIdComposite;
         this.id = id;
+        this.current = current;
         this.validFrom = validFrom;
         this.workdays = workdays;
     }
@@ -53,6 +56,13 @@ public final class WorkingTime implements HasUserIdComposite {
 
     public WorkingTimeId id() {
         return id;
+    }
+
+    /**
+     * @return {@code true} when this WorkingTime is currently active, otherwise {@code false}.
+     */
+    public boolean isCurrent() {
+        return current;
     }
 
     /**
@@ -190,12 +200,18 @@ public final class WorkingTime implements HasUserIdComposite {
     public static class Builder {
         private final UserIdComposite userIdComposite;
         private final WorkingTimeId id;
+        private boolean current;
         private LocalDate validFrom;
         private final EnumMap<DayOfWeek, WorkDay> workDays = new EnumMap<>(DayOfWeek.class);
 
         public Builder(UserIdComposite userIdComposite, WorkingTimeId id) {
             this.userIdComposite = userIdComposite;
             this.id = id;
+        }
+
+        public Builder current(boolean current) {
+            this.current = current;
+            return this;
         }
 
         public Builder validFrom(LocalDate validFrom) {
@@ -295,7 +311,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public WorkingTime build() {
-            return new WorkingTime(userIdComposite, id, validFrom, workDays);
+            return new WorkingTime(userIdComposite, id, current, validFrom, workDays);
         }
     }
 }

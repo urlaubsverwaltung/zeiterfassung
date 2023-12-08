@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -29,6 +30,9 @@ import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.nullsLast;
+import static java.util.Comparator.reverseOrder;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
@@ -40,13 +44,15 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     private final WorkingTimeRepository repository;
     private final UserDateService userDateService;
     private final UserManagementService userManagementService;
+    private final Clock clock;
 
     WorkTimeServiceImpl(WorkingTimeRepository repository, UserDateService userDateService,
-                        UserManagementService userManagementService) {
+                        UserManagementService userManagementService, Clock clock) {
 
         this.repository = repository;
         this.userDateService = userDateService;
         this.userManagementService = userManagementService;
+        this.clock = clock;
     }
 
     @Override
@@ -55,15 +61,20 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final User user = findUser(userLocalId);
 
         return repository.findByUserId(userLocalId.value())
-            .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, user.userIdComposite()))
+            .map(workingTimeEntity -> {
+                final WorkingTimeEntity current = getCurrentWorkingTimeEntity(userLocalId);
+                return entityToWorkingTime(workingTimeEntity, user.userIdComposite(), workingTimeEntity.equals(current));
+            })
             .orElseGet(() -> createDefaultWorkingTime(user.userIdComposite()));
     }
 
     @Override
     public Optional<WorkingTime> getWorkingTimeById(WorkingTimeId workingTimeId) {
         return repository.findById(workingTimeId.uuid()).map(entity -> {
-            final User user = findUser(new UserLocalId(entity.getUserId()));
-            return entityToWorkingTime(entity, user.userIdComposite());
+            final UserLocalId userLocalId = new UserLocalId(entity.getUserId());
+            final User user = findUser(userLocalId);
+            final WorkingTimeEntity current = getCurrentWorkingTimeEntity(userLocalId);
+            return entityToWorkingTime(entity, user.userIdComposite(), entity.equals(current));
         });
     }
 
@@ -72,8 +83,11 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
         final User user = findUser(userLocalId);
 
-        final List<WorkingTime> workingTimes = repository.findAllByUserIdOrderByValidFrom(userLocalId.value()).stream()
-            .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, user.userIdComposite()))
+        final List<WorkingTimeEntity> all = findAllWorkingTimesSorted(user.userLocalId());
+        final WorkingTimeEntity current = getCurrentWorkingTimeEntity(userLocalId);
+
+        final List<WorkingTime> workingTimes = all.stream()
+            .map(entity -> entityToWorkingTime(entity, user.userIdComposite(), entity.equals(current)))
             .toList();
 
         return workingTimes.isEmpty() ? List.of(createDefaultWorkingTime(user.userIdComposite())) : workingTimes;
@@ -118,9 +132,18 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         entity.setSaturday(durationToString(workdays.get(SATURDAY)));
         entity.setSunday(durationToString(workdays.get(SUNDAY)));
 
-        final WorkingTimeEntity saved = repository.save(entity);
+        final LocalDate today = LocalDate.now(clock);
+        final boolean isCurrent;
 
-        return entityToWorkingTime(saved, user.userIdComposite());
+        if (validFrom.isAfter(today)) {
+            isCurrent = false;
+        } else {
+            final List<WorkingTimeEntity> all = findAllWorkingTimesSorted(user.userLocalId());
+            isCurrent = all.stream().noneMatch(w -> w.getValidFrom() != null && w.getValidFrom().isAfter(validFrom));
+        }
+
+        final WorkingTimeEntity saved = repository.save(entity);
+        return entityToWorkingTime(saved, user.userIdComposite(), isCurrent);
     }
 
     @Override
@@ -146,9 +169,29 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         entity.setSaturday(workdayToDurationString(workWeekUpdate.saturday()));
         entity.setSunday(workdayToDurationString(workWeekUpdate.sunday()));
 
-        final User user = findUser(new UserLocalId(entity.getUserId()));
+        final UserLocalId userLocalId = new UserLocalId(entity.getUserId());
+        final User user = findUser(userLocalId);
 
-        return entityToWorkingTime(repository.save(entity), user.userIdComposite());
+        final WorkingTimeEntity saved = repository.save(entity);
+        final WorkingTimeEntity current = getCurrentWorkingTimeEntity(userLocalId);
+
+        return entityToWorkingTime(saved, user.userIdComposite(), saved.equals(current));
+    }
+
+    private WorkingTimeEntity getCurrentWorkingTimeEntity(UserLocalId userLocalId) {
+        WorkingTimeEntity current = repository.findByPersonAndValidityDateEqualsOrMinorDate(userLocalId.value(), LocalDate.now(clock));
+        if (current == null) {
+            current = repository.findByUserIdAndValidFrom(userLocalId.value(), null)
+                .orElseThrow(() -> new IllegalStateException("expected one working-time to exist for user=" + userLocalId));
+        }
+        return current;
+    }
+
+    private List<WorkingTimeEntity> findAllWorkingTimesSorted(UserLocalId userLocalId) {
+        return repository.findAllByUserId(userLocalId.value())
+            .stream()
+            .sorted(comparing(WorkingTimeEntity::getValidFrom, nullsLast(reverseOrder())))
+            .toList();
     }
 
     private Map<UserIdComposite, WorkingTime> getWorkingTime(Collection<User> users) {
@@ -162,7 +205,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
         final Map<UserIdComposite, WorkingTime> result = repository.findAllByUserIdIsIn(localIdValues)
             .stream()
-            .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, userIdCompositeByLocalIdValue.get(workingTimeEntity.getUserId())))
+            .map(workingTimeEntity -> entityToWorkingTime(workingTimeEntity, userIdCompositeByLocalIdValue.get(workingTimeEntity.getUserId()), true))
             .collect(toMap(WorkingTime::userIdComposite, identity()));
 
         for (User user : users) {
@@ -188,6 +231,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     private WorkingTime defaultWorkingTime(UserIdComposite userIdComposite) {
         final Duration eight = Duration.ofHours(8);
         return WorkingTime.builder(userIdComposite, null)
+            .current(true)
             .monday(eight)
             .tuesday(eight)
             .wednesday(eight)
@@ -201,11 +245,12 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     private WorkingTime createDefaultWorkingTime(UserIdComposite userIdComposite) {
         final WorkingTime defaultWorkingTime = defaultWorkingTime(userIdComposite);
         final WorkingTimeEntity persisted = repository.save(workingTimeToEntity(defaultWorkingTime));
-        return entityToWorkingTime(persisted, userIdComposite);
+        return entityToWorkingTime(persisted, userIdComposite, true);
     }
 
-    private static WorkingTime entityToWorkingTime(WorkingTimeEntity entity, UserIdComposite userIdComposite) {
+    private WorkingTime entityToWorkingTime(WorkingTimeEntity entity, UserIdComposite userIdComposite, boolean current) {
         return WorkingTime.builder(userIdComposite, new WorkingTimeId(entity.getId()))
+            .current(current)
             .validFrom(entity.getValidFrom())
             .monday(orZero(entity.getMonday()))
             .tuesday(orZero(entity.getTuesday()))

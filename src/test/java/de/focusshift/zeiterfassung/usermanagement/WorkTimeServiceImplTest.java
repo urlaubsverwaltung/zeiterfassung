@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -33,6 +34,7 @@ import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
+import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -47,16 +49,16 @@ class WorkTimeServiceImplTest {
 
     @Mock
     private WorkingTimeRepository workingTimeRepository;
-
     @Mock
     private UserDateService userDateService;
-
     @Mock
     private UserManagementService userManagementService;
 
+    private final Clock clockFixed = Clock.fixed(Clock.systemUTC().instant(), UTC);
+
     @BeforeEach
     void setUp() {
-        sut = new WorkTimeServiceImpl(workingTimeRepository, userDateService, userManagementService);
+        sut = new WorkTimeServiceImpl(workingTimeRepository, userDateService, userManagementService, clockFixed);
     }
 
     @Test
@@ -81,10 +83,12 @@ class WorkTimeServiceImplTest {
         entity.setSunday("PT7H");
 
         when(workingTimeRepository.findByUserId(userLocalId_1.value())).thenReturn(Optional.of(entity));
+        when(workingTimeRepository.findByPersonAndValidityDateEqualsOrMinorDate(userLocalId_1.value(), LocalDate.now(clockFixed))).thenReturn(entity);
 
         final WorkingTime actual = sut.getWorkingTimeByUser(userLocalId_1);
 
         assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
+        assertThat(actual.isCurrent()).isTrue();
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
         assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));
@@ -322,6 +326,7 @@ class WorkTimeServiceImplTest {
         entity.setSunday("PT7H");
 
         when(workingTimeRepository.findByUserId(userLocalId.value())).thenReturn(Optional.of(entity));
+        when(workingTimeRepository.findByPersonAndValidityDateEqualsOrMinorDate(userLocalId.value(), LocalDate.now(clockFixed))).thenReturn(entity);
 
         when(userDateService.firstDayOfWeek(Year.of(2023), 7))
             .thenReturn(LocalDate.of(2023, 2, 13));
@@ -424,6 +429,7 @@ class WorkTimeServiceImplTest {
         entity.setSunday("PT24H");
 
         when(workingTimeRepository.findById(id)).thenReturn(Optional.of(entity));
+        when(workingTimeRepository.findByPersonAndValidityDateEqualsOrMinorDate(42L, LocalDate.now(clockFixed))).thenReturn(entity);
         when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
 
         final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
@@ -439,6 +445,7 @@ class WorkTimeServiceImplTest {
         final WorkingTime actual = sut.updateWorkingTime(new WorkingTimeId(id), workWeekUpdate);
 
         assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
+        assertThat(actual.isCurrent()).isTrue();
         assertThat(actual.getMonday()).hasValue(WorkDay.monday(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).hasValue(WorkDay.tuesday(Duration.ofHours(2)));
         assertThat(actual.getWednesday()).hasValue(WorkDay.wednesday(Duration.ofHours(3)));

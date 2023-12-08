@@ -7,6 +7,7 @@ record WorkingTimeListEntryDto(
     String id,
     Long userId,
     Date validFrom,
+    boolean isCurrent,
     Double workingTimeMonday,
     Double workingTimeTuesday,
     Double workingTimeWednesday,

@@ -5,15 +5,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
 
 
-@Entity
-@Table(name = "working_time")
+@Entity(name = "working_time")
 public class WorkingTimeEntity extends AbstractTenantAwareEntity {
 
     @Id

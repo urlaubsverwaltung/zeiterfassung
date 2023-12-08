@@ -84,6 +84,7 @@ class WorkingTimeControllerTest {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
+            .current(true)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -97,6 +98,7 @@ class WorkingTimeControllerTest {
             workingTimeId.value(),
             workingTime.userIdComposite().localId().value(),
             null,
+            true,
             8.0,
             8.0,
             8.0,
@@ -180,6 +182,7 @@ class WorkingTimeControllerTest {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
+            .current(true)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -193,6 +196,7 @@ class WorkingTimeControllerTest {
             workingTimeId.value(),
             workingTime.userIdComposite().localId().value(),
             null,
+            true,
             8.0,
             8.0,
             8.0,
@@ -233,6 +237,7 @@ class WorkingTimeControllerTest {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
+            .current(true)
             .monday(BigDecimal.valueOf(4))
             .wednesday(BigDecimal.valueOf(5))
             .saturday(BigDecimal.valueOf(6))
@@ -244,6 +249,7 @@ class WorkingTimeControllerTest {
             workingTimeId.value(),
             workingTime.userIdComposite().localId().value(),
             null,
+            true,
             4.0,
             0d,
             5.0,
@@ -280,6 +286,7 @@ class WorkingTimeControllerTest {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
+            .current(true)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -293,6 +300,7 @@ class WorkingTimeControllerTest {
             workingTimeId.value(),
             workingTime.userIdComposite().localId().value(),
             null,
+            true,
             8.0,
             8.0,
             8.0,
@@ -332,6 +340,7 @@ class WorkingTimeControllerTest {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
+            .current(true)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -345,6 +354,7 @@ class WorkingTimeControllerTest {
             workingTimeId.value(),
             workingTime.userIdComposite().localId().value(),
             null,
+            true,
             8.0,
             8.0,
             8.0,
@@ -392,6 +402,7 @@ class WorkingTimeControllerTest {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
+            .current(true)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -405,6 +416,7 @@ class WorkingTimeControllerTest {
             workingTimeId.value(),
             workingTime.userIdComposite().localId().value(),
             null,
+            true,
             8.0,
             8.0,
             8.0,
@@ -451,6 +463,7 @@ class WorkingTimeControllerTest {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
+            .current(true)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -464,6 +477,7 @@ class WorkingTimeControllerTest {
             workingTimeId.value(),
             workingTime.userIdComposite().localId().value(),
             null,
+            true,
             8.0,
             8.0,
             8.0,

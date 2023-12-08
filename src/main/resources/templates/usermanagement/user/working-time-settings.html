@@ -37,15 +37,18 @@
               class="group"
               th:attrappend="open=${#objects.nullSafe(opened, false) ? 'true' : null}"
             >
-              <summary class="flex gap-1 items-center cursor-pointer">
+              <summary
+                class="flex gap-1 items-center cursor-pointer"
+                th:classappend="${workingTime.current ? 'font-bold' : ''}"
+              >
                 <svg
                   th:replace="~{icons/chevron-right::svg(className='w-5 h-5 transition-transform group-open:rotate-90')}"
                 ></svg>
                 <th:block
                   th:if="${workingTime.validFrom == null}"
-                  th:text="#{usermanagement.working-time.multiple-working-time-summary.without-valid-from(${workingTime.validFrom})}"
+                  th:text="#{usermanagement.working-time.multiple-working-time-summary.without-valid-from}"
                 >
-                  erste Arbeitszeit
+                  gültig ab unbekannt
                 </th:block>
                 <th:block
                   th:if="${workingTime.validFrom != null}"
