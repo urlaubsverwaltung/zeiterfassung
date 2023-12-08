@@ -5,20 +5,29 @@
   </head>
   <body>
     <th:block th:fragment="section(user, workingTimes)">
-      <div>
+      <div class="flex gap-2 items-center">
         <a
           href="#"
           th:href="@{/users/{id}/working-time/new (id=${user.id}, query=${query})}"
-          class="flex items-center gap-1"
+          class="flex items-center gap-2 py-1 pl-3 pr-4 text-gray-400 border border-gray-300 bg-white rounded-lg transition-colors hover:text-gray-500 hover:border-gray-500 focus:text-gray-500 focus:border-gray-500"
           data-turbo-action="advance"
         >
           <svg th:replace="~{icons/plus::svg(className='w-5 h-5')}"></svg>
-          <span
-            class="underline"
+          <th:block
             th:text="#{usermanagement.working-time.add-new-working-time-entry}"
           >
-            neue Arbeitszeit hinzufügen
-          </span>
+            Neu
+          </th:block>
+        </a>
+        <a
+          th:if="${#lists.size(workingTimes) == 1}"
+          href="#"
+          th:href="@{/users/{id}/working-time/{workingTimeId} (id=${user.id},workingTimeId=${workingTimes[0].id})}"
+          class="flex items-center gap-2 py-1 pl-3 pr-4 text-gray-400 border border-gray-300 bg-white rounded-lg transition-colors hover:text-gray-500 hover:border-gray-500 focus:text-gray-500 focus:border-gray-500"
+          data-turbo-action="advance"
+        >
+          <svg th:replace="~{icons/edit::svg(className='w-4 h-4')}"></svg>
+          <th:block>Bearbeiten</th:block>
         </a>
       </div>
       <th:block th:if="${#lists.size(workingTimes) > 1}">
@@ -46,8 +55,9 @@
                 class="mt-4 mb-8 flex flex-col gap-8"
               >
                 <div
+                  th:if="${workingTimeStat != null}"
                   class="flex items-center gap-2"
-                  th:with="index=${workingTimeStat == null ? 0 : workingTimeStat.index}"
+                  th:with="index=${workingTimeStat.index}"
                 >
                   <a
                     href="#"
