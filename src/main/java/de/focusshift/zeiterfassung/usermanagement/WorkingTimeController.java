@@ -325,13 +325,13 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             workingTime.validFrom().map(localDate -> Date.from(localDate.atStartOfDay().toInstant(UTC))).orElse(null),
             workingTime.isCurrent(),
             workingTime.validFrom().map(validFrom -> validFrom.isAfter(today)).orElse(false),
-            workingTime.getMonday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
-            workingTime.getTuesday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
-            workingTime.getWednesday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
-            workingTime.getThursday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
-            workingTime.getFriday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
-            workingTime.getSaturday().map(WorkDay::hours).orElse(ZERO).doubleValue(),
-            workingTime.getSunday().map(WorkDay::hours).orElse(ZERO).doubleValue()
+            workingTime.getMonday().hours().doubleValue(),
+            workingTime.getTuesday().hours().doubleValue(),
+            workingTime.getWednesday().hours().doubleValue(),
+            workingTime.getThursday().hours().doubleValue(),
+            workingTime.getFriday().hours().doubleValue(),
+            workingTime.getSaturday().hours().doubleValue(),
+            workingTime.getSunday().hours().doubleValue()
         );
     }
 
@@ -356,7 +356,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             // every day has the same hours
             // -> individual input fields should be empty
             // -> working time input should be set
-            builder.workingTime(workingTime.getWorkingDays().get(0).hours().doubleValue());
+            builder.workingTime(workingTime.getWorkingDays().getFirst().hours().doubleValue());
         }
 
         return builder

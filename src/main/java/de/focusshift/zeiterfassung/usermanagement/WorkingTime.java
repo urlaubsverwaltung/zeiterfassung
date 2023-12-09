@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -40,8 +41,7 @@ public final class WorkingTime implements HasUserIdComposite {
     private final EnumMap<DayOfWeek, WorkDay> workdays;
 
     private WorkingTime(UserIdComposite userIdComposite, WorkingTimeId id, boolean current,
-                        @Nullable LocalDate validFrom,
-                        EnumMap<DayOfWeek, WorkDay> workdays) {
+                        @Nullable LocalDate validFrom, EnumMap<DayOfWeek, WorkDay> workdays) {
         this.userIdComposite = userIdComposite;
         this.id = id;
         this.current = current;
@@ -73,66 +73,58 @@ public final class WorkingTime implements HasUserIdComposite {
     }
 
     /**
-     *
-     * @return optional {@linkplain WorkDay} of the given {@linkplain DayOfWeek}, or {@linkplain Optional#empty()} when it is not a working day.
+     * @return {@linkplain WorkDay} of the given {@linkplain DayOfWeek}, never {@code null}
      */
-    public Optional<WorkDay> getForDayOfWeek(DayOfWeek dayOfWeek) {
-        return Optional.ofNullable(workdays.get(dayOfWeek));
+    public WorkDay getForDayOfWeek(DayOfWeek dayOfWeek) {
+        return workdays.get(dayOfWeek);
     }
 
     /**
-     *
-     * @return optional {@linkplain WorkDay} of monday, or {@linkplain Optional#empty()} when it is not a working day.
+     * @return {@linkplain WorkDay} of monday, never {@code null}
      */
-    public Optional<WorkDay> getMonday() {
+    public WorkDay getMonday() {
         return getForDayOfWeek(MONDAY);
     }
 
     /**
-     *
-     * @return optional {@linkplain WorkDay} of tuesday, or {@linkplain Optional#empty()} when it is not a working day.
+     * @return {@linkplain WorkDay} of tuesday, never {@code null}
      */
-    public Optional<WorkDay> getTuesday() {
+    public WorkDay getTuesday() {
         return getForDayOfWeek(TUESDAY);
     }
 
     /**
-     *
-     * @return optional {@linkplain WorkDay} of wednesday, or {@linkplain Optional#empty()} when it is not a working day.
+     * @return {@linkplain WorkDay} of wednesday, never {@code null}
      */
-    public Optional<WorkDay> getWednesday() {
+    public WorkDay getWednesday() {
         return getForDayOfWeek(WEDNESDAY);
     }
 
     /**
-     *
-     * @return optional {@linkplain WorkDay} of thursday, or {@linkplain Optional#empty()} when it is not a working day.
+     * @return {@linkplain WorkDay} of thursday, never {@code null}
      */
-    public Optional<WorkDay> getThursday() {
+    public WorkDay getThursday() {
         return getForDayOfWeek(THURSDAY);
     }
 
     /**
-     *
-     * @return optional {@linkplain WorkDay} of friday, or {@linkplain Optional#empty()} when it is not a working day.
+     * @return {@linkplain WorkDay} of friday, never {@code null}
      */
-    public Optional<WorkDay> getFriday() {
+    public WorkDay getFriday() {
         return getForDayOfWeek(FRIDAY);
     }
 
     /**
-     *
-     * @return optional {@linkplain WorkDay} of saturday, or {@linkplain Optional#empty()} when it is not a working day.
+     * @return {@linkplain WorkDay} of saturday, never {@code null}
      */
-    public Optional<WorkDay> getSaturday() {
+    public WorkDay getSaturday() {
         return getForDayOfWeek(SATURDAY);
     }
 
     /**
-     *
-     * @return optional {@linkplain WorkDay} of sunday, or {@linkplain Optional#empty()} when it is not a working day.
+     * @return {@linkplain WorkDay} of sunday, never {@code null}
      */
-    public Optional<WorkDay> getSunday() {
+    public WorkDay getSunday() {
         return getForDayOfWeek(SUNDAY);
     }
 
@@ -154,8 +146,6 @@ public final class WorkingTime implements HasUserIdComposite {
      */
     public boolean hasDifferentWorkingHours() {
         return Stream.of(getMonday(), getTuesday(), getWednesday(), getThursday(), getFriday(), getSaturday(), getSunday())
-            .filter(Optional::isPresent)
-            .map(Optional::get)
             .map(WorkDay::duration)
             .filter(not(Duration.ZERO::equals))
             .collect(toSet())
@@ -202,7 +192,15 @@ public final class WorkingTime implements HasUserIdComposite {
         private final WorkingTimeId id;
         private boolean current;
         private LocalDate validFrom;
-        private final EnumMap<DayOfWeek, WorkDay> workDays = new EnumMap<>(DayOfWeek.class);
+        private final EnumMap<DayOfWeek, WorkDay> workDays = new EnumMap<>(Map.of(
+            MONDAY, WorkDay.monday(ZERO),
+            TUESDAY, WorkDay.tuesday(ZERO),
+            WEDNESDAY, WorkDay.wednesday(ZERO),
+            THURSDAY, WorkDay.thursday(ZERO),
+            FRIDAY, WorkDay.friday(ZERO),
+            SATURDAY, WorkDay.saturday(ZERO),
+            SUNDAY, WorkDay.sunday(ZERO)
+        ));
 
         public Builder(UserIdComposite userIdComposite, WorkingTimeId id) {
             this.userIdComposite = userIdComposite;

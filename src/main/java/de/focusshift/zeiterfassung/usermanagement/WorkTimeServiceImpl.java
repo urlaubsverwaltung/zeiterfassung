@@ -285,13 +285,13 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
         entity.setUserId(workingTime.userLocalId().value());
         entity.setValidFrom(workingTime.validFrom().orElse(null));
-        entity.setMonday(workdayToDurationString(workingTime.getMonday()));
-        entity.setTuesday(workdayToDurationString(workingTime.getTuesday()));
-        entity.setWednesday(workdayToDurationString(workingTime.getWednesday()));
-        entity.setThursday(workdayToDurationString(workingTime.getThursday()));
-        entity.setFriday(workdayToDurationString(workingTime.getFriday()));
-        entity.setSaturday(workdayToDurationString(workingTime.getSaturday()));
-        entity.setSunday(workdayToDurationString(workingTime.getSunday()));
+        entity.setMonday(workingTime.getMonday().duration().toString());
+        entity.setTuesday(workingTime.getTuesday().duration().toString());
+        entity.setWednesday(workingTime.getWednesday().duration().toString());
+        entity.setThursday(workingTime.getThursday().duration().toString());
+        entity.setFriday(workingTime.getFriday().duration().toString());
+        entity.setSaturday(workingTime.getSaturday().duration().toString());
+        entity.setSunday(workingTime.getSunday().duration().toString());
 
         return entity;
     }

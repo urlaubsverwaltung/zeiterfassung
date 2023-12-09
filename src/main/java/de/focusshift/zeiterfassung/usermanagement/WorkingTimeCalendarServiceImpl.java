@@ -64,11 +64,8 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
             }
 
             for (LocalDate localDate : workingTimeDateRange) {
-                final PlannedWorkingHours plannedWorkingHours = workingTime.getForDayOfWeek(localDate.getDayOfWeek())
-                    .map(WorkDay::duration)
-                    .map(PlannedWorkingHours::new)
-                    .orElse(PlannedWorkingHours.ZERO);
-                plannedWorkingHoursByDate.put(localDate, plannedWorkingHours);
+                final WorkDay workDay = workingTime.getForDayOfWeek(localDate.getDayOfWeek());
+                plannedWorkingHoursByDate.put(localDate, new PlannedWorkingHours(workDay.duration()));
             }
 
             if (workingTimeDateRange.startDate().equals(from)) {
