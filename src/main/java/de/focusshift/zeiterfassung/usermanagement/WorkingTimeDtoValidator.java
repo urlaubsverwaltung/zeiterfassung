@@ -28,6 +28,10 @@ class WorkingTimeDtoValidator implements Validator {
 
         final WorkingTimeDto dto = (WorkingTimeDto) target;
 
+        if (dto.getId() == null && dto.getValidFrom() == null) {
+            errors.rejectValue("validFrom", "usermanagement.working-time.validation.validFrom.not-empty");
+        }
+
         validateDays(dto, WorkingTimeDtoValidator::positiveOrZero,
             field -> errors.rejectValue(field, "usermanagement.working-time.validation.positive-or-zero")
         );

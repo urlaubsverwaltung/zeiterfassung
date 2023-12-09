@@ -48,7 +48,7 @@
             <legend class="text-sm font-medium text-gray-400">
               Gültigkeit
             </legend>
-            <div class="mt-2 sm:mt-4 flex items-center gap-2">
+            <div class="mt-2 sm:mt-4">
               <div class="flex items-center gap-2">
                 <span>
                   Die Arbeitszeit ist
@@ -57,10 +57,18 @@
                 <input
                   type="date"
                   th:field="*{validFrom}"
+                  th:errorclass="invalid"
                   id="working-time-valid-from-input"
                   class="px-2 border border-gray-300"
                 />
               </div>
+              <p
+                th:if="${#fields.hasErrors('validFrom')}"
+                th:text="${#fields.errors('validFrom')[0]}"
+                class="mt-2 invalid"
+              >
+                Datum muss angegeben werden.
+              </p>
             </div>
           </fieldset>
           <fieldset
