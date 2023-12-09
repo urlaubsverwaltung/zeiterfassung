@@ -64,38 +64,6 @@
                 th:ref="working-time-block"
                 class="mt-4 mb-2 pl-6 flex flex-col gap-4"
               >
-                <div
-                  th:if="${workingTimeStat != null}"
-                  class="flex items-center gap-2"
-                  th:with="index=${workingTimeStat.index}"
-                >
-                  <a
-                    href="#"
-                    th:href="@{/users/{id}/working-time/{workingTimeId} (id=${user.id},workingTimeId=${workingTime.id})}"
-                    class="flex items-center gap-2 py-1 pl-3 pr-4 text-gray-400 border border-gray-300 bg-white rounded-lg transition-colors hover:text-gray-500 hover:border-gray-500 focus:text-gray-500 focus:border-gray-500"
-                    data-turbo-action="advance"
-                  >
-                    <svg
-                      th:replace="~{icons/edit::svg(className='w-4 h-4')}"
-                    ></svg>
-                    <th:block>Bearbeiten</th:block>
-                  </a>
-                  <form
-                    action="#"
-                    th:action="@{/users/{id}/working-time/{workingTimeId}/delete (id=${user.id},workingTimeId=${workingTime.id})}"
-                    th:if="${workingTime.isDeletable}"
-                  >
-                    <button
-                      type="submit"
-                      class="flex items-center gap-2 py-1 pl-3 pr-4 text-gray-400 border border-gray-300 bg-white rounded-lg transition-colors hover:text-gray-500 hover:border-gray-500 focus:text-gray-500 focus:border-gray-500"
-                    >
-                      <svg
-                        th:replace="~{icons/trash::svg(className='w-4 h-4')}"
-                      ></svg>
-                      <th:block>Löschen</th:block>
-                    </button>
-                  </form>
-                </div>
                 <div>
                   <ul class="text-sm flex flex-col gap-4 sm:flex-row sm:gap-2">
                     <li
@@ -142,6 +110,38 @@
                       th:replace="~{::blubb(dayOfWeek='SUNDAY', hours=${workingTime.workingTimeSunday})}"
                     ></li>
                   </ul>
+                </div>
+                <div
+                  th:if="${workingTimeStat != null}"
+                  class="flex items-center gap-2"
+                  th:with="index=${workingTimeStat.index}"
+                >
+                  <a
+                    href="#"
+                    th:href="@{/users/{id}/working-time/{workingTimeId} (id=${user.id},workingTimeId=${workingTime.id})}"
+                    class="flex items-center gap-2 py-1 pl-3 pr-4 text-gray-400 border border-gray-300 bg-white rounded-lg transition-colors hover:text-gray-500 hover:border-gray-500 focus:text-gray-500 focus:border-gray-500"
+                    data-turbo-action="advance"
+                  >
+                    <svg
+                      th:replace="~{icons/edit::svg(className='w-4 h-4')}"
+                    ></svg>
+                    <th:block>Bearbeiten</th:block>
+                  </a>
+                  <form
+                    action="#"
+                    th:action="@{/users/{id}/working-time/{workingTimeId}/delete (id=${user.id},workingTimeId=${workingTime.id})}"
+                    th:if="${workingTime.isDeletable}"
+                  >
+                    <button
+                      type="submit"
+                      class="flex items-center gap-2 py-1 pl-3 pr-4 text-gray-400 border border-gray-300 bg-white rounded-lg transition-colors hover:text-gray-500 hover:border-gray-500 focus:text-gray-500 focus:border-gray-500"
+                    >
+                      <svg
+                        th:replace="~{icons/trash::svg(className='w-4 h-4')}"
+                      ></svg>
+                      <th:block>Löschen</th:block>
+                    </button>
+                  </form>
                 </div>
               </div>
             </details>
