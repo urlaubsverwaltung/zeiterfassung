@@ -10,6 +10,7 @@
           href="#"
           th:href="@{/users/{id}/working-time (id=${user.id})}"
           class="flex gap-2 items-center underline"
+          data-turbo-action="advance"
         >
           <svg th:replace="~{icons/arrow-left::svg(className='w-5 h-5')}"></svg>
           <th:block>zurück zu Arbeitszeiten</th:block>
