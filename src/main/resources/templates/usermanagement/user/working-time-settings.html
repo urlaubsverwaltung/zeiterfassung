@@ -94,10 +94,10 @@
                   </form>
                 </div>
                 <div>
-                  <ul class="text-sm">
+                  <ul class="text-sm flex flex-row gap-2">
                     <li
                       th:fragment="blubb(dayOfWeek, hours)"
-                      class="flex items-center gap-4 first:border-t-0 border-t border-gray-100 p-1 transition-colors hover:bg-gray-50"
+                      class="flex flex-col gap-1"
                       th:with="dayOfWeek=${#objects.nullSafe(dayOfWeek, 'MONDAY')}, hours=${#objects.nullSafe(hours, workingTime.workingTimeMonday)}"
                     >
                       <span
@@ -106,10 +106,10 @@
                         >Montag</span
                       >
                       <span
-                        class="inline-flex rounded-lg border border-green-300 bg-white w-[180px]"
+                        class="flex rounded-lg border border-green-300 bg-white"
                       >
                         <span
-                          class="rounded-lg bg-green-300 h-4"
+                          class="rounded-lg bg-green-300 h-2"
                           th:with="max=${workingTime.max}, width=${((hours eq 0) or (max eq 0)) ? 0 : #numbers.formatDecimal((hours/max)*100, 2, 'POINT', 3, 'POINT')}"
                           th:styleappend="${'width:' + width + '%'}"
                         ></span>
