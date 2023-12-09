@@ -42,8 +42,9 @@ class WorkingTimeCalendarServiceImplTest {
         final UserLocalId userLocalId_2 = new UserLocalId(2L);
         final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
 
-        when(workingTimeService.getAllWorkingTimeByUsers()).thenReturn(Map.of(
-                userIdComposite_1, WorkingTime.builder(userIdComposite_1, new WorkingTimeId(UUID.randomUUID()))
+        when(workingTimeService.getAllWorkingTimesByUsers()).thenReturn(Map.of(
+            userIdComposite_1, List.of(
+                WorkingTime.builder(userIdComposite_1, new WorkingTimeId(UUID.randomUUID()))
                     .monday(1)
                     .tuesday(2)
                     .wednesday(3)
@@ -51,8 +52,10 @@ class WorkingTimeCalendarServiceImplTest {
                     .friday(5)
                     .saturday(6)
                     .sunday(7)
-                    .build(),
-            userIdComposite_2, WorkingTime.builder(userIdComposite_2, new WorkingTimeId(UUID.randomUUID()))
+                    .build()
+            ),
+            userIdComposite_2, List.of(
+                WorkingTime.builder(userIdComposite_2, new WorkingTimeId(UUID.randomUUID()))
                     .monday(7)
                     .tuesday(6)
                     .wednesday(5)
@@ -61,9 +64,12 @@ class WorkingTimeCalendarServiceImplTest {
                     .saturday(2)
                     .sunday(1)
                     .build()
+            )
         ));
 
-        final Map<UserIdComposite, WorkingTimeCalendar> actual = sut.getWorkingTimeCalendarForAllUsers(LocalDate.of(2023, 2, 13), LocalDate.of(2023, 2, 20));
+        final LocalDate from = LocalDate.of(2023, 2, 13);
+        final LocalDate toExclusive = LocalDate.of(2023, 2, 20);
+        final Map<UserIdComposite, WorkingTimeCalendar> actual = sut.getWorkingTimeCalendarForAllUsers(from, toExclusive);
 
         assertThat(actual)
             .hasSize(2)
@@ -98,25 +104,29 @@ class WorkingTimeCalendarServiceImplTest {
         final UserLocalId userLocalId_2 = new UserLocalId(2L);
         final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
 
-        when(workingTimeService.getWorkingTimeByUsers(List.of(userLocalId_1, userLocalId_2))).thenReturn(Map.of(
-            userIdComposite_1, WorkingTime.builder(userIdComposite_1, new WorkingTimeId(UUID.randomUUID()))
-                .monday(1)
-                .tuesday(2)
-                .wednesday(3)
-                .thursday(4)
-                .friday(5)
-                .saturday(6)
-                .sunday(7)
-                .build(),
-            userIdComposite_2, WorkingTime.builder(userIdComposite_2, new WorkingTimeId(UUID.randomUUID()))
-                .monday(7)
-                .tuesday(6)
-                .wednesday(5)
-                .thursday(4)
-                .friday(3)
-                .saturday(2)
-                .sunday(1)
-                .build()
+        when(workingTimeService.getWorkingTimesByUsers(List.of(userLocalId_1, userLocalId_2))).thenReturn(Map.of(
+            userIdComposite_1, List.of(
+                WorkingTime.builder(userIdComposite_1, new WorkingTimeId(UUID.randomUUID()))
+                    .monday(1)
+                    .tuesday(2)
+                    .wednesday(3)
+                    .thursday(4)
+                    .friday(5)
+                    .saturday(6)
+                    .sunday(7)
+                    .build()
+            ),
+            userIdComposite_2, List.of(
+                WorkingTime.builder(userIdComposite_2, new WorkingTimeId(UUID.randomUUID()))
+                    .monday(7)
+                    .tuesday(6)
+                    .wednesday(5)
+                    .thursday(4)
+                    .friday(3)
+                    .saturday(2)
+                    .sunday(1)
+                    .build()
+            )
         ));
 
         final Map<UserIdComposite, WorkingTimeCalendar> actual = sut.getWorkingTimeCalendarForUsers(

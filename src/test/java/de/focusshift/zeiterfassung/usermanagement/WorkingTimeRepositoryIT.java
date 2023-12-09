@@ -11,12 +11,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @Transactional
@@ -97,5 +97,48 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
             assertThat(entity.getSaturday()).isEqualTo("PT8H");
             assertThat(entity.getSunday()).isEqualTo("PT8H");
         });
+    }
+
+    @Test
+    void ensureFindByUserIdAndValidFromIsNullOrIsBetween() {
+
+        final LocalDate validFrom = LocalDate.of(2023, 12, 4);
+        final LocalDate exclusive = validFrom.plusWeeks(1);
+
+        final TenantUser tenantUser = tenantUserService.createNewUser(UUID.randomUUID().toString(), "", "", new EMailAddress(""), Set.of());
+        final Long userId = tenantUser.localId();
+
+        final WorkingTimeEntity firstWorkingTimeEntity = anyWorkingTimeEntity(userId, null);
+        final WorkingTimeEntity workingTimeEntity_equal = anyWorkingTimeEntity(userId, validFrom);
+        final WorkingTimeEntity workingTimeEntity_between = anyWorkingTimeEntity(userId, exclusive.minusDays(1));
+        final WorkingTimeEntity workingTimeEntity_exclusive = anyWorkingTimeEntity(userId, exclusive);
+
+        sut.save(firstWorkingTimeEntity);
+        sut.save(workingTimeEntity_equal);
+        sut.save(workingTimeEntity_between);
+        sut.save(workingTimeEntity_exclusive);
+
+        final List<WorkingTimeEntity> actual = sut.findByUserIdAndValidFromIsNullOrIsBetween(userId, validFrom, exclusive);
+
+        assertThat(actual)
+            .containsExactlyInAnyOrder(firstWorkingTimeEntity, workingTimeEntity_equal, workingTimeEntity_between);
+    }
+
+    private WorkingTimeEntity anyWorkingTimeEntity(Long userId, LocalDate validFrom) {
+
+        final String durationZero = Duration.ofHours(0).toString();
+
+        final WorkingTimeEntity entity = new WorkingTimeEntity();
+        entity.setUserId(userId);
+        entity.setValidFrom(validFrom);
+        entity.setMonday(durationZero);
+        entity.setTuesday(durationZero);
+        entity.setWednesday(durationZero);
+        entity.setThursday(durationZero);
+        entity.setFriday(durationZero);
+        entity.setSaturday(durationZero);
+        entity.setSunday(durationZero);
+
+        return entity;
     }
 }

@@ -1,12 +1,10 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
-import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.Year;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
@@ -15,32 +13,31 @@ import java.util.Optional;
 
 public interface WorkingTimeService {
 
-    /**
-     * Get the users {@linkplain WorkingTime}. If nothing has been set up yet, a default {@linkplain WorkingTime}
-     * will be returned with 8 hours from monday to friday.
-     *
-     * @param userLocalId user id
-     * @return {@linkplain WorkingTime} for the user, never {@code null}.
-     */
-    WorkingTime getWorkingTimeByUser(UserLocalId userLocalId);
-
     Optional<WorkingTime> getWorkingTimeById(WorkingTimeId workingTimeId);
 
+    /**
+     * Finds all {@linkplain WorkingTime}s for the user and sorts the list by {@linkplain WorkingTime#validFrom()}
+     * descending (first element is the newest, last element the oldest).
+     *
+     * @return sorted list of {@linkplain WorkingTime}s
+     */
     List<WorkingTime> getAllWorkingTimesByUser(UserLocalId userLocalId);
 
-    Map<UserIdComposite, WorkingTime> getWorkingTimeByUsers(Collection<UserLocalId> userLocalIds);
-
-    Map<UserIdComposite, WorkingTime> getAllWorkingTimeByUsers();
+    /**
+     * Finds all {@linkplain WorkingTime}s for all the given users and sorts the lists by
+     * {@linkplain WorkingTime#validFrom()} descending (first element is the newest, last element the oldest).
+     *
+     * @return Map of sorted {@linkplain WorkingTime} lists
+     */
+    Map<UserIdComposite, List<WorkingTime>> getWorkingTimesByUsers(Collection<UserLocalId> userLocalIds);
 
     /**
-     * Get {@linkplain PlannedWorkingHours}. Note that public holidays and other absences are not considered.
+     * Finds all {@linkplain WorkingTime}s for all users and sorts the lists by {@linkplain WorkingTime#validFrom()}
+     * descending (first element is the newest, last element the oldest).
      *
-     * @param userLocalId user id
-     * @param year year
-     * @param weekOfYear week of year
-     * @return {@linkplain PlannedWorkingHours} for every day.
+     * @return Map of sorted {@linkplain WorkingTime} lists
      */
-    Map<LocalDate, PlannedWorkingHours> getWorkingHoursByUserAndYearWeek(UserLocalId userLocalId, Year year, int weekOfYear);
+    Map<UserIdComposite, List<WorkingTime>> getAllWorkingTimesByUsers();
 
     /**
      * Create a new {@linkplain WorkingTime} entry for the {@linkplain User}.

@@ -24,4 +24,10 @@ interface WorkingTimeRepository extends CrudRepository<WorkingTimeEntity, UUID> 
             + "AND x.validFrom = (SELECT MAX(w.validFrom) from working_time w WHERE w.userId = ?1 AND w.validFrom <= ?2)"
     )
     WorkingTimeEntity findByPersonAndValidityDateEqualsOrMinorDate(Long userId, LocalDate date);
+
+    @Query(
+        "SELECT wt from working_time wt WHERE wt.userId = ?1 "
+            + "AND wt.validFrom is null OR (wt.validFrom < ?3 AND wt.validFrom >= ?2)"
+    )
+    List<WorkingTimeEntity> findByUserIdAndValidFromIsNullOrIsBetween(Long userId, LocalDate validFrom, LocalDate validFromExclusive);
 }
