@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -27,7 +26,6 @@ import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -38,7 +36,6 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WO
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static de.focusshift.zeiterfassung.usermanagement.WorkingTime.hoursToDuration;
 import static java.lang.invoke.MethodHandles.lookup;
-import static java.math.BigDecimal.ZERO;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
@@ -372,35 +369,26 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         final WorkWeekUpdate.Builder builder = WorkWeekUpdate.builder()
             .validFrom(workingTimeDto.getValidFrom());
 
-        final Map<String, Supplier<Double>> values = Map.of(
-            "monday", workingTimeDto::getWorkingTimeMonday,
-            "tuesday", workingTimeDto::getWorkingTimeTuesday,
-            "wednesday", workingTimeDto::getWorkingTimeWednesday,
-            "thursday", workingTimeDto::getWorkingTimeThursday,
-            "friday", workingTimeDto::getWorkingTimeFriday,
-            "saturday", workingTimeDto::getWorkingTimeSaturday,
-            "sunday", workingTimeDto::getWorkingTimeSunday
-        );
-
-        final Map<String, Consumer<BigDecimal>> setter = Map.of(
-            "monday", builder::monday,
-            "tuesday", builder::tuesday,
-            "wednesday", builder::wednesday,
-            "thursday", builder::thursday,
-            "friday", builder::friday,
-            "saturday", builder::saturday,
-            "sunday", builder::sunday
-        );
-
-        // for each day set the individual value or the common value when nothing is set
-        for (String day : workingTimeDto.getWorkday()) {
-
-            final BigDecimal hours = Optional.ofNullable(values.get(day).get())
-                .or(() -> Optional.of(workingTimeDto.getWorkingTime()))
-                .map(BigDecimal::new)
-                .orElse(ZERO);
-
-            setter.get(day).accept(hours);
+        if (workingTimeDto.isWorkDayMonday()) {
+            builder.monday(requireNonNullElseGet(workingTimeDto.getWorkingTimeMonday(), workingTimeDto::getWorkingTime));
+        }
+        if (workingTimeDto.isWorkDayTuesday()) {
+            builder.tuesday(requireNonNullElseGet(workingTimeDto.getWorkingTimeTuesday(), workingTimeDto::getWorkingTime));
+        }
+        if (workingTimeDto.isWorkDayWednesday()) {
+            builder.wednesday(requireNonNullElseGet(workingTimeDto.getWorkingTimeWednesday(), workingTimeDto::getWorkingTime));
+        }
+        if (workingTimeDto.isWorkDayThursday()) {
+            builder.thursday(requireNonNullElseGet(workingTimeDto.getWorkingTimeThursday(), workingTimeDto::getWorkingTime));
+        }
+        if (workingTimeDto.isWorkDayFriday()) {
+            builder.friday(requireNonNullElseGet(workingTimeDto.getWorkingTimeFriday(), workingTimeDto::getWorkingTime));
+        }
+        if (workingTimeDto.isWorkDaySaturday()) {
+            builder.saturday(requireNonNullElseGet(workingTimeDto.getWorkingTimeSaturday(), workingTimeDto::getWorkingTime));
+        }
+        if (workingTimeDto.isWorkDaySunday()) {
+            builder.sunday(requireNonNullElseGet(workingTimeDto.getWorkingTimeSunday(), workingTimeDto::getWorkingTime));
         }
 
         return builder.build();

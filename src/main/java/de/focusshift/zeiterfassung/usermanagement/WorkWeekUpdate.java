@@ -5,6 +5,9 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.usermanagement.WorkingTime.hoursToDuration;
@@ -15,29 +18,23 @@ import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
+import static org.springframework.util.Assert.isTrue;
 
 /**
  * Used to update a {@linkplain WorkingTime}.
  *
  * @param validFrom empty Optional when updating the very first {@linkplain WorkingTime}, a date otherwise
- * @param monday {@linkplain WorkDay} or empty Optional when this is not a working day
- * @param tuesday  {@linkplain WorkDay} or empty Optional when this is not a working day
- * @param wednesday  {@linkplain WorkDay} or empty Optional when this is not a working day
- * @param thursday  {@linkplain WorkDay} or empty Optional when this is not a working day
- * @param friday  {@linkplain WorkDay} or empty Optional when this is not a working day
- * @param saturday  {@linkplain WorkDay} or empty Optional when this is not a working day
- * @param sunday  {@linkplain WorkDay} or empty Optional when this is not a working day
+ * @param workDays duration for every DayOfWeek. Map must contain non {@code null} values for all {@linkplain DayOfWeek}s.
  */
 public record WorkWeekUpdate(
     Optional<LocalDate> validFrom,
-    Optional<WorkDay> monday,
-    Optional<WorkDay> tuesday,
-    Optional<WorkDay> wednesday,
-    Optional<WorkDay> thursday,
-    Optional<WorkDay> friday,
-    Optional<WorkDay> saturday,
-    Optional<WorkDay> sunday
+    EnumMap<DayOfWeek, Duration> workDays
 ) {
+
+    public WorkWeekUpdate {
+        isTrue(workDays.keySet().containsAll(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY)), "expected workDays to contain values for every DayOfWeek.");
+        isTrue(workDays.values().stream().noneMatch(Objects::isNull), "expected all workDays values to be non null.");
+    }
 
     static Builder builder() {
         return new Builder();
@@ -45,7 +42,15 @@ public record WorkWeekUpdate(
 
     public static class Builder {
         private LocalDate validFrom;
-        private final EnumMap<DayOfWeek, Duration> workDays = new EnumMap<>(DayOfWeek.class);
+        private final EnumMap<DayOfWeek, Duration> workDays = new EnumMap<>(Map.of(
+            MONDAY, Duration.ZERO,
+            TUESDAY, Duration.ZERO,
+            WEDNESDAY, Duration.ZERO,
+            THURSDAY, Duration.ZERO,
+            FRIDAY, Duration.ZERO,
+            SATURDAY, Duration.ZERO,
+            SUNDAY, Duration.ZERO
+        ));
 
         public Builder validFrom(LocalDate validFrom) {
             this.validFrom = validFrom;
@@ -144,14 +149,7 @@ public record WorkWeekUpdate(
         }
 
         public WorkWeekUpdate build() {
-            return new WorkWeekUpdate(Optional.ofNullable(validFrom), getWorkDay(MONDAY),
-                getWorkDay(TUESDAY), getWorkDay(WEDNESDAY), getWorkDay(THURSDAY), getWorkDay(FRIDAY),
-                getWorkDay(SATURDAY), getWorkDay(SUNDAY));
-        }
-
-        private Optional<WorkDay> getWorkDay(DayOfWeek dayOfWeek) {
-            final Duration hours = workDays.get(dayOfWeek);
-            return hours == null ? Optional.empty() : Optional.of(new WorkDay(dayOfWeek, hours));
+            return new WorkWeekUpdate(Optional.ofNullable(validFrom), workDays);
         }
     }
 }
