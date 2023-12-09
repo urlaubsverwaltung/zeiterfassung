@@ -21,5 +21,6 @@
     <include relativeToChangelogFile="true" file="changelog-1.6.5-add-absence-type-source-id.xml"/>
     <include relativeToChangelogFile="true" file="changelog-1.6.5-migrate-existing-absences-with-source-id.xml"/>
     <include relativeToChangelogFile="true" file="changelog-2.0.0-prepare-multiple-working-times-per-user.xml"/>
+    <include relativeToChangelogFile="true" file="changelog-2.0.0-add-working-time-duration-not-null-constraint.xml"/>
 
 </databaseChangeLog>

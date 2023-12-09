@@ -265,13 +265,13 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         return WorkingTime.builder(userIdComposite, new WorkingTimeId(entity.getId()))
             .current(current)
             .validFrom(entity.getValidFrom())
-            .monday(orZero(entity.getMonday()))
-            .tuesday(orZero(entity.getTuesday()))
-            .wednesday(orZero(entity.getWednesday()))
-            .thursday(orZero(entity.getThursday()))
-            .friday(orZero(entity.getFriday()))
-            .saturday(orZero(entity.getSaturday()))
-            .sunday(orZero(entity.getSunday()))
+            .monday(Duration.parse(entity.getMonday()))
+            .tuesday(Duration.parse(entity.getTuesday()))
+            .wednesday(Duration.parse(entity.getWednesday()))
+            .thursday(Duration.parse(entity.getThursday()))
+            .friday(Duration.parse(entity.getFriday()))
+            .saturday(Duration.parse(entity.getSaturday()))
+            .sunday(Duration.parse(entity.getSunday()))
             .build();
     }
 
@@ -285,22 +285,14 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
         entity.setUserId(workingTime.userLocalId().value());
         entity.setValidFrom(workingTime.validFrom().orElse(null));
-        entity.setMonday(workingTime.getMonday().duration().toString());
-        entity.setTuesday(workingTime.getTuesday().duration().toString());
-        entity.setWednesday(workingTime.getWednesday().duration().toString());
-        entity.setThursday(workingTime.getThursday().duration().toString());
-        entity.setFriday(workingTime.getFriday().duration().toString());
-        entity.setSaturday(workingTime.getSaturday().duration().toString());
-        entity.setSunday(workingTime.getSunday().duration().toString());
+        entity.setMonday(durationToString(workingTime.getMonday().duration()));
+        entity.setTuesday(durationToString(workingTime.getTuesday().duration()));
+        entity.setWednesday(durationToString(workingTime.getWednesday().duration()));
+        entity.setThursday(durationToString(workingTime.getThursday().duration()));
+        entity.setFriday(durationToString(workingTime.getFriday().duration()));
+        entity.setSaturday(durationToString(workingTime.getSaturday().duration()));
+        entity.setSunday(durationToString(workingTime.getSunday().duration()));
 
         return entity;
-    }
-
-    private static Duration orZero(String durationString) {
-        if (durationString == null) {
-            return Duration.ZERO;
-        } else {
-            return Duration.parse(durationString);
-        }
     }
 }
