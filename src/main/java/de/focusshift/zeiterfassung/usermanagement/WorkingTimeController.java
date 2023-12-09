@@ -111,7 +111,6 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                           @AuthenticationPrincipal OidcUser principal) {
 
         final WorkingTime workingTime = workingTimeService.getWorkingTimeById(WorkingTimeId.fromString(workingTimeId))
-            // TODO nice frontend message/page instead of "no-content" in case of ajax call
             .orElseThrow(() -> new IllegalStateException("could not find working time with id=" + workingTimeId));
 
         final WorkingTimeDto workingTimeDto = workingTimeToDto(workingTime);
