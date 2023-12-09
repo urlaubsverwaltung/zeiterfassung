@@ -43,6 +43,7 @@
           <fieldset
             class="border-t border-gray-100"
             th:with="hasError=${#fields.hasErrors('validFrom') or #fields.hasErrors('validFrom')}"
+            th:if="${workingTime.id == null or workingTime.validFrom != null}"
           >
             <legend class="text-sm font-medium text-gray-400">
               Gültigkeit
