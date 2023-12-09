@@ -32,6 +32,17 @@ public final class WorkingTimeCalendar {
         return Optional.ofNullable(plannedWorkingHoursByDate.get(date));
     }
 
+    /**
+     * calculate {@linkplain PlannedWorkingHours} between the given dates.
+     */
+    public PlannedWorkingHours plannedWorkingHours(LocalDate from, LocalDate toExclusive) {
+        return plannedWorkingHoursByDate.entrySet()
+            .stream()
+            .filter(entry -> isDateBetween(entry.getKey(), from, toExclusive))
+            .map(Map.Entry::getValue)
+            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -50,5 +61,9 @@ public final class WorkingTimeCalendar {
         return "WorkingTimeCalendar{" +
             "plannedWorkingHoursByDate=" + plannedWorkingHoursByDate +
             '}';
+    }
+
+    private boolean isDateBetween(LocalDate toCheck, LocalDate from, LocalDate toExclusive) {
+        return toCheck.isBefore(toExclusive) && (toCheck.isEqual(from) || toCheck.isAfter(from));
     }
 }

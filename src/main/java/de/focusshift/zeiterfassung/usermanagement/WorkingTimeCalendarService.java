@@ -10,5 +10,7 @@ public interface WorkingTimeCalendarService {
 
     Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimes(LocalDate from, LocalDate toExclusive);
 
+    WorkingTimeCalendar getWorkingTimes(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId);
+
     Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimes(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds);
 }

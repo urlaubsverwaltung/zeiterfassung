@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -22,6 +23,11 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
     @Override
     public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimes(LocalDate from, LocalDate toExclusive) {
         return entitiesToWorkingTime(from, toExclusive, workingTimeService.getAllWorkingTimeByUsers());
+    }
+
+    @Override
+    public WorkingTimeCalendar getWorkingTimes(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId) {
+        return getWorkingTimes(from, toExclusive, List.of(userLocalId)).values().stream().toList().getFirst();
     }
 
     @Override
