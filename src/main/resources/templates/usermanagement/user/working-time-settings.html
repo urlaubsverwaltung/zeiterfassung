@@ -31,8 +31,11 @@
         </a>
       </div>
       <th:block th:if="${#lists.size(workingTimes) > 1}">
-        <ul class="mt-8 space-y-1.5">
-          <li th:each="workingTime : ${workingTimes}">
+        <ul class="mt-8">
+          <li
+            th:each="workingTime : ${workingTimes}"
+            class="flex flex-col gap-1 border-t border-t-gray-100 py-2 first:border-t-0"
+          >
             <details
               class="group"
               th:attrappend="open=${workingTime.isCurrent ? 'true' : null}"
@@ -59,7 +62,7 @@
               </summary>
               <div
                 th:ref="working-time-block"
-                class="mt-4 mb-8 pl-6 flex flex-col gap-4"
+                class="mt-4 mb-2 pl-6 flex flex-col gap-4"
               >
                 <div
                   th:if="${workingTimeStat != null}"
@@ -94,17 +97,18 @@
                   </form>
                 </div>
                 <div>
-                  <ul class="text-sm flex flex-row gap-2">
+                  <ul class="text-sm flex flex-col gap-4 sm:flex-row sm:gap-2">
                     <li
                       th:fragment="blubb(dayOfWeek, hours)"
-                      class="flex flex-col gap-1"
                       th:with="dayOfWeek=${#objects.nullSafe(dayOfWeek, 'MONDAY')}, hours=${#objects.nullSafe(hours, workingTime.workingTimeMonday)}"
+                      class="flex-1 shrink-0"
                     >
                       <span
                         class="w-32 font-bold"
                         th:text="${#messages.msg(dayOfWeek)}"
-                        >Montag</span
                       >
+                        Montag
+                      </span>
                       <span
                         class="flex rounded-lg border border-green-300 bg-white"
                       >
@@ -116,6 +120,7 @@
                       </span>
                       <span
                         th:text="#{usermanagement.working-time.multiple-working-time.entry.hours(${hours})}"
+                        class="whitespace-nowrap"
                       ></span>
                     </li>
                     <li
