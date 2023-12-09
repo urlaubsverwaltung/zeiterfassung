@@ -63,7 +63,7 @@ class WorkingTimeCalendarServiceImplTest {
                     .build()
         ));
 
-        final Map<UserIdComposite, WorkingTimeCalendar> actual = sut.getWorkingTimes(LocalDate.of(2023, 2, 13), LocalDate.of(2023, 2, 20));
+        final Map<UserIdComposite, WorkingTimeCalendar> actual = sut.getWorkingTimeCalendarForAllUsers(LocalDate.of(2023, 2, 13), LocalDate.of(2023, 2, 20));
 
         assertThat(actual)
             .hasSize(2)
@@ -119,7 +119,7 @@ class WorkingTimeCalendarServiceImplTest {
                 .build()
         ));
 
-        final Map<UserIdComposite, WorkingTimeCalendar> actual = sut.getWorkingTimes(
+        final Map<UserIdComposite, WorkingTimeCalendar> actual = sut.getWorkingTimeCalendarForUsers(
             LocalDate.of(2023, 2, 13),
             LocalDate.of(2023, 2, 20),
             List.of(userLocalId_1, userLocalId_2)

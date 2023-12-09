@@ -1016,7 +1016,7 @@ class TimeEntryServiceImplTest {
         final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         when(userManagementService.findUserById(userId)).thenReturn(Optional.of(batman));
 
-        when(workingTimeCalendarService.getWorkingTimes(firstDayOfWeek, firstDayOfWeek.plusWeeks(1), userLocalId))
+        when(workingTimeCalendarService.getWorkingTimeCalender(firstDayOfWeek, firstDayOfWeek.plusWeeks(1), userLocalId))
             .thenReturn(new WorkingTimeCalendar(Map.of(
                 LocalDate.of(2022, 1, 3), PlannedWorkingHours.EIGHT,
                 LocalDate.of(2022, 1, 4), PlannedWorkingHours.EIGHT,
@@ -1127,7 +1127,7 @@ class TimeEntryServiceImplTest {
         final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         when(userManagementService.findUserById(userId)).thenReturn(Optional.of(batman));
 
-        when(workingTimeCalendarService.getWorkingTimes(firstDateOfWeek, firstDateOfWeek.plusWeeks(1), userLocalId))
+        when(workingTimeCalendarService.getWorkingTimeCalender(firstDateOfWeek, firstDateOfWeek.plusWeeks(1), userLocalId))
             .thenReturn(new WorkingTimeCalendar(Map.of(
                 firstDateOfWeek, PlannedWorkingHours.EIGHT,
                 LocalDate.of(2023, 1, 31), PlannedWorkingHours.EIGHT,
@@ -1230,7 +1230,7 @@ class TimeEntryServiceImplTest {
         final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         when(userManagementService.findUserById(userId)).thenReturn(Optional.of(batman));
 
-        when(workingTimeCalendarService.getWorkingTimes(firstDateOfWeek, firstDateOfWeek.plusWeeks(1), userLocalId))
+        when(workingTimeCalendarService.getWorkingTimeCalender(firstDateOfWeek, firstDateOfWeek.plusWeeks(1), userLocalId))
             .thenReturn(new WorkingTimeCalendar(Map.of(
                 LocalDate.of(2023, 6, 12), PlannedWorkingHours.EIGHT,
                 LocalDate.of(2023, 6, 13), PlannedWorkingHours.EIGHT,

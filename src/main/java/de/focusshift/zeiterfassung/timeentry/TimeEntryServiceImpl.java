@@ -163,7 +163,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final UserLocalId userLocalId = user.userLocalId();
 
         final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarService
-            .getWorkingTimes(fromLocalDate, toLocalDateExclusive, userLocalId);
+            .getWorkingTimeCalender(fromLocalDate, toLocalDateExclusive, userLocalId);
 
         final List<TimeEntryDay> daysOfWeek = createTimeEntryDays(fromLocalDate, toLocalDateExclusive, timeEntriesByDate, absencesByDate, workingTimeCalendar);
 

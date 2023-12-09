@@ -71,21 +71,21 @@ class ReportServiceRaw {
         return createReportWeek(year, week,
             period -> Map.of(user.userIdComposite(), timeEntryService.getEntries(period.from(), period.toExclusive(), userId)),
             period -> Map.of(user.userIdComposite(), absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
-            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(user.userLocalId())));
+            period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
     ReportWeek getReportWeek(Year year, int week, List<UserLocalId> userLocalIds) {
         return createReportWeek(year, week,
             period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), userLocalIds),
             period -> absenceService.getAbsencesByUserIds(userLocalIds, period.from(), period.toExclusive()),
-            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), userLocalIds));
+            period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds));
     }
 
     ReportWeek getReportWeekForAllUsers(Year year, int week) {
         return createReportWeek(year, week,
             period -> timeEntryService.getEntriesForAllUsers(period.from(), period.toExclusive()),
             period -> absenceService.getAbsencesForAllUsers(period.from(), period.toExclusive()),
-            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive()));
+            period -> workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(period.from(), period.toExclusive()));
     }
 
     ReportMonth getReportMonth(YearMonth yearMonth, UserId userId) {
@@ -96,21 +96,21 @@ class ReportServiceRaw {
         return createReportMonth(yearMonth,
             period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), List.of(user.userLocalId())),
             period -> Map.of(user.userIdComposite(), absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
-            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), List.of(user.userLocalId())));
+            period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
     ReportMonth getReportMonth(YearMonth yearMonth, List<UserLocalId> userLocalIds) {
         return createReportMonth(yearMonth,
             period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), userLocalIds),
             period -> absenceService.getAbsencesByUserIds(userLocalIds, period.from(), period.toExclusive()),
-            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive(), userLocalIds));
+            period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds));
     }
 
     ReportMonth getReportMonthForAllUsers(YearMonth yearMonth) {
         return createReportMonth(yearMonth,
             period -> timeEntryService.getEntriesForAllUsers(period.from(), period.toExclusive()),
             period -> absenceService.getAbsencesForAllUsers(period.from(), period.toExclusive()),
-            period -> workingTimeCalendarService.getWorkingTimes(period.from(), period.toExclusive()));
+            period -> workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(period.from(), period.toExclusive()));
     }
 
     private ReportWeek createReportWeek(Year year, int week,

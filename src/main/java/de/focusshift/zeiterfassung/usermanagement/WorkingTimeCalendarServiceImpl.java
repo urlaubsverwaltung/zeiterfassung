@@ -21,17 +21,17 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
     }
 
     @Override
-    public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimes(LocalDate from, LocalDate toExclusive) {
+    public WorkingTimeCalendar getWorkingTimeCalender(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId) {
+        return getWorkingTimeCalendarForUsers(from, toExclusive, List.of(userLocalId)).values().stream().toList().getFirst();
+    }
+
+    @Override
+    public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimeCalendarForAllUsers(LocalDate from, LocalDate toExclusive) {
         return entitiesToWorkingTime(from, toExclusive, workingTimeService.getAllWorkingTimeByUsers());
     }
 
     @Override
-    public WorkingTimeCalendar getWorkingTimes(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId) {
-        return getWorkingTimes(from, toExclusive, List.of(userLocalId)).values().stream().toList().getFirst();
-    }
-
-    @Override
-    public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimes(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
+    public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimeCalendarForUsers(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
         return entitiesToWorkingTime(from, toExclusive, workingTimeService.getWorkingTimeByUsers(userLocalIds));
     }
 
