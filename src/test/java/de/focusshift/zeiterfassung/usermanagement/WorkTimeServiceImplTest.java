@@ -8,6 +8,9 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.internal.stubbing.answers.ReturnsArgumentAt;
@@ -26,6 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
@@ -54,7 +58,7 @@ class WorkTimeServiceImplTest {
     @Mock
     private UserManagementService userManagementService;
 
-    private final Clock clockFixed = Clock.fixed(Clock.systemUTC().instant(), UTC);
+    private static final Clock clockFixed = Clock.fixed(Clock.systemUTC().instant(), UTC);
 
     @BeforeEach
     void setUp() {
@@ -543,6 +547,53 @@ class WorkTimeServiceImplTest {
         assertThat(actual.getFriday().map(WorkDay::duration)).hasValue(Duration.ofHours(5));
         assertThat(actual.getSaturday().map(WorkDay::duration)).hasValue(Duration.ofHours(6));
         assertThat(actual.getSunday().map(WorkDay::duration)).hasValue(Duration.ofHours(7));
+    }
+
+    @Test
+    void ensureDeleteWorkingTimeThrowsWhenWorkingTimeCannotBeFound() {
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        assertThatThrownBy(() -> sut.deleteWorkingTime(workingTimeId)).isInstanceOf(IllegalStateException.class);
+    }
+
+    static Stream<Arguments> nowAndPastDate() {
+        return Stream.of(
+            Arguments.of(LocalDate.now(clockFixed)),
+            Arguments.of(LocalDate.now(clockFixed).minusDays(1))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("nowAndPastDate")
+    void ensureDeleteWorkingTimeReturnsFalseWhenWorkingTimeValidFromIsNowOrInThePast(LocalDate givenValidFrom) {
+
+
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+
+        final WorkingTimeEntity entity = new WorkingTimeEntity();
+        entity.setId(workingTimeId.uuid());
+        entity.setUserId(42L);
+        entity.setValidFrom(givenValidFrom);
+
+        when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.of(entity));
+
+        final boolean actual = sut.deleteWorkingTime(workingTimeId);
+        assertThat(actual).isFalse();
+    }
+
+    @Test
+    void ensureDeleteWorkingTime() {
+
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+
+        final WorkingTimeEntity entity = new WorkingTimeEntity();
+        entity.setId(workingTimeId.uuid());
+        entity.setUserId(42L);
+        entity.setValidFrom(LocalDate.now(clockFixed).plusDays(123));
+
+        when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.of(entity));
+
+        final boolean actual = sut.deleteWorkingTime(workingTimeId);
+        assertThat(actual).isTrue();
     }
 
     public static Answer<WorkingTimeEntity> returnsWorkingTimeEntityWithId(UUID uuid) {

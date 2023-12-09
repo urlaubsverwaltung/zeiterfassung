@@ -129,6 +129,7 @@
                   </a>
                   <form
                     action="#"
+                    method="post"
                     th:action="@{/users/{id}/working-time/{workingTimeId}/delete (id=${user.id},workingTimeId=${workingTime.id})}"
                     th:if="${workingTime.isDeletable}"
                   >

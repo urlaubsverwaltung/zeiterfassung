@@ -5,7 +5,6 @@ import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -35,11 +34,12 @@ import static java.util.Comparator.nullsLast;
 import static java.util.Comparator.reverseOrder;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
 class WorkTimeServiceImpl implements WorkingTimeService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final WorkingTimeRepository repository;
     private final UserDateService userDateService;
@@ -176,6 +176,21 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final WorkingTimeEntity current = getCurrentWorkingTimeEntity(userLocalId);
 
         return entityToWorkingTime(saved, user.userIdComposite(), saved.equals(current));
+    }
+
+    @Override
+    public boolean deleteWorkingTime(WorkingTimeId workingTimeId) {
+
+        final WorkingTimeEntity toDelete = repository.findById(workingTimeId.uuid())
+            .orElseThrow(() -> new IllegalStateException("could not find WorkingTime=" + workingTimeId));
+
+        if (!LocalDate.now(clock).isBefore(toDelete.getValidFrom())) {
+            LOG.info("could not delete WorkingTime={} because it is in the past.", workingTimeId);
+            return false;
+        }
+
+        repository.deleteById(workingTimeId.uuid());
+        return true;
     }
 
     private WorkingTimeEntity getCurrentWorkingTimeEntity(UserLocalId userLocalId) {

@@ -60,4 +60,12 @@ public interface WorkingTimeService {
      * @return the updated {@linkplain WorkingTime}
      */
     WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, WorkWeekUpdate workWeekUpdate);
+
+    /**
+     * Delete the {@linkplain WorkingTime} with the given id if possible.
+     *
+     * @param workingTimeId id to delete
+     * @return {@code true} when {@linkplain WorkingTime} is deleted, {@code false} otherwise
+     */
+    boolean deleteWorkingTime(WorkingTimeId workingTimeId);
 }

@@ -806,6 +806,40 @@ class WorkingTimeControllerTest {
         verifyNoInteractions(workingTimeService);
     }
 
+    @Test
+    void ensureDeleteWorkingTimeRendersErrorPageWhenItCannotBeDeleted() throws Exception {
+
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+
+        when(workingTimeService.deleteWorkingTime(workingTimeId)).thenReturn(false);
+
+        perform(
+            post("/users/42/working-time/%s/delete".formatted(workingTimeId.value()))
+                .with(
+                    oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL"))
+                )
+        )
+            .andExpect(status().isBadRequest())
+            .andExpect(view().name("error/5xx"));
+    }
+
+    @Test
+    void ensureDeleteWorkingTimeRedirectsToWorkingTimeView() throws Exception {
+
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+
+        when(workingTimeService.deleteWorkingTime(workingTimeId)).thenReturn(true);
+
+        perform(
+            post("/users/42/working-time/%s/delete".formatted(workingTimeId.value()))
+                .with(
+                    oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL"))
+                )
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/users/42/working-time"));
+    }
+
     @SuppressWarnings("unchecked")
     private <T> T getModelAttribute(String attributeName, ResultActions result) {
         final ModelAndView modelAndView = Objects.requireNonNull(result.andReturn().getModelAndView());
