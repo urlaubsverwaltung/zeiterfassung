@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
-import org.slf4j.Logger;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -35,7 +34,6 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OV
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static de.focusshift.zeiterfassung.usermanagement.WorkingTime.hoursToDuration;
-import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
@@ -45,7 +43,6 @@ import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static java.time.ZoneOffset.UTC;
 import static java.util.Objects.requireNonNullElseGet;
-import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.util.StringUtils.hasText;
@@ -54,8 +51,6 @@ import static org.springframework.util.StringUtils.hasText;
 @RequestMapping("/users/{userId}/working-time")
 @PreAuthorize("hasAuthority('ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL')")
 class WorkingTimeController implements HasTimeClock, HasLaunchpad {
-
-    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final UserManagementService userManagementService;
     private final WorkingTimeService workingTimeService;
