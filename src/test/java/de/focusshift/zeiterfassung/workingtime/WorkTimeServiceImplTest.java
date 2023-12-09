@@ -331,13 +331,13 @@ class WorkTimeServiceImplTest {
 
         assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
         assertThat(actual.isCurrent()).isTrue();
-        assertThat(actual.getMonday()).isEqualTo(WorkDay.monday(Duration.ofHours(1)));
-        assertThat(actual.getTuesday()).isEqualTo(WorkDay.tuesday(Duration.ofHours(2)));
-        assertThat(actual.getWednesday()).isEqualTo(WorkDay.wednesday(Duration.ofHours(3)));
-        assertThat(actual.getThursday()).isEqualTo(WorkDay.thursday(Duration.ofHours(4)));
-        assertThat(actual.getFriday()).isEqualTo(WorkDay.friday(Duration.ofHours(5)));
-        assertThat(actual.getSaturday()).isEqualTo(WorkDay.saturday(Duration.ofHours(6)));
-        assertThat(actual.getSunday()).isEqualTo(WorkDay.sunday(Duration.ofHours(7)));
+        assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
+        assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(2)));
+        assertThat(actual.getWednesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(3)));
+        assertThat(actual.getThursday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(4)));
+        assertThat(actual.getFriday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(5)));
+        assertThat(actual.getSaturday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(6)));
+        assertThat(actual.getSunday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(7)));
 
         final ArgumentCaptor<WorkingTimeEntity> captor = ArgumentCaptor.forClass(WorkingTimeEntity.class);
         verify(workingTimeRepository).save(captor.capture());
@@ -380,13 +380,13 @@ class WorkTimeServiceImplTest {
         assertThat(actual.id()).isEqualTo(new WorkingTimeId(uuid));
         assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actual.validFrom()).hasValue(LocalDate.of(2023, 12, 9));
-        assertThat(actual.getMonday()).isEqualTo(WorkDay.monday(Duration.ofHours(1)));
-        assertThat(actual.getTuesday()).isEqualTo(WorkDay.tuesday(Duration.ZERO));
-        assertThat(actual.getWednesday()).isEqualTo(WorkDay.wednesday(Duration.ZERO));
-        assertThat(actual.getThursday()).isEqualTo(WorkDay.thursday(Duration.ZERO));
-        assertThat(actual.getFriday()).isEqualTo(WorkDay.friday(Duration.ZERO));
-        assertThat(actual.getSaturday()).isEqualTo(WorkDay.saturday(Duration.ZERO));
-        assertThat(actual.getSunday()).isEqualTo(WorkDay.sunday(Duration.ZERO));
+        assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
+        assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
+        assertThat(actual.getWednesday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
+        assertThat(actual.getThursday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
+        assertThat(actual.getFriday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
+        assertThat(actual.getSaturday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
+        assertThat(actual.getSunday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
     }
 
     @Test
@@ -421,13 +421,13 @@ class WorkTimeServiceImplTest {
         assertThat(actual.id()).isEqualTo(new WorkingTimeId(uuid));
         assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actual.validFrom()).hasValue(LocalDate.of(2023, 12, 9));
-        assertThat(actual.getMonday()).isEqualTo(WorkDay.monday(Duration.ofHours(1)));
-        assertThat(actual.getTuesday()).isEqualTo(WorkDay.tuesday(Duration.ofHours(2)));
-        assertThat(actual.getWednesday()).isEqualTo(WorkDay.wednesday(Duration.ofHours(3)));
-        assertThat(actual.getThursday()).isEqualTo(WorkDay.thursday(Duration.ofHours(4)));
-        assertThat(actual.getFriday()).isEqualTo(WorkDay.friday(Duration.ofHours(5)));
-        assertThat(actual.getSaturday()).isEqualTo(WorkDay.saturday(Duration.ofHours(6)));
-        assertThat(actual.getSunday()).isEqualTo(WorkDay.sunday(Duration.ofHours(7)));
+        assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
+        assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(2)));
+        assertThat(actual.getWednesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(3)));
+        assertThat(actual.getThursday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(4)));
+        assertThat(actual.getFriday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(5)));
+        assertThat(actual.getSaturday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(6)));
+        assertThat(actual.getSunday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(7)));
     }
 
     @Test

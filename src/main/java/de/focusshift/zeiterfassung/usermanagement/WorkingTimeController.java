@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
-import de.focusshift.zeiterfassung.workingtime.WorkDay;
 import de.focusshift.zeiterfassung.workingtime.WorkWeekUpdate;
 import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
@@ -322,13 +321,13 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             workingTime.validFrom().map(localDate -> Date.from(localDate.atStartOfDay().toInstant(UTC))).orElse(null),
             workingTime.isCurrent(),
             workingTime.validFrom().map(validFrom -> validFrom.isAfter(today)).orElse(false),
-            workingTime.getMonday().hours().doubleValue(),
-            workingTime.getTuesday().hours().doubleValue(),
-            workingTime.getWednesday().hours().doubleValue(),
-            workingTime.getThursday().hours().doubleValue(),
-            workingTime.getFriday().hours().doubleValue(),
-            workingTime.getSaturday().hours().doubleValue(),
-            workingTime.getSunday().hours().doubleValue()
+            workingTime.getMonday().hoursDoubleValue(),
+            workingTime.getTuesday().hoursDoubleValue(),
+            workingTime.getWednesday().hoursDoubleValue(),
+            workingTime.getThursday().hoursDoubleValue(),
+            workingTime.getFriday().hoursDoubleValue(),
+            workingTime.getSaturday().hoursDoubleValue(),
+            workingTime.getSunday().hoursDoubleValue()
         );
     }
 
@@ -346,21 +345,21 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                 SATURDAY, builder::workingTimeSaturday,
                 SUNDAY, builder::workingTimeSunday
             );
-            for (WorkDay workingDay : workingTime.getWorkingDays()) {
-                setter.get(workingDay.dayOfWeek()).accept(workingDay.hours().doubleValue());
-            }
+            workingTime.workdays().forEach((dayOfWeek, workDayDuration) -> {
+                setter.get(dayOfWeek).accept(workDayDuration.hoursDoubleValue());
+            });
         } else {
             // every day has the same hours
             // -> individual input fields should be empty
             // -> working time input should be set
-            builder.workingTime(workingTime.getWorkingDays().getFirst().hours().doubleValue());
+            builder.workingTime(workingTime.workdays().get(MONDAY).hoursDoubleValue());
         }
 
         return builder
             .id(workingTime.id().value())
             .validFrom(workingTime.validFrom().orElse(null))
             .userId(workingTime.userIdComposite().localId().value())
-            .workday(workingTime.getWorkingDays().stream().map(WorkDay::dayOfWeek).toList())
+            .workday(workingTime.actualWorkingDays())
             .build();
     }
 

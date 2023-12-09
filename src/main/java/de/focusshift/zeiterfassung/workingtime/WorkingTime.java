@@ -26,8 +26,10 @@ import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static java.time.Duration.ZERO;
+import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.collections4.map.UnmodifiableMap.unmodifiableMap;
 
 /**
  * Contractual working time. This representation has no context of absences like public holidays.
@@ -38,10 +40,10 @@ public final class WorkingTime implements HasUserIdComposite {
     private final WorkingTimeId id;
     private final boolean current;
     private final LocalDate validFrom;
-    private final EnumMap<DayOfWeek, WorkDay> workdays;
+    private final EnumMap<DayOfWeek, PlannedWorkingHours> workdays;
 
     private WorkingTime(UserIdComposite userIdComposite, WorkingTimeId id, boolean current,
-                        @Nullable LocalDate validFrom, EnumMap<DayOfWeek, WorkDay> workdays) {
+                        @Nullable LocalDate validFrom, EnumMap<DayOfWeek, PlannedWorkingHours> workdays) {
         this.userIdComposite = userIdComposite;
         this.id = id;
         this.current = current;
@@ -72,71 +74,64 @@ public final class WorkingTime implements HasUserIdComposite {
         return Optional.ofNullable(validFrom);
     }
 
+    public Map<DayOfWeek, PlannedWorkingHours> workdays() {
+        return unmodifiableMap(workdays);
+    }
+
     /**
-     * @return {@linkplain WorkDay} of the given {@linkplain DayOfWeek}, never {@code null}
+     * @return {@linkplain Duration} of the given {@linkplain DayOfWeek}, never {@code null}
      */
-    public WorkDay getForDayOfWeek(DayOfWeek dayOfWeek) {
+    public PlannedWorkingHours getForDayOfWeek(DayOfWeek dayOfWeek) {
         return workdays.get(dayOfWeek);
     }
 
     /**
-     * @return {@linkplain WorkDay} of monday, never {@code null}
+     * @return {@linkplain Duration} of monday, never {@code null}
      */
-    public WorkDay getMonday() {
+    public PlannedWorkingHours getMonday() {
         return getForDayOfWeek(MONDAY);
     }
 
     /**
-     * @return {@linkplain WorkDay} of tuesday, never {@code null}
+     * @return {@linkplain Duration} of tuesday, never {@code null}
      */
-    public WorkDay getTuesday() {
+    public PlannedWorkingHours getTuesday() {
         return getForDayOfWeek(TUESDAY);
     }
 
     /**
-     * @return {@linkplain WorkDay} of wednesday, never {@code null}
+     * @return {@linkplain Duration} of wednesday, never {@code null}
      */
-    public WorkDay getWednesday() {
+    public PlannedWorkingHours getWednesday() {
         return getForDayOfWeek(WEDNESDAY);
     }
 
     /**
-     * @return {@linkplain WorkDay} of thursday, never {@code null}
+     * @return {@linkplain Duration} of thursday, never {@code null}
      */
-    public WorkDay getThursday() {
+    public PlannedWorkingHours getThursday() {
         return getForDayOfWeek(THURSDAY);
     }
 
     /**
-     * @return {@linkplain WorkDay} of friday, never {@code null}
+     * @return {@linkplain Duration} of friday, never {@code null}
      */
-    public WorkDay getFriday() {
+    public PlannedWorkingHours getFriday() {
         return getForDayOfWeek(FRIDAY);
     }
 
     /**
-     * @return {@linkplain WorkDay} of saturday, never {@code null}
+     * @return {@linkplain Duration} of saturday, never {@code null}
      */
-    public WorkDay getSaturday() {
+    public PlannedWorkingHours getSaturday() {
         return getForDayOfWeek(SATURDAY);
     }
 
     /**
-     * @return {@linkplain WorkDay} of sunday, never {@code null}
+     * @return {@linkplain Duration} of sunday, never {@code null}
      */
-    public WorkDay getSunday() {
+    public PlannedWorkingHours getSunday() {
         return getForDayOfWeek(SUNDAY);
-    }
-
-    /**
-     *
-     * @return list of {@linkplain WorkDay}s with working hours greater ZERO.
-     */
-    public List<WorkDay> getWorkingDays() {
-        return workdays.values()
-            .stream()
-            .filter(not(w -> ZERO.equals(w.duration())))
-            .toList();
     }
 
     /**
@@ -146,10 +141,21 @@ public final class WorkingTime implements HasUserIdComposite {
      */
     public boolean hasDifferentWorkingHours() {
         return Stream.of(getMonday(), getTuesday(), getWednesday(), getThursday(), getFriday(), getSaturday(), getSunday())
-            .map(WorkDay::duration)
+            .map(PlannedWorkingHours::duration)
             .filter(not(Duration.ZERO::equals))
             .collect(toSet())
             .size() > 1;
+    }
+
+    /**
+     * @return {@linkplain DayOfWeek}s with duration greater than ZERO.
+     */
+    public List<DayOfWeek> actualWorkingDays() {
+        return workdays.entrySet().stream()
+            .filter(not(entry -> PlannedWorkingHours.ZERO.equals(entry.getValue())))
+            .map(Map.Entry::getKey)
+            .sorted(comparing(DayOfWeek::getValue))
+            .toList();
     }
 
     @Override
@@ -192,14 +198,14 @@ public final class WorkingTime implements HasUserIdComposite {
         private final WorkingTimeId id;
         private boolean current;
         private LocalDate validFrom;
-        private final EnumMap<DayOfWeek, WorkDay> workDays = new EnumMap<>(Map.of(
-            MONDAY, WorkDay.monday(ZERO),
-            TUESDAY, WorkDay.tuesday(ZERO),
-            WEDNESDAY, WorkDay.wednesday(ZERO),
-            THURSDAY, WorkDay.thursday(ZERO),
-            FRIDAY, WorkDay.friday(ZERO),
-            SATURDAY, WorkDay.saturday(ZERO),
-            SUNDAY, WorkDay.sunday(ZERO)
+        private final EnumMap<DayOfWeek, PlannedWorkingHours> workDays = new EnumMap<>(Map.of(
+            MONDAY, PlannedWorkingHours.ZERO,
+            TUESDAY, PlannedWorkingHours.ZERO,
+            WEDNESDAY, PlannedWorkingHours.ZERO,
+            THURSDAY, PlannedWorkingHours.ZERO,
+            FRIDAY, PlannedWorkingHours.ZERO,
+            SATURDAY, PlannedWorkingHours.ZERO,
+            SUNDAY, PlannedWorkingHours.ZERO
         ));
 
         public Builder(UserIdComposite userIdComposite, WorkingTimeId id) {
@@ -218,7 +224,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public Builder monday(Duration duration) {
-            this.workDays.put(MONDAY, new WorkDay(MONDAY, duration));
+            this.workDays.put(MONDAY, new PlannedWorkingHours(duration));
             return this;
         }
 
@@ -231,7 +237,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public Builder tuesday(Duration duration) {
-            this.workDays.put(TUESDAY, new WorkDay(TUESDAY, duration));
+            this.workDays.put(TUESDAY, new PlannedWorkingHours(duration));
             return this;
         }
 
@@ -244,7 +250,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public Builder wednesday(Duration duration) {
-            this.workDays.put(WEDNESDAY, new WorkDay(WEDNESDAY, duration));
+            this.workDays.put(WEDNESDAY, new PlannedWorkingHours(duration));
             return this;
         }
 
@@ -257,7 +263,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public Builder thursday(Duration duration) {
-            this.workDays.put(THURSDAY, new WorkDay(THURSDAY, duration));
+            this.workDays.put(THURSDAY, new PlannedWorkingHours(duration));
             return this;
         }
 
@@ -270,7 +276,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public Builder friday(Duration duration) {
-            this.workDays.put(FRIDAY, new WorkDay(FRIDAY, duration));
+            this.workDays.put(FRIDAY, new PlannedWorkingHours(duration));
             return this;
         }
 
@@ -283,7 +289,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public Builder saturday(Duration duration) {
-            this.workDays.put(SATURDAY, new WorkDay(SATURDAY, duration));
+            this.workDays.put(SATURDAY, new PlannedWorkingHours(duration));
             return this;
         }
 
@@ -296,7 +302,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public Builder sunday(Duration duration) {
-            this.workDays.put(SUNDAY, new WorkDay(SUNDAY, duration));
+            this.workDays.put(SUNDAY, new PlannedWorkingHours(duration));
             return this;
         }
 

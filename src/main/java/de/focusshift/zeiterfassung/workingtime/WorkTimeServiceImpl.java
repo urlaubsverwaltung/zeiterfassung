@@ -228,8 +228,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             .orElseThrow(() -> new IllegalStateException("expected user=%s to exist. but got nothing.".formatted(userLocalId)));
     }
 
-    private String workdayToDurationString(@Nullable WorkDay workDay) {
-        return durationToString(workDay == null ? null : workDay.duration());
+    private String workdayToDurationString(@Nullable PlannedWorkingHours plannedWorkingHours) {
+        return durationToString(plannedWorkingHours == null ? null : plannedWorkingHours.duration());
     }
 
     private String durationToString(@Nullable Duration duration) {

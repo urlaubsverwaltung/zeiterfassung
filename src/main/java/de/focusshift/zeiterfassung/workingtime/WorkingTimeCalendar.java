@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.workingtime;
 
-import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.usermanagement.User;
 
 import java.time.LocalDate;
@@ -9,7 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Provides information about the {@link de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours} on a given {@link LocalDate} including publicHolidays.
+ * Provides information about the {@link PlannedWorkingHours} on a given {@link LocalDate} including publicHolidays.
  * For instance:
  * <ul>
  *     <li>2022-12-26 - 0h (publicHoliday, monday)</li>

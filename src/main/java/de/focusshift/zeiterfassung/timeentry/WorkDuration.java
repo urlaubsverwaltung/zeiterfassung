@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.workingtime.ZeitDuration;
+
 import java.time.Duration;
 
 /**

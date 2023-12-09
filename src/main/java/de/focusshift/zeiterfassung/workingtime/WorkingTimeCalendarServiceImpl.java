@@ -1,7 +1,6 @@
 package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.DateRange;
-import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.stereotype.Component;
@@ -65,8 +64,7 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
             }
 
             for (LocalDate localDate : workingTimeDateRange) {
-                final WorkDay workDay = workingTime.getForDayOfWeek(localDate.getDayOfWeek());
-                plannedWorkingHoursByDate.put(localDate, new PlannedWorkingHours(workDay.duration()));
+                plannedWorkingHoursByDate.put(localDate, workingTime.getForDayOfWeek(localDate.getDayOfWeek()));
             }
 
             if (workingTimeDateRange.startDate().equals(from)) {

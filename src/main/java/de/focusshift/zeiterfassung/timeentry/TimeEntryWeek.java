@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import org.threeten.extra.YearWeek;
 
 import java.math.BigDecimal;
