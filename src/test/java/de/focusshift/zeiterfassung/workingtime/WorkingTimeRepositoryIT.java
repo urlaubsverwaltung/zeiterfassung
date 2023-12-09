@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.usermanagement;
+package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.TestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;

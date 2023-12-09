@@ -1,6 +1,7 @@
-package de.focusshift.zeiterfassung.usermanagement;
+package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 
 import java.time.LocalDate;
 import java.util.Collection;

@@ -6,7 +6,7 @@ import de.focusshift.zeiterfassung.tenancy.user.TenantUserEntity;
 import de.focusshift.zeiterfassung.timeclock.TimeClockEntity;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryEntity;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccountEntity;
-import de.focusshift.zeiterfassung.usermanagement.WorkingTimeEntity;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeEntity;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;

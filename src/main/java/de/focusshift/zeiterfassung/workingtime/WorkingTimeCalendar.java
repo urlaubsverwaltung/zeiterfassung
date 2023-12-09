@@ -1,6 +1,7 @@
-package de.focusshift.zeiterfassung.usermanagement;
+package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.usermanagement.User;
 
 import java.time.LocalDate;
 import java.util.Map;

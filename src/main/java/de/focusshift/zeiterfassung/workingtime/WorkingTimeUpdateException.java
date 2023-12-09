@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.usermanagement;
+package de.focusshift.zeiterfassung.workingtime;
 
 public class WorkingTimeUpdateException extends RuntimeException {
 

@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.usermanagement;
+package de.focusshift.zeiterfassung.workingtime;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import static de.focusshift.zeiterfassung.usermanagement.WorkingTime.hoursToDuration;
+import static de.focusshift.zeiterfassung.workingtime.WorkingTime.hoursToDuration;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
@@ -36,7 +36,7 @@ public record WorkWeekUpdate(
         isTrue(workDays.values().stream().noneMatch(Objects::isNull), "expected all workDays values to be non null.");
     }
 
-    static Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 
