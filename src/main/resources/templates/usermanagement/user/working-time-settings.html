@@ -49,17 +49,35 @@
                 <svg
                   th:replace="~{icons/chevron-right::svg(className='w-5 h-5 transition-transform group-open:rotate-90')}"
                 ></svg>
-                <th:block
-                  th:if="${workingTime.validFrom == null}"
-                  th:text="#{usermanagement.working-time.multiple-working-time-summary.without-valid-from}"
-                >
-                  gültig ab unbekannt
-                </th:block>
-                <th:block
-                  th:if="${workingTime.validFrom != null}"
-                  th:text="#{usermanagement.working-time.multiple-working-time-summary(${workingTime.validFrom})}"
-                >
-                  gültig ab XX.XX.XXXX
+                <th:block th:switch="${workingTime.validFromIsPast}">
+                  <th:block th:case="true">
+                    <th:block
+                      th:if="${workingTime.validFrom == null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.past.without-valid-from}"
+                    >
+                      gültig seit unbekannt
+                    </th:block>
+                    <th:block
+                      th:if="${workingTime.validFrom != null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.past(${workingTime.validFrom})}"
+                    >
+                      gültig seit XX.XX.XXXX
+                    </th:block>
+                  </th:block>
+                  <th:block th:case="false">
+                    <th:block
+                      th:if="${workingTime.validFrom == null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.without-valid-from}"
+                    >
+                      gültig ab unbekannt
+                    </th:block>
+                    <th:block
+                      th:if="${workingTime.validFrom != null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary(${workingTime.validFrom})}"
+                    >
+                      gültig ab XX.XX.XXXX
+                    </th:block>
+                  </th:block>
                 </th:block>
               </summary>
               <div
