@@ -28,12 +28,12 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
 
     @Override
     public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimeCalendarForAllUsers(LocalDate from, LocalDate toExclusive) {
-        return toWorkingTimeCalendar(from, toExclusive, workingTimeService.getAllWorkingTimesByUsers());
+        return toWorkingTimeCalendar(from, toExclusive, workingTimeService.getAllWorkingTimes(from, toExclusive));
     }
 
     @Override
     public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimeCalendarForUsers(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
-        return toWorkingTimeCalendar(from, toExclusive, workingTimeService.getWorkingTimesByUsers(userLocalIds));
+        return toWorkingTimeCalendar(from, toExclusive, workingTimeService.getWorkingTimesByUsers(from, toExclusive, userLocalIds));
     }
 
     private Map<UserIdComposite, WorkingTimeCalendar> toWorkingTimeCalendar(LocalDate from, LocalDate toExclusive, Map<UserIdComposite, List<WorkingTime>> sortedWorkingTimes) {
@@ -54,7 +54,7 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
 
         LocalDate nextEnd = toExclusive.minusDays(1);
 
-        for (WorkingTime workingTime : sortedWorkingTimes.reversed()) {
+        for (WorkingTime workingTime : sortedWorkingTimes) {
 
             final DateRange workingTimeDateRange;
             if (workingTime.validFrom().map(date -> date.isBefore(from)).orElse(true)) {

@@ -29,17 +29,21 @@ public interface WorkingTimeService {
      * Finds all {@linkplain WorkingTime}s for all the given users and sorts the lists by
      * {@linkplain WorkingTime#validFrom()} descending (first element is the newest, last element the oldest).
      *
+     * @param from include WorkingTimes greaterOrEqual from date
+     * @param toExclusive include WorkingTimes before toExclusive date
      * @return Map of sorted {@linkplain WorkingTime} lists
      */
-    Map<UserIdComposite, List<WorkingTime>> getWorkingTimesByUsers(Collection<UserLocalId> userLocalIds);
+    Map<UserIdComposite, List<WorkingTime>> getWorkingTimesByUsers(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds);
 
     /**
      * Finds all {@linkplain WorkingTime}s for all users and sorts the lists by {@linkplain WorkingTime#validFrom()}
      * descending (first element is the newest, last element the oldest).
      *
+     * @param from include WorkingTimes greaterOrEqual from date
+     * @param toExclusive include WorkingTimes before toExclusive date
      * @return Map of sorted {@linkplain WorkingTime} lists
      */
-    Map<UserIdComposite, List<WorkingTime>> getAllWorkingTimesByUsers();
+    Map<UserIdComposite, List<WorkingTime>> getAllWorkingTimes(LocalDate from, LocalDate toExclusive);
 
     /**
      * Create a new {@linkplain WorkingTime} entry for the {@linkplain User}.

@@ -310,7 +310,9 @@ class WorkTimeServiceImplTest {
         when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1, userLocalId_2)))
             .thenReturn(List.of(user_1, user_2));
 
-        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getWorkingTimesByUsers(List.of(new UserLocalId(1L), new UserLocalId(2L)));
+        final LocalDate from = LocalDate.now(clockFixed);
+        final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
+        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getWorkingTimesByUsers(from, toExclusive, List.of(new UserLocalId(1L), new UserLocalId(2L)));
 
         assertThat(actual)
             .containsEntry(userIdComposite_1, List.of(
@@ -352,7 +354,9 @@ class WorkTimeServiceImplTest {
         when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1)))
             .thenReturn(List.of(user_1));
 
-        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getWorkingTimesByUsers(List.of(new UserLocalId(1L)));
+        final LocalDate from = LocalDate.now(clockFixed);
+        final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
+        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getWorkingTimesByUsers(from, toExclusive, List.of(new UserLocalId(1L)));
 
         assertThat(actual)
             .containsEntry(userIdComposite_1, List.of(
@@ -407,7 +411,9 @@ class WorkTimeServiceImplTest {
         when(userManagementService.findAllUsers()).thenReturn(List.of(user_1, user_2));
         when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L, 2L))).thenReturn(List.of(entity_1, entity_2));
 
-        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getAllWorkingTimesByUsers();
+        final LocalDate from = LocalDate.now(clockFixed);
+        final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
+        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getAllWorkingTimes(from, toExclusive);
 
         assertThat(actual)
             .containsEntry(userIdComposite_1, List.of(
@@ -447,7 +453,9 @@ class WorkTimeServiceImplTest {
         when(userManagementService.findAllUsers()).thenReturn(List.of(user_1));
         when(workingTimeRepository.findAllByUserIdIsIn(List.of(userLocalId_1.value()))).thenReturn(List.of());
 
-        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getAllWorkingTimesByUsers();
+        final LocalDate from = LocalDate.now(clockFixed);
+        final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
+        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getAllWorkingTimes(from, toExclusive);
 
         assertThat(actual)
             .containsEntry(userIdComposite_1, List.of(

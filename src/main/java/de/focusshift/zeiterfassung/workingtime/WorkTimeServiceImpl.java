@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.DayOfWeek.FRIDAY;
@@ -31,6 +32,7 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.nullsLast;
 import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
@@ -74,14 +76,15 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     }
 
     @Override
-    public Map<UserIdComposite, List<WorkingTime>> getWorkingTimesByUsers(Collection<UserLocalId> userLocalIds) {
+    public Map<UserIdComposite, List<WorkingTime>> getWorkingTimesByUsers(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
         final List<User> users = userManagementService.findAllUsersByLocalIds(userLocalIds);
-        return findWorkingTimesSorted(users);
+        return findWorkingTimesForUsers(from, toExclusive, users);
     }
 
     @Override
-    public Map<UserIdComposite, List<WorkingTime>> getAllWorkingTimesByUsers() {
-        return findWorkingTimesSorted(userManagementService.findAllUsers());
+    public Map<UserIdComposite, List<WorkingTime>> getAllWorkingTimes(LocalDate from, LocalDate toExclusive) {
+        final List<User> users = userManagementService.findAllUsers();
+        return findWorkingTimesForUsers(from, toExclusive, users);
     }
 
     @Override
@@ -139,6 +142,37 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
         repository.deleteById(workingTimeId.uuid());
         return true;
+    }
+
+    private Map<UserIdComposite, List<WorkingTime>> findWorkingTimesForUsers(LocalDate from, LocalDate toExclusive, Collection<User> users) {
+        final Map<UserIdComposite, List<WorkingTime>> workingTimesSorted = findWorkingTimesSorted(users);
+        return workingTimesSorted.entrySet().stream()
+            .collect(toMap(
+                Map.Entry::getKey,
+                entry -> entry.getValue().stream().filter(workingTimeTouchingDateRange(from, toExclusive)).toList()
+            ));
+    }
+
+    private static Predicate<WorkingTime> workingTimeTouchingDateRange(LocalDate from, LocalDate toExclusive) {
+        return workingTime -> {
+            if (workingTime.validFrom().isEmpty() && workingTime.validTo().isEmpty()) {
+                // very first working-time, which is the only entry
+                return true;
+            } else if (workingTime.validFrom().isEmpty()) {
+                // very first working-time, but other entries exist
+                final LocalDate validTo = workingTime.validTo().get();
+                return !validTo.isBefore(from);
+            } else if (workingTime.validTo().isEmpty()) {
+                // most recent working-time entry
+                final LocalDate validFrom = workingTime.validFrom().get();
+                return validFrom.isBefore(toExclusive);
+            } else {
+                // not the very first working-time
+                final LocalDate validFrom = workingTime.validFrom().get();
+                final LocalDate validTo = workingTime.validTo().get();
+                return validFrom.isBefore(toExclusive) && validTo.isAfter(from);
+            }
+        };
     }
 
     private void setWorkDays(WorkingTimeEntity entity, EnumMap<DayOfWeek, Duration> workDays) {
