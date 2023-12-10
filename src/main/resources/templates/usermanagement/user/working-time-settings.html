@@ -34,10 +34,12 @@
         <ul class="mt-8">
           <li
             th:each="workingTime : ${workingTimes}"
-            class="flex flex-col gap-1 border-t border-t-gray-100 py-2 first:border-t-0"
+            class="flex flex-col gap-1 border-t border-t-gray-100 first:border-t-0"
+            th:classappend="${workingTime.isCurrent ? '' : 'py-2'}"
           >
             <details
-              class="group"
+              class="group pr-2"
+              th:classappend="${workingTime.isCurrent ? 'bg-gray-100 rounded-xl py-2' : ''}"
               th:attrappend="open=${workingTime.isCurrent ? 'true' : null}"
             >
               <summary
