@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -85,7 +85,7 @@
               >
                 <button
                   type="submit"
-                  class="bg-blue-700 text-white pl-3 pr-4 py-1 text-lg font-medium rounded-full flex items-center hover:bg-blue-600 transition-colors"
+                  class="button-primary pl-3 pr-4 py-1 text-lg rounded-full"
                 >
                   <svg
                     th:replace="~{icons/play::svg(className='w-6 h-6 mr-1.5')}"
@@ -143,22 +143,22 @@
               <div class="shrink-0 relative flex">
                 <z-nav-popup-menu-button>
                   <a
-                  href="#avatar-menu"
-                  id="avatar-link"
-                  aria-expanded="false"
-                  aria-haspopup="true"
-                  class="flex flex-row items-center"
-                >
-                  <span class="inline-flex text-blue-200">
-                    <img
-                      th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='52px',height='52px',className='w-10 h-10 lg:w-9 lg:h-9')}"
-                      alt=""
-                    />
-                  </span>
-                  <svg
-                    th:replace="~{icons/chevron-down::svg(className='w-4 h-4')}"
-                  ></svg>
-                </a>
+                    href="#avatar-menu"
+                    id="avatar-link"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    class="flex flex-row items-center"
+                  >
+                    <span class="inline-flex text-blue-200">
+                      <img
+                        th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='52px',height='52px',className='w-10 h-10 lg:w-9 lg:h-9')}"
+                        alt=""
+                      />
+                    </span>
+                    <svg
+                      th:replace="~{icons/chevron-down::svg(className='w-4 h-4')}"
+                    ></svg>
+                  </a>
                 </z-nav-popup-menu-button>
                 <div id="avatar-menu" class="nav-popup-menu xs:max-w-xs">
                   <div class="nav-popup-menu-inner">

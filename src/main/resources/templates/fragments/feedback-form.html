@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -93,13 +93,10 @@
                   >
                     Schließen
                   </button>
-                  <button
-                    type="submit"
-                    class="bg-blue-600 text-blue-50 rounded px-4 py-2 flex items-center whitespace-nowrap"
-                  >
-                    <span class="mr-4" th:text="#{feedback.form.submit}"
-                      >Feedback geben</span
-                    >
+                  <button type="submit" class="button-primary">
+                    <th:block th:text="#{feedback.form.submit}">
+                      Feedback geben
+                    </th:block>
                     <svg
                       th:replace="~{icons/paper-airplane::svg(className='w-4 h-4 rotate-45')}"
                     ></svg>
