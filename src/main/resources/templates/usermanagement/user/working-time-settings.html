@@ -66,16 +66,13 @@
                 th:classappend="${#lists.size(workingTimes) > 1 ? 'pl-6' : ''}"
               >
                 <div>
-                  <ul class="text-sm flex flex-col gap-4 sm:flex-row sm:gap-2">
+                  <ul class="flex flex-col gap-4 sm:flex-row">
                     <li
                       th:fragment="blubb(dayOfWeek, hours)"
                       th:with="dayOfWeek=${#objects.nullSafe(dayOfWeek, 'MONDAY')}, hours=${#objects.nullSafe(hours, workingTime.workingTimeMonday)}"
                       class="flex-1 shrink-0"
                     >
-                      <span
-                        class="w-32 font-bold"
-                        th:text="${#messages.msg(dayOfWeek)}"
-                      >
+                      <span th:text="${#messages.msg(dayOfWeek)}">
                         Montag
                       </span>
                       <span
@@ -89,7 +86,7 @@
                       </span>
                       <span
                         th:text="#{usermanagement.working-time.multiple-working-time.entry.hours(${hours})}"
-                        class="whitespace-nowrap"
+                        class="whitespace-nowrap text-sm"
                       ></span>
                     </li>
                     <li

@@ -40,14 +40,16 @@ public final class WorkingTime implements HasUserIdComposite {
     private final WorkingTimeId id;
     private final boolean current;
     private final LocalDate validFrom;
+    private final LocalDate validTo;
     private final EnumMap<DayOfWeek, PlannedWorkingHours> workdays;
 
     private WorkingTime(UserIdComposite userIdComposite, WorkingTimeId id, boolean current,
-                        @Nullable LocalDate validFrom, EnumMap<DayOfWeek, PlannedWorkingHours> workdays) {
+                        @Nullable LocalDate validFrom, @Nullable LocalDate validTo, EnumMap<DayOfWeek, PlannedWorkingHours> workdays) {
         this.userIdComposite = userIdComposite;
         this.id = id;
         this.current = current;
         this.validFrom = validFrom;
+        this.validTo = validTo;
         this.workdays = workdays;
     }
 
@@ -72,6 +74,13 @@ public final class WorkingTime implements HasUserIdComposite {
      */
     public Optional<LocalDate> validFrom() {
         return Optional.ofNullable(validFrom);
+    }
+
+    /**
+     * @return empty optional when this is the last known {@linkplain WorkingTime} entry, validTo (inclusive) date otherwise.
+     */
+    public Optional<LocalDate> validTo() {
+        return Optional.ofNullable(validTo);
     }
 
     public Map<DayOfWeek, PlannedWorkingHours> workdays() {
@@ -198,6 +207,7 @@ public final class WorkingTime implements HasUserIdComposite {
         private final WorkingTimeId id;
         private boolean current;
         private LocalDate validFrom;
+        private LocalDate validTo;
         private final EnumMap<DayOfWeek, PlannedWorkingHours> workDays = new EnumMap<>(Map.of(
             MONDAY, PlannedWorkingHours.ZERO,
             TUESDAY, PlannedWorkingHours.ZERO,
@@ -220,6 +230,11 @@ public final class WorkingTime implements HasUserIdComposite {
 
         public Builder validFrom(LocalDate validFrom) {
             this.validFrom = validFrom;
+            return this;
+        }
+
+        public Builder validTo(LocalDate validTo) {
+            this.validTo = validTo;
             return this;
         }
 
@@ -315,7 +330,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public WorkingTime build() {
-            return new WorkingTime(userIdComposite, id, current, validFrom, workDays);
+            return new WorkingTime(userIdComposite, id, current, validFrom, validTo, workDays);
         }
     }
 }

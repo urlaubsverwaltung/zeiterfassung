@@ -7,6 +7,7 @@ import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -59,6 +60,214 @@ class WorkTimeServiceImplTest {
     @BeforeEach
     void setUp() {
         sut = new WorkTimeServiceImpl(workingTimeRepository, userManagementService, clockFixed);
+    }
+
+    @Nested
+    class GetAllWorkingTimesByUser {
+
+        @Test
+        void returnsDefaultWithoutAndPersistIt() {
+
+            final User user = anyUser();
+            when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of());
+
+            final UUID workingTimeId = UUID.randomUUID();
+            when(workingTimeRepository.save(any())).thenAnswer(invocation -> {
+                final WorkingTimeEntity entity = cloneEntity(invocation.getArgument(0));
+                entity.setId(workingTimeId);
+                return entity;
+            });
+
+            final List<WorkingTime> actual = sut.getAllWorkingTimesByUser(user.userLocalId());
+            assertThat(actual).hasSize(1);
+            assertThat(actual.getFirst()).satisfies(workingTime -> {
+                assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId));
+                assertThat(workingTime.userIdComposite()).isEqualTo(user.userIdComposite());
+                assertThat(workingTime.validFrom()).isEmpty();
+                assertThat(workingTime.getMonday()).isEqualTo(PlannedWorkingHours.EIGHT);
+                assertThat(workingTime.getTuesday()).isEqualTo(PlannedWorkingHours.EIGHT);
+                assertThat(workingTime.getWednesday()).isEqualTo(PlannedWorkingHours.EIGHT);
+                assertThat(workingTime.getThursday()).isEqualTo(PlannedWorkingHours.EIGHT);
+                assertThat(workingTime.getFriday()).isEqualTo(PlannedWorkingHours.EIGHT);
+                assertThat(workingTime.getSaturday()).isEqualTo(PlannedWorkingHours.ZERO);
+                assertThat(workingTime.getSunday()).isEqualTo(PlannedWorkingHours.ZERO);
+            });
+
+            final ArgumentCaptor<WorkingTimeEntity> captor = ArgumentCaptor.forClass(WorkingTimeEntity.class);
+            verify(workingTimeRepository).save(captor.capture());
+
+            final WorkingTimeEntity persistedEntity = captor.getValue();
+            assertThat(persistedEntity.getId()).isNull();
+            assertThat(persistedEntity.getUserId()).isEqualTo(user.userLocalId().value());
+            assertThat(persistedEntity.getValidFrom()).isNull();
+            assertThat(persistedEntity.getMonday()).isEqualTo("PT8H");
+            assertThat(persistedEntity.getTuesday()).isEqualTo("PT8H");
+            assertThat(persistedEntity.getWednesday()).isEqualTo("PT8H");
+            assertThat(persistedEntity.getThursday()).isEqualTo("PT8H");
+            assertThat(persistedEntity.getFriday()).isEqualTo("PT8H");
+            assertThat(persistedEntity.getSaturday()).isEqualTo("PT0S");
+            assertThat(persistedEntity.getSunday()).isEqualTo("PT0S");
+        }
+
+        @Test
+        void isSortedByValidFrom() {
+
+            final User user = anyUser();
+            when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            final UUID workingTimeId_1 = UUID.randomUUID();
+            final UUID workingTimeId_2 = UUID.randomUUID();
+            final UUID workingTimeId_3 = UUID.randomUUID();
+            final WorkingTimeEntity entity_1 = anyWorkingTimeEntity(workingTimeId_1, user.userLocalId().value(), null);
+            final WorkingTimeEntity entity_2 = anyWorkingTimeEntity(workingTimeId_2, user.userLocalId().value(), LocalDate.of(2024, 1, 1));
+            final WorkingTimeEntity entity_3 = anyWorkingTimeEntity(workingTimeId_3, user.userLocalId().value(), LocalDate.of(2024, 7, 1));
+            when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of(entity_1, entity_2, entity_3));
+
+            final List<WorkingTime> actual = sut.getAllWorkingTimesByUser(user.userLocalId());
+
+            assertThat(actual).hasSize(3);
+            assertThat(actual.get(0).id()).isEqualTo(new WorkingTimeId(workingTimeId_3));
+            assertThat(actual.get(1).id()).isEqualTo(new WorkingTimeId(workingTimeId_2));
+            assertThat(actual.get(2).id()).isEqualTo(new WorkingTimeId(workingTimeId_1));
+        }
+
+        @Test
+        void setsCurrentFlagCorrectlyWhenThereIsOnlyOneWorkingTime() {
+
+            final User user = anyUser();
+            when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            final UUID workingTimeId = UUID.randomUUID();
+            final WorkingTimeEntity entity = anyWorkingTimeEntity(workingTimeId, user.userLocalId().value(), null);
+            when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of(entity));
+
+            final List<WorkingTime> actual = sut.getAllWorkingTimesByUser(user.userLocalId());
+
+            assertThat(actual).hasSize(1);
+            assertThat(actual.getFirst().isCurrent()).isTrue();
+        }
+
+        @Test
+        void setsCurrentFlagCorrectlyWhenSecondOneIsInTheFuture() {
+
+            final LocalDate today = LocalDate.now(clockFixed);
+
+            final User user = anyUser();
+            when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            final UUID workingTimeId_1 = UUID.randomUUID();
+            final UUID workingTimeId_2 = UUID.randomUUID();
+            final UUID workingTimeId_3 = UUID.randomUUID();
+            final WorkingTimeEntity entity_1 = anyWorkingTimeEntity(workingTimeId_1, user.userLocalId().value(), null);
+            final WorkingTimeEntity entity_2 = anyWorkingTimeEntity(workingTimeId_2, user.userLocalId().value(), today.plusDays(1));
+            final WorkingTimeEntity entity_3 = anyWorkingTimeEntity(workingTimeId_3, user.userLocalId().value(), today.plusDays(2));
+            when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of(entity_1, entity_2, entity_3));
+
+            final List<WorkingTime> actual = sut.getAllWorkingTimesByUser(user.userLocalId());
+
+            assertThat(actual).hasSize(3);
+            assertThat(actual.get(0).isCurrent()).isFalse();
+            assertThat(actual.get(1).isCurrent()).isFalse();
+            assertThat(actual.get(2).isCurrent()).isTrue();
+        }
+
+        @Test
+        void setsCurrentFlagCorrectlyWhenSecondOneIsValidFromToday() {
+
+            final LocalDate today = LocalDate.now(clockFixed);
+
+            final User user = anyUser();
+            when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            final UUID workingTimeId_1 = UUID.randomUUID();
+            final UUID workingTimeId_2 = UUID.randomUUID();
+            final UUID workingTimeId_3 = UUID.randomUUID();
+            final WorkingTimeEntity entity_1 = anyWorkingTimeEntity(workingTimeId_1, user.userLocalId().value(), null);
+            final WorkingTimeEntity entity_2 = anyWorkingTimeEntity(workingTimeId_2, user.userLocalId().value(), today);
+            final WorkingTimeEntity entity_3 = anyWorkingTimeEntity(workingTimeId_3, user.userLocalId().value(), today.plusDays(1));
+            when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of(entity_1, entity_2, entity_3));
+
+            final List<WorkingTime> actual = sut.getAllWorkingTimesByUser(user.userLocalId());
+
+            assertThat(actual).hasSize(3);
+            assertThat(actual.get(0).isCurrent()).isFalse();
+            assertThat(actual.get(1).isCurrent()).isTrue();
+            assertThat(actual.get(2).isCurrent()).isFalse();
+        }
+
+        @Test
+        void setsCurrentFlagCorrectlyWhenSecondOneIsValidAndThirdOneInTheFuture() {
+
+            final LocalDate today = LocalDate.now(clockFixed);
+
+            final User user = anyUser();
+            when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            final UUID workingTimeId_1 = UUID.randomUUID();
+            final UUID workingTimeId_2 = UUID.randomUUID();
+            final UUID workingTimeId_3 = UUID.randomUUID();
+            final WorkingTimeEntity entity_1 = anyWorkingTimeEntity(workingTimeId_1, user.userLocalId().value(), null);
+            final WorkingTimeEntity entity_2 = anyWorkingTimeEntity(workingTimeId_2, user.userLocalId().value(), today.minusDays(1));
+            final WorkingTimeEntity entity_3 = anyWorkingTimeEntity(workingTimeId_3, user.userLocalId().value(), today.plusDays(1));
+            when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of(entity_1, entity_2, entity_3));
+
+            final List<WorkingTime> actual = sut.getAllWorkingTimesByUser(user.userLocalId());
+
+            assertThat(actual).hasSize(3);
+            assertThat(actual.get(0).isCurrent()).isFalse();
+            assertThat(actual.get(1).isCurrent()).isTrue();
+            assertThat(actual.get(2).isCurrent()).isFalse();
+        }
+
+        @Test
+        void setsCurrentFlagCorrectlyWhenThirdOneIsValidFromToday() {
+
+            final LocalDate today = LocalDate.now(clockFixed);
+
+            final User user = anyUser();
+            when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            final UUID workingTimeId_1 = UUID.randomUUID();
+            final UUID workingTimeId_2 = UUID.randomUUID();
+            final UUID workingTimeId_3 = UUID.randomUUID();
+            final WorkingTimeEntity entity_1 = anyWorkingTimeEntity(workingTimeId_1, user.userLocalId().value(), null);
+            final WorkingTimeEntity entity_2 = anyWorkingTimeEntity(workingTimeId_2, user.userLocalId().value(), today.minusDays(1));
+            final WorkingTimeEntity entity_3 = anyWorkingTimeEntity(workingTimeId_3, user.userLocalId().value(), today);
+            when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of(entity_1, entity_2, entity_3));
+
+            final List<WorkingTime> actual = sut.getAllWorkingTimesByUser(user.userLocalId());
+
+            assertThat(actual).hasSize(3);
+            assertThat(actual.get(0).isCurrent()).isTrue();
+            assertThat(actual.get(1).isCurrent()).isFalse();
+            assertThat(actual.get(2).isCurrent()).isFalse();
+        }
+
+        @Test
+        void setsCurrentFlagCorrectlyWhenThirdOneIsValidFrom() {
+
+            final LocalDate today = LocalDate.now(clockFixed);
+
+            final User user = anyUser();
+            when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            final UUID workingTimeId_1 = UUID.randomUUID();
+            final UUID workingTimeId_2 = UUID.randomUUID();
+            final UUID workingTimeId_3 = UUID.randomUUID();
+            final WorkingTimeEntity entity_1 = anyWorkingTimeEntity(workingTimeId_1, user.userLocalId().value(), null);
+            final WorkingTimeEntity entity_2 = anyWorkingTimeEntity(workingTimeId_2, user.userLocalId().value(), today.minusDays(2));
+            final WorkingTimeEntity entity_3 = anyWorkingTimeEntity(workingTimeId_3, user.userLocalId().value(), today.minusDays(1));
+            when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of(entity_1, entity_2, entity_3));
+
+            final List<WorkingTime> actual = sut.getAllWorkingTimesByUser(user.userLocalId());
+
+            assertThat(actual).hasSize(3);
+            assertThat(actual.get(0).isCurrent()).isTrue();
+            assertThat(actual.get(1).isCurrent()).isFalse();
+            assertThat(actual.get(2).isCurrent()).isFalse();
+        }
     }
 
     @Test
@@ -228,7 +437,7 @@ class WorkTimeServiceImplTest {
     }
 
     @Test
-    void ensureGetAllWorkingTimeByUsersAddsDefaultWorkingTimeForUsersWithoutExplicitOne() {
+    void ensureGetAllWorkingTimesByUsersAddsDefaultWorkingTimeForUsersWithoutExplicitOne() {
 
         final UserId userId_1 = new UserId("uuid-1");
         final UserLocalId userLocalId_1 = new UserLocalId(1L);
@@ -295,11 +504,11 @@ class WorkTimeServiceImplTest {
     @Test
     void ensureUpdateWorkingTime() {
 
-        final UserId userId_1 = new UserId("uuid-1");
-        final UserLocalId userLocalId_1 = new UserLocalId(42L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserByLocalId(userLocalId_1)).thenReturn(Optional.of(user_1));
+        final UserId userId = new UserId("uuid-1");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
 
         final UUID id = UUID.randomUUID();
         final WorkingTimeEntity entity = new WorkingTimeEntity();
@@ -314,8 +523,11 @@ class WorkTimeServiceImplTest {
         entity.setSunday("PT24H");
 
         when(workingTimeRepository.findById(id)).thenReturn(Optional.of(entity));
-        when(workingTimeRepository.findByPersonAndValidityDateEqualsOrMinorDate(42L, LocalDate.now(clockFixed))).thenReturn(entity);
         when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
+
+        when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
+            anyWorkingTimeEntity(id, userLocalId.value(), null)
+        ));
 
         final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
             .monday(BigDecimal.valueOf(1))
@@ -329,7 +541,7 @@ class WorkTimeServiceImplTest {
 
         final WorkingTime actual = sut.updateWorkingTime(new WorkingTimeId(id), workWeekUpdate);
 
-        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite_1);
+        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actual.isCurrent()).isTrue();
         assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(2)));
@@ -367,10 +579,14 @@ class WorkTimeServiceImplTest {
 
         final UUID uuid = UUID.randomUUID();
         when(workingTimeRepository.save(any(WorkingTimeEntity.class))).thenAnswer(invocation -> {
-            final WorkingTimeEntity entity = invocation.getArgument(0);
+            final WorkingTimeEntity entity = cloneEntity(invocation.getArgument(0));
             entity.setId(uuid);
             return entity;
         });
+
+        when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
+            anyWorkingTimeEntity(uuid, userLocalId.value(), LocalDate.of(2023, 12, 9))
+        ));
 
         final EnumMap<DayOfWeek, Duration> durations = new EnumMap<>(Map.of(
             MONDAY, Duration.ofHours(1)
@@ -402,10 +618,14 @@ class WorkTimeServiceImplTest {
 
         final UUID uuid = UUID.randomUUID();
         when(workingTimeRepository.save(any(WorkingTimeEntity.class))).thenAnswer(invocation -> {
-            final WorkingTimeEntity entity = invocation.getArgument(0);
+            final WorkingTimeEntity entity = cloneEntity(invocation.getArgument(0));
             entity.setId(uuid);
             return entity;
         });
+
+        when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
+            anyWorkingTimeEntity(uuid, userLocalId.value(), LocalDate.of(2023, 12, 9))
+        ));
 
         final EnumMap<DayOfWeek, Duration> durations = new EnumMap<>(Map.of(
             MONDAY, Duration.ofHours(1),
@@ -475,5 +695,43 @@ class WorkTimeServiceImplTest {
 
         final boolean actual = sut.deleteWorkingTime(workingTimeId);
         assertThat(actual).isTrue();
+    }
+
+    private User anyUser() {
+        final UserId userId = new UserId("user-id");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        return new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+    }
+
+    private WorkingTimeEntity anyWorkingTimeEntity(UUID id, Long userId, LocalDate validFrom) {
+        final WorkingTimeEntity entity = new WorkingTimeEntity();
+        entity.setId(id);
+        entity.setUserId(userId);
+        entity.setValidFrom(validFrom);
+        entity.setMonday("PT0S");
+        entity.setTuesday("PT0S");
+        entity.setWednesday("PT0S");
+        entity.setThursday("PT0S");
+        entity.setFriday("PT0S");
+        entity.setSaturday("PT0S");
+        entity.setSunday("PT0S");
+        return entity;
+    }
+
+    private WorkingTimeEntity cloneEntity(WorkingTimeEntity entity) {
+        final WorkingTimeEntity clone = new WorkingTimeEntity();
+        clone.setTenantId(entity.getTenantId());
+        clone.setId(entity.getId());
+        clone.setUserId(entity.getUserId());
+        clone.setValidFrom(entity.getValidFrom());
+        clone.setMonday(entity.getMonday());
+        clone.setTuesday(entity.getTuesday());
+        clone.setWednesday(entity.getWednesday());
+        clone.setThursday(entity.getThursday());
+        clone.setFriday(entity.getFriday());
+        clone.setSaturday(entity.getSaturday());
+        clone.setSunday(entity.getSunday());
+        return clone;
     }
 }

@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.DayOfWeek.FRIDAY;
@@ -54,8 +53,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         return repository.findById(workingTimeId.uuid()).map(entity -> {
             final UserLocalId userLocalId = new UserLocalId(entity.getUserId());
             final User user = findUser(userLocalId);
-            final WorkingTimeEntity current = getCurrentWorkingTimeEntity(userLocalId);
-            return entityToWorkingTime(entity, user.userIdComposite(), entity.equals(current));
+            final List<WorkingTimeEntity> allEntitiesSorted = findAllWorkingTimeEntitiesSorted(userLocalId);
+            return entityToWorkingTime(entity, user.userIdComposite(), allEntitiesSorted);
         });
     }
 
@@ -69,10 +68,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             return List.of(createDefaultWorkingTime(user.userIdComposite()));
         }
 
-        final WorkingTimeEntity current = getCurrentWorkingTimeEntity(userLocalId);
-
         return sortedEntities.stream()
-            .map(entity -> entityToWorkingTime(entity, user.userIdComposite(), entity.equals(current)))
+            .map(entity -> entityToWorkingTime(entity, user.userIdComposite(), sortedEntities))
             .toList();
     }
 
@@ -97,19 +94,10 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         entity.setValidFrom(validFrom);
         setWorkDays(entity, workdays);
 
-        final LocalDate today = LocalDate.now(clock);
-        final boolean isCurrent;
-
-        if (validFrom.isAfter(today)) {
-            isCurrent = false;
-        } else {
-            final List<WorkingTimeEntity> all = findAllWorkingTimeEntitiesSorted(user.userLocalId());
-            isCurrent = all.stream().noneMatch(w -> w.getValidFrom() != null && w.getValidFrom().isAfter(validFrom));
-        }
-
         final WorkingTimeEntity saved = repository.save(entity);
+        final List<WorkingTimeEntity> allEntitiesSorted = findAllWorkingTimeEntitiesSorted(userLocalId);
 
-        return entityToWorkingTime(saved, user.userIdComposite(), isCurrent);
+        return entityToWorkingTime(saved, user.userIdComposite(), allEntitiesSorted);
     }
 
     @Override
@@ -133,9 +121,9 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final User user = findUser(userLocalId);
 
         final WorkingTimeEntity saved = repository.save(entity);
-        final WorkingTimeEntity current = getCurrentWorkingTimeEntity(userLocalId);
+        final List<WorkingTimeEntity> allEntitiesSorted = findAllWorkingTimeEntitiesSorted(userLocalId);
 
-        return entityToWorkingTime(saved, user.userIdComposite(), saved.equals(current));
+        return entityToWorkingTime(saved, user.userIdComposite(), allEntitiesSorted);
     }
 
     @Override
@@ -163,37 +151,86 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         entity.setSunday(durationToString(workDays.get(SUNDAY)));
     }
 
-    private WorkingTimeEntity getCurrentWorkingTimeEntity(UserLocalId userLocalId) {
-        WorkingTimeEntity current = repository.findByPersonAndValidityDateEqualsOrMinorDate(userLocalId.value(), LocalDate.now(clock));
-        if (current == null) {
-            current = repository.findByUserIdAndValidFrom(userLocalId.value(), null)
-                .orElseThrow(() -> new IllegalStateException("expected one working-time to exist for user=" + userLocalId));
-        }
-        return current;
-    }
-
     private Map<UserIdComposite, List<WorkingTime>> findWorkingTimesSorted(Collection<User> users) {
 
         final List<Long> localIdValues = users.stream().map(User::userLocalId).map(UserLocalId::value).toList();
-        final Map<UserLocalId, List<WorkingTimeEntity>> sortedEntities = findAllWorkingTimeEntitiesSorted(localIdValues);
+        final Map<UserLocalId, List<WorkingTimeEntity>> sortedEntitiesByUserLocalId = findAllWorkingTimeEntitiesSorted(localIdValues);
 
         final Map<UserIdComposite, List<WorkingTime>> result = new HashMap<>(users.size());
 
         for (User user : users) {
 
             final UserIdComposite userIdComposite = user.userIdComposite();
-            final List<WorkingTimeEntity> entities = sortedEntities.get(user.userLocalId());
+            final List<WorkingTimeEntity> sortedEntities = sortedEntitiesByUserLocalId.get(user.userLocalId());
 
-            if (entities.isEmpty()) {
+            if (sortedEntities.isEmpty()) {
                 result.put(userIdComposite, List.of(defaultWorkingTime(userIdComposite)));
             } else {
-                // FIXME implement isCurrent
-                final List<WorkingTime> workingTimes = entitiesToWorkingTimes(entities, userIdComposite, (entity) -> true);
+                final List<WorkingTime> workingTimes = entitiesToWorkingTimes(sortedEntities, userIdComposite);
                 result.put(userIdComposite, workingTimes);
             }
         }
 
         return result;
+    }
+
+    private boolean isCurrent(WorkingTimeEntity entity, List<WorkingTimeEntity> allEntitiesSorted) {
+
+        final LocalDate today = LocalDate.now(clock);
+        final WorkingTimeEntity adjacentNewer = getAdjacentNewer(entity, allEntitiesSorted);
+        final WorkingTimeEntity adjacentOlder = getAdjacentOlder(entity, allEntitiesSorted);
+
+        if (adjacentNewer == null && adjacentOlder == null) {
+            // I am the only working-time entry, therefore I am the current \o/
+            return true;
+        } else if (adjacentNewer == null) {
+            // I am the most recent entry
+            if (adjacentOlder.getValidFrom() == null) {
+                // and my ancestor is the very first working-time, so check myself
+                return !entity.getValidFrom().isAfter(today);
+            } else if (entity.getValidFrom().isAfter(today)) {
+                return false;
+            } else {
+                // otherwise check my ancestor
+                return adjacentOlder.getValidFrom().isBefore(today);
+            }
+        } else if (adjacentOlder == null) {
+            // I am the very first working-time entry, so I can only be the current if I am valid from today or past.
+            return !adjacentNewer.getValidFrom().isEqual(today) && !adjacentNewer.getValidFrom().isBefore(today);
+        } else {
+            // I am in the middle of working times. check if previous or next is current, if not -> I am
+            final boolean newerIsBeforeToday = adjacentNewer.getValidFrom().isBefore(today);
+            final boolean newerIsToday = adjacentNewer.getValidFrom().isEqual(today);
+            if (newerIsBeforeToday || newerIsToday) {
+              return false;
+            }
+            if (adjacentOlder.getValidFrom() == null) {
+                return entity.getValidFrom().isEqual(today) || entity.getValidFrom().isBefore(today);
+            }
+            final boolean olderIsToday = adjacentOlder.getValidFrom().isEqual(today);
+            final boolean olderIsAfter = adjacentOlder.getValidFrom().isAfter(today);
+            return !olderIsToday && !olderIsAfter;
+        }
+    }
+
+    @Nullable
+    private WorkingTimeEntity getAdjacentNewer(WorkingTimeEntity entity, List<WorkingTimeEntity> allEntitiesSorted) {
+        final int indexOf = indexOf(entity, allEntitiesSorted);
+        return indexOf == 0 ? null : allEntitiesSorted.get(indexOf - 1);
+    }
+
+    @Nullable
+    private WorkingTimeEntity getAdjacentOlder(WorkingTimeEntity entity, List<WorkingTimeEntity> allEntitiesSorted) {
+        final int indexOf = indexOf(entity, allEntitiesSorted);
+        return indexOf + 1 == allEntitiesSorted.size() ? null : allEntitiesSorted.get(indexOf + 1);
+    }
+
+    private int indexOf(WorkingTimeEntity entity, List<WorkingTimeEntity> allEntitiesSorted) {
+        final int indexOf = allEntitiesSorted.indexOf(entity);
+        if (indexOf == -1) {
+            throw new IllegalStateException("expected entity to exist in allEntities list");
+        }
+        return indexOf;
     }
 
     private List<WorkingTimeEntity> findAllWorkingTimeEntitiesSorted(UserLocalId userLocalId) {
@@ -253,18 +290,18 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     private WorkingTime createDefaultWorkingTime(UserIdComposite userIdComposite) {
         final WorkingTime defaultWorkingTime = defaultWorkingTime(userIdComposite);
         final WorkingTimeEntity persisted = repository.save(workingTimeToEntity(defaultWorkingTime));
-        return entityToWorkingTime(persisted, userIdComposite, true);
+        return entityToWorkingTime(persisted, userIdComposite, List.of(persisted));
     }
 
-    private List<WorkingTime> entitiesToWorkingTimes(List<WorkingTimeEntity> entities, UserIdComposite userIdComposite, Function<WorkingTimeEntity, Boolean> currentSupplier) {
+    private List<WorkingTime> entitiesToWorkingTimes(List<WorkingTimeEntity> entities, UserIdComposite userIdComposite) {
         return entities.stream()
-            .map(entity -> entityToWorkingTime(entity, userIdComposite, currentSupplier.apply(entity)))
+            .map(entity -> entityToWorkingTime(entity, userIdComposite, entities))
             .toList();
     }
 
-    private WorkingTime entityToWorkingTime(WorkingTimeEntity entity, UserIdComposite userIdComposite, boolean current) {
+    private WorkingTime entityToWorkingTime(WorkingTimeEntity entity, UserIdComposite userIdComposite, List<WorkingTimeEntity> allEntitiesSorted) {
         return WorkingTime.builder(userIdComposite, new WorkingTimeId(entity.getId()))
-            .current(current)
+            .current(isCurrent(entity, allEntitiesSorted))
             .validFrom(entity.getValidFrom())
             .monday(Duration.parse(entity.getMonday()))
             .tuesday(Duration.parse(entity.getTuesday()))
