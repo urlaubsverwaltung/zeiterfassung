@@ -357,6 +357,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         return builder
             .id(workingTime.id().value())
             .validFrom(workingTime.validFrom().orElse(null))
+            .minValidFrom(workingTime.minValidFrom().orElse(null))
+            .maxValidFrom(workingTime.validTo().orElse(null))
             .userId(workingTime.userIdComposite().localId().value())
             .workday(workingTime.actualWorkingDays())
             .build();

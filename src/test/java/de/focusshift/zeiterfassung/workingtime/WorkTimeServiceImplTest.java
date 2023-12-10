@@ -585,6 +585,7 @@ class WorkTimeServiceImplTest {
         });
 
         when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
+            anyWorkingTimeEntity(uuid, userLocalId.value(), null),
             anyWorkingTimeEntity(uuid, userLocalId.value(), LocalDate.of(2023, 12, 9))
         ));
 
@@ -624,6 +625,7 @@ class WorkTimeServiceImplTest {
         });
 
         when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
+            anyWorkingTimeEntity(uuid, userLocalId.value(), null),
             anyWorkingTimeEntity(uuid, userLocalId.value(), LocalDate.of(2023, 12, 9))
         ));
 

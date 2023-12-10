@@ -60,6 +60,8 @@
                   th:errorclass="invalid"
                   id="working-time-valid-from-input"
                   class="px-2 border border-gray-300"
+                  th:min="${workingTime.minValidFrom}"
+                  th:max="${workingTime.maxValidFrom}"
                 />
               </div>
               <p

@@ -174,6 +174,35 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         return result;
     }
 
+    @Nullable
+    private LocalDate getValidToDate(WorkingTimeEntity entity, List<WorkingTimeEntity> allEntitiesSorted) {
+        final WorkingTimeEntity adjacentNewer = getAdjacentNewer(entity, allEntitiesSorted);
+        if (adjacentNewer == null) {
+            // valid till infinite
+            return null;
+        } else {
+            return adjacentNewer.getValidFrom().minusDays(1);
+        }
+    }
+
+    @Nullable
+    private LocalDate getMinValidFromDate(WorkingTimeEntity entity, List<WorkingTimeEntity> allEntitiesSorted) {
+        if (entity.getValidFrom() == null) {
+            // I am the very first working-time
+            return null;
+        }
+        final WorkingTimeEntity adjacentOlder = getAdjacentOlder(entity, allEntitiesSorted);
+        if (adjacentOlder == null) {
+            throw new IllegalStateException("expected adjacentOlder to exist. null case has been handle upfront.");
+        }
+        final LocalDate validFrom = adjacentOlder.getValidFrom();
+        if (validFrom == null) {
+            // adjacentOlder is the very first working-time. user has to decide ¯\_(ツ)_/¯
+            return null;
+        }
+        return validFrom.minusDays(1);
+    }
+
     private boolean isCurrent(WorkingTimeEntity entity, List<WorkingTimeEntity> allEntitiesSorted) {
 
         final LocalDate today = LocalDate.now(clock);
@@ -303,6 +332,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         return WorkingTime.builder(userIdComposite, new WorkingTimeId(entity.getId()))
             .current(isCurrent(entity, allEntitiesSorted))
             .validFrom(entity.getValidFrom())
+            .validTo(getValidToDate(entity, allEntitiesSorted))
+            .minValidFrom(getMinValidFromDate(entity, allEntitiesSorted))
             .monday(Duration.parse(entity.getMonday()))
             .tuesday(Duration.parse(entity.getTuesday()))
             .wednesday(Duration.parse(entity.getWednesday()))

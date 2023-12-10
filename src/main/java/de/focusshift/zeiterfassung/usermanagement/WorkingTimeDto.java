@@ -16,6 +16,9 @@ class WorkingTimeDto {
     private String id;
     @DateTimeFormat(pattern = ISO_DATE)
     private LocalDate validFrom;
+    @DateTimeFormat(pattern = ISO_DATE)
+    private LocalDate minValidFrom;
+    private LocalDate maxValidFrom;
     private List<String> workday = new ArrayList<>();
     private Double workingTime;
     private Double workingTimeMonday;
@@ -48,6 +51,22 @@ class WorkingTimeDto {
 
     public void setValidFrom(LocalDate validFrom) {
         this.validFrom = validFrom;
+    }
+
+    public LocalDate getMinValidFrom() {
+        return minValidFrom;
+    }
+
+    public void setMinValidFrom(LocalDate minValidFrom) {
+        this.minValidFrom = minValidFrom;
+    }
+
+    public LocalDate getMaxValidFrom() {
+        return maxValidFrom;
+    }
+
+    public void setMaxValidFrom(LocalDate maxValidFrom) {
+        this.maxValidFrom = maxValidFrom;
     }
 
     public List<String> getWorkday() {
@@ -211,6 +230,8 @@ class WorkingTimeDto {
         return userId.equals(that.userId)
             && Objects.equals(id, that.id)
             && Objects.equals(validFrom, that.validFrom)
+            && Objects.equals(minValidFrom, that.minValidFrom)
+            && Objects.equals(maxValidFrom, that.maxValidFrom)
             && workday.equals(that.workday)
             && Objects.equals(workingTime, that.workingTime)
             && Objects.equals(workingTimeMonday, that.workingTimeMonday)
@@ -224,8 +245,9 @@ class WorkingTimeDto {
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, id, validFrom, workday, workingTime, workingTimeMonday, workingTimeTuesday,
-            workingTimeWednesday, workingTimeThursday, workingTimeFriday, workingTimeSaturday, workingTimeSunday);
+        return Objects.hash(userId, id, validFrom, minValidFrom, maxValidFrom, workday, workingTime, workingTimeMonday,
+            workingTimeTuesday, workingTimeWednesday, workingTimeThursday, workingTimeFriday, workingTimeSaturday,
+            workingTimeSunday);
     }
 
     static Builder builder() {
@@ -236,6 +258,8 @@ class WorkingTimeDto {
         private Long userId;
         private String uuid;
         private LocalDate validFrom;
+        private LocalDate minValidFrom;
+        private LocalDate maxValidFrom;
         private List<DayOfWeek> workday = new ArrayList<>();
         private Double workingTime;
         private Double workingTimeMonday;
@@ -258,6 +282,16 @@ class WorkingTimeDto {
 
         Builder validFrom(LocalDate validFrom) {
             this.validFrom = validFrom;
+            return this;
+        }
+
+        Builder minValidFrom(LocalDate minValidFrom) {
+            this.minValidFrom = minValidFrom;
+            return this;
+        }
+
+        Builder maxValidFrom(LocalDate maxValidFrom) {
+            this.maxValidFrom = maxValidFrom;
             return this;
         }
 
@@ -311,6 +345,8 @@ class WorkingTimeDto {
             workingTimeDto.setUserId(userId);
             workingTimeDto.setId(uuid);
             workingTimeDto.setValidFrom(validFrom);
+            workingTimeDto.setMinValidFrom(minValidFrom);
+            workingTimeDto.setMaxValidFrom(maxValidFrom);
             workingTimeDto.setWorkday(workday.stream().map(DayOfWeek::name).map(String::toLowerCase).toList());
             workingTimeDto.setWorkingTime(workingTime);
             workingTimeDto.setWorkingTimeMonday(workingTimeMonday);

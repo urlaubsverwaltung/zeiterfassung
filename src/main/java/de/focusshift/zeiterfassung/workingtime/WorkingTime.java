@@ -41,15 +41,18 @@ public final class WorkingTime implements HasUserIdComposite {
     private final boolean current;
     private final LocalDate validFrom;
     private final LocalDate validTo;
+    private final LocalDate minValidFrom;
     private final EnumMap<DayOfWeek, PlannedWorkingHours> workdays;
 
     private WorkingTime(UserIdComposite userIdComposite, WorkingTimeId id, boolean current,
-                        @Nullable LocalDate validFrom, @Nullable LocalDate validTo, EnumMap<DayOfWeek, PlannedWorkingHours> workdays) {
+                        @Nullable LocalDate validFrom, @Nullable LocalDate validTo, @Nullable LocalDate minValidFrom,
+                        EnumMap<DayOfWeek, PlannedWorkingHours> workdays) {
         this.userIdComposite = userIdComposite;
         this.id = id;
         this.current = current;
         this.validFrom = validFrom;
         this.validTo = validTo;
+        this.minValidFrom = minValidFrom;
         this.workdays = workdays;
     }
 
@@ -81,6 +84,16 @@ public final class WorkingTime implements HasUserIdComposite {
      */
     public Optional<LocalDate> validTo() {
         return Optional.ofNullable(validTo);
+    }
+
+    /**
+     * The minimum possible validFrom date that can be set for this {@linkplain WorkingTime}.
+     * Equals the {@linkplain WorkingTime#validTo()} date of the previous one plus one day.
+     *
+     * @return empty optional when this is the very first {@linkplain WorkingTime} entry, minValidFrom date otherwise.
+     */
+    public Optional<LocalDate> minValidFrom() {
+        return Optional.ofNullable(minValidFrom);
     }
 
     public Map<DayOfWeek, PlannedWorkingHours> workdays() {
@@ -208,6 +221,7 @@ public final class WorkingTime implements HasUserIdComposite {
         private boolean current;
         private LocalDate validFrom;
         private LocalDate validTo;
+        private LocalDate minValidFrom;
         private final EnumMap<DayOfWeek, PlannedWorkingHours> workDays = new EnumMap<>(Map.of(
             MONDAY, PlannedWorkingHours.ZERO,
             TUESDAY, PlannedWorkingHours.ZERO,
@@ -228,13 +242,18 @@ public final class WorkingTime implements HasUserIdComposite {
             return this;
         }
 
-        public Builder validFrom(LocalDate validFrom) {
+        public Builder validFrom(@Nullable LocalDate validFrom) {
             this.validFrom = validFrom;
             return this;
         }
 
-        public Builder validTo(LocalDate validTo) {
+        public Builder validTo(@Nullable LocalDate validTo) {
             this.validTo = validTo;
+            return this;
+        }
+
+        public Builder minValidFrom(@Nullable LocalDate minValidFrom) {
+            this.minValidFrom = minValidFrom;
             return this;
         }
 
@@ -330,7 +349,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public WorkingTime build() {
-            return new WorkingTime(userIdComposite, id, current, validFrom, validTo, workDays);
+            return new WorkingTime(userIdComposite, id, current, validFrom, validTo, minValidFrom, workDays);
         }
     }
 }
