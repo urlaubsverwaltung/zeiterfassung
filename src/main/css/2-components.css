@@ -47,12 +47,19 @@ duet-date-picker.edited ~ label > span {
   @apply border;
   @apply border-blue-700;
   @apply text-blue-700;
+  @apply bg-white;
   @apply font-medium;
   @apply rounded;
   @apply text-center;
   @apply px-4;
   @apply py-2;
   @apply sm:text-left;
+}
+
+.button-secondary--subtle {
+  @apply border-gray-400;
+  @apply text-gray-500;
+  @apply font-normal;
 }
 
 .button-secondary:has(svg) {

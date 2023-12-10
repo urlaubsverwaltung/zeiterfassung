@@ -31,15 +31,15 @@
         </a>
       </div>
       <th:block th:if="${#lists.size(workingTimes) > 1}">
-        <ul class="mt-8">
+        <ul class="mt-8 flex flex-col gap-1">
           <li
             th:each="workingTime : ${workingTimes}"
-            class="flex flex-col gap-1 border-t border-t-gray-100 first:border-t-0"
+            class="border-t border-t-gray-100 first:border-t-0"
             th:classappend="${workingTime.isCurrent ? '' : 'py-2'}"
           >
             <details
               class="group pr-2"
-              th:classappend="${workingTime.isCurrent ? 'bg-gray-100 rounded-xl py-2' : ''}"
+              th:classappend="${workingTime.isCurrent ? 'bg-gray-50 rounded-xl py-2' : ''}"
               th:attrappend="open=${workingTime.isCurrent ? 'true' : null}"
             >
               <summary
@@ -119,7 +119,7 @@
                   <a
                     href="#"
                     th:href="@{/users/{id}/working-time/{workingTimeId} (id=${user.id},workingTimeId=${workingTime.id})}"
-                    class="button-secondary button-secondary--narrow"
+                    class="button-secondary button-secondary--subtle button-secondary--narrow"
                     data-turbo-action="advance"
                   >
                     <svg
@@ -135,7 +135,7 @@
                   >
                     <button
                       type="submit"
-                      class="button-secondary button-secondary--narrow"
+                      class="button-secondary button-secondary--subtle button-secondary--narrow"
                     >
                       <svg
                         th:replace="~{icons/trash::svg(className='w-4 h-4')}"
