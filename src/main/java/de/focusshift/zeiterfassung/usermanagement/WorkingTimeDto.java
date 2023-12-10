@@ -8,16 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static de.focusshift.zeiterfassung.DateAndTimeFormat.ISO_DATE;
-
 class WorkingTimeDto {
 
     private Long userId;
     private String id;
-    @DateTimeFormat(pattern = ISO_DATE)
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate validFrom;
-    @DateTimeFormat(pattern = ISO_DATE)
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate minValidFrom;
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate maxValidFrom;
     private List<String> workday = new ArrayList<>();
     private Double workingTime;
