@@ -17,7 +17,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -478,17 +477,17 @@ class WorkTimeServiceImplTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.empty());
 
-        final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
-            .monday(BigDecimal.valueOf(1))
-            .tuesday(BigDecimal.valueOf(2))
-            .wednesday(BigDecimal.valueOf(3))
-            .thursday(BigDecimal.valueOf(4))
-            .friday(BigDecimal.valueOf(5))
-            .saturday(BigDecimal.valueOf(6))
-            .sunday(BigDecimal.valueOf(7))
-            .build();
+        final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
+            MONDAY, Duration.ofHours(1),
+            TUESDAY, Duration.ofHours(2),
+            WEDNESDAY, Duration.ofHours(3),
+            THURSDAY, Duration.ofHours(4),
+            FRIDAY, Duration.ofHours(5),
+            SATURDAY, Duration.ofHours(6),
+            SUNDAY, Duration.ofHours(7)
+        ));
 
-        assertThatThrownBy(() -> sut.updateWorkingTime(workingTimeId, workWeekUpdate))
+        assertThatThrownBy(() -> sut.updateWorkingTime(workingTimeId, null, workdays))
             .isInstanceOf(IllegalStateException.class);
     }
 
@@ -502,10 +501,17 @@ class WorkTimeServiceImplTest {
 
         when(workingTimeRepository.findById(id)).thenReturn(Optional.of(entity));
 
-        final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
-            .build();
+        final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
+            MONDAY, Duration.ofHours(1),
+            TUESDAY, Duration.ofHours(2),
+            WEDNESDAY, Duration.ofHours(3),
+            THURSDAY, Duration.ofHours(4),
+            FRIDAY, Duration.ofHours(5),
+            SATURDAY, Duration.ofHours(6),
+            SUNDAY, Duration.ofHours(7)
+        ));
 
-        assertThatThrownBy(() -> sut.updateWorkingTime(new WorkingTimeId(id), workWeekUpdate))
+        assertThatThrownBy(() -> sut.updateWorkingTime(new WorkingTimeId(id), null, workdays))
             .isInstanceOf(WorkingTimeUpdateException.class);
     }
 
@@ -537,17 +543,17 @@ class WorkTimeServiceImplTest {
             anyWorkingTimeEntity(id, userLocalId.value(), null)
         ));
 
-        final WorkWeekUpdate workWeekUpdate = WorkWeekUpdate.builder()
-            .monday(BigDecimal.valueOf(1))
-            .tuesday(BigDecimal.valueOf(2))
-            .wednesday(BigDecimal.valueOf(3))
-            .thursday(BigDecimal.valueOf(4))
-            .friday(BigDecimal.valueOf(5))
-            .saturday(BigDecimal.valueOf(6))
-            .sunday(BigDecimal.valueOf(7))
-            .build();
+        final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
+            MONDAY, Duration.ofHours(1),
+            TUESDAY, Duration.ofHours(2),
+            WEDNESDAY, Duration.ofHours(3),
+            THURSDAY, Duration.ofHours(4),
+            FRIDAY, Duration.ofHours(5),
+            SATURDAY, Duration.ofHours(6),
+            SUNDAY, Duration.ofHours(7)
+        ));
 
-        final WorkingTime actual = sut.updateWorkingTime(new WorkingTimeId(id), workWeekUpdate);
+        final WorkingTime actual = sut.updateWorkingTime(new WorkingTimeId(id), null, workdays);
 
         assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actual.isCurrent()).isTrue();

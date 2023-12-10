@@ -59,10 +59,11 @@ public interface WorkingTimeService {
      * Update the {@linkplain WorkingTime}
      *
      * @param workingTimeId id of the working time to update
-     * @param workWeekUpdate new working time values
+     * @param validFrom new validFrom date, may be {@code null} for the very first {@linkplain WorkingTime}
+     * @param workdays workdays info
      * @return the updated {@linkplain WorkingTime}
      */
-    WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, WorkWeekUpdate workWeekUpdate);
+    WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, LocalDate validFrom, EnumMap<DayOfWeek, Duration> workdays);
 
     /**
      * Delete the {@linkplain WorkingTime} with the given id if possible.

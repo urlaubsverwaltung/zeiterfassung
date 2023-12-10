@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
-import de.focusshift.zeiterfassung.workingtime.WorkWeekUpdate;
 import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
@@ -200,8 +199,9 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             }
         }
 
-        final WorkWeekUpdate workWeekUpdate = dtoToWorkWeekUpdate(workingTimeDto);
-        workingTimeService.updateWorkingTime(WorkingTimeId.fromString(workingTimeDto.getId()), workWeekUpdate);
+        final LocalDate validFrom = workingTimeDto.getValidFrom();
+        final EnumMap<DayOfWeek, Duration> workdays = workingTimeDtoToWorkdays(workingTimeDto);
+        workingTimeService.updateWorkingTime(WorkingTimeId.fromString(workingTimeDto.getId()), validFrom, workdays);
 
         return new ModelAndView("redirect:/users/%s/working-time".formatted(userId));
     }
@@ -363,35 +363,5 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             .userId(workingTime.userIdComposite().localId().value())
             .workday(workingTime.actualWorkingDays())
             .build();
-    }
-
-    private WorkWeekUpdate dtoToWorkWeekUpdate(WorkingTimeDto workingTimeDto) {
-
-        final WorkWeekUpdate.Builder builder = WorkWeekUpdate.builder()
-            .validFrom(workingTimeDto.getValidFrom());
-
-        if (workingTimeDto.isWorkDayMonday()) {
-            builder.monday(requireNonNullElseGet(workingTimeDto.getWorkingTimeMonday(), workingTimeDto::getWorkingTime));
-        }
-        if (workingTimeDto.isWorkDayTuesday()) {
-            builder.tuesday(requireNonNullElseGet(workingTimeDto.getWorkingTimeTuesday(), workingTimeDto::getWorkingTime));
-        }
-        if (workingTimeDto.isWorkDayWednesday()) {
-            builder.wednesday(requireNonNullElseGet(workingTimeDto.getWorkingTimeWednesday(), workingTimeDto::getWorkingTime));
-        }
-        if (workingTimeDto.isWorkDayThursday()) {
-            builder.thursday(requireNonNullElseGet(workingTimeDto.getWorkingTimeThursday(), workingTimeDto::getWorkingTime));
-        }
-        if (workingTimeDto.isWorkDayFriday()) {
-            builder.friday(requireNonNullElseGet(workingTimeDto.getWorkingTimeFriday(), workingTimeDto::getWorkingTime));
-        }
-        if (workingTimeDto.isWorkDaySaturday()) {
-            builder.saturday(requireNonNullElseGet(workingTimeDto.getWorkingTimeSaturday(), workingTimeDto::getWorkingTime));
-        }
-        if (workingTimeDto.isWorkDaySunday()) {
-            builder.sunday(requireNonNullElseGet(workingTimeDto.getWorkingTimeSunday(), workingTimeDto::getWorkingTime));
-        }
-
-        return builder.build();
     }
 }

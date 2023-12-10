@@ -3,7 +3,6 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
-import de.focusshift.zeiterfassung.workingtime.WorkWeekUpdate;
 import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
@@ -28,10 +27,13 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -40,6 +42,8 @@ import java.util.stream.Stream;
 
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
+import static java.time.DayOfWeek.SATURDAY;
+import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
@@ -617,17 +621,17 @@ class WorkingTimeControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/42/working-time"));
 
-        final WorkWeekUpdate expectedWorkWeekUpdate = WorkWeekUpdate.builder()
-            .monday(Duration.ofHours(0))
-            .tuesday(Duration.ofHours(1))
-            .wednesday(Duration.ofHours(2))
-            .thursday(Duration.ofHours(3))
-            .friday(Duration.ofHours(4))
-            .saturday(Duration.ofHours(5))
-            .sunday(Duration.ofHours(6))
-            .build();
+        final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
+            MONDAY, Duration.ofHours(0),
+            TUESDAY, Duration.ofHours(1),
+            WEDNESDAY, Duration.ofHours(2),
+            THURSDAY, Duration.ofHours(3),
+            FRIDAY, Duration.ofHours(4),
+            SATURDAY, Duration.ofHours(5),
+            SUNDAY, Duration.ofHours(6)
+        ));
 
-        verify(workingTimeService).updateWorkingTime(workingTimeId, expectedWorkWeekUpdate);
+        verify(workingTimeService).updateWorkingTime(workingTimeId, null, workdays);
     }
 
     @Test
@@ -652,17 +656,17 @@ class WorkingTimeControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/42/working-time"));
 
-        final WorkWeekUpdate expectedWorkWeekUpdate = WorkWeekUpdate.builder()
-            .monday(Duration.ofHours(0))
-            .tuesday(Duration.ofHours(1))
-            .wednesday(Duration.ofHours(2))
-            .thursday(Duration.ofHours(3))
-            .friday(Duration.ofHours(4))
-            .saturday(Duration.ofHours(5))
-            .sunday(Duration.ofHours(6))
-            .build();
+        final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
+            MONDAY, Duration.ofHours(0),
+            TUESDAY, Duration.ofHours(1),
+            WEDNESDAY, Duration.ofHours(2),
+            THURSDAY, Duration.ofHours(3),
+            FRIDAY, Duration.ofHours(4),
+            SATURDAY, Duration.ofHours(5),
+            SUNDAY, Duration.ofHours(6)
+        ));
 
-        verify(workingTimeService).updateWorkingTime(workingTimeId, expectedWorkWeekUpdate);
+        verify(workingTimeService).updateWorkingTime(workingTimeId, null, workdays);
     }
 
     @Test

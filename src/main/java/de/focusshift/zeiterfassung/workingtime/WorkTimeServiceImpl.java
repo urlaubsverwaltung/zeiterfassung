@@ -104,21 +104,20 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     }
 
     @Override
-    public WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, WorkWeekUpdate workWeekUpdate) {
+    public WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, @Nullable LocalDate validFrom, EnumMap<DayOfWeek, Duration> workdays) {
 
         final WorkingTimeEntity entity = repository.findById(workingTimeId.uuid())
             .orElseThrow(() -> new IllegalStateException("could not find working-time with id=%s".formatted(workingTimeId)));
 
-        final LocalDate nextValidFrom = workWeekUpdate.validFrom().orElse(null);
         if (entity.getValidFrom() == null) {
-            LOG.info("ignore updating validFrom of very first workingTime={} to validFrom={}", workingTimeId, nextValidFrom);
-        } else if (nextValidFrom != null) {
-            entity.setValidFrom(nextValidFrom);
+            LOG.info("ignore updating validFrom of very first workingTime={} to validFrom={}", workingTimeId, validFrom);
+        } else if (validFrom != null) {
+            entity.setValidFrom(validFrom);
         } else {
             throw new WorkingTimeUpdateException("cannot update WorkingTime=%s without validFrom".formatted(workingTimeId));
         }
 
-        setWorkDays(entity, workWeekUpdate.workDays());
+        setWorkDays(entity, workdays);
 
         final UserLocalId userLocalId = new UserLocalId(entity.getUserId());
         final User user = findUser(userLocalId);
