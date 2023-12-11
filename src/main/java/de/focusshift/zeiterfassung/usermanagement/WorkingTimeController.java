@@ -345,9 +345,9 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                 SATURDAY, builder::workingTimeSaturday,
                 SUNDAY, builder::workingTimeSunday
             );
-            workingTime.workdays().forEach((dayOfWeek, workDayDuration) -> {
-                setter.get(dayOfWeek).accept(workDayDuration.hoursDoubleValue());
-            });
+            workingTime.workdays().forEach((dayOfWeek, workDayDuration) ->
+                setter.get(dayOfWeek).accept(workDayDuration.hoursDoubleValue())
+            );
         } else {
             // every day has the same hours
             // -> individual input fields should be empty
