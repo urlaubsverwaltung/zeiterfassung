@@ -57,10 +57,11 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
         for (WorkingTime workingTime : sortedWorkingTimes) {
 
             final DateRange workingTimeDateRange;
-            if (workingTime.validFrom().map(date -> date.isBefore(from)).orElse(true)) {
+            final LocalDate validFrom = workingTime.validFrom().orElse(null);
+            if (validFrom == null || validFrom.isBefore(from)) {
                 workingTimeDateRange = new DateRange(from, nextEnd);
             } else {
-                workingTimeDateRange = new DateRange(workingTime.validFrom().get(), nextEnd);
+                workingTimeDateRange = new DateRange(validFrom, nextEnd);
             }
 
             for (LocalDate localDate : workingTimeDateRange) {
