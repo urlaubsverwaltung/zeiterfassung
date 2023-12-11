@@ -25,7 +25,6 @@ import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
-import static java.time.Duration.ZERO;
 import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toSet;
@@ -201,8 +200,8 @@ public final class WorkingTime implements HasUserIdComposite {
             '}';
     }
 
-    public static Duration hoursToDuration(@Nullable Double hours) {
-        return hours == null ? ZERO : hoursToDuration(BigDecimal.valueOf(hours));
+    public static Duration hoursToDuration(double hours) {
+        return hoursToDuration(BigDecimal.valueOf(hours));
     }
 
     public static Duration hoursToDuration(BigDecimal hours) {

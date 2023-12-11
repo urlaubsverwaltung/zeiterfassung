@@ -30,8 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.ToDoubleFunction;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
@@ -241,18 +241,18 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             SUNDAY, workingTimeDto::getWorkingTimeSunday
         ));
 
-        final Function<DayOfWeek, Double> duration = dayOfWeek -> checked.get(dayOfWeek)
+        final ToDoubleFunction<DayOfWeek> duration = dayOfWeek -> checked.get(dayOfWeek)
             ? requireNonNullElseGet(dayWorkingTime.get(dayOfWeek).get(), workingTimeDto::getWorkingTime)
             : 0d;
 
         return new EnumMap<>(Map.of(
-            MONDAY, hoursToDuration(duration.apply(MONDAY)),
-            TUESDAY, hoursToDuration(duration.apply(TUESDAY)),
-            WEDNESDAY, hoursToDuration(duration.apply(WEDNESDAY)),
-            THURSDAY, hoursToDuration(duration.apply(THURSDAY)),
-            FRIDAY, hoursToDuration(duration.apply(FRIDAY)),
-            SATURDAY, hoursToDuration(duration.apply(SATURDAY)),
-            SUNDAY, hoursToDuration(duration.apply(SUNDAY))
+            MONDAY, hoursToDuration(duration.applyAsDouble(MONDAY)),
+            TUESDAY, hoursToDuration(duration.applyAsDouble(TUESDAY)),
+            WEDNESDAY, hoursToDuration(duration.applyAsDouble(WEDNESDAY)),
+            THURSDAY, hoursToDuration(duration.applyAsDouble(THURSDAY)),
+            FRIDAY, hoursToDuration(duration.applyAsDouble(FRIDAY)),
+            SATURDAY, hoursToDuration(duration.applyAsDouble(SATURDAY)),
+            SUNDAY, hoursToDuration(duration.applyAsDouble(SUNDAY))
         ));
     }
 
