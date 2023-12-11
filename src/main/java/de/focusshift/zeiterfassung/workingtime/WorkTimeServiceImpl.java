@@ -110,7 +110,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             .orElseThrow(() -> new IllegalStateException("could not find working-time with id=%s".formatted(workingTimeId)));
 
         if (entity.getValidFrom() == null) {
-            LOG.info("ignore updating validFrom of very first workingTime={} to validFrom={}", workingTimeId, validFrom);
+            LOG.info("ignore updating validFrom of very first workingTime={}", workingTimeId);
         } else if (validFrom != null) {
             entity.setValidFrom(validFrom);
         } else {
