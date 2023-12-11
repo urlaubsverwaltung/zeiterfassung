@@ -62,6 +62,77 @@ class WorkTimeServiceImplTest {
     }
 
     @Nested
+    class GetWorkingTimeById {
+
+        @Test
+        void returnsEmptyOptionalWhenItDoesNotExist() {
+
+            final UUID uuid = UUID.randomUUID();
+            when(workingTimeRepository.findById(uuid)).thenReturn(Optional.empty());
+
+            final Optional<WorkingTime> actual = sut.getWorkingTimeById(new WorkingTimeId(uuid));
+            assertThat(actual).isEmpty();
+        }
+
+        @Test
+        void returnsWorkingTime() {
+
+            final UserId userId = new UserId("userid");
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+            when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+            final UUID workingTimeUuid = UUID.randomUUID();
+            final WorkingTimeEntity entity = anyWorkingTimeEntity(workingTimeUuid, 42L, null);
+            entity.setId(workingTimeUuid);
+            entity.setUserId(userLocalId.value());
+
+            when(workingTimeRepository.findById(workingTimeUuid)).thenReturn(Optional.of(entity));
+            when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(entity));
+
+            final Optional<WorkingTime> actual = sut.getWorkingTimeById(new WorkingTimeId(workingTimeUuid));
+            assertThat(actual).hasValueSatisfying(workingTime -> {
+                assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeUuid));
+                assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite);
+                assertThat(workingTime.isCurrent()).isTrue();
+                assertThat(workingTime.validFrom()).isEmpty();
+                assertThat(workingTime.validTo()).isEmpty();
+                assertThat(workingTime.minValidFrom()).isEmpty();
+            });
+        }
+
+        @Test
+        void returnsWorkingTimeWhichIsNotCurrent() {
+
+            final UserId userId = new UserId("userid");
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+            when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+            final UUID workingTimeUuid = UUID.randomUUID();
+            final WorkingTimeEntity entity = anyWorkingTimeEntity(workingTimeUuid, 42L, null);
+            entity.setId(workingTimeUuid);
+            entity.setUserId(userLocalId.value());
+
+            final LocalDate yesterday = LocalDate.now(clockFixed).minusDays(1);
+            final WorkingTimeEntity entity_2 = anyWorkingTimeEntity(workingTimeUuid, 42L, yesterday);
+            entity_2.setId(UUID.randomUUID());
+            entity_2.setUserId(userLocalId.value());
+
+            when(workingTimeRepository.findById(workingTimeUuid)).thenReturn(Optional.of(entity));
+            when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(entity, entity_2));
+
+            final Optional<WorkingTime> actual = sut.getWorkingTimeById(new WorkingTimeId(workingTimeUuid));
+            assertThat(actual).hasValueSatisfying(workingTime -> {
+                assertThat(workingTime.isCurrent()).isFalse();
+                assertThat(workingTime.validTo()).hasValue(yesterday.minusDays(1));
+            });
+        }
+    }
+
+    @Nested
     class GetAllWorkingTimesByUser {
 
         @Test
