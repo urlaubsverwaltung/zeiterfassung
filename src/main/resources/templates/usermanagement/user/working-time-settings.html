@@ -131,13 +131,13 @@
                 </div>
                 <div
                   th:if="${workingTimeStat != null}"
-                  class="flex items-center gap-2"
+                  class="flex flex-col gap-2 xs:flex-row xs:items-center"
                   th:with="index=${workingTimeStat.index}"
                 >
                   <a
                     href="#"
                     th:href="@{/users/{id}/working-time/{workingTimeId} (id=${user.id},workingTimeId=${workingTime.id})}"
-                    class="button-secondary button-secondary--subtle button-secondary--narrow"
+                    class="flex justify-center w-full xs:inline-block xs:w-auto button-secondary button-secondary--subtle button-secondary--narrow"
                     data-turbo-action="advance"
                   >
                     <svg
@@ -150,10 +150,11 @@
                     method="post"
                     th:action="@{/users/{id}/working-time/{workingTimeId}/delete (id=${user.id},workingTimeId=${workingTime.id})}"
                     th:if="${workingTime.isDeletable}"
+                    class="w-full xs:w-auto"
                   >
                     <button
                       type="submit"
-                      class="button-secondary button-secondary--subtle button-secondary--narrow"
+                      class="flex justify-center w-full xs:inline-block xs:w-auto button-secondary button-secondary--subtle button-secondary--narrow"
                     >
                       <svg
                         th:replace="~{icons/trash::svg(className='w-4 h-4')}"
