@@ -14,7 +14,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +30,7 @@ import static java.time.DayOfWeek.WEDNESDAY;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.nullsLast;
 import static java.util.Comparator.reverseOrder;
+import static java.util.HashMap.newHashMap;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -189,7 +189,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final List<Long> localIdValues = users.stream().map(User::userLocalId).map(UserLocalId::value).toList();
         final Map<UserLocalId, List<WorkingTimeEntity>> sortedEntitiesByUserLocalId = findAllWorkingTimeEntitiesSorted(localIdValues);
 
-        final Map<UserIdComposite, List<WorkingTime>> result = new HashMap<>(users.size());
+        final Map<UserIdComposite, List<WorkingTime>> result = newHashMap(users.size());
 
         for (User user : users) {
 
@@ -305,7 +305,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             .stream()
             .collect(groupingBy(entity -> new UserLocalId(entity.getUserId())));
 
-        final Map<UserLocalId, List<WorkingTimeEntity>> sorted = new HashMap<>(unsorted.size());
+        final Map<UserLocalId, List<WorkingTimeEntity>> sorted = newHashMap(unsorted.size());
 
         for (Long userLocalIdValue : userLocalIdValues) {
             final UserLocalId userLocalId = new UserLocalId(userLocalIdValue);
