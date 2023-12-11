@@ -582,7 +582,9 @@ class WorkTimeServiceImplTest {
             SUNDAY, Duration.ofHours(7)
         ));
 
-        assertThatThrownBy(() -> sut.updateWorkingTime(new WorkingTimeId(id), null, workdays))
+        final WorkingTimeId workingTimeId = new WorkingTimeId(id);
+
+        assertThatThrownBy(() -> sut.updateWorkingTime(workingTimeId, null, workdays))
             .isInstanceOf(WorkingTimeUpdateException.class);
     }
 
