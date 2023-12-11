@@ -750,9 +750,8 @@ class WorkTimeServiceImplTest {
         );
     }
 
-    @ParameterizedTest
-    @MethodSource("nowAndPastDate")
-    void ensureDeleteWorkingTimeReturnsFalseWhenWorkingTimeValidFromIsNowOrInThePast(LocalDate givenValidFrom) {
+    @Test
+    void ensureDeleteWorkingTimeReturnsFalseWhenWorkingTimeIsVeryFirstOne() {
 
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
@@ -760,7 +759,7 @@ class WorkTimeServiceImplTest {
         final WorkingTimeEntity entity = new WorkingTimeEntity();
         entity.setId(workingTimeId.uuid());
         entity.setUserId(42L);
-        entity.setValidFrom(givenValidFrom);
+        entity.setValidFrom(null);
 
         when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.of(entity));
 
@@ -768,15 +767,16 @@ class WorkTimeServiceImplTest {
         assertThat(actual).isFalse();
     }
 
-    @Test
-    void ensureDeleteWorkingTime() {
+    @ParameterizedTest
+    @MethodSource("nowAndPastDate")
+    void ensureDeleteWorkingTime(LocalDate givenValidFromDate) {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
         final WorkingTimeEntity entity = new WorkingTimeEntity();
         entity.setId(workingTimeId.uuid());
         entity.setUserId(42L);
-        entity.setValidFrom(LocalDate.now(clockFixed).plusDays(123));
+        entity.setValidFrom(givenValidFromDate);
 
         when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.of(entity));
 

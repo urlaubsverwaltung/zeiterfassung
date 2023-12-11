@@ -320,7 +320,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             workingTime.validFrom().map(localDate -> Date.from(localDate.atStartOfDay().toInstant(UTC))).orElse(null),
             workingTime.validFrom().map(validFrom -> validFrom.isBefore(today)).orElse(true),
             workingTime.isCurrent(),
-            workingTime.validFrom().map(validFrom -> validFrom.isAfter(today)).orElse(false),
+            workingTime.validFrom().isPresent(),
             workingTime.getMonday().hoursDoubleValue(),
             workingTime.getTuesday().hoursDoubleValue(),
             workingTime.getWednesday().hoursDoubleValue(),

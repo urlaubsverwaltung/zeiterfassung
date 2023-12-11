@@ -183,7 +183,7 @@ class WorkingTimeControllerTest {
 
     @ParameterizedTest
     @MethodSource("nowAndPastDate")
-    void ensureSimpleGetWithNotDeletableWorkingTimeBecauseValidFromIsNowOrInThePast(LocalDate givenValidFrom) throws Exception {
+    void ensureSimpleGetWithDeletableWorkingTimeDespiteValidFromIsNowOrInThePast(LocalDate givenValidFrom) throws Exception {
 
         final UserId userId = new UserId("uuid");
         final UserLocalId userLocalId = new UserLocalId(1337L);
@@ -195,6 +195,31 @@ class WorkingTimeControllerTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .validFrom(givenValidFrom)
+            .build();
+
+        when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
+
+        final ResultActions result = perform(
+            get("/users/1337/working-time")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        );
+
+        final List<WorkingTimeListEntryDto> workingTimes = getModelAttribute("workingTimes", result);
+        assertThat(workingTimes).extracting(WorkingTimeListEntryDto::isDeletable).contains(true);
+    }
+    @Test
+    void ensureSimpleGetWithNotDeletableWorkingTimeBecauseVeryFirstWorkingTime() throws Exception {
+
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(1337L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(batman));
+
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
+            .validFrom(null)
             .build();
 
         when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));

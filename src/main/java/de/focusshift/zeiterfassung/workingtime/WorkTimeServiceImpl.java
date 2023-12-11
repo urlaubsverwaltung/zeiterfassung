@@ -134,8 +134,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final WorkingTimeEntity toDelete = repository.findById(workingTimeId.uuid())
             .orElseThrow(() -> new IllegalStateException("could not find WorkingTime=" + workingTimeId));
 
-        if (!LocalDate.now(clock).isBefore(toDelete.getValidFrom())) {
-            LOG.info("could not delete WorkingTime={} because it is in the past.", workingTimeId);
+        if (toDelete.getValidFrom() == null) {
+            LOG.info("cannot delete WorkingTime={} because it is the very first one.", workingTimeId);
             return false;
         }
 
