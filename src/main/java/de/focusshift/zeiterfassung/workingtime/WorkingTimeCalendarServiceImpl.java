@@ -56,13 +56,7 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
 
         for (WorkingTime workingTime : sortedWorkingTimes) {
 
-            final DateRange workingTimeDateRange;
-            final LocalDate validFrom = workingTime.validFrom().orElse(null);
-            if (validFrom == null || validFrom.isBefore(from)) {
-                workingTimeDateRange = new DateRange(from, nextEnd);
-            } else {
-                workingTimeDateRange = new DateRange(validFrom, nextEnd);
-            }
+            final DateRange workingTimeDateRange = getDateRange(from, workingTime, nextEnd);
 
             for (LocalDate localDate : workingTimeDateRange) {
                 plannedWorkingHoursByDate.put(localDate, workingTime.getForDayOfWeek(localDate.getDayOfWeek()));
@@ -77,5 +71,14 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
         }
 
         return new WorkingTimeCalendar(plannedWorkingHoursByDate);
+    }
+
+    private static DateRange getDateRange(LocalDate from, WorkingTime workingTime, LocalDate nextEnd) {
+        final LocalDate validFrom = workingTime.validFrom().orElse(null);
+        if (validFrom == null || validFrom.isBefore(from)) {
+            return new DateRange(from, nextEnd);
+        } else {
+            return new DateRange(validFrom, nextEnd);
+        }
     }
 }
