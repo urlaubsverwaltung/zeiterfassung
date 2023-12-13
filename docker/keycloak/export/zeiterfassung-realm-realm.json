@@ -108,6 +108,14 @@
       "clientRole" : false,
       "containerId" : "zeiterfassung-realm",
       "attributes" : { }
+    }, {
+      "id" : "8cfe48f2-2857-460e-9454-04c712aa7b6d",
+      "name" : "ZEITERFASSUNG_SETTINGS_TIME_ENTRIES",
+      "description" : "",
+      "composite" : false,
+      "clientRole" : false,
+      "containerId" : "zeiterfassung-realm",
+      "attributes" : { }
     } ],
     "client" : {
       "realm-management" : [ {
@@ -384,7 +392,8 @@
     "realmRoles" : [
       "ZEITERFASSUNG_VIEW_REPORT_ALL",
       "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL",
-      "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL"
+      "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL",
+      "ZEITERFASSUNG_SETTINGS_TIME_ENTRIES"
     ],
     "clientRoles" : { },
     "subGroups" : [ ]

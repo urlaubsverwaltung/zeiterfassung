@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+<head th:replace="~{_layout::head(title=~{::title})}">
+    <title th:text="#{settings.head.title}">Zeiterfassung - Einstellungen</title>
+</head>
+<body th:replace="~{_layout::body(~{::content})}">
+<th:block th:fragment="content">
+  <main class="flex-1 flex flex-col">
+    <h1>Einstellungen</h1>
+    <form action="#" th:action="@{/settings}" method="post" th:object="${settings}">
+      <fieldset>
+        <legend>erfasste Zeiten</legend>
+        <div>
+          nicht mehr änderbar ab
+          <input type="text" inputmode="numeric" th:field="*{timeEntrySettings.value}" >
+          <select
+            th:replace="~{fragments/select::one(id='time-entry-settings-unit-select', name='timeEntrySettings.unit', options=~{::time-entry-settings-unit-select-options}, autosubmit='sort-submit')}"
+          >
+            <th:block th:ref="time-entry-settings-unit-select-options">
+              <option
+                th:each="option : ${timeEntryFreezeUnits.options}"
+                th:value="${option.value}"
+                th:text="${#messages.msg(option.textMessageKey)}"
+                th:selected="${option.selected}"
+              ></option>
+            </th:block>
+          </select>
+        </div>
+      </fieldset>
+      <div class="flex gap-2">
+        <button type="submit" class="button-primary" th:text="#{settings.submit}">Aktualisieren</button>
+        <button type="reset" class="button-secondary" th:text="#{settings.cancel}">Abbrechen</button>
+      </div>
+    </form>
+  </main>
+</th:block>
+</body>
+</html>
