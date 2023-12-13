@@ -15,7 +15,7 @@
         <a
           href="#"
           th:href="${userReportPreviousSectionUrl}"
-          class="button-primary"
+          class="button-primary button-primary-icon"
         >
           <svg
             th:replace="~{icons/chevron-left::svg(className='w-6 h-6')}"
@@ -27,7 +27,7 @@
         <a
           href="#"
           th:href="${userReportTodaySectionUrl}"
-          class="button-primary"
+          class="button-primary button-primary-icon"
           th:text="#{report.month.navigation.button.today}"
         >
           Heute
@@ -35,7 +35,7 @@
         <a
           href="#"
           th:href="${userReportNextSectionUrl}"
-          class="button-primary"
+          class="button-primary button-primary-icon"
         >
           <svg
             th:replace="~{icons/chevron-right::svg(className='w-6 h-6')}"

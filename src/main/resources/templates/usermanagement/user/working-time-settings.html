@@ -9,7 +9,7 @@
         <a
           href="#"
           th:href="@{/users/{id}/working-time/new (id=${user.id}, query=${query})}"
-          class="button-secondary button-secondary--narrow"
+          class="button-secondary button-secondary-icon button-secondary--narrow"
           data-turbo-action="advance"
         >
           <svg th:replace="~{icons/plus::svg(className='w-5 h-5')}"></svg>
@@ -23,7 +23,7 @@
           th:if="${#lists.size(workingTimes) == 1}"
           href="#"
           th:href="@{/users/{id}/working-time/{workingTimeId} (id=${user.id},workingTimeId=${workingTimes[0].id})}"
-          class="button-secondary button-secondary--narrow"
+          class="button-secondary button-secondary-icon button-secondary--narrow"
           data-turbo-action="advance"
         >
           <svg th:replace="~{icons/edit::svg(className='w-4 h-4')}"></svg>
@@ -149,7 +149,7 @@
                   <a
                     href="#"
                     th:href="@{/users/{id}/working-time/{workingTimeId} (id=${user.id},workingTimeId=${workingTime.id})}"
-                    class="flex justify-center w-full xs:inline-block xs:w-auto button-secondary button-secondary--subtle button-secondary--narrow"
+                    class="flex justify-center w-full xs:inline-block xs:w-auto button-secondary button-secondary-icon button-secondary--subtle button-secondary--narrow"
                     data-turbo-action="advance"
                   >
                     <svg
@@ -166,7 +166,7 @@
                   >
                     <button
                       type="submit"
-                      class="flex justify-center w-full xs:inline-block xs:w-auto button-secondary button-secondary--subtle button-secondary--narrow"
+                      class="flex justify-center w-full xs:inline-block xs:w-auto button-secondary button-secondary-icon button-secondary--subtle button-secondary--narrow"
                     >
                       <svg
                         th:replace="~{icons/trash::svg(className='w-4 h-4')}"

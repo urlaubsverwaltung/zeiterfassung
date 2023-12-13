@@ -36,7 +36,7 @@ duet-date-picker.edited ~ label > span {
   @apply sm:justify-start;
 }
 
-.button-primary:has(svg) {
+.button-primary-icon {
   @apply items-center;
   @apply gap-2;
   @apply justify-center;
@@ -56,23 +56,24 @@ duet-date-picker.edited ~ label > span {
   @apply sm:text-left;
 }
 
+.button-secondary-icon {
+  @apply flex;
+  @apply items-center;
+  @apply gap-2;
+}
+
 .button-secondary--subtle {
   @apply border-gray-400;
   @apply text-gray-500;
   @apply font-normal;
 }
 
-.button-secondary:has(svg) {
-  @apply flex;
-  @apply items-center;
-  @apply gap-2;
-}
-
 .button-secondary.button-secondary--narrow {
   @apply py-1;
   @apply px-4;
 }
-.button-secondary:has(svg).button-secondary--narrow {
+
+.button-secondary-icon.button-secondary--narrow {
   @apply py-1;
   @apply pl-3;
   @apply pr-4;
