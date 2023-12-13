@@ -7,6 +7,7 @@ record WorkingTimeListEntryDto(
     String id,
     Long userId,
     Date validFrom,
+    Date validTo,
     boolean validFromIsPast,
     boolean isCurrent,
     boolean isDeletable,

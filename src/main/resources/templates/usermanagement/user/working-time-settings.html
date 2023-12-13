@@ -53,29 +53,41 @@
                   <th:block th:case="true">
                     <th:block
                       th:if="${workingTime.validFrom == null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.past.without-valid-from}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo})}"
                     >
-                      gültig seit unbekannt
+                      gültig bis ___
                     </th:block>
                     <th:block
-                      th:if="${workingTime.validFrom != null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.past(${workingTime.validFrom})}"
+                      th:if="${workingTime.validFrom != null && workingTime.validTo != null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo})}"
                     >
-                      gültig seit XX.XX.XXXX
+                      gültig von ___ bis ___
+                    </th:block>
+                    <th:block
+                      th:if="${workingTime.validFrom != null && workingTime.validTo == null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom})}"
+                    >
+                      gültig von ___
                     </th:block>
                   </th:block>
                   <th:block th:case="false">
                     <th:block
                       th:if="${workingTime.validFrom == null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.without-valid-from}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo})}"
                     >
-                      gültig ab unbekannt
+                      gültig bis ___
                     </th:block>
                     <th:block
-                      th:if="${workingTime.validFrom != null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary(${workingTime.validFrom})}"
+                      th:if="${workingTime.validFrom != null && workingTime.validTo != null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo})}"
                     >
-                      gültig ab XX.XX.XXXX
+                      gültig von ___ bis ___
+                    </th:block>
+                    <th:block
+                      th:if="${workingTime.validFrom != null && workingTime.validTo == null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom})}"
+                    >
+                      gültig von ___
                     </th:block>
                   </th:block>
                 </th:block>

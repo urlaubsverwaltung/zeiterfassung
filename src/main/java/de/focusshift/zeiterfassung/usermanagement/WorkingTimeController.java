@@ -318,6 +318,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             workingTime.id().value(),
             workingTime.userLocalId().value(),
             workingTime.validFrom().map(localDate -> Date.from(localDate.atStartOfDay().toInstant(UTC))).orElse(null),
+            workingTime.validTo().map(localDate -> Date.from(localDate.atStartOfDay().toInstant(UTC))).orElse(null),
             workingTime.validFrom().map(validFrom -> validFrom.isBefore(today)).orElse(true),
             workingTime.isCurrent(),
             workingTime.validFrom().isPresent(),
