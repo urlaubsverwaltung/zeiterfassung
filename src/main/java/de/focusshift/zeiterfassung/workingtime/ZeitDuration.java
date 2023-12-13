@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.timeentry;
+package de.focusshift.zeiterfassung.workingtime;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -6,14 +6,14 @@ import java.time.Duration;
 import static java.math.RoundingMode.CEILING;
 
 /**
- * Container of a {@linkplain Duration} to provide calculation stuff like {@code durationInMinutes}.
+ * Container of a {@linkplain Duration} to provide calculation stuff like {@linkplain  ZeitDuration#hoursDoubleValue()}
+ * which has to have a prevision of three digits.
  *
  * <p>
- * This can be used within {@linkplain WorkDuration} or {@linkplain BreakDuration} for instance
- * as these objects provide more context about the actual duration.
- *
+ * This interface can be used with more specialized Duration objects like {@linkplain PlannedWorkingHours} as these
+ * objects provide more context about the actual duration.
  */
-interface ZeitDuration {
+public interface ZeitDuration {
 
     /**
      * Return the exact duration. (e.g {@code "PT50M42S"})

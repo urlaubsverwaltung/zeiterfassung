@@ -10,7 +10,9 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
-import de.focusshift.zeiterfassung.usermanagement.WorkingTimeService;
+import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +53,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     private final TimeEntryRepository timeEntryRepository;
     private final UserManagementService userManagementService;
-    private final WorkingTimeService workingTimeService;
+    private final WorkingTimeCalendarService workingTimeCalendarService;
     private final UserDateService userDateService;
     private final UserSettingsProvider userSettingsProvider;
     private final AbsenceService absenceService;
@@ -59,12 +61,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     @Autowired
     TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, UserManagementService userManagementService,
-                         WorkingTimeService workingTimeService, UserDateService userDateService,
+                         WorkingTimeCalendarService workingTimeCalendarService, UserDateService userDateService,
                          UserSettingsProvider userSettingsProvider, AbsenceService absenceService, Clock clock) {
 
         this.timeEntryRepository = timeEntryRepository;
         this.userManagementService = userManagementService;
-        this.workingTimeService = workingTimeService;
+        this.workingTimeCalendarService = workingTimeCalendarService;
         this.userDateService = userDateService;
         this.userSettingsProvider = userSettingsProvider;
         this.absenceService = absenceService;
@@ -160,13 +162,14 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         // TODO refactor getEntryWeekPage to accept UserLocalId to replace userManagementService call
         final UserLocalId userLocalId = user.userLocalId();
-        final Map<LocalDate, PlannedWorkingHours> plannedByDate = workingTimeService.getWorkingHoursByUserAndYearWeek(userLocalId, Year.of(year), weekOfYear);
 
-        final PlannedWorkingHours weekPlannedHours = plannedByDate.values()
-            .stream()
-            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+        final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarService
+            .getWorkingTimeCalender(fromLocalDate, toLocalDateExclusive, userLocalId);
 
-        final List<TimeEntryDay> daysOfWeek = createTimeEntryDays(fromLocalDate, toLocalDateExclusive, timeEntriesByDate, absencesByDate, plannedByDate);
+        final List<TimeEntryDay> daysOfWeek = createTimeEntryDays(fromLocalDate, toLocalDateExclusive, timeEntriesByDate, absencesByDate, workingTimeCalendar);
+
+        final PlannedWorkingHours weekPlannedHours = workingTimeCalendar
+            .plannedWorkingHours(fromLocalDate, toLocalDateExclusive);
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(fromLocalDate, weekPlannedHours, daysOfWeek);
         final long totalTimeEntries = timeEntryRepository.countAllByOwner(userId.value());
@@ -207,7 +210,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private static List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,
                                                           Map<LocalDate, List<TimeEntry>> timeEntriesByDate,
                                                           Map<LocalDate, List<Absence>> absencesByDate,
-                                                          Map<LocalDate, PlannedWorkingHours> plannedByDate) {
+                                                          WorkingTimeCalendar workingTimeCalendar) {
 
         final List<TimeEntryDay> timeEntryDays = new ArrayList<>();
 
@@ -215,11 +218,15 @@ class TimeEntryServiceImpl implements TimeEntryService {
         LocalDate date = toExclusive.minusDays(1);
 
         while (date.isEqual(from) || date.isAfter(from)) {
-            final PlannedWorkingHours plannedWorkingHours = plannedByDate.get(date);
+
+            final PlannedWorkingHours plannedWorkingHours = workingTimeCalendar.plannedWorkingHours(date)
+                .orElseThrow(() -> new IllegalStateException("expected plannedWorkingHours to exist in calendar."));
+
             final List<TimeEntry> timeEntries = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = absencesByDate.getOrDefault(date, List.of());
             final ShouldWorkingHours shouldWorkingHours = dayShouldHoursWorked(plannedWorkingHours, absences);
             timeEntryDays.add(new TimeEntryDay(date, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
+
             date = date.minusDays(1);
         }
 

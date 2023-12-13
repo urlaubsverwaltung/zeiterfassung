@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 
 import java.math.BigDecimal;
 import java.time.Duration;

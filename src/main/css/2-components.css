@@ -19,3 +19,62 @@
 duet-date-picker.edited ~ label > span {
   color: theme("colors.blue.600");
 }
+
+.button-primary {
+  @apply whitespace-nowrap;
+  @apply bg-blue-700;
+  @apply border;
+  @apply border-blue-700;
+  @apply text-white;
+  @apply font-medium;
+  @apply rounded;
+  @apply px-4;
+  @apply py-2;
+  @apply flex;
+  @apply transition-colors;
+  @apply hover:bg-blue-600;
+  @apply sm:justify-start;
+}
+
+.button-primary-icon {
+  @apply items-center;
+  @apply gap-2;
+  @apply justify-center;
+}
+
+.button-secondary {
+  @apply whitespace-nowrap;
+  @apply border;
+  @apply border-blue-700;
+  @apply text-blue-700;
+  @apply bg-white;
+  @apply font-medium;
+  @apply rounded;
+  @apply text-center;
+  @apply px-4;
+  @apply py-2;
+  @apply sm:text-left;
+}
+
+.button-secondary-icon {
+  @apply flex;
+  @apply items-center;
+  @apply gap-2;
+}
+
+.button-secondary--subtle {
+  @apply border-gray-400;
+  @apply text-gray-500;
+  @apply font-normal;
+}
+
+.button-secondary.button-secondary--narrow {
+  @apply py-1;
+  @apply px-4;
+}
+
+.button-secondary-icon.button-secondary--narrow {
+  @apply py-1;
+  @apply pl-3;
+  @apply pr-4;
+}

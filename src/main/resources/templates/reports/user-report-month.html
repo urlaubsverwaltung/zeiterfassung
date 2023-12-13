@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de">
   <head>
     <title>Zeiterfassung - Bericht</title>
@@ -15,7 +15,7 @@
         <a
           href="#"
           th:href="${userReportPreviousSectionUrl}"
-          class="bg-blue-700 text-white font-medium rounded px-4 py-2"
+          class="button-primary button-primary-icon"
         >
           <svg
             th:replace="~{icons/chevron-left::svg(className='w-6 h-6')}"
@@ -27,7 +27,7 @@
         <a
           href="#"
           th:href="${userReportTodaySectionUrl}"
-          class="bg-blue-700 text-white font-medium rounded px-4 py-2"
+          class="button-primary button-primary-icon"
           th:text="#{report.month.navigation.button.today}"
         >
           Heute
@@ -35,7 +35,7 @@
         <a
           href="#"
           th:href="${userReportNextSectionUrl}"
-          class="bg-blue-700 text-white font-medium rounded px-4 py-2"
+          class="button-primary button-primary-icon"
         >
           <svg
             th:replace="~{icons/chevron-right::svg(className='w-6 h-6')}"
@@ -51,7 +51,7 @@
           href="#"
           th:href="${userReportCsvDownloadUrl}"
           download
-          class="whitespace-nowrap sm:ml-auto inline-block border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
+          class="button-secondary sm:ml-auto inline-block"
           th:text="#{report.month.button.csv-download}"
         >
           CSV Download

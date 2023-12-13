@@ -1,6 +1,6 @@
-package de.focusshift.zeiterfassung.usermanagement;
+package de.focusshift.zeiterfassung.workingtime;
 
-import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.usermanagement.User;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Provides information about the {@link de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours} on a given {@link LocalDate} including publicHolidays.
+ * Provides information about the {@link PlannedWorkingHours} on a given {@link LocalDate} including publicHolidays.
  * For instance:
  * <ul>
  *     <li>2022-12-26 - 0h (publicHoliday, monday)</li>
@@ -32,6 +32,17 @@ public final class WorkingTimeCalendar {
         return Optional.ofNullable(plannedWorkingHoursByDate.get(date));
     }
 
+    /**
+     * calculate {@linkplain PlannedWorkingHours} between the given dates.
+     */
+    public PlannedWorkingHours plannedWorkingHours(LocalDate from, LocalDate toExclusive) {
+        return plannedWorkingHoursByDate.entrySet()
+            .stream()
+            .filter(entry -> isDateBetween(entry.getKey(), from, toExclusive))
+            .map(Map.Entry::getValue)
+            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -50,5 +61,9 @@ public final class WorkingTimeCalendar {
         return "WorkingTimeCalendar{" +
             "plannedWorkingHoursByDate=" + plannedWorkingHoursByDate +
             '}';
+    }
+
+    private boolean isDateBetween(LocalDate toCheck, LocalDate from, LocalDate toExclusive) {
+        return toCheck.isBefore(toExclusive) && (toCheck.isEqual(from) || toCheck.isAfter(from));
     }
 }

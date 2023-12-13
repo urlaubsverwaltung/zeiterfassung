@@ -1,38 +1,29 @@
-package de.focusshift.zeiterfassung.usermanagement;
+package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
-import de.focusshift.zeiterfassung.tenancy.user.TenantUserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
 
+import java.time.LocalDate;
 import java.util.Objects;
+import java.util.UUID;
 
-import static jakarta.persistence.FetchType.LAZY;
 
-
-@Entity
-@Table(name = "working_time")
+@Entity(name = "working_time")
 public class WorkingTimeEntity extends AbstractTenantAwareEntity {
 
     @Id
+    @GeneratedValue
     @Column(name = "id", unique = true, nullable = false, updatable = false)
-    @SequenceGenerator(name = "working_time_seq", sequenceName = "working_time_seq")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "working_time_seq")
-    private Long id;
+    private UUID id;
 
     @Column(name = "user_id")
     private Long userId;
 
-    @OneToOne(fetch = LAZY)
-    @PrimaryKeyJoinColumn(name = "user_id", referencedColumnName = "id")
-    private TenantUserEntity user;
+    @Column(name = "valid_from")
+    private LocalDate validFrom;
 
     private String monday;
 
@@ -52,11 +43,11 @@ public class WorkingTimeEntity extends AbstractTenantAwareEntity {
         super(null);
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -68,12 +59,12 @@ public class WorkingTimeEntity extends AbstractTenantAwareEntity {
         this.userId = userId;
     }
 
-    public TenantUserEntity getUser() {
-        return user;
+    public LocalDate getValidFrom() {
+        return validFrom;
     }
 
-    public void setUser(TenantUserEntity user) {
-        this.user = user;
+    public void setValidFrom(LocalDate validFrom) {
+        this.validFrom = validFrom;
     }
 
     public String getMonday() {
@@ -143,5 +134,14 @@ public class WorkingTimeEntity extends AbstractTenantAwareEntity {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "WorkingTimeEntity{" +
+            "id=" + id +
+            ", userId=" + userId +
+            ", validFrom=" + validFrom +
+            '}';
     }
 }

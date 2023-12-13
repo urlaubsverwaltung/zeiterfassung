@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de">
   <head>
     <title>Zeiterfassung - Bericht</title>
@@ -13,7 +13,7 @@
       <div class="relative">
         <a
           href="#report-user-selection"
-          class="flex items-center border border-gray-200 hover:border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded px-4 py-2 transition-colors duration-75 2xl:border-blue-600 2xl:bg-white 2xl:text-blue-600 hover:2xl:bg-white hover:2xl:border-blue-600"
+          class="button-secondary button-secondary-icon"
           is="z-report-user-select"
         >
           <th:block
@@ -21,13 +21,11 @@
           >
             <th:block th:case="true">
               <svg
-                th:replace="~{icons/users.html::svg(className='w-4 h-4 mr-2 fill-amber-500')}"
+                th:replace="~{icons/users.html::svg(className='w-4 h-4 fill-amber-500')}"
               />
             </th:block>
             <th:block th:case="false">
-              <svg
-                th:replace="~{icons/users.html::svg(className='w-4 h-4 mr-2')}"
-              />
+              <svg th:replace="~{icons/users.html::svg(className='w-4 h-4')}" />
             </th:block>
           </th:block>
           <th:block th:text="#{report.filter.users}"> Personen </th:block>
@@ -89,7 +87,7 @@
           </div>
           <button
             type="submit"
-            class="w-full mt-4 bg-blue-700 text-white font-medium rounded px-4 py-2"
+            class="button-primary w-full mt-4 rounded"
             th:text="#{report.filter.users.submit}"
           >
             Übernehmen

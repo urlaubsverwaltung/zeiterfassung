@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head th:replace="~{_layout::head(~{::title})}">
     <title>Zeiterfassung</title>
@@ -19,7 +19,7 @@
             >
               <button
                 type="submit"
-                class="bg-blue-700 text-white pl-3 pr-4 py-1 text-lg font-medium rounded-full flex items-center hover:bg-blue-600 transition-colors"
+                class="button-primary button-primary-icon pl-3 pr-4 py-1 text-lg rounded-full"
               >
                 <svg
                   th:replace="~{icons/play::svg(className='w-6 h-6 mr-1.5')}"

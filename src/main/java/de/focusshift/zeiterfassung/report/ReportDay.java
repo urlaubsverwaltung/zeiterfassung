@@ -1,9 +1,9 @@
 package de.focusshift.zeiterfassung.report;
 
-import de.focusshift.zeiterfassung.timeentry.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 
 import java.time.LocalDate;
 import java.util.Collection;

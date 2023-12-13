@@ -1,226 +1,193 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de">
   <head>
     <title>Zeiterfassung - Personen</title>
   </head>
   <body>
-    <th:block th:fragment="section(user, workingTime)">
-      <form
-        action="#"
-        th:action="@{/users/{userId}/working-time (userId=${user.id})}"
-        method="post"
-        th:object="${workingTime}"
-      >
-        <div id="working-time-form-hidden-inputs">
-          <input type="hidden" name="query" th:value="${query}" />
-        </div>
-        <div class="flex flex-col gap-8">
-          <div
-            class="p-4 rounded-md text-red-900 border border-red-100 bg-red-50"
-            th:if="${#fields.hasErrors('empty')}"
+    <th:block th:fragment="section(user, workingTimes)">
+      <div class="flex gap-2 items-center">
+        <a
+          href="#"
+          th:href="@{/users/{id}/working-time/new (id=${user.id}, query=${query})}"
+          class="button-secondary button-secondary-icon button-secondary--narrow"
+          data-turbo-action="advance"
+        >
+          <svg th:replace="~{icons/plus::svg(className='w-5 h-5')}"></svg>
+          <th:block
+            th:text="#{usermanagement.working-time.add-new-working-time-entry}"
           >
-            <p th:text="${#fields.errors('empty')[0]}">
-              Leeres Formular Fehlernachricht.
-            </p>
-          </div>
-          <fieldset
-            class="border-t border-gray-100"
-            th:with="hasError=${#fields.hasErrors('workday') or #fields.hasErrors('workDayMonday') or #fields.hasErrors('workDayTuesday') or #fields.hasErrors('workDayWednesday') or #fields.hasErrors('workDayThursday') or #fields.hasErrors('workDayFriday') or #fields.hasErrors('workDaySaturday') or #fields.hasErrors('workDaySunday')}"
+            Neu
+          </th:block>
+        </a>
+        <a
+          th:if="${#lists.size(workingTimes) == 1}"
+          href="#"
+          th:href="@{/users/{id}/working-time/{workingTimeId} (id=${user.id},workingTimeId=${workingTimes[0].id})}"
+          class="button-secondary button-secondary-icon button-secondary--narrow"
+          data-turbo-action="advance"
+        >
+          <svg th:replace="~{icons/edit::svg(className='w-4 h-4')}"></svg>
+          <th:block>Bearbeiten</th:block>
+        </a>
+      </div>
+      <th:block th:if="${#lists.size(workingTimes) > 1}">
+        <ul class="mt-8 flex flex-col gap-1">
+          <li
+            th:each="workingTime : ${workingTimes}"
+            class="border-t border-t-gray-100 first:border-t-0"
+            th:classappend="${workingTime.isCurrent ? '' : 'py-2'}"
           >
-            <legend
-              class="text-sm font-medium text-gray-400"
-              th:text="#{usermanagement.working-time.workdays.title}"
+            <details
+              class="group pr-2"
+              th:classappend="${workingTime.isCurrent ? 'bg-gray-50 rounded-xl py-2' : ''}"
+              th:attrappend="open=${workingTime.isCurrent ? 'true' : null}"
             >
-              Arbeitstage
-            </legend>
-            <div class="mt-2 sm:mt-4">
-              <ul class="flex flex-wrap gap-4">
-                <li
-                  class="flex items-center gap-1"
-                  th:fragment="workday(dayOfWeek)"
-                  th:with="dayOfWeek=${dayOfWeek ?: 'monday'}, hasError=${#fields.hasErrors('workDay'+ #strings.capitalize(dayOfWeek))}"
-                >
-                  <input
-                    type="checkbox"
-                    name="workday"
-                    value="monday"
-                    th:value="${dayOfWeek}"
-                    id="workday-monday"
-                    th:id="${'workday-' + dayOfWeek}"
-                    th:checked="${#lists.contains(workingTime.workday, dayOfWeek)}"
-                    th:class="${hasError ? 'invalid' : ''}"
-                    th:aria-invalid="${hasError}"
-                    th:aria-message="${hasError ? 'work-day-error-message' : ''}"
-                  />
-                  <label
-                    for="workday-monday"
-                    th:for="${'workday-' + dayOfWeek}"
-                    th:text="${#messages.msg(dayOfWeek.toUpperCase())}"
-                    th:class="${hasError ? 'invalid' : ''}"
-                  >
-                    Montag
-                  </label>
-                </li>
-                <li th:replace="~{::workday('tuesday')}"></li>
-                <li th:replace="~{::workday('wednesday')}"></li>
-                <li th:replace="~{::workday('thursday')}"></li>
-                <li th:replace="~{::workday('friday')}"></li>
-                <li th:replace="~{::workday('saturday')}"></li>
-                <li th:replace="~{::workday('sunday')}"></li>
-              </ul>
-              <div class="mt-2" th:if="${hasError}">
-                <p
-                  th:if="${#fields.hasErrors('workday')}"
-                  th:text="${#fields.errors('workday')[0]}"
-                  class="invalid"
-                >
-                  Arbeitstag Fehlernachricht.
-                </p>
-                <th:block
-                  th:fragment="workdayError(dayOfWeek)"
-                  th:with="dayOfWeek=${dayOfWeek ?: 'monday'}, fieldName=${'workDay' + #strings.capitalize(dayOfWeek)}"
-                >
-                  <p
-                    th:if="${#fields.hasErrors(fieldName)}"
-                    th:text="${#fields.errors(fieldName)[0]}"
-                    class="invalid"
-                  >
-                    Arbeitstag Fehlernachricht.
-                  </p>
+              <summary
+                class="flex gap-1 items-center cursor-pointer"
+                th:classappend="${workingTime.current ? 'font-bold' : ''}"
+              >
+                <svg
+                  th:replace="~{icons/chevron-right::svg(className='w-5 h-5 transition-transform group-open:rotate-90')}"
+                ></svg>
+                <th:block th:switch="${workingTime.validFromIsPast}">
+                  <th:block th:case="true">
+                    <th:block
+                      th:if="${workingTime.validFrom == null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo})}"
+                    >
+                      gültig bis ___
+                    </th:block>
+                    <th:block
+                      th:if="${workingTime.validFrom != null && workingTime.validTo != null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo})}"
+                    >
+                      gültig von ___ bis ___
+                    </th:block>
+                    <th:block
+                      th:if="${workingTime.validFrom != null && workingTime.validTo == null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom})}"
+                    >
+                      gültig von ___
+                    </th:block>
+                  </th:block>
+                  <th:block th:case="false">
+                    <th:block
+                      th:if="${workingTime.validFrom == null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo})}"
+                    >
+                      gültig bis ___
+                    </th:block>
+                    <th:block
+                      th:if="${workingTime.validFrom != null && workingTime.validTo != null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo})}"
+                    >
+                      gültig von ___ bis ___
+                    </th:block>
+                    <th:block
+                      th:if="${workingTime.validFrom != null && workingTime.validTo == null}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom})}"
+                    >
+                      gültig von ___
+                    </th:block>
+                  </th:block>
                 </th:block>
-                <p th:replace="~{::workdayError('tuesday')}"></p>
-                <p th:replace="~{::workdayError('wednesday')}"></p>
-                <p th:replace="~{::workdayError('thursday')}"></p>
-                <p th:replace="~{::workdayError('friday')}"></p>
-                <p th:replace="~{::workdayError('saturday')}"></p>
-                <p th:replace="~{::workdayError('sunday')}"></p>
-              </div>
-            </div>
-          </fieldset>
-          <fieldset
-            class="border-t border-gray-100"
-            th:classappend="${#fields.hasErrors('workingTimeClash') ? 'border-red-600' : ''}"
-          >
-            <legend
-              class="text-sm font-medium text-gray-400"
-              th:classappend="${#fields.hasErrors('workingTimeClash') ? 'text-red-600' : ''}"
-              th:text="#{usermanagement.working-time.hours.common.title}"
-            >
-              Arbeitszeit
-            </legend>
-            <div class="mt-2 sm:mt-4">
+              </summary>
               <div
-                class="flex items-center gap-2 sm:grid sm:grid-cols-7 sm:gap-4"
+                th:ref="working-time-block"
+                class="mt-4 mb-2 flex flex-col gap-4"
+                th:classappend="${#lists.size(workingTimes) > 1 ? 'pl-6' : ''}"
               >
-                <input
-                  type="text"
-                  inputmode="numeric"
-                  name="workingTime"
-                  id="input-workingtime"
-                  class="border border-gray-300 px-2 py-1 w-14 sm:w-full"
-                  th:field="*{workingTime}"
-                  th:errorclass="invalid"
-                  th:aria-invalid="${#fields.hasErrors('workingTime')}"
-                  th:aria-message="${#fields.hasErrors('workingTime') ? 'working-time-error-message' : ''}"
-                />
-                <label
-                  for="input-workingtime"
-                  class="col-span-6"
-                  th:text="#{usermanagement.working-time.hours.common.input.label}"
+                <div>
+                  <ul class="flex flex-col gap-4 sm:flex-row">
+                    <li
+                      th:fragment="blubb(dayOfWeek, hours)"
+                      th:with="dayOfWeek=${#objects.nullSafe(dayOfWeek, 'MONDAY')}, hours=${#objects.nullSafe(hours, workingTime.workingTimeMonday)}"
+                      class="flex-1 shrink-0"
+                    >
+                      <span th:text="${#messages.msg(dayOfWeek)}">
+                        Montag
+                      </span>
+                      <span
+                        class="flex rounded-lg border border-green-300 bg-white"
+                      >
+                        <span
+                          class="rounded-lg bg-green-300 h-2"
+                          th:with="max=${workingTime.max}, width=${((hours eq 0) or (max eq 0)) ? 0 : #numbers.formatDecimal((hours/max)*100, 2, 'POINT', 3, 'POINT')}"
+                          th:styleappend="${'width:' + width + '%'}"
+                        ></span>
+                      </span>
+                      <span
+                        th:text="#{usermanagement.working-time.multiple-working-time.entry.hours(${hours})}"
+                        class="whitespace-nowrap text-sm"
+                      ></span>
+                    </li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='TUESDAY', hours=${workingTime.workingTimeTuesday})}"
+                    ></li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='WEDNESDAY', hours=${workingTime.workingTimeWednesday})}"
+                    ></li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='THURSDAY', hours=${workingTime.workingTimeThursday})}"
+                    ></li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='FRIDAY', hours=${workingTime.workingTimeFriday})}"
+                    ></li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='SATURDAY', hours=${workingTime.workingTimeSaturday})}"
+                    ></li>
+                    <li
+                      th:replace="~{::blubb(dayOfWeek='SUNDAY', hours=${workingTime.workingTimeSunday})}"
+                    ></li>
+                  </ul>
+                </div>
+                <div
+                  th:if="${workingTimeStat != null}"
+                  class="flex flex-col gap-2 xs:flex-row xs:items-center"
+                  th:with="index=${workingTimeStat.index}"
                 >
-                  Stunden am Tag
-                </label>
+                  <a
+                    href="#"
+                    th:href="@{/users/{id}/working-time/{workingTimeId} (id=${user.id},workingTimeId=${workingTime.id})}"
+                    class="flex justify-center w-full xs:inline-block xs:w-auto button-secondary button-secondary-icon button-secondary--subtle button-secondary--narrow"
+                    data-turbo-action="advance"
+                  >
+                    <svg
+                      th:replace="~{icons/edit::svg(className='w-4 h-4')}"
+                    ></svg>
+                    <th:block>Bearbeiten</th:block>
+                  </a>
+                  <form
+                    action="#"
+                    method="post"
+                    th:action="@{/users/{id}/working-time/{workingTimeId}/delete (id=${user.id},workingTimeId=${workingTime.id})}"
+                    th:if="${workingTime.isDeletable}"
+                    class="w-full xs:w-auto"
+                  >
+                    <button
+                      type="submit"
+                      class="flex justify-center w-full xs:inline-block xs:w-auto button-secondary button-secondary-icon button-secondary--subtle button-secondary--narrow"
+                    >
+                      <svg
+                        th:replace="~{icons/trash::svg(className='w-4 h-4')}"
+                      ></svg>
+                      <th:block>Löschen</th:block>
+                    </button>
+                  </form>
+                </div>
               </div>
-              <p
-                th:if="${#fields.hasErrors('workingTime')}"
-                th:text="${#fields.errors('workingTime')[0]}"
-                id="working-time-error-message"
-                class="mt-2 invalid"
-              ></p>
-            </div>
-          </fieldset>
-          <fieldset
-            class="border-t border-gray-100"
-            th:classappend="${#fields.hasErrors('workingTimeClash') ? 'border-red-400' : ''}"
-          >
-            <legend
-              class="text-sm font-medium text-gray-400"
-              th:classappend="${#fields.hasErrors('workingTimeClash') ? 'text-red-600' : ''}"
-              th:text="#{usermanagement.working-time.hours.individual.title}"
-            >
-              Individuelle Arbeitszeit
-            </legend>
-            <div
-              class="mt-2 flex flex-col gap-2 sm:mt-4 sm:grid sm:grid-cols-7 sm:gap-4"
-            >
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('monday', ${workingTime.workingTimeMonday})}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('tuesday', ${workingTime.workingTimeTuesday})}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('wednesday', ${workingTime.workingTimeWednesday})}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('thursday', ${workingTime.workingTimeThursday})}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('friday', ${workingTime.workingTimeFriday})}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('saturday', ${workingTime.workingTimeSaturday})}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::box('sunday', ${workingTime.workingTimeSunday})}"
-              ></div>
-            </div>
-            <div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('monday')}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('tuesday')}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('wednesday')}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('thursday')}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('friday')}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('saturday')}"
-              ></div>
-              <div
-                th:replace="~{usermanagement/user/working-time-settings_working-time-weekday::error-box('sunday')}"
-              ></div>
-            </div>
-          </fieldset>
-          <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
-            <button
-              type="submit"
-              class="bg-blue-700 border border-blue-700 text-white font-medium rounded px-4 py-2 flex items-center gap-2 justify-center sm:justify-start"
-            >
-              <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
-              <th:block th:text="#{usermanagement.save}"
-                >Aktualisieren</th:block
-              >
-            </button>
-            <a
-              id="working-time-settings-reset-button"
-              href="#"
-              th:href="@{/users/{id} (id=${user.id}, query=${query})}"
-              class="whitespace-nowrap border border-blue-700 text-blue-700 font-medium rounded px-4 py-2 text-center sm:text-left"
-              th:text="#{usermanagement.revert}"
-            >
-              Änderungen verwerfen
-            </a>
-          </div>
+            </details>
+          </li>
+        </ul>
+      </th:block>
+      <th:block
+        th:if="${#lists.size(workingTimes) eq 1}"
+        th:with="workingTime=${workingTimes[0]}"
+      >
+        <div class="mt-8">
+          <div th:replace="~{::working-time-block}"></div>
         </div>
-      </form>
+      </th:block>
     </th:block>
   </body>
 </html>

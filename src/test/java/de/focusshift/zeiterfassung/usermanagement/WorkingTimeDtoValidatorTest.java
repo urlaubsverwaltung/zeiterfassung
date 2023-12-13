@@ -9,9 +9,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.validation.MapBindingResult;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -42,7 +44,7 @@ class WorkingTimeDtoValidatorTest {
     @ParameterizedTest
     @EnumSource(DayOfWeek.class)
     void validWhenDayOfWeekIsSet(DayOfWeek dayOfWeek) {
-        final WorkingTimeDto.Builder builder = WorkingTimeDto.builder();
+        final WorkingTimeDto.Builder builder = WorkingTimeDto.builder().validFrom(LocalDate.now());
         final Map<DayOfWeek, Consumer<Double>> setterByDayOfWeek = setterByDayOfWeek(builder);
 
         builder.workday(List.of(dayOfWeek));
@@ -61,6 +63,7 @@ class WorkingTimeDtoValidatorTest {
     void validWhenWorkingTimeIsSetButNoDayOfWeekHours(DayOfWeek dayOfWeek) {
 
         final WorkingTimeDto dto = WorkingTimeDto.builder()
+            .validFrom(LocalDate.now())
             .workday(List.of(dayOfWeek))
             .workingTime(10.0)
             .build();
@@ -80,6 +83,35 @@ class WorkingTimeDtoValidatorTest {
 
         assertThat(bindingResult.getFieldError("empty")).isNotNull();
         assertThat(bindingResult.getFieldError("empty").getCode()).isEqualTo("usermanagement.working-time.validation.not-empty");
+    }
+
+    @Test
+    void invalidWhenValidFromIsNotSetAndIdIsNull() {
+        final WorkingTimeDto dto = WorkingTimeDto.builder()
+            .id(null)
+            .validFrom(null)
+            .workday(List.of())
+            .build();
+
+        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
+        sut.validate(dto, bindingResult);
+
+        assertThat(bindingResult.getFieldError("validFrom")).isNotNull();
+        assertThat(bindingResult.getFieldError("validFrom").getCode()).isEqualTo("usermanagement.working-time.validation.validFrom.not-empty");
+    }
+
+    @Test
+    void validWhenValidFromIsNotSetButIdIsNotNull() {
+        final WorkingTimeDto dto = WorkingTimeDto.builder()
+            .id(UUID.randomUUID().toString())
+            .validFrom(null)
+            .workday(List.of())
+            .build();
+
+        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
+        sut.validate(dto, bindingResult);
+
+        assertThat(bindingResult.getFieldError("validFrom")).isNull();
     }
 
     @Test

@@ -94,25 +94,6 @@
               is="z-user-selection-list"
             >
               <turbo-frame id="person-list-frame">
-                <th:block th:if="${selectedUser}">
-                  <turbo-stream
-                    target="working-time-form-hidden-inputs"
-                    action="replace"
-                  >
-                    <template
-                      th:insert="~{usermanagement/user/working-time-settings::#working-time-form-hidden-inputs}"
-                    ></template>
-                  </turbo-stream>
-                  <turbo-stream
-                    target="working-time-settings-reset-button"
-                    action="replace"
-                    th:with="user=${selectedUser}"
-                  >
-                    <template
-                      th:insert="~{usermanagement/user/working-time-settings::#working-time-settings-reset-button}"
-                    ></template>
-                  </turbo-stream>
-                </th:block>
                 <ol class="flex flex-col user-selection-list">
                   <th:block th:each="user : ${users}">
                     <li
@@ -255,7 +236,7 @@
                             href="#"
                             th:href="@{/users/{userId} (userId=${selectedUser.id})}"
                             class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-opacity-100"
-                            th:classappend="${section == null ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
+                            th:classappend="${(section == null or section == 'working-time-edit') ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
                             data-turbo-frame="person-frame"
                             data-turbo-action="advance"
                             th:text="#{usermanagement.navigation.working-time}"
@@ -282,7 +263,12 @@
                     <div class="flex-1 p-6 bg-white">
                       <th:block th:if="${section == null}">
                         <div
-                          th:replace="~{usermanagement/user/working-time-settings::section(${selectedUser}, ${workingTime})}"
+                          th:replace="~{usermanagement/user/working-time-settings::section(${selectedUser}, ${workingTimes})}"
+                        ></div>
+                      </th:block>
+                      <th:block th:if="${section == 'working-time-edit'}">
+                        <div
+                          th:replace="~{usermanagement/user/working-time-edit::section(${selectedUser}, ${workingTime})}"
                         ></div>
                       </th:block>
                       <th:block th:if="${section == 'overtime'}">

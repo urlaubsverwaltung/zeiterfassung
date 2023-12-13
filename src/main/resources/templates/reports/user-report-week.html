@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de">
   <head>
     <title>Zeiterfassung - Bericht</title>
@@ -15,7 +15,7 @@
         <a
           href="#"
           th:href="${userReportPreviousSectionUrl}"
-          class="bg-blue-700 text-white font-medium rounded px-4 py-2"
+          class="button-primary button-primary-icon"
         >
           <svg
             th:replace="~{icons/chevron-left::svg(className='w-6 h-6')}"
@@ -29,7 +29,7 @@
         <a
           href="#"
           th:href="${userReportTodaySectionUrl}"
-          class="bg-blue-700 text-white font-medium rounded px-4 py-2"
+          class="button-primary"
           th:text="#{report.month.navigation.button.today}"
         >
           Heute
@@ -37,7 +37,7 @@
         <a
           href="#"
           th:href="${userReportNextSectionUrl}"
-          class="bg-blue-700 text-white font-medium rounded px-4 py-2"
+          class="button-primary button-primary-icon"
         >
           <svg
             th:replace="~{icons/chevron-right::svg(className='w-6 h-6')}"
@@ -53,7 +53,7 @@
           href="#"
           th:href="${userReportCsvDownloadUrl}"
           download
-          class="whitespace-nowrap sm:ml-auto inline-block border border-blue-700 text-blue-700 font-medium rounded px-4 py-2"
+          class="button-secondary sm:ml-auto inline-block"
           th:text="#{report.week.button.csv-download}"
         >
           CSV Download
@@ -409,9 +409,7 @@
                       class="report-view-entry-box-absence__absence-color-box"
                       th:style="|background-color:var(--absence-color-${absence.color})|"
                     ></div>
-                    <p
-                      th:text="${#messages.msg(absence.nameMessageKey)}"
-                    >
+                    <p th:text="${#messages.msg(absence.nameMessageKey)}">
                       Erholungsurlaub
                     </p>
                   </div>
