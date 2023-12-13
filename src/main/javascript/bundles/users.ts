@@ -1,5 +1,7 @@
 import "../components/user-selection-list";
-import "../components/form/autosubmit";
+import { initAutosubmit } from "../components/form";
+
+initAutosubmit();
 
 document.addEventListener("turbo:render", function () {
   const main = document.querySelector("main");
