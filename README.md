@@ -147,6 +147,24 @@ works, can be found in the corresponding chapters of the Spring Boot documentati
 * [Linux Service](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment-service)
 * [Windows Service](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment-windows)
 
+#### Info-Banner
+
+An info banner can be configured, e.g. to announce maintenance work.
+The banner is then displayed at the top.
+
+```yaml
+zeiterfassung:
+  info-banner:
+    enabled: true
+    text:
+      de: Wartungsarbeiten ab Freitag 14:00. Es kann zu Beeinträchtigungen kommen.
+```
+
+| Property                           | Type    | Description                                       |
+|------------------------------------|---------|---------------------------------------------------|
+| zeiterfassung.info-banner.enabled  | Boolean | (default) `false`, `true` to activate the banner  |
+| zeiterfassung.info-banner.text.de  | String  | Text of the info banner for the German Locale.    |
+
 #### Launchpad
 
 You can configure a launchpad that shows other applications the user can navigate to.

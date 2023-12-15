@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de" th:lang="${lang}" xmlns:th="http://www.thymeleaf.org">
   <head
     th:fragment="head(title)"
@@ -64,6 +64,7 @@
       <p th:text="#{feedback.kudos}">Vielen Dank für dein Feedback.</p>
     </noscript>
 
+    <div th:replace="~{_info-banner::banner}"></div>
     <nav th:replace="~{_navigation::nav}">navigation block</nav>
 
     <div class="pb-16 flex-1 flex flex-col">
