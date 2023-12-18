@@ -1,0 +1,21 @@
+.info-banner {
+  @apply py-2;
+  @apply px-4;
+  @apply bg-sky-900;
+  @apply text-white;
+}
+
+.info-banner-text {
+  width: 100%;
+  text-align: center;
+  @apply text-sm;
+}
+
+.info-banner a {
+  text-decoration: underline;
+  color: white;
+}
+
+.info-banner a:hover {
+  color: white;
+}
