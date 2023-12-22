@@ -167,8 +167,6 @@ zeiterfassung:
 | zeiterfassung.feedback.enabled  | Boolean | (default) `false`, `true` to enable the feedback form. |
 | zeiterfassung.feedback.email.to | String  | Recipient of the feedback E-Mail.                      |
 
-Note that the default `enabled` value is `false`. However, the feature is enabled in the [application.yml](./src/main/resources/application.yaml). 
-
 #### Info-Banner
 
 An info banner can be configured, e.g. to announce maintenance work.
