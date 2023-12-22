@@ -1,5 +1,6 @@
 zeiterfassung:
   feedback:
+    enabled: true
     email:
       to: feedback@urlaubsverwaltung.cloud
   mail:

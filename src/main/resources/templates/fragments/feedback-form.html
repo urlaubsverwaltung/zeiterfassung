@@ -5,111 +5,117 @@
     <title>Feedback Form</title>
   </head>
   <body>
-    <div
+    <th:block
+      th:if="${#objects.nullSafe(feedbackEnabled, false) == true}"
       th:fragment="feedback"
-      id="feedback"
-      class="feedback flex mt-16 px-8 py-16 bg-blue-200 shadow-inner shadow-blue-300 text-gray-900"
-      data-js-class="fixed z-20 right-0 bottom-0 w-full sm:w-auto"
-      data-js-class-remove="flex mt-16 px-8 py-16 bg-blue-200 shadow-inner shadow-blue-300 text-gray-900"
     >
-      <div class="w-full mx-auto max-w-7xl">
-        <h2
-          class="text-xl font-bold mb-4"
-          data-js-class="sr-only"
-          th:text="#{feedback.title}"
-        >
-          Du hast Feedback für uns?
-        </h2>
-        <div data-js-class="relative">
-          <button
-            type="button"
-            hidden
-            data-js-no-hidden
-            id="feedback-form-toggle-button"
-            data-js-class="flex flex-row items-center gap-2 cursor-pointer absolute right-0 bottom-0 p-2"
+      <div
+        id="feedback"
+        class="feedback flex mt-16 px-8 py-16 bg-blue-200 shadow-inner shadow-blue-300 text-gray-900"
+        data-js-class="fixed z-20 right-0 bottom-0 w-full sm:w-auto"
+        data-js-class-remove="flex mt-16 px-8 py-16 bg-blue-200 shadow-inner shadow-blue-300 text-gray-900"
+      >
+        <div class="w-full mx-auto max-w-7xl">
+          <h2
+            class="text-xl font-bold mb-4"
+            data-js-class="sr-only"
+            th:text="#{feedback.title}"
           >
-            <svg th:replace="~{icons/mail::svg(className='w-7 h-7')}" />
-            <span class="sr-only sm:not-sr-only" th:text="#{feedback.label}">
-              Feedback
-            </span>
-          </button>
-          <form
-            action="#"
-            th:action="@{/feedback}"
-            method="post"
-            id="feedback-form"
-            data-js-class="feedback-form"
-          >
-            <div data-js-class="sm:p-4 sm:pb-2 w-full sm:w-96">
-              <div
-                data-js-class="relative p-6 flex flex-col gap-8 bg-gray-100 sm:bg-white sm:border border-gray-300 rounded-md shadow-xl"
-              >
-                <button
-                  type="button"
-                  hidden
-                  data-js-no-hidden
-                  id="feedback-form-close-button"
-                  class="self-end cursor-pointer sm:absolute right-0 top-0 sm:translate-x-1/2 sm:-translate-y-1/2 border border-gray-400 p-0.5 rounded-full bg-white text-gray-500 focus:text-gray-800 hover:text-gray-800 focus:bg-gray-100 hover:bg-gray-100"
+            Du hast Feedback für uns?
+          </h2>
+          <div data-js-class="relative">
+            <button
+              type="button"
+              hidden
+              data-js-no-hidden
+              id="feedback-form-toggle-button"
+              data-js-class="flex flex-row items-center gap-2 cursor-pointer absolute right-0 bottom-0 p-2"
+            >
+              <svg th:replace="~{icons/mail::svg(className='w-7 h-7')}" />
+              <span class="sr-only sm:not-sr-only" th:text="#{feedback.label}">
+                Feedback
+              </span>
+            </button>
+            <form
+              action="#"
+              th:action="@{/feedback}"
+              method="post"
+              id="feedback-form"
+              data-js-class="feedback-form"
+            >
+              <div data-js-class="sm:p-4 sm:pb-2 w-full sm:w-96">
+                <div
+                  data-js-class="relative p-6 flex flex-col gap-8 bg-gray-100 sm:bg-white sm:border border-gray-300 rounded-md shadow-xl"
                 >
-                  <span class="sr-only" th:text="#{feedback.form.close}">
-                    Schließen
-                  </span>
-                  <svg
-                    th:replace="~{icons/x::svg(className='w-4 h-4 stroke-1')}"
-                  />
-                </button>
-                <div class="flex flex-col gap-1">
-                  <p
-                    data-js-class="sr-only"
-                    th:text="#{feedback.form.paragraph}"
-                  >
-                    Beschreibe und was dir gefällt oder was dir nicht gefällt.
-                    Hat etwas nicht so funktioniert wie du es dir wünschst?
-                  </p>
-                  <label
-                    for="feedback-body"
-                    class="sr-only"
-                    data-js-class-remove="sr-only"
-                    th:text="#{feedback.form.textarea.label}"
-                  >
-                    Deine Nachricht an uns
-                  </label>
-                  <textarea
-                    required
-                    id="feedback-body"
-                    name="body"
-                    class="border border-gray-300 mt-4 p-4"
-                    rows="5"
-                  ></textarea>
-                </div>
-                <div class="mt-4 mb-6 flex items-center justify-between gap-4">
                   <button
                     type="button"
                     hidden
                     data-js-no-hidden
-                    id="feedback-form-cancel-button"
-                    class="bg-transparent"
-                    th:text="#{feedback.form.cancel}"
+                    id="feedback-form-close-button"
+                    class="self-end cursor-pointer sm:absolute right-0 top-0 sm:translate-x-1/2 sm:-translate-y-1/2 border border-gray-400 p-0.5 rounded-full bg-white text-gray-500 focus:text-gray-800 hover:text-gray-800 focus:bg-gray-100 hover:bg-gray-100"
                   >
-                    Schließen
-                  </button>
-                  <button
-                    type="submit"
-                    class="button-primary button-primary-icon"
-                  >
-                    <th:block th:text="#{feedback.form.submit}">
-                      Feedback geben
-                    </th:block>
+                    <span class="sr-only" th:text="#{feedback.form.close}">
+                      Schließen
+                    </span>
                     <svg
-                      th:replace="~{icons/paper-airplane::svg(className='w-4 h-4 rotate-45')}"
-                    ></svg>
+                      th:replace="~{icons/x::svg(className='w-4 h-4 stroke-1')}"
+                    />
                   </button>
+                  <div class="flex flex-col gap-1">
+                    <p
+                      data-js-class="sr-only"
+                      th:text="#{feedback.form.paragraph}"
+                    >
+                      Beschreibe und was dir gefällt oder was dir nicht gefällt.
+                      Hat etwas nicht so funktioniert wie du es dir wünschst?
+                    </p>
+                    <label
+                      for="feedback-body"
+                      class="sr-only"
+                      data-js-class-remove="sr-only"
+                      th:text="#{feedback.form.textarea.label}"
+                    >
+                      Deine Nachricht an uns
+                    </label>
+                    <textarea
+                      required
+                      id="feedback-body"
+                      name="body"
+                      class="border border-gray-300 mt-4 p-4"
+                      rows="5"
+                    ></textarea>
+                  </div>
+                  <div
+                    class="mt-4 mb-6 flex items-center justify-between gap-4"
+                  >
+                    <button
+                      type="button"
+                      hidden
+                      data-js-no-hidden
+                      id="feedback-form-cancel-button"
+                      class="bg-transparent"
+                      th:text="#{feedback.form.cancel}"
+                    >
+                      Schließen
+                    </button>
+                    <button
+                      type="submit"
+                      class="button-primary button-primary-icon"
+                    >
+                      <th:block th:text="#{feedback.form.submit}">
+                        Feedback geben
+                      </th:block>
+                      <svg
+                        th:replace="~{icons/paper-airplane::svg(className='w-4 h-4 rotate-45')}"
+                      ></svg>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </th:block>
   </body>
 </html>

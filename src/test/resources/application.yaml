@@ -1,7 +1,4 @@
 zeiterfassung:
-  feedback:
-    email:
-      to: feedback@example.org
   mail:
     from: zeiterfassung@localhost
     fromDisplayName: zeiterfassung
