@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
@@ -41,6 +42,8 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
 
         final WorkingTimeEntity workingTimeEntity_1 = new WorkingTimeEntity();
         workingTimeEntity_1.setUserId(tenantUser_1.localId());
+        workingTimeEntity_1.setFederalState(FederalState.NONE);
+        workingTimeEntity_1.setWorksOnPublicHoliday(false);
         workingTimeEntity_1.setMonday(Duration.ofHours(1).toString());
         workingTimeEntity_1.setTuesday(Duration.ofHours(2).toString());
         workingTimeEntity_1.setWednesday(Duration.ofHours(3).toString());
@@ -51,6 +54,8 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
 
         final WorkingTimeEntity workingTimeEntity_2 = new WorkingTimeEntity();
         workingTimeEntity_2.setUserId(tenantUser_2.localId());
+        workingTimeEntity_2.setFederalState(FederalState.GERMANY_BADEN_WUERTTEMBERG);
+        workingTimeEntity_2.setWorksOnPublicHoliday(false);
         workingTimeEntity_2.setMonday(Duration.ofHours(10).toString());
         workingTimeEntity_2.setTuesday(Duration.ofHours(10).toString());
         workingTimeEntity_2.setWednesday(Duration.ofHours(10).toString());
@@ -61,6 +66,8 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
 
         final WorkingTimeEntity workingTimeEntity_3 = new WorkingTimeEntity();
         workingTimeEntity_3.setUserId(tenantUser_3.localId());
+        workingTimeEntity_3.setFederalState(FederalState.GERMANY_BAYERN);
+        workingTimeEntity_3.setWorksOnPublicHoliday(true);
         workingTimeEntity_3.setMonday(Duration.ofHours(8).toString());
         workingTimeEntity_3.setTuesday(Duration.ofHours(8).toString());
         workingTimeEntity_3.setWednesday(Duration.ofHours(8).toString());
@@ -78,6 +85,8 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
         assertThat(actual).hasSize(2);
         assertThat(actual.get(0)).satisfies(entity -> {
             assertThat(entity.getUserId()).isEqualTo(tenantUser_1.localId());
+            assertThat(entity.getFederalState()).isEqualTo(FederalState.NONE);
+            assertThat(entity.isWorksOnPublicHoliday()).isFalse();
             assertThat(entity.getMonday()).isEqualTo("PT1H");
             assertThat(entity.getTuesday()).isEqualTo("PT2H");
             assertThat(entity.getWednesday()).isEqualTo("PT3H");
@@ -88,6 +97,8 @@ class WorkingTimeRepositoryIT extends TestContainersBase {
         });
         assertThat(actual.get(1)).satisfies(entity -> {
             assertThat(entity.getUserId()).isEqualTo(tenantUser_3.localId());
+            assertThat(entity.getFederalState()).isEqualTo(FederalState.GERMANY_BAYERN);
+            assertThat(entity.isWorksOnPublicHoliday()).isTrue();
             assertThat(entity.getMonday()).isEqualTo("PT8H");
             assertThat(entity.getTuesday()).isEqualTo("PT8H");
             assertThat(entity.getWednesday()).isEqualTo("PT8H");
