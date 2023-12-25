@@ -5,9 +5,9 @@
 
     <changeSet author="bseber" id="add-authorities-to-tenant-user">
         <preConditions>
-            <tableExists tableName="tenant_user" />
+            <tableExists tableName="tenant_user"/>
             <not>
-                <tableExists tableName="tenant_user_authorities" />
+                <tableExists tableName="tenant_user_authorities"/>
             </not>
         </preConditions>
 
@@ -20,7 +20,7 @@
 
         <addForeignKeyConstraint baseTableName="tenant_user_authorities" baseColumnNames="tenant_user_id"
                                  referencedTableName="tenant_user" referencedColumnNames="id"
-                                 constraintName="FK_tenant_id" onDelete="CASCADE" onUpdate="NO ACTION" />
+                                 constraintName="FK_tenant_id" onDelete="CASCADE" onUpdate="NO ACTION"/>
     </changeSet>
 
 </databaseChangeLog>

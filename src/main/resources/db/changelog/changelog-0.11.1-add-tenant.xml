@@ -11,7 +11,7 @@
             </not>
         </preConditions>
 
-        <createSequence sequenceName="tenant_seq" incrementBy="50" />
+        <createSequence sequenceName="tenant_seq" incrementBy="50"/>
 
         <createTable tableName="tenant">
             <column name="id" type="BIGINT">

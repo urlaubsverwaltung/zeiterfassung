@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.workingtime;
 
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.user.HasUserIdComposite;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import jakarta.annotation.Nullable;
@@ -41,17 +42,21 @@ public final class WorkingTime implements HasUserIdComposite {
     private final LocalDate validFrom;
     private final LocalDate validTo;
     private final LocalDate minValidFrom;
+    private final FederalState federalState;
+    private final boolean worksOnPublicHoliday;
     private final EnumMap<DayOfWeek, PlannedWorkingHours> workdays;
 
     private WorkingTime(UserIdComposite userIdComposite, WorkingTimeId id, boolean current,
                         @Nullable LocalDate validFrom, @Nullable LocalDate validTo, @Nullable LocalDate minValidFrom,
-                        EnumMap<DayOfWeek, PlannedWorkingHours> workdays) {
+                        FederalState federalState, boolean worksOnPublicHoliday, EnumMap<DayOfWeek, PlannedWorkingHours> workdays) {
         this.userIdComposite = userIdComposite;
         this.id = id;
         this.current = current;
         this.validFrom = validFrom;
         this.validTo = validTo;
         this.minValidFrom = minValidFrom;
+        this.federalState = federalState;
+        this.worksOnPublicHoliday = worksOnPublicHoliday;
         this.workdays = workdays;
     }
 
@@ -93,6 +98,14 @@ public final class WorkingTime implements HasUserIdComposite {
      */
     public Optional<LocalDate> minValidFrom() {
         return Optional.ofNullable(minValidFrom);
+    }
+
+    public FederalState federalState() {
+        return federalState;
+    }
+
+    public boolean worksOnPublicHoliday() {
+        return worksOnPublicHoliday;
     }
 
     public Map<DayOfWeek, PlannedWorkingHours> workdays() {
@@ -221,6 +234,8 @@ public final class WorkingTime implements HasUserIdComposite {
         private LocalDate validFrom;
         private LocalDate validTo;
         private LocalDate minValidFrom;
+        private FederalState federalState;
+        private boolean worksOnPublicHoliday;
         private final EnumMap<DayOfWeek, PlannedWorkingHours> workDays = new EnumMap<>(Map.of(
             MONDAY, PlannedWorkingHours.ZERO,
             TUESDAY, PlannedWorkingHours.ZERO,
@@ -253,6 +268,16 @@ public final class WorkingTime implements HasUserIdComposite {
 
         public Builder minValidFrom(@Nullable LocalDate minValidFrom) {
             this.minValidFrom = minValidFrom;
+            return this;
+        }
+
+        public Builder federalState(FederalState federalState) {
+            this.federalState = federalState;
+            return this;
+        }
+
+        public Builder worksOnPublicHoliday(boolean worksOnPublicHoliday) {
+            this.worksOnPublicHoliday = worksOnPublicHoliday;
             return this;
         }
 
@@ -348,7 +373,8 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public WorkingTime build() {
-            return new WorkingTime(userIdComposite, id, current, validFrom, validTo, minValidFrom, workDays);
+            return new WorkingTime(userIdComposite, id, current, validFrom, validTo, minValidFrom, federalState,
+                worksOnPublicHoliday, workDays);
         }
     }
 }

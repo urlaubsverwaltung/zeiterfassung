@@ -53,19 +53,19 @@
                   <th:block th:case="true">
                     <th:block
                       th:if="${workingTime.validFrom == null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
                     >
                       gültig bis ___
                     </th:block>
                     <th:block
                       th:if="${workingTime.validFrom != null && workingTime.validTo != null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
                     >
                       gültig von ___ bis ___
                     </th:block>
                     <th:block
                       th:if="${workingTime.validFrom != null && workingTime.validTo == null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
                     >
                       gültig von ___
                     </th:block>
@@ -73,19 +73,19 @@
                   <th:block th:case="false">
                     <th:block
                       th:if="${workingTime.validFrom == null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
                     >
                       gültig bis ___
                     </th:block>
                     <th:block
                       th:if="${workingTime.validFrom != null && workingTime.validTo != null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
                     >
                       gültig von ___ bis ___
                     </th:block>
                     <th:block
                       th:if="${workingTime.validFrom != null && workingTime.validTo == null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
                     >
                       gültig von ___
                     </th:block>

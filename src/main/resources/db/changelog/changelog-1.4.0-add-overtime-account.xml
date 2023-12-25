@@ -15,7 +15,7 @@
 
         <createTable tableName="overtime_account">
             <column name="user_id" type="BIGINT">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_OVERTIME_ACCOUNT" />
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_OVERTIME_ACCOUNT"/>
             </column>
             <column name="tenant_id" type="VARCHAR(8)">
                 <constraints nullable="false"/>
@@ -57,8 +57,10 @@
     <changeSet id="enable-row-level-security-on-overtime-account" author="bseber">
         <sql dbms="postgresql">
             ALTER TABLE overtime_account ENABLE ROW LEVEL SECURITY;
-            DROP POLICY IF EXISTS overtime_account_tenant_isolation_policy ON overtime_account;
-            CREATE POLICY overtime_account_tenant_isolation_policy ON overtime_account
+            DROP
+            POLICY IF EXISTS overtime_account_tenant_isolation_policy ON overtime_account;
+            CREATE
+            POLICY overtime_account_tenant_isolation_policy ON overtime_account
                 USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
         </sql>
     </changeSet>

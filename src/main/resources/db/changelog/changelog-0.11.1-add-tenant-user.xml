@@ -40,7 +40,8 @@
             </column>
         </createTable>
 
-        <addForeignKeyConstraint baseColumnNames="tenant_id" baseTableName="tenant_user" constraintName="FK_TENANT_USER_TENANT_ID"
+        <addForeignKeyConstraint baseColumnNames="tenant_id" baseTableName="tenant_user"
+                                 constraintName="FK_TENANT_USER_TENANT_ID"
                                  deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
                                  referencedColumnNames="tenant_id" referencedTableName="tenant"/>
 
@@ -51,7 +52,8 @@
             <tableExists tableName="time_entry"/>
             <tableExists tableName="tenant_user"/>
         </preConditions>
-        <addForeignKeyConstraint baseColumnNames="owner" baseTableName="time_entry" constraintName="FK_TENANT_ENTRY_OWNER"
+        <addForeignKeyConstraint baseColumnNames="owner" baseTableName="time_entry"
+                                 constraintName="FK_TENANT_ENTRY_OWNER"
                                  deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
                                  referencedColumnNames="uuid" referencedTableName="tenant_user"/>
     </changeSet>
@@ -61,7 +63,8 @@
             <tableExists tableName="time_clock"/>
             <tableExists tableName="tenant_user"/>
         </preConditions>
-        <addForeignKeyConstraint baseColumnNames="owner" baseTableName="time_clock" constraintName="FK_TENANT_CLOCK_OWNER"
+        <addForeignKeyConstraint baseColumnNames="owner" baseTableName="time_clock"
+                                 constraintName="FK_TENANT_CLOCK_OWNER"
                                  deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
                                  referencedColumnNames="uuid" referencedTableName="tenant_user"/>
     </changeSet>
@@ -69,8 +72,10 @@
     <changeSet id="enable-row-level-security-on-tenant-user" author="grafjo">
         <sql dbms="postgresql">
             ALTER TABLE tenant_user ENABLE ROW LEVEL SECURITY;
-            DROP POLICY IF EXISTS tenant_user_tenant_isolation_policy ON tenant_user;
-            CREATE POLICY tenant_user_tenant_isolation_policy ON tenant_user
+            DROP
+            POLICY IF EXISTS tenant_user_tenant_isolation_policy ON tenant_user;
+            CREATE
+            POLICY tenant_user_tenant_isolation_policy ON tenant_user
                 USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
         </sql>
     </changeSet>

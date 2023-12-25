@@ -26,7 +26,7 @@
         <dropPrimaryKey tableName="working_time" dropIndex="true"/>
         <addPrimaryKey tableName="working_time" columnNames="uuid"/>
         <dropColumn tableName="working_time" columnName="id"/>
-        <renameColumn tableName="working_time" oldColumnName="uuid" newColumnName="id" />
+        <renameColumn tableName="working_time" oldColumnName="uuid" newColumnName="id"/>
         <addForeignKeyConstraint
             constraintName="fk_working_time_user_id"
             baseTableName="working_time"

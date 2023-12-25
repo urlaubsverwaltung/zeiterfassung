@@ -37,7 +37,8 @@
             </column>
         </createTable>
 
-        <addForeignKeyConstraint baseColumnNames="tenant_id" baseTableName="time_clock" constraintName="FK_TENANT_CLOCK_TENANT_ID"
+        <addForeignKeyConstraint baseColumnNames="tenant_id" baseTableName="time_clock"
+                                 constraintName="FK_TENANT_CLOCK_TENANT_ID"
                                  deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
                                  referencedColumnNames="tenant_id" referencedTableName="tenant"/>
 
@@ -46,8 +47,10 @@
     <changeSet id="enable-row-level-security-on-timeclock" author="grafjo">
         <sql dbms="postgresql">
             ALTER TABLE time_clock ENABLE ROW LEVEL SECURITY;
-            DROP POLICY IF EXISTS time_clock_tenant_isolation_policy ON time_clock;
-            CREATE POLICY time_clock_tenant_isolation_policy ON time_clock
+            DROP
+            POLICY IF EXISTS time_clock_tenant_isolation_policy ON time_clock;
+            CREATE
+            POLICY time_clock_tenant_isolation_policy ON time_clock
                 USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
         </sql>
     </changeSet>

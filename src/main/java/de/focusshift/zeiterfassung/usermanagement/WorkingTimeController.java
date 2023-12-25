@@ -1,7 +1,11 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import de.focusshift.zeiterfassung.web.html.HtmlOptgroupDto;
+import de.focusshift.zeiterfassung.web.html.HtmlOptionDto;
+import de.focusshift.zeiterfassung.web.html.HtmlSelectDto;
 import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
@@ -24,6 +28,7 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
@@ -95,6 +100,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                           @AuthenticationPrincipal OidcUser principal) {
 
         final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
+        workingTimeDto.setFederalState(FederalState.NONE);
+        workingTimeDto.setWorksOnPublicHoliday(false);
 
         prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
         model.addAttribute("createMode", true);
@@ -159,9 +166,11 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         final UserLocalId userLocalId = new UserLocalId(workingTimeDto.getUserId());
         final LocalDate validFrom = workingTimeDto.getValidFrom();
+        final FederalState federalState = workingTimeDto.getFederalState();
+        final boolean worksOnPublicHoliday = workingTimeDto.isWorksOnPublicHoliday();
         final EnumMap<DayOfWeek, Duration> workdays = workingTimeDtoToWorkdays(workingTimeDto);
 
-        workingTimeService.createWorkingTime(userLocalId, validFrom, workdays);
+        workingTimeService.createWorkingTime(userLocalId, validFrom, federalState, worksOnPublicHoliday, workdays);
 
         return new ModelAndView("redirect:/users/%s/working-time".formatted(userId));
     }
@@ -200,8 +209,10 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         }
 
         final LocalDate validFrom = workingTimeDto.getValidFrom();
+        final FederalState federalState = workingTimeDto.getFederalState();
+        final boolean worksOnPublicHoliday = workingTimeDto.isWorksOnPublicHoliday();
         final EnumMap<DayOfWeek, Duration> workdays = workingTimeDtoToWorkdays(workingTimeDto);
-        workingTimeService.updateWorkingTime(WorkingTimeId.fromString(workingTimeDto.getId()), validFrom, workdays);
+        workingTimeService.updateWorkingTime(WorkingTimeId.fromString(workingTimeDto.getId()), validFrom, federalState, worksOnPublicHoliday, workdays);
 
         return new ModelAndView("redirect:/users/%s/working-time".formatted(userId));
     }
@@ -286,6 +297,30 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         model.addAttribute("section", "working-time-edit");
         model.addAttribute("workingTime", workingTimeDto);
+        model.addAttribute("federalStateSelect", federalStateSelectDto(workingTimeDto));
+    }
+
+    private HtmlSelectDto federalStateSelectDto(WorkingTimeDto workingTimeDto) {
+
+        final ArrayList<HtmlOptgroupDto> countries = new ArrayList<>();
+        final FederalState currentFederalState = workingTimeDto.getFederalState();
+
+        final HtmlOptionDto noneOption = new HtmlOptionDto("federalState.NONE", FederalState.NONE.name(), FederalState.NONE.equals(workingTimeDto.getFederalState()));
+        countries.add(new HtmlOptgroupDto("country.general", List.of(noneOption)));
+
+        FederalState.federalStatesTypesByCountry().forEach((country, federalStates) -> {
+            final List<HtmlOptionDto> options = federalStates.stream()
+                .map(federalState -> new HtmlOptionDto(federalStateMessageKey(federalState), federalState.name(), federalState.equals(currentFederalState)))
+                .toList();
+            final HtmlOptgroupDto optgroup = new HtmlOptgroupDto("country." + country, options);
+            countries.add(optgroup);
+        });
+
+        return new HtmlSelectDto(countries);
+    }
+
+    private static String federalStateMessageKey(FederalState federalState) {
+        return "federalState." + federalState.name();
     }
 
     private void clearWorkDayHours(String dayOfWeek, WorkingTimeDto workingTimeDto) {
@@ -313,15 +348,20 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     private WorkingTimeListEntryDto workingTimeListEntryDto(WorkingTime workingTime) {
 
         final LocalDate today = LocalDate.now(clock);
+        final Date validFrom = workingTime.validFrom().map(from -> Date.from(from.atStartOfDay().toInstant(UTC))).orElse(null);
+        final Date validTo = workingTime.validTo().map(to -> Date.from(to.atStartOfDay().toInstant(UTC))).orElse(null);
+        final Boolean validFromIsPast = workingTime.validFrom().map(from -> from.isBefore(today)).orElse(true);
+        final String federalStateMessageKey = federalStateMessageKey(workingTime.federalState());
 
         return new WorkingTimeListEntryDto(
             workingTime.id().value(),
             workingTime.userLocalId().value(),
-            workingTime.validFrom().map(localDate -> Date.from(localDate.atStartOfDay().toInstant(UTC))).orElse(null),
-            workingTime.validTo().map(localDate -> Date.from(localDate.atStartOfDay().toInstant(UTC))).orElse(null),
-            workingTime.validFrom().map(validFrom -> validFrom.isBefore(today)).orElse(true),
+            validFrom,
+            validTo,
+            validFromIsPast,
             workingTime.isCurrent(),
             workingTime.validFrom().isPresent(),
+            federalStateMessageKey,
             workingTime.getMonday().hoursDoubleValue(),
             workingTime.getTuesday().hoursDoubleValue(),
             workingTime.getWednesday().hoursDoubleValue(),
@@ -361,6 +401,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             .validFrom(workingTime.validFrom().orElse(null))
             .minValidFrom(workingTime.minValidFrom().orElse(null))
             .maxValidFrom(workingTime.validTo().orElse(null))
+            .federalState(workingTime.federalState())
+            .worksOnPublicHoliday(workingTime.worksOnPublicHoliday())
             .userId(workingTime.userIdComposite().localId().value())
             .workday(workingTime.actualWorkingDays())
             .build();

@@ -5,11 +5,11 @@
 
     <changeSet author="honnel" id="add-absence-type-source-id">
         <preConditions>
-            <tableExists tableName="absence" />
+            <tableExists tableName="absence"/>
             <not>
-                <columnExists tableName="absence" columnName="type_source_id" />
+                <columnExists tableName="absence" columnName="type_source_id"/>
             </not>
-            <columnExists tableName="absence" columnName="type" />
+            <columnExists tableName="absence" columnName="type"/>
         </preConditions>
         <addColumn tableName="absence">
             <column name="type_source_id" type="BIGINT"/>

@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.workingtime;
 
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -48,22 +49,26 @@ public interface WorkingTimeService {
     /**
      * Create a new {@linkplain WorkingTime} entry for the {@linkplain User}.
      *
-     * @param userLocalId id of the user
-     * @param validFrom date the created working time is valid from
-     * @param workdays workdays info
+     * @param userLocalId          id of the user
+     * @param validFrom            date the created working time is valid from
+     * @param federalState         {@linkplain FederalState}
+     * @param worksOnPublicHoliday
+     * @param workdays             workdays info
      * @return the created {@linkplain WorkingTime}
      */
-    WorkingTime createWorkingTime(UserLocalId userLocalId, LocalDate validFrom, EnumMap<DayOfWeek, Duration> workdays);
+    WorkingTime createWorkingTime(UserLocalId userLocalId, LocalDate validFrom, FederalState federalState, boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays);
 
     /**
      * Update the {@linkplain WorkingTime}
      *
-     * @param workingTimeId id of the working time to update
-     * @param validFrom new validFrom date, may be {@code null} for the very first {@linkplain WorkingTime}
-     * @param workdays workdays info
+     * @param workingTimeId        id of the working time to update
+     * @param validFrom            new validFrom date, may be {@code null} for the very first {@linkplain WorkingTime}
+     * @param federalState         new {@linkplain FederalState}
+     * @param worksOnPublicHoliday
+     * @param workdays             workdays info
      * @return the updated {@linkplain WorkingTime}
      */
-    WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, LocalDate validFrom, EnumMap<DayOfWeek, Duration> workdays);
+    WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, LocalDate validFrom, FederalState federalState, boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays);
 
     /**
      * Delete the {@linkplain WorkingTime} with the given id if possible.

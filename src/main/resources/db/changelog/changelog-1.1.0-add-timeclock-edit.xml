@@ -10,13 +10,13 @@
 
         <addColumn tableName="time_clock">
             <column name="comment" type="VARCHAR(255)" defaultValue="">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </addColumn>
 
         <addColumn tableName="time_clock">
             <column name="is_break" type="BOOLEAN" defaultValue="false">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </addColumn>
     </changeSet>

@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.DayOfWeek;
@@ -18,6 +19,8 @@ class WorkingTimeDto {
     private LocalDate minValidFrom;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate maxValidFrom;
+    private FederalState federalState;
+    private boolean worksOnPublicHoliday;
     private List<String> workday = new ArrayList<>();
     private Double workingTime;
     private Double workingTimeMonday;
@@ -66,6 +69,22 @@ class WorkingTimeDto {
 
     public void setMaxValidFrom(LocalDate maxValidFrom) {
         this.maxValidFrom = maxValidFrom;
+    }
+
+    public FederalState getFederalState() {
+        return federalState;
+    }
+
+    public void setFederalState(FederalState federalState) {
+        this.federalState = federalState;
+    }
+
+    public boolean isWorksOnPublicHoliday() {
+        return worksOnPublicHoliday;
+    }
+
+    public void setWorksOnPublicHoliday(boolean worksOnPublicHoliday) {
+        this.worksOnPublicHoliday = worksOnPublicHoliday;
     }
 
     public List<String> getWorkday() {
@@ -231,6 +250,8 @@ class WorkingTimeDto {
             && Objects.equals(validFrom, that.validFrom)
             && Objects.equals(minValidFrom, that.minValidFrom)
             && Objects.equals(maxValidFrom, that.maxValidFrom)
+            && Objects.equals(federalState, that.federalState)
+            && Objects.equals(worksOnPublicHoliday, that.worksOnPublicHoliday)
             && workday.equals(that.workday)
             && Objects.equals(workingTime, that.workingTime)
             && Objects.equals(workingTimeMonday, that.workingTimeMonday)
@@ -244,9 +265,9 @@ class WorkingTimeDto {
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, id, validFrom, minValidFrom, maxValidFrom, workday, workingTime, workingTimeMonday,
-            workingTimeTuesday, workingTimeWednesday, workingTimeThursday, workingTimeFriday, workingTimeSaturday,
-            workingTimeSunday);
+        return Objects.hash(userId, id, validFrom, minValidFrom, maxValidFrom, federalState, worksOnPublicHoliday,
+            workday, workingTime, workingTimeMonday, workingTimeTuesday, workingTimeWednesday, workingTimeThursday,
+            workingTimeFriday, workingTimeSaturday, workingTimeSunday);
     }
 
     static Builder builder() {
@@ -259,6 +280,8 @@ class WorkingTimeDto {
         private LocalDate validFrom;
         private LocalDate minValidFrom;
         private LocalDate maxValidFrom;
+        private FederalState federalState;
+        private boolean worksOnPublicHoliday;
         private List<DayOfWeek> workday = new ArrayList<>();
         private Double workingTime;
         private Double workingTimeMonday;
@@ -291,6 +314,16 @@ class WorkingTimeDto {
 
         Builder maxValidFrom(LocalDate maxValidFrom) {
             this.maxValidFrom = maxValidFrom;
+            return this;
+        }
+
+        Builder federalState(FederalState federalState) {
+            this.federalState = federalState;
+            return this;
+        }
+
+        Builder worksOnPublicHoliday(boolean worksOnPublicHoliday) {
+            this.worksOnPublicHoliday = worksOnPublicHoliday;
             return this;
         }
 
@@ -346,6 +379,8 @@ class WorkingTimeDto {
             workingTimeDto.setValidFrom(validFrom);
             workingTimeDto.setMinValidFrom(minValidFrom);
             workingTimeDto.setMaxValidFrom(maxValidFrom);
+            workingTimeDto.setFederalState(federalState);
+            workingTimeDto.setWorksOnPublicHoliday(worksOnPublicHoliday);
             workingTimeDto.setWorkday(workday.stream().map(DayOfWeek::name).map(String::toLowerCase).toList());
             workingTimeDto.setWorkingTime(workingTime);
             workingTimeDto.setWorkingTimeMonday(workingTimeMonday);

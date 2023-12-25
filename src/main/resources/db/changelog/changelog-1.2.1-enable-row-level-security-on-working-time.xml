@@ -6,8 +6,10 @@
     <changeSet author="bseber" id="enable-row-level-security-on-working-time">
         <sql dbms="postgresql">
             ALTER TABLE working_time ENABLE ROW LEVEL SECURITY;
-            DROP POLICY IF EXISTS working_time_tenant_isolation_policy ON working_time;
-            CREATE POLICY working_time_tenant_isolation_policy ON working_time
+            DROP
+            POLICY IF EXISTS working_time_tenant_isolation_policy ON working_time;
+            CREATE
+            POLICY working_time_tenant_isolation_policy ON working_time
                 USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
         </sql>
     </changeSet>

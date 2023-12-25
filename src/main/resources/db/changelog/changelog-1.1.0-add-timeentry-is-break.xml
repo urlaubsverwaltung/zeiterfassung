@@ -7,7 +7,7 @@
         <preConditions>
             <tableExists tableName="time_entry"/>
             <not>
-                <columnExists tableName="time_entry" columnName="is_break" />
+                <columnExists tableName="time_entry" columnName="is_break"/>
             </not>
         </preConditions>
 
@@ -16,7 +16,8 @@
         </addColumn>
 
         <sql>
-            UPDATE time_entry SET is_break = false;
+            UPDATE time_entry
+            SET is_break = false;
         </sql>
     </changeSet>
 

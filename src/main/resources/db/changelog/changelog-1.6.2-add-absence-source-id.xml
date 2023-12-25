@@ -5,19 +5,19 @@
 
     <changeSet author="seber" id="add-absence-source-id">
         <preConditions>
-            <tableExists tableName="absence" />
+            <tableExists tableName="absence"/>
             <not>
-                <columnExists tableName="absence" columnName="source_id" />
+                <columnExists tableName="absence" columnName="source_id"/>
             </not>
         </preConditions>
         <!-- clear table to be able to add not-nullable constraint -->
         <!-- clearing table is safe since all absences are republished anyway (including this new sourceId) -->
-        <delete tableName="absence" />
+        <delete tableName="absence"/>
         <addColumn tableName="absence">
             <column name="source_id" type="BIGINT">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </addColumn>
-        <addUniqueConstraint tableName="absence" columnNames="tenant_id,source_id,type" constraintName="UC_ABSENCE" />
+        <addUniqueConstraint tableName="absence" columnNames="tenant_id,source_id,type" constraintName="UC_ABSENCE"/>
     </changeSet>
 </databaseChangeLog>

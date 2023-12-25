@@ -5,9 +5,9 @@
 
     <changeSet author="honnel" id="add-absence-type-source-id">
         <preConditions>
-            <tableExists tableName="absence" />
-            <columnExists tableName="absence" columnName="type_category" />
-            <columnExists tableName="absence" columnName="type_source_id" />
+            <tableExists tableName="absence"/>
+            <columnExists tableName="absence" columnName="type_category"/>
+            <columnExists tableName="absence" columnName="type_source_id"/>
         </preConditions>
         <update tableName="absence">
             <column name="type_source_id" value="1000"/>

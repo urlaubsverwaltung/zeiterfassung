@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.workingtime;
 
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -88,13 +89,15 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     }
 
     @Override
-    public WorkingTime createWorkingTime(UserLocalId userLocalId, LocalDate validFrom, EnumMap<DayOfWeek, Duration> workdays) {
+    public WorkingTime createWorkingTime(UserLocalId userLocalId, LocalDate validFrom, FederalState federalState, boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays) {
 
         final User user = findUser(userLocalId);
 
         final WorkingTimeEntity entity = new WorkingTimeEntity();
         entity.setUserId(userLocalId.value());
         entity.setValidFrom(validFrom);
+        entity.setFederalState(federalState);
+        entity.setWorksOnPublicHoliday(worksOnPublicHoliday);
         setWorkDays(entity, workdays);
 
         final WorkingTimeEntity saved = repository.save(entity);
@@ -104,7 +107,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     }
 
     @Override
-    public WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, @Nullable LocalDate validFrom, EnumMap<DayOfWeek, Duration> workdays) {
+    public WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, @Nullable LocalDate validFrom, FederalState federalState, boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays) {
 
         final WorkingTimeEntity entity = repository.findById(workingTimeId.uuid())
             .orElseThrow(() -> new IllegalStateException("could not find working-time with id=%s".formatted(workingTimeId)));
@@ -117,6 +120,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             throw new WorkingTimeUpdateException("cannot update WorkingTime=%s without validFrom".formatted(workingTimeId));
         }
 
+        entity.setFederalState(federalState);
+        entity.setWorksOnPublicHoliday(worksOnPublicHoliday);
         setWorkDays(entity, workdays);
 
         final UserLocalId userLocalId = new UserLocalId(entity.getUserId());
@@ -339,6 +344,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final Duration eight = Duration.ofHours(8);
         return WorkingTime.builder(userIdComposite, null)
             .current(true)
+            .federalState(FederalState.NONE)
+            .worksOnPublicHoliday(false)
             .monday(eight)
             .tuesday(eight)
             .wednesday(eight)
@@ -367,6 +374,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             .validFrom(entity.getValidFrom())
             .validTo(getValidToDate(entity, allEntitiesSorted))
             .minValidFrom(getMinValidFromDate(entity, allEntitiesSorted))
+            .federalState(entity.getFederalState())
+            .worksOnPublicHoliday(entity.isWorksOnPublicHoliday())
             .monday(Duration.parse(entity.getMonday()))
             .tuesday(Duration.parse(entity.getTuesday()))
             .wednesday(Duration.parse(entity.getWednesday()))
@@ -387,6 +396,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
         entity.setUserId(workingTime.userLocalId().value());
         entity.setValidFrom(workingTime.validFrom().orElse(null));
+        entity.setFederalState(workingTime.federalState());
+        entity.setWorksOnPublicHoliday(workingTime.worksOnPublicHoliday());
         entity.setMonday(workdayToDurationString(workingTime.getMonday()));
         entity.setTuesday(workdayToDurationString(workingTime.getTuesday()));
         entity.setWednesday(workdayToDurationString(workingTime.getWednesday()));
