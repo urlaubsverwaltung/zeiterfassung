@@ -3,60 +3,60 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
 
-    <changeSet author="seber" id="prepare-multiple-working-times-per-user--add-uuid">
-        <preConditions>
-            <tableExists tableName="working_time"/>
-            <not>
-                <columnExists tableName="working_time" columnName="uuid"/>
-            </not>
-        </preConditions>
-        <addColumn tableName="working_time">
-            <column name="uuid" type="UUID" defaultValueComputed="gen_random_uuid()">
-                <!-- nullable and unique constraint not required. will be the primary key in next step -->
-            </column>
-        </addColumn>
-    </changeSet>
+  <changeSet author="seber" id="prepare-multiple-working-times-per-user--add-uuid">
+    <preConditions>
+      <tableExists tableName="working_time"/>
+      <not>
+        <columnExists tableName="working_time" columnName="uuid"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="working_time">
+      <column name="uuid" type="UUID" defaultValueComputed="gen_random_uuid()">
+        <!-- nullable and unique constraint not required. will be the primary key in next step -->
+      </column>
+    </addColumn>
+  </changeSet>
 
-    <changeSet author="seber" id="prepare-multiple-working-times-per-user--replace-id-with-uuid">
-        <preConditions>
-            <tableExists tableName="working_time"/>
-            <columnExists tableName="working_time" columnName="id"/>
-            <columnExists tableName="working_time" columnName="uuid"/>
-        </preConditions>
-        <dropPrimaryKey tableName="working_time" dropIndex="true"/>
-        <addPrimaryKey tableName="working_time" columnNames="uuid"/>
-        <dropColumn tableName="working_time" columnName="id"/>
-        <renameColumn tableName="working_time" oldColumnName="uuid" newColumnName="id"/>
-        <addForeignKeyConstraint
-            constraintName="fk_working_time_user_id"
-            baseTableName="working_time"
-            baseColumnNames="user_id"
-            referencedTableName="tenant_user"
-            referencedColumnNames="id"
-            onDelete="CASCADE"
-            onUpdate="NO ACTION"
-        />
-    </changeSet>
+  <changeSet author="seber" id="prepare-multiple-working-times-per-user--replace-id-with-uuid">
+    <preConditions>
+      <tableExists tableName="working_time"/>
+      <columnExists tableName="working_time" columnName="id"/>
+      <columnExists tableName="working_time" columnName="uuid"/>
+    </preConditions>
+    <dropPrimaryKey tableName="working_time" dropIndex="true"/>
+    <addPrimaryKey tableName="working_time" columnNames="uuid"/>
+    <dropColumn tableName="working_time" columnName="id"/>
+    <renameColumn tableName="working_time" oldColumnName="uuid" newColumnName="id"/>
+    <addForeignKeyConstraint
+      constraintName="fk_working_time_user_id"
+      baseTableName="working_time"
+      baseColumnNames="user_id"
+      referencedTableName="tenant_user"
+      referencedColumnNames="id"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+    />
+  </changeSet>
 
-    <changeSet author="seber" id="prepare-multiple-working-times-per-user--add-valid-from">
-        <preConditions>
-            <tableExists tableName="working_time"/>
-            <not>
-                <columnExists tableName="working_time" columnName="valid_from"/>
-            </not>
-        </preConditions>
-        <addColumn tableName="working_time">
-            <column name="valid_from" type="DATE">
-                <!-- one null value is allowed per tenant user, not more -->
-                <constraints nullable="true"/>
-            </column>
-        </addColumn>
-        <addUniqueConstraint
-            tableName="working_time"
-            columnNames="tenant_id,user_id,valid_from"
-            constraintName="UC_WORKING_TIME_TENANT_USER_VALID_FROM"
-        />
-    </changeSet>
+  <changeSet author="seber" id="prepare-multiple-working-times-per-user--add-valid-from">
+    <preConditions>
+      <tableExists tableName="working_time"/>
+      <not>
+        <columnExists tableName="working_time" columnName="valid_from"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="working_time">
+      <column name="valid_from" type="DATE">
+        <!-- one null value is allowed per tenant user, not more -->
+        <constraints nullable="true"/>
+      </column>
+    </addColumn>
+    <addUniqueConstraint
+      tableName="working_time"
+      columnNames="tenant_id,user_id,valid_from"
+      constraintName="UC_WORKING_TIME_TENANT_USER_VALID_FROM"
+    />
+  </changeSet>
 
 </databaseChangeLog>
 

@@ -3,66 +3,66 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
 
-    <changeSet author="bseber" id="add-overtime-account">
+  <changeSet author="bseber" id="add-overtime-account">
 
-        <preConditions>
-            <not>
-                <tableExists tableName="overtime_account"/>
-            </not>
-        </preConditions>
+    <preConditions>
+      <not>
+        <tableExists tableName="overtime_account"/>
+      </not>
+    </preConditions>
 
-        <createSequence sequenceName="overtime_account_seq" incrementBy="50"/>
+    <createSequence sequenceName="overtime_account_seq" incrementBy="50"/>
 
-        <createTable tableName="overtime_account">
-            <column name="user_id" type="BIGINT">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_OVERTIME_ACCOUNT"/>
-            </column>
-            <column name="tenant_id" type="VARCHAR(8)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="allowed" type="BOOLEAN" defaultValue="true">
-                <constraints nullable="false"/>
-            </column>
-            <column name="max_allowed_overtime" type="VARCHAR">
-                <constraints nullable="true"/>
-            </column>
-        </createTable>
+    <createTable tableName="overtime_account">
+      <column name="user_id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_OVERTIME_ACCOUNT"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(8)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="allowed" type="BOOLEAN" defaultValue="true">
+        <constraints nullable="false"/>
+      </column>
+      <column name="max_allowed_overtime" type="VARCHAR">
+        <constraints nullable="true"/>
+      </column>
+    </createTable>
 
-        <addForeignKeyConstraint
-            constraintName="FK_OVERTIME_ACCOUNT_TENANT_ID__TENANT_ID"
-            baseColumnNames="tenant_id"
-            baseTableName="overtime_account"
-            referencedColumnNames="tenant_id"
-            referencedTableName="tenant"
-            deferrable="false"
-            initiallyDeferred="false"
-            onDelete="CASCADE"
-            onUpdate="NO ACTION"
-        />
+    <addForeignKeyConstraint
+      constraintName="FK_OVERTIME_ACCOUNT_TENANT_ID__TENANT_ID"
+      baseColumnNames="tenant_id"
+      baseTableName="overtime_account"
+      referencedColumnNames="tenant_id"
+      referencedTableName="tenant"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+    />
 
-        <addForeignKeyConstraint
-            constraintName="FK_OVERTIME_ACCOUNT_USER_ID__TENANT_USER_ID"
-            baseColumnNames="user_id"
-            baseTableName="overtime_account"
-            referencedColumnNames="id"
-            referencedTableName="tenant_user"
-            deferrable="false"
-            initiallyDeferred="false"
-            onDelete="CASCADE"
-            onUpdate="NO ACTION"
-        />
+    <addForeignKeyConstraint
+      constraintName="FK_OVERTIME_ACCOUNT_USER_ID__TENANT_USER_ID"
+      baseColumnNames="user_id"
+      baseTableName="overtime_account"
+      referencedColumnNames="id"
+      referencedTableName="tenant_user"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+    />
 
-    </changeSet>
+  </changeSet>
 
-    <changeSet id="enable-row-level-security-on-overtime-account" author="bseber">
-        <sql dbms="postgresql">
-            ALTER TABLE overtime_account ENABLE ROW LEVEL SECURITY;
-            DROP
-            POLICY IF EXISTS overtime_account_tenant_isolation_policy ON overtime_account;
+  <changeSet id="enable-row-level-security-on-overtime-account" author="bseber">
+    <sql dbms="postgresql">
+      ALTER TABLE overtime_account ENABLE ROW LEVEL SECURITY;
+      DROP
+      POLICY IF EXISTS overtime_account_tenant_isolation_policy ON overtime_account;
             CREATE
-            POLICY overtime_account_tenant_isolation_policy ON overtime_account
+      POLICY overtime_account_tenant_isolation_policy ON overtime_account
                 USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
-        </sql>
-    </changeSet>
+    </sql>
+  </changeSet>
 
 </databaseChangeLog>

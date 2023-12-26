@@ -3,22 +3,22 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
 
-    <changeSet author="bseber" id="add-timeentry-isbreak">
-        <preConditions>
-            <tableExists tableName="time_entry"/>
-            <not>
-                <columnExists tableName="time_entry" columnName="is_break"/>
-            </not>
-        </preConditions>
+  <changeSet author="bseber" id="add-timeentry-isbreak">
+    <preConditions>
+      <tableExists tableName="time_entry"/>
+      <not>
+        <columnExists tableName="time_entry" columnName="is_break"/>
+      </not>
+    </preConditions>
 
-        <addColumn tableName="time_entry">
-            <column name="is_break" type="BOOLEAN"/>
-        </addColumn>
+    <addColumn tableName="time_entry">
+      <column name="is_break" type="BOOLEAN"/>
+    </addColumn>
 
-        <sql>
-            UPDATE time_entry
-            SET is_break = false;
-        </sql>
-    </changeSet>
+    <sql>
+      UPDATE time_entry
+      SET is_break = false;
+    </sql>
+  </changeSet>
 
 </databaseChangeLog>

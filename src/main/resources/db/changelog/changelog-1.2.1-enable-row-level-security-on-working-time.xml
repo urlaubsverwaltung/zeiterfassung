@@ -3,15 +3,15 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
 
-    <changeSet author="bseber" id="enable-row-level-security-on-working-time">
-        <sql dbms="postgresql">
-            ALTER TABLE working_time ENABLE ROW LEVEL SECURITY;
-            DROP
-            POLICY IF EXISTS working_time_tenant_isolation_policy ON working_time;
+  <changeSet author="bseber" id="enable-row-level-security-on-working-time">
+    <sql dbms="postgresql">
+      ALTER TABLE working_time ENABLE ROW LEVEL SECURITY;
+      DROP
+      POLICY IF EXISTS working_time_tenant_isolation_policy ON working_time;
             CREATE
-            POLICY working_time_tenant_isolation_policy ON working_time
+      POLICY working_time_tenant_isolation_policy ON working_time
                 USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
-        </sql>
-    </changeSet>
+    </sql>
+  </changeSet>
 
 </databaseChangeLog>

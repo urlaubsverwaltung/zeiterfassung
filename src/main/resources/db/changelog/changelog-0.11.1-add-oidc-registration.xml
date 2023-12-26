@@ -3,32 +3,32 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
 
-    <changeSet author="grafjo" id="add-oidc-client-table">
+  <changeSet author="grafjo" id="add-oidc-client-table">
 
-        <preConditions>
-            <not>
-                <tableExists tableName="oidc_client"/>
-            </not>
-        </preConditions>
+    <preConditions>
+      <not>
+        <tableExists tableName="oidc_client"/>
+      </not>
+    </preConditions>
 
-        <createSequence sequenceName="oidc_client_seq" incrementBy="50"/>
+    <createSequence sequenceName="oidc_client_seq" incrementBy="50"/>
 
-        <createTable tableName="oidc_client">
-            <column name="id" type="BIGINT">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_OIDC_CLIENT"/>
-            </column>
-            <column name="tenant_id" type="VARCHAR(255)">
-                <constraints nullable="false" unique="true" uniqueConstraintName="UC_OIDC_CLIENT_TENANT_ID"/>
-            </column>
-            <column name="client_secret" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
+    <createTable tableName="oidc_client">
+      <column name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_OIDC_CLIENT"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(255)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="UC_OIDC_CLIENT_TENANT_ID"/>
+      </column>
+      <column name="client_secret" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
 
-        <addForeignKeyConstraint baseColumnNames="tenant_id" baseTableName="oidc_client"
-                                 constraintName="FK_OIDC_CLIENT_TENANT_ID"
-                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
-                                 referencedColumnNames="tenant_id" referencedTableName="tenant"/>
-    </changeSet>
+    <addForeignKeyConstraint baseColumnNames="tenant_id" baseTableName="oidc_client"
+                             constraintName="FK_OIDC_CLIENT_TENANT_ID"
+                             deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                             referencedColumnNames="tenant_id" referencedTableName="tenant"/>
+  </changeSet>
 
 </databaseChangeLog>
