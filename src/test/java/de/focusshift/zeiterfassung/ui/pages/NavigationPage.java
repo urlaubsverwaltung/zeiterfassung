@@ -35,11 +35,9 @@ public class NavigationPage {
     private record AvatarMenu(Page page) {
 
         void logout() {
-            page.context().clearCookies();
-//            page.locator("[data-test-id=avatar]").click();
-            // TODO clicking logout renders a white page without Response.ok()
-//            page.waitForResponse(Response::ok, () -> page.locator("[data-test-id=logout]").click());
-//            page.waitForLoadState(DOMCONTENTLOADED);
+            page.locator("[data-test-id=avatar]").click();
+            page.waitForResponse(Response::ok, () -> page.locator("[data-test-id=logout]").click());
+            page.waitForLoadState(DOMCONTENTLOADED);
         }
     }
 }
