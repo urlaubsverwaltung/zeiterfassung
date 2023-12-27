@@ -27,6 +27,7 @@ public class OvertimeAccountEntity extends AbstractTenantAwareEntity {
 
     private boolean allowed;
 
+    @Column(name = "max_allowed_overtime")
     private String maxAllowedOvertime;
 
     protected OvertimeAccountEntity() {
