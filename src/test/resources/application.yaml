@@ -9,7 +9,7 @@ zeiterfassung:
     replyToDisplayName: replyto
   security:
     oidc:
-      claim-mapper: keycloak
+      claim-mapper: groups
       login-form-url: http://localhost:8070/login/redirect
       redirect-uri-template: '{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}'
       server-url: http://localhost:8090

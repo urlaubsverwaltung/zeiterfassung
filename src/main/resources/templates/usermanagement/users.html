@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
     th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scriptsDefer=~{::scriptsDefer})}"
@@ -115,6 +115,7 @@
                         class="flex-1 flex items-center justify-between gap-4"
                         data-turbo-frame="person-frame"
                         data-turbo-action="advance"
+                        data-test-id="users-list-person-link"
                       >
                         <span class="flex flex-col">
                           <span
@@ -253,6 +254,7 @@
                             data-turbo-frame="person-frame"
                             data-turbo-action="advance"
                             th:text="#{usermanagement.navigation.overtime-account}"
+                            data-test-id="users-overtime-account-link"
                           >
                             Überstundenregelung
                           </a>
