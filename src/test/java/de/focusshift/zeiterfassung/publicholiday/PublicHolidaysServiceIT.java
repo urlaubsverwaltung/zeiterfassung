@@ -36,7 +36,7 @@ class PublicHolidaysServiceIT {
         assertThat(actual).hasEntrySatisfying(GERMANY_BADEN_WUERTTEMBERG, publicHolidayCalendar -> {
             assertThat(publicHolidayCalendar.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
             assertThat(publicHolidayCalendar.publicHolidays()).satisfies(map -> {
-                assertThat(map).hasSize(14);
+                assertThat(map).hasSize(12);
                 assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 1, 6), anyDescription())));
                 assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 1, 1), anyDescription())));
                 assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 4, 7), anyDescription())));
@@ -47,18 +47,14 @@ class PublicHolidaysServiceIT {
                 assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 6, 8), anyDescription())));
                 assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 10, 3), anyDescription())));
                 assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 11, 1), anyDescription())));
-                assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 12, 24), anyDescription())));
                 assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 12, 25), anyDescription())));
                 assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 12, 26), anyDescription())));
-                assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 12, 31), anyDescription())));
             });
         });
     }
 
     private HolidayManager getHolidayManager(String country) {
-        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        final URL url = cl.getResource("Holidays_%s.xml".formatted(country));
-        return HolidayManager.getInstance(ManagerParameters.create(url));
+        return HolidayManager.getInstance(ManagerParameters.create(country));
     }
 
     private Function<Locale, String> anyDescription() {
