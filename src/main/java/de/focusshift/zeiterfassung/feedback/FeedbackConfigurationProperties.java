@@ -1,19 +1,27 @@
 package de.focusshift.zeiterfassung.feedback;
 
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 import org.springframework.validation.annotation.Validated;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
+import static org.springframework.validation.ValidationUtils.rejectIfEmpty;
 
-@Component
 @Validated
-@ConfigurationProperties(prefix = "zeiterfassung.feedback")
-public class FeedbackConfigurationProperties {
+@ConfigurationProperties("zeiterfassung.feedback")
+public class FeedbackConfigurationProperties implements Validator {
 
-    @Valid
-    private Email email = new Email();
+    private boolean enabled = false;
+    private Email email;
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 
     public Email getEmail() {
         return email;
@@ -21,6 +29,19 @@ public class FeedbackConfigurationProperties {
 
     public void setEmail(Email email) {
         this.email = email;
+    }
+
+    @Override
+    public boolean supports(Class<?> clazz) {
+        return FeedbackConfigurationProperties.class.isAssignableFrom(clazz);
+    }
+
+    @Override
+    public void validate(Object target, Errors errors) {
+        final var properties = (FeedbackConfigurationProperties) target;
+        if (properties.isEnabled()) {
+            rejectIfEmpty(errors, "email", "", "Email must not be null");
+        }
     }
 
     public static class Email {

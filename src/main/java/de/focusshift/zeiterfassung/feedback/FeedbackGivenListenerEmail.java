@@ -3,20 +3,16 @@ package de.focusshift.zeiterfassung.feedback;
 import de.focusshift.zeiterfassung.email.EMailConstants;
 import de.focusshift.zeiterfassung.email.EMailService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import jakarta.mail.MessagingException;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
-
-import jakarta.mail.MessagingException;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-@Component
 class FeedbackGivenListenerEmail {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
@@ -25,10 +21,10 @@ class FeedbackGivenListenerEmail {
     private final ITemplateEngine mailTemplateEngine;
     private final FeedbackConfigurationProperties feedbackConfigurationProperties;
 
-    FeedbackGivenListenerEmail(EMailService eMailService, @Qualifier("emailTemplateEngine") ITemplateEngine mailTemplateEngine,
+    FeedbackGivenListenerEmail(EMailService eMailService, ITemplateEngine emailTemplateEngine,
                                FeedbackConfigurationProperties feedbackConfigurationProperties) {
         this.eMailService = eMailService;
-        this.mailTemplateEngine = mailTemplateEngine;
+        this.mailTemplateEngine = emailTemplateEngine;
         this.feedbackConfigurationProperties = feedbackConfigurationProperties;
     }
 

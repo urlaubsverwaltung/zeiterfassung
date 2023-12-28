@@ -16,12 +16,14 @@ class FeedbackGivenControllerAdviceTest {
     @Test
     void ensureSetAttributeIfUserFeedbackWasGiven() {
 
+        final FeedbackConfigurationProperties feedbackProperties = enabledFeedbackConfigurationProperties();
+
         final MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
         mockHttpServletRequest.setAttribute(INPUT_FLASH_MAP_ATTRIBUTE, Map.of("user-feedback-given", true));
 
         final Model model = new ConcurrentModel();
 
-        final FeedbackGivenControllerAdvice sut = new FeedbackGivenControllerAdvice();
+        final FeedbackGivenControllerAdvice sut = new FeedbackGivenControllerAdvice(feedbackProperties);
         sut.userFeedbackGiven(model, mockHttpServletRequest);
         assertThat(model.getAttribute("showFeedbackKudo")).isEqualTo(true);
     }
@@ -29,12 +31,14 @@ class FeedbackGivenControllerAdviceTest {
     @Test
     void ensureNotSetAttributeIfUserFeedbackWasNotGiven() {
 
+        final FeedbackConfigurationProperties feedbackProperties = enabledFeedbackConfigurationProperties();
+
         final MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
         mockHttpServletRequest.setAttribute(INPUT_FLASH_MAP_ATTRIBUTE, Map.of());
 
         final Model model = new ConcurrentModel();
 
-        final FeedbackGivenControllerAdvice sut = new FeedbackGivenControllerAdvice();
+        final FeedbackGivenControllerAdvice sut = new FeedbackGivenControllerAdvice(feedbackProperties);
         sut.userFeedbackGiven(model, mockHttpServletRequest);
         assertThat(model.getAttribute("showFeedbackKudo")).isNull();
     }
@@ -42,13 +46,27 @@ class FeedbackGivenControllerAdviceTest {
     @Test
     void ensureNotSetAttributeIfUserFeedbackWasFalse() {
 
+        final FeedbackConfigurationProperties feedbackProperties = enabledFeedbackConfigurationProperties();
+
         final MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
         mockHttpServletRequest.setAttribute(INPUT_FLASH_MAP_ATTRIBUTE, Map.of("user-feedback-given", false));
 
         final Model model = new ConcurrentModel();
 
-        final FeedbackGivenControllerAdvice sut = new FeedbackGivenControllerAdvice();
+        final FeedbackGivenControllerAdvice sut = new FeedbackGivenControllerAdvice(feedbackProperties);
         sut.userFeedbackGiven(model, mockHttpServletRequest);
         assertThat(model.getAttribute("showFeedbackKudo")).isNull();
+    }
+
+    private FeedbackConfigurationProperties enabledFeedbackConfigurationProperties() {
+
+        final FeedbackConfigurationProperties.Email email = new FeedbackConfigurationProperties.Email();
+        email.setTo("to@example.org");
+
+        final FeedbackConfigurationProperties feedbackConfigurationProperties = new FeedbackConfigurationProperties();
+        feedbackConfigurationProperties.setEnabled(true);
+        feedbackConfigurationProperties.setEmail(email);
+
+        return feedbackConfigurationProperties;
     }
 }

@@ -1,12 +1,11 @@
 package de.focusshift.zeiterfassung.timeclock;
 
-import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.user.UserId;
-import de.focusshift.zeiterfassung.web.DoubleFormatter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
@@ -38,22 +37,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
-@WebMvcTest(controllers = {TimeClockController.class})
+@ExtendWith(MockitoExtension.class)
 class TimeClockControllerTest {
 
     private static final ZoneId ZONE_EUROPE_BERLIN = ZoneId.of("Europe/Berlin");
 
-    @Autowired
     private TimeClockController sut;
 
-    @MockBean
+    @Mock
     private TimeClockService timeClockService;
 
-    @MockBean
-    private CurrentUserProvider currentUserProvider;
-
-    @MockBean
-    private DoubleFormatter doubleFormatter;
+    @BeforeEach
+    void setUp() {
+        sut = new TimeClockController(timeClockService);
+    }
 
     @Test
     void ensureStartTimeClock() throws Exception {

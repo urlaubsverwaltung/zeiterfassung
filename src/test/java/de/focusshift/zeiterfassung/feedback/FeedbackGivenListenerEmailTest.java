@@ -3,18 +3,13 @@ package de.focusshift.zeiterfassung.feedback;
 import de.focusshift.zeiterfassung.email.EMailService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.IContext;
-import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -23,8 +18,13 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = {FeedbackGivenListenerEmail.class, FeedbackGivenListenerEmailTest.FeedbackTestConfiguration.class, FeedbackConfigurationProperties.class})
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest(
+    classes = {FeedbackGivenListenerEmail.class, FeedbackConfigurationProperties.class},
+    properties = {
+        "zeiterfassung.feedback.enabled=true",
+        "zeiterfassung.feedback.email.to=zeiterfassung@example.org"
+    }
+)
 class FeedbackGivenListenerEmailTest {
 
     @Autowired
@@ -36,8 +36,8 @@ class FeedbackGivenListenerEmailTest {
     @MockBean
     private EMailService eMailService;
 
-    @MockBean
-    private ITemplateEngine templateEngine;
+    @MockBean(name = "emailTemplateEngine")
+    private ITemplateEngine emailTemplateEngine;
 
     @MockBean
     private FeedbackConfigurationProperties feedbackConfigurationProperties;
@@ -49,7 +49,7 @@ class FeedbackGivenListenerEmailTest {
         final FeedbackGivenEvent event = new FeedbackGivenEvent(sender, "awesome feedback message");
 
         mockFeedbackEmailConfiguration("feedback@example.org");
-        when(templateEngine.process(eq("text/user-feedback.txt"), any(IContext.class))).thenReturn("rendered text email");
+        when(emailTemplateEngine.process(eq("text/user-feedback.txt"), any(IContext.class))).thenReturn("rendered text email");
 
         applicationEventPublisher.publishEvent(event);
 
@@ -65,13 +65,13 @@ class FeedbackGivenListenerEmailTest {
         final FeedbackGivenEvent event = new FeedbackGivenEvent(sender, "awesome feedback message");
 
         mockFeedbackEmailConfiguration("feedback@example.org");
-        when(templateEngine.process(eq("text/user-feedback.txt"), any(IContext.class))).thenReturn("rendered text email");
+        when(emailTemplateEngine.process(eq("text/user-feedback.txt"), any(IContext.class))).thenReturn("rendered text email");
 
         applicationEventPublisher.publishEvent(event);
 
         await().untilAsserted(() -> {
             final ArgumentCaptor<IContext> captor = ArgumentCaptor.forClass(IContext.class);
-            verify(templateEngine).process(eq("text/user-feedback.txt"), captor.capture());
+            verify(emailTemplateEngine).process(eq("text/user-feedback.txt"), captor.capture());
 
             final IContext model = captor.getValue();
             assertThat(model.getVariable("sender")).isEqualTo("user@example.org");
@@ -83,14 +83,7 @@ class FeedbackGivenListenerEmailTest {
         final FeedbackConfigurationProperties.Email emailConfigurationProperties = new FeedbackConfigurationProperties.Email();
         emailConfigurationProperties.setTo(to);
 
+        when(feedbackConfigurationProperties.isEnabled()).thenReturn(true);
         when(feedbackConfigurationProperties.getEmail()).thenReturn(emailConfigurationProperties);
-    }
-
-    @TestConfiguration
-    static class FeedbackTestConfiguration {
-        @Bean
-        ITemplateEngine emailTemplateEngine() {
-            return new SpringTemplateEngine();
-        }
     }
 }

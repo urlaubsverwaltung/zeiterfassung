@@ -147,6 +147,26 @@ works, can be found in the corresponding chapters of the Spring Boot documentati
 * [Linux Service](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment-service)
 * [Windows Service](https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment-windows)
 
+#### Feedback form
+
+A Feedback Form can be configured.
+
+If enabled, the form will be displayed for every user on every page on the bottom right of the browser.  
+The logged-in user email is used as the Sender Email-Address.
+
+```yaml
+zeiterfassung:
+  feedback:
+    enabled: true
+    email:
+      to: zeiterfassung@example.org
+```
+
+| Property                        | Type    | Description                                            |
+|---------------------------------|---------|--------------------------------------------------------|
+| zeiterfassung.feedback.enabled  | Boolean | (default) `false`, `true` to enable the feedback form. |
+| zeiterfassung.feedback.email.to | String  | Recipient of the feedback E-Mail.                      |
+
 #### Info-Banner
 
 An info banner can be configured, e.g. to announce maintenance work.
