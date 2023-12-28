@@ -5,7 +5,6 @@ import de.focus_shift.jollyday.core.ManagerParameters;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
@@ -16,7 +15,7 @@ import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BAD
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.NONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class PublicHolidaysServiceIT {
+class PublicHolidaysServiceTest {
 
     private PublicHolidaysService sut;
 
