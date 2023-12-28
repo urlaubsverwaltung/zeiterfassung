@@ -9,10 +9,11 @@ zeiterfassung:
     replyToDisplayName: replyto
   security:
     oidc:
-      claim-mapper: keycloak
-      login-form-url: http://localhost:8070/login/redirect
+      claim-mapper: groups
+      login-form-url: http://localhost:${local.server.port}/login/redirect
       redirect-uri-template: '{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}'
       server-url: http://localhost:8090
+      post-logout-redirect-uri: '{baseUrl}/oauth2/authorization/{registrationId}'
   tenant:
     single:
       defaultTenantId: default
