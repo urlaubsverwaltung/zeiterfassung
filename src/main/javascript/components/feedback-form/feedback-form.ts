@@ -14,7 +14,7 @@ const cancelButton: HTMLButtonElement = document.querySelector(
 
 let overlay;
 
-toggleElement.addEventListener("click", function () {
+toggleElement?.addEventListener("click", function () {
   if (formElement.classList.contains("feedback-form--visible")) {
     hideForm();
   } else {
@@ -22,11 +22,11 @@ toggleElement.addEventListener("click", function () {
   }
 });
 
-closeElement.addEventListener("click", function () {
+closeElement?.addEventListener("click", function () {
   hideForm();
 });
 
-cancelButton.addEventListener("click", function () {
+cancelButton?.addEventListener("click", function () {
   hideForm();
 });
 
