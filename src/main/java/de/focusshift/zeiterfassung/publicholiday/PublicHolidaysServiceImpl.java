@@ -27,14 +27,15 @@ class PublicHolidaysServiceImpl implements PublicHolidaysService {
         final Map<FederalState, PublicHolidayCalendar> calendar = new HashMap<>();
 
         for (FederalState federalState : federalStates) {
+            if (federalState != FederalState.NONE) {
+                final HolidayManager holidayManager = holidayManagers.get(federalState.getCountry());
+                final Map<LocalDate, List<PublicHoliday>> holidays = holidayManager.getHolidays(from, to, federalState.getCodes())
+                    .stream()
+                    .map(holiday -> new PublicHoliday(holiday.getDate(), holiday::getDescription))
+                    .collect(groupingBy(PublicHoliday::date));
 
-            final HolidayManager holidayManager = holidayManagers.get(federalState.getCountry());
-            final Map<LocalDate, List<PublicHoliday>> holidays = holidayManager.getHolidays(from, to, federalState.getCodes())
-                .stream()
-                .map(holiday -> new PublicHoliday(holiday.getDate(), holiday::getDescription))
-                .collect(groupingBy(PublicHoliday::date));
-
-            calendar.put(federalState, new PublicHolidayCalendar(federalState, holidays));
+                calendar.put(federalState, new PublicHolidayCalendar(federalState, holidays));
+            }
         }
 
         return calendar;

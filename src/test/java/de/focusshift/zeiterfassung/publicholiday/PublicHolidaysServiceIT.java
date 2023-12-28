@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
+import static de.focusshift.zeiterfassung.publicholiday.FederalState.NONE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PublicHolidaysServiceIT {
@@ -27,12 +28,13 @@ class PublicHolidaysServiceIT {
     @Test
     void ensureGetPublicHolidays() {
 
-        final List<FederalState> federalStates = List.of(GERMANY_BADEN_WUERTTEMBERG);
+        final List<FederalState> federalStates = List.of(NONE, GERMANY_BADEN_WUERTTEMBERG);
         final LocalDate from = LocalDate.of(2023, 1, 1);
         final LocalDate toExclusive = LocalDate.of(2024, 1, 1);
 
         final Map<FederalState, PublicHolidayCalendar> actual = sut.getPublicHolidays(from, toExclusive, federalStates);
 
+        assertThat(actual).hasSize(1);
         assertThat(actual).hasEntrySatisfying(GERMANY_BADEN_WUERTTEMBERG, publicHolidayCalendar -> {
             assertThat(publicHolidayCalendar.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
             assertThat(publicHolidayCalendar.publicHolidays()).satisfies(map -> {
