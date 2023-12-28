@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +24,7 @@ class PublicHolidaysServiceImpl implements PublicHolidaysService {
     public Map<FederalState, PublicHolidayCalendar> getPublicHolidays(LocalDate from, LocalDate toExclusive, Collection<FederalState> federalStates) {
 
         final LocalDate to = toExclusive.minusDays(1);
-        final Map<FederalState, PublicHolidayCalendar> calendar = new HashMap<>();
+        final Map<FederalState, PublicHolidayCalendar> calendar = new EnumMap<>(FederalState.class);
 
         for (FederalState federalState : federalStates) {
             if (federalState != FederalState.NONE) {
