@@ -185,6 +185,9 @@
         th:with="workingTime=${workingTimes[0]}"
       >
         <div class="mt-8">
+          <p th:text="${#messages.msg(workingTime.federalStateMessageKey)}">
+            Baden-Württemberg
+          </p>
           <div th:replace="~{::working-time-block}"></div>
         </div>
       </th:block>
