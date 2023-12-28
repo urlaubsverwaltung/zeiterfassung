@@ -27,15 +27,17 @@ class PublicHolidaysServiceImpl implements PublicHolidaysService {
         final Map<FederalState, PublicHolidayCalendar> calendar = new EnumMap<>(FederalState.class);
 
         for (FederalState federalState : federalStates) {
-            if (federalState != FederalState.NONE) {
+            final Map<LocalDate, List<PublicHoliday>> holidays;
+            if (federalState == FederalState.NONE) {
+                holidays = Map.of();
+            } else {
                 final HolidayManager holidayManager = holidayManagers.get(federalState.getCountry());
-                final Map<LocalDate, List<PublicHoliday>> holidays = holidayManager.getHolidays(from, to, federalState.getCodes())
+                holidays = holidayManager.getHolidays(from, to, federalState.getCodes())
                     .stream()
                     .map(holiday -> new PublicHoliday(holiday.getDate(), holiday::getDescription))
                     .collect(groupingBy(PublicHoliday::date));
-
-                calendar.put(federalState, new PublicHolidayCalendar(federalState, holidays));
             }
+            calendar.put(federalState, new PublicHolidayCalendar(federalState, holidays));
         }
 
         return calendar;

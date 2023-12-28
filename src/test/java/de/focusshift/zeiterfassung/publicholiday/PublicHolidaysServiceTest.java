@@ -33,7 +33,11 @@ class PublicHolidaysServiceTest {
 
         final Map<FederalState, PublicHolidayCalendar> actual = sut.getPublicHolidays(from, toExclusive, federalStates);
 
-        assertThat(actual).hasSize(1);
+        assertThat(actual).hasSize(2);
+        assertThat(actual).hasEntrySatisfying(NONE, publicHolidayCalendar -> {
+            assertThat(publicHolidayCalendar.federalState()).isEqualTo(NONE);
+            assertThat(publicHolidayCalendar.publicHolidays()).isEmpty();
+        });
         assertThat(actual).hasEntrySatisfying(GERMANY_BADEN_WUERTTEMBERG, publicHolidayCalendar -> {
             assertThat(publicHolidayCalendar.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
             assertThat(publicHolidayCalendar.publicHolidays()).satisfies(map -> {
