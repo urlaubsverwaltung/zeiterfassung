@@ -1,14 +1,8 @@
 #menu-toggle-checkbox ~ label ~ nav {
-  /*position: fixed;*/
-  /*top: 100%;*/
-  /*bottom: 0;*/
-  /*left: 0;*/
-  /*right: 0;*/
   @apply px-6;
   @apply py-8;
   @apply transition-all;
   @apply duration-150;
-  @apply bg-white;
 }
 
 #menu-toggle-checkbox:checked ~ label ~ nav {
@@ -35,12 +29,12 @@
 
 .navigation-content-spacer--left::before,
 .navigation-content-spacer--right::before {
-  @apply bg-zinc-100;
+  /*@apply bg-zinc-100;*/
 }
 
 .navigation-content-spacer--left::after,
 .navigation-content-spacer--right::after {
-  @apply bg-white;
+  /*@apply bg-white;*/
 }
 
 .navigation-content-spacer--left::after {
@@ -129,7 +123,7 @@
     overflow: hidden;
     max-height: 0;
     top: -100%;
-    @apply bg-zinc-100;
+    /*@apply bg-zinc-100;*/
     /*z-index: 10;*/
   }
 
@@ -287,14 +281,14 @@ body:has(.nav-popup-menu.visible) {
   }
 
   .nav-popup-menu-button_icon {
-    @apply text-zinc-900;
-    @apply text-opacity-75;
-    @apply transition-colors;
+    /*@apply text-zinc-900;*/
+    /*@apply text-opacity-75;*/
+    /*@apply transition-colors;*/
   }
 
   .nav-popup-menu-button:is(:hover, :focus) .nav-popup-menu-button_icon {
-    @apply text-opacity-100;
-    @apply text-zinc-800;
+    /*@apply text-opacity-100;*/
+    /*@apply text-zinc-800;*/
   }
 }
 
