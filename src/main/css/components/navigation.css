@@ -1,9 +1,9 @@
 #menu-toggle-checkbox ~ label ~ nav {
-  position: fixed;
-  top: 100%;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  /*position: fixed;*/
+  /*top: 100%;*/
+  /*bottom: 0;*/
+  /*left: 0;*/
+  /*right: 0;*/
   @apply px-6;
   @apply py-8;
   @apply transition-all;
@@ -133,7 +133,7 @@
     max-height: 0;
     top: -100%;
     @apply bg-zinc-100;
-    z-index: 10;
+    /*z-index: 10;*/
   }
 
   #menu-toggle-checkbox:checked ~ label ~ nav,
@@ -168,8 +168,7 @@
   @apply lg:w-5;
   @apply lg:h-5;
   @apply lg:stroke-gray-800;
-  @apply mr-4;
-  @apply lg:mr-1.5;
+  @apply mr-3.5;
 }
 .main-nav-link:hover svg {
   @apply fill-amber-500;

@@ -6,21 +6,104 @@
   </head>
   <body>
     <th:block th:ref="nav">
-      <div class="sticky top-0 z-50 mb-8 lg:mb-12">
-        <div class="py-1.5 px-2 pr-4 lg:px-8 lg:py-1.5 bg-zinc-100">
-          <div class="flex items-center">
-            <div class="hidden lg:block flex-1">
+      <div class="bg-zinc-100 min-h-full">
+        <div class="sticky top-0 p-2">
+          <div class="">
+            <div class="hidden lg:flex lg:items-center lg:gap-2">
+              <div th:replace="~{launchpad/launchpad::navigation-item}"></div>
               <a
                 href="/"
-                class="font-logo text-xl font-medium mr-8 md:mr-16"
+                class="font-logo text-xl font-medium"
                 th:text="#{navigation.zeiterfassung}"
               >
                 Zeiterfassung
               </a>
+              <div class="ml-8 relative">
+                <z-nav-popup-menu-button>
+                  <a
+                    href="#avatar-menu"
+                    id="avatar-link"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    class="flex flex-row items-center"
+                    data-testid="avatar"
+                  >
+                    <span class="inline-flex text-blue-200">
+                      <img
+                        th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='52px',height='52px',className='w-10 h-10 lg:w-9 lg:h-9')}"
+                        alt=""
+                      />
+                    </span>
+                    <svg
+                      th:replace="~{icons/chevron-down::svg(className='w-4 h-4')}"
+                    ></svg>
+                  </a>
+                </z-nav-popup-menu-button>
+                <div id="avatar-menu" class="nav-popup-menu xs:max-w-xs">
+                  <div class="nav-popup-menu-inner">
+                    <div class="nav-popup-menu-inner__header">
+                      <a
+                        href="/"
+                        th:href="@{/}"
+                        class="flex items-center gap-4 hover:no-underline focus:no-underline"
+                      >
+                        <span class="text-blue-200">
+                          <img
+                            th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='64px',height='64px')}"
+                            alt=""
+                          />
+                        </span>
+                        <p
+                          class="m-0 whitespace-nowrap overflow-hidden text-ellipsis"
+                        >
+                          <span
+                            th:text="#{navigation.avatar-menu.signed-in-as}"
+                            class="text-sm block text-gray-600 dark:text-zinc-100"
+                          ></span>
+                          <span
+                            class="text-lg leading-none text-gray-700 hover:text-black focus:text-black dark:text-zinc-200"
+                            th:text="${signedInUser.fullName}"
+                          >
+                            Max Mustermann
+                          </span>
+                        </p>
+                      </a>
+                    </div>
+                    <div class="nav-popup-menu-inner__content">
+                      <ul class="list-none m-0 p-0">
+                        <li>
+                          <form
+                            action="#"
+                            th:action="@{/logout}"
+                            method="POST"
+                            class="ml-auto w-full"
+                          >
+                            <button
+                              type="submit"
+                              class="nav-popup-menu_link rounded-b-2xl"
+                              data-testid="logout"
+                            >
+                              <span
+                                class="px-2 py-1 rounded flex items-center ml-2.5"
+                              >
+                                <svg
+                                  th:replace="~{icons/logout::svg(className='w-6 h-6')}"
+                                ></svg>
+                              </span>
+                              <span
+                                class="ml-4"
+                                th:text="#{navigation.avatar-menu.logout}"
+                              ></span>
+                            </button>
+                          </form>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div
-              class="grow w-full max-w-screen-lg 2xl:max-w-screen-3xl px-4 flex relative"
-            >
+            <div class="mt-8 px-1.5 flex relative">
               <input id="menu-toggle-checkbox" type="checkbox" class="hidden" />
               <label for="menu-toggle-checkbox" class="z-50 flex lg:hidden">
                 <span class="inline-block">
@@ -32,9 +115,7 @@
                 </span>
               </label>
               <nav>
-                <ul
-                  class="flex flex-col space-y-8 lg:space-x-8 lg:space-y-0 lg:flex-row overflow-hidden"
-                >
+                <ul class="flex flex-col gap-4">
                   <li>
                     <a
                       href="#"
@@ -96,7 +177,7 @@
                 </ul>
               </nav>
             </div>
-            <div class="z-50 flex-1 flex justify-end gap-4">
+            <div class="flex justify-end gap-4">
               <form
                 th:if="${timeClock == null}"
                 action="#"
@@ -159,91 +240,6 @@
                     <span th:text="#{timeclock.stop}"> Stop </span>
                   </button>
                 </form>
-              </div>
-              <div th:replace="~{launchpad/launchpad::navigation-item}"></div>
-              <div class="shrink-0 relative flex">
-                <z-nav-popup-menu-button>
-                  <a
-                    href="#avatar-menu"
-                    id="avatar-link"
-                    aria-expanded="false"
-                    aria-haspopup="true"
-                    class="flex flex-row items-center"
-                    data-testid="avatar"
-                  >
-                    <span class="inline-flex text-blue-200">
-                      <img
-                        th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='52px',height='52px',className='w-10 h-10 lg:w-9 lg:h-9',tooltip=false)}"
-                        alt=""
-                      />
-                    </span>
-                    <svg
-                      th:replace="~{icons/chevron-down::svg(className='w-4 h-4')}"
-                    ></svg>
-                  </a>
-                </z-nav-popup-menu-button>
-                <div id="avatar-menu" class="nav-popup-menu xs:max-w-xs">
-                  <div class="nav-popup-menu-inner">
-                    <div class="nav-popup-menu-inner__header">
-                      <a
-                        href="/"
-                        th:href="@{/}"
-                        class="flex items-center gap-4 hover:no-underline focus:no-underline"
-                      >
-                        <span class="text-blue-200">
-                          <img
-                            th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='64px',height='64px',tooltip=false)}"
-                            alt=""
-                          />
-                        </span>
-                        <p
-                          class="m-0 whitespace-nowrap overflow-hidden text-ellipsis"
-                        >
-                          <span
-                            th:text="#{navigation.avatar-menu.signed-in-as}"
-                            class="text-sm block text-gray-600 dark:text-zinc-100"
-                          ></span>
-                          <span
-                            class="text-lg leading-none text-gray-700 hover:text-black focus:text-black dark:text-zinc-200"
-                            th:text="${signedInUser.fullName}"
-                          >
-                            Max Mustermann
-                          </span>
-                        </p>
-                      </a>
-                    </div>
-                    <div class="nav-popup-menu-inner__content">
-                      <ul class="list-none m-0 p-0">
-                        <li>
-                          <form
-                            action="#"
-                            th:action="@{/logout}"
-                            method="POST"
-                            class="ml-auto w-full"
-                          >
-                            <button
-                              type="submit"
-                              class="nav-popup-menu_link rounded-b-2xl"
-                              data-testid="logout"
-                            >
-                              <span
-                                class="px-2 py-1 rounded flex items-center ml-2.5"
-                              >
-                                <svg
-                                  th:replace="~{icons/logout::svg(className='w-6 h-6')}"
-                                ></svg>
-                              </span>
-                              <span
-                                class="ml-4"
-                                th:text="#{navigation.avatar-menu.logout}"
-                              ></span>
-                            </button>
-                          </form>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

@@ -25,6 +25,13 @@ body {
   min-height: --webkit-fill-available;
   background-image: linear-gradient(#ffffff, #fafafa);
   background-attachment: fixed;
+
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "banner banner"
+    "navigation content";
 }
 
 input:not([class*="rounded"]),
