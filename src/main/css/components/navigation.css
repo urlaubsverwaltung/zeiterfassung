@@ -22,7 +22,6 @@
 .navigation-content-spacer--left,
 .navigation-content-spacer--right {
   position: relative;
-  @apply dark:hidden;
 }
 
 .navigation-content-spacer--left::before,
@@ -37,13 +36,11 @@
 .navigation-content-spacer--left::before,
 .navigation-content-spacer--right::before {
   @apply bg-zinc-100;
-  @apply dark:bg-zinc-800;
 }
 
 .navigation-content-spacer--left::after,
 .navigation-content-spacer--right::after {
   @apply bg-white;
-  @apply dark:bg-zinc-900;
 }
 
 .navigation-content-spacer--left::after {
@@ -253,8 +250,6 @@ body:has(.nav-popup-menu.visible) {
     @apply right-0;
     @apply bottom-auto;
     @apply rounded-2xl;
-    @apply dark:border-zinc-800;
-    @apply dark:shadow-none;
   }
 
   .nav-popup-menu.visible {
