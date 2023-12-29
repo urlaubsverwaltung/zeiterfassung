@@ -17,6 +17,17 @@ body:has(.time-clock-dropdown[open]) .navigation-content-spacer--right::after {
   background-color: rgba(0, 0, 0, 0.31);
 }
 
+.time-clock-dropdown_summary {
+  @apply cursor-pointer;
+  @apply text-sm;
+  @apply w-full;
+  @apply px-0; /* gap by container */
+  @apply py-0; /* centered by container */
+  @apply rounded-md;
+  @apply flex;
+  @apply items-center;
+}
+
 .time-clock-dropdown_content {
   z-index: 1;
   left: 0.5rem;
@@ -32,17 +43,6 @@ body:has(.time-clock-dropdown[open]) .navigation-content-spacer--right::after {
 }
 
 @screen xs {
-  .time-clock-dropdown_summary {
-    @apply cursor-pointer;
-    @apply text-sm;
-    @apply w-full;
-    @apply px-0; /* gap by container */
-    @apply py-0; /* centered by container */
-    @apply rounded-md;
-    @apply flex;
-    @apply items-center;
-  }
-
   .time-clock-dropdown_content {
     position: fixed;
   }

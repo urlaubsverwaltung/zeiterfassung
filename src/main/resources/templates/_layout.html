@@ -96,15 +96,11 @@
     <th:block th:replace="${additional}"></th:block>
   </head>
   <body th:fragment="body(content)">
-    <div style="grid-area: banner">
-      <div th:replace="~{_info-banner::banner}"></div>
-    </div>
-
-    <div style="grid-area: navigation">
-      <nav th:replace="~{_navigation::nav}">navigation block</nav>
-    </div>
+    <div th:replace="~{_info-banner::banner}"></div>
+    <nav th:replace="~{_navigation::nav}">navigation block</nav>
 
     <div class="pb-16 flex flex-col" style="grid-area: content">
+      <div th:replace="~{_top::row}"></div>
       <noscript th:if="${showFeedbackKudo}">
         <p th:text="#{feedback.kudos}">Vielen Dank für dein Feedback.</p>
       </noscript>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Navigation fragment</title>
+  </head>
+  <body>
+    <div
+      th:fragment="row"
+      class="sticky top-0 p-2 bg-white z-50 border-b border-zinc-100"
+    >
+      <div class="ml-auto flex justify-end gap-4">
+        <form
+          th:if="${timeClock == null}"
+          action="#"
+          th:action="@{/timeclock/start}"
+          method="post"
+          class="flex items-center"
+        >
+          <button
+            type="submit"
+            class="button-primary button-primary-icon pl-3 pr-4 py-1 text-lg rounded-full"
+          >
+            <svg th:replace="~{icons/play::svg(className='w-6 h-6 mr-1.5')}" />
+            <span th:text="#{timeclock.start}"> Start </span>
+          </button>
+        </form>
+        <div th:if="${timeClock != null}" class="flex items-center gap-4">
+          <details class="time-clock-dropdown" is="z-details-dropdown">
+            <summary
+              id="time-clock-summary"
+              class="time-clock-dropdown_summary"
+            >
+              <span
+                class="sr-only"
+                th:text="#{timeclock.elapsed-time.label}"
+              ></span>
+              <span
+                class="text-lg"
+                th:text="${timeClock.duration}"
+                th:data-started-at="${timeClock.startedAt}"
+                is="z-time-clock-duration"
+              ></span>
+              <svg
+                th:replace="~{icons/chevron-down::svg(className='w-4 h-4')}"
+              ></svg>
+            </summary>
+            <div class="time-clock-dropdown_content">
+              <div
+                th:replace="~{timeclock/timeclock-edit-form::navigation-box}"
+              ></div>
+            </div>
+          </details>
+          <form
+            action="#"
+            th:action="@{/timeclock/stop}"
+            method="post"
+            class="flex items-center"
+          >
+            <button
+              type="submit"
+              class="bg-red-700 text-white py-1 pl-2 pr-3 text-lg font-medium rounded-full flex items-center gap-1.5 hover:bg-red-600 transition-colors"
+            >
+              <svg
+                th:replace="~{icons/stop::svg(className='text-red-100 w-6 h-6')}"
+              />
+              <span th:text="#{timeclock.stop}"> Stop </span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

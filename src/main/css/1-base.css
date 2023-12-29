@@ -27,11 +27,22 @@ body {
   background-attachment: fixed;
 
   display: grid;
-  grid-template-rows: auto 1fr;
-  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   grid-template-areas:
-    "banner banner"
-    "navigation content";
+    "banner"
+    "navigation"
+    "content";
+}
+
+@screen lg {
+  body {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "banner banner"
+      "navigation content";
+  }
 }
 
 input:not([class*="rounded"]),
