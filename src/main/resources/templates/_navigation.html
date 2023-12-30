@@ -22,7 +22,7 @@
             </span>
           </label>
           <div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 lg:relative">
               <div th:replace="~{launchpad/launchpad::navigation-item}"></div>
               <a
                 href="/"
@@ -31,7 +31,7 @@
               >
                 Zeiterfassung
               </a>
-              <div class="ml-auto relative lg:ml-8">
+              <div class="ml-auto lg:ml-8">
                 <z-nav-popup-menu-button>
                   <a
                     href="#avatar-menu"
@@ -52,7 +52,7 @@
                     ></svg>
                   </a>
                 </z-nav-popup-menu-button>
-                <div id="avatar-menu" class="nav-popup-menu">
+                <div id="avatar-menu" class="nav-popup-menu origin-top-right">
                   <div class="nav-popup-menu-inner">
                     <div class="nav-popup-menu-inner__header">
                       <a
@@ -60,7 +60,7 @@
                         th:href="@{/}"
                         class="flex items-center gap-4 hover:no-underline focus:no-underline"
                       >
-                        <span class="text-blue-200">
+                        <span class="text-blue-200 lg:hidden">
                           <img
                             th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='64px',height='64px')}"
                             alt=""

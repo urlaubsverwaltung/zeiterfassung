@@ -227,76 +227,63 @@ body:has(#menu-toggle-checkbox:checked) {
   overflow-y: auto;
 }
 
-body:has(.nav-popup-menu.visible) {
-  /* disable body scroll as long as nav-popup-menu is open */
-  overflow: hidden;
-}
-
-.nav-popup-menu.visible .nav-popup-menu-inner {
-  width: 100%;
-  height: 100%;
-}
-
 @screen lg {
-  .nav-popup-menu::before {
-    content: "";
-    border-color: transparent;
-    border-width: 8px;
-    @apply border-b-gray-200;
-    position: absolute;
-    top: -17px;
-    @apply right-6;
-  }
-
   .nav-popup-menu {
-    @apply transition-transform;
-    @apply origin-top-right;
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: 0;
     @apply scale-0;
-    @apply border;
-    @apply border-gray-200;
-    @apply shadow-xl;
-    @apply mt-3;
-    @apply z-50;
-    @apply absolute;
-    @apply left-auto;
-    @apply right-0;
-    @apply bottom-auto;
-    @apply rounded-2xl;
   }
 
   .nav-popup-menu.visible {
-    @apply top-full;
-    @apply z-10;
+    @apply scale-100;
+    top: calc(100% + 0.5rem);
   }
 
   .nav-popup-menu-inner {
-    max-height: 75vh;
-    @apply w-auto;
-    @apply h-auto;
-    @apply rounded-2xl;
-    @apply border-gray-200;
     @apply bg-white;
-    @apply backdrop-blur;
-    @apply supports-backdrop-blur:bg-white/[0.85];
+    @apply border;
+    @apply border-gray-50;
+    @apply rounded-lg;
+    @apply shadow-sm;
+    @apply shadow-blue-100;
   }
 
-  .nav-popup-menu-inner ul li:first-of-type .nav-popup-menu_link {
-    @apply rounded-t-2xl;
-  }
+  /*.nav-popup-menu-inner ul li:first-of-type .nav-popup-menu_link {*/
+  /*  @apply rounded-t-2xl;*/
+  /*}*/
 
-  .nav-popup-menu-inner ul li:last-of-type .nav-popup-menu_link {
-    @apply rounded-b-2xl;
-  }
+  /*.nav-popup-menu-inner ul li:last-of-type .nav-popup-menu_link {*/
+  /*  @apply rounded-b-2xl;*/
+  /*}*/
 
   .nav-popup-menu-inner ul li[role="separator"] {
     @apply border-t;
     @apply border-gray-200;
   }
 
-  .nav-popup-menu.visible,
-  .nav-popup-menu:focus-within {
-    @apply scale-100;
+  .nav-popup-menu-inner__header {
+    @apply rounded-t-none;
+    @apply bg-gray-100;
+
+    /*@apply rounded-t-2xl;*/
+    /*@apply bg-gradient-to-br;*/
+    /*@apply from-blue-50;*/
+    /*@apply via-gray-100;*/
+    /*@apply to-blue-100;*/
+    /*@apply px-4;*/
+    /*@apply py-2;*/
   }
+
+  .nav-popup-menu-inner__content {
+    overflow-y: hidden;
+  }
+
+  /*.nav-popup-menu.visible,*/
+  /*.nav-popup-menu:focus-within {*/
+  /*  @apply scale-100;*/
+  /*}*/
 
   .nav-popup-menu-button_icon {
     /*@apply text-zinc-900;*/
