@@ -1,14 +1,14 @@
 #menu-toggle-checkbox ~ label ~ div {
   @apply transition-all;
-  @apply duration-150;
+  @apply duration-200;
   opacity: 0;
 
   width: 100%;
   position: fixed;
-  /*top: 3rem; !* menu icon *!*/
-  top: 7rem; /* menu icon + banner + stopwatch */
+  top: 100%;
   bottom: 0;
-  left: -100%;
+  left: 0;
+  right: 0;
   background: white;
   z-index: 999999;
 
