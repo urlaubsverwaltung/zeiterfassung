@@ -1,4 +1,4 @@
-#menu-toggle-checkbox ~ label ~ nav {
+#menu-toggle-checkbox ~ label ~ div {
   @apply transition-all;
   @apply duration-150;
   opacity: 0;
@@ -15,7 +15,7 @@
   @apply px-3;
 }
 
-#menu-toggle-checkbox:checked ~ label ~ nav {
+#menu-toggle-checkbox:checked ~ label ~ div {
   opacity: 1;
   left: 0;
   top: calc(var(--navigation-header-height) + 1.5rem);
@@ -152,8 +152,8 @@ body:has(#menu-toggle-checkbox:checked) {
 }
 
 @screen lg {
-  #menu-toggle-checkbox ~ label ~ nav,
-  #menu-toggle-checkbox:checked ~ label ~ nav {
+  #menu-toggle-checkbox ~ label ~ div,
+  #menu-toggle-checkbox:checked ~ label ~ div {
     position: static;
     opacity: 1;
     padding: 0;
