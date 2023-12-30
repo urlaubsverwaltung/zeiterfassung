@@ -7,10 +7,10 @@
   <body>
     <th:block th:ref="nav">
       <div
-        class="sticky top-0 z-50 bg-white border-r border-zinc-50 min-h-full lg:static"
+        class="flex items-center sticky top-0 z-50 bg-gray-100 lg:block lg:bg-white lg:border-r lg:border-zinc-50 lg:min-h-full lg:static"
         style="grid-area: navigation"
       >
-        <div class="lg:sticky top-0 p-2">
+        <div class="p-2 lg:sticky lg:top-0">
           <div class="flex items-center justify-between lg:block">
             <div class="hidden lg:flex lg:items-center lg:gap-2">
               <div th:replace="~{launchpad/launchpad::navigation-item}"></div>
@@ -182,12 +182,7 @@
             </div>
           </div>
         </div>
-        <div
-          class="navigation-content-spacer flex justify-between w-full lg:hidden"
-        >
-          <div class="navigation-content-spacer--left h-4 w-4"></div>
-          <div class="navigation-content-spacer--right h-4 w-4"></div>
-        </div>
+        <div class="navigation-content-spacer--left h-4 w-4"></div>
       </div>
     </th:block>
   </body>

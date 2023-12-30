@@ -28,19 +28,21 @@ body {
 
   display: grid;
   grid-template-rows: auto auto 1fr;
+  grid-template-columns: auto 1fr;
   grid-template-areas:
-    "banner"
-    "navigation"
-    "content";
+    "banner banner"
+    "navigation topbar"
+    "content content";
 }
 
 @screen lg {
   body {
     display: grid;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto 1fr;
     grid-template-columns: auto 1fr;
     grid-template-areas:
       "banner banner"
+      "navigation topbar"
       "navigation content";
   }
 }

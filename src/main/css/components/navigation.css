@@ -27,40 +27,39 @@ body:has(#menu-toggle-checkbox:checked) {
   overflow: hidden;
 }
 
-.navigation-content-spacer {
-  @apply bg-transparent;
-}
-
 .navigation-content-spacer--left,
 .navigation-content-spacer--right {
-  position: relative;
+  position: absolute;
+  top: 100%;
+  @apply bg-gray-100;
+  @apply lg:hidden;
 }
 
-.navigation-content-spacer--left::before,
-.navigation-content-spacer--right::before,
+.navigation-content-spacer--left {
+  left: 0;
+}
+
+.navigation-content-spacer--right {
+  right: 0;
+}
+
 .navigation-content-spacer--left::after,
 .navigation-content-spacer--right::after {
   content: "";
   position: absolute;
   @apply inset-0;
-}
-
-.navigation-content-spacer--left::before,
-.navigation-content-spacer--right::before {
-  /*@apply bg-zinc-100;*/
-}
-
-.navigation-content-spacer--left::after,
-.navigation-content-spacer--right::after {
-  /*@apply bg-white;*/
+  @apply bg-white;
+  @apply lg:hidden;
 }
 
 .navigation-content-spacer--left::after {
   @apply rounded-tl-full;
+  left: 0;
 }
 
 .navigation-content-spacer--right::after {
   @apply rounded-tr-full;
+  right: 0;
 }
 
 #menu-toggle-checkbox + label > span:first-child {
