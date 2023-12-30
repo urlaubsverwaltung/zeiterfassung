@@ -237,7 +237,7 @@ body:has(.nav-popup-menu.visible) {
   height: 100%;
 }
 
-@screen xs {
+@screen lg {
   .nav-popup-menu::before {
     content: "";
     border-color: transparent;
