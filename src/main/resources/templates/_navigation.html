@@ -7,10 +7,10 @@
   <body>
     <th:block th:ref="nav">
       <div
-        class="flex items-center sticky top-0 z-50 bg-gray-100 lg:block lg:bg-white lg:border-r lg:border-zinc-50 lg:min-h-full lg:static"
-        style="grid-area: navigation"
+        class="flex items-center sticky z-40 bg-gray-100 lg:block lg:bg-white lg:border-r lg:border-zinc-50"
+        style="top: var(--navigation-sticky-top); grid-area: navigation"
       >
-        <div class="p-2 lg:sticky lg:top-0">
+        <div class="p-2 lg:sticky" style="top: var(--navigation-sticky-top)">
           <input id="menu-toggle-checkbox" type="checkbox" class="hidden" />
           <label for="menu-toggle-checkbox" class="z-50 flex lg:hidden">
             <span class="inline-block">

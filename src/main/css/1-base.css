@@ -1,8 +1,13 @@
 @tailwind base;
 
 :root {
+  /* info-banner is optional and value is overridden by javascript with real height on runtime. as we don't know the content yet... */
+  --info-banner-height: 0;
   --top-bar-height: 3.25rem;
   --z-index-tooltip: 99999; /* tooltips shown on pointer hover should always be on top */
+
+  --info-banner-sticky-top: 0;
+  --navigation-sticky-top: var(--info-banner-height);
 
   /* 500 */
   --absence-color-GRAY: #6b7280;

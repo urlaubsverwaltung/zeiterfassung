@@ -18,7 +18,8 @@
 #menu-toggle-checkbox:checked ~ label ~ div {
   opacity: 1;
   left: 0;
-  top: calc(var(--top-bar-height) + 1.5rem);
+  top: calc(var(--navigation-sticky-top) + var(--top-bar-height));
+  padding-top: 1rem;
 }
 
 body:has(#menu-toggle-checkbox:checked) {
