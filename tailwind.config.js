@@ -13,9 +13,6 @@ module.exports = {
       fontFamily: {
         logo: ["KaushanScript"],
       },
-      inset: {
-        "nav-header": "var(--navigation-header-height)",
-      },
       spacing: {
         6.5: "1.625rem",
         7.5: "1.875rem",

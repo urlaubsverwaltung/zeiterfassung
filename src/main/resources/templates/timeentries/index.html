@@ -242,7 +242,10 @@
                     th:classappend="${dayStat.first ? 'mt-2' : 'mt-8 md:mt-4'}"
                     th:id="${'day-of-week-' + calendarWeek + '-' + day.dayOfWeek}"
                   >
-                    <div class="px-4 sticky top-nav-header pt-px z-10">
+                    <div
+                      class="px-4 sticky pt-px z-10"
+                      style="top: var(--top-bar-height)"
+                    >
                       <div
                         th:fragment="day-of-week-banner(calendarWeek, day)"
                         th:id="${'day-of-week-banner-' + calendarWeek + '-' + day.dayOfWeek}"

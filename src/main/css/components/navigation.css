@@ -18,7 +18,7 @@
 #menu-toggle-checkbox:checked ~ label ~ div {
   opacity: 1;
   left: 0;
-  top: calc(var(--navigation-header-height) + 1.5rem);
+  top: calc(var(--top-bar-height) + 1.5rem);
 }
 
 body:has(#menu-toggle-checkbox:checked) {
@@ -146,7 +146,7 @@ body:has(#menu-toggle-checkbox:checked) {
 
   #menu-toggle-checkbox:checked ~ label ~ nav,
   #menu-toggle-checkbox:checked ~ label ~ nav:focus-within {
-    top: var(--navigation-header-height);
+    top: var(--top-bar-height);
     max-height: 100vh !important;
   }
 }
@@ -204,7 +204,7 @@ body:has(#menu-toggle-checkbox:checked) {
 }
 
 .nav-popup-menu.visible {
-  top: calc(var(--navigation-header-height) + 1.5rem);
+  top: calc(var(--top-bar-height) + 1.5rem);
 }
 
 .nav-popup-menu-inner {
