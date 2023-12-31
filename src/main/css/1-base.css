@@ -1,7 +1,7 @@
 @tailwind base;
 
 :root {
-  --top-bar-height: 3rem;
+  --top-bar-height: 3.25rem;
   --z-index-tooltip: 99999; /* tooltips shown on pointer hover should always be on top */
 
   /* 500 */
