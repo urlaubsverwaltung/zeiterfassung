@@ -357,7 +357,6 @@
     border-top-right-radius: 0;
     border-top-left-radius: var(--time-entries-box-border-radius);
     border-bottom-left-radius: var(--time-entries-box-border-radius);
-    width: 14rem;
   }
 
   .time-entry-box-absence__input__date {
@@ -384,8 +383,7 @@
   .time-entry-box__controls,
   .time-entry-box-absence__controls {
     margin-left: 1rem;
-    justify-content: flex-start;
-    width: 20%;
+    width: 3rem;
   }
 
   .time-entry-box-absence__absence-color-box {
