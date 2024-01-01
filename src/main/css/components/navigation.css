@@ -250,14 +250,6 @@ body:has(#menu-toggle-checkbox:checked) {
     @apply shadow-lg;
   }
 
-  /*.nav-popup-menu-inner ul li:first-of-type .nav-popup-menu_link {*/
-  /*  @apply rounded-t-2xl;*/
-  /*}*/
-
-  /*.nav-popup-menu-inner ul li:last-of-type .nav-popup-menu_link {*/
-  /*  @apply rounded-b-2xl;*/
-  /*}*/
-
   .nav-popup-menu-inner ul li[role="separator"] {
     @apply border-t;
     @apply border-gray-200;
@@ -266,34 +258,10 @@ body:has(#menu-toggle-checkbox:checked) {
   .nav-popup-menu-inner__header {
     @apply rounded-t-none;
     @apply bg-gray-100;
-
-    /*@apply rounded-t-2xl;*/
-    /*@apply bg-gradient-to-br;*/
-    /*@apply from-blue-50;*/
-    /*@apply via-gray-100;*/
-    /*@apply to-blue-100;*/
-    /*@apply px-4;*/
-    /*@apply py-2;*/
   }
 
   .nav-popup-menu-inner__content {
     overflow-y: hidden;
-  }
-
-  /*.nav-popup-menu.visible,*/
-  /*.nav-popup-menu:focus-within {*/
-  /*  @apply scale-100;*/
-  /*}*/
-
-  .nav-popup-menu-button_icon {
-    /*@apply text-zinc-900;*/
-    /*@apply text-opacity-75;*/
-    /*@apply transition-colors;*/
-  }
-
-  .nav-popup-menu-button:is(:hover, :focus) .nav-popup-menu-button_icon {
-    /*@apply text-opacity-100;*/
-    /*@apply text-zinc-800;*/
   }
 }
 
