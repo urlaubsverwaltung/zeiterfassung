@@ -58,6 +58,62 @@
   grid-column-start: 6;
 }
 
+.time-entry-actions {
+  position: relative;
+
+  [data-toggle-button] {
+    @apply rounded-full;
+    @apply w-12;
+    @apply h-12;
+    @apply hover:bg-blue-100;
+    @apply focus:bg-blue-100;
+    @apply transition-colors;
+    @apply duration-200;
+  }
+
+  [data-toggle-button][aria-pressed="true"] {
+    @apply bg-blue-100;
+  }
+
+  [data-toggle-button] ~ .time-entry-actions-list button {
+    @apply pl-3;
+    @apply pr-4;
+    @apply py-1;
+    @apply rounded-md;
+    @apply transition-colors;
+    @apply hover:bg-gray-100;
+    @apply focus:bg-gray-100;
+    @apply w-full;
+    @apply flex;
+    @apply items-center;
+    @apply gap-3;
+  }
+
+  [data-toggle-button] ~ .time-entry-actions-list {
+    @apply absolute;
+    @apply mt-1;
+    @apply top-full;
+    @apply right-0;
+    @apply bg-white;
+    @apply py-2;
+    @apply px-1;
+    @apply border;
+    @apply border-gray-100;
+    @apply rounded-lg;
+    @apply shadow-lg;
+    @apply z-10;
+    @apply transition-all;
+    @apply scale-0;
+    @apply opacity-0;
+    @apply origin-top-right;
+  }
+
+  [data-toggle-button][aria-pressed="true"] ~ .time-entry-actions-list {
+    @apply opacity-100;
+    @apply scale-100;
+  }
+}
+
 @screen xs {
   .time-entry-cell-container {
     display: grid;
@@ -203,7 +259,7 @@
   border-radius: 27px;
 }
 
-.timeslot-form-existing.edited button[type="submit"] {
+.timeslot-form-existing.edited button[data-toggle-button] {
   color: theme("colors.gray.700");
   background-color: theme("colors.blue.100");
   padding: 0.25rem 0.5rem;
