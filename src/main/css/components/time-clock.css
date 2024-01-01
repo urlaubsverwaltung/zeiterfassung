@@ -1,13 +1,6 @@
-body:has(.time-clock-dropdown[open]) .navigation-content-spacer--left::after,
-body:has(.time-clock-dropdown[open]) .navigation-content-spacer--right::after {
-  /* can't handle content-space positioning with z-index. */
-  /* therefore set color. note that this depends on the user's monitor, of course. */
-  /* the used value seems to be a good compromise. */
-  background-color: rgba(0, 0, 0, 0.31);
-}
-
 .time-clock-dropdown_summary {
   @apply cursor-pointer;
+  @apply select-none;
   @apply text-sm;
   @apply w-full;
   @apply px-0; /* gap by container */
@@ -18,34 +11,50 @@ body:has(.time-clock-dropdown[open]) .navigation-content-spacer--right::after {
 }
 
 .time-clock-dropdown_content {
-  z-index: 1;
-  left: 0.5rem;
-  right: 0.5rem;
-  width: calc(100vw - 1rem); /* 1rem = left + right */
+  @apply transition-all;
+  @apply duration-200;
+  opacity: 0;
+  width: 100%;
+  position: fixed;
+  top: 100%;
+  bottom: 0;
+  left: 0;
+  right: 0;
   @apply bg-white;
-  @apply border;
-  @apply px-4;
-  @apply py-3;
-  @apply rounded;
-  @apply translate-y-4;
-  @apply shadow-lg;
+  @apply py-4;
+  @apply px-3;
 }
 
-@screen xs {
-  .time-clock-dropdown_content {
-    position: fixed;
+.time-clock-dropdown[open] .time-clock-dropdown_content {
+  opacity: 1;
+  top: calc(var(--navigation-sticky-top) + var(--top-bar-height));
+}
+
+body:has(.time-clock-dropdown[open]) {
+  /* prevent scrolling of hidden content */
+  /* remember to reset this on large screen to avoid content jumping when scrollbar is (always) visible */
+  overflow: hidden;
+}
+
+@screen lg {
+  body:has(.time-clock-dropdown[open]) {
+    overflow: revert;
   }
-}
 
-@screen sm {
   .time-clock-dropdown {
     position: relative;
   }
 
   .time-clock-dropdown_content {
     position: absolute;
+    bottom: auto;
     left: auto;
     right: 0;
     width: auto;
+    @apply border;
+    @apply px-4;
+    @apply py-3;
+    @apply rounded;
+    @apply shadow-lg;
   }
 }
