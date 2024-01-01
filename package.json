@@ -29,7 +29,7 @@
     "autoprefixer": "10.4.16",
     "concurrently": "8.2.2",
     "cssnano": "6.0.1",
-    "date-fns": "2.30.0",
+    "date-fns": "3.0.6",
     "esbuild": "0.19.8",
     "eslint": "8.54.0",
     "eslint-config-prettier": "9.0.0",
