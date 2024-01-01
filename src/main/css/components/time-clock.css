@@ -1,14 +1,3 @@
-body:has(.time-clock-dropdown[open]) #body-overlay {
-  z-index: 10;
-  opacity: 1;
-  background-color: rgba(0, 0, 0, 0.33);
-  width: 100vw;
-  height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-}
-
 body:has(.time-clock-dropdown[open]) .navigation-content-spacer--left::after,
 body:has(.time-clock-dropdown[open]) .navigation-content-spacer--right::after {
   /* can't handle content-space positioning with z-index. */

@@ -106,13 +106,9 @@
         <p th:text="#{feedback.kudos}">Vielen Dank für dein Feedback.</p>
       </noscript>
       <div th:replace="${content}">content block</div>
+      <div th:replace="~{fragments/feedback-form::feedback}"></div>
       <footer th:replace="~{_footer::footer}">footer block</footer>
     </div>
-
-    <div th:replace="~{fragments/feedback-form::feedback}"></div>
-
-    <div id="body-overlay" class="body-overlay"></div>
-    <th:block th:replace="~{/fragments/modal/frame::frame-modal(~{})}"></th:block>
 
     <script>
       (function () {
