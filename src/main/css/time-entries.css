@@ -62,13 +62,15 @@
   position: relative;
 
   [data-toggle-button] {
-    @apply rounded-full;
-    @apply w-12;
-    @apply h-12;
-    @apply hover:bg-blue-100;
-    @apply focus:bg-blue-100;
-    @apply transition-colors;
-    @apply duration-200;
+    @apply hidden;
+    @apply md:inline-flex;
+    @apply md:rounded-full;
+    @apply md:w-12;
+    @apply md:h-12;
+    @apply md:hover:bg-blue-100;
+    @apply md:focus:bg-blue-100;
+    @apply md:transition-colors;
+    @apply md:duration-200;
   }
 
   [data-toggle-button][aria-pressed="true"] {
@@ -76,41 +78,48 @@
   }
 
   [data-toggle-button] ~ .time-entry-actions-list button {
-    @apply pl-3;
-    @apply pr-4;
-    @apply py-1;
-    @apply rounded-md;
-    @apply transition-colors;
-    @apply hover:bg-gray-100;
-    @apply focus:bg-gray-100;
-    @apply w-full;
     @apply flex;
     @apply items-center;
     @apply gap-3;
+    @apply text-gray-500;
+    @apply md:text-gray-900;
+    @apply md:pl-3;
+    @apply md:pr-4;
+    @apply md:py-1;
+    @apply md:rounded-md;
+    @apply md:transition-colors;
+    @apply md:hover:bg-gray-100;
+    @apply md:focus:bg-gray-100;
+    @apply md:w-full;
   }
 
   [data-toggle-button] ~ .time-entry-actions-list {
-    @apply absolute;
-    @apply mt-1;
-    @apply top-full;
-    @apply right-0;
-    @apply bg-white;
-    @apply py-2;
-    @apply px-1;
-    @apply border;
-    @apply border-gray-100;
-    @apply rounded-lg;
-    @apply shadow-lg;
-    @apply z-10;
-    @apply transition-all;
-    @apply scale-0;
-    @apply opacity-0;
-    @apply origin-top-right;
+    @apply flex;
+    @apply flex-row;
+    @apply gap-4;
+    @apply md:flex-col;
+    @apply md:gap-0;
+    @apply md:bg-white;
+    @apply md:py-2;
+    @apply md:px-1;
+    @apply md:absolute;
+    @apply md:mt-1;
+    @apply md:top-full;
+    @apply md:right-0;
+    @apply md:border;
+    @apply md:border-gray-100;
+    @apply md:rounded-lg;
+    @apply md:shadow-lg;
+    @apply md:z-10;
+    @apply md:transition-all;
+    @apply md:scale-0;
+    @apply md:opacity-0;
+    @apply md:origin-top-right;
   }
 
   [data-toggle-button][aria-pressed="true"] ~ .time-entry-actions-list {
-    @apply opacity-100;
-    @apply scale-100;
+    @apply md:opacity-100;
+    @apply md:scale-100;
   }
 }
 
