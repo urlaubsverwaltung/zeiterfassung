@@ -168,6 +168,7 @@ body:has(#menu-toggle-checkbox:checked) {
 .main-nav-link {
   @apply text-2xl;
   @apply lg:text-lg;
+  @apply lg:pl-1;
   @apply font-medium;
   @apply text-gray-800;
   @apply transition-colors;
