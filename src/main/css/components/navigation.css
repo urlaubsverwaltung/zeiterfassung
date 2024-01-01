@@ -276,10 +276,10 @@ body:has(#menu-toggle-checkbox:checked) {
   @apply hover:no-underline;
   @apply focus:no-underline;
   @apply text-base;
-  @apply text-gray-700;
+  @apply text-gray-800;
   @apply bg-transparent;
   @apply hover:text-black;
   @apply focus:text-black;
-  @apply hover:bg-gray-50;
-  @apply focus:bg-gray-50;
+  @apply hover:bg-gray-100;
+  @apply focus:bg-gray-100;
 }
