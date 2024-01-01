@@ -247,8 +247,7 @@ body:has(#menu-toggle-checkbox:checked) {
     @apply border;
     @apply border-gray-50;
     @apply rounded-lg;
-    @apply shadow-sm;
-    @apply shadow-blue-100;
+    @apply shadow-lg;
   }
 
   /*.nav-popup-menu-inner ul li:first-of-type .nav-popup-menu_link {*/

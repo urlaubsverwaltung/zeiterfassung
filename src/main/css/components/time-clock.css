@@ -28,7 +28,7 @@ body:has(.time-clock-dropdown[open]) .navigation-content-spacer--right::after {
   @apply py-3;
   @apply rounded;
   @apply translate-y-4;
-  @apply shadow-2xl;
+  @apply shadow-lg;
 }
 
 @screen xs {
