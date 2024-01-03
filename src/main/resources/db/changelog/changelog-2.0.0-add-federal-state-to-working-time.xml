@@ -1,0 +1,36 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+  <changeSet author="seber" id="add-federal-state-to-working-time">
+    <preConditions>
+      <tableExists tableName="working_time"/>
+      <not>
+        <columnExists tableName="working_time" columnName="federal_state"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="working_time">
+      <column name="federal_state" type="VARCHAR" defaultValue="NONE">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="seber" id="add-works-on-public-holiday-to-working-time">
+    <preConditions>
+      <tableExists tableName="working_time"/>
+      <not>
+        <columnExists tableName="working_time" columnName="works_on_public_holiday"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="working_time">
+      <column name="works_on_public_holiday" type="BOOLEAN" defaultValue="false">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
+
+</databaseChangeLog>
+

@@ -3,17 +3,17 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
 
-    <changeSet author="honnel" id="add-absence-type-source-id">
-        <preConditions>
-            <tableExists tableName="absence" />
-            <not>
-                <columnExists tableName="absence" columnName="type_source_id" />
-            </not>
-            <columnExists tableName="absence" columnName="type" />
-        </preConditions>
-        <addColumn tableName="absence">
-            <column name="type_source_id" type="BIGINT"/>
-        </addColumn>
-        <renameColumn tableName="absence" oldColumnName="type" newColumnName="type_category"/>
-    </changeSet>
+  <changeSet author="honnel" id="add-absence-type-source-id">
+    <preConditions>
+      <tableExists tableName="absence"/>
+      <not>
+        <columnExists tableName="absence" columnName="type_source_id"/>
+      </not>
+      <columnExists tableName="absence" columnName="type"/>
+    </preConditions>
+    <addColumn tableName="absence">
+      <column name="type_source_id" type="BIGINT"/>
+    </addColumn>
+    <renameColumn tableName="absence" oldColumnName="type" newColumnName="type_category"/>
+  </changeSet>
 </databaseChangeLog>

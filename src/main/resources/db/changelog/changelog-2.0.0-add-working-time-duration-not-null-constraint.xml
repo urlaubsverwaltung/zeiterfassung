@@ -3,29 +3,29 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
 
-    <changeSet author="seber" id="add-working-time-duration-not-null-constraint">
-        <preConditions>
-            <tableExists tableName="working_time"/>
-            <columnExists tableName="working_time" columnName="monday"/>
-            <columnExists tableName="working_time" columnName="tuesday"/>
-            <columnExists tableName="working_time" columnName="wednesday"/>
-            <columnExists tableName="working_time" columnName="thursday"/>
-            <columnExists tableName="working_time" columnName="friday"/>
-            <columnExists tableName="working_time" columnName="saturday"/>
-            <columnExists tableName="working_time" columnName="sunday"/>
-        </preConditions>
-        <!--
-            default values don't have to be set, because there is a default workingTime created on runtime
-            when WorkingTimeEntity exists. And updating a workingTime sets the duration of an empty WorkDay to string="PT0S".
-         -->
-        <addNotNullConstraint tableName="working_time" columnName="monday"/>
-        <addNotNullConstraint tableName="working_time" columnName="tuesday"/>
-        <addNotNullConstraint tableName="working_time" columnName="wednesday"/>
-        <addNotNullConstraint tableName="working_time" columnName="thursday"/>
-        <addNotNullConstraint tableName="working_time" columnName="friday"/>
-        <addNotNullConstraint tableName="working_time" columnName="saturday"/>
-        <addNotNullConstraint tableName="working_time" columnName="sunday"/>
-    </changeSet>
+  <changeSet author="seber" id="add-working-time-duration-not-null-constraint">
+    <preConditions>
+      <tableExists tableName="working_time"/>
+      <columnExists tableName="working_time" columnName="monday"/>
+      <columnExists tableName="working_time" columnName="tuesday"/>
+      <columnExists tableName="working_time" columnName="wednesday"/>
+      <columnExists tableName="working_time" columnName="thursday"/>
+      <columnExists tableName="working_time" columnName="friday"/>
+      <columnExists tableName="working_time" columnName="saturday"/>
+      <columnExists tableName="working_time" columnName="sunday"/>
+    </preConditions>
+    <!--
+        default values don't have to be set, because there is a default workingTime created on runtime
+        when WorkingTimeEntity exists. And updating a workingTime sets the duration of an empty WorkDay to string="PT0S".
+     -->
+    <addNotNullConstraint tableName="working_time" columnName="monday"/>
+    <addNotNullConstraint tableName="working_time" columnName="tuesday"/>
+    <addNotNullConstraint tableName="working_time" columnName="wednesday"/>
+    <addNotNullConstraint tableName="working_time" columnName="thursday"/>
+    <addNotNullConstraint tableName="working_time" columnName="friday"/>
+    <addNotNullConstraint tableName="working_time" columnName="saturday"/>
+    <addNotNullConstraint tableName="working_time" columnName="sunday"/>
+  </changeSet>
 
 </databaseChangeLog>
 

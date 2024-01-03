@@ -3,53 +3,56 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
 
-    <changeSet author="bseber" id="add-timeclock-table">
+  <changeSet author="bseber" id="add-timeclock-table">
 
-        <preConditions>
-            <not>
-                <tableExists tableName="time_clock"/>
-            </not>
-        </preConditions>
+    <preConditions>
+      <not>
+        <tableExists tableName="time_clock"/>
+      </not>
+    </preConditions>
 
-        <createSequence sequenceName="time_clock_seq" incrementBy="50"/>
+    <createSequence sequenceName="time_clock_seq" incrementBy="50"/>
 
-        <createTable tableName="time_clock">
-            <column name="id" type="BIGINT">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_TIME_CLOCK"/>
-            </column>
-            <column name="tenant_id" type="VARCHAR(8)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="owner" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="started_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="started_at_zone_id" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="stopped_at" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="true"/>
-            </column>
-            <column name="stopped_at_zone_id" type="VARCHAR(255)">
-                <constraints nullable="true"/>
-            </column>
-        </createTable>
+    <createTable tableName="time_clock">
+      <column name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_TIME_CLOCK"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(8)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="owner" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="started_at" type="TIMESTAMP WITH TIME ZONE">
+        <constraints nullable="false"/>
+      </column>
+      <column name="started_at_zone_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="stopped_at" type="TIMESTAMP WITH TIME ZONE">
+        <constraints nullable="true"/>
+      </column>
+      <column name="stopped_at_zone_id" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+    </createTable>
 
-        <addForeignKeyConstraint baseColumnNames="tenant_id" baseTableName="time_clock" constraintName="FK_TENANT_CLOCK_TENANT_ID"
-                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
-                                 referencedColumnNames="tenant_id" referencedTableName="tenant"/>
+    <addForeignKeyConstraint baseColumnNames="tenant_id" baseTableName="time_clock"
+                             constraintName="FK_TENANT_CLOCK_TENANT_ID"
+                             deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                             referencedColumnNames="tenant_id" referencedTableName="tenant"/>
 
-    </changeSet>
+  </changeSet>
 
-    <changeSet id="enable-row-level-security-on-timeclock" author="grafjo">
-        <sql dbms="postgresql">
-            ALTER TABLE time_clock ENABLE ROW LEVEL SECURITY;
-            DROP POLICY IF EXISTS time_clock_tenant_isolation_policy ON time_clock;
-            CREATE POLICY time_clock_tenant_isolation_policy ON time_clock
+  <changeSet id="enable-row-level-security-on-timeclock" author="grafjo">
+    <sql dbms="postgresql">
+      ALTER TABLE time_clock ENABLE ROW LEVEL SECURITY;
+      DROP
+      POLICY IF EXISTS time_clock_tenant_isolation_policy ON time_clock;
+            CREATE
+      POLICY time_clock_tenant_isolation_policy ON time_clock
                 USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
-        </sql>
-    </changeSet>
+    </sql>
+  </changeSet>
 
 </databaseChangeLog>

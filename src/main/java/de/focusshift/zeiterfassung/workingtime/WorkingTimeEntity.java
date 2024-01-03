@@ -1,14 +1,18 @@
 package de.focusshift.zeiterfassung.workingtime;
 
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
+
+import static jakarta.persistence.EnumType.STRING;
 
 
 @Entity(name = "working_time")
@@ -24,6 +28,13 @@ public class WorkingTimeEntity extends AbstractTenantAwareEntity {
 
     @Column(name = "valid_from")
     private LocalDate validFrom;
+
+    @Column(name = "federal_state")
+    @Enumerated(STRING)
+    private FederalState federalState;
+
+    @Column(name = "works_on_public_holiday")
+    private boolean worksOnPublicHoliday;
 
     private String monday;
 
@@ -65,6 +76,22 @@ public class WorkingTimeEntity extends AbstractTenantAwareEntity {
 
     public void setValidFrom(LocalDate validFrom) {
         this.validFrom = validFrom;
+    }
+
+    public FederalState getFederalState() {
+        return federalState;
+    }
+
+    public void setFederalState(FederalState federalState) {
+        this.federalState = federalState;
+    }
+
+    public boolean isWorksOnPublicHoliday() {
+        return worksOnPublicHoliday;
+    }
+
+    public void setWorksOnPublicHoliday(boolean worksOnPublicHoliday) {
+        this.worksOnPublicHoliday = worksOnPublicHoliday;
     }
 
     public String getMonday() {

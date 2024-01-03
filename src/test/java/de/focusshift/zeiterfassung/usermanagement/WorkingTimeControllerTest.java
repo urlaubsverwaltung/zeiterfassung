@@ -40,6 +40,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
+import static de.focusshift.zeiterfassung.publicholiday.FederalState.NONE;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
@@ -104,6 +106,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .current(true)
+            .federalState(GERMANY_BADEN_WUERTTEMBERG)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -121,6 +124,7 @@ class WorkingTimeControllerTest {
             true,
             true,
             false,
+            "federalState.GERMANY_BADEN_WUERTTEMBERG",
             8.0,
             8.0,
             8.0,
@@ -162,6 +166,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .validFrom(LocalDate.now(clockFixed).plusDays(1))
+            .federalState(NONE)
             .build();
 
         when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
@@ -196,6 +201,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .validFrom(givenValidFrom)
+            .federalState(NONE)
             .build();
 
         when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
@@ -221,6 +227,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .validFrom(null)
+            .federalState(NONE)
             .build();
 
         when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
@@ -254,11 +261,7 @@ class WorkingTimeControllerTest {
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, new WorkingTimeId(UUID.randomUUID()))
-            .monday(EIGHT)
-            .tuesday(EIGHT)
-            .wednesday(EIGHT)
-            .thursday(EIGHT)
-            .friday(EIGHT)
+            .federalState(NONE)
             .build();
 
         when(workingTimeService.getAllWorkingTimesByUser(supermanLocalId)).thenReturn(List.of(workingTime));
@@ -290,6 +293,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .current(true)
+            .federalState(GERMANY_BADEN_WUERTTEMBERG)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -307,6 +311,7 @@ class WorkingTimeControllerTest {
             true,
             true,
             false,
+            "federalState.GERMANY_BADEN_WUERTTEMBERG",
             8.0,
             8.0,
             8.0,
@@ -348,6 +353,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .current(true)
+            .federalState(GERMANY_BADEN_WUERTTEMBERG)
             .monday(BigDecimal.valueOf(4))
             .wednesday(BigDecimal.valueOf(5))
             .saturday(BigDecimal.valueOf(6))
@@ -363,6 +369,7 @@ class WorkingTimeControllerTest {
             true,
             true,
             false,
+            "federalState.GERMANY_BADEN_WUERTTEMBERG",
             4.0,
             0d,
             5.0,
@@ -400,6 +407,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .current(true)
+            .federalState(GERMANY_BADEN_WUERTTEMBERG)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -417,6 +425,7 @@ class WorkingTimeControllerTest {
             true,
             true,
             false,
+            "federalState.GERMANY_BADEN_WUERTTEMBERG",
             8.0,
             8.0,
             8.0,
@@ -457,6 +466,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .current(true)
+            .federalState(GERMANY_BADEN_WUERTTEMBERG)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -474,6 +484,7 @@ class WorkingTimeControllerTest {
             true,
             true,
             false,
+            "federalState.GERMANY_BADEN_WUERTTEMBERG",
             8.0,
             8.0,
             8.0,
@@ -522,6 +533,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .current(true)
+            .federalState(GERMANY_BADEN_WUERTTEMBERG)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -539,6 +551,7 @@ class WorkingTimeControllerTest {
             true,
             true,
             false,
+            "federalState.GERMANY_BADEN_WUERTTEMBERG",
             8.0,
             8.0,
             8.0,
@@ -586,6 +599,7 @@ class WorkingTimeControllerTest {
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .current(true)
+            .federalState(GERMANY_BADEN_WUERTTEMBERG)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -603,6 +617,7 @@ class WorkingTimeControllerTest {
             true,
             true,
             false,
+            "federalState.GERMANY_BADEN_WUERTTEMBERG",
             8.0,
             8.0,
             8.0,
@@ -641,6 +656,8 @@ class WorkingTimeControllerTest {
             post("/users/42/working-time/" + workingTimeId.value())
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("id", workingTimeId.value())
+                .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
+                .param("worksOnPublicHoliday", "true")
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
                 .param("workingTimeMonday", "0")
                 .param("workingTimeTuesday", "1")
@@ -663,7 +680,7 @@ class WorkingTimeControllerTest {
             SUNDAY, Duration.ofHours(6)
         ));
 
-        verify(workingTimeService).updateWorkingTime(workingTimeId, null, workdays);
+        verify(workingTimeService).updateWorkingTime(workingTimeId, null, GERMANY_BADEN_WUERTTEMBERG, true, workdays);
     }
 
     @Test
@@ -676,6 +693,8 @@ class WorkingTimeControllerTest {
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("id", workingTimeId.value())
+                .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
+                .param("worksOnPublicHoliday", "true")
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
                 .param("workingTimeMonday", "0")
                 .param("workingTimeTuesday", "1")
@@ -698,7 +717,7 @@ class WorkingTimeControllerTest {
             SUNDAY, Duration.ofHours(6)
         ));
 
-        verify(workingTimeService).updateWorkingTime(workingTimeId, null, workdays);
+        verify(workingTimeService).updateWorkingTime(workingTimeId, null, GERMANY_BADEN_WUERTTEMBERG, true, workdays);
     }
 
     @Test

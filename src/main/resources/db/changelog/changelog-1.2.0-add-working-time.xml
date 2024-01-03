@@ -3,47 +3,47 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
 
-    <changeSet author="bseber" id="add-working-time">
-        <preConditions>
-            <not>
-                <tableExists tableName="working_time" />
-            </not>
-        </preConditions>
+  <changeSet author="bseber" id="add-working-time">
+    <preConditions>
+      <not>
+        <tableExists tableName="working_time"/>
+      </not>
+    </preConditions>
 
-        <createSequence sequenceName="working_time_seq" incrementBy="50" />
+    <createSequence sequenceName="working_time_seq" incrementBy="50"/>
 
-        <createTable tableName="working_time">
-            <column name="id" type="BIGINT">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WORKING_TIME" />
-            </column>
-            <column name="tenant_id" type="VARCHAR(8)">
-                <constraints nullable="false" />
-            </column>
-            <column name="user_id" type="BIGINT">
-                <constraints nullable="false" />
-            </column>
-            <column name="monday" type="VARCHAR">
-                <constraints nullable="false" />
-            </column>
-            <column name="tuesday" type="VARCHAR">
-                <constraints nullable="false" />
-            </column>
-            <column name="wednesday" type="VARCHAR">
-                <constraints nullable="false" />
-            </column>
-            <column name="thursday" type="VARCHAR">
-                <constraints nullable="false" />
-            </column>
-            <column name="friday" type="VARCHAR">
-                <constraints nullable="false" />
-            </column>
-            <column name="saturday" type="VARCHAR">
-                <constraints nullable="false" />
-            </column>
-            <column name="sunday" type="VARCHAR">
-                <constraints nullable="false" />
-            </column>
-        </createTable>
-    </changeSet>
+    <createTable tableName="working_time">
+      <column name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WORKING_TIME"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(8)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="user_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="monday" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+      <column name="tuesday" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+      <column name="wednesday" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+      <column name="thursday" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+      <column name="friday" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+      <column name="saturday" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+      <column name="sunday" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
 
 </databaseChangeLog>
