@@ -11,7 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
-import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
+import org.springframework.security.web.method.annotation.CurrentSecurityContextArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
@@ -59,7 +59,7 @@ class UserManagementControllerTest {
 
         perform(
             get("/users")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -89,7 +89,7 @@ class UserManagementControllerTest {
 
         perform(
             get("/users")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
         )
             .andExpect(status().isOk())
@@ -114,7 +114,7 @@ class UserManagementControllerTest {
 
         perform(
             get("/users")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("query", "bat")
         )
             .andExpect(status().isOk())
@@ -138,7 +138,7 @@ class UserManagementControllerTest {
 
         perform(
             get("/users")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("query", "bat")
         )
@@ -156,7 +156,7 @@ class UserManagementControllerTest {
     void ensureUserForwardsToWorkingTime() throws Exception {
         perform(
             get("/users/42")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(view().name("forward:/users/42/working-time"));
     }
@@ -165,15 +165,24 @@ class UserManagementControllerTest {
     void ensureUserForwardsToOvertimeAccount() throws Exception {
         perform(
             get("/users/42")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
         )
             .andExpect(view().name("forward:/users/42/overtime-account"));
+    }
+
+    @Test
+    void ensureUserForwardsToPermissions() throws Exception {
+        perform(
+            get("/users/42")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_PERMISSIONS_EDIT_ALL")))
+        )
+            .andExpect(view().name("forward:/users/42/permissions"));
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
         return standaloneSetup(sut)
             .addFilters(new SecurityContextHolderFilter(new HttpSessionSecurityContextRepository()))
-            .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+            .setCustomArgumentResolvers(new CurrentSecurityContextArgumentResolver())
             .build()
             .perform(builder);
     }

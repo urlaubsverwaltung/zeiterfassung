@@ -4,8 +4,10 @@ zeiterfassung:
       create: true
   security:
     oidc:
-      claim-mapper: groups
       login-form-url: http://localhost:8060/oauth2/authorization/default
+      claim-mappers:
+        group-claim:
+          enabled: true
   tenant:
     mode: single
     single:

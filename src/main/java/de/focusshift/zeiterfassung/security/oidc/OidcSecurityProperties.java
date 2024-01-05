@@ -1,22 +1,12 @@
-package de.focusshift.zeiterfassung.security;
+package de.focusshift.zeiterfassung.security.oidc;
 
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-
 @Validated
 @ConfigurationProperties("zeiterfassung.security.oidc")
-public class SecurityConfigurationProperties {
-
-    public static final String GROUPS = "groups";
-    public static final String KEYCLOAK = "keycloak";
-
-    public enum ClaimMappers {
-        GROUPS,
-        KEYCLOAK
-    }
+public class OidcSecurityProperties {
 
     /**
      * OIDC post logout redirect uri.
@@ -29,9 +19,6 @@ public class SecurityConfigurationProperties {
 
     @NotEmpty
     private String loginFormUrl;
-
-    @NotNull
-    private ClaimMappers claimMapper;
 
     public String getPostLogoutRedirectUri() {
         return postLogoutRedirectUri;
@@ -47,13 +34,5 @@ public class SecurityConfigurationProperties {
 
     public void setLoginFormUrl(String loginFormUrl) {
         this.loginFormUrl = loginFormUrl;
-    }
-
-    public ClaimMappers getClaimMapper() {
-        return claimMapper;
-    }
-
-    public void setClaimMapper(ClaimMappers claimMapper) {
-        this.claimMapper = claimMapper;
     }
 }

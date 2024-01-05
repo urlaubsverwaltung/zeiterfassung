@@ -6,7 +6,6 @@ import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -30,7 +29,6 @@ import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Controller
-@PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
 class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());

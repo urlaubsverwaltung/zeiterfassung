@@ -19,7 +19,10 @@ public record User(
         return givenName + " " + familyName;
     }
 
-    public boolean hasAuthority(SecurityRole authority) {
-        return authorities().contains(authority);
+    @Override
+    public String toString() {
+        return "User{" +
+            "userIdComposite=" + userIdComposite +
+            '}';
     }
 }

@@ -10,7 +10,6 @@ import de.focusshift.zeiterfassung.user.YearFormat;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
@@ -45,7 +44,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.util.StringUtils.hasText;
 
 @Controller
-@PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
 class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());

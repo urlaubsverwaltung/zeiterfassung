@@ -10,8 +10,8 @@ import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -39,6 +39,7 @@ import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static de.focusshift.zeiterfassung.workingtime.WorkingTime.hoursToDuration;
@@ -57,7 +58,7 @@ import static org.springframework.util.StringUtils.hasText;
 
 @Controller
 @RequestMapping("/users/{userId}/working-time")
-@PreAuthorize("hasAuthority('ROLE_ZEITERFASSUNG_WORKING_TIME_EDIT_ALL')")
+@PreAuthorize("hasAuthority('ZEITERFASSUNG_WORKING_TIME_EDIT_ALL')")
 class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
     private final UserManagementService userManagementService;
@@ -80,12 +81,12 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     String get(@PathVariable("userId") Long userId, Model model,
                @RequestParam(value = "query", required = false, defaultValue = "") String query,
                @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-               @AuthenticationPrincipal OidcUser principal) {
+               @CurrentSecurityContext SecurityContext securityContext) {
 
         final List<WorkingTime> workingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(userId));
         final List<WorkingTimeListEntryDto> workingTimeDtos = workingTimesToDtos(workingTimes);
 
-        prepareGetWorkingTimesModel(model, query, userId, workingTimeDtos, principal);
+        prepareGetWorkingTimesModel(model, query, userId, workingTimeDtos, securityContext);
 
         if (hasText(turboFrame)) {
             return "usermanagement/users::#" + turboFrame;
@@ -97,13 +98,13 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     @GetMapping("/new")
     String newWorkingTime(@PathVariable("userId") Long userId, Model model,
                           @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                          @AuthenticationPrincipal OidcUser principal) {
+                          @CurrentSecurityContext SecurityContext securityContext) {
 
         final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
         workingTimeDto.setFederalState(FederalState.NONE);
         workingTimeDto.setWorksOnPublicHoliday(false);
 
-        prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
+        prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
         model.addAttribute("createMode", true);
 
         return "usermanagement/users";
@@ -114,14 +115,14 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                           @PathVariable("workingTimeId") String workingTimeId,
                           @RequestParam(value = "query", required = false, defaultValue = "") String query,
                           @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                          @AuthenticationPrincipal OidcUser principal) {
+                          @CurrentSecurityContext SecurityContext securityContext) {
 
         final WorkingTime workingTime = workingTimeService.getWorkingTimeById(WorkingTimeId.fromString(workingTimeId))
             .orElseThrow(() -> new IllegalStateException("could not find working time with id=" + workingTimeId));
 
         final WorkingTimeDto workingTimeDto = workingTimeToDto(workingTime);
 
-        prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
+        prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
         model.addAttribute("createMode", false);
 
         if (hasText(turboFrame)) {
@@ -136,7 +137,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                                       @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
                                       @RequestParam(value = "query", required = false, defaultValue = "") String query,
                                       @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                                      @AuthenticationPrincipal OidcUser principal,
+                                      @CurrentSecurityContext SecurityContext securityContext,
                                       @RequestParam Map<String, Object> requestParameters) {
 
         final Object select = requestParameters.get("select");
@@ -155,7 +156,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         validator.validate(workingTimeDto, result);
         if (result.hasErrors()) {
-            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
+            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
             model.addAttribute("createMode", workingTimeDto.getId() == null);
             if (hasText(turboFrame)) {
                 return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
@@ -180,7 +181,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                                    @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
                                    @RequestParam(value = "query", required = false, defaultValue = "") String query,
                                    @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                                   @AuthenticationPrincipal OidcUser principal,
+                                   @CurrentSecurityContext SecurityContext securityContext,
                                    @RequestParam Map<String, Object> requestParameters) {
 
         final Object select = requestParameters.get("select");
@@ -199,7 +200,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         validator.validate(workingTimeDto, result);
         if (result.hasErrors()) {
-            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, principal);
+            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
             model.addAttribute("createMode", workingTimeDto.getId() == null);
             if (hasText(turboFrame)) {
                 return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
@@ -268,7 +269,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     }
 
     private void prepareGetWorkingTimesModel(Model model, String query, Long userId,
-                                             List<WorkingTimeListEntryDto> workingTimeDtos, OidcUser principal) {
+                                             List<WorkingTimeListEntryDto> workingTimeDtos,
+                                             SecurityContext securityContext) {
 
         final List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()
@@ -287,13 +289,14 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         model.addAttribute("workingTimes", workingTimeDtos);
         model.addAttribute("personSearchFormAction", "/users/" + selectedUser.id());
 
-        model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, principal));
-        model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, principal));
+        model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, securityContext));
+        model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, securityContext));
+        model.addAttribute("allowedToEditPermissions", hasAuthority(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, securityContext));
     }
 
-    private void prepareWorkingTimeCreateOrEditModel(Model model, String query, Long userId, WorkingTimeDto workingTimeDto, OidcUser principal) {
+    private void prepareWorkingTimeCreateOrEditModel(Model model, String query, Long userId, WorkingTimeDto workingTimeDto, SecurityContext securityContext) {
 
-        prepareGetWorkingTimesModel(model, query, userId, List.of(), principal);
+        prepareGetWorkingTimesModel(model, query, userId, List.of(), securityContext);
 
         model.addAttribute("section", "working-time-edit");
         model.addAttribute("workingTime", workingTimeDto);

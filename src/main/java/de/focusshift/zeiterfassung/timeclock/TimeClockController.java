@@ -4,7 +4,6 @@ import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.user.UserId;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.stereotype.Controller;
@@ -29,7 +28,6 @@ import static org.springframework.util.StringUtils.hasText;
 
 @Controller
 @RequestMapping("timeclock")
-@PreAuthorize("hasRole('ZEITERFASSUNG_USER')")
 class TimeClockController implements HasTimeClock, HasLaunchpad {
 
     private final TimeClockService timeClockService;

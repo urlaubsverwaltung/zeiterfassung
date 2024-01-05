@@ -35,7 +35,7 @@ class AuthoritiesModelProviderTest {
         final MockHttpServletResponse response = new MockHttpServletResponse();
 
         final OAuth2User oAuth2User = mock(OAuth2User.class);
-        final List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + securityRole.name()));
+        final List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(securityRole.name()));
         final Authentication authentication = new OAuth2AuthenticationToken(oAuth2User, authorities, "client-registration-id");
         request.setUserPrincipal(authentication);
 
@@ -55,7 +55,7 @@ class AuthoritiesModelProviderTest {
         final MockHttpServletResponse response = new MockHttpServletResponse();
 
         final OAuth2User oAuth2User = mock(OAuth2User.class);
-        final List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + securityRole.name()));
+        final List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(securityRole.name()));
         final Authentication authentication = new OAuth2AuthenticationToken(oAuth2User, authorities, "client-registration-id");
         request.setUserPrincipal(authentication);
 

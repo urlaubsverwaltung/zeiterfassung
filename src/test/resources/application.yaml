@@ -6,11 +6,15 @@ zeiterfassung:
     replyToDisplayName: replyto
   security:
     oidc:
-      claim-mapper: groups
       login-form-url: http://localhost:${local.server.port}/login/redirect
-      redirect-uri-template: '{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}'
-      server-url: http://localhost:8090
       post-logout-redirect-uri: '{baseUrl}/oauth2/authorization/{registrationId}'
+      claim-mappers:
+        group-claim:
+          enabled: true
+      client:
+        registration:
+          redirect-uri-template: '{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}'
+          server-url: http://localhost:8090
   tenant:
     single:
       defaultTenantId: default

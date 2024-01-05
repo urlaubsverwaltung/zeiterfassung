@@ -15,7 +15,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -193,5 +196,60 @@ class UserManagementServiceImplTest {
 
         final List<User> actual = sut.findAllUsersByLocalIds((List.of(userLocalId_1, userLocalId_2)));
         assertThat(actual).containsExactly(user, user2);
+    }
+
+    @Test
+    void ensureUpdateUserPermissionsThrowsUserNotFoundException() {
+
+        final UserLocalId userLocalId = new UserLocalId(42L);
+
+        when(tenantUserService.findByLocalId(userLocalId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> sut.updateUserPermissions(userLocalId, Set.of()))
+            .isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    void ensureUpdateUserPermissions() throws Exception {
+
+        final UserId userId = new UserId("user-id");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final EMailAddress email = new EMailAddress("mail@example.org");
+
+        when(tenantUserService.findByLocalId(userLocalId)).thenReturn(
+            Optional.of(
+                new TenantUser(
+                    "user-id",
+                    42L,
+                    "given name",
+                    "family name",
+                    email,
+                    Set.of()
+                )
+            )
+        );
+
+        final TenantUser expectedUpdatedTenant = new TenantUser(
+            "user-id",
+            42L,
+            "given name",
+            "family name",
+            email,
+            Set.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL)
+        );
+
+        when(tenantUserService.updateUser(expectedUpdatedTenant)).thenAnswer(returnsFirstArg());
+
+        final User actualUpdatedUser = sut.updateUserPermissions(userLocalId, Set.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL));
+        assertThat(actualUpdatedUser).isEqualTo(
+            new User(
+                userIdComposite,
+                "given name",
+                "family name",
+                email,
+                Set.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL)
+            )
+        );
     }
 }

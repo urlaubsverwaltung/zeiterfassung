@@ -6,7 +6,6 @@ zeiterfassung:
     replyToDisplayName: replyto
   security:
     oidc:
-      claim-mapper: groups
       login-form-url: ''
 
 server:

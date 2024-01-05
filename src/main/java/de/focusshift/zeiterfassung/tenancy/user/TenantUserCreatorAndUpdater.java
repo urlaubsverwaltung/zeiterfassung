@@ -1,19 +1,17 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
-import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.authentication.event.InteractiveAuthenticationSuccessEvent;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 
-import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.toSet;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 
 @Component
 class TenantUserCreatorAndUpdater {
@@ -25,30 +23,20 @@ class TenantUserCreatorAndUpdater {
     }
 
     @EventListener
-    public void handle(InteractiveAuthenticationSuccessEvent interactiveAuthenticationSuccessEvent) {
-        if (interactiveAuthenticationSuccessEvent.getAuthentication().getPrincipal() instanceof final DefaultOidcUser oidcUser) {
+    public void handle(InteractiveAuthenticationSuccessEvent event) {
+        if (event.getAuthentication().getPrincipal() instanceof final DefaultOidcUser oidcUser) {
+
             final EMailAddress eMailAddress = new EMailAddress(oidcUser.getEmail());
+            final UserId userId = new UserId(oidcUser.getSubject());
 
-            final Set<SecurityRole> authorities = oidcUser.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .filter(startsWith("ROLE_").and(not("ROLE_USER"::equals)))
-                .map(s -> s.substring("ROLE_".length()))
-                .map(SecurityRole::valueOf)
-                .collect(toSet());
-
-            final Optional<TenantUser> maybeUser = tenantUserService.findById(new UserId(oidcUser.getSubject()));
-            if (maybeUser.isEmpty()) {
-                tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, authorities);
-            } else {
+            final Optional<TenantUser> maybeUser = tenantUserService.findById(userId);
+            if (maybeUser.isPresent()) {
                 final TenantUser user = maybeUser.get();
-                final TenantUser tenantUser = new TenantUser(user.id(), user.localId(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, authorities);
+                final TenantUser tenantUser = new TenantUser(user.id(), user.localId(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, user.authorities());
                 tenantUserService.updateUser(tenantUser);
+            } else {
+                tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, Set.of(ZEITERFASSUNG_USER));
             }
         }
-    }
-
-    private static Predicate<String> startsWith(String prefix) {
-        return s -> s.startsWith(prefix);
     }
 }

@@ -1,12 +1,14 @@
 package de.focusshift.zeiterfassung.security;
 
-import de.focusshift.zeiterfassung.security.oidc.claimmapper.ClaimBasedOAuth2UserService;
+import de.focusshift.zeiterfassung.security.oidc.OidcSecurityProperties;
 import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMapper;
+import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMappersInfusedOAuth2UserService;
+import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMappersProperties;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
-import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
@@ -14,45 +16,43 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+
+import java.util.List;
+
+import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
+import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.SINGLE;
 
 
 @Configuration
-@EnableConfigurationProperties(SecurityConfigurationProperties.class)
+@EnableConfigurationProperties({OidcSecurityProperties.class, RolesFromClaimMappersProperties.class})
 class SecurityBeanConfiguration {
 
     @Bean
-    GrantedAuthoritiesMapper grantedAuthoritiesMapper() {
-        // All roles have ROLE_-prefix and roles from keycloak are mapped
-        // to upper case style to be spring security-conform
-        final SimpleAuthorityMapper authorityMapper = new SimpleAuthorityMapper();
-        authorityMapper.setConvertToUpperCase(true);
-        return authorityMapper;
-    }
-
-    @Bean
-    OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler(final ClientRegistrationRepository clientRegistrationRepository, final SecurityConfigurationProperties securityConfigurationProperties) {
-        final OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
-        oidcClientInitiatedLogoutSuccessHandler.setPostLogoutRedirectUri(securityConfigurationProperties.getPostLogoutRedirectUri());
-        return oidcClientInitiatedLogoutSuccessHandler;
-    }
-
-    // oidc multi tenant realm login related
-    @Bean
-    OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService(RolesFromClaimMapper rolesFromClaimMapper) {
-        final OidcUserService defaultOidcUserService = new OidcUserService();
-        return new ClaimBasedOAuth2UserService(defaultOidcUserService, rolesFromClaimMapper);
-    }
-
-    @Bean
-    AuthenticationEntryPoint authenticationEntryPoint(SecurityConfigurationProperties securityConfigurationProperties) {
+    AuthenticationEntryPoint authenticationEntryPoint(OidcSecurityProperties securityConfigurationProperties) {
         return new LoginUrlAuthenticationEntryPoint(securityConfigurationProperties.getLoginFormUrl());
     }
 
     @Bean
-    AuthenticationSuccessHandler authenticationSuccessHandler() {
-        return new SavedRequestAwareAuthenticationSuccessHandler();
+    @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = SINGLE, matchIfMissing = true)
+    OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserServiceSingleTenant(TenantUserService tenantUserService, List<RolesFromClaimMapper> rolesFromClaimMappers) {
+        final OidcUserService defaultOidcUserService = new OidcUserService();
+        final OAuth2UserServiceSingleTenant userService = new OAuth2UserServiceSingleTenant(defaultOidcUserService, tenantUserService);
+        return new RolesFromClaimMappersInfusedOAuth2UserService(userService, rolesFromClaimMappers);
+    }
+
+    @Bean
+    @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
+    OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserServiceMultiTenant(TenantUserService tenantUserService, List<RolesFromClaimMapper> rolesFromClaimMappers) {
+        final OidcUserService defaultOidcUserService = new OidcUserService();
+        final OAuth2UserServiceMultiTenant userService = new OAuth2UserServiceMultiTenant(defaultOidcUserService, tenantUserService);
+        return new RolesFromClaimMappersInfusedOAuth2UserService(userService, rolesFromClaimMappers);
+    }
+
+    @Bean
+    OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler(final ClientRegistrationRepository clientRegistrationRepository, final OidcSecurityProperties securityConfigurationProperties) {
+        final OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
+        oidcClientInitiatedLogoutSuccessHandler.setPostLogoutRedirectUri(securityConfigurationProperties.getPostLogoutRedirectUri());
+        return oidcClientInitiatedLogoutSuccessHandler;
     }
 }

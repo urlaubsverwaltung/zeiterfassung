@@ -11,21 +11,21 @@ public enum SecurityRole {
     ZEITERFASSUNG_USER,
     ZEITERFASSUNG_VIEW_REPORT_ALL,
     ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,
-    ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
+    ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,
+    ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 
     private GrantedAuthority authority;
 
     public GrantedAuthority authority() {
         if (authority == null) {
-            authority = new SimpleGrantedAuthority("ROLE_" + this.name());
+            authority = new SimpleGrantedAuthority(this.name());
         }
         return authority;
     }
 
     public static Optional<SecurityRole> fromAuthority(GrantedAuthority authority) {
         try {
-            final SecurityRole role = SecurityRole.valueOf(authority.getAuthority().substring("ROLE_".length()));
-            return Optional.of(role);
+            return Optional.of(SecurityRole.valueOf(authority.getAuthority()));
         } catch(IllegalArgumentException exception) {
             return Optional.empty();
         }
