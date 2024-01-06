@@ -1,5 +1,5 @@
 export function initAutosubmit() {
-  let keyupSubmit: NodeJS.Timeout;
+  let keyupSubmit;
 
   document.addEventListener("input", function (event: InputEvent) {
     if (event.defaultPrevented) {
