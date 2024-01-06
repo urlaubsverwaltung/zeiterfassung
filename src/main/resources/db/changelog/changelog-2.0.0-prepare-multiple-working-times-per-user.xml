@@ -4,6 +4,7 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
 
   <changeSet author="seber" id="prepare-multiple-working-times-per-user--add-uuid">
+    <validCheckSum>9:0a68e4e4c90146101d28e6a5bea3b241</validCheckSum>
     <preConditions>
       <tableExists tableName="working_time"/>
       <not>
@@ -11,7 +12,7 @@
       </not>
     </preConditions>
     <addColumn tableName="working_time">
-      <column name="uuid" type="UUID" defaultValueComputed="gen_random_uuid()">
+      <column name="uuid" type="UUID" defaultValueComputed="uuid_in(overlay(overlay(md5(random()::text || ':' || clock_timestamp()::text) placing '4' from 13) placing to_hex(floor(random()*(11-8+1) + 8)::int)::text from 17)::cstring)">
         <!-- nullable and unique constraint not required. will be the primary key in next step -->
       </column>
     </addColumn>
