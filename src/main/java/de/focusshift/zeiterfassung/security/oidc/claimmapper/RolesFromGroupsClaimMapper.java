@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.security.oidc.claimmapper;
 
 import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMappersProperties.GroupClaimMapperProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
@@ -45,13 +44,12 @@ public class RolesFromGroupsClaimMapper implements RolesFromClaimMapper {
 
         final GroupClaimMapperProperties groupClaim = properties.getGroupClaim();
 
+        final String neededResourceAccessRole = ZEITERFASSUNG_USER.name().toLowerCase();
         if (!claims.containsKey(groupClaim.getClaimName())) {
-            throw new AccessDeniedException(format("claim=%s is missing!", groupClaim.getClaimName()));
+            throw new MissingClaimAuthorityException(format("User has not required permission '%s' to access zeiterfassung! The claim '%s' is missing!", neededResourceAccessRole, groupClaim.getClaimName()));
         }
 
         final List<String> groups = extractRolesFromClaimName(claims, groupClaim.getClaimName());
-        final String neededResourceAccessRole = ZEITERFASSUNG_USER.name().toLowerCase();
-
         if (groups.stream().noneMatch(neededResourceAccessRole::equals)) {
             throw new MissingClaimAuthorityException(format("User has not required permission '%s' to access zeiterfassung!", neededResourceAccessRole));
         }
