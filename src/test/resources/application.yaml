@@ -72,3 +72,7 @@ spring:
             redirect-uri: http://localhost/login/oauth2/code/{registrationId}
             scope: openid,profile,email,roles
 
+info:
+  app:
+    name: "@project.name@"
+    version: "@project.version@"

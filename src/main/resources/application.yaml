@@ -47,6 +47,11 @@ spring:
     virtual:
       enabled: true
 
+info:
+  app:
+    name: "@project.name@"
+    version: "@project.version@"
+
 management:
   endpoint:
     prometheus:

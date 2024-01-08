@@ -97,6 +97,8 @@
       <div th:replace="${content}">content block</div>
     </div>
 
+    <footer th:replace="~{_footer::footer}">footer block</footer>
+
     <div th:replace="~{fragments/feedback-form::feedback}"></div>
 
     <div id="body-overlay" class="body-overlay"></div>
