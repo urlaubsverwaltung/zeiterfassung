@@ -73,6 +73,20 @@
                       <th:block>Personen</th:block>
                     </a>
                   </li>
+                  <li th:if="${showMainNavigationSettings}">
+                    <a
+                      id="main-navigation-link-settings"
+                      href="#"
+                      th:href="@{/settings}"
+                      class="flex items-center main-nav-link"
+                      th:classappend="${currentRequestURI.startsWith('/settings') ? 'current' : ''}"
+                      th:aria-current="${currentRequestURI.equals('/settings') ? 'page' : 'false'}"
+                      data-test-id="navigation-link-settings"
+                    >
+                      <svg th:replace="~{icons/cog::svg}"></svg>
+                      <th:block>Einstellungen</th:block>
+                    </a>
+                  </li>
                 </ul>
               </nav>
             </div>

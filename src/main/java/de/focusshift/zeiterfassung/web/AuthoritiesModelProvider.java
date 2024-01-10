@@ -20,6 +20,7 @@ import java.util.Optional;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL;
 import static java.lang.invoke.MethodHandles.lookup;
 
 @Component
@@ -52,6 +53,9 @@ class AuthoritiesModelProvider implements HandlerInterceptor {
 
         modelAndView.addObject("showMainNavigationPersons",
             contains(roles, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, ZEITERFASSUNG_PERMISSIONS_EDIT_ALL));
+
+        modelAndView.addObject("showMainNavigationSettings",
+            contains(roles, ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL));
     }
 
     private static boolean contains(Collection<SecurityRole> roles, SecurityRole... anyOf) {

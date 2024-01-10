@@ -1,0 +1,110 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+  <head th:replace="~{_layout::head(title=~{::title})}">
+    <title>Zeiterfassung - Einstellungen</title>
+  </head>
+  <body th:replace="~{_layout::body(~{::content})}">
+    <th:block th:fragment="content">
+      <main class="flex-1 flex flex-col">
+        <div
+          class="flex-1 flex flex-col mx-auto w-full px-8 max-w-screen-xl 3xl:px-4 3xl:max-w-screen-3xl"
+        >
+          <div>
+            <h1 class="text-xl font-bold" th:text="#{settings.heading}">
+              Einstellungen
+            </h1>
+            <p class="mt-2 text-gray-600" th:text="#{settings.teaser-text}">
+              Lorem ipsum...
+            </p>
+          </div>
+          <div class="mt-8 lg:mt-12">
+            <h2 class="font-bold" th:text="#{settings.federal-state.heading}">
+              Feiertagsregelung
+            </h2>
+            <p
+              class="mt-2 text-gray-600"
+              th:text="#{settings.federal-state.teaser-text}"
+            >
+              Lorem ipsum...
+            </p>
+            <form
+              action="#"
+              th:action="@{/settings/federal-state}"
+              method="post"
+              th:object="${federalStateSettings}"
+              class="mt-4"
+            >
+              <div class="flex flex-col gap-8">
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center">
+                    <label
+                      for="federal-state-select"
+                      class="sr-only"
+                      th:text="#{usermanagement.working-time.federalstate.select.label}"
+                    >
+                      Bundesland
+                    </label>
+                    <select
+                      id="federal-state-select"
+                      name="federalState"
+                      th:replace="~{fragments/select::one(id='federal-state-select', name='federalState', options=~{::federal-state-select-options})}"
+                    >
+                      <th:block th:ref="federal-state-select-options">
+                        <optgroup
+                          th:each="optgroup : ${federalStateSelect.optgroups}"
+                          th:label="${#messages.msg(optgroup.labelMessageKey)}"
+                        >
+                          <option
+                            th:each="option : ${optgroup.options}"
+                            th:value="${option.value}"
+                            th:text="${#messages.msg(option.textMessageKey)}"
+                            th:selected="${option.selected}"
+                          ></option>
+                        </optgroup>
+                      </th:block>
+                    </select>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="works-on-public-holiday-checkbox"
+                      th:field="*{worksOnPublicHoliday}"
+                    />
+                    <label
+                      for="works-on-public-holiday-checkbox"
+                      th:text="#{usermanagement.working-time.federalstate.works-on-public-holiday.label}"
+                    >
+                      arbeitet an Feiertagen
+                    </label>
+                  </div>
+                </div>
+                <div
+                  class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center"
+                >
+                  <button
+                    type="submit"
+                    class="button-primary button-primary-icon"
+                  >
+                    <svg
+                      th:replace="~{icons/save::svg(className='w-5 h-5')}"
+                    ></svg>
+                    <th:block th:text="#{settings.save}"> Speichern </th:block>
+                  </button>
+                  <a
+                    id="settings-reset-button"
+                    href="#"
+                    th:href="@{/settings}"
+                    class="button-secondary"
+                    th:text="#{settings.reset}"
+                  >
+                    Zurücksetzen
+                  </a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </th:block>
+  </body>
+</html>
