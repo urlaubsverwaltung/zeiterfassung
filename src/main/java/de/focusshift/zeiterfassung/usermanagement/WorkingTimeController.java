@@ -3,9 +3,6 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
-import de.focusshift.zeiterfassung.web.html.HtmlOptgroupDto;
-import de.focusshift.zeiterfassung.web.html.HtmlOptionDto;
-import de.focusshift.zeiterfassung.web.html.HtmlSelectDto;
 import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
@@ -28,7 +25,6 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
@@ -41,6 +37,8 @@ import java.util.function.ToDoubleFunction;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
+import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateMessageKey;
+import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static de.focusshift.zeiterfassung.workingtime.WorkingTime.hoursToDuration;
 import static java.time.DayOfWeek.FRIDAY;
@@ -300,30 +298,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         model.addAttribute("section", "working-time-edit");
         model.addAttribute("workingTime", workingTimeDto);
-        model.addAttribute("federalStateSelect", federalStateSelectDto(workingTimeDto));
-    }
-
-    private HtmlSelectDto federalStateSelectDto(WorkingTimeDto workingTimeDto) {
-
-        final ArrayList<HtmlOptgroupDto> countries = new ArrayList<>();
-        final FederalState currentFederalState = workingTimeDto.getFederalState();
-
-        final HtmlOptionDto noneOption = new HtmlOptionDto("federalState.NONE", FederalState.NONE.name(), FederalState.NONE.equals(workingTimeDto.getFederalState()));
-        countries.add(new HtmlOptgroupDto("country.general", List.of(noneOption)));
-
-        FederalState.federalStatesTypesByCountry().forEach((country, federalStates) -> {
-            final List<HtmlOptionDto> options = federalStates.stream()
-                .map(federalState -> new HtmlOptionDto(federalStateMessageKey(federalState), federalState.name(), federalState.equals(currentFederalState)))
-                .toList();
-            final HtmlOptgroupDto optgroup = new HtmlOptgroupDto("country." + country, options);
-            countries.add(optgroup);
-        });
-
-        return new HtmlSelectDto(countries);
-    }
-
-    private static String federalStateMessageKey(FederalState federalState) {
-        return "federalState." + federalState.name();
+        model.addAttribute("federalStateSelect", federalStateSelectDto(workingTimeDto.getFederalState()));
     }
 
     private void clearWorkDayHours(String dayOfWeek, WorkingTimeDto workingTimeDto) {

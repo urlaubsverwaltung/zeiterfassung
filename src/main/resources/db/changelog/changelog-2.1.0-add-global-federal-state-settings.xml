@@ -1,0 +1,59 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+  <changeSet author="seber" id="add-global-federal-state-settings">
+    <preConditions>
+      <not>
+        <tableExists tableName="settings_federal_state"/>
+      </not>
+    </preConditions>
+
+    <createSequence sequenceName="settings_federal_state_seq" incrementBy="50"/>
+
+    <createTable tableName="settings_federal_state">
+      <column name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_SETTINGS_FEDERAL_STATE"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="federal_state" type="VARCHAR">
+        <constraints nullable="false"/>
+      </column>
+      <column name="works_on_public_holiday" type="BOOLEAN" defaultValue="false">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint
+      constraintName="FK_SETTINGS_FEDERAL_STATE_TENANT_ID__TENANT_ID"
+      baseColumnNames="tenant_id"
+      baseTableName="settings_federal_state"
+      referencedColumnNames="tenant_id"
+      referencedTableName="tenant"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+    />
+
+    <createIndex tableName="settings_federal_state" indexName="IDX_FEDERAL_STATE_SETTINGS_TENANT_ID">
+      <column name="tenant_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="bseber" id="enable-row-level-security-on-federal-state-settings">
+    <sql dbms="postgresql">
+      ALTER TABLE settings_federal_state ENABLE ROW LEVEL SECURITY;
+      DROP
+      POLICY IF EXISTS settings_federal_state_tenant_isolation_policy ON settings_federal_state;
+            CREATE
+      POLICY settings_federal_state_tenant_isolation_policy ON settings_federal_state
+                USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>
+
