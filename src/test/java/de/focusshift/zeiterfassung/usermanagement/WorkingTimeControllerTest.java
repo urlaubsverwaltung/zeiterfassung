@@ -1,5 +1,8 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.settings.FederalStateSettings;
+import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -34,13 +37,13 @@ import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
+import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BERLIN;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.NONE;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
@@ -50,6 +53,7 @@ import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static java.time.ZoneOffset.UTC;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
@@ -79,17 +83,21 @@ class WorkingTimeControllerTest {
     private WorkingTimeService workingTimeService;
     @Mock
     private WorkingTimeDtoValidator workingTimeDtoValidator;
+    @Mock
+    private FederalStateSettingsService federalStateSettingsService;
 
     private static final Clock clockFixed = Clock.fixed(Instant.now(), UTC);
     private static final BigDecimal EIGHT = BigDecimal.valueOf(8);
 
     @BeforeEach
     void setUp() {
-        sut = new WorkingTimeController(userManagementService, workingTimeService, workingTimeDtoValidator, clockFixed);
+        sut = new WorkingTimeController(userManagementService, workingTimeService, workingTimeDtoValidator, federalStateSettingsService, clockFixed);
     }
 
     @Test
     void ensureSimpleGet() throws Exception {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UserId batmanId = new UserId("uuid");
         final UserLocalId batmanLocalId = new UserLocalId(1337L);
@@ -150,11 +158,15 @@ class WorkingTimeControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
+            .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
     @Test
     void ensureSimpleGetWithDeletableWorkingTimeBecauseValidFromIsInTheFuture() throws Exception {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UserId userId = new UserId("uuid");
         final UserLocalId userLocalId = new UserLocalId(1337L);
@@ -191,6 +203,8 @@ class WorkingTimeControllerTest {
     @MethodSource("nowAndPastDate")
     void ensureSimpleGetWithDeletableWorkingTimeDespiteValidFromIsNowOrInThePast(LocalDate givenValidFrom) throws Exception {
 
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
         final UserId userId = new UserId("uuid");
         final UserLocalId userLocalId = new UserLocalId(1337L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -216,6 +230,8 @@ class WorkingTimeControllerTest {
     }
     @Test
     void ensureSimpleGetWithNotDeletableWorkingTimeBecauseVeryFirstWorkingTime() throws Exception {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UserId userId = new UserId("uuid");
         final UserLocalId userLocalId = new UserLocalId(1337L);
@@ -249,6 +265,8 @@ class WorkingTimeControllerTest {
     })
     void ensureSimpleGetAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount, boolean editPermissions) throws Exception {
 
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
         final UserId batmanId = new UserId("uuid");
         final UserLocalId batmanLocalId = new UserLocalId(1337L);
         final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
@@ -279,6 +297,8 @@ class WorkingTimeControllerTest {
 
     @Test
     void ensureSimpleGetJavaScript() throws Exception {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UserId batmanId = new UserId("uuid");
         final UserLocalId batmanLocalId = new UserLocalId(1337L);
@@ -340,11 +360,15 @@ class WorkingTimeControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
+            .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
     @Test
     void ensureSimpleGetForWorkingTimeWithSpecialWorkingDays() throws Exception {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UserId userId = new UserId("uuid");
         final UserLocalId userLocalId = new UserLocalId(1L);
@@ -394,11 +418,15 @@ class WorkingTimeControllerTest {
             .andExpect(model().attribute("users", contains(expectedSelectedUser)))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
+            .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
             .andExpect(model().attribute("personSearchFormAction", "/users/1"));
     }
 
     @Test
     void ensureSearch() throws Exception {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UserId userId = new UserId("uuid-2");
         final UserLocalId userLocalId = new UserLocalId(42L);
@@ -453,11 +481,15 @@ class WorkingTimeControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
+            .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
     @Test
     void ensureSearchJavaScript() throws Exception {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UserId userId = new UserId("uuid-2");
         final UserLocalId userLocalId = new UserLocalId(42L);
@@ -513,11 +545,15 @@ class WorkingTimeControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
+            .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
     @Test
     void ensureSearchWithSelectedUserNotInQuery() throws Exception {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UserId batmanId = new UserId("uuid");
         final UserLocalId batmanLocalId = new UserLocalId(1337L);
@@ -579,11 +615,15 @@ class WorkingTimeControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
+            .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
     @Test
     void ensureSearchWithSelectedUserNotInQueryJavaScript() throws Exception {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UserId batmanId = new UserId("uuid");
         final UserLocalId batmanLocalId = new UserLocalId(1337L);
@@ -646,6 +686,8 @@ class WorkingTimeControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
+            .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
             .andExpect(model().attribute("personSearchFormAction", "/users/42"));
     }
 
@@ -725,6 +767,8 @@ class WorkingTimeControllerTest {
     @Test
     void ensurePostWithValidationError() throws Exception {
 
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
@@ -771,6 +815,8 @@ class WorkingTimeControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")))
             .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
+            .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
             .andExpect(model().attribute("personSearchFormAction", is("/users/42")));
 
         verifyNoInteractions(workingTimeService);
@@ -783,6 +829,8 @@ class WorkingTimeControllerTest {
         "ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,false,false,true"
     })
     void ensurePostWithValidationErrorAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount, boolean editPermissions) throws Exception {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
             .userId(42L)
@@ -823,6 +871,8 @@ class WorkingTimeControllerTest {
 
     @Test
     void ensurePostWithValidationErrorJavaScript() throws Exception {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
@@ -871,6 +921,8 @@ class WorkingTimeControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")))
             .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
+            .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
             .andExpect(model().attribute("personSearchFormAction", is("/users/42")));
 
         verifyNoInteractions(workingTimeService);
@@ -910,9 +962,13 @@ class WorkingTimeControllerTest {
             .andExpect(redirectedUrl("/users/42/working-time"));
     }
 
+    private FederalStateSettings federalStateSettings(FederalState globalFederalState) {
+        return new FederalStateSettings(globalFederalState, false);
+    }
+
     @SuppressWarnings("unchecked")
     private <T> T getModelAttribute(String attributeName, ResultActions result) {
-        final ModelAndView modelAndView = Objects.requireNonNull(result.andReturn().getModelAndView());
+        final ModelAndView modelAndView = requireNonNull(result.andReturn().getModelAndView());
         return (T) modelAndView.getModel().get(attributeName);
     }
 

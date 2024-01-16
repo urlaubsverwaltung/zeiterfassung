@@ -8,7 +8,7 @@ import de.focusshift.zeiterfassung.publicholiday.FederalState;
  * @param federalState the default federal-state and public holiday regulations
  * @param worksOnPublicHoliday whether persons are working on public holidays or not
  */
-record FederalStateSettings(FederalState federalState, boolean worksOnPublicHoliday) {
+public record FederalStateSettings(FederalState federalState, boolean worksOnPublicHoliday) {
 
     public static final FederalStateSettings DEFAULT = new FederalStateSettings(FederalState.NONE, false);
 }

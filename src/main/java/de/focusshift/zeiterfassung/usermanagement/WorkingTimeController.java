@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
@@ -62,16 +63,19 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     private final UserManagementService userManagementService;
     private final WorkingTimeService workingTimeService;
     private final WorkingTimeDtoValidator validator;
+    private final FederalStateSettingsService federalStateSettingsService;
     private final Clock clock;
 
     WorkingTimeController(UserManagementService userManagementService,
                           WorkingTimeService workingTimeService,
                           WorkingTimeDtoValidator validator,
+                          FederalStateSettingsService federalStateSettingsService,
                           Clock clock) {
 
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
         this.validator = validator;
+        this.federalStateSettingsService = federalStateSettingsService;
         this.clock = clock;
     }
 
@@ -280,11 +284,15 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             .or(() -> userManagementService.findUserByLocalId(new UserLocalId(userId)).map(UserManagementController::userToDto))
             .orElseThrow(() -> new IllegalArgumentException("could not find person=%s".formatted(userId)));
 
+        final FederalState globalFederalState = federalStateSettingsService.getFederalStateSettings().federalState();
+
         model.addAttribute("query", query);
         model.addAttribute("slug", "working-time");
         model.addAttribute("users", users);
         model.addAttribute("selectedUser", selectedUser);
         model.addAttribute("workingTimes", workingTimeDtos);
+        model.addAttribute("globalFederalState", globalFederalState);
+        model.addAttribute("globalFederalStateMessageKey", federalStateMessageKey(globalFederalState));
         model.addAttribute("personSearchFormAction", "/users/" + selectedUser.id());
 
         model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, securityContext));
@@ -298,7 +306,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         model.addAttribute("section", "working-time-edit");
         model.addAttribute("workingTime", workingTimeDto);
-        model.addAttribute("federalStateSelect", federalStateSelectDto(workingTimeDto.getFederalState()));
+        model.addAttribute("federalStateSelect", federalStateSelectDto(workingTimeDto.getFederalState(), true));
     }
 
     private void clearWorkDayHours(String dayOfWeek, WorkingTimeDto workingTimeDto) {

@@ -69,7 +69,7 @@
                       <option
                         th:each="option : ${optgroup.options}"
                         th:value="${option.value}"
-                        th:text="${#messages.msg(option.textMessageKey)}"
+                        th:text="${#messages.msg(option.textMessageKey, #messages.msg(globalFederalStateMessageKey))}"
                         th:selected="${option.selected}"
                       ></option>
                     </optgroup>

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-class SettingsService {
+class SettingsService implements FederalStateSettingsService {
 
     private final FederalStateSettingsRepository federalStateSettingsRepository;
     private final TenantContextHolder tenantContextHolder;
@@ -18,7 +18,8 @@ class SettingsService {
         this.tenantContextHolder = tenantContextHolder;
     }
 
-    FederalStateSettings getFederalStateSettings() {
+    @Override
+    public FederalStateSettings getFederalStateSettings() {
         return getFederalStateEntity()
             .map(SettingsService::toFederalStateSettings)
             .orElse(FederalStateSettings.DEFAULT);

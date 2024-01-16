@@ -344,7 +344,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final Duration eight = Duration.ofHours(8);
         return WorkingTime.builder(userIdComposite, null)
             .current(true)
-            .federalState(FederalState.NONE)
+            .federalState(FederalState.GLOBAL)
             .worksOnPublicHoliday(false)
             .monday(eight)
             .tuesday(eight)
