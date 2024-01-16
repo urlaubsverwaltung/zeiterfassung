@@ -49,23 +49,26 @@
                 <svg
                   th:replace="~{icons/chevron-right::svg(className='w-5 h-5 transition-transform group-open:rotate-90')}"
                 ></svg>
-                <th:block th:switch="${workingTime.validFromIsPast}">
+                <th:block
+                  th:switch="${workingTime.validFromIsPast}"
+                  th:with="federalStateMsg=${#messages.msg(workingTime.federalStateMessageKey, #messages.msg(globalFederalStateMessageKey))}"
+                >
                   <th:block th:case="true">
                     <th:block
                       th:if="${workingTime.validFrom == null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo}, ${federalStateMsg})}"
                     >
                       gültig bis ___
                     </th:block>
                     <th:block
                       th:if="${workingTime.validFrom != null && workingTime.validTo != null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo}, ${federalStateMsg})}"
                     >
                       gültig von ___ bis ___
                     </th:block>
                     <th:block
                       th:if="${workingTime.validFrom != null && workingTime.validTo == null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom}, ${federalStateMsg})}"
                     >
                       gültig von ___
                     </th:block>
@@ -73,19 +76,19 @@
                   <th:block th:case="false">
                     <th:block
                       th:if="${workingTime.validFrom == null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo}, ${federalStateMsg})}"
                     >
                       gültig bis ___
                     </th:block>
                     <th:block
                       th:if="${workingTime.validFrom != null && workingTime.validTo != null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from-until(${workingTime.validFrom}, ${workingTime.validTo}, ${federalStateMsg})}"
                     >
                       gültig von ___ bis ___
                     </th:block>
                     <th:block
                       th:if="${workingTime.validFrom != null && workingTime.validTo == null}"
-                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom}, ${#messages.msg(workingTime.federalStateMessageKey)})}"
+                      th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-from(${workingTime.validFrom}, ${federalStateMsg})}"
                     >
                       gültig von ___
                     </th:block>
@@ -188,10 +191,11 @@
         th:with="workingTime=${workingTimes[0]}"
       >
         <div class="mt-8">
-          <p>
-            <span th:text="${#messages.msg(workingTime.federalStateMessageKey)}">
-              Baden-Württemberg
-            </span>
+          <p
+           >
+            <span th:text="${#messages.msg(workingTime.federalStateMessageKey, #messages.msg(globalFederalStateMessageKey))}"
+          >
+            Baden-Württemberg</span>
             <span th:if="${workingTime.worksOnPublicHoliday}" th:text="'(' + #{usermanagement.working-time.federalstate.works-on-public-holiday.label} + ')'">
               (arbeitet an Feiertagen)
             </span>
