@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.settings.FederalStateSettings;
+import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -31,6 +33,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
+import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BERLIN;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GLOBAL;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.NONE;
 import static java.time.DayOfWeek.FRIDAY;
@@ -57,12 +60,14 @@ class WorkTimeServiceImplTest {
     private WorkingTimeRepository workingTimeRepository;
     @Mock
     private UserManagementService userManagementService;
+    @Mock
+    private FederalStateSettingsService federalStateSettingsService;
 
     private static final Clock clockFixed = Clock.fixed(Clock.systemUTC().instant(), UTC);
 
     @BeforeEach
     void setUp() {
-        sut = new WorkTimeServiceImpl(workingTimeRepository, userManagementService, clockFixed);
+        sut = new WorkTimeServiceImpl(workingTimeRepository, userManagementService, federalStateSettingsService, clockFixed);
     }
 
     @Nested
@@ -86,6 +91,8 @@ class WorkTimeServiceImplTest {
             final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
             final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
             when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+            when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
             final UUID workingTimeUuid = UUID.randomUUID();
             final WorkingTimeEntity entity = anyWorkingTimeEntity(workingTimeUuid, 42L, null);
@@ -119,6 +126,8 @@ class WorkTimeServiceImplTest {
             final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
             when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
 
+            when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
             final UUID workingTimeUuid = UUID.randomUUID();
             final WorkingTimeEntity entity = anyWorkingTimeEntity(workingTimeUuid, 42L, null);
             entity.setId(workingTimeUuid);
@@ -144,12 +153,14 @@ class WorkTimeServiceImplTest {
     class GetAllWorkingTimesByUser {
 
         @Test
-        void returnsDefaultWithoutAndPersistIt() {
+        void returnsDefaultAndPersistsIt() {
 
             final User user = anyUser();
             when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
 
             when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of());
+
+            when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
             final UUID workingTimeId = UUID.randomUUID();
             when(workingTimeRepository.save(any())).thenAnswer(invocation -> {
@@ -166,6 +177,7 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTime.validFrom()).isEmpty();
                 assertThat(workingTime.federalState()).isEqualTo(GLOBAL);
                 assertThat(workingTime.worksOnPublicHoliday()).isFalse();
+                assertThat(workingTime.isWorksOnPublicHolidayGlobal()).isTrue();
                 assertThat(workingTime.getMonday()).isEqualTo(PlannedWorkingHours.EIGHT);
                 assertThat(workingTime.getTuesday()).isEqualTo(PlannedWorkingHours.EIGHT);
                 assertThat(workingTime.getWednesday()).isEqualTo(PlannedWorkingHours.EIGHT);
@@ -183,7 +195,7 @@ class WorkTimeServiceImplTest {
             assertThat(persistedEntity.getUserId()).isEqualTo(user.userLocalId().value());
             assertThat(persistedEntity.getValidFrom()).isNull();
             assertThat(persistedEntity.getFederalState()).isEqualTo(GLOBAL);
-            assertThat(persistedEntity.isWorksOnPublicHoliday()).isFalse();
+            assertThat(persistedEntity.isWorksOnPublicHoliday()).isNull();
             assertThat(persistedEntity.getMonday()).isEqualTo("PT8H");
             assertThat(persistedEntity.getTuesday()).isEqualTo("PT8H");
             assertThat(persistedEntity.getWednesday()).isEqualTo("PT8H");
@@ -198,6 +210,8 @@ class WorkTimeServiceImplTest {
 
             final User user = anyUser();
             when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
             final UUID workingTimeId_1 = UUID.randomUUID();
             final UUID workingTimeId_2 = UUID.randomUUID();
@@ -221,6 +235,8 @@ class WorkTimeServiceImplTest {
             final User user = anyUser();
             when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
 
+            when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
             final UUID workingTimeId = UUID.randomUUID();
             final WorkingTimeEntity entity = anyWorkingTimeEntity(workingTimeId, user.userLocalId().value(), null);
             when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of(entity));
@@ -238,6 +254,8 @@ class WorkTimeServiceImplTest {
 
             final User user = anyUser();
             when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
             final UUID workingTimeId_1 = UUID.randomUUID();
             final UUID workingTimeId_2 = UUID.randomUUID();
@@ -263,6 +281,8 @@ class WorkTimeServiceImplTest {
             final User user = anyUser();
             when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
 
+            when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
             final UUID workingTimeId_1 = UUID.randomUUID();
             final UUID workingTimeId_2 = UUID.randomUUID();
             final UUID workingTimeId_3 = UUID.randomUUID();
@@ -286,6 +306,8 @@ class WorkTimeServiceImplTest {
 
             final User user = anyUser();
             when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
             final UUID workingTimeId_1 = UUID.randomUUID();
             final UUID workingTimeId_2 = UUID.randomUUID();
@@ -311,6 +333,8 @@ class WorkTimeServiceImplTest {
             final User user = anyUser();
             when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
 
+            when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
             final UUID workingTimeId_1 = UUID.randomUUID();
             final UUID workingTimeId_2 = UUID.randomUUID();
             final UUID workingTimeId_3 = UUID.randomUUID();
@@ -335,6 +359,8 @@ class WorkTimeServiceImplTest {
             final User user = anyUser();
             when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
 
+            when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
             final UUID workingTimeId_1 = UUID.randomUUID();
             final UUID workingTimeId_2 = UUID.randomUUID();
             final UUID workingTimeId_3 = UUID.randomUUID();
@@ -354,6 +380,8 @@ class WorkTimeServiceImplTest {
 
     @Test
     void ensureGetWorkingTimeByUsers() {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UUID workingTimeId_1 = UUID.randomUUID();
         final WorkingTimeEntity entity_1 = new WorkingTimeEntity();
@@ -450,6 +478,8 @@ class WorkTimeServiceImplTest {
         when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1)))
             .thenReturn(List.of(user_1));
 
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
         final LocalDate from = LocalDate.now(clockFixed);
         final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
         final Map<UserIdComposite, List<WorkingTime>> actual = sut.getWorkingTimesByUsers(from, toExclusive, List.of(new UserLocalId(1L)));
@@ -474,6 +504,8 @@ class WorkTimeServiceImplTest {
 
     @Test
     void ensureGetAllWorkingTimeByUsers() {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UUID workingTimeId_1 = UUID.randomUUID();
         final WorkingTimeEntity entity_1 = new WorkingTimeEntity();
@@ -566,6 +598,8 @@ class WorkTimeServiceImplTest {
         when(userManagementService.findAllUsers()).thenReturn(List.of(user_1));
         when(workingTimeRepository.findAllByUserIdIsIn(List.of(userLocalId_1.value()))).thenReturn(List.of());
 
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
         final LocalDate from = LocalDate.now(clockFixed);
         final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
         final Map<UserIdComposite, List<WorkingTime>> actual = sut.getAllWorkingTimes(from, toExclusive);
@@ -636,6 +670,8 @@ class WorkTimeServiceImplTest {
 
     @Test
     void ensureUpdateWorkingTime() {
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UserId userId = new UserId("uuid-1");
         final UserLocalId userLocalId = new UserLocalId(42L);
@@ -716,6 +752,8 @@ class WorkTimeServiceImplTest {
         when(userManagementService.findUserByLocalId(userLocalId))
             .thenReturn(Optional.of(user));
 
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
         final UUID uuid = UUID.randomUUID();
         when(workingTimeRepository.save(any(WorkingTimeEntity.class))).thenAnswer(invocation -> {
             final WorkingTimeEntity entity = cloneEntity(invocation.getArgument(0));
@@ -757,6 +795,8 @@ class WorkTimeServiceImplTest {
 
         when(userManagementService.findUserByLocalId(userLocalId))
             .thenReturn(Optional.of(user));
+
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
         final UUID uuid = UUID.randomUUID();
         when(workingTimeRepository.save(any(WorkingTimeEntity.class))).thenAnswer(invocation -> {
@@ -840,6 +880,10 @@ class WorkTimeServiceImplTest {
 
         final boolean actual = sut.deleteWorkingTime(workingTimeId);
         assertThat(actual).isTrue();
+    }
+
+    private FederalStateSettings federalStateSettings(FederalState globalFederalState) {
+        return new FederalStateSettings(globalFederalState, false);
     }
 
     private User anyUser() {

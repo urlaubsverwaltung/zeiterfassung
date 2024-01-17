@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.settings.FederalStateSettings;
 import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.workingtime.WorkingTime;
@@ -87,8 +88,9 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         final List<WorkingTime> workingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(userId));
         final List<WorkingTimeListEntryDto> workingTimeDtos = workingTimesToDtos(workingTimes);
+        final FederalStateSettings federalStateSettings = federalStateSettingsService.getFederalStateSettings();
 
-        prepareGetWorkingTimesModel(model, query, userId, workingTimeDtos, securityContext);
+        prepareGetWorkingTimesModel(model, query, userId, workingTimeDtos, securityContext, federalStateSettings);
 
         if (hasText(turboFrame)) {
             return "usermanagement/users::#" + turboFrame;
@@ -170,7 +172,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         final UserLocalId userLocalId = new UserLocalId(workingTimeDto.getUserId());
         final LocalDate validFrom = workingTimeDto.getValidFrom();
         final FederalState federalState = workingTimeDto.getFederalState();
-        final boolean worksOnPublicHoliday = workingTimeDto.isWorksOnPublicHoliday();
+        final Boolean worksOnPublicHoliday = workingTimeDto.getWorksOnPublicHoliday();
         final EnumMap<DayOfWeek, Duration> workdays = workingTimeDtoToWorkdays(workingTimeDto);
 
         workingTimeService.createWorkingTime(userLocalId, validFrom, federalState, worksOnPublicHoliday, workdays);
@@ -213,7 +215,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         final LocalDate validFrom = workingTimeDto.getValidFrom();
         final FederalState federalState = workingTimeDto.getFederalState();
-        final boolean worksOnPublicHoliday = workingTimeDto.isWorksOnPublicHoliday();
+        final Boolean worksOnPublicHoliday = workingTimeDto.getWorksOnPublicHoliday();
         final EnumMap<DayOfWeek, Duration> workdays = workingTimeDtoToWorkdays(workingTimeDto);
         workingTimeService.updateWorkingTime(WorkingTimeId.fromString(workingTimeDto.getId()), validFrom, federalState, worksOnPublicHoliday, workdays);
 
@@ -272,7 +274,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
     private void prepareGetWorkingTimesModel(Model model, String query, Long userId,
                                              List<WorkingTimeListEntryDto> workingTimeDtos,
-                                             SecurityContext securityContext) {
+                                             SecurityContext securityContext,
+                                             FederalStateSettings federalStateSettings) {
 
         final List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()
@@ -284,7 +287,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             .or(() -> userManagementService.findUserByLocalId(new UserLocalId(userId)).map(UserManagementController::userToDto))
             .orElseThrow(() -> new IllegalArgumentException("could not find person=%s".formatted(userId)));
 
-        final FederalState globalFederalState = federalStateSettingsService.getFederalStateSettings().federalState();
+        final FederalState globalFederalState = federalStateSettings.federalState();
 
         model.addAttribute("query", query);
         model.addAttribute("slug", "working-time");
@@ -302,10 +305,14 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
     private void prepareWorkingTimeCreateOrEditModel(Model model, String query, Long userId, WorkingTimeDto workingTimeDto, SecurityContext securityContext) {
 
-        prepareGetWorkingTimesModel(model, query, userId, List.of(), securityContext);
+        final FederalStateSettings federalStateSettings = federalStateSettingsService.getFederalStateSettings();
+
+        prepareGetWorkingTimesModel(model, query, userId, List.of(), securityContext, federalStateSettings);
 
         model.addAttribute("section", "working-time-edit");
         model.addAttribute("workingTime", workingTimeDto);
+        // number is required for the messages choice pattern which does not work with boolean
+        model.addAttribute("globalWorksOnPublicHoliday", federalStateSettings.worksOnPublicHoliday() ? 1 : 0);
         model.addAttribute("federalStateSelect", federalStateSelectDto(workingTimeDto.getFederalState(), true));
     }
 
@@ -361,37 +368,32 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
     private static WorkingTimeDto workingTimeToDto(WorkingTime workingTime) {
 
-        final WorkingTimeDto.Builder builder = WorkingTimeDto.builder();
+        final WorkingTimeDto dto = new WorkingTimeDto();
 
         if (workingTime.hasDifferentWorkingHours()) {
-            final Map<DayOfWeek, Consumer<Double>> setter = Map.of(
-                MONDAY, builder::workingTimeMonday,
-                TUESDAY, builder::workingTimeTuesday,
-                WEDNESDAY, builder::workingTimeWednesday,
-                THURSDAY, builder::workingTimeThursday,
-                FRIDAY, builder::workingTimeFriday,
-                SATURDAY, builder::workingTimeSaturday,
-                SUNDAY, builder::workingTimeSunday
-            );
-            workingTime.workdays().forEach((dayOfWeek, workDayDuration) ->
-                setter.get(dayOfWeek).accept(workDayDuration.hoursDoubleValue())
-            );
+            dto.setWorkingTimeMonday(workingTime.getMonday().hoursDoubleValue());
+            dto.setWorkingTimeTuesday(workingTime.getTuesday().hoursDoubleValue());
+            dto.setWorkingTimeWednesday(workingTime.getWednesday().hoursDoubleValue());
+            dto.setWorkingTimeThursday(workingTime.getThursday().hoursDoubleValue());
+            dto.setWorkingTimeFriday(workingTime.getFriday().hoursDoubleValue());
+            dto.setWorkingTimeSaturday(workingTime.getSaturday().hoursDoubleValue());
+            dto.setWorkingTimeSunday(workingTime.getSunday().hoursDoubleValue());
         } else {
             // every day has the same hours
             // -> individual input fields should be empty
             // -> working time input should be set
-            builder.workingTime(workingTime.workdays().get(MONDAY).hoursDoubleValue());
+            dto.setWorkingTime(workingTime.getMonday().hoursDoubleValue());
         }
 
-        return builder
-            .id(workingTime.id().value())
-            .validFrom(workingTime.validFrom().orElse(null))
-            .minValidFrom(workingTime.minValidFrom().orElse(null))
-            .maxValidFrom(workingTime.validTo().orElse(null))
-            .federalState(workingTime.federalState())
-            .worksOnPublicHoliday(workingTime.worksOnPublicHoliday())
-            .userId(workingTime.userIdComposite().localId().value())
-            .workday(workingTime.actualWorkingDays())
-            .build();
+        dto.setId(workingTime.id().value());
+        dto.setValidFrom(workingTime.validFrom().orElse(null));
+        dto.setMinValidFrom(workingTime.minValidFrom().orElse(null));
+        dto.setMaxValidFrom(workingTime.validTo().orElse(null));
+        dto.setFederalState(workingTime.federalState());
+        dto.setWorksOnPublicHoliday(workingTime.isWorksOnPublicHolidayGlobal() ? null : workingTime.worksOnPublicHoliday());
+        dto.setUserId(workingTime.userIdComposite().localId().value());
+        dto.setWorkday(workingTime.actualWorkingDays().stream().map(DayOfWeek::name).map(String::toLowerCase).toList());
+
+        return dto;
     }
 }

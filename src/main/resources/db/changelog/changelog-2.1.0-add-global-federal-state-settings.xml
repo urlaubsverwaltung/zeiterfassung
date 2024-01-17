@@ -55,5 +55,24 @@
     </sql>
   </changeSet>
 
+  <changeSet author="bseber" id="optional-working-time-works-on-public-holiday">
+    <preConditions>
+      <tableExists tableName="working_time"/>
+      <columnExists tableName="working_time" columnName="works_on_public_holiday"/>
+    </preConditions>
+    <addColumn tableName="working_time">
+      <column name="works_on_public_holiday_temp" type="BOOLEAN"/>
+    </addColumn>
+    <sql>UPDATE working_time SET works_on_public_holiday_temp = works_on_public_holiday</sql>
+    <dropColumn tableName="working_time" columnName="works_on_public_holiday"/>
+    <addColumn tableName="working_time">
+      <column name="works_on_public_holiday" type="BOOLEAN">
+        <constraints nullable="true"/>
+      </column>
+    </addColumn>
+    <sql>UPDATE working_time SET works_on_public_holiday = works_on_public_holiday_temp</sql>
+    <dropColumn tableName="working_time" columnName="works_on_public_holiday_temp"/>
+  </changeSet>
+
 </databaseChangeLog>
 

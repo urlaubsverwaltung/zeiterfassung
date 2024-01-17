@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.workingtime;
 
+import de.focusshift.zeiterfassung.CachedSupplier;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -19,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.DayOfWeek.FRIDAY;
@@ -32,6 +35,7 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.nullsLast;
 import static java.util.Comparator.reverseOrder;
 import static java.util.HashMap.newHashMap;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -43,11 +47,14 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
     private final WorkingTimeRepository repository;
     private final UserManagementService userManagementService;
+    private FederalStateSettingsService federalStateSettingsService;
     private final Clock clock;
 
-    WorkTimeServiceImpl(WorkingTimeRepository repository, UserManagementService userManagementService, Clock clock) {
+    WorkTimeServiceImpl(WorkingTimeRepository repository, UserManagementService userManagementService,
+                        FederalStateSettingsService federalStateSettingsService, Clock clock) {
         this.repository = repository;
         this.userManagementService = userManagementService;
+        this.federalStateSettingsService = federalStateSettingsService;
         this.clock = clock;
     }
 
@@ -57,7 +64,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             final UserLocalId userLocalId = new UserLocalId(entity.getUserId());
             final User user = findUser(userLocalId);
             final List<WorkingTimeEntity> allEntitiesSorted = findAllWorkingTimeEntitiesSorted(userLocalId);
-            return entityToWorkingTime(entity, user.userIdComposite(), allEntitiesSorted);
+            return entityToWorkingTime(entity, user.userIdComposite(), allEntitiesSorted, this::globalWorksOnPublicHoliday);
         });
     }
 
@@ -71,8 +78,10 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             return List.of(createDefaultWorkingTime(user.userIdComposite()));
         }
 
+        final CachedSupplier<Boolean> globalWorksOnPublicHoliday = new CachedSupplier<>(this::globalWorksOnPublicHoliday);
+
         return sortedEntities.stream()
-            .map(entity -> entityToWorkingTime(entity, user.userIdComposite(), sortedEntities))
+            .map(entity -> entityToWorkingTime(entity, user.userIdComposite(), sortedEntities, globalWorksOnPublicHoliday))
             .toList();
     }
 
@@ -89,7 +98,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     }
 
     @Override
-    public WorkingTime createWorkingTime(UserLocalId userLocalId, LocalDate validFrom, FederalState federalState, boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays) {
+    public WorkingTime createWorkingTime(UserLocalId userLocalId, LocalDate validFrom, FederalState federalState, @Nullable Boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays) {
 
         final User user = findUser(userLocalId);
 
@@ -103,11 +112,11 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final WorkingTimeEntity saved = repository.save(entity);
         final List<WorkingTimeEntity> allEntitiesSorted = findAllWorkingTimeEntitiesSorted(userLocalId);
 
-        return entityToWorkingTime(saved, user.userIdComposite(), allEntitiesSorted);
+        return entityToWorkingTime(saved, user.userIdComposite(), allEntitiesSorted, this::globalWorksOnPublicHoliday);
     }
 
     @Override
-    public WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, @Nullable LocalDate validFrom, FederalState federalState, boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays) {
+    public WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, @Nullable LocalDate validFrom, FederalState federalState, @Nullable Boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays) {
 
         final WorkingTimeEntity entity = repository.findById(workingTimeId.uuid())
             .orElseThrow(() -> new IllegalStateException("could not find working-time with id=%s".formatted(workingTimeId)));
@@ -130,7 +139,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final WorkingTimeEntity saved = repository.save(entity);
         final List<WorkingTimeEntity> allEntitiesSorted = findAllWorkingTimeEntitiesSorted(userLocalId);
 
-        return entityToWorkingTime(saved, user.userIdComposite(), allEntitiesSorted);
+        return entityToWorkingTime(saved, user.userIdComposite(), allEntitiesSorted, this::globalWorksOnPublicHoliday);
     }
 
     @Override
@@ -195,6 +204,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final Map<UserLocalId, List<WorkingTimeEntity>> sortedEntitiesByUserLocalId = findAllWorkingTimeEntitiesSorted(localIdValues);
 
         final Map<UserIdComposite, List<WorkingTime>> result = newHashMap(users.size());
+        final CachedSupplier<Boolean> globalWorksOnPublicHoliday = new CachedSupplier<>(this::globalWorksOnPublicHoliday);
 
         for (User user : users) {
 
@@ -202,9 +212,9 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             final List<WorkingTimeEntity> sortedEntities = sortedEntitiesByUserLocalId.get(user.userLocalId());
 
             if (sortedEntities.isEmpty()) {
-                result.put(userIdComposite, List.of(defaultWorkingTime(userIdComposite)));
+                result.put(userIdComposite, List.of(defaultWorkingTime(userIdComposite, globalWorksOnPublicHoliday)));
             } else {
-                final List<WorkingTime> workingTimes = entitiesToWorkingTimes(sortedEntities, userIdComposite);
+                final List<WorkingTime> workingTimes = entitiesToWorkingTimes(sortedEntities, userIdComposite, globalWorksOnPublicHoliday);
                 result.put(userIdComposite, workingTimes);
             }
         }
@@ -340,12 +350,13 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         return duration == null ? Duration.ZERO.toString() : duration.toString();
     }
 
-    private WorkingTime defaultWorkingTime(UserIdComposite userIdComposite) {
+    @SuppressWarnings("java:S4276") // we need Supplier because we don't have a CachedBooleanSupplier
+    private WorkingTime defaultWorkingTime(UserIdComposite userIdComposite, Supplier<Boolean> worksOnPublicHolidaySupplier) {
         final Duration eight = Duration.ofHours(8);
         return WorkingTime.builder(userIdComposite, null)
             .current(true)
             .federalState(FederalState.GLOBAL)
-            .worksOnPublicHoliday(false)
+            .worksOnPublicHoliday(worksOnPublicHolidaySupplier.get(), true)
             .monday(eight)
             .tuesday(eight)
             .wednesday(eight)
@@ -357,25 +368,37 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     }
 
     private WorkingTime createDefaultWorkingTime(UserIdComposite userIdComposite) {
-        final WorkingTime defaultWorkingTime = defaultWorkingTime(userIdComposite);
+        final WorkingTime defaultWorkingTime = defaultWorkingTime(userIdComposite, this::globalWorksOnPublicHoliday);
         final WorkingTimeEntity persisted = repository.save(workingTimeToEntity(defaultWorkingTime));
-        return entityToWorkingTime(persisted, userIdComposite, List.of(persisted));
+        return entityToWorkingTime(persisted, userIdComposite, List.of(persisted), this::globalWorksOnPublicHoliday);
     }
 
-    private List<WorkingTime> entitiesToWorkingTimes(List<WorkingTimeEntity> entities, UserIdComposite userIdComposite) {
+    private boolean globalWorksOnPublicHoliday() {
+        return federalStateSettingsService.getFederalStateSettings().worksOnPublicHoliday();
+    }
+
+    private List<WorkingTime> entitiesToWorkingTimes(List<WorkingTimeEntity> entities, UserIdComposite userIdComposite,
+                                                     Supplier<Boolean> worksOnPublicHolidaySupplier) {
         return entities.stream()
-            .map(entity -> entityToWorkingTime(entity, userIdComposite, entities))
+            .map(entity -> entityToWorkingTime(entity, userIdComposite, entities, worksOnPublicHolidaySupplier))
             .toList();
     }
 
-    private WorkingTime entityToWorkingTime(WorkingTimeEntity entity, UserIdComposite userIdComposite, List<WorkingTimeEntity> allEntitiesSorted) {
+    @SuppressWarnings("java:S4276") // we need Supplier because we don't have a CachedBooleanSupplier
+    private WorkingTime entityToWorkingTime(WorkingTimeEntity entity, UserIdComposite userIdComposite,
+                                            List<WorkingTimeEntity> allEntitiesSorted,
+                                            Supplier<Boolean> worksOnPublicHolidaySupplier) {
+
+        final Boolean entityWorksOnPublicHoliday = entity.isWorksOnPublicHoliday();
+        final boolean worksOnPublicHoliday = requireNonNullElse(entityWorksOnPublicHoliday, worksOnPublicHolidaySupplier.get());
+
         return WorkingTime.builder(userIdComposite, new WorkingTimeId(entity.getId()))
             .current(isCurrent(entity, allEntitiesSorted))
             .validFrom(entity.getValidFrom())
             .validTo(getValidToDate(entity, allEntitiesSorted))
             .minValidFrom(getMinValidFromDate(entity, allEntitiesSorted))
             .federalState(entity.getFederalState())
-            .worksOnPublicHoliday(entity.isWorksOnPublicHoliday())
+            .worksOnPublicHoliday(worksOnPublicHoliday, entityWorksOnPublicHoliday == null)
             .monday(Duration.parse(entity.getMonday()))
             .tuesday(Duration.parse(entity.getTuesday()))
             .wednesday(Duration.parse(entity.getWednesday()))
@@ -397,7 +420,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         entity.setUserId(workingTime.userLocalId().value());
         entity.setValidFrom(workingTime.validFrom().orElse(null));
         entity.setFederalState(workingTime.federalState());
-        entity.setWorksOnPublicHoliday(workingTime.worksOnPublicHoliday());
+        entity.setWorksOnPublicHoliday(workingTime.isWorksOnPublicHolidayGlobal() ? null : workingTime.worksOnPublicHoliday());
         entity.setMonday(workdayToDurationString(workingTime.getMonday()));
         entity.setTuesday(workdayToDurationString(workingTime.getTuesday()));
         entity.setWednesday(workdayToDurationString(workingTime.getWednesday()));
