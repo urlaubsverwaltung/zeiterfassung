@@ -110,6 +110,16 @@ class SecurityBeanConfigurationTest {
         public void deleteUser(Long id) {
 
         }
+
+        @Override
+        public void activateUser(Long id) {
+
+        }
+
+        @Override
+        public void deactivateUser(Long id) {
+
+        }
     }
 }
 

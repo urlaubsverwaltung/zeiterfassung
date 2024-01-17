@@ -18,6 +18,7 @@ import de.focusshift.zeiterfassung.tenancy.tenant.TenantStatus;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
+import de.focusshift.zeiterfassung.tenancy.user.UserStatus;
 import de.focusshift.zeiterfassung.timeclock.TimeClock;
 import de.focusshift.zeiterfassung.timeclock.TimeClockService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
@@ -111,11 +112,12 @@ class TenantImporterComponentTest {
         TenantExport tenantExport = exportedData();
 
         when(importInputProvider.fromExport()).thenReturn(Optional.of(tenantExport));
-        when(tenantService.getTenantByTenantId(anyString())).thenReturn(Optional.of(new Tenant("tenantId", Instant.now().minus(365, ChronoUnit.DAYS), Instant.now().minus(365, ChronoUnit.DAYS), TenantStatus.ACTIVE)));
+        Instant firstLoginAt = Instant.now().minus(365, ChronoUnit.DAYS);
+        when(tenantService.getTenantByTenantId(anyString())).thenReturn(Optional.of(new Tenant("tenantId", firstLoginAt, firstLoginAt, TenantStatus.ACTIVE)));
         when(tenantUserService.findAllUsers()).thenReturn(List.of());
 
         when(tenantUserService.createNewUser(anyString(), anyString(), anyString(), any(EMailAddress.class), anySet())).thenReturn(
-            new TenantUser("externalId", 1L, "marlene", "muster", new EMailAddress("my.name@example.org"), Set.of(SecurityRole.ZEITERFASSUNG_USER))
+            new TenantUser("externalId", 1L, "marlene", "muster", new EMailAddress("my.name@example.org"), firstLoginAt, Set.of(SecurityRole.ZEITERFASSUNG_USER), firstLoginAt, firstLoginAt, null, null, UserStatus.ACTIVE)
         );
 
         sut.runImport();
@@ -182,8 +184,9 @@ class TenantImporterComponentTest {
         TenantExport tenantExport = exportedData();
 
         when(importInputProvider.fromExport()).thenReturn(Optional.of(tenantExport));
-        when(tenantService.getTenantByTenantId(anyString())).thenReturn(Optional.of(new Tenant("tenantId", Instant.now().minus(365, ChronoUnit.DAYS), Instant.now().minus(365, ChronoUnit.DAYS), TenantStatus.ACTIVE)));
-        when(tenantUserService.findAllUsers()).thenReturn(List.of(new TenantUser("externalId", 1L, "marlene", "muster", new EMailAddress("my.name@example.org"), Set.of(SecurityRole.ZEITERFASSUNG_USER))));
+        Instant firstLoginAt = Instant.now().minus(365, ChronoUnit.DAYS);
+        when(tenantService.getTenantByTenantId(anyString())).thenReturn(Optional.of(new Tenant("tenantId", firstLoginAt, firstLoginAt, TenantStatus.ACTIVE)));
+        when(tenantUserService.findAllUsers()).thenReturn(List.of(new TenantUser("externalId", 1L, "marlene", "muster", new EMailAddress("my.name@example.org"), firstLoginAt, Set.of(SecurityRole.ZEITERFASSUNG_USER), firstLoginAt, firstLoginAt, null, null, UserStatus.ACTIVE)));
 
         sut.runImport();
 

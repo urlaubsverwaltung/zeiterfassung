@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.security;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
+import de.focusshift.zeiterfassung.tenancy.user.UserStatus;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -95,6 +96,7 @@ class OAuth2UserServiceSingleTenantTest {
     }
 
     private TenantUser anyTenantUser(String id, Set<SecurityRole> authorities) {
-        return new TenantUser(id, 1L, "Bruce", "Wayne", new EMailAddress("batman@example.org"), authorities);
+        Instant now = Instant.now();
+        return new TenantUser(id, 1L, "Bruce", "Wayne", new EMailAddress("batman@example.org"), now, authorities, now, now, null, null, UserStatus.ACTIVE);
     }
 }

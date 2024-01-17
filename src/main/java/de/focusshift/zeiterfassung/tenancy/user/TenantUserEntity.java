@@ -38,11 +38,11 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
     @Size(max = 36)
     private String uuid;
 
-    @Column(name = "first_login_at", nullable = false)
+    @Column(name = "first_login_at")
     @NotNull
     private Instant firstLoginAt;
 
-    @Column(name = "last_login_at", nullable = false)
+    @Column(name = "last_login_at")
     @NotNull
     private Instant lastLoginAt;
 
@@ -66,15 +66,31 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
     @Enumerated(STRING)
     private Set<SecurityRole> authorities;
 
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @Column(name = "deactivated_at")
+    private Instant deactivatedAt;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "status", nullable = false)
+    @Enumerated(STRING)
+    private UserStatus status;
+
     protected TenantUserEntity() {
-        this(null, null, null, null, null, null, null, null, Set.of());
+        this(null, null, null, null, null, null, null, Set.of(), null, null, null, null, UserStatus.UNKNOWN);
     }
 
-    protected TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRole> authorities) {
-        this(id, null, uuid, firstLoginAt, lastLoginAt, givenName, familyName, email, authorities);
+    protected TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRole> authorities, Instant createdAt, Instant updatedAt, Instant deactivatedAt, Instant deletedAt, UserStatus status) {
+        this(id, null, uuid, firstLoginAt, lastLoginAt, givenName, familyName, email, authorities, createdAt, updatedAt, deactivatedAt, deletedAt, status);
     }
 
-    protected TenantUserEntity(Long id, String tenantId, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRole> authorities) {
+    protected TenantUserEntity(Long id, String tenantId, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRole> authorities, Instant createdAt, Instant updatedAt, Instant deactivatedAt, Instant deletedAt, UserStatus status) {
         super(tenantId);
         this.id = id;
         this.uuid = uuid;
@@ -84,6 +100,11 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
         this.familyName = familyName;
         this.email = email;
         this.authorities = authorities;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.deactivatedAt = deactivatedAt;
+        this.deletedAt = deletedAt;
+        this.status = status;
     }
 
     public Long getId() {
@@ -116,6 +137,26 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
 
     public Set<SecurityRole> getAuthorities() {
         return authorities;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public Instant getDeactivatedAt() {
+        return deactivatedAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public UserStatus getStatus() {
+        return status;
     }
 
     @Override

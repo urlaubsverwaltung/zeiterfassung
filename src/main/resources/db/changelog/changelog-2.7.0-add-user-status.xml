@@ -1,0 +1,66 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+  <changeSet author="grafjo" id="make-tenant-user-first-login-at-optional">
+    <preConditions>
+      <tableExists tableName="tenant_user"/>
+      <columnExists tableName="tenant_user" columnName="first_login_at"/>
+    </preConditions>
+    <dropNotNullConstraint tableName="tenant_user" columnName="first_login_at" columnDataType="TIMESTAMP WITH TIME ZONE"/>
+  </changeSet>
+
+  <changeSet author="grafjo" id="make-tenant-user-last-login-at-optional">
+    <preConditions>
+      <tableExists tableName="tenant_user"/>
+      <columnExists tableName="tenant_user" columnName="last_login_at"/>
+    </preConditions>
+    <dropNotNullConstraint tableName="tenant_user" columnName="last_login_at" columnDataType="TIMESTAMP WITH TIME ZONE"/>
+  </changeSet>
+
+  <changeSet author="grafjo" id="add-tenant-user-status">
+    <preConditions>
+      <tableExists tableName="tenant_user"/>
+      <not>
+        <columnExists tableName="tenant_user" columnName="created_at"/>
+        <columnExists tableName="tenant_user" columnName="updated_at"/>
+        <columnExists tableName="tenant_user" columnName="deactivated_at"/>
+        <columnExists tableName="tenant_user" columnName="deleted_at"/>
+        <columnExists tableName="tenant_user" columnName="status"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="tenant_user">
+      <column name="created_at" type="TIMESTAMP WITH TIME ZONE" />
+      <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" />
+      <column name="deactivated_at" type="TIMESTAMP WITH TIME ZONE" />
+      <column name="deleted_at" type="TIMESTAMP WITH TIME ZONE" />
+      <column name="status" type="VARCHAR(255)" defaultValue="UNKNOWN">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="grafjo" id="update-tenant-user-created-at-with-first-login-at">
+    <preConditions>
+      <tableExists tableName="tenant_user"/>
+      <columnExists tableName="tenant_user" columnName="created_at"/>
+      <columnExists tableName="tenant_user" columnName="first_login_at"/>
+    </preConditions>
+    <update tableName="tenant_user">
+      <column name="created_at" valueComputed="first_login_at"/>
+      <where>created_at IS NULL</where>
+    </update>
+  </changeSet>
+
+  <changeSet author="seber" id="add-not-null-constraint-to-tenant-user-created-at">
+    <preConditions>
+      <tableExists tableName="tenant_user"/>
+      <columnExists tableName="tenant_user" columnName="created_at"/>
+    </preConditions>
+    <addNotNullConstraint tableName="tenant_user" columnName="created_at"/>
+  </changeSet>
+
+</databaseChangeLog>
+
