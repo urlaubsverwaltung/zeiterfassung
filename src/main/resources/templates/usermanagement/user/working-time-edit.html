@@ -76,17 +76,59 @@
                   </th:block>
                 </select>
               </div>
+            </div>
+          </fieldset>
+          <fieldset class="border-t border-gray-100">
+            <legend
+              class="text-sm font-medium text-gray-400"
+              th:text="#{usermanagement.working-time.federalstate.works-on-public-holiday.title}"
+            >
+              Arbeitsregelung an Feiertagen
+            </legend>
+            <div class="mt-2 flex flex-col sm:mt-4">
               <div class="flex items-center gap-2">
                 <input
-                  type="checkbox"
-                  id="works-on-public-holiday-checkbox"
-                  th:field="*{worksOnPublicHoliday}"
+                  type="radio"
+                  id="works-on-public-holiday-yes-checkbox"
+                  name="worksOnPublicHoliday"
+                  value="true"
+                  th:checked="${workingTime.worksOnPublicHoliday != null && workingTime.worksOnPublicHoliday == true}"
                 />
                 <label
-                  for="works-on-public-holiday-checkbox"
-                  th:text="#{usermanagement.working-time.federalstate.works-on-public-holiday.label}"
+                  for="works-on-public-holiday-yes-checkbox"
+                  th:text="#{usermanagement.working-time.federalstate.works-on-public-holiday.yes.label}"
                 >
-                  arbeitet an Feiertagen
+                  ja, arbeitet an Feiertagen
+                </label>
+              </div>
+              <div class="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="works-on-public-holiday-no-checkbox"
+                  name="worksOnPublicHoliday"
+                  value="false"
+                  th:checked="${workingTime.worksOnPublicHoliday != null && workingTime.worksOnPublicHoliday == false}"
+                />
+                <label
+                  for="works-on-public-holiday-no-checkbox"
+                  th:text="#{usermanagement.working-time.federalstate.works-on-public-holiday.no.label}"
+                >
+                  nein, arbeitet nicht an Feiertagen
+                </label>
+              </div>
+              <div class="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="works-on-public-holiday-global-checkbox"
+                  name="worksOnPublicHoliday"
+                  value=""
+                  th:checked="${workingTime.worksOnPublicHoliday == null}"
+                />
+                <label
+                  for="works-on-public-holiday-global-checkbox"
+                  th:text="#{usermanagement.working-time.federalstate.works-on-public-holiday.global.label(${globalWorksOnPublicHoliday})}"
+                >
+                  globale Einstellung (nein)
                 </label>
               </div>
             </div>

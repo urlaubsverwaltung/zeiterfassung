@@ -44,20 +44,20 @@ public final class WorkingTime implements HasUserIdComposite {
     private final LocalDate minValidFrom;
     private final FederalState federalState;
     private final boolean worksOnPublicHoliday;
+    private final boolean worksOnPublicHolidayGlobal;
     private final EnumMap<DayOfWeek, PlannedWorkingHours> workdays;
 
-    private WorkingTime(UserIdComposite userIdComposite, WorkingTimeId id, boolean current,
-                        @Nullable LocalDate validFrom, @Nullable LocalDate validTo, @Nullable LocalDate minValidFrom,
-                        FederalState federalState, boolean worksOnPublicHoliday, EnumMap<DayOfWeek, PlannedWorkingHours> workdays) {
-        this.userIdComposite = userIdComposite;
-        this.id = id;
-        this.current = current;
-        this.validFrom = validFrom;
-        this.validTo = validTo;
-        this.minValidFrom = minValidFrom;
-        this.federalState = federalState;
-        this.worksOnPublicHoliday = worksOnPublicHoliday;
-        this.workdays = workdays;
+    private WorkingTime(Builder builder) {
+        this.userIdComposite = builder.userIdComposite;
+        this.id = builder.id;
+        this.current = builder.current;
+        this.validFrom = builder.validFrom;
+        this.validTo = builder.validTo;
+        this.minValidFrom = builder.minValidFrom;
+        this.federalState = builder.federalState;
+        this.worksOnPublicHoliday = builder.worksOnPublicHoliday;
+        this.worksOnPublicHolidayGlobal = builder.worksOnPublicHolidayGlobal;
+        this.workdays = builder.workDays;
     }
 
     @Override
@@ -104,8 +104,19 @@ public final class WorkingTime implements HasUserIdComposite {
         return federalState;
     }
 
+    /**
+     * Whether the related person works on public holidays or not.
+     * Check {@linkplain WorkingTime#isWorksOnPublicHolidayGlobal()} if it is the system-wide setting or not.
+     */
     public boolean worksOnPublicHoliday() {
         return worksOnPublicHoliday;
+    }
+
+    /**
+     * Whether the {@linkplain WorkingTime#worksOnPublicHoliday()} value is the system-wide setting or not.
+     */
+    public boolean isWorksOnPublicHolidayGlobal() {
+        return worksOnPublicHolidayGlobal;
     }
 
     public Map<DayOfWeek, PlannedWorkingHours> workdays() {
@@ -236,6 +247,7 @@ public final class WorkingTime implements HasUserIdComposite {
         private LocalDate minValidFrom;
         private FederalState federalState;
         private boolean worksOnPublicHoliday;
+        private boolean worksOnPublicHolidayGlobal;
         private final EnumMap<DayOfWeek, PlannedWorkingHours> workDays = new EnumMap<>(Map.of(
             MONDAY, PlannedWorkingHours.ZERO,
             TUESDAY, PlannedWorkingHours.ZERO,
@@ -276,8 +288,9 @@ public final class WorkingTime implements HasUserIdComposite {
             return this;
         }
 
-        public Builder worksOnPublicHoliday(boolean worksOnPublicHoliday) {
+        public Builder worksOnPublicHoliday(boolean worksOnPublicHoliday, boolean isGlobal) {
             this.worksOnPublicHoliday = worksOnPublicHoliday;
+            this.worksOnPublicHolidayGlobal = isGlobal;
             return this;
         }
 
@@ -373,8 +386,7 @@ public final class WorkingTime implements HasUserIdComposite {
         }
 
         public WorkingTime build() {
-            return new WorkingTime(userIdComposite, id, current, validFrom, validTo, minValidFrom, federalState,
-                worksOnPublicHoliday, workDays);
+            return new WorkingTime(this);
         }
     }
 }

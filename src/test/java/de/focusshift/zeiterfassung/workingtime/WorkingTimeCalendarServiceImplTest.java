@@ -126,7 +126,7 @@ class WorkingTimeCalendarServiceImplTest {
                 userIdComposite_1, List.of(
                     WorkingTime.builder(userIdComposite_1, new WorkingTimeId(UUID.randomUUID()))
                         .federalState(GERMANY_BADEN_WUERTTEMBERG)
-                        .worksOnPublicHoliday(false)
+                        .worksOnPublicHoliday(false, false)
                         .monday(8)
                         .tuesday(8)
                         .build()
@@ -134,7 +134,7 @@ class WorkingTimeCalendarServiceImplTest {
                 userIdComposite_2, List.of(
                     WorkingTime.builder(userIdComposite_2, new WorkingTimeId(UUID.randomUUID()))
                         .federalState(GERMANY_BAYERN)
-                        .worksOnPublicHoliday(false)
+                        .worksOnPublicHoliday(false, false)
                         .monday(8)
                         .tuesday(8)
                         .build()
@@ -307,7 +307,7 @@ class WorkingTimeCalendarServiceImplTest {
                     userIdComposite_1, List.of(
                         WorkingTime.builder(userIdComposite_1, new WorkingTimeId(UUID.randomUUID()))
                             .federalState(GERMANY_BADEN_WUERTTEMBERG)
-                            .worksOnPublicHoliday(false)
+                            .worksOnPublicHoliday(false, false)
                             .monday(8)
                             .tuesday(8)
                             .build()
@@ -315,7 +315,7 @@ class WorkingTimeCalendarServiceImplTest {
                     userIdComposite_2, List.of(
                         WorkingTime.builder(userIdComposite_2, new WorkingTimeId(UUID.randomUUID()))
                             .federalState(GERMANY_BAYERN)
-                            .worksOnPublicHoliday(false)
+                            .worksOnPublicHoliday(false, false)
                             .monday(8)
                             .tuesday(8)
                             .build()

@@ -771,12 +771,11 @@ class WorkingTimeControllerTest {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
-        final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .id(workingTimeId.value())
-            .userId(42L)
-            .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(48.0)
-            .build();
+        final WorkingTimeDto expectedWorkingTimeDto = new WorkingTimeDto();
+        expectedWorkingTimeDto.setId(workingTimeId.value());
+        expectedWorkingTimeDto.setUserId(42L);
+        expectedWorkingTimeDto.setWorkday(List.of("monday", "tuesday", "wednesday", "thursday", "friday"));
+        expectedWorkingTimeDto.setWorkingTime(48.0);
 
         doAnswer(
             invocation -> {
@@ -832,11 +831,10 @@ class WorkingTimeControllerTest {
 
         when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
-        final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .userId(42L)
-            .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(48.0)
-            .build();
+        final WorkingTimeDto expectedWorkingTimeDto = new WorkingTimeDto();
+        expectedWorkingTimeDto.setUserId(42L);
+        expectedWorkingTimeDto.setWorkday(List.of("monday", "tuesday", "wednesday", "thursday", "friday"));
+        expectedWorkingTimeDto.setWorkingTime(48.0);
 
         doAnswer(
             invocation -> {
@@ -876,12 +874,11 @@ class WorkingTimeControllerTest {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
-        final WorkingTimeDto expectedWorkingTimeDto = WorkingTimeDto.builder()
-            .id(workingTimeId.value())
-            .userId(42L)
-            .workday(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY))
-            .workingTime(48.0)
-            .build();
+        final WorkingTimeDto expectedWorkingTimeDto = new WorkingTimeDto();
+        expectedWorkingTimeDto.setId(workingTimeId.value());
+        expectedWorkingTimeDto.setUserId(42L);
+        expectedWorkingTimeDto.setWorkday(List.of("monday", "tuesday", "wednesday", "thursday", "friday"));
+        expectedWorkingTimeDto.setWorkingTime(48.0);
 
         doAnswer(
             invocation -> {
