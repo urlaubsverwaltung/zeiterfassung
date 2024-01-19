@@ -105,8 +105,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
                           @CurrentSecurityContext SecurityContext securityContext) {
 
         final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
-        workingTimeDto.setFederalState(FederalState.NONE);
-        workingTimeDto.setWorksOnPublicHoliday(false);
+        workingTimeDto.setFederalState(FederalState.GLOBAL);
+        workingTimeDto.setWorksOnPublicHoliday(null);
 
         prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
         model.addAttribute("createMode", true);

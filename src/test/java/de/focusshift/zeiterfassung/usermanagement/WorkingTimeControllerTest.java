@@ -699,7 +699,7 @@ class WorkingTimeControllerTest {
     }
 
     @Test
-    void ensurePost() throws Exception {
+    void ensureEdit() throws Exception {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
@@ -735,7 +735,7 @@ class WorkingTimeControllerTest {
     }
 
     @Test
-    void ensurePostJavaScript() throws Exception {
+    void ensureEditJavaScript() throws Exception {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
@@ -772,7 +772,7 @@ class WorkingTimeControllerTest {
     }
 
     @Test
-    void ensurePostWithValidationError() throws Exception {
+    void ensureEditWithValidationError() throws Exception {
 
         when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
@@ -834,7 +834,7 @@ class WorkingTimeControllerTest {
         "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true,false",
         "ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,false,false,true"
     })
-    void ensurePostWithValidationErrorAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount, boolean editPermissions) throws Exception {
+    void ensureEditWithValidationErrorAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount, boolean editPermissions) throws Exception {
 
         when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
@@ -875,7 +875,7 @@ class WorkingTimeControllerTest {
     }
 
     @Test
-    void ensurePostWithValidationErrorJavaScript() throws Exception {
+    void ensureEditWithValidationErrorJavaScript() throws Exception {
 
         when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
