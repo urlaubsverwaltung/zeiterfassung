@@ -52,12 +52,8 @@ class OAuth2UserServiceSingleTenantTest {
     void ensureOriginalOidcUserWhenUserDoesNotExistYet() {
 
         final Map<String, Object> claims = Map.of(SUB, "uuid");
-
-        final ClientRegistration clientRegistration = ClientRegistration.withRegistrationId("most-awesome-tenant").authorizationGrantType(JWT_BEARER).build();
-        final OAuth2AccessToken accessToken = new OAuth2AccessToken(BEARER, "token-value", Instant.now(), Instant.now());
-        final OidcIdToken oidcToken = OidcIdToken.withTokenValue("token-value").claims(map -> map.putAll(claims)).build();
-        final OidcUserRequest oidcUserRequest = new OidcUserRequest(clientRegistration, accessToken, oidcToken);
-
+        final OidcIdToken oidcToken = oidcIdToken(claims);
+        final OidcUserRequest oidcUserRequest = oidcUserRequest(oidcToken);
         final DefaultOidcUser oidcUser = new DefaultOidcUser(List.of(new SimpleGrantedAuthority("remote-role")), oidcToken, new OidcUserInfo(claims));
         when(oidcUserService.loadUser(oidcUserRequest)).thenReturn(oidcUser);
 
@@ -71,12 +67,8 @@ class OAuth2UserServiceSingleTenantTest {
     void ensureMergedRemoteAndApplicationAuthorities() {
 
         final Map<String, Object> claims = Map.of(SUB, "uuid");
-
-        final ClientRegistration clientRegistration = ClientRegistration.withRegistrationId("most-awesome-tenant").authorizationGrantType(JWT_BEARER).build();
-        final OAuth2AccessToken accessToken = new OAuth2AccessToken(BEARER, "token-value", Instant.now(), Instant.now());
-        final OidcIdToken oidcToken = OidcIdToken.withTokenValue("token-value").claims(map -> map.putAll(claims)).build();
-        final OidcUserRequest oidcUserRequest = new OidcUserRequest(clientRegistration, accessToken, oidcToken);
-
+        final OidcIdToken oidcToken = oidcIdToken(claims);
+        final OidcUserRequest oidcUserRequest = oidcUserRequest(oidcToken);
         final DefaultOidcUser oidcUser = new DefaultOidcUser(List.of(new SimpleGrantedAuthority("remote-role")), oidcToken, new OidcUserInfo(claims));
         when(oidcUserService.loadUser(oidcUserRequest)).thenReturn(oidcUser);
 
@@ -86,6 +78,20 @@ class OAuth2UserServiceSingleTenantTest {
 
         assertThat(actual.getAuthorities().stream().map(GrantedAuthority::getAuthority))
             .containsExactlyInAnyOrder("remote-role", ZEITERFASSUNG_VIEW_REPORT_ALL.name());
+    }
+
+    private OidcUserRequest oidcUserRequest(OidcIdToken oidcToken) {
+        final ClientRegistration clientRegistration = ClientRegistration.withRegistrationId("most-awesome-tenant").authorizationGrantType(JWT_BEARER).build();
+        return new OidcUserRequest(clientRegistration, oAuth2AccessToken(), oidcToken);
+    }
+
+    private OidcIdToken oidcIdToken(Map<String, Object> claims) {
+        return OidcIdToken.withTokenValue("token-value").claims(map -> map.putAll(claims)).build();
+    }
+
+    private static OAuth2AccessToken oAuth2AccessToken() {
+        final Instant now = Instant.now();
+        return new OAuth2AccessToken(BEARER, "token-value", now, now.plusMillis(1));
     }
 
     private TenantUser anyTenantUser(String id, Set<SecurityRole> authorities) {
