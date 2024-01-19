@@ -57,7 +57,7 @@ class OAuth2UserServiceMultiTenantTest {
         final Map<String, Object> claims = Map.of(SUB, "uuid");
 
         final ClientRegistration clientRegistration = ClientRegistration.withRegistrationId("most-awesome-tenant").authorizationGrantType(JWT_BEARER).build();
-        final OAuth2AccessToken accessToken = new OAuth2AccessToken(BEARER, "token-value", Instant.now(), Instant.now());
+        final OAuth2AccessToken accessToken = new OAuth2AccessToken(BEARER, "token-value", Instant.now(), Instant.now().plusNanos(1));
         final OidcIdToken oidcToken = OidcIdToken.withTokenValue("token-value").claims(map -> map.putAll(claims)).build();
         final OidcUserRequest oidcUserRequest = new OidcUserRequest(clientRegistration, accessToken, oidcToken);
 
@@ -76,7 +76,7 @@ class OAuth2UserServiceMultiTenantTest {
         final Map<String, Object> claims = Map.of(SUB, "uuid");
 
         final ClientRegistration clientRegistration = ClientRegistration.withRegistrationId("most-awesome-tenant").authorizationGrantType(JWT_BEARER).build();
-        final OAuth2AccessToken accessToken = new OAuth2AccessToken(BEARER, "token-value", Instant.now(), Instant.now());
+        final OAuth2AccessToken accessToken = new OAuth2AccessToken(BEARER, "token-value", Instant.now(), Instant.now().plusNanos(1));
         final OidcIdToken oidcToken = OidcIdToken.withTokenValue("token-value").claims(map -> map.putAll(claims)).build();
         final OidcUserRequest oidcUserRequest = new OidcUserRequest(clientRegistration, accessToken, oidcToken);
 
@@ -97,7 +97,7 @@ class OAuth2UserServiceMultiTenantTest {
         final Map<String, Object> claims = Map.of(SUB, "uuid");
 
         final ClientRegistration clientRegistration = ClientRegistration.withRegistrationId("most-awesome-tenant").authorizationGrantType(JWT_BEARER).build();
-        final OAuth2AccessToken accessToken = new OAuth2AccessToken(BEARER, "token-value", Instant.now(), Instant.now());
+        final OAuth2AccessToken accessToken = new OAuth2AccessToken(BEARER, "token-value", Instant.now(), Instant.now().plusNanos(1));
         final OidcIdToken oidcToken = OidcIdToken.withTokenValue("token-value").claims(map -> map.putAll(claims)).build();
         final OidcUserRequest oidcUserRequest = new OidcUserRequest(clientRegistration, accessToken, oidcToken);
 
