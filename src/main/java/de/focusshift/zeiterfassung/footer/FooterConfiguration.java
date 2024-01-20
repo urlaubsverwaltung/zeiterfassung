@@ -15,15 +15,15 @@ class FooterConfiguration implements WebMvcConfigurer {
     }
 
     @Bean
-    WebMvcConfigurer infoBannerWebMvcConfigurer(FooterControllerAdvice footerControllerAdvice) {
-        return new InfoBannerWebMvcConfigurer(footerControllerAdvice);
+    WebMvcConfigurer footerWebMvcConfigurer(FooterControllerAdvice footerControllerAdvice) {
+        return new FooterWebMvcConfigurer(footerControllerAdvice);
     }
 
-    static class InfoBannerWebMvcConfigurer implements WebMvcConfigurer {
+    static class FooterWebMvcConfigurer implements WebMvcConfigurer {
 
         private final FooterControllerAdvice footerControllerAdvice;
 
-        InfoBannerWebMvcConfigurer(FooterControllerAdvice footerControllerAdvice) {
+        FooterWebMvcConfigurer(FooterControllerAdvice footerControllerAdvice) {
             this.footerControllerAdvice = footerControllerAdvice;
         }
 
