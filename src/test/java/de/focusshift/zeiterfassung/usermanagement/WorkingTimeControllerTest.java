@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,7 @@ import java.time.Duration;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -120,6 +122,64 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time/new")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        )
+            .andExpect(model().attribute("globalWorksOnPublicHoliday", expectedValue));
+    }
+
+    @Test
+    void ensureGetEditPage() throws Exception {
+
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
+
+        when(federalStateSettingsService.getFederalStateSettings())
+            .thenReturn(new FederalStateSettings(GERMANY_BERLIN, true));
+
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId).build();
+        when(workingTimeService.getWorkingTimeById(workingTimeId)).thenReturn(Optional.of(workingTime));
+
+        perform(
+            get("/users/42/working-time/" + workingTimeId.value())
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("usermanagement/users"))
+            .andExpect(model().attribute("createMode", false))
+            .andExpect(model().attribute("section", "working-time-edit"))
+            .andExpect(model().attributeExists("workingTime", "federalStateSelect"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "true, 1",
+        "false, 0",
+    })
+    void ensureGetEditPage(boolean globalWorksOnPublicHoliday, Integer expectedValue) throws Exception {
+
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
+
+        when(federalStateSettingsService.getFederalStateSettings())
+            .thenReturn(new FederalStateSettings(GERMANY_BERLIN, globalWorksOnPublicHoliday));
+
+        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
+            .build();
+
+        when(workingTimeService.getWorkingTimeById(workingTimeId)).thenReturn(Optional.of(workingTime));
+
+        perform(
+            get("/users/42/working-time/" + workingTimeId.value())
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(model().attribute("globalWorksOnPublicHoliday", expectedValue));
