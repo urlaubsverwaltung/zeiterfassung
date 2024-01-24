@@ -47,9 +47,10 @@ class PublicHolidaysServiceTest {
 
         final Map<FederalState, PublicHolidayCalendar> actual = sut.getPublicHolidays(from, toExclusive, federalStates);
 
-        assertThat(actual).hasSize(2);
-        assertThat(actual).hasEntrySatisfying(NONE, this::assertNone);
-        assertThat(actual).hasEntrySatisfying(GERMANY_BADEN_WUERTTEMBERG, this::assertBadenWuerttemberg);
+        assertThat(actual)
+            .hasSize(2)
+            .hasEntrySatisfying(NONE, this::assertNone)
+            .hasEntrySatisfying(GERMANY_BADEN_WUERTTEMBERG, this::assertBadenWuerttemberg);
 
         verifyNoInteractions(federalStateSettingsService);
     }
@@ -64,8 +65,9 @@ class PublicHolidaysServiceTest {
 
         final Map<FederalState, PublicHolidayCalendar> actual = sut.getPublicHolidays(from, toExclusive, List.of(GLOBAL));
 
-        assertThat(actual).hasSize(1);
-        assertThat(actual).hasEntrySatisfying(NONE, this::assertNone);
+        assertThat(actual)
+            .hasSize(1)
+            .hasEntrySatisfying(NONE, this::assertNone);
     }
 
     @ParameterizedTest
@@ -79,8 +81,9 @@ class PublicHolidaysServiceTest {
 
         final Map<FederalState, PublicHolidayCalendar> actual = sut.getPublicHolidays(from, toExclusive, List.of(GLOBAL));
 
-        assertThat(actual).hasSize(1);
-        assertThat(actual).hasEntrySatisfying(GERMANY_BADEN_WUERTTEMBERG, this::assertBadenWuerttemberg);
+        assertThat(actual)
+            .hasSize(1)
+            .hasEntrySatisfying(GERMANY_BADEN_WUERTTEMBERG, this::assertBadenWuerttemberg);
     }
 
     private void assertNone(PublicHolidayCalendar publicHolidayCalendar) {
