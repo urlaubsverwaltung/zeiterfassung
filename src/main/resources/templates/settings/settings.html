@@ -47,7 +47,7 @@
                     <select
                       id="federal-state-select"
                       name="federalState"
-                      th:replace="~{fragments/select::one(id='federal-state-select', name='federalState', options=~{::federal-state-select-options})}"
+                      th:replace="~{fragments/select::one(id='federal-state-select', name='federalState', options=~{::federal-state-select-options}, testId='federal-state-select')}"
                     >
                       <th:block th:ref="federal-state-select-options">
                         <optgroup
@@ -68,6 +68,7 @@
                     <input
                       type="checkbox"
                       id="works-on-public-holiday-checkbox"
+                      data-test-id="works-on-public-holiday-checkbox"
                       th:field="*{worksOnPublicHoliday}"
                     />
                     <label
@@ -84,6 +85,7 @@
                   <button
                     type="submit"
                     class="button-primary button-primary-icon"
+                    data-test-id="settings-submit-button"
                   >
                     <svg
                       th:replace="~{icons/save::svg(className='w-5 h-5')}"
