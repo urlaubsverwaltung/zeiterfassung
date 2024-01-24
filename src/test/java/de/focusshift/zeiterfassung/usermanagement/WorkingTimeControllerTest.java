@@ -27,6 +27,7 @@ import org.springframework.validation.ObjectError;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -125,6 +126,111 @@ class WorkingTimeControllerTest {
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(model().attribute("globalWorksOnPublicHoliday", expectedValue));
+    }
+
+    @Test
+    void ensurePostCreateWorkingTimeFailsWithValidationError() throws Exception {
+
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
+
+        when(federalStateSettingsService.getFederalStateSettings())
+            .thenReturn(new FederalStateSettings(GERMANY_BERLIN, false));
+
+        final WorkingTimeDto expectedWorkingTimeDto = new WorkingTimeDto();
+        expectedWorkingTimeDto.setUserId(42L);
+
+        doAnswer(
+            invocation -> {
+                final BindingResult result = invocation.getArgument(1);
+                result.addError(new ObjectError("workingTime", "error"));
+                return null;
+            }
+        ).when(workingTimeDtoValidator).validate(eq(expectedWorkingTimeDto), any(BindingResult.class));
+
+        perform(
+            post("/users/42/working-time/new")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .param("userId", "42")
+        )
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("createMode", true))
+            .andExpect(view().name("usermanagement/users"));
+
+        verifyNoInteractions(workingTimeService);
+    }
+
+    @Test
+    void ensurePostCreateWorkingTimeFailsWithValidationErrorJavaScript() throws Exception {
+
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
+
+        when(federalStateSettingsService.getFederalStateSettings())
+            .thenReturn(new FederalStateSettings(GERMANY_BERLIN, false));
+
+        final WorkingTimeDto expectedWorkingTimeDto = new WorkingTimeDto();
+        expectedWorkingTimeDto.setUserId(42L);
+
+        doAnswer(
+            invocation -> {
+                final BindingResult result = invocation.getArgument(1);
+                result.addError(new ObjectError("workingTime", "error"));
+                return null;
+            }
+        ).when(workingTimeDtoValidator).validate(eq(expectedWorkingTimeDto), any(BindingResult.class));
+
+        perform(
+            post("/users/42/working-time/new")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .header("Turbo-Frame", "person-frame")
+                .param("userId", "42")
+        )
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(model().attribute("createMode", true))
+            .andExpect(view().name("usermanagement/users::#person-frame"));
+
+        verifyNoInteractions(workingTimeService);
+    }
+
+    @Test
+    void ensurePostCreateWorkingTime() throws Exception {
+
+        perform(
+            post("/users/42/working-time/new")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .param("userId", "42")
+                .param("validFrom", "2024-04-01")
+                .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
+                .param("workday", "monday", "wednesday")
+                .param("workingTime", "4.0")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/users/42/working-time"));
+
+        verify(workingTimeService).createWorkingTime(
+            new UserLocalId(42L),
+            LocalDate.of(2024, 4, 1),
+            GERMANY_BADEN_WUERTTEMBERG,
+            null,
+            new EnumMap<>(Map.of(
+                MONDAY, Duration.ofHours(4),
+                TUESDAY, Duration.ZERO,
+                WEDNESDAY, Duration.ofHours(4),
+                THURSDAY, Duration.ZERO,
+                FRIDAY, Duration.ZERO,
+                SATURDAY, Duration.ZERO,
+                SUNDAY, Duration.ZERO
+            ))
+        );
     }
 
     @Test

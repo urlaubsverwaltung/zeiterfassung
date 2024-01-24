@@ -140,8 +140,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         if (result.hasErrors()) {
             prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
             model.addAttribute("createMode", workingTimeDto.getId() == null);
-            if (hasText(turboFrame)) {
-                return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
+            if ("person-frame".equals(turboFrame)) {
+                return new ModelAndView("usermanagement/users::#person-frame", UNPROCESSABLE_ENTITY);
             } else {
                 return new ModelAndView("usermanagement/users");
             }
