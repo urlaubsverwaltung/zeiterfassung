@@ -50,6 +50,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -74,6 +75,54 @@ class WorkingTimeControllerTest {
     @BeforeEach
     void setUp() {
         sut = new WorkingTimeController(userManagementService, workingTimeService, workingTimeDtoValidator, federalStateSettingsService);
+    }
+
+    @Test
+    void ensureGetCreatePage() throws Exception {
+
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
+
+        when(federalStateSettingsService.getFederalStateSettings())
+            .thenReturn(new FederalStateSettings(GERMANY_BERLIN, true));
+
+        perform(
+            get("/users/42/working-time/new")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("usermanagement/users"))
+            .andExpect(model().attribute("createMode", true))
+            .andExpect(model().attribute("section", "working-time-edit"))
+            .andExpect(model().attributeExists("federalStateSelect"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "true, 1",
+        "false, 0",
+    })
+    void ensureGetCreatePageWithCorrectGlobalWorksOnPublicHoliday(boolean worksOnPublicHoliday, Integer expectedValue) throws Exception {
+
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
+
+        when(federalStateSettingsService.getFederalStateSettings())
+            .thenReturn(new FederalStateSettings(GERMANY_BERLIN, worksOnPublicHoliday));
+
+        perform(
+            get("/users/42/working-time/new")
+                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        )
+            .andExpect(model().attribute("globalWorksOnPublicHoliday", expectedValue));
     }
 
     @Test
