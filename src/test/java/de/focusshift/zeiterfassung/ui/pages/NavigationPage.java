@@ -24,12 +24,24 @@ public class NavigationPage {
     }
 
     public void goToUsersPage() {
-        page.waitForResponse(Response::ok, () -> usersLink().click());
-        page.waitForLoadState(DOMCONTENTLOADED);
+        goTo(usersLink());
+    }
+
+    public void goToSettingsPage() {
+        goTo(settingsLink());
     }
 
     public Locator usersLink() {
         return page.locator("[data-test-id=navigation-link-users]");
+    }
+
+    public Locator settingsLink() {
+        return page.locator("[data-test-id=navigation-link-settings]");
+    }
+
+    private void goTo(Locator locator) {
+        page.waitForResponse(Response::ok, locator::click);
+        page.waitForLoadState(DOMCONTENTLOADED);
     }
 
     private record AvatarMenu(Page page) {

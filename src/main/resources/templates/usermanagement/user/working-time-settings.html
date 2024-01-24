@@ -11,6 +11,7 @@
           th:href="@{/users/{id}/working-time/new (id=${user.id}, query=${query})}"
           class="button-secondary button-secondary-icon button-secondary--narrow"
           data-turbo-action="advance"
+          data-test-id="working-time-create-button"
         >
           <svg th:replace="~{icons/plus::svg(className='w-5 h-5')}"></svg>
           <th:block

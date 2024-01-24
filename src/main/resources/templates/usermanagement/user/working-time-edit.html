@@ -59,7 +59,7 @@
                 <select
                   id="federal-state-select"
                   name="federalState"
-                  th:replace="~{fragments/select::one(id='federal-state-select', name='federalState', options=~{::federal-state-select-options})}"
+                  th:replace="~{fragments/select::one(id='federal-state-select', name='federalState', options=~{::federal-state-select-options}, testId='federal-state-select')}"
                 >
                   <th:block th:ref="federal-state-select-options">
                     <optgroup
@@ -93,6 +93,7 @@
                   name="worksOnPublicHoliday"
                   value="true"
                   th:checked="${workingTime.worksOnPublicHoliday != null && workingTime.worksOnPublicHoliday == true}"
+                  data-test-id="works-on-public-holiday-yes-input"
                 />
                 <label
                   for="works-on-public-holiday-yes-checkbox"
@@ -108,6 +109,7 @@
                   name="worksOnPublicHoliday"
                   value="false"
                   th:checked="${workingTime.worksOnPublicHoliday != null && workingTime.worksOnPublicHoliday == false}"
+                  data-test-id="works-on-public-holiday-no-input"
                 />
                 <label
                   for="works-on-public-holiday-no-checkbox"
@@ -123,6 +125,7 @@
                   name="worksOnPublicHoliday"
                   value=""
                   th:checked="${workingTime.worksOnPublicHoliday == null}"
+                  data-test-id="works-on-public-holiday-global-input"
                 />
                 <label
                   for="works-on-public-holiday-global-checkbox"
@@ -265,6 +268,7 @@
                   th:errorclass="invalid"
                   th:aria-invalid="${#fields.hasErrors('workingTime')}"
                   th:aria-message="${#fields.hasErrors('workingTime') ? 'working-time-error-message' : ''}"
+                  data-test-id="working-time-hours-input"
                 />
                 <label
                   for="input-workingtime"
@@ -347,6 +351,7 @@
               type="submit"
               class="button-primary button-primary-icon"
               data-turbo-action="advance"
+              data-test-id="working-time-submit-button"
             >
               <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
               <th:block
