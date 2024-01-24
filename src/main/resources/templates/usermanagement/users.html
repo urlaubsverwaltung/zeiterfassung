@@ -94,6 +94,9 @@
               is="z-user-selection-list"
             >
               <turbo-frame id="person-list-frame">
+                <turbo-stream target="user-settings-tabs" action="replace">
+                  <template th:insert="~{::#user-settings-tabs}"></template>
+                </turbo-stream>
                 <ol class="flex flex-col user-selection-list">
                   <th:block th:each="user : ${users}">
                     <li
@@ -230,7 +233,7 @@
                         </span>
                       </div>
                     </div>
-                    <div>
+                    <div id="user-settings-tabs">
                       <ul class="flex flex-col sm:flex-row sm:px-2">
                         <li th:if="${allowedToEditWorkingTime}">
                           <a
