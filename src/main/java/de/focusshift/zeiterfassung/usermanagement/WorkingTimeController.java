@@ -23,11 +23,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -50,12 +48,14 @@ import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
-import static java.time.ZoneOffset.UTC;
 import static java.util.Objects.requireNonNullElseGet;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.util.StringUtils.hasText;
 
+/**
+ * Controller for a special working time of a person.
+ */
 @Controller
 @RequestMapping("/users/{userId}/working-time")
 @PreAuthorize("hasAuthority('ZEITERFASSUNG_WORKING_TIME_EDIT_ALL')")
@@ -65,38 +65,16 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     private final WorkingTimeService workingTimeService;
     private final WorkingTimeDtoValidator validator;
     private final FederalStateSettingsService federalStateSettingsService;
-    private final Clock clock;
 
     WorkingTimeController(UserManagementService userManagementService,
                           WorkingTimeService workingTimeService,
                           WorkingTimeDtoValidator validator,
-                          FederalStateSettingsService federalStateSettingsService,
-                          Clock clock) {
+                          FederalStateSettingsService federalStateSettingsService) {
 
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
         this.validator = validator;
         this.federalStateSettingsService = federalStateSettingsService;
-        this.clock = clock;
-    }
-
-    @GetMapping
-    String get(@PathVariable("userId") Long userId, Model model,
-               @RequestParam(value = "query", required = false, defaultValue = "") String query,
-               @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-               @CurrentSecurityContext SecurityContext securityContext) {
-
-        final List<WorkingTime> workingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(userId));
-        final List<WorkingTimeListEntryDto> workingTimeDtos = workingTimesToDtos(workingTimes);
-        final FederalStateSettings federalStateSettings = federalStateSettingsService.getFederalStateSettings();
-
-        prepareGetWorkingTimesModel(model, query, userId, workingTimeDtos, securityContext, federalStateSettings);
-
-        if (hasText(turboFrame)) {
-            return "usermanagement/users::#" + turboFrame;
-        } else {
-            return "usermanagement/users";
-        }
     }
 
     @GetMapping("/new")
@@ -332,38 +310,6 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         if (consumer != null) {
             consumer.accept(0.0); // o.O`
         }
-    }
-
-    private List<WorkingTimeListEntryDto> workingTimesToDtos(List<WorkingTime> workingTimes) {
-        return workingTimes.stream().map(this::workingTimeListEntryDto).toList();
-    }
-
-    private WorkingTimeListEntryDto workingTimeListEntryDto(WorkingTime workingTime) {
-
-        final LocalDate today = LocalDate.now(clock);
-        final Date validFrom = workingTime.validFrom().map(from -> Date.from(from.atStartOfDay().toInstant(UTC))).orElse(null);
-        final Date validTo = workingTime.validTo().map(to -> Date.from(to.atStartOfDay().toInstant(UTC))).orElse(null);
-        final Boolean validFromIsPast = workingTime.validFrom().map(from -> from.isBefore(today)).orElse(true);
-        final String federalStateMessageKey = federalStateMessageKey(workingTime.federalState());
-
-        return new WorkingTimeListEntryDto(
-            workingTime.id().value(),
-            workingTime.userLocalId().value(),
-            validFrom,
-            validTo,
-            validFromIsPast,
-            workingTime.isCurrent(),
-            workingTime.validFrom().isPresent(),
-            federalStateMessageKey,
-            workingTime.worksOnPublicHoliday(),
-            workingTime.getMonday().hoursDoubleValue(),
-            workingTime.getTuesday().hoursDoubleValue(),
-            workingTime.getWednesday().hoursDoubleValue(),
-            workingTime.getThursday().hoursDoubleValue(),
-            workingTime.getFriday().hoursDoubleValue(),
-            workingTime.getSaturday().hoursDoubleValue(),
-            workingTime.getSunday().hoursDoubleValue()
-        );
     }
 
     private static WorkingTimeDto workingTimeToDto(WorkingTime workingTime) {
