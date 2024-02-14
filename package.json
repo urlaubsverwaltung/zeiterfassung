@@ -47,7 +47,7 @@
     "prettier-plugin-svelte": "3.1.2",
     "rimraf": "5.0.5",
     "rollup": "4.9.6",
-    "rollup-plugin-esbuild": "6.1.0",
+    "rollup-plugin-esbuild": "6.1.1",
     "rollup-plugin-postcss": "4.0.2",
     "rollup-plugin-svelte": "7.1.6",
     "svelte": "4.2.9",
