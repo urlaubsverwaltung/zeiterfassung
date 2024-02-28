@@ -60,6 +60,22 @@
                 </label>
               </div>
             </div>
+            <div class="mt-2 sm:mt-4">
+              <div class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="permissions-working-time-edit-global-checkbox"
+                  th:field="*{workingTimeEditGlobal}"
+                />
+                <label
+                  for="permissions-working-time-edit-global-checkbox"
+                  th:text="#{usermanagement.permissions.working-time-edit-global.allowed.label}"
+                >
+                  darf die globale Arbeitszeit und Feiertagseinstellung
+                  bearbeiten
+                </label>
+              </div>
+            </div>
           </fieldset>
           <fieldset class="border-t border-gray-100">
             <legend
