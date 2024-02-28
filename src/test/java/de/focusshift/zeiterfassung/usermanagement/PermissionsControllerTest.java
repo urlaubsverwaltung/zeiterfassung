@@ -99,8 +99,11 @@ class PermissionsControllerTest {
         final PermissionsDto reportPermissionDto = new PermissionsDto();
         reportPermissionDto.setViewReportAll(true);
 
-        final PermissionsDto workingTimePermissionDto = new PermissionsDto();
-        workingTimePermissionDto.setWorkingTimeEditAll(true);
+        final PermissionsDto workingTimeAllPermissionDto = new PermissionsDto();
+        workingTimeAllPermissionDto.setWorkingTimeEditAll(true);
+
+        final PermissionsDto workingTimeGlobalPermissionDto = new PermissionsDto();
+        workingTimeGlobalPermissionDto.setWorkingTimeEditGlobal(true);
 
         final PermissionsDto overtimePermissionDto = new PermissionsDto();
         overtimePermissionDto.setOvertimeEditAll(true);
@@ -110,7 +113,8 @@ class PermissionsControllerTest {
 
         return Stream.of(
             Arguments.of(SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL, reportPermissionDto),
-            Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, workingTimePermissionDto),
+            Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, workingTimeAllPermissionDto),
+            Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL, workingTimeGlobalPermissionDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, overtimePermissionDto),
             Arguments.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, permissionsPermissionDto)
         );
@@ -141,7 +145,7 @@ class PermissionsControllerTest {
         "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true,false",
         "ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,false,false,true"
     })
-    void ensureSimpleGetAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount, boolean editPermissions) throws Exception {
+    void ensureSimpleGetAllowedToEditX(String authority, boolean editWorkingTimeAll, boolean editOvertimeAccount, boolean editPermissions) throws Exception {
 
         final UserId batmanId = new UserId("batman");
         final UserLocalId batmanLocalId = new UserLocalId(1337L);
@@ -159,7 +163,7 @@ class PermissionsControllerTest {
             get("/users/1337/permissions")
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority(authority)))
         )
-            .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTime))
+            .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTimeAll))
             .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount))
             .andExpect(model().attribute("allowedToEditPermissions", editPermissions));
     }

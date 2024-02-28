@@ -6,6 +6,7 @@ class PermissionsDto {
 
     private boolean viewReportAll;
     private boolean workingTimeEditAll;
+    private boolean workingTimeEditGlobal;
     private boolean overtimeEditAll;
     private boolean permissionsEditAll;
 
@@ -23,6 +24,14 @@ class PermissionsDto {
 
     public void setWorkingTimeEditAll(boolean workingTimeEditAll) {
         this.workingTimeEditAll = workingTimeEditAll;
+    }
+
+    public boolean isWorkingTimeEditGlobal() {
+        return workingTimeEditGlobal;
+    }
+
+    public void setWorkingTimeEditGlobal(boolean workingTimeEditGlobal) {
+        this.workingTimeEditGlobal = workingTimeEditGlobal;
     }
 
     public boolean isOvertimeEditAll() {
