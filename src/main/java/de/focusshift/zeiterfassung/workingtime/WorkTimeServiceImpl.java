@@ -47,7 +47,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
     private final WorkingTimeRepository repository;
     private final UserManagementService userManagementService;
-    private FederalStateSettingsService federalStateSettingsService;
+    private final FederalStateSettingsService federalStateSettingsService;
     private final Clock clock;
 
     WorkTimeServiceImpl(WorkingTimeRepository repository, UserManagementService userManagementService,
