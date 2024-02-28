@@ -35,7 +35,7 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.nullsLast;
 import static java.util.Comparator.reverseOrder;
 import static java.util.HashMap.newHashMap;
-import static java.util.Objects.requireNonNullElse;
+import static java.util.Objects.requireNonNullElseGet;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -390,7 +390,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
                                             Supplier<Boolean> worksOnPublicHolidaySupplier) {
 
         final Boolean entityWorksOnPublicHoliday = entity.isWorksOnPublicHoliday();
-        final boolean worksOnPublicHoliday = requireNonNullElse(entityWorksOnPublicHoliday, worksOnPublicHolidaySupplier.get());
+        final boolean worksOnPublicHoliday = requireNonNullElseGet(entityWorksOnPublicHoliday, worksOnPublicHolidaySupplier);
 
         return WorkingTime.builder(userIdComposite, new WorkingTimeId(entity.getId()))
             .current(isCurrent(entity, allEntitiesSorted))
