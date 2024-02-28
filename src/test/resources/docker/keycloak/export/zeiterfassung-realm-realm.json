@@ -101,8 +101,8 @@
       "containerId" : "zeiterfassung-realm",
       "attributes" : { }
     }, {
-      "id" : "9f64d177-229c-4fd1-8a40-a2fb5f10e8d3",
-      "name" : "zeiterfassung_overtime_account_edit_global",
+      "id" : "71923301-670f-48ae-a372-648d70e6d7cf",
+      "name" : "zeiterfassung_working_time_edit_global",
       "description" : "",
       "composite" : false,
       "clientRole" : false,
