@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -13,7 +13,7 @@
     >
       <turbo-frame id="frame-nav-time-clock-edit">
         <turbo-stream target="time-clock-summary" action="replace">
-          <template th:insert="~{_navigation::#time-clock-summary}"></template>
+          <template th:insert="~{_top::#time-clock-summary}"></template>
         </turbo-stream>
         <form action="#" th:replace="~{::time-clock-form}"></form>
       </turbo-frame>

@@ -58,6 +58,71 @@
   grid-column-start: 6;
 }
 
+.time-entry-actions {
+  position: relative;
+
+  [data-toggle-button] {
+    @apply hidden;
+    @apply md:inline-flex;
+    @apply md:rounded-full;
+    @apply md:w-12;
+    @apply md:h-12;
+    @apply md:hover:bg-blue-100;
+    @apply md:focus:bg-blue-100;
+    @apply md:transition-colors;
+    @apply md:duration-200;
+  }
+
+  [data-toggle-button][aria-pressed="true"] {
+    @apply bg-blue-100;
+  }
+
+  [data-toggle-button] ~ .time-entry-actions-list button {
+    @apply flex;
+    @apply items-center;
+    @apply gap-3;
+    @apply text-gray-500;
+    @apply md:text-gray-900;
+    @apply md:pl-3;
+    @apply md:pr-4;
+    @apply md:py-1;
+    @apply md:rounded-md;
+    @apply md:transition-colors;
+    @apply md:hover:bg-gray-100;
+    @apply md:focus:bg-gray-100;
+    @apply md:w-full;
+  }
+
+  [data-toggle-button] ~ .time-entry-actions-list {
+    @apply flex;
+    @apply flex-row;
+    @apply gap-4;
+    @apply md:flex-col;
+    @apply md:gap-0;
+    @apply md:bg-white;
+    @apply md:py-2;
+    @apply md:px-1;
+    @apply md:absolute;
+    @apply md:mt-1;
+    @apply md:top-full;
+    @apply md:right-0;
+    @apply md:border;
+    @apply md:border-gray-100;
+    @apply md:rounded-lg;
+    @apply md:shadow-lg;
+    @apply md:z-10;
+    @apply md:transition-all;
+    @apply md:scale-0;
+    @apply md:opacity-0;
+    @apply md:origin-top-right;
+  }
+
+  [data-toggle-button][aria-pressed="true"] ~ .time-entry-actions-list {
+    @apply md:opacity-100;
+    @apply md:scale-100;
+  }
+}
+
 @screen xs {
   .time-entry-cell-container {
     display: grid;
@@ -203,7 +268,7 @@
   border-radius: 27px;
 }
 
-.timeslot-form-existing.edited button[type="submit"] {
+.timeslot-form-existing.edited button[data-toggle-button] {
   color: theme("colors.gray.700");
   background-color: theme("colors.blue.100");
   padding: 0.25rem 0.5rem;
@@ -301,7 +366,6 @@
     border-top-right-radius: 0;
     border-top-left-radius: var(--time-entries-box-border-radius);
     border-bottom-left-radius: var(--time-entries-box-border-radius);
-    width: 14rem;
   }
 
   .time-entry-box-absence__input__date {
@@ -328,8 +392,7 @@
   .time-entry-box__controls,
   .time-entry-box-absence__controls {
     margin-left: 1rem;
-    justify-content: flex-start;
-    width: 20%;
+    width: 3rem;
   }
 
   .time-entry-box-absence__absence-color-box {
@@ -342,12 +405,5 @@
   .time-entry-box-absence__absence-text {
     @apply font-bold;
     @apply text-sm;
-  }
-}
-
-@screen lg {
-  .time-entry-box__controls,
-  .time-entry-box-absence__controls {
-    width: 16.6666666667%;
   }
 }

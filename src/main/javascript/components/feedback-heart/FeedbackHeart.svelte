@@ -20,7 +20,7 @@
   <FloatingHeart />
 {/each}
 
-<div class="fixed left-0 bottom-0 p-2">
+<div class="fixed left-0 bottom-0 p-2 lg:z-50">
   <div
     on:click={handleMouseClick}
     on:keypress={() => {
@@ -30,6 +30,6 @@
     tabindex="0"
     class="cursor-pointer"
   >
-    <HeartIcon class="w-8 h-8" />
+    <HeartIcon class="w-8 h-8" style="z-index: 9999999" />
   </div>
 </div>
