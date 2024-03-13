@@ -289,6 +289,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         model.addAttribute("section", "working-time-edit");
         model.addAttribute("workingTime", workingTimeDto);
+        model.addAttribute("globalFederalState", federalStateSettings.federalState());
         // number is required for the messages choice pattern which does not work with boolean
         model.addAttribute("globalWorksOnPublicHoliday", federalStateSettings.worksOnPublicHoliday() ? 1 : 0);
         model.addAttribute("federalStateSelect", federalStateSelectDto(workingTimeDto.getFederalState(), true));

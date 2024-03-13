@@ -394,14 +394,14 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
         final Boolean entityWorksOnPublicHoliday = entity.isWorksOnPublicHoliday();
         final boolean worksOnPublicHoliday = requireNonNullElseGet(entityWorksOnPublicHoliday, () -> federalStateSettingsSupplier.get().worksOnPublicHoliday());
-        final FederalState federalState = entityFederalStateToDomain(entity, federalStateSettingsSupplier);
 
         return WorkingTime.builder(userIdComposite, new WorkingTimeId(entity.getId()))
             .current(isCurrent(entity, allEntitiesSorted))
             .validFrom(entity.getValidFrom())
             .validTo(getValidToDate(entity, allEntitiesSorted))
             .minValidFrom(getMinValidFromDate(entity, allEntitiesSorted))
-            .federalState(federalState)
+            .federalState(entity.getFederalState())
+            .globalFederalStateSupplier(() -> federalStateSettingsSupplier.get().federalState())
             .worksOnPublicHoliday(worksOnPublicHoliday, entityWorksOnPublicHoliday == null)
             .monday(Duration.parse(entity.getMonday()))
             .tuesday(Duration.parse(entity.getTuesday()))
@@ -411,14 +411,6 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             .saturday(Duration.parse(entity.getSaturday()))
             .sunday(Duration.parse(entity.getSunday()))
             .build();
-    }
-
-    private FederalState entityFederalStateToDomain(WorkingTimeEntity entity, Supplier<FederalStateSettings> federalStateSettingsSupplier) {
-        if (entity.getFederalState().equals(FederalState.GLOBAL)) {
-            return federalStateSettingsSupplier.get().federalState();
-        } else {
-            return entity.getFederalState();
-        }
     }
 
     private WorkingTimeEntity workingTimeToEntity(WorkingTime workingTime) {
