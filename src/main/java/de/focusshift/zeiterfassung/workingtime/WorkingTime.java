@@ -14,8 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static de.focusshift.zeiterfassung.publicholiday.FederalState.GLOBAL;
 import static java.math.BigDecimal.ONE;
 import static java.math.RoundingMode.DOWN;
 import static java.math.RoundingMode.HALF_EVEN;
@@ -43,6 +45,7 @@ public final class WorkingTime implements HasUserIdComposite {
     private final LocalDate validTo;
     private final LocalDate minValidFrom;
     private final FederalState federalState;
+    private final Supplier<FederalState> globalFederalStateSupplier;
     private final boolean worksOnPublicHoliday;
     private final boolean worksOnPublicHolidayGlobal;
     private final EnumMap<DayOfWeek, PlannedWorkingHours> workdays;
@@ -55,6 +58,7 @@ public final class WorkingTime implements HasUserIdComposite {
         this.validTo = builder.validTo;
         this.minValidFrom = builder.minValidFrom;
         this.federalState = builder.federalState;
+        this.globalFederalStateSupplier = builder.globalFederalStateSupplier;
         this.worksOnPublicHoliday = builder.worksOnPublicHoliday;
         this.worksOnPublicHolidayGlobal = builder.worksOnPublicHolidayGlobal;
         this.workdays = builder.workDays;
@@ -100,8 +104,24 @@ public final class WorkingTime implements HasUserIdComposite {
         return Optional.ofNullable(minValidFrom);
     }
 
+    /**
+     * The individual set federalState which can be {@linkplain FederalState#GLOBAL}.
+     * Use {@linkplain WorkingTime#actualFederalState()} to get the resolved federalState value.
+     *
+     * @return the individual set {@linkplain FederalState} (e.g. {@linkplain FederalState#GLOBAL}, {@linkplain FederalState#NONE}, ...)
+     */
     public FederalState federalState() {
         return federalState;
+    }
+
+    /**
+     * This method handles resolving a possible {@linkplain FederalState#GLOBAL} value to the globally set value.
+      *
+     * @return the resolved {@linkplain FederalState} for this {@linkplain WorkingTime},
+     *         never {@linkplain FederalState#GLOBAL}, can be {@linkplain FederalState#NONE}
+     */
+    public FederalState actualFederalState() {
+        return federalState.equals(GLOBAL) ? globalFederalStateSupplier.get() : federalState;
     }
 
     /**
@@ -246,6 +266,7 @@ public final class WorkingTime implements HasUserIdComposite {
         private LocalDate validTo;
         private LocalDate minValidFrom;
         private FederalState federalState;
+        private Supplier<FederalState> globalFederalStateSupplier;
         private boolean worksOnPublicHoliday;
         private boolean worksOnPublicHolidayGlobal;
         private final EnumMap<DayOfWeek, PlannedWorkingHours> workDays = new EnumMap<>(Map.of(
@@ -285,6 +306,11 @@ public final class WorkingTime implements HasUserIdComposite {
 
         public Builder federalState(FederalState federalState) {
             this.federalState = federalState;
+            return this;
+        }
+
+        public Builder globalFederalStateSupplier(Supplier<FederalState> globalFederalStateSupplier) {
+            this.globalFederalStateSupplier = globalFederalStateSupplier;
             return this;
         }
 

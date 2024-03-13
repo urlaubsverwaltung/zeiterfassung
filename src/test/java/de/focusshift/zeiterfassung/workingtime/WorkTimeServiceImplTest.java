@@ -171,7 +171,8 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId));
                 assertThat(workingTime.userIdComposite()).isEqualTo(user.userIdComposite());
                 assertThat(workingTime.validFrom()).isEmpty();
-                assertThat(workingTime.federalState()).isEqualTo(GERMANY_BERLIN);
+                assertThat(workingTime.federalState()).isEqualTo(GLOBAL);
+                assertThat(workingTime.actualFederalState()).isEqualTo(GERMANY_BERLIN);
                 assertThat(workingTime.worksOnPublicHoliday()).isFalse();
                 assertThat(workingTime.isWorksOnPublicHolidayGlobal()).isTrue();
                 assertThat(workingTime.getMonday()).isEqualTo(PlannedWorkingHours.EIGHT);
