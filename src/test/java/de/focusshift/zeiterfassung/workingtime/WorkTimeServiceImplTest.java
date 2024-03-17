@@ -110,8 +110,8 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTime.validFrom()).isEmpty();
                 assertThat(workingTime.validTo()).isEmpty();
                 assertThat(workingTime.minValidFrom()).isEmpty();
-                assertThat(workingTime.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-                assertThat(workingTime.worksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+                assertThat(workingTime.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+                assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
             });
         }
 
@@ -170,9 +170,9 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId));
                 assertThat(workingTime.userIdComposite()).isEqualTo(user.userIdComposite());
                 assertThat(workingTime.validFrom()).isEmpty();
-                assertThat(workingTime.federalState()).isEqualTo(GLOBAL);
-                assertThat(workingTime.actualFederalState()).isEqualTo(GERMANY_BERLIN);
-                assertThat(workingTime.worksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
+                assertThat(workingTime.individualFederalState()).isEqualTo(GLOBAL);
+                assertThat(workingTime.federalState()).isEqualTo(GERMANY_BERLIN);
+                assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
                 assertThat(workingTime.getMonday()).isEqualTo(PlannedWorkingHours.EIGHT);
                 assertThat(workingTime.getTuesday()).isEqualTo(PlannedWorkingHours.EIGHT);
                 assertThat(workingTime.getWednesday()).isEqualTo(PlannedWorkingHours.EIGHT);
@@ -415,8 +415,8 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
                     assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
                     assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId_1));
-                    assertThat(workingTime.federalState()).isEqualTo(NONE);
-                    assertThat(workingTime.worksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.NO);
+                    assertThat(workingTime.individualFederalState()).isEqualTo(NONE);
+                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.NO);
                     assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(1));
                     assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(2));
                     assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(3));
@@ -431,8 +431,8 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
                     assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_2);
                     assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId_2));
-                    assertThat(workingTime.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-                    assertThat(workingTime.worksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+                    assertThat(workingTime.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
                     assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(7));
                     assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(6));
                     assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(5));
@@ -468,9 +468,9 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTimes).hasSize(1);
                 assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
                     assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
-                    assertThat(workingTime.federalState()).isEqualTo(GLOBAL);
-                    assertThat(workingTime.actualFederalState()).isEqualTo(GERMANY_BERLIN);
-                    assertThat(workingTime.worksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
+                    assertThat(workingTime.individualFederalState()).isEqualTo(GLOBAL);
+                    assertThat(workingTime.federalState()).isEqualTo(GERMANY_BERLIN);
+                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
                     assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(8));
                     assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(8));
                     assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(8));
@@ -536,8 +536,8 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
                     assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
                     assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId_1));
-                    assertThat(workingTime.federalState()).isEqualTo(NONE);
-                    assertThat(workingTime.worksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.NO);
+                    assertThat(workingTime.individualFederalState()).isEqualTo(NONE);
+                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.NO);
                     assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(1));
                     assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(2));
                     assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(3));
@@ -552,8 +552,8 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
                     assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_2);
                     assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId_2));
-                    assertThat(workingTime.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-                    assertThat(workingTime.worksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+                    assertThat(workingTime.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
                     assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(7));
                     assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(6));
                     assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(5));
@@ -585,8 +585,8 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTimes).hasSize(1);
                 assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
                     assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
-                    assertThat(workingTime.federalState()).isEqualTo(GLOBAL);
-                    assertThat(workingTime.worksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
+                    assertThat(workingTime.individualFederalState()).isEqualTo(GLOBAL);
+                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
                     assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(8));
                     assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(8));
                     assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(8));
@@ -688,8 +688,8 @@ class WorkTimeServiceImplTest {
 
         assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
         assertThat(actual.isCurrent()).isTrue();
-        assertThat(actual.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-        assertThat(actual.worksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+        assertThat(actual.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+        assertThat(actual.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
         assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(2)));
         assertThat(actual.getWednesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(3)));
@@ -745,8 +745,8 @@ class WorkTimeServiceImplTest {
         final WorkingTime actual = sut.createWorkingTime(userLocalId, LocalDate.of(2023, 12, 9), GERMANY_BADEN_WUERTTEMBERG, true, durations);
         assertThat(actual.id()).isEqualTo(new WorkingTimeId(uuid));
         assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
-        assertThat(actual.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-        assertThat(actual.worksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+        assertThat(actual.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+        assertThat(actual.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
         assertThat(actual.validFrom()).hasValue(LocalDate.of(2023, 12, 9));
         assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
@@ -793,8 +793,8 @@ class WorkTimeServiceImplTest {
         final WorkingTime actual = sut.createWorkingTime(userLocalId, LocalDate.of(2023, 12, 9), GERMANY_BADEN_WUERTTEMBERG, true, durations);
         assertThat(actual.id()).isEqualTo(new WorkingTimeId(uuid));
         assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
-        assertThat(actual.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-        assertThat(actual.worksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+        assertThat(actual.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+        assertThat(actual.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
         assertThat(actual.validFrom()).hasValue(LocalDate.of(2023, 12, 9));
         assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
         assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(2)));

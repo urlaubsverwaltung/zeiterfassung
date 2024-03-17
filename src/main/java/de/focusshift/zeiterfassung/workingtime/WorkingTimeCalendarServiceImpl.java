@@ -52,7 +52,7 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
         final Set<FederalState> federalStates = sortedWorkingTimes.values()
             .stream()
             .flatMap(List::stream)
-            .map(WorkingTime::actualFederalState)
+            .map(WorkingTime::federalState)
             .collect(toUnmodifiableSet());
 
         final Map<FederalState, PublicHolidayCalendar> publicHolidayCalendars =
@@ -80,7 +80,7 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
             final DateRange workingTimeDateRange = getDateRange(from, workingTime, nextEnd);
 
             for (LocalDate localDate : workingTimeDateRange) {
-                if (workingTime.actualWorksOnPublicHoliday() || !isPublicHoliday.test(localDate, workingTime.actualFederalState())) {
+                if (workingTime.worksOnPublicHoliday() || !isPublicHoliday.test(localDate, workingTime.federalState())) {
                     plannedWorkingHoursByDate.put(localDate, workingTime.getForDayOfWeek(localDate.getDayOfWeek()));
                 } else {
                     plannedWorkingHoursByDate.put(localDate, PlannedWorkingHours.ZERO);

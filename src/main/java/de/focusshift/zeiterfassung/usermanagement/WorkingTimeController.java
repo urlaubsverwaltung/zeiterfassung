@@ -335,8 +335,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         dto.setValidFrom(workingTime.validFrom().orElse(null));
         dto.setMinValidFrom(workingTime.minValidFrom().orElse(null));
         dto.setMaxValidFrom(workingTime.validTo().orElse(null));
-        dto.setFederalState(workingTime.federalState());
-        dto.setWorksOnPublicHoliday(workingTime.worksOnPublicHoliday().asBoolean());
+        dto.setFederalState(workingTime.individualFederalState());
+        dto.setWorksOnPublicHoliday(workingTime.individualWorksOnPublicHoliday().asBoolean());
         dto.setUserId(workingTime.userIdComposite().localId().value());
         dto.setWorkday(workingTime.actualWorkingDays().stream().map(DayOfWeek::name).map(String::toLowerCase).toList());
 
