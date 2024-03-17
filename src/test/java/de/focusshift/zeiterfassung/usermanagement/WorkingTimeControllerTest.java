@@ -9,6 +9,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
+import de.focusshift.zeiterfassung.workingtime.WorksOnPublicHoliday;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +37,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
+import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BAYERN;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BERLIN;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
@@ -247,7 +249,7 @@ class WorkingTimeControllerTest {
             .thenReturn(new FederalStateSettings(GERMANY_BERLIN, true));
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
-        final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId).build();
+        final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId).worksOnPublicHoliday(WorksOnPublicHoliday.GLOBAL).build();
         when(workingTimeService.getWorkingTimeById(workingTimeId)).thenReturn(Optional.of(workingTime));
 
         perform(
@@ -280,6 +282,7 @@ class WorkingTimeControllerTest {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.GLOBAL)
             .build();
 
         when(workingTimeService.getWorkingTimeById(workingTimeId)).thenReturn(Optional.of(workingTime));
@@ -414,7 +417,6 @@ class WorkingTimeControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")))
             .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
-            .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
             .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
             .andExpect(model().attribute("personSearchFormAction", is("/users/42")));
 
@@ -470,7 +472,7 @@ class WorkingTimeControllerTest {
     @Test
     void ensureEditWithValidationErrorJavaScript() throws Exception {
 
-        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BAYERN));
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
@@ -518,8 +520,7 @@ class WorkingTimeControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")))
             .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
-            .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
-            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BAYERN"))
             .andExpect(model().attribute("personSearchFormAction", is("/users/42")));
 
         verifyNoInteractions(workingTimeService);
