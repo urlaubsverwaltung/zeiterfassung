@@ -105,38 +105,37 @@ public final class WorkingTime implements HasUserIdComposite {
     }
 
     /**
-     * The individual set federalState which can be {@linkplain FederalState#GLOBAL}.
-     * Use {@linkplain WorkingTime#actualFederalState()} to get the resolved federalState value.
+     * The individual federalState if this {@linkplain WorkingTime} which can be {@linkplain FederalState#GLOBAL}.
+     * Use {@linkplain WorkingTime#federalState()} to get the resolved federalState value in this case when needed.
      *
      * @return the individual set {@linkplain FederalState} (e.g. {@linkplain FederalState#GLOBAL}, {@linkplain FederalState#NONE}, ...)
      */
-    public FederalState federalState() {
+    public FederalState individualFederalState() {
         return federalState;
     }
 
     /**
-     * This method handles resolving a possible {@linkplain FederalState#GLOBAL} value to the globally set value.
-      *
-     * @return the resolved {@linkplain FederalState} for this {@linkplain WorkingTime},
-     *         never {@linkplain FederalState#GLOBAL}, can be {@linkplain FederalState#NONE}
+     * @return {@linkplain FederalState} value of this {@linkplain WorkingTime}, never {@linkplain FederalState#GLOBAL}.
+     *         resolves to global setting when individual equals {@linkplain FederalState#GLOBAL}.
      */
-    public FederalState actualFederalState() {
+    public FederalState federalState() {
         return federalState.equals(GLOBAL) ? federalStateSettingsSupplier.get().federalState() : federalState;
     }
 
     /**
-     * Whether the related person works on public holidays or not.
+     * @return the {@linkplain WorksOnPublicHoliday} type
      */
-    public WorksOnPublicHoliday worksOnPublicHoliday() {
+    public WorksOnPublicHoliday individualWorksOnPublicHoliday() {
         return worksOnPublicHoliday;
     }
 
     /**
-     * Handles {@linkplain #worksOnPublicHoliday()} boolean value and uses global setting when required.
      *
-     * @return boolean value of works on public holiday
+     * @return {@code true} when the individual settings is {@linkplain WorksOnPublicHoliday#YES},
+     *         {@code false} when individual setting is {@linkplain WorksOnPublicHoliday#NO},
+     *         resolves to global setting otherwise.
      */
-    public boolean actualWorksOnPublicHoliday() {
+    public boolean worksOnPublicHoliday() {
         return requireNonNullElseGet(worksOnPublicHoliday.asBoolean(),
             () -> federalStateSettingsSupplier.get().worksOnPublicHoliday());
     }

@@ -115,7 +115,7 @@ class WorkingTimeAccountController implements HasTimeClock, HasLaunchpad {
         final Date validFrom = workingTime.validFrom().map(from -> Date.from(from.atStartOfDay().toInstant(UTC))).orElse(null);
         final Date validTo = workingTime.validTo().map(to -> Date.from(to.atStartOfDay().toInstant(UTC))).orElse(null);
         final Boolean validFromIsPast = workingTime.validFrom().map(from -> from.isBefore(today)).orElse(true);
-        final String federalStateMessageKey = federalStateMessageKey(workingTime.federalState());
+        final String federalStateMessageKey = federalStateMessageKey(workingTime.individualFederalState());
 
         return new WorkingTimeListEntryDto(
             workingTime.id().value(),
@@ -126,7 +126,7 @@ class WorkingTimeAccountController implements HasTimeClock, HasLaunchpad {
             workingTime.isCurrent(),
             workingTime.validFrom().isPresent(),
             federalStateMessageKey,
-            workingTime.actualWorksOnPublicHoliday(),
+            workingTime.worksOnPublicHoliday(),
             workingTime.getMonday().hoursDoubleValue(),
             workingTime.getTuesday().hoursDoubleValue(),
             workingTime.getWednesday().hoursDoubleValue(),

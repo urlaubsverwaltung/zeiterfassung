@@ -418,8 +418,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
         entity.setUserId(workingTime.userLocalId().value());
         entity.setValidFrom(workingTime.validFrom().orElse(null));
-        entity.setFederalState(workingTime.federalState());
-        entity.setWorksOnPublicHoliday(workingTime.worksOnPublicHoliday().asBoolean());
+        entity.setFederalState(workingTime.individualFederalState());
+        entity.setWorksOnPublicHoliday(workingTime.individualWorksOnPublicHoliday().asBoolean());
         entity.setMonday(workdayToDurationString(workingTime.getMonday()));
         entity.setTuesday(workdayToDurationString(workingTime.getTuesday()));
         entity.setWednesday(workdayToDurationString(workingTime.getWednesday()));
