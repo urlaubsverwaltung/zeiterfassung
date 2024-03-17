@@ -1,9 +1,9 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import jakarta.annotation.Nullable;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +20,7 @@ class WorkingTimeDto {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate maxValidFrom;
     private FederalState federalState;
-    private boolean worksOnPublicHoliday;
+    private Boolean worksOnPublicHoliday;
     private List<String> workday = new ArrayList<>();
     private Double workingTime;
     private Double workingTimeMonday;
@@ -79,11 +79,12 @@ class WorkingTimeDto {
         this.federalState = federalState;
     }
 
-    public boolean isWorksOnPublicHoliday() {
+    @Nullable
+    public Boolean getWorksOnPublicHoliday() {
         return worksOnPublicHoliday;
     }
 
-    public void setWorksOnPublicHoliday(boolean worksOnPublicHoliday) {
+    public void setWorksOnPublicHoliday(@Nullable Boolean worksOnPublicHoliday) {
         this.worksOnPublicHoliday = worksOnPublicHoliday;
     }
 
@@ -244,23 +245,23 @@ class WorkingTimeDto {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        WorkingTimeDto that = (WorkingTimeDto) o;
-        return userId.equals(that.userId)
-            && Objects.equals(id, that.id)
-            && Objects.equals(validFrom, that.validFrom)
-            && Objects.equals(minValidFrom, that.minValidFrom)
-            && Objects.equals(maxValidFrom, that.maxValidFrom)
-            && Objects.equals(federalState, that.federalState)
-            && Objects.equals(worksOnPublicHoliday, that.worksOnPublicHoliday)
-            && workday.equals(that.workday)
-            && Objects.equals(workingTime, that.workingTime)
-            && Objects.equals(workingTimeMonday, that.workingTimeMonday)
-            && Objects.equals(workingTimeTuesday, that.workingTimeTuesday)
-            && Objects.equals(workingTimeWednesday, that.workingTimeWednesday)
-            && Objects.equals(workingTimeThursday, that.workingTimeThursday)
-            && Objects.equals(workingTimeFriday, that.workingTimeFriday)
-            && Objects.equals(workingTimeSaturday, that.workingTimeSaturday)
-            && Objects.equals(workingTimeSunday, that.workingTimeSunday);
+        WorkingTimeDto dto = (WorkingTimeDto) o;
+        return Objects.equals(userId, dto.userId)
+            && Objects.equals(id, dto.id)
+            && Objects.equals(validFrom, dto.validFrom)
+            && Objects.equals(minValidFrom, dto.minValidFrom)
+            && Objects.equals(maxValidFrom, dto.maxValidFrom)
+            && federalState == dto.federalState
+            && Objects.equals(worksOnPublicHoliday, dto.worksOnPublicHoliday)
+            && Objects.equals(workday, dto.workday)
+            && Objects.equals(workingTime, dto.workingTime)
+            && Objects.equals(workingTimeMonday, dto.workingTimeMonday)
+            && Objects.equals(workingTimeTuesday, dto.workingTimeTuesday)
+            && Objects.equals(workingTimeWednesday, dto.workingTimeWednesday)
+            && Objects.equals(workingTimeThursday, dto.workingTimeThursday)
+            && Objects.equals(workingTimeFriday, dto.workingTimeFriday)
+            && Objects.equals(workingTimeSaturday, dto.workingTimeSaturday)
+            && Objects.equals(workingTimeSunday, dto.workingTimeSunday);
     }
 
     @Override
@@ -268,129 +269,5 @@ class WorkingTimeDto {
         return Objects.hash(userId, id, validFrom, minValidFrom, maxValidFrom, federalState, worksOnPublicHoliday,
             workday, workingTime, workingTimeMonday, workingTimeTuesday, workingTimeWednesday, workingTimeThursday,
             workingTimeFriday, workingTimeSaturday, workingTimeSunday);
-    }
-
-    static Builder builder() {
-        return new Builder();
-    }
-
-    static class Builder {
-        private Long userId;
-        private String uuid;
-        private LocalDate validFrom;
-        private LocalDate minValidFrom;
-        private LocalDate maxValidFrom;
-        private FederalState federalState;
-        private boolean worksOnPublicHoliday;
-        private List<DayOfWeek> workday = new ArrayList<>();
-        private Double workingTime;
-        private Double workingTimeMonday;
-        private Double workingTimeTuesday;
-        private Double workingTimeWednesday;
-        private Double workingTimeThursday;
-        private Double workingTimeFriday;
-        private Double workingTimeSaturday;
-        private Double workingTimeSunday;
-
-        Builder userId(Long userId) {
-            this.userId = userId;
-            return this;
-        }
-
-        Builder id(String uuid) {
-            this.uuid = uuid;
-            return this;
-        }
-
-        Builder validFrom(LocalDate validFrom) {
-            this.validFrom = validFrom;
-            return this;
-        }
-
-        Builder minValidFrom(LocalDate minValidFrom) {
-            this.minValidFrom = minValidFrom;
-            return this;
-        }
-
-        Builder maxValidFrom(LocalDate maxValidFrom) {
-            this.maxValidFrom = maxValidFrom;
-            return this;
-        }
-
-        Builder federalState(FederalState federalState) {
-            this.federalState = federalState;
-            return this;
-        }
-
-        Builder worksOnPublicHoliday(boolean worksOnPublicHoliday) {
-            this.worksOnPublicHoliday = worksOnPublicHoliday;
-            return this;
-        }
-
-        Builder workday(List<DayOfWeek> workday) {
-            this.workday = workday;
-            return this;
-        }
-
-        Builder workingTime(Double workingTime) {
-            this.workingTime = workingTime;
-            return this;
-        }
-
-        Builder workingTimeMonday(Double workingTimeMonday) {
-            this.workingTimeMonday = workingTimeMonday;
-            return this;
-        }
-
-        Builder workingTimeTuesday(Double workingTimeTuesday) {
-            this.workingTimeTuesday = workingTimeTuesday;
-            return this;
-        }
-
-        Builder workingTimeWednesday(Double workingTimeWednesday) {
-            this.workingTimeWednesday = workingTimeWednesday;
-            return this;
-        }
-
-        Builder workingTimeThursday(Double workingTimeThursday) {
-            this.workingTimeThursday = workingTimeThursday;
-            return this;
-        }
-
-        Builder workingTimeFriday(Double workingTimeFriday) {
-            this.workingTimeFriday = workingTimeFriday;
-            return this;
-        }
-
-        Builder workingTimeSaturday(Double workingTimeSaturday) {
-            this.workingTimeSaturday = workingTimeSaturday;
-            return this;
-        }
-
-        Builder workingTimeSunday(Double workingTimeSunday) {
-            this.workingTimeSunday = workingTimeSunday;
-            return this;
-        }
-
-        WorkingTimeDto build() {
-            final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
-            workingTimeDto.setUserId(userId);
-            workingTimeDto.setId(uuid);
-            workingTimeDto.setValidFrom(validFrom);
-            workingTimeDto.setMinValidFrom(minValidFrom);
-            workingTimeDto.setMaxValidFrom(maxValidFrom);
-            workingTimeDto.setFederalState(federalState);
-            workingTimeDto.setWorksOnPublicHoliday(worksOnPublicHoliday);
-            workingTimeDto.setWorkday(workday.stream().map(DayOfWeek::name).map(String::toLowerCase).toList());
-            workingTimeDto.setWorkingTime(workingTime);
-            workingTimeDto.setWorkingTimeMonday(workingTimeMonday);
-            workingTimeDto.setWorkingTimeTuesday(workingTimeTuesday);
-            workingTimeDto.setWorkingTimeWednesday(workingTimeWednesday);
-            workingTimeDto.setWorkingTimeThursday(workingTimeThursday);
-            workingTimeDto.setWorkingTimeFriday(workingTimeFriday);
-            workingTimeDto.setWorkingTimeSaturday(workingTimeSaturday);
-            workingTimeDto.setWorkingTimeSunday(workingTimeSunday);
-            return workingTimeDto;
-        }
     }
 }

@@ -23,5 +23,6 @@
   <include relativeToChangelogFile="true" file="changelog-2.0.0-prepare-multiple-working-times-per-user.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.0.0-add-working-time-duration-not-null-constraint.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.0.0-add-federal-state-to-working-time.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-2.1.0-add-global-federal-state-settings.xml"/>
 
 </databaseChangeLog>

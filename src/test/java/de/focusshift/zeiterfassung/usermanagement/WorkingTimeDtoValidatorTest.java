@@ -12,9 +12,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static java.time.DayOfWeek.FRIDAY;
@@ -44,13 +42,10 @@ class WorkingTimeDtoValidatorTest {
     @ParameterizedTest
     @EnumSource(DayOfWeek.class)
     void validWhenDayOfWeekIsSet(DayOfWeek dayOfWeek) {
-        final WorkingTimeDto.Builder builder = WorkingTimeDto.builder().validFrom(LocalDate.now());
-        final Map<DayOfWeek, Consumer<Double>> setterByDayOfWeek = setterByDayOfWeek(builder);
 
-        builder.workday(List.of(dayOfWeek));
-        setterByDayOfWeek.get(dayOfWeek).accept(10.0);
-
-        final WorkingTimeDto dto = builder.build();
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        dto.setValidFrom(LocalDate.now());
+        setOneWorkday(dto, dayOfWeek, 10.0);
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -62,11 +57,9 @@ class WorkingTimeDtoValidatorTest {
     @EnumSource(DayOfWeek.class)
     void validWhenWorkingTimeIsSetButNoDayOfWeekHours(DayOfWeek dayOfWeek) {
 
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .validFrom(LocalDate.now())
-            .workday(List.of(dayOfWeek))
-            .workingTime(10.0)
-            .build();
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        dto.setValidFrom(LocalDate.now());
+        setOneWorkday(dto, dayOfWeek, 10.0);
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -76,7 +69,8 @@ class WorkingTimeDtoValidatorTest {
 
     @Test
     void invalidWhenNothingIsSet() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder().build();
+
+        final WorkingTimeDto dto = new WorkingTimeDto();
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -87,11 +81,11 @@ class WorkingTimeDtoValidatorTest {
 
     @Test
     void invalidWhenValidFromIsNotSetAndIdIsNull() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .id(null)
-            .validFrom(null)
-            .workday(List.of())
-            .build();
+
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        dto.setId(null);
+        dto.setValidFrom(null);
+        dto.setWorkday(List.of());
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -102,11 +96,11 @@ class WorkingTimeDtoValidatorTest {
 
     @Test
     void validWhenValidFromIsNotSetButIdIsNotNull() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .id(UUID.randomUUID().toString())
-            .validFrom(null)
-            .workday(List.of())
-            .build();
+
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        dto.setId(UUID.randomUUID().toString());
+        dto.setValidFrom(null);
+        dto.setWorkday(List.of());
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -116,10 +110,10 @@ class WorkingTimeDtoValidatorTest {
 
     @Test
     void invalidWhenWorkdayIsNotSelected() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of())
-            .workingTime(8.0)
-            .build();
+
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        dto.setWorkday(List.of());
+        dto.setWorkingTime(8.0);
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -131,10 +125,10 @@ class WorkingTimeDtoValidatorTest {
     @ParameterizedTest
     @EnumSource(DayOfWeek.class)
     void invalidWhenWorkingTimeIsNull(DayOfWeek dayOfWeek) {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(dayOfWeek))
-            .workingTime(null)
-            .build();
+
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        dto.setWorkday(List.of(dayOfWeek.name().toLowerCase()));
+        dto.setWorkingTime(null);
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -146,10 +140,10 @@ class WorkingTimeDtoValidatorTest {
     @ParameterizedTest
     @EnumSource(DayOfWeek.class)
     void invalidWhenWorkingTimeIsZero(DayOfWeek dayOfWeek) {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workday(List.of(dayOfWeek))
-            .workingTime(0.0)
-            .build();
+
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        dto.setWorkday(List.of(dayOfWeek.name().toLowerCase()));
+        dto.setWorkingTime(0.0);
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -160,9 +154,9 @@ class WorkingTimeDtoValidatorTest {
 
     @Test
     void invalidWhenWorkingTimeIsNegative() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workingTime(-1.0)
-            .build();
+
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        dto.setWorkingTime(-1.0);
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -175,13 +169,8 @@ class WorkingTimeDtoValidatorTest {
     @EnumSource(DayOfWeek.class)
     void invalidWhenDayOfWeekWorkingTimeIsNegative(DayOfWeek dayOfWeek) {
 
-        final WorkingTimeDto.Builder builder = WorkingTimeDto.builder();
-        final Map<DayOfWeek, Consumer<Double>> setterByDayOfWeek = setterByDayOfWeek(builder);
-
-        builder.workday(List.of(dayOfWeek));
-        setterByDayOfWeek.get(dayOfWeek).accept(-1.0);
-
-        final WorkingTimeDto dto = builder.build();
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        setOneWorkday(dto, dayOfWeek, -1.0);
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -193,9 +182,9 @@ class WorkingTimeDtoValidatorTest {
 
     @Test
     void invalidWhenWorkingTimeIsGreaterThan24() {
-        final WorkingTimeDto dto = WorkingTimeDto.builder()
-            .workingTime(24.1)
-            .build();
+
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        dto.setWorkingTime(24.1);
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -208,13 +197,8 @@ class WorkingTimeDtoValidatorTest {
     @EnumSource(DayOfWeek.class)
     void invalidWhenDayOfWeekWorkingTimeIsGreaterThan24(DayOfWeek dayOfWeek) {
 
-        final WorkingTimeDto.Builder builder = WorkingTimeDto.builder();
-        final Map<DayOfWeek, Consumer<Double>> setterByDayOfWeek = setterByDayOfWeek(builder);
-
-        builder.workday(List.of(dayOfWeek));
-        setterByDayOfWeek.get(dayOfWeek).accept(24.1);
-
-        final WorkingTimeDto dto = builder.build();
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        setOneWorkday(dto, dayOfWeek, 24.1);
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -240,13 +224,9 @@ class WorkingTimeDtoValidatorTest {
     @MethodSource("factory")
     void invalidWhenDayOfWeekHoursAreGivenButDayIsNotSelected(DayOfWeek dayOfWeek, DayOfWeek otherDayOfWeek) {
 
-        final WorkingTimeDto.Builder builder = WorkingTimeDto.builder();
-        final Map<DayOfWeek, Consumer<Double>> setterByDayOfWeek = setterByDayOfWeek(builder);
-
-        builder.workday(List.of(otherDayOfWeek));
-        setterByDayOfWeek.get(dayOfWeek).accept(8.0);
-
-        final WorkingTimeDto dto = builder.build();
+        final WorkingTimeDto dto = new WorkingTimeDto();
+        dto.setWorkday(List.of(otherDayOfWeek.name()));
+        setWorkingTimeOfDayOfWeek(dto, dayOfWeek, 8.0);
 
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
@@ -257,15 +237,20 @@ class WorkingTimeDtoValidatorTest {
         assertThat(bindingResult.getFieldError(field).getCode()).isEqualTo("usermanagement.working-time.validation.hours.%s.no-workday".formatted(name));
     }
 
-    private static Map<DayOfWeek, Consumer<Double>> setterByDayOfWeek(WorkingTimeDto.Builder builder) {
-        return Map.of(
-            MONDAY, builder::workingTimeMonday,
-            TUESDAY, builder::workingTimeTuesday,
-            WEDNESDAY, builder::workingTimeWednesday,
-            THURSDAY, builder::workingTimeThursday,
-            FRIDAY, builder::workingTimeFriday,
-            SATURDAY, builder::workingTimeSaturday,
-            SUNDAY, builder::workingTimeSunday
-        );
+    private void setOneWorkday(WorkingTimeDto dto, DayOfWeek dayOfWeek, Double workingTime) {
+        dto.setWorkday(List.of(dayOfWeek.name().toLowerCase()));
+        setWorkingTimeOfDayOfWeek(dto, dayOfWeek, workingTime);
+    }
+
+    private void setWorkingTimeOfDayOfWeek(WorkingTimeDto dto, DayOfWeek dayOfWeek, Double workingTime) {
+        switch (dayOfWeek) {
+            case MONDAY -> dto.setWorkingTimeMonday(workingTime);
+            case TUESDAY -> dto.setWorkingTimeTuesday(workingTime);
+            case WEDNESDAY -> dto.setWorkingTimeWednesday(workingTime);
+            case THURSDAY -> dto.setWorkingTimeThursday(workingTime);
+            case FRIDAY -> dto.setWorkingTimeFriday(workingTime);
+            case SATURDAY -> dto.setWorkingTimeSaturday(workingTime);
+            case SUNDAY -> dto.setWorkingTimeSunday(workingTime);
+        }
     }
 }

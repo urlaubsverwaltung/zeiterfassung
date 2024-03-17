@@ -33,7 +33,15 @@ public class UsersPage {
      * go to the overtime-account page of the currently selected person.
      */
     public void goToOvertimeAccountSettings() {
-        page.waitForResponse(Response::ok, () -> page.locator("[data-test-id=users-overtime-account-link]").click());
+        goTo("[data-test-id=users-overtime-account-link]");
+    }
+
+    public void goToWorkingTimeAccountSettings() {
+        goTo("[data-test-id=users-working-time-account-link]");
+    }
+
+    private void goTo(String selector) {
+        page.waitForResponse(Response::ok, () -> page.locator(selector).click());
         page.waitForLoadState(DOMCONTENTLOADED);
     }
 
