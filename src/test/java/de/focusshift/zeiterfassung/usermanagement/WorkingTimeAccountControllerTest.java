@@ -9,6 +9,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
+import de.focusshift.zeiterfassung.workingtime.WorksOnPublicHoliday;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -92,6 +93,7 @@ class WorkingTimeAccountControllerTest {
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .current(true)
             .federalState(GERMANY_BADEN_WUERTTEMBERG)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -157,6 +159,7 @@ class WorkingTimeAccountControllerTest {
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .validFrom(LocalDate.now(clockFixed).plusDays(1))
             .federalState(NONE)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
             .build();
 
         when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
@@ -194,6 +197,7 @@ class WorkingTimeAccountControllerTest {
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .validFrom(givenValidFrom)
             .federalState(NONE)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
             .build();
 
         when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
@@ -222,6 +226,7 @@ class WorkingTimeAccountControllerTest {
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .validFrom(null)
             .federalState(NONE)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
             .build();
 
         when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
@@ -259,6 +264,7 @@ class WorkingTimeAccountControllerTest {
 
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, new WorkingTimeId(UUID.randomUUID()))
             .federalState(NONE)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
             .build();
 
         when(workingTimeService.getAllWorkingTimesByUser(supermanLocalId)).thenReturn(List.of(workingTime));
@@ -294,6 +300,7 @@ class WorkingTimeAccountControllerTest {
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .current(true)
             .federalState(GERMANY_BADEN_WUERTTEMBERG)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -359,6 +366,7 @@ class WorkingTimeAccountControllerTest {
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .current(true)
             .federalState(GERMANY_BADEN_WUERTTEMBERG)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
             .monday(BigDecimal.valueOf(4))
             .wednesday(BigDecimal.valueOf(5))
             .saturday(BigDecimal.valueOf(6))
@@ -418,6 +426,7 @@ class WorkingTimeAccountControllerTest {
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .current(true)
             .federalState(GERMANY_BADEN_WUERTTEMBERG)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -482,6 +491,7 @@ class WorkingTimeAccountControllerTest {
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId)
             .current(true)
             .federalState(GERMANY_BADEN_WUERTTEMBERG)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -554,6 +564,7 @@ class WorkingTimeAccountControllerTest {
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .current(true)
             .federalState(GERMANY_BADEN_WUERTTEMBERG)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)
@@ -625,6 +636,7 @@ class WorkingTimeAccountControllerTest {
         final WorkingTime workingTime = WorkingTime.builder(supermanIdComposite, workingTimeId)
             .current(true)
             .federalState(GERMANY_BADEN_WUERTTEMBERG)
+            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
             .monday(EIGHT)
             .tuesday(EIGHT)
             .wednesday(EIGHT)

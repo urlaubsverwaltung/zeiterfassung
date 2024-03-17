@@ -126,7 +126,7 @@ class WorkingTimeAccountController implements HasTimeClock, HasLaunchpad {
             workingTime.isCurrent(),
             workingTime.validFrom().isPresent(),
             federalStateMessageKey,
-            workingTime.worksOnPublicHoliday(),
+            workingTime.actualWorksOnPublicHoliday(),
             workingTime.getMonday().hoursDoubleValue(),
             workingTime.getTuesday().hoursDoubleValue(),
             workingTime.getWednesday().hoursDoubleValue(),

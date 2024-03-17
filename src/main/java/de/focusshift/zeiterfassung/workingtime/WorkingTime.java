@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.settings.FederalStateSettings;
 import de.focusshift.zeiterfassung.user.HasUserIdComposite;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import jakarta.annotation.Nullable;
@@ -29,6 +30,7 @@ import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static java.util.Comparator.comparing;
+import static java.util.Objects.requireNonNullElseGet;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections4.map.UnmodifiableMap.unmodifiableMap;
@@ -45,9 +47,8 @@ public final class WorkingTime implements HasUserIdComposite {
     private final LocalDate validTo;
     private final LocalDate minValidFrom;
     private final FederalState federalState;
-    private final Supplier<FederalState> globalFederalStateSupplier;
-    private final boolean worksOnPublicHoliday;
-    private final boolean worksOnPublicHolidayGlobal;
+    private final Supplier<FederalStateSettings> federalStateSettingsSupplier;
+    private final WorksOnPublicHoliday worksOnPublicHoliday;
     private final EnumMap<DayOfWeek, PlannedWorkingHours> workdays;
 
     private WorkingTime(Builder builder) {
@@ -58,9 +59,8 @@ public final class WorkingTime implements HasUserIdComposite {
         this.validTo = builder.validTo;
         this.minValidFrom = builder.minValidFrom;
         this.federalState = builder.federalState;
-        this.globalFederalStateSupplier = builder.globalFederalStateSupplier;
+        this.federalStateSettingsSupplier = builder.globalFederalStateSettingsSupplier;
         this.worksOnPublicHoliday = builder.worksOnPublicHoliday;
-        this.worksOnPublicHolidayGlobal = builder.worksOnPublicHolidayGlobal;
         this.workdays = builder.workDays;
     }
 
@@ -121,22 +121,24 @@ public final class WorkingTime implements HasUserIdComposite {
      *         never {@linkplain FederalState#GLOBAL}, can be {@linkplain FederalState#NONE}
      */
     public FederalState actualFederalState() {
-        return federalState.equals(GLOBAL) ? globalFederalStateSupplier.get() : federalState;
+        return federalState.equals(GLOBAL) ? federalStateSettingsSupplier.get().federalState() : federalState;
     }
 
     /**
      * Whether the related person works on public holidays or not.
-     * Check {@linkplain WorkingTime#isWorksOnPublicHolidayGlobal()} if it is the system-wide setting or not.
      */
-    public boolean worksOnPublicHoliday() {
+    public WorksOnPublicHoliday worksOnPublicHoliday() {
         return worksOnPublicHoliday;
     }
 
     /**
-     * Whether the {@linkplain WorkingTime#worksOnPublicHoliday()} value is the system-wide setting or not.
+     * Handles {@linkplain #worksOnPublicHoliday()} boolean value and uses global setting when required.
+     *
+     * @return boolean value of works on public holiday
      */
-    public boolean isWorksOnPublicHolidayGlobal() {
-        return worksOnPublicHolidayGlobal;
+    public boolean actualWorksOnPublicHoliday() {
+        return requireNonNullElseGet(worksOnPublicHoliday.asBoolean(),
+            () -> federalStateSettingsSupplier.get().worksOnPublicHoliday());
     }
 
     public Map<DayOfWeek, PlannedWorkingHours> workdays() {
@@ -266,9 +268,8 @@ public final class WorkingTime implements HasUserIdComposite {
         private LocalDate validTo;
         private LocalDate minValidFrom;
         private FederalState federalState;
-        private Supplier<FederalState> globalFederalStateSupplier;
-        private boolean worksOnPublicHoliday;
-        private boolean worksOnPublicHolidayGlobal;
+        private WorksOnPublicHoliday worksOnPublicHoliday;
+        private Supplier<FederalStateSettings> globalFederalStateSettingsSupplier;
         private final EnumMap<DayOfWeek, PlannedWorkingHours> workDays = new EnumMap<>(Map.of(
             MONDAY, PlannedWorkingHours.ZERO,
             TUESDAY, PlannedWorkingHours.ZERO,
@@ -309,14 +310,13 @@ public final class WorkingTime implements HasUserIdComposite {
             return this;
         }
 
-        public Builder globalFederalStateSupplier(Supplier<FederalState> globalFederalStateSupplier) {
-            this.globalFederalStateSupplier = globalFederalStateSupplier;
+        public Builder worksOnPublicHoliday(WorksOnPublicHoliday worksOnPublicHoliday) {
+            this.worksOnPublicHoliday = worksOnPublicHoliday;
             return this;
         }
 
-        public Builder worksOnPublicHoliday(boolean worksOnPublicHoliday, boolean isGlobal) {
-            this.worksOnPublicHoliday = worksOnPublicHoliday;
-            this.worksOnPublicHolidayGlobal = isGlobal;
+        public Builder federalStateSettingsSupplier(Supplier<FederalStateSettings> globalFederalStateSettingsSupplier) {
+            this.globalFederalStateSettingsSupplier = globalFederalStateSettingsSupplier;
             return this;
         }
 
