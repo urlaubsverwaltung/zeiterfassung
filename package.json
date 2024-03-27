@@ -28,7 +28,7 @@
     "@vitest/coverage-v8": "1.4.0",
     "autoprefixer": "10.4.19",
     "concurrently": "8.2.2",
-    "cssnano": "6.0.5",
+    "cssnano": "6.1.2",
     "date-fns": "3.3.1",
     "esbuild": "0.20.1",
     "eslint": "8.57.0",
