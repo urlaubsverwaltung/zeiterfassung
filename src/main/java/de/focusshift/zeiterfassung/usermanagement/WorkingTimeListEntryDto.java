@@ -12,6 +12,7 @@ record WorkingTimeListEntryDto(
     boolean isCurrent,
     boolean isDeletable,
     String federalStateMessageKey,
+    boolean worksOnPublicHoliday,
     Double workingTimeMonday,
     Double workingTimeTuesday,
     Double workingTimeWednesday,

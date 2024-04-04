@@ -91,6 +91,9 @@
                     </th:block>
                   </th:block>
                 </th:block>
+                <span th:if="${workingTime.worksOnPublicHoliday}" th:text="'(' + #{usermanagement.working-time.federalstate.works-on-public-holiday.label} + ')'">
+                  (arbeitet an Feiertagen)
+                </span>
               </summary>
               <div
                 th:ref="working-time-block"
@@ -185,8 +188,13 @@
         th:with="workingTime=${workingTimes[0]}"
       >
         <div class="mt-8">
-          <p th:text="${#messages.msg(workingTime.federalStateMessageKey)}">
-            Baden-Württemberg
+          <p>
+            <span th:text="${#messages.msg(workingTime.federalStateMessageKey)}">
+              Baden-Württemberg
+            </span>
+            <span th:if="${workingTime.worksOnPublicHoliday}" th:text="'(' + #{usermanagement.working-time.federalstate.works-on-public-holiday.label} + ')'">
+              (arbeitet an Feiertagen)
+            </span>
           </p>
           <div th:replace="~{::working-time-block}"></div>
         </div>

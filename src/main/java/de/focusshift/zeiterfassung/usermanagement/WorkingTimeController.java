@@ -365,6 +365,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             workingTime.isCurrent(),
             workingTime.validFrom().isPresent(),
             federalStateMessageKey,
+            workingTime.worksOnPublicHoliday(),
             workingTime.getMonday().hoursDoubleValue(),
             workingTime.getTuesday().hoursDoubleValue(),
             workingTime.getWednesday().hoursDoubleValue(),
