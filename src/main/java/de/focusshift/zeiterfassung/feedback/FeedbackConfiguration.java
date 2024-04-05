@@ -21,10 +21,6 @@ public class FeedbackConfiguration {
         FeedbackService feedbackService(ApplicationEventPublisher applicationEventPublisher) {
             return new FeedbackService(applicationEventPublisher);
         }
-        @Bean
-        FeedbackViewController feedbackViewController(FeedbackService feedbackService) {
-            return new FeedbackViewController(feedbackService);
-        }
 
         @Bean
         FeedbackGivenListenerEmail feedbackGivenListenerEmail(EMailService eMailService, @Qualifier("emailTemplateEngine") ITemplateEngine emailTemplateEngine, FeedbackConfigurationProperties properties) {

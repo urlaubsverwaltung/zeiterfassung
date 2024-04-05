@@ -26,7 +26,6 @@ class FeedbackConfigurationTest {
         applicationContextRunner
             .run(context -> {
                 assertThat(context).doesNotHaveBean(FeedbackService.class);
-                assertThat(context).doesNotHaveBean(FeedbackViewController.class);
                 assertThat(context).hasSingleBean(FeedbackGivenControllerAdvice.class);
             });
     }
@@ -37,7 +36,6 @@ class FeedbackConfigurationTest {
             .withPropertyValues("zeiterfassung.feedback.enabled=false")
             .run(context -> {
                 assertThat(context).doesNotHaveBean(FeedbackService.class);
-                assertThat(context).doesNotHaveBean(FeedbackViewController.class);
                 assertThat(context).hasSingleBean(FeedbackGivenControllerAdvice.class);
             });
     }
@@ -51,7 +49,6 @@ class FeedbackConfigurationTest {
             )
             .run(context -> {
                 assertThat(context).hasSingleBean(FeedbackService.class);
-                assertThat(context).hasSingleBean(FeedbackViewController.class);
                 assertThat(context).hasSingleBean(FeedbackGivenControllerAdvice.class);
             });
     }
