@@ -3,6 +3,7 @@ import "../components/details-dropdown";
 import "../components/feedback-form";
 import "../components/navigation";
 import "../components/time-clock";
+import "../components/info-banner/info-banner";
 import { initFeedbackHeartView } from "../components/feedback-heart";
 
 const showFeedbackKudo =

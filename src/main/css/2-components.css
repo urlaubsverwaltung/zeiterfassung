@@ -1,6 +1,5 @@
 @import "tailwindcss/components.css";
 @import "./components/ajax-loader.css";
-@import "./components/body-overlay.css";
 @import "./components/checkbox-switch.css";
 @import "./components/info-banner.css";
 @import "./components/feedback.css";
@@ -15,6 +14,17 @@
   min-height: 350px;
   max-height: 600px;
   margin-top: auto;
+}
+
+duet-date-picker .duet-date__dialog {
+  /* completely "hide" the div to avoid adding height to the parent element. */
+  height: 0;
+  overflow: hidden;
+}
+
+duet-date-picker .duet-date__dialog.is-active {
+  height: auto;
+  overflow: auto;
 }
 
 duet-date-picker.edited ~ label > span {
