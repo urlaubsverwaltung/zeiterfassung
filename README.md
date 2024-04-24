@@ -121,6 +121,7 @@ Zeiterfassung is using user permissions from oidc claim `groups` for mapping pos
 * `ZEITERFASSUNG_WORKING_TIME_EDIT_ALL`: Allowed to edit working time of all users
 * `ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL`: Allowed to edit overtime account of all users
 * `ZEITERFASSUNG_PERMISSIONS_EDIT_ALL`: Allowed to edit permissions of all users
+* `ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL`: Allowed to edit global (company-wide default) working time
 
 If you're using Keycloak, this can be configured via a predefined OIDC client mapper with name `groups`.
 Create both permissions as `Realm roles` and assign user to those roles.
@@ -298,11 +299,11 @@ users.
 
 As a user of a tenant can log in via `http://localhost:8060/`:
 
-| username   | password | role                                                                                                           |
-|------------|----------|----------------------------------------------------------------------------------------------------------------|
-| boss       | secret   | `view_reports_all`, `working_time_edit_all`, `overtime_account_edit_all`, `zeiterfassung_permissions_edit_all` |
-| office     | secret   | `view_reports_all`, `working_time_edit_all`, `overtime_account_edit_all`, `zeiterfassung_permissions_edit_all` |
-| user       | secret   |                                                                                                                |
+| username   | password | role                                                                                                                                                     |
+|------------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| boss       | secret   | `view_reports_all`, `working_time_edit_all`, `overtime_account_edit_all`, `zeiterfassung_permissions_edit_all`, `zeiterfassung_working_time_edit_global` |
+| office     | secret   | `view_reports_all`, `working_time_edit_all`, `overtime_account_edit_all`, `zeiterfassung_permissions_edit_all`, `zeiterfassung_working_time_edit_global` |
+| user       | secret   |                                                                                                                                                          |
 
 
 ### git hooks (optional)

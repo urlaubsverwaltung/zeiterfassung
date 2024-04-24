@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.groupingBy;
 public enum FederalState {
 
     NONE("none"),
+    GLOBAL("global"),
 
     GERMANY_BADEN_WUERTTEMBERG("de", "bw"),
     GERMANY_BAYERN("de", "by"),
@@ -142,7 +143,7 @@ public enum FederalState {
      */
     public static Map<String, List<FederalState>> federalStatesTypesByCountry() {
         return Arrays.stream(values())
-            .filter(federalState -> federalState != NONE)
+            .filter(federalState -> federalState != NONE && federalState != GLOBAL)
             .collect(groupingBy(FederalState::getCountry));
     }
 }

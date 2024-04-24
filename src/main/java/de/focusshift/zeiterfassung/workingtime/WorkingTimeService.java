@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import jakarta.annotation.Nullable;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -52,11 +53,11 @@ public interface WorkingTimeService {
      * @param userLocalId          id of the user
      * @param validFrom            date the created working time is valid from
      * @param federalState         {@linkplain FederalState}
-     * @param worksOnPublicHoliday
+     * @param worksOnPublicHoliday whether the person works on public holidays or not. can be {@code null} when the global settings should be used
      * @param workdays             workdays info
      * @return the created {@linkplain WorkingTime}
      */
-    WorkingTime createWorkingTime(UserLocalId userLocalId, LocalDate validFrom, FederalState federalState, boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays);
+    WorkingTime createWorkingTime(UserLocalId userLocalId, LocalDate validFrom, FederalState federalState, @Nullable Boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays);
 
     /**
      * Update the {@linkplain WorkingTime}
@@ -68,7 +69,7 @@ public interface WorkingTimeService {
      * @param workdays             workdays info
      * @return the updated {@linkplain WorkingTime}
      */
-    WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, LocalDate validFrom, FederalState federalState, boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays);
+    WorkingTime updateWorkingTime(WorkingTimeId workingTimeId, LocalDate validFrom, FederalState federalState, @Nullable Boolean worksOnPublicHoliday, EnumMap<DayOfWeek, Duration> workdays);
 
     /**
      * Delete the {@linkplain WorkingTime} with the given id if possible.

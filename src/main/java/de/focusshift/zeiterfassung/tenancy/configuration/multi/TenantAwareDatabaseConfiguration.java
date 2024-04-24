@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.tenancy.configuration.multi;
 
 import com.zaxxer.hikari.HikariDataSource;
+import de.focusshift.zeiterfassung.settings.FederalStateSettingsEntity;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserEntity;
 import de.focusshift.zeiterfassung.timeclock.TimeClockEntity;
@@ -32,7 +33,14 @@ import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
 @Configuration(proxyBeanMethods = false)
 @EnableTransactionManagement
 @EnableJpaRepositories(
-    basePackageClasses = {TimeEntryEntity.class, TimeClockEntity.class, TenantUserEntity.class, WorkingTimeEntity.class, OvertimeAccountEntity.class},
+    basePackageClasses = {
+        TimeEntryEntity.class,
+        TimeClockEntity.class,
+        TenantUserEntity.class,
+        WorkingTimeEntity.class,
+        OvertimeAccountEntity.class,
+        FederalStateSettingsEntity.class
+    },
     entityManagerFactoryRef = "tenantAwareEntityManagerFactory",
     transactionManagerRef = "tenantAwareTransactionManager"
 )
@@ -67,7 +75,14 @@ class TenantAwareDatabaseConfiguration {
         return builder
             .dataSource(tenantAwareDataSource)
             // List all tenant aware related entity packages here
-            .packages(TimeEntryEntity.class, TimeClockEntity.class, TenantUserEntity.class, WorkingTimeEntity.class, OvertimeAccountEntity.class)
+            .packages(
+                TimeEntryEntity.class,
+                TimeClockEntity.class,
+                TenantUserEntity.class,
+                WorkingTimeEntity.class,
+                OvertimeAccountEntity.class,
+                FederalStateSettingsEntity.class
+            )
             .persistenceUnit("tenantAware")
             // enable hibernate to access spring beans and inject them into jpa entity lifecycle events
             .properties(Map.of(BEAN_CONTAINER, new SpringBeanContainer(beanFactory)))
