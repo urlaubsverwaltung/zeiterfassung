@@ -55,12 +55,10 @@ class VacationTypeHandlerRabbitmq extends RabbitMessageConsumer {
     }
 
     private static Optional<AbsenceTypeCategory> toAbsenceTypeCategory(String category) {
-        return mapToEnum(category, AbsenceTypeCategory::valueOf,
-            () -> "could not map category=%s to AbsenceTypeCategory".formatted(category));
+        return mapToEnum(category, AbsenceTypeCategory.class);
     }
 
     private static Optional<AbsenceColor> toAbsenceColor(String color) {
-        return mapToEnum(color, AbsenceColor::valueOf,
-            () -> "could not map color=%s to AbsenceColor".formatted(color));
+        return mapToEnum(color, AbsenceColor.class);
     }
 }

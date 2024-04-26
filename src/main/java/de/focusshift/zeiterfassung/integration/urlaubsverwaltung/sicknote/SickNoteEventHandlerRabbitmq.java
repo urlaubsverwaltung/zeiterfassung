@@ -88,6 +88,6 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
     }
 
     private static Optional<DayLength> toDayLength(de.focus_shift.urlaubsverwaltung.extension.api.sicknote.DayLength dayLength) {
-        return mapToEnum(dayLength.name(), DayLength::valueOf, () -> "could not map dayLength");
+        return mapToEnum(dayLength.name(), DayLength.class);
     }
 }

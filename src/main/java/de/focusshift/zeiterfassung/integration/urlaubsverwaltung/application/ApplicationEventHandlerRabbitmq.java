@@ -89,15 +89,15 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
     }
 
     private static Optional<DayLength> toDayLength(de.focus_shift.urlaubsverwaltung.extension.api.application.DayLength dayLength) {
-        return mapToEnum(dayLength.name(), DayLength::valueOf, () -> "could not map dayLength");
+        return mapToEnum(dayLength.name(), DayLength.class);
     }
 
     private static Optional<AbsenceType> toAbsenceType(String absenceTypeCategoryName, Long sourceId) {
-        return mapToEnum(absenceTypeCategoryName, AbsenceTypeCategory::valueOf, () -> "could not map vacationTypeCategory to AbsenceType")
+        return mapToEnum(absenceTypeCategoryName, AbsenceTypeCategory.class)
             .map(category -> new AbsenceType(category, sourceId));
     }
 
     private static Optional<AbsenceColor> toAbsenceColor(String vacationTypeColor) {
-        return mapToEnum(vacationTypeColor, AbsenceColor::valueOf, () -> "could not map vacationTypeColor to AbsenceColor");
+        return mapToEnum(vacationTypeColor, AbsenceColor.class);
     }
 }
