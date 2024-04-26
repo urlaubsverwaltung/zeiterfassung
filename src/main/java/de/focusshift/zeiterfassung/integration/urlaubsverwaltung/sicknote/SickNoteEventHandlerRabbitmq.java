@@ -74,23 +74,17 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
     }
 
     private static Optional<AbsenceWrite> toAbsence(SickNoteEventDtoAdapter event) {
-
-        final Optional<DayLength> maybeDayLength = toDayLength(event.getPeriod().getDayLength());
-
-        if (maybeDayLength.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return Optional.of(new AbsenceWrite(
-            new TenantId(event.getTenantId()),
-            event.getSourceId().longValue(),
-            new UserId(event.getPerson().getUsername()),
-            event.getPeriod().getStartDate(),
-            event.getPeriod().getEndDate(),
-            maybeDayLength.get(),
-            AbsenceType.SICK,
-            AbsenceColor.RED
-        ));
+        return toDayLength(event.getPeriod().getDayLength())
+            .map(dayLength -> new AbsenceWrite(
+                new TenantId(event.getTenantId()),
+                event.getSourceId().longValue(),
+                new UserId(event.getPerson().getUsername()),
+                event.getPeriod().getStartDate(),
+                event.getPeriod().getEndDate(),
+                dayLength,
+                AbsenceType.SICK,
+                AbsenceColor.RED
+            ));
     }
 
     private static Optional<DayLength> toDayLength(de.focus_shift.urlaubsverwaltung.extension.api.sicknote.DayLength dayLength) {
