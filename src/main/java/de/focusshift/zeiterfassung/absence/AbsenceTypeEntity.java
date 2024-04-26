@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.absence;
 
-import de.focusshift.zeiterfassung.JpaJsonConverter;
 import de.focusshift.zeiterfassung.tenancy.configuration.multi.AdminAware;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -43,7 +42,7 @@ public class AbsenceTypeEntity implements AdminAware<Long> {
     private AbsenceColor color;
 
     @Column(name = "label_by_locale", nullable = false)
-    @Convert(converter = JpaJsonConverter.class)
+    @Convert(converter = LabelByLocaleConverter.class)
     private Map<Locale, String> labelByLocale;
 
     public String getTenantId() {
