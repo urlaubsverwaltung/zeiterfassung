@@ -9,6 +9,7 @@ import de.focusshift.zeiterfassung.absence.AbsenceTypeCategory;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
+import de.focusshift.zeiterfassung.integration.urlaubsverwaltung.RabbitMessageConsumer;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.slf4j.Logger;
@@ -17,8 +18,6 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE;
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE;
@@ -26,7 +25,8 @@ import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.applicat
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class ApplicationEventHandlerRabbitmq {
+public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
+
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final AbsenceWriteService absenceWriteService;
@@ -89,37 +89,15 @@ public class ApplicationEventHandlerRabbitmq {
     }
 
     private static Optional<DayLength> toDayLength(de.focus_shift.urlaubsverwaltung.extension.api.application.DayLength dayLength) {
-        return map(dayLength.name(), DayLength::valueOf)
-            .or(peek(() -> LOG.info("could not map dayLength")));
+        return mapToEnum(dayLength.name(), DayLength::valueOf, () -> "could not map dayLength");
     }
 
     private static Optional<AbsenceType> toAbsenceType(String absenceTypeCategoryName, Long sourceId) {
-        return map(absenceTypeCategoryName, AbsenceTypeCategory::valueOf)
-            .map(category -> new AbsenceType(category, sourceId))
-            .or(peek(() -> LOG.info("could not map vacationTypeCategory to AbsenceType")));
+        return mapToEnum(absenceTypeCategoryName, AbsenceTypeCategory::valueOf, () -> "could not map vacationTypeCategory to AbsenceType")
+            .map(category -> new AbsenceType(category, sourceId));
     }
 
     private static Optional<AbsenceColor> toAbsenceColor(String vacationTypeColor) {
-        return map(vacationTypeColor, AbsenceColor::valueOf)
-            .or(peek(() -> LOG.info("could not map vacationTypeColor to AbsenceColor")));
-    }
-
-    private static <R, T> Optional<R> map(T t, Function<T, R> mapper) {
-        try {
-            return Optional.of(mapper.apply(t));
-        } catch (IllegalArgumentException e) {
-            return Optional.empty();
-        }
-    }
-
-    private static <T> Supplier<Optional<T>> peek(Runnable runnable) {
-        return () -> {
-            try {
-                runnable.run();
-            } catch (Exception e) {
-                //
-            }
-            return Optional.empty();
-        };
+        return mapToEnum(vacationTypeColor, AbsenceColor::valueOf, () -> "could not map vacationTypeColor to AbsenceColor");
     }
 }

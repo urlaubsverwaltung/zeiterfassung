@@ -5,19 +5,18 @@ import de.focusshift.zeiterfassung.absence.AbsenceColor;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeCategory;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeService;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeUpdate;
+import de.focusshift.zeiterfassung.integration.urlaubsverwaltung.RabbitMessageConsumer;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import org.slf4j.Logger;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.vacationtype.VacationTypeRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_VACATIONTYPE_UPDATED_QUEUE;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-class VacationTypeHandlerRabbitmq {
+class VacationTypeHandlerRabbitmq extends RabbitMessageConsumer {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
@@ -55,32 +54,13 @@ class VacationTypeHandlerRabbitmq {
             );
     }
 
-    private Optional<AbsenceTypeCategory> toAbsenceTypeCategory(String category) {
-        return map(category, AbsenceTypeCategory::valueOf)
-            .or(peek(() -> LOG.info("could not map category={} to AbsenceTypeCategory", category)));
+    private static Optional<AbsenceTypeCategory> toAbsenceTypeCategory(String category) {
+        return mapToEnum(category, AbsenceTypeCategory::valueOf,
+            () -> "could not map category=%s to AbsenceTypeCategory".formatted(category));
     }
 
     private static Optional<AbsenceColor> toAbsenceColor(String color) {
-        return map(color, AbsenceColor::valueOf)
-            .or(peek(() -> LOG.info("could not map color={} to AbsenceColor", color)));
-    }
-
-    private static <R, T> Optional<R> map(T t, Function<T, R> mapper) {
-        try {
-            return Optional.of(mapper.apply(t));
-        } catch (IllegalArgumentException e) {
-            return Optional.empty();
-        }
-    }
-
-    private static <T> Supplier<Optional<T>> peek(Runnable runnable) {
-        return () -> {
-            try {
-                runnable.run();
-            } catch (Exception e) {
-                //
-            }
-            return Optional.empty();
-        };
+        return mapToEnum(color, AbsenceColor::valueOf,
+            () -> "could not map color=%s to AbsenceColor".formatted(color));
     }
 }

@@ -9,14 +9,13 @@ import de.focusshift.zeiterfassung.absence.AbsenceType;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
+import de.focusshift.zeiterfassung.integration.urlaubsverwaltung.RabbitMessageConsumer;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.slf4j.Logger;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote.SickNoteRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CANCELLED_QUEUE;
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote.SickNoteRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CONVERTED_TO_APPLICATION_QUEUE;
@@ -25,7 +24,7 @@ import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class SickNoteEventHandlerRabbitmq {
+public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final AbsenceWriteService absenceWriteService;
@@ -95,26 +94,6 @@ public class SickNoteEventHandlerRabbitmq {
     }
 
     private static Optional<DayLength> toDayLength(de.focus_shift.urlaubsverwaltung.extension.api.sicknote.DayLength dayLength) {
-        return map(dayLength.name(), DayLength::valueOf)
-            .or(peek(() -> LOG.info("could not map dayLength")));
-    }
-
-    private static <R, T> Optional<R> map(T t, Function<T, R> mapper) {
-        try {
-            return Optional.of(mapper.apply(t));
-        } catch (IllegalArgumentException e) {
-            return Optional.empty();
-        }
-    }
-
-    private static <T> Supplier<Optional<T>> peek(Runnable runnable) {
-        return () -> {
-            try {
-                runnable.run();
-            } catch (Exception e) {
-                //
-            }
-            return Optional.empty();
-        };
+        return mapToEnum(dayLength.name(), DayLength::valueOf, () -> "could not map dayLength");
     }
 }
