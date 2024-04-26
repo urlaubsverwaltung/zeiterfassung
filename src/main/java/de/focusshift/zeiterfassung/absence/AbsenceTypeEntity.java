@@ -107,4 +107,16 @@ public class AbsenceTypeEntity implements AdminAware<Long> {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+    @Override
+    public String toString() {
+        return "AbsenceTypeEntity{" +
+            "tenantId='" + tenantId + '\'' +
+            ", id=" + id +
+            ", category=" + category +
+            ", sourceId=" + sourceId +
+            ", color=" + color +
+            ", labelByLocale=" + labelByLocale +
+            '}';
+    }
 }
