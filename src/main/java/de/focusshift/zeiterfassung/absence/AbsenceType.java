@@ -31,12 +31,6 @@ public record AbsenceType(
         this(category, sourceId, null);
     }
 
-    public AbsenceType(AbsenceTypeCategory category, @Nullable Long sourceId, @Nullable Map<Locale, String> labelByLocale) {
-        this.category = category;
-        this.sourceId = sourceId;
-        this.labelByLocale = labelByLocale;
-    }
-
     /**
      * implicitly known HOLIDAY absence to ease testing.
      * note: do not use in production code since sourceId is not ensured to be correct in runtime.
