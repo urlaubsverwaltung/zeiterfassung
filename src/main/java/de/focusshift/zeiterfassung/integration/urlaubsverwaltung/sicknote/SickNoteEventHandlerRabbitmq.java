@@ -77,7 +77,7 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
         return toDayLength(event.getPeriod().getDayLength())
             .map(dayLength -> new AbsenceWrite(
                 new TenantId(event.getTenantId()),
-                event.getSourceId().longValue(),
+                event.getSourceId(),
                 new UserId(event.getPerson().getUsername()),
                 event.getPeriod().getStartDate(),
                 event.getPeriod().getEndDate(),
