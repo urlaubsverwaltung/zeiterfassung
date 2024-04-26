@@ -16,6 +16,7 @@ public abstract class RabbitMessageConsumer {
     }
 
     /**
+     * Maps the source value to the given enum, returns empty Optional when the value cannot be parsed to the enum.
      *
      * @param source source object that should be mapped to an enum
      * @param enumClass class of the enum
