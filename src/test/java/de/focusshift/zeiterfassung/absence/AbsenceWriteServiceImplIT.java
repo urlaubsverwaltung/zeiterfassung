@@ -27,6 +27,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
 
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
+        final AbsenceType absenceType = AbsenceType.absenceTypeHoliday();
 
         final AbsenceWriteEntity existingEntity = new AbsenceWriteEntity();
         existingEntity.setTenantId("tenant");
@@ -35,7 +36,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
         existingEntity.setStartDate(startDate);
         existingEntity.setEndDate(endDate);
         existingEntity.setDayLength(DayLength.FULL);
-        existingEntity.setType(new AbsenceTypeEntityEmbeddable(AbsenceType.HOLIDAY.category(), AbsenceType.HOLIDAY.sourceId()));
+        existingEntity.setType(new AbsenceTypeEntityEmbeddable(absenceType.category(), absenceType.sourceId()));
         existingEntity.setColor(AbsenceColor.PINK);
         repository.save(existingEntity);
 
@@ -46,7 +47,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
             startDate,
             endDate,
             DayLength.FULL,
-            AbsenceType.HOLIDAY,
+            absenceType,
             AbsenceColor.BLUE
         );
 
@@ -62,6 +63,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
 
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
+        final AbsenceType absenceType = AbsenceType.absenceTypeHoliday();
 
         final AbsenceWriteEntity existingEntity = new AbsenceWriteEntity();
         existingEntity.setTenantId("tenant");
@@ -70,7 +72,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
         existingEntity.setStartDate(startDate);
         existingEntity.setEndDate(endDate);
         existingEntity.setDayLength(DayLength.FULL);
-        existingEntity.setType(new AbsenceTypeEntityEmbeddable(AbsenceType.HOLIDAY.category(), AbsenceType.HOLIDAY.sourceId()));
+        existingEntity.setType(new AbsenceTypeEntityEmbeddable(absenceType.category(), absenceType.sourceId()));
         existingEntity.setColor(AbsenceColor.PINK);
         repository.save(existingEntity);
 
@@ -81,7 +83,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
             startDate,
             endDate,
             DayLength.FULL,
-            AbsenceType.HOLIDAY,
+            absenceType,
             AbsenceColor.BLUE
         );
 

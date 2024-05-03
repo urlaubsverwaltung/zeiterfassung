@@ -24,7 +24,7 @@ public record AbsenceWrite(
     Instant startDate,
     Instant endDate,
     DayLength dayLength,
-    AbsenceType type,
-    AbsenceColor color
+    @Deprecated(forRemoval = true) AbsenceType type,
+    @Deprecated(forRemoval = true) AbsenceColor color
 ) {
 }

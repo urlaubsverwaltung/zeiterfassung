@@ -1,7 +1,5 @@
 package de.focusshift.zeiterfassung.absence;
 
-import org.springframework.lang.Nullable;
-
 import java.util.Locale;
 import java.util.Map;
 
@@ -19,29 +17,41 @@ import java.util.Map;
  */
 public record AbsenceType(
     AbsenceTypeCategory category,
-    @Nullable Long sourceId,
-    @Nullable Map<Locale, String> labelByLocale
+    Long sourceId,
+    Map<Locale, String> labelByLocale
 ) {
 
-    public AbsenceType(AbsenceTypeCategory category) {
-        this(category, null, null);
-    }
+    public static AbsenceType SICK = new AbsenceType(AbsenceTypeCategory.SICK, null, Map.of());
 
-    public AbsenceType(AbsenceTypeCategory category, @Nullable Long sourceId) {
-        this(category, sourceId, null);
+    /**
+     * implicitly known HOLIDAY absence to ease testing.
+     * note: do not use in production code since sourceId is not ensured to be correct in runtime.
+     */
+    public static AbsenceType absenceTypeHoliday() {
+        return absenceTypeHoliday(Map.of());
     }
 
     /**
      * implicitly known HOLIDAY absence to ease testing.
      * note: do not use in production code since sourceId is not ensured to be correct in runtime.
      */
-    public static AbsenceType HOLIDAY = new AbsenceType(AbsenceTypeCategory.HOLIDAY, 1000L);
+    public static AbsenceType absenceTypeHoliday(Map<Locale, String> labelByLocale) {
+        return new AbsenceType(AbsenceTypeCategory.HOLIDAY, 1000L, labelByLocale);
+    }
 
     /**
      * implicitly known SPECIALLEAVE absence to ease testing.
      * note: do not use in production code since sourceId is not ensured to be correct in runtime.
      */
-    public static AbsenceType SPECIALLEAVE = new AbsenceType(AbsenceTypeCategory.SPECIALLEAVE, 2000L);
+    public static AbsenceType absenceTypeSpecialLeave() {
+        return absenceTypeSpecialLeave(Map.of());
+    }
 
-    public static AbsenceType SICK = new AbsenceType(AbsenceTypeCategory.SICK);
+    /**
+     * implicitly known SPECIALLEAVE absence to ease testing.
+     * note: do not use in production code since sourceId is not ensured to be correct in runtime.
+     */
+    public static AbsenceType absenceTypeSpecialLeave(Map<Locale, String> labelByLocale) {
+        return new AbsenceType(AbsenceTypeCategory.SPECIALLEAVE, 2000L, labelByLocale);
+    }
 }

@@ -18,6 +18,7 @@ import java.time.temporal.ChronoField;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import static java.util.stream.Collectors.joining;
 
@@ -86,11 +87,11 @@ class ReportControllerHelper {
         return new GraphDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, hoursWorkedShould);
     }
 
-    DetailWeekDto toDetailWeekDto(ReportWeek reportWeek, Month monthPivot) {
+    DetailWeekDto toDetailWeekDto(ReportWeek reportWeek, Month monthPivot, Locale locale) {
 
         final List<DetailDayDto> dayReports = reportWeek.reportDays()
             .stream()
-            .map(reportDay -> toDetailDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot)))
+            .map(reportDay -> toDetailDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot), locale))
             .toList();
 
         final LocalDate first = reportWeek.firstDateOfWeek();
@@ -129,7 +130,7 @@ class ReportControllerHelper {
         return url;
     }
 
-    private DetailDayDto toDetailDayReportDto(ReportDay reportDay, boolean differentMonth) {
+    private DetailDayDto toDetailDayReportDto(ReportDay reportDay, boolean differentMonth, Locale locale) {
 
         final String dayOfWeekNarrow = dateFormatter.formatDayOfWeekNarrow(reportDay.date().getDayOfWeek());
         final String dayOfWeekFull = dateFormatter.formatDayOfWeekFull(reportDay.date().getDayOfWeek());
@@ -139,7 +140,7 @@ class ReportControllerHelper {
 
         final List<DetailDayAbsenceDto> detailDayAbsenceDto = reportDay.detailDayAbsencesByUser().values().stream()
             .flatMap(Collection::stream)
-            .map(this::toDetailDayAbsenceDto)
+            .map(reportDayAbsence -> toDetailDayAbsenceDto(reportDayAbsence, locale))
             .toList();
 
         return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, dayEntryDtos, detailDayAbsenceDto);
@@ -149,9 +150,9 @@ class ReportControllerHelper {
         return new DetailDayEntryDto(reportDayEntry.user().fullName(), reportDayEntry.comment(), reportDayEntry.start().toLocalTime(), reportDayEntry.end().toLocalTime());
     }
 
-    private DetailDayAbsenceDto toDetailDayAbsenceDto(ReportDayAbsence reportDayAbsence) {
+    private DetailDayAbsenceDto toDetailDayAbsenceDto(ReportDayAbsence reportDayAbsence, Locale locale) {
         final User user = reportDayAbsence.user();
         final Absence absence = reportDayAbsence.absence();
-        return new DetailDayAbsenceDto(user.fullName(), absence.dayLength().name(), absence.getMessageKey(), absence.color().name());
+        return new DetailDayAbsenceDto(user.fullName(), absence.dayLength().name(), absence.label(locale).orElse(""), absence.color().name());
     }
 }

@@ -22,6 +22,7 @@ import java.time.Clock;
 import java.time.DateTimeException;
 import java.time.Year;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import static java.lang.String.format;
@@ -60,7 +61,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         @RequestParam(value = "everyone", required = false) Optional<String> optionalAllUsersSelected,
         @RequestParam(value = "user", required = false) Optional<List<Long>> optionalUserIds,
         @AuthenticationPrincipal DefaultOidcUser principal,
-        Model model) {
+        Model model, Locale locale) {
 
         final YearWeek reportYearWeek = yearWeek(year, week)
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST));
@@ -71,7 +72,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
         final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, userLocalIds);
         final GraphWeekDto graphWeekDto = helper.toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
-        final DetailWeekDto detailWeekDto = helper.toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
+        final DetailWeekDto detailWeekDto = helper.toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth(), locale);
 
         model.addAttribute("weekReport", graphWeekDto);
         model.addAttribute("weekReportDetail", detailWeekDto);

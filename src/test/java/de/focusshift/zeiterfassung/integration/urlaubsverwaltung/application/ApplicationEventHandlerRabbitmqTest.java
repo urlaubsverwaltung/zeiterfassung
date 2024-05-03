@@ -8,7 +8,6 @@ import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPer
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPersonDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
 import de.focusshift.zeiterfassung.absence.AbsenceColor;
-import de.focusshift.zeiterfassung.absence.AbsenceType;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
@@ -25,6 +24,7 @@ import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceType.absenceTypeHoliday;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,7 +62,7 @@ class ApplicationEventHandlerRabbitmqTest {
                 Instant.ofEpochMilli(0L),
                 Instant.ofEpochMilli(1L),
                 DayLength.FULL,
-                AbsenceType.HOLIDAY,
+                absenceTypeHoliday(),
                 AbsenceColor.CYAN
         );
         verify(absenceWriteService).addAbsence(absence);
@@ -90,7 +90,7 @@ class ApplicationEventHandlerRabbitmqTest {
                 Instant.ofEpochMilli(0L),
                 Instant.ofEpochMilli(1L),
                 DayLength.FULL,
-                AbsenceType.HOLIDAY,
+                absenceTypeHoliday(),
                 AbsenceColor.CYAN
         );
         verify(absenceWriteService).addAbsence(absence);
@@ -118,7 +118,7 @@ class ApplicationEventHandlerRabbitmqTest {
                 Instant.ofEpochMilli(0L),
                 Instant.ofEpochMilli(1L),
                 DayLength.FULL,
-                AbsenceType.HOLIDAY,
+                absenceTypeHoliday(),
                 AbsenceColor.CYAN
         );
         verify(absenceWriteService).deleteAbsence(absence);

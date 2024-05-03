@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.absence;
 
+import de.focusshift.zeiterfassung.settings.SupportedLanguages;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -8,6 +9,7 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.LongFunction;
@@ -34,18 +37,21 @@ class AbsenceServiceImpl implements AbsenceService {
     private final UserSettingsProvider userSettingsProvider;
     private final TenantContextHolder tenantContextHolder;
     private final UserManagementService userManagementService;
+    private final MessageSource messageSource;
 
     AbsenceServiceImpl(AbsenceRepository absenceRepository,
                        AbsenceTypeService absenceTypeService,
                        UserSettingsProvider userSettingsProvider,
                        TenantContextHolder tenantContextHolder,
-                       UserManagementService userManagementService) {
+                       UserManagementService userManagementService,
+                       MessageSource messageSource) {
 
         this.absenceRepository = absenceRepository;
         this.absenceTypeService = absenceTypeService;
         this.userSettingsProvider = userSettingsProvider;
         this.tenantContextHolder = tenantContextHolder;
         this.userManagementService = userManagementService;
+        this.messageSource = messageSource;
     }
 
     @Override
@@ -165,8 +171,9 @@ class AbsenceServiceImpl implements AbsenceService {
         // the full info contains the correct color and all labels
         // while the AbsenceWriteEntity#getType embeddable contains potentially old info about the color for instance
         final AbsenceType fullAbsenceTypeInfo = absenceTypeBySourceIdSupplier.apply(entity.getType().getSourceId());
+
         final AbsenceType absenceType = fullAbsenceTypeInfo == null
-            ? new AbsenceType(entity.getType().getCategory(), entity.getType().getSourceId())
+            ? getAbsenceTypeFromOldEmbeddedInfo(entity)
             : fullAbsenceTypeInfo;
 
         return new Absence(
@@ -177,6 +184,38 @@ class AbsenceServiceImpl implements AbsenceService {
             absenceType,
             entity.getColor()
         );
+    }
+
+    private AbsenceType getAbsenceTypeFromOldEmbeddedInfo(AbsenceWriteEntity entity) {
+
+        final AbsenceTypeCategory category = entity.getType().getCategory();
+        final Long sourceId = entity.getType().getSourceId();
+        final Map<Locale, String> labelByLocale = toEmbeddableAbsenceTypeLabels(entity);
+
+        return new AbsenceType(category, sourceId, labelByLocale);
+    }
+
+    private Map<Locale, String> toEmbeddableAbsenceTypeLabels(AbsenceWriteEntity entity) {
+        return Stream.of(SupportedLanguages.values())
+            .collect(toMap(
+                SupportedLanguages::getLocale,
+                language -> embeddableAbsenceTypeLabel(entity, language.getLocale())
+            ));
+    }
+
+    private String embeddableAbsenceTypeLabel(AbsenceWriteEntity entity, Locale locale) {
+        final String key = embeddableAbsenceTypeLabelMessageKey(entity);
+        return messageSource.getMessage(key, new Object[]{}, locale);
+    }
+
+    private String embeddableAbsenceTypeLabelMessageKey(AbsenceWriteEntity entity) {
+        final AbsenceTypeEntityEmbeddable type = entity.getType();
+        final String dayLength = switch (entity.getDayLength()) {
+            case FULL -> "FULL";
+            case MORNING -> "MORNING";
+            case NOON -> "NOON";
+        };
+        return "absence.%s.%S.%s".formatted(type.getCategory(), type.getSourceId(), dayLength);
     }
 
     private List<AbsenceType> findAbsenceTypes(Collection<AbsenceWriteEntity> absenceEntities) {

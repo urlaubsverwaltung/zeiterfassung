@@ -17,6 +17,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE;
@@ -69,7 +70,10 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
 
         final List<LocalDate> absentWorkingDays = event.getAbsentWorkingDays().stream().sorted().toList();
         final Optional<DayLength> maybeDayLength = toDayLength(event.getPeriod().getDayLength());
+
+        // absenceType will be the sourceId soon
         final Optional<AbsenceType> maybeAbsenceType = toAbsenceType(event.getVacationType().getCategory(), event.getVacationType().getSourceId());
+        // color is not of interest anymore soon. will be joined from AbsenceTypeEntity
         final Optional<AbsenceColor> maybeAbsenceColor = toAbsenceColor(event.getVacationType().getColor());
 
         if (absentWorkingDays.isEmpty() || maybeDayLength.isEmpty() || maybeAbsenceType.isEmpty() || maybeAbsenceColor.isEmpty()) {
@@ -94,7 +98,9 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
 
     private static Optional<AbsenceType> toAbsenceType(String absenceTypeCategoryName, Long sourceId) {
         return mapToEnum(absenceTypeCategoryName, AbsenceTypeCategory.class)
-            .map(category -> new AbsenceType(category, sourceId));
+            // labelByLocale map can be an empty Map here since sourceId is the only actual attribute of interest here.
+            // (AbsenceWrite will use the AbsenceType sourceId only soon)
+            .map(category -> new AbsenceType(category, sourceId, Map.of()));
     }
 
     private static Optional<AbsenceColor> toAbsenceColor(String vacationTypeColor) {

@@ -146,7 +146,9 @@ class ReportWeekControllerTest {
                         absenceDate.atStartOfDay(UTC),
                         absenceDate.atStartOfDay(UTC),
                         DayLength.FULL,
-                        AbsenceType.HOLIDAY,
+                        AbsenceType.absenceTypeHoliday(Map.of(
+                            GERMAN, "absence-full-de"
+                        )),
                         AbsenceColor.VIOLET
                     ))
                 ))
@@ -166,7 +168,7 @@ class ReportWeekControllerTest {
                         new DetailDayAbsenceDto(
                             "Bruce Wayne",
                             "FULL",
-                            "absence.HOLIDAY.1000.FULL",
+                            "absence-full-de",
                             "VIOLET"
                         )
                     )

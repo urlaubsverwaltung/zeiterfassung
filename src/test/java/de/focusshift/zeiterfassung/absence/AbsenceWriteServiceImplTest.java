@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceType.absenceTypeSpecialLeave;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -46,7 +47,7 @@ class AbsenceWriteServiceImplTest {
             startDate,
             endDate,
             DayLength.FULL,
-            AbsenceType.SPECIALLEAVE,
+            absenceTypeSpecialLeave(),
             AbsenceColor.BLUE
         );
 
@@ -82,7 +83,7 @@ class AbsenceWriteServiceImplTest {
             startDate,
             endDate,
             DayLength.FULL,
-            AbsenceType.SPECIALLEAVE,
+            absenceTypeSpecialLeave(),
             AbsenceColor.BLUE
         );
 

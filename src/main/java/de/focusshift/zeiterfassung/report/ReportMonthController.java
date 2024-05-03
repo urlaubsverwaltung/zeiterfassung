@@ -22,6 +22,7 @@ import java.time.Clock;
 import java.time.DateTimeException;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
@@ -62,7 +63,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         @RequestParam(value = "everyone", required = false) Optional<String> optionalAllUsersSelected,
         @RequestParam(value = "user", required = false) Optional<List<Long>> optionalUserIds,
         @AuthenticationPrincipal DefaultOidcUser principal,
-        Model model
+        Model model, Locale locale
     ) {
 
         final YearMonth yearMonth = yearMonth(year, month)
@@ -73,7 +74,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
 
         final ReportMonth reportMonth = getReportMonth(principal, allUsersSelected, yearMonth, userLocalIds);
         final GraphMonthDto graphMonthDto = toGraphMonthDto(reportMonth);
-        final DetailMonthDto detailMonthDto = toDetailMonthDto(reportMonth);
+        final DetailMonthDto detailMonthDto = toDetailMonthDto(reportMonth, locale);
 
         model.addAttribute("monthReport", graphMonthDto);
         model.addAttribute("monthReportDetail", detailMonthDto);
@@ -146,11 +147,11 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked, hoursWorkedAverageADay);
     }
 
-    private DetailMonthDto toDetailMonthDto(ReportMonth reportMonth) {
+    private DetailMonthDto toDetailMonthDto(ReportMonth reportMonth, Locale locale) {
 
         final List<DetailWeekDto> weeks = reportMonth.weeks()
             .stream()
-            .map(week -> helper.toDetailWeekDto(week, reportMonth.yearMonth().getMonth()))
+            .map(week -> helper.toDetailWeekDto(week, reportMonth.yearMonth().getMonth(), locale))
             .toList();
 
         final String yearMonth = dateFormatter.formatYearMonth(reportMonth.yearMonth());

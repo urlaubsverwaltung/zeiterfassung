@@ -71,13 +71,15 @@ class TimeEntryControllerTest {
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
+        final AbsenceType absenceTypeHoliday = AbsenceType.absenceTypeHoliday();
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
         final ZonedDateTime absenceStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime absenceEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
-        final Absence absence = new Absence(new UserId("batman"), absenceStart, absenceEnd, DayLength.FULL, AbsenceType.HOLIDAY, AbsenceColor.BLUE);
+        final Absence absence = new Absence(new UserId("batman"), absenceStart, absenceEnd, DayLength.FULL, absenceTypeHoliday, AbsenceColor.BLUE);
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryDay timeEntryDayWithAbsence = new TimeEntryDay(LocalDate.of(2022, 9, 20), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of(absence));
