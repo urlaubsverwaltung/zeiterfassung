@@ -7,7 +7,6 @@ import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCre
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPeriodDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPersonDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
-import de.focusshift.zeiterfassung.absence.AbsenceColor;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
@@ -24,6 +23,7 @@ import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceColor.CYAN;
 import static de.focusshift.zeiterfassung.absence.AbsenceType.absenceTypeHoliday;
 import static org.mockito.Mockito.verify;
 
@@ -62,8 +62,8 @@ class ApplicationEventHandlerRabbitmqTest {
                 Instant.ofEpochMilli(0L),
                 Instant.ofEpochMilli(1L),
                 DayLength.FULL,
-                absenceTypeHoliday(),
-                AbsenceColor.CYAN
+                absenceTypeHoliday(CYAN),
+                CYAN
         );
         verify(absenceWriteService).addAbsence(absence);
     }
@@ -90,8 +90,8 @@ class ApplicationEventHandlerRabbitmqTest {
                 Instant.ofEpochMilli(0L),
                 Instant.ofEpochMilli(1L),
                 DayLength.FULL,
-                absenceTypeHoliday(),
-                AbsenceColor.CYAN
+                absenceTypeHoliday(CYAN),
+                CYAN
         );
         verify(absenceWriteService).addAbsence(absence);
     }
@@ -118,8 +118,8 @@ class ApplicationEventHandlerRabbitmqTest {
                 Instant.ofEpochMilli(0L),
                 Instant.ofEpochMilli(1L),
                 DayLength.FULL,
-                absenceTypeHoliday(),
-                AbsenceColor.CYAN
+                absenceTypeHoliday(CYAN),
+                CYAN
         );
         verify(absenceWriteService).deleteAbsence(absence);
     }

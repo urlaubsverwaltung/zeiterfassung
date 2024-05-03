@@ -18,15 +18,13 @@ import static java.util.Objects.requireNonNullElseGet;
  * @param endDate
  * @param dayLength
  * @param type
- * @param color     selected by the user to render the absence type
  */
 public record Absence(
     UserId userId,
     ZonedDateTime startDate,
     ZonedDateTime endDate,
     DayLength dayLength,
-    AbsenceType type,
-    AbsenceColor color
+    AbsenceType type
 ) {
 
     /**
@@ -37,6 +35,10 @@ public record Absence(
     public Optional<String> label(Locale locale) {
         final Map<Locale, String> labelByLocale = requireNonNullElseGet(type.labelByLocale(), HashMap::new);
         return Optional.ofNullable(labelByLocale.get(locale));
+    }
+
+    public AbsenceColor color() {
+        return type.color();
     }
 
     public String getMessageKey() {

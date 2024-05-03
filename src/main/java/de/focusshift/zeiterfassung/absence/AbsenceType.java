@@ -3,6 +3,9 @@ package de.focusshift.zeiterfassung.absence;
 import java.util.Locale;
 import java.util.Map;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.SPECIALLEAVE;
+
 /**
  * Describes the absence-type of an {@linkplain Absence}. Absence types are not managed by Zeiterfassung, but by an
  * external system.
@@ -18,10 +21,11 @@ import java.util.Map;
 public record AbsenceType(
     AbsenceTypeCategory category,
     Long sourceId,
-    Map<Locale, String> labelByLocale
+    Map<Locale, String> labelByLocale,
+    AbsenceColor color
 ) {
 
-    public static AbsenceType SICK = new AbsenceType(AbsenceTypeCategory.SICK, null, Map.of());
+    public static AbsenceType SICK = new AbsenceType(AbsenceTypeCategory.SICK, null, Map.of(), AbsenceColor.RED);
 
     /**
      * implicitly known HOLIDAY absence to ease testing.
@@ -30,13 +34,28 @@ public record AbsenceType(
     public static AbsenceType absenceTypeHoliday() {
         return absenceTypeHoliday(Map.of());
     }
+    /**
+     * implicitly known HOLIDAY absence to ease testing.
+     * note: do not use in production code since sourceId is not ensured to be correct in runtime.
+     */
+    public static AbsenceType absenceTypeHoliday(AbsenceColor color) {
+        return absenceTypeHoliday(Map.of(), color);
+    }
 
     /**
      * implicitly known HOLIDAY absence to ease testing.
      * note: do not use in production code since sourceId is not ensured to be correct in runtime.
      */
     public static AbsenceType absenceTypeHoliday(Map<Locale, String> labelByLocale) {
-        return new AbsenceType(AbsenceTypeCategory.HOLIDAY, 1000L, labelByLocale);
+        return absenceTypeHoliday(labelByLocale, AbsenceColor.ORANGE);
+    }
+
+    /**
+     * implicitly known HOLIDAY absence to ease testing.
+     * note: do not use in production code since sourceId is not ensured to be correct in runtime.
+     */
+    public static AbsenceType absenceTypeHoliday(Map<Locale, String> labelByLocale, AbsenceColor color) {
+        return new AbsenceType(HOLIDAY, 1000L, labelByLocale, color);
     }
 
     /**
@@ -51,7 +70,23 @@ public record AbsenceType(
      * implicitly known SPECIALLEAVE absence to ease testing.
      * note: do not use in production code since sourceId is not ensured to be correct in runtime.
      */
+    public static AbsenceType absenceTypeSpecialLeave(AbsenceColor color) {
+        return absenceTypeSpecialLeave(Map.of(), color);
+    }
+
+    /**
+     * implicitly known SPECIALLEAVE absence to ease testing.
+     * note: do not use in production code since sourceId is not ensured to be correct in runtime.
+     */
     public static AbsenceType absenceTypeSpecialLeave(Map<Locale, String> labelByLocale) {
-        return new AbsenceType(AbsenceTypeCategory.SPECIALLEAVE, 2000L, labelByLocale);
+        return absenceTypeSpecialLeave(labelByLocale, AbsenceColor.CYAN);
+    }
+
+    /**
+     * implicitly known SPECIALLEAVE absence to ease testing.
+     * note: do not use in production code since sourceId is not ensured to be correct in runtime.
+     */
+    public static AbsenceType absenceTypeSpecialLeave(Map<Locale, String> labelByLocale, AbsenceColor color) {
+        return new AbsenceType(SPECIALLEAVE, 2000L, labelByLocale, color);
     }
 }

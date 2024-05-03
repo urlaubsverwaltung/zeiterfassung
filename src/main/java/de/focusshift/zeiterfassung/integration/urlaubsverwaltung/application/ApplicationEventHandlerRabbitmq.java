@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationAllowedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCancelledEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCreatedFromSickNoteEventDTO;
+import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
 import de.focusshift.zeiterfassung.absence.AbsenceColor;
 import de.focusshift.zeiterfassung.absence.AbsenceType;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeCategory;
@@ -72,7 +73,7 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
         final Optional<DayLength> maybeDayLength = toDayLength(event.getPeriod().getDayLength());
 
         // absenceType will be the sourceId soon
-        final Optional<AbsenceType> maybeAbsenceType = toAbsenceType(event.getVacationType().getCategory(), event.getVacationType().getSourceId());
+        final Optional<AbsenceType> maybeAbsenceType = toAbsenceType(event.getVacationType());
         // color is not of interest anymore soon. will be joined from AbsenceTypeEntity
         final Optional<AbsenceColor> maybeAbsenceColor = toAbsenceColor(event.getVacationType().getColor());
 
@@ -96,11 +97,13 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
         return mapToEnum(dayLength.name(), DayLength.class);
     }
 
-    private static Optional<AbsenceType> toAbsenceType(String absenceTypeCategoryName, Long sourceId) {
-        return mapToEnum(absenceTypeCategoryName, AbsenceTypeCategory.class)
+    private static Optional<AbsenceType> toAbsenceType(VacationTypeDTO vacationType) {
+        return mapToEnum(vacationType.getCategory(), AbsenceTypeCategory.class)
             // labelByLocale map can be an empty Map here since sourceId is the only actual attribute of interest here.
             // (AbsenceWrite will use the AbsenceType sourceId only soon)
-            .map(category -> new AbsenceType(category, sourceId, Map.of()));
+            .flatMap(category ->
+                toAbsenceColor(vacationType.getColor())
+                    .map(color -> new AbsenceType(category, vacationType.getSourceId(), Map.of(), color)));
     }
 
     private static Optional<AbsenceColor> toAbsenceColor(String vacationTypeColor) {

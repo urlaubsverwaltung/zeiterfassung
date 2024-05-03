@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.CYAN;
+import static de.focusshift.zeiterfassung.absence.AbsenceColor.PINK;
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.VIOLET;
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.YELLOW;
 import static de.focusshift.zeiterfassung.absence.AbsenceType.absenceTypeHoliday;
@@ -77,12 +78,12 @@ class AbsenceServiceImplTest {
         final AbsenceType holiday = absenceTypeHoliday(Map.of(
             Locale.GERMAN, "holiday-full-de",
             Locale.ENGLISH, "holiday-full-en"
-        ));
+        ), PINK);
 
         final AbsenceType specialleave = absenceTypeSpecialLeave(Map.of(
             Locale.GERMAN, "special-morning-de",
             Locale.ENGLISH, "special-morning-en"
-        ));
+        ), VIOLET);
 
         final AbsenceWriteEntity entity_1 = new AbsenceWriteEntity();
         entity_1.setId(1L);
@@ -91,7 +92,7 @@ class AbsenceServiceImplTest {
         entity_1.setEndDate(today.plusDays(2).toInstant());
         entity_1.setDayLength(FULL);
         entity_1.setType(new AbsenceTypeEntityEmbeddable(holiday.category(), holiday.sourceId()));
-        entity_1.setColor(AbsenceColor.PINK);
+        entity_1.setColor(PINK);
 
         final AbsenceWriteEntity entity_2 = new AbsenceWriteEntity();
         entity_2.setId(2L);
@@ -110,16 +111,14 @@ class AbsenceServiceImplTest {
             today.plusDays(1).withZoneSameInstant(berlin),
             today.plusDays(2).withZoneSameInstant(berlin),
             FULL,
-            holiday,
-            AbsenceColor.PINK
+            holiday
         );
         final Absence expectedAbsence_2 = new Absence(
             new UserId("user"),
             today.plusDays(4).withZoneSameInstant(berlin),
             today.plusDays(4).withZoneSameInstant(berlin),
             MORNING,
-            specialleave,
-            VIOLET
+            specialleave
         );
 
         // SupportedLanguages are GERMAN and ENGLISH right now
@@ -241,17 +240,17 @@ class AbsenceServiceImplTest {
                 new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, new AbsenceType(OTHER, 1000L, Map.of(
                     Locale.GERMAN, "full-de",
                     Locale.ENGLISH, "full-en"
-                )), YELLOW)
+                ), YELLOW))
             ),
             userIdComposite_2, List.of(
                 new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, new AbsenceType(OTHER, 2000L, Map.of(
                     Locale.GERMAN, "morning-de",
                     Locale.ENGLISH, "morning-en"
-                )), VIOLET),
+                ), VIOLET)),
                 new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, new AbsenceType(OTHER, 3000L, Map.of(
                     Locale.GERMAN, "noon-de",
                     Locale.ENGLISH, "noon-en"
-                )), CYAN)
+                ), CYAN))
             )
         ));
     }
@@ -352,17 +351,17 @@ class AbsenceServiceImplTest {
                 new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, new AbsenceType(OTHER, 1000L, Map.of(
                     Locale.GERMAN, "full-de",
                     Locale.ENGLISH, "full-en"
-                )), YELLOW)
+                ), YELLOW))
             ),
             userIdComposite_2, List.of(
                 new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, new AbsenceType(OTHER, 2000L, Map.of(
                     Locale.GERMAN, "morning-de",
                     Locale.ENGLISH, "morning-en"
-                )), VIOLET),
+                ), VIOLET)),
                 new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, new AbsenceType(OTHER, 3000L, Map.of(
                     Locale.GERMAN, "noon-de",
                     Locale.ENGLISH, "noon-en"
-                )), CYAN)
+                ), CYAN))
             )
         ));
     }

@@ -181,8 +181,7 @@ class AbsenceServiceImpl implements AbsenceService {
             entity.getStartDate().atZone(zoneId),
             entity.getEndDate().atZone(zoneId),
             entity.getDayLength(),
-            absenceType,
-            entity.getColor()
+            absenceType
         );
     }
 
@@ -191,8 +190,9 @@ class AbsenceServiceImpl implements AbsenceService {
         final AbsenceTypeCategory category = entity.getType().getCategory();
         final Long sourceId = entity.getType().getSourceId();
         final Map<Locale, String> labelByLocale = toEmbeddableAbsenceTypeLabels(entity);
+        final AbsenceColor color = entity.getColor();
 
-        return new AbsenceType(category, sourceId, labelByLocale);
+        return new AbsenceType(category, sourceId, labelByLocale, color);
     }
 
     private Map<Locale, String> toEmbeddableAbsenceTypeLabels(AbsenceWriteEntity entity) {

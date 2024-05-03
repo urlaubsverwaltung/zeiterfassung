@@ -50,6 +50,6 @@ class AbsenceTypeServiceImpl implements AbsenceTypeService {
     }
 
     private static AbsenceType toAbsenceType(AbsenceTypeEntity entity) {
-        return new AbsenceType(entity.getCategory(), entity.getSourceId(), entity.getLabelByLocale());
+        return new AbsenceType(entity.getCategory(), entity.getSourceId(), entity.getLabelByLocale(), entity.getColor());
     }
 }
