@@ -111,16 +111,16 @@ class AbsenceServiceImplTest {
             today.plusDays(1).withZoneSameInstant(berlin),
             today.plusDays(2).withZoneSameInstant(berlin),
             FULL,
-            holiday,
-            locale -> ""
+            locale -> "",
+            holiday.color()
         );
         final Absence expectedAbsence_2 = new Absence(
             new UserId("user"),
             today.plusDays(4).withZoneSameInstant(berlin),
             today.plusDays(4).withZoneSameInstant(berlin),
             MORNING,
-            specialleave,
-            locale -> ""
+            locale -> "",
+            specialleave.color()
         );
 
         // SupportedLanguages are GERMAN and ENGLISH right now
@@ -239,20 +239,11 @@ class AbsenceServiceImplTest {
 
         assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
             userIdComposite_1, List.of(
-                new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, new AbsenceType(OTHER, 1000L, Map.of(
-                    Locale.GERMAN, "full-de",
-                    Locale.ENGLISH, "full-en"
-                ), YELLOW), locale -> "")
+                new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, locale -> "", YELLOW)
             ),
             userIdComposite_2, List.of(
-                new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, new AbsenceType(OTHER, 2000L, Map.of(
-                    Locale.GERMAN, "morning-de",
-                    Locale.ENGLISH, "morning-en"
-                ), VIOLET), locale -> ""),
-                new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, new AbsenceType(OTHER, 3000L, Map.of(
-                    Locale.GERMAN, "noon-de",
-                    Locale.ENGLISH, "noon-en"
-                ), CYAN), locale -> "")
+                new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, locale -> "", VIOLET),
+                new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, locale -> "", CYAN)
             )
         ));
     }
@@ -350,20 +341,11 @@ class AbsenceServiceImplTest {
         final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesForAllUsers(from, toExclusive);
         assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
             userIdComposite_1, List.of(
-                new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, new AbsenceType(OTHER, 1000L, Map.of(
-                    Locale.GERMAN, "full-de",
-                    Locale.ENGLISH, "full-en"
-                ), YELLOW), locale -> "")
+                new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, locale -> "", YELLOW)
             ),
             userIdComposite_2, List.of(
-                new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, new AbsenceType(OTHER, 2000L, Map.of(
-                    Locale.GERMAN, "morning-de",
-                    Locale.ENGLISH, "morning-en"
-                ), VIOLET), locale -> ""),
-                new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, new AbsenceType(OTHER, 3000L, Map.of(
-                    Locale.GERMAN, "noon-de",
-                    Locale.ENGLISH, "noon-en"
-                ), CYAN), locale -> "")
+                new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, locale -> "", VIOLET),
+                new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, locale -> "", CYAN)
             )
         ));
     }

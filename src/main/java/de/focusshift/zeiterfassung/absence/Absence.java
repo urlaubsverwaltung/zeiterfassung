@@ -14,24 +14,20 @@ import java.util.function.Function;
  * @param startDate
  * @param endDate
  * @param dayLength
- * @param type
  * @param label
+ * @param color
  */
 public record Absence(
     UserId userId,
     ZonedDateTime startDate,
     ZonedDateTime endDate,
     DayLength dayLength,
-    AbsenceType type,
-    Function<Locale, String> label
+    Function<Locale, String> label,
+    AbsenceColor color
 ) {
 
     public String label(Locale locale) {
         return label.apply(locale);
-    }
-
-    public AbsenceColor color() {
-        return type.color();
     }
 
     @Override
@@ -40,7 +36,7 @@ public record Absence(
         if (o == null || getClass() != o.getClass()) return false;
         Absence absence = (Absence) o;
         return Objects.equals(userId, absence.userId)
-            && Objects.equals(type, absence.type)
+            && Objects.equals(color, absence.color)
             && dayLength == absence.dayLength
             && Objects.equals(endDate, absence.endDate)
             && Objects.equals(startDate, absence.startDate);
@@ -48,6 +44,6 @@ public record Absence(
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, startDate, endDate, dayLength, type);
+        return Objects.hash(userId, startDate, endDate, dayLength, color);
     }
 }

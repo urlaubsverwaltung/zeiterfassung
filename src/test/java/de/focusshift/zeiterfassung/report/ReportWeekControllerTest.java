@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.absence.Absence;
-import de.focusshift.zeiterfassung.absence.AbsenceType;
+import de.focusshift.zeiterfassung.absence.AbsenceColor;
 import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
@@ -145,8 +145,8 @@ class ReportWeekControllerTest {
                         absenceDate.atStartOfDay(UTC),
                         absenceDate.atStartOfDay(UTC),
                         DayLength.FULL,
-                        AbsenceType.absenceTypeHoliday(Map.of()),
-                        locale -> "absence-full-de"
+                        locale -> "absence-full-de",
+                        AbsenceColor.ORANGE
                     ))
                 ))
             )
