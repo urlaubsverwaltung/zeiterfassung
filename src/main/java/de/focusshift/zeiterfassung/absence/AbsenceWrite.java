@@ -29,6 +29,17 @@ public record AbsenceWrite(
     @Nullable AbsenceTypeSourceId absenceTypeSourceId
 ) {
 
+    /**
+     * constructor for absences without a absenceType sourceId (e.g. {@linkplain AbsenceTypeCategory#SICK}).
+     *
+     * @param tenantId
+     * @param sourceId
+     * @param userId
+     * @param startDate
+     * @param endDate
+     * @param dayLength
+     * @param absenceTypeCategory
+     */
     public AbsenceWrite(TenantId tenantId, Long sourceId, UserId userId, Instant startDate, Instant endDate, DayLength dayLength, AbsenceTypeCategory absenceTypeCategory) {
         this(tenantId, sourceId, userId, startDate, endDate, dayLength, absenceTypeCategory, null);
     }
