@@ -9,6 +9,7 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import org.slf4j.Logger;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
@@ -22,15 +23,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.LongFunction;
 import java.util.stream.Stream;
 
+import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
 class AbsenceServiceImpl implements AbsenceService {
+
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final AbsenceRepository absenceRepository;
     private final AbsenceTypeService absenceTypeService;
@@ -176,13 +183,36 @@ class AbsenceServiceImpl implements AbsenceService {
             ? getAbsenceTypeFromOldEmbeddedInfo(entity)
             : fullAbsenceTypeInfo;
 
+        final DayLength dayLength = entity.getDayLength();
+
+        final Function<Locale, String> label = locale -> fullAbsenceTypeInfo == null
+            // embedded info contains the final translation already
+            // fallback to empty String when there is no label available... this branch will be removed soon anyway
+            ? requireNonNullElse(absenceType.labelByLocale().get(locale), "")
+            // while using the persisted AbsenceType has no info about the DayLength
+            : getAbsenceTypeLabelWithDayLength(dayLength, absenceType).apply(locale);
+
         return new Absence(
             new UserId(entity.getUserId()),
             entity.getStartDate().atZone(zoneId),
             entity.getEndDate().atZone(zoneId),
-            entity.getDayLength(),
-            absenceType
+            dayLength,
+            absenceType,
+            label
         );
+    }
+
+    private Function<Locale, String> getAbsenceTypeLabelWithDayLength(DayLength dayLength, AbsenceType absenceType) {
+        return locale -> {
+            final Map<Locale, String> labelByLocale = absenceType.labelByLocale();
+            final String label = labelByLocale.get(locale);
+            if (label == null) {
+                LOG.info("could not resolve label of absenceType={} for locale={}. falling back to GERMAN", absenceType, locale);
+                return getAbsenceTypeLabelWithDayLength(dayLength, absenceType).apply(Locale.GERMAN);
+            } else {
+                return messageSource.getMessage("absence.label" + dayLength, new Object[]{label}, locale);
+            }
+        };
     }
 
     private AbsenceType getAbsenceTypeFromOldEmbeddedInfo(AbsenceWriteEntity entity) {

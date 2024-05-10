@@ -145,9 +145,8 @@ class ReportWeekControllerTest {
                         absenceDate.atStartOfDay(UTC),
                         absenceDate.atStartOfDay(UTC),
                         DayLength.FULL,
-                        AbsenceType.absenceTypeHoliday(Map.of(
-                            GERMAN, "absence-full-de"
-                        ))
+                        AbsenceType.absenceTypeHoliday(Map.of()),
+                        locale -> "absence-full-de"
                     ))
                 ))
             )

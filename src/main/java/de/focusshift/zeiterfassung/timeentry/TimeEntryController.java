@@ -385,7 +385,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final double ratio = timeEntryDay.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
         final List<TimeEntryDTO> dayTimeEntryDtos = timeEntryDay.timeEntries().stream().map(this::toTimeEntryDto).toList();
         final List<AbsenceEntryDto> absenceEntryDtos = timeEntryDay.absences().stream()
-            .map(absence -> new AbsenceEntryDto(timeEntryDay.date(), absence.label(locale).orElse(""), absence.color()))
+            .map(absence -> new AbsenceEntryDto(timeEntryDay.date(), absence.label(locale), absence.color()))
             .toList();
 
         return TimeEntryDayDto.builder()

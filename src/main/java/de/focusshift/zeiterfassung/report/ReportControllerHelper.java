@@ -153,6 +153,6 @@ class ReportControllerHelper {
     private DetailDayAbsenceDto toDetailDayAbsenceDto(ReportDayAbsence reportDayAbsence, Locale locale) {
         final User user = reportDayAbsence.user();
         final Absence absence = reportDayAbsence.absence();
-        return new DetailDayAbsenceDto(user.fullName(), absence.dayLength().name(), absence.label(locale).orElse(""), absence.color().name());
+        return new DetailDayAbsenceDto(user.fullName(), absence.dayLength().name(), absence.label(locale), absence.color().name());
     }
 }

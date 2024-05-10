@@ -120,7 +120,7 @@ class AbsenceIT extends TestContainersBase {
 
         final UserId userId = new UserId("boss");
         final AbsenceType expectedAbsenceType = new AbsenceType(erholungsurlaubCategory, erholungsUrlaubSourceId, erholungsurlaubLabels, erholungsUrlaubColor);
-        final Absence expectedAbsence = new Absence(userId, ZonedDateTime.ofInstant(startOfDay, UTC), ZonedDateTime.ofInstant(startOfDay, ZONE_ID), DayLength.FULL, expectedAbsenceType);
+        final Absence expectedAbsence = new Absence(userId, ZonedDateTime.ofInstant(startOfDay, UTC), ZonedDateTime.ofInstant(startOfDay, ZONE_ID), DayLength.FULL, expectedAbsenceType, locale -> "");
 
         await().untilAsserted(() -> {
             final Map<LocalDate, List<Absence>> absences = absenceService.findAllAbsences(userId, startOfDay, startOfNextDay);
@@ -156,7 +156,7 @@ class AbsenceIT extends TestContainersBase {
         final UserId userId = new UserId("boss");
         final Map<Locale, String> labels = Map.of(GERMAN, "Erholungsurlaub", ENGLISH, "Holiday");
         final AbsenceType expectedAbsenceType = new AbsenceType(HOLIDAY, erholungsUrlaubSourceId, labels, AbsenceColor.ORANGE);
-        final Absence expectedAbsence = new Absence(userId, ZonedDateTime.ofInstant(startOfDay, UTC), ZonedDateTime.ofInstant(startOfDay, ZONE_ID), DayLength.FULL, expectedAbsenceType);
+        final Absence expectedAbsence = new Absence(userId, ZonedDateTime.ofInstant(startOfDay, UTC), ZonedDateTime.ofInstant(startOfDay, ZONE_ID), DayLength.FULL, expectedAbsenceType, locale -> "");
 
         await().untilAsserted(() -> {
             final Map<LocalDate, List<Absence>> absences = absenceService.findAllAbsences(userId, startOfDay, startOfNextDay);
