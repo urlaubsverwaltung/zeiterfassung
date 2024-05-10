@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.absence;
 
-import de.focusshift.zeiterfassung.settings.SupportedLanguages;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -22,13 +21,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.LongFunction;
 import java.util.stream.Stream;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.SICK;
 import static java.lang.invoke.MethodHandles.lookup;
-import static java.util.Objects.requireNonNullElse;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
@@ -174,23 +174,21 @@ class AbsenceServiceImpl implements AbsenceService {
 
     private Absence toAbsence(AbsenceWriteEntity entity, ZoneId zoneId, LongFunction<AbsenceType> absenceTypeBySourceIdSupplier) {
 
-        // fullAbsenceTypeInfo could not be available (is received by message broker VacationTypeUpdated event)
-        // the full info contains the correct color and all labels
-        // while the AbsenceWriteEntity#getType embeddable contains potentially old info about the color for instance
-        final AbsenceType fullAbsenceTypeInfo = absenceTypeBySourceIdSupplier.apply(entity.getType().getSourceId());
-
-        final AbsenceType absenceType = fullAbsenceTypeInfo == null
-            ? getAbsenceTypeFromOldEmbeddedInfo(entity)
-            : fullAbsenceTypeInfo;
+        final AbsenceType absenceType;
+        if (entity.getType().getCategory().equals(SICK)) {
+            // TODO sick labels
+            absenceType = new AbsenceType(SICK, null, Map.of(), AbsenceColor.RED);
+        } else {
+            final AbsenceTypeEntityEmbeddable type = entity.getType();
+            absenceType = absenceTypeBySourceIdSupplier.apply(type.getSourceId());
+            if (absenceType == null) {
+                // TODO how to handle `absenceType == null`?
+                throw new IllegalStateException("expected absenceType to exist. type=%s".formatted(type));
+            }
+        }
 
         final DayLength dayLength = entity.getDayLength();
-
-        final Function<Locale, String> label = locale -> fullAbsenceTypeInfo == null
-            // embedded info contains the final translation already
-            // fallback to empty String when there is no label available... this branch will be removed soon anyway
-            ? requireNonNullElse(absenceType.labelByLocale().get(locale), "")
-            // while using the persisted AbsenceType has no info about the DayLength
-            : getAbsenceTypeLabelWithDayLength(dayLength, absenceType).apply(locale);
+        final Function<Locale, String> label = getAbsenceTypeLabelWithDayLength(dayLength, absenceType);
 
         return new Absence(
             new UserId(entity.getUserId()),
@@ -198,7 +196,8 @@ class AbsenceServiceImpl implements AbsenceService {
             entity.getEndDate().atZone(zoneId),
             dayLength,
             label,
-            absenceType.color()
+            absenceType.color(),
+            absenceType.category()
         );
     }
 
@@ -210,49 +209,16 @@ class AbsenceServiceImpl implements AbsenceService {
                 LOG.info("could not resolve label of absenceType={} for locale={}. falling back to GERMAN", absenceType, locale);
                 return getAbsenceTypeLabelWithDayLength(dayLength, absenceType).apply(Locale.GERMAN);
             } else {
-                return messageSource.getMessage("absence.label" + dayLength, new Object[]{label}, locale);
+                return messageSource.getMessage("absence.label." + dayLength, new Object[]{label}, locale);
             }
         };
-    }
-
-    private AbsenceType getAbsenceTypeFromOldEmbeddedInfo(AbsenceWriteEntity entity) {
-
-        final AbsenceTypeCategory category = entity.getType().getCategory();
-        final Long sourceId = entity.getType().getSourceId();
-        final Map<Locale, String> labelByLocale = toEmbeddableAbsenceTypeLabels(entity);
-        final AbsenceColor color = entity.getColor();
-
-        return new AbsenceType(category, sourceId, labelByLocale, color);
-    }
-
-    private Map<Locale, String> toEmbeddableAbsenceTypeLabels(AbsenceWriteEntity entity) {
-        return Stream.of(SupportedLanguages.values())
-            .collect(toMap(
-                SupportedLanguages::getLocale,
-                language -> embeddableAbsenceTypeLabel(entity, language.getLocale())
-            ));
-    }
-
-    private String embeddableAbsenceTypeLabel(AbsenceWriteEntity entity, Locale locale) {
-        final String key = embeddableAbsenceTypeLabelMessageKey(entity);
-        return messageSource.getMessage(key, new Object[]{}, locale);
-    }
-
-    private String embeddableAbsenceTypeLabelMessageKey(AbsenceWriteEntity entity) {
-        final AbsenceTypeEntityEmbeddable type = entity.getType();
-        final String dayLength = switch (entity.getDayLength()) {
-            case FULL -> "FULL";
-            case MORNING -> "MORNING";
-            case NOON -> "NOON";
-        };
-        return "absence.%s.%S.%s".formatted(type.getCategory(), type.getSourceId(), dayLength);
     }
 
     private List<AbsenceType> findAbsenceTypes(Collection<AbsenceWriteEntity> absenceEntities) {
 
         final List<Long> absenceTypeSourceIds = absenceEntities.stream()
-            .map(AbsenceWriteEntity::getType)
-            .map(AbsenceTypeEntityEmbeddable::getSourceId)
+            .map(entity -> entity.getType().getSourceId())
+            .filter(Objects::nonNull) // category SICK does not have a sourceId
             .distinct()
             .toList();
 

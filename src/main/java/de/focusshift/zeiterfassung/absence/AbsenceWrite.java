@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.absence;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
+import jakarta.annotation.Nullable;
 
 import java.time.Instant;
 
@@ -14,8 +15,8 @@ import java.time.Instant;
  * @param startDate
  * @param endDate
  * @param dayLength
- * @param type
- * @param color selected by the user to render the absence type
+ * @param absenceTypeCategory
+ * @param absenceTypeSourceId absence type source id or {@code null} for {@linkplain AbsenceTypeCategory#SICK}
  */
 public record AbsenceWrite(
     TenantId tenantId,
@@ -24,7 +25,11 @@ public record AbsenceWrite(
     Instant startDate,
     Instant endDate,
     DayLength dayLength,
-    @Deprecated(forRemoval = true) AbsenceType type,
-    @Deprecated(forRemoval = true) AbsenceColor color
+    AbsenceTypeCategory absenceTypeCategory,
+    @Nullable AbsenceTypeSourceId absenceTypeSourceId
 ) {
+
+    public AbsenceWrite(TenantId tenantId, Long sourceId, UserId userId, Instant startDate, Instant endDate, DayLength dayLength, AbsenceTypeCategory absenceTypeCategory) {
+        this(tenantId, sourceId, userId, startDate, endDate, dayLength, absenceTypeCategory, null);
+    }
 }

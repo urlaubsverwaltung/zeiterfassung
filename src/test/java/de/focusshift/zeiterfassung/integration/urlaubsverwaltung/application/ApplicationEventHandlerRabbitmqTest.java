@@ -7,6 +7,7 @@ import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCre
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPeriodDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPersonDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
+import de.focusshift.zeiterfassung.absence.AbsenceTypeSourceId;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
@@ -23,8 +24,7 @@ import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
 
-import static de.focusshift.zeiterfassung.absence.AbsenceColor.CYAN;
-import static de.focusshift.zeiterfassung.absence.AbsenceType.absenceTypeHoliday;
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,14 +56,14 @@ class ApplicationEventHandlerRabbitmqTest {
         sut.on(event);
 
         final AbsenceWrite absence = new AbsenceWrite(
-                new TenantId("tenantId"),
-                1L,
-                new UserId("userId"),
-                Instant.ofEpochMilli(0L),
-                Instant.ofEpochMilli(1L),
-                DayLength.FULL,
-                absenceTypeHoliday(CYAN),
-                CYAN
+            new TenantId("tenantId"),
+            1L,
+            new UserId("userId"),
+            Instant.ofEpochMilli(0L),
+            Instant.ofEpochMilli(1L),
+            DayLength.FULL,
+            HOLIDAY,
+            new AbsenceTypeSourceId(1000L)
         );
         verify(absenceWriteService).addAbsence(absence);
     }
@@ -84,14 +84,14 @@ class ApplicationEventHandlerRabbitmqTest {
         sut.on(event);
 
         final AbsenceWrite absence = new AbsenceWrite(
-                new TenantId("tenantId"),
-                1L,
-                new UserId("userId"),
-                Instant.ofEpochMilli(0L),
-                Instant.ofEpochMilli(1L),
-                DayLength.FULL,
-                absenceTypeHoliday(CYAN),
-                CYAN
+            new TenantId("tenantId"),
+            1L,
+            new UserId("userId"),
+            Instant.ofEpochMilli(0L),
+            Instant.ofEpochMilli(1L),
+            DayLength.FULL,
+            HOLIDAY,
+            new AbsenceTypeSourceId(1000L)
         );
         verify(absenceWriteService).addAbsence(absence);
     }
@@ -112,14 +112,14 @@ class ApplicationEventHandlerRabbitmqTest {
         sut.on(event);
 
         final AbsenceWrite absence = new AbsenceWrite(
-                new TenantId("tenantId"),
-                1L,
-                new UserId("userId"),
-                Instant.ofEpochMilli(0L),
-                Instant.ofEpochMilli(1L),
-                DayLength.FULL,
-                absenceTypeHoliday(CYAN),
-                CYAN
+            new TenantId("tenantId"),
+            1L,
+            new UserId("userId"),
+            Instant.ofEpochMilli(0L),
+            Instant.ofEpochMilli(1L),
+            DayLength.FULL,
+            HOLIDAY,
+            new AbsenceTypeSourceId(1000L)
         );
         verify(absenceWriteService).deleteAbsence(absence);
     }

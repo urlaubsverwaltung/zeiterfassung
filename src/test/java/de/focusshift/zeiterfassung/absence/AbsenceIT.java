@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static de.focus_shift.urlaubsverwaltung.extension.api.application.DayLength.FULL;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
@@ -119,41 +120,8 @@ class AbsenceIT extends TestContainersBase {
         );
 
         final UserId userId = new UserId("boss");
-        final Absence expectedAbsence = new Absence(userId, ZonedDateTime.ofInstant(startOfDay, UTC), ZonedDateTime.ofInstant(startOfDay, ZONE_ID), DayLength.FULL, locale -> "", erholungsUrlaubColor);
-
-        await().untilAsserted(() -> {
-            final Map<LocalDate, List<Absence>> absences = absenceService.findAllAbsences(userId, startOfDay, startOfNextDay);
-            assertThat(absences)
-                .hasSize(1)
-                .contains(Map.entry(now, List.of(expectedAbsence)));
-        });
-    }
-
-    @Test
-    void ensureAbsenceWithEmbeddedInformation() {
-
-        final LocalDate now = LocalDate.now(ZONE_ID);
-        final Instant startOfDay = now.atStartOfDay().toInstant(ZONE_ID);
-        final Instant startOfNextDay = now.plusDays(1).atStartOfDay().toInstant(ZONE_ID);
-
-        final long erholungsUrlaubSourceId = 1000L;
-
-        rabbitTemplate.convertAndSend(TOPIC, ALLOWED_ROUTING_KEY, ApplicationAllowedEventDTO.builder()
-            .createdAt(Instant.now())
-            .id(UUID.randomUUID())
-            .tenantId(TENANT_ID)
-            .sourceId(42L)
-            .status("ALLOWED")
-            .vacationType(VacationTypeDTO.builder().sourceId(erholungsUrlaubSourceId).category("HOLIDAY").color("ORANGE").build())
-            .allowedBy(ApplicationPersonDTO.builder().username("boss").personId(1L).build())
-            .person(ApplicationPersonDTO.builder().username("boss").personId(1L).build())
-            .period(ApplicationPeriodDTO.builder().startDate(startOfDay).endDate(startOfDay).dayLength(FULL).build())
-            .absentWorkingDays(Set.of(now))
-            .build()
-        );
-
-        final UserId userId = new UserId("boss");
-        final Absence expectedAbsence = new Absence(userId, ZonedDateTime.ofInstant(startOfDay, UTC), ZonedDateTime.ofInstant(startOfDay, ZONE_ID), DayLength.FULL, locale -> "", AbsenceColor.ORANGE);
+        final Function<Locale, String> anyLabel = locale -> "";
+        final Absence expectedAbsence = new Absence(userId, ZonedDateTime.ofInstant(startOfDay, UTC), ZonedDateTime.ofInstant(startOfDay, ZONE_ID), DayLength.FULL, anyLabel, erholungsUrlaubColor, erholungsurlaubCategory);
 
         await().untilAsserted(() -> {
             final Map<LocalDate, List<Absence>> absences = absenceService.findAllAbsences(userId, startOfDay, startOfNextDay);

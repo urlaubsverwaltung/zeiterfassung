@@ -16,6 +16,7 @@ import java.util.function.Function;
  * @param dayLength
  * @param label
  * @param color
+ * @param absenceTypeCategory
  */
 public record Absence(
     UserId userId,
@@ -23,7 +24,8 @@ public record Absence(
     ZonedDateTime endDate,
     DayLength dayLength,
     Function<Locale, String> label,
-    AbsenceColor color
+    AbsenceColor color,
+    AbsenceTypeCategory absenceTypeCategory
 ) {
 
     public String label(Locale locale) {
@@ -36,14 +38,15 @@ public record Absence(
         if (o == null || getClass() != o.getClass()) return false;
         Absence absence = (Absence) o;
         return Objects.equals(userId, absence.userId)
-            && Objects.equals(color, absence.color)
+            && color == absence.color
             && dayLength == absence.dayLength
             && Objects.equals(endDate, absence.endDate)
-            && Objects.equals(startDate, absence.startDate);
+            && Objects.equals(startDate, absence.startDate)
+            && Objects.equals(absenceTypeCategory, absence.absenceTypeCategory);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, startDate, endDate, dayLength, color);
+        return Objects.hash(userId, startDate, endDate, dayLength, color, absenceTypeCategory);
     }
 }

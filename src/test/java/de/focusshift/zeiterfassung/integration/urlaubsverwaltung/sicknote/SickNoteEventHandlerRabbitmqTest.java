@@ -1,20 +1,14 @@
 package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote;
 
-import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPeriodDTO;
-import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPersonDTO;
-import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteCancelledEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteConvertedToApplicationEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteCreatedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNotePeriodDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNotePersonDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteUpdatedEventDTO;
-import de.focusshift.zeiterfassung.absence.AbsenceColor;
-import de.focusshift.zeiterfassung.absence.AbsenceType;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
-import de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationEventHandlerRabbitmq;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +22,7 @@ import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.SICK;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,14 +54,13 @@ class SickNoteEventHandlerRabbitmqTest {
 
         sut.on(event);
         final AbsenceWrite absence = new AbsenceWrite(
-                new TenantId("tenantId"),
-                1L,
-                new UserId("userId"),
-                Instant.ofEpochMilli(0L),
-                Instant.ofEpochMilli(1L),
-                DayLength.FULL,
-                AbsenceType.SICK,
-                AbsenceColor.RED
+            new TenantId("tenantId"),
+            1L,
+            new UserId("userId"),
+            Instant.ofEpochMilli(0L),
+            Instant.ofEpochMilli(1L),
+            DayLength.FULL,
+            SICK
         );
         verify(absenceWriteService).addAbsence(absence);
     }
@@ -87,14 +81,13 @@ class SickNoteEventHandlerRabbitmqTest {
 
         sut.on(event);
         final AbsenceWrite absence = new AbsenceWrite(
-                new TenantId("tenantId"),
-                1L,
-                new UserId("userId"),
-                Instant.ofEpochMilli(0L),
-                Instant.ofEpochMilli(1L),
-                DayLength.FULL,
-                AbsenceType.SICK,
-                AbsenceColor.RED
+            new TenantId("tenantId"),
+            1L,
+            new UserId("userId"),
+            Instant.ofEpochMilli(0L),
+            Instant.ofEpochMilli(1L),
+            DayLength.FULL,
+            SICK
         );
         verify(absenceWriteService).deleteAbsence(absence);
     }
@@ -115,14 +108,13 @@ class SickNoteEventHandlerRabbitmqTest {
 
         sut.on(event);
         final AbsenceWrite absence = new AbsenceWrite(
-                new TenantId("tenantId"),
-                1L,
-                new UserId("userId"),
-                Instant.ofEpochMilli(0L),
-                Instant.ofEpochMilli(1L),
-                DayLength.FULL,
-                AbsenceType.SICK,
-                AbsenceColor.RED
+            new TenantId("tenantId"),
+            1L,
+            new UserId("userId"),
+            Instant.ofEpochMilli(0L),
+            Instant.ofEpochMilli(1L),
+            DayLength.FULL,
+            SICK
         );
         verify(absenceWriteService).updateAbsence(absence);
     }
@@ -143,14 +135,13 @@ class SickNoteEventHandlerRabbitmqTest {
 
         sut.on(event);
         final AbsenceWrite absence = new AbsenceWrite(
-                new TenantId("tenantId"),
-                1L,
-                new UserId("userId"),
-                Instant.ofEpochMilli(0L),
-                Instant.ofEpochMilli(1L),
-                DayLength.FULL,
-                AbsenceType.SICK,
-                AbsenceColor.RED
+            new TenantId("tenantId"),
+            1L,
+            new UserId("userId"),
+            Instant.ofEpochMilli(0L),
+            Instant.ofEpochMilli(1L),
+            DayLength.FULL,
+            SICK
         );
         verify(absenceWriteService).deleteAbsence(absence);
     }
