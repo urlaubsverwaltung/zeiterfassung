@@ -36,6 +36,7 @@ import static de.focusshift.zeiterfassung.absence.AbsenceColor.VIOLET;
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.YELLOW;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.OTHER;
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.SICK;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.SPECIALLEAVE;
 import static de.focusshift.zeiterfassung.absence.DayLength.FULL;
 import static de.focusshift.zeiterfassung.absence.DayLength.MORNING;
@@ -170,9 +171,45 @@ class AbsenceServiceImplTest {
         when(messageSource.getMessage("absence.label." + givenDayLength, new Object[]{"en"}, ENGLISH)).thenReturn("message-en");
 
         final Map<LocalDate, List<Absence>> actual = sut.findAllAbsences(new UserId("user"), startDate, endDateExclusive);
-        assertThat(actual.get(today.toLocalDate())).satisfies(asd -> {
-            assertThat(asd.getFirst().label(GERMAN)).isEqualTo("message-de");
-            assertThat(asd.getFirst().label(ENGLISH)).isEqualTo("message-en");
+        assertThat(actual.get(today.toLocalDate())).satisfies(absences -> {
+            assertThat(absences.getFirst().label(GERMAN)).isEqualTo("message-de");
+            assertThat(absences.getFirst().label(ENGLISH)).isEqualTo("message-en");
+        });
+    }
+
+    @ParameterizedTest
+    @EnumSource(DayLength.class)
+    void ensureFindAllAbsencesWithLabelForDayLengthAndCategorySickness(DayLength givenDayLength) {
+
+        final ZonedDateTime today = LocalDate.now().atStartOfDay(UTC);
+        final Instant startDate = today.toInstant();
+        final Instant endDateExclusive = today.plusWeeks(1).toInstant();
+
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(berlin);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+
+        final AbsenceWriteEntity entitySickness = new AbsenceWriteEntity();
+        entitySickness.setId(2L);
+        entitySickness.setUserId("user");
+        entitySickness.setStartDate(today.toInstant());
+        entitySickness.setEndDate(today.toInstant());
+        entitySickness.setDayLength(givenDayLength);
+        entitySickness.setType(new AbsenceTypeEntityEmbeddable(SICK, null));
+
+        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
+            .thenReturn(List.of(entitySickness));
+
+        // SupportedLanguages are GERMAN and ENGLISH right now
+        when(messageSource.getMessage("absence.type.category.SICK", null, GERMAN)).thenReturn("Krank");
+        when(messageSource.getMessage("absence.type.category.SICK", null, ENGLISH)).thenReturn("Sickness");
+        when(messageSource.getMessage("absence.label." + givenDayLength, new Object[]{"Krank"}, GERMAN)).thenReturn("sick-message-de");
+        when(messageSource.getMessage("absence.label." + givenDayLength, new Object[]{"Sickness"}, ENGLISH)).thenReturn("sick-message-en");
+
+        final Map<LocalDate, List<Absence>> actual = sut.findAllAbsences(new UserId("user"), startDate, endDateExclusive);
+        assertThat(actual.get(today.toLocalDate())).satisfies(absences -> {
+            assertThat(absences.getFirst().label(GERMAN)).isEqualTo("sick-message-de");
+            assertThat(absences.getFirst().label(ENGLISH)).isEqualTo("sick-message-en");
         });
     }
 

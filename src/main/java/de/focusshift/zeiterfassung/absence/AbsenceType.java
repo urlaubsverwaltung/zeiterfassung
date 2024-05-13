@@ -13,7 +13,7 @@ import java.util.function.Function;
  * values yourself. Or {@linkplain Locale locales} that are not existing in {@linkplain #label}.
  *
  * @param category {@linkplain AbsenceTypeCategory} of this {@linkplain AbsenceType}
- * @param sourceId external id of this {@linkplain AbsenceType}
+ * @param sourceId external id of this {@linkplain AbsenceType}, {@code null} for {@linkplain AbsenceTypeCategory#SICK}
  * @param label label supplier of this {@linkplain AbsenceType} for a given {@linkplain Locale}, may return {@code null}
  */
 public record AbsenceType(

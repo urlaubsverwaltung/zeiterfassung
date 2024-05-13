@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.absence;
 
+import de.focusshift.zeiterfassung.CachedFunction;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -38,6 +39,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 class AbsenceServiceImpl implements AbsenceService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
+
+    private static final AbsenceColor ABSENCE_SICK_COLOR = AbsenceColor.RED;
 
     private final AbsenceRepository absenceRepository;
     private final AbsenceTypeService absenceTypeService;
@@ -168,16 +171,21 @@ class AbsenceServiceImpl implements AbsenceService {
         final Map<Long, AbsenceType> absenceTypeBySourceId = findAbsenceTypes(absenceEntities).stream()
             .collect(toMap(AbsenceType::sourceId, identity()));
 
+        final Function<Locale, String> sickLabel = new CachedFunction<>(this::sickLabel);
+
         return absenceEntities.stream()
-            .map(entity -> toAbsence(entity, zoneId, absenceTypeBySourceId::get));
+            .map(entity -> toAbsence(entity, zoneId, absenceTypeBySourceId::get, sickLabel));
     }
 
-    private Absence toAbsence(AbsenceWriteEntity entity, ZoneId zoneId, LongFunction<AbsenceType> absenceTypeBySourceIdSupplier) {
+    private String sickLabel(Locale locale) {
+        return messageSource.getMessage("absence.type.category.SICK", null, locale);
+    }
+
+    private Absence toAbsence(AbsenceWriteEntity entity, ZoneId zoneId, LongFunction<AbsenceType> absenceTypeBySourceIdSupplier, Function<Locale, String> sickLabelSupplier) {
 
         final AbsenceType absenceType;
         if (entity.getType().getCategory().equals(SICK)) {
-            // TODO sick labels
-            absenceType = new AbsenceType(SICK, null, locale -> null, AbsenceColor.RED);
+            absenceType = new AbsenceType(SICK, null, sickLabelSupplier, ABSENCE_SICK_COLOR);
         } else {
             final AbsenceTypeEntityEmbeddable type = entity.getType();
             absenceType = absenceTypeBySourceIdSupplier.apply(type.getSourceId());
