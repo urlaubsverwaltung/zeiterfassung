@@ -177,7 +177,7 @@ class AbsenceServiceImpl implements AbsenceService {
         final AbsenceType absenceType;
         if (entity.getType().getCategory().equals(SICK)) {
             // TODO sick labels
-            absenceType = new AbsenceType(SICK, null, Map.of(), AbsenceColor.RED);
+            absenceType = new AbsenceType(SICK, null, locale -> null, AbsenceColor.RED);
         } else {
             final AbsenceTypeEntityEmbeddable type = entity.getType();
             absenceType = absenceTypeBySourceIdSupplier.apply(type.getSourceId());
@@ -203,8 +203,7 @@ class AbsenceServiceImpl implements AbsenceService {
 
     private Function<Locale, String> getAbsenceTypeLabelWithDayLength(DayLength dayLength, AbsenceType absenceType) {
         return locale -> {
-            final Map<Locale, String> labelByLocale = absenceType.labelByLocale();
-            final String label = labelByLocale.get(locale);
+            final String label = absenceType.label(locale);
             if (label == null) {
                 LOG.info("could not resolve label of absenceType={} for locale={}. falling back to GERMAN", absenceType, locale);
                 return getAbsenceTypeLabelWithDayLength(dayLength, absenceType).apply(Locale.GERMAN);

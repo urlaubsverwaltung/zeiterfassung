@@ -99,8 +99,8 @@ class AbsenceServiceImplTest {
         when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
             .thenReturn(List.of(entity_1, entity_2));
 
-        final AbsenceType absenceType1 = new AbsenceType(HOLIDAY, 1000L, Map.of(GERMAN, "1000-de", ENGLISH, "1000-en"), PINK);
-        final AbsenceType absenceType2 = new AbsenceType(SPECIALLEAVE, 2000L, Map.of(GERMAN, "2000-de", ENGLISH, "2000-en"), VIOLET);
+        final AbsenceType absenceType1 = new AbsenceType(HOLIDAY, 1000L, label(GERMAN, "1000-de", ENGLISH, "1000-en"), PINK);
+        final AbsenceType absenceType2 = new AbsenceType(SPECIALLEAVE, 2000L, label(GERMAN, "2000-de", ENGLISH, "2000-en"), VIOLET);
 
         when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L, 2000L)))
             .thenReturn(List.of(absenceType1, absenceType2));
@@ -160,7 +160,7 @@ class AbsenceServiceImplTest {
         when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
             .thenReturn(List.of(entity));
 
-        final AbsenceType absenceType = new AbsenceType(HOLIDAY, 1000L, Map.of(GERMAN, "de", ENGLISH, "en"), PINK);
+        final AbsenceType absenceType = new AbsenceType(HOLIDAY, 1000L, label(GERMAN, "de", ENGLISH, "en"), PINK);
 
         when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L)))
             .thenReturn(List.of(absenceType));
@@ -259,9 +259,9 @@ class AbsenceServiceImplTest {
         when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of(userId_1.value(), userId_2.value()), toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity_1, absenceEntity_2_1, absenceEntity_2_2));
 
-        final AbsenceType absenceType1 = new AbsenceType(OTHER, 1000L, Map.of(GERMAN, "1000-de", ENGLISH, "1000-en"), YELLOW);
-        final AbsenceType absenceType2 = new AbsenceType(OTHER, 2000L, Map.of(GERMAN, "2000-de", ENGLISH, "2000-en"), VIOLET);
-        final AbsenceType absenceType3 = new AbsenceType(OTHER, 3000L, Map.of(GERMAN, "3000-de", ENGLISH, "3000-en"), CYAN);
+        final AbsenceType absenceType1 = new AbsenceType(OTHER, 1000L, label(GERMAN, "1000-de", ENGLISH, "1000-en"), YELLOW);
+        final AbsenceType absenceType2 = new AbsenceType(OTHER, 2000L, label(GERMAN, "2000-de", ENGLISH, "2000-en"), VIOLET);
+        final AbsenceType absenceType3 = new AbsenceType(OTHER, 3000L, label(GERMAN, "3000-de", ENGLISH, "3000-en"), CYAN);
 
         when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L, 2000L, 3000L)))
             .thenReturn(List.of(absenceType1, absenceType2, absenceType3));
@@ -313,7 +313,7 @@ class AbsenceServiceImplTest {
         when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of(userId.value()), toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity));
 
-        final AbsenceType absenceType = new AbsenceType(OTHER, 1000L, Map.of(GERMAN, "de", ENGLISH, "en"), YELLOW);
+        final AbsenceType absenceType = new AbsenceType(OTHER, 1000L, label(GERMAN, "de", ENGLISH, "en"), YELLOW);
 
         when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L)))
             .thenReturn(List.of(absenceType));
@@ -407,9 +407,9 @@ class AbsenceServiceImplTest {
         when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity_1, absenceEntity_2_1, absenceEntity_2_2));
 
-        final AbsenceType absenceType1 = new AbsenceType(OTHER, 1000L, Map.of(GERMAN, "1000-de", ENGLISH, "1000-en"), YELLOW);
-        final AbsenceType absenceType2 = new AbsenceType(OTHER, 2000L, Map.of(GERMAN, "2000-de", ENGLISH, "2000-en"), VIOLET);
-        final AbsenceType absenceType3 = new AbsenceType(OTHER, 3000L, Map.of(GERMAN, "3000-de", ENGLISH, "3000-en"), CYAN);
+        final AbsenceType absenceType1 = new AbsenceType(OTHER, 1000L, label(GERMAN, "1000-de", ENGLISH, "1000-en"), YELLOW);
+        final AbsenceType absenceType2 = new AbsenceType(OTHER, 2000L, label(GERMAN, "2000-de", ENGLISH, "2000-en"), VIOLET);
+        final AbsenceType absenceType3 = new AbsenceType(OTHER, 3000L, label(GERMAN, "3000-de", ENGLISH, "3000-en"), CYAN);
 
         when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L, 2000L, 3000L)))
             .thenReturn(List.of(absenceType1, absenceType2, absenceType3));
@@ -460,7 +460,7 @@ class AbsenceServiceImplTest {
         when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity));
 
-        final AbsenceType absenceType = new AbsenceType(OTHER, 1000L, Map.of(GERMAN, "de", ENGLISH, "en"), YELLOW);
+        final AbsenceType absenceType = new AbsenceType(OTHER, 1000L, label(GERMAN, "de", ENGLISH, "en"), YELLOW);
 
         when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L)))
             .thenReturn(List.of(absenceType));
@@ -473,5 +473,10 @@ class AbsenceServiceImplTest {
         final Absence actualAbsence = actual.get(userIdComposite).getFirst();
         assertThat(actualAbsence.label(GERMAN)).isEqualTo("message-de");
         assertThat(actualAbsence.label(ENGLISH)).isEqualTo("message-en");
+    }
+
+    private static Function<Locale, String> label(Locale locale, String label, Locale locale2, String label2) {
+        final Map<Locale, String> labelByLocale = Map.of(locale, label, locale2, label2);
+        return labelByLocale::get;
     }
 }
