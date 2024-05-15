@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.security.SecurityRole;
+import de.focusshift.zeiterfassung.security.SessionService;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -35,9 +36,11 @@ import static de.focusshift.zeiterfassung.usermanagement.UserManagementControlle
 class PermissionsController implements HasLaunchpad, HasTimeClock {
 
     private final UserManagementService userManagementService;
+    private final SessionService sessionService;
 
-    PermissionsController(UserManagementService userManagementService) {
+    PermissionsController(UserManagementService userManagementService, SessionService sessionService) {
         this.userManagementService = userManagementService;
+        this.sessionService = sessionService;
     }
 
     @GetMapping
@@ -68,6 +71,7 @@ class PermissionsController implements HasLaunchpad, HasTimeClock {
         try {
             final Set<SecurityRole> newPermissions = permissionsDtoToSecurityRoles(permissionsDto);
             userManagementService.updateUserPermissions(userLocalId, newPermissions);
+            sessionService.markSessionToReloadAuthorities(userLocalId);
         } catch (UserNotFoundException e) {
             throw new IllegalArgumentException("could not find person=%s".formatted(userLocalId));
         }

@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.security.SecurityRole;
+import de.focusshift.zeiterfassung.security.SessionService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -47,10 +48,12 @@ class PermissionsControllerTest {
 
     @Mock
     private UserManagementService userManagementService;
+    @Mock
+    private SessionService sessionService;
 
     @BeforeEach
     void setUp() {
-        sut = new PermissionsController(userManagementService);
+        sut = new PermissionsController(userManagementService, sessionService);
     }
 
     @Test
@@ -313,6 +316,7 @@ class PermissionsControllerTest {
             .andExpect(redirectedUrl("/users/1337/permissions"));
 
         verify(userManagementService).updateUserPermissions(new UserLocalId(1337L), Set.of(securityRole));
+        verify(sessionService).markSessionToReloadAuthorities(new UserLocalId(1337L));
     }
 
 
