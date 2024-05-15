@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.user.UserId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
@@ -20,8 +21,8 @@ class SessionServiceImpl<S extends Session> implements SessionService {
     }
 
     @Override
-    public void markSessionToReloadAuthorities(String username) {
-        final Map<String, S> map = sessionRepository.findByPrincipalName(username);
+    public void markSessionToReloadAuthorities(UserId userId) {
+        final Map<String, S> map = sessionRepository.findByPrincipalName(userId.value());
         for (final S session : map.values()) {
             session.setAttribute(RELOAD_AUTHORITIES, true);
             sessionRepository.save(session);

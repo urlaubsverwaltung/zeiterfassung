@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +37,7 @@ class SessionServiceImplTest {
         when(sessionRepository.findByPrincipalName(username))
             .thenReturn(Map.of("65266d07-2ab0-400b-86b5-4b609e552399", new MapSession()));
 
-        sut.markSessionToReloadAuthorities(username);
+        sut.markSessionToReloadAuthorities(new UserId(username));
 
         final ArgumentCaptor<Session> captor = ArgumentCaptor.forClass(Session.class);
         verify(sessionRepository).save(captor.capture());
