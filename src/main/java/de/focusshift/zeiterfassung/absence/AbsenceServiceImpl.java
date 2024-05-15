@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.LongFunction;
@@ -174,14 +175,16 @@ class AbsenceServiceImpl implements AbsenceService {
         final Function<Locale, String> sickLabel = new CachedFunction<>(this::sickLabel);
 
         return absenceEntities.stream()
-            .map(entity -> toAbsence(entity, zoneId, absenceTypeBySourceId::get, sickLabel));
+            .map(entity -> toAbsence(entity, zoneId, absenceTypeBySourceId::get, sickLabel))
+            .filter(Optional::isPresent)
+            .map(Optional::get);
     }
 
     private String sickLabel(Locale locale) {
         return messageSource.getMessage("absence.type.category.SICK", null, locale);
     }
 
-    private Absence toAbsence(AbsenceWriteEntity entity, ZoneId zoneId, LongFunction<AbsenceType> absenceTypeBySourceIdSupplier, Function<Locale, String> sickLabelSupplier) {
+    private Optional<Absence> toAbsence(AbsenceWriteEntity entity, ZoneId zoneId, LongFunction<AbsenceType> absenceTypeBySourceIdSupplier, Function<Locale, String> sickLabelSupplier) {
 
         final AbsenceType absenceType;
         if (entity.getType().getCategory().equals(SICK)) {
@@ -190,22 +193,24 @@ class AbsenceServiceImpl implements AbsenceService {
             final AbsenceTypeEntityEmbeddable type = entity.getType();
             absenceType = absenceTypeBySourceIdSupplier.apply(type.getSourceId());
             if (absenceType == null) {
-                // TODO how to handle `absenceType == null`?
-                throw new IllegalStateException("expected absenceType to exist. type=%s".formatted(type));
+                LOG.warn("Ignore Absence id={} since AbsenceType with sourceId={} is unknown. Will be resolved eventually, hopefully.", entity.getId(), type.getSourceId());
+                return Optional.empty();
             }
         }
 
         final DayLength dayLength = entity.getDayLength();
         final Function<Locale, String> label = getAbsenceTypeLabelWithDayLength(dayLength, absenceType);
 
-        return new Absence(
-            new UserId(entity.getUserId()),
-            entity.getStartDate().atZone(zoneId),
-            entity.getEndDate().atZone(zoneId),
-            dayLength,
-            label,
-            absenceType.color(),
-            absenceType.category()
+        return Optional.of(
+            new Absence(
+                new UserId(entity.getUserId()),
+                entity.getStartDate().atZone(zoneId),
+                entity.getEndDate().atZone(zoneId),
+                dayLength,
+                label,
+                absenceType.color(),
+                absenceType.category()
+            )
         );
     }
 
