@@ -218,8 +218,9 @@ class AbsenceServiceImpl implements AbsenceService {
         return locale -> {
             final String label = absenceType.label(locale);
             if (label == null) {
-                LOG.info("could not resolve label of absenceType={} for locale={}. falling back to GERMAN", absenceType, locale);
-                return getAbsenceTypeLabelWithDayLength(dayLength, absenceType).apply(Locale.GERMAN);
+                final Locale fallbackLocale = Locale.of(locale.getLanguage());
+                LOG.info("could not resolve label of absenceType={} for locale={}. falling back to {}", absenceType, locale, fallbackLocale);
+                return getAbsenceTypeLabelWithDayLength(dayLength, absenceType).apply(fallbackLocale);
             } else {
                 return messageSource.getMessage("absence.label." + dayLength, new Object[]{label}, locale);
             }
