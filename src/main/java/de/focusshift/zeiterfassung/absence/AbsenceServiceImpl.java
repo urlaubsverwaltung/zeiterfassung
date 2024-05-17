@@ -216,14 +216,17 @@ class AbsenceServiceImpl implements AbsenceService {
 
     private Function<Locale, String> getAbsenceTypeLabelWithDayLength(DayLength dayLength, AbsenceType absenceType) {
         return locale -> {
-            final String label = absenceType.label(locale);
+            String label = absenceType.label(locale);
             if (label == null) {
                 final Locale fallbackLocale = Locale.of(locale.getLanguage());
                 LOG.info("could not resolve label of absenceType={} for locale={}. falling back to {}", absenceType, locale, fallbackLocale);
-                return getAbsenceTypeLabelWithDayLength(dayLength, absenceType).apply(fallbackLocale);
-            } else {
-                return messageSource.getMessage("absence.label." + dayLength, new Object[]{label}, locale);
+                label = absenceType.label(fallbackLocale);
+                if (label == null) {
+                    LOG.info("could not resolve label of absenceType={} for locale={}. falling back to GERMAN", absenceType, fallbackLocale);
+                    label = absenceType.label(Locale.GERMAN);
+                }
             }
+            return messageSource.getMessage("absence.label." + dayLength, new Object[]{label}, locale);
         };
     }
 
