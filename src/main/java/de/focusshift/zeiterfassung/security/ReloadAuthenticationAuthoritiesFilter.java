@@ -84,7 +84,9 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
 
     private static Set<GrantedAuthority> mergeAuthorities(OAuth2AuthenticationToken token, User user) {
 
-        final HashSet<GrantedAuthority> updatedAuthorities = new HashSet<>(token.getAuthorities());
+        // token.principal.authorities contains the original authorities coming from oidc provider
+        // while token.authorities is a list already modified by us
+        final HashSet<GrantedAuthority> updatedAuthorities = new HashSet<>(token.getPrincipal().getAuthorities());
         updatedAuthorities.addAll(user.authorities().stream().map(role -> new SimpleGrantedAuthority(role.name())).toList());
 
         return updatedAuthorities;

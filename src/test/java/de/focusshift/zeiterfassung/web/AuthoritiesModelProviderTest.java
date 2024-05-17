@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.web;
 
 import de.focusshift.zeiterfassung.security.SecurityRole;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -9,6 +10,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.servlet.ModelAndView;
@@ -27,6 +29,11 @@ class AuthoritiesModelProviderTest {
         sut = new AuthoritiesModelProvider();
     }
 
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.getContext().setAuthentication(null);
+    }
+
     @ParameterizedTest
     @EnumSource(value = SecurityRole.class, names = { "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL", "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL" })
     void ensureShowMainNavigationPersonsIsTrueForAuthority(SecurityRole securityRole) {
@@ -37,7 +44,7 @@ class AuthoritiesModelProviderTest {
         final OAuth2User oAuth2User = mock(OAuth2User.class);
         final List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(securityRole.name()));
         final Authentication authentication = new OAuth2AuthenticationToken(oAuth2User, authorities, "client-registration-id");
-        request.setUserPrincipal(authentication);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         final ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("any-view-name");
@@ -57,7 +64,7 @@ class AuthoritiesModelProviderTest {
         final OAuth2User oAuth2User = mock(OAuth2User.class);
         final List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(securityRole.name()));
         final Authentication authentication = new OAuth2AuthenticationToken(oAuth2User, authorities, "client-registration-id");
-        request.setUserPrincipal(authentication);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         final ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("any-view-name");
