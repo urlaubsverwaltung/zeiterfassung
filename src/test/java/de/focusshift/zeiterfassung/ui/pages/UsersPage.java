@@ -40,6 +40,10 @@ public class UsersPage {
         goTo("[data-test-id=users-working-time-account-link]");
     }
 
+    public void goToPermissionsSettings() {
+        goTo("[data-test-id=users-permissions-link]");
+    }
+
     private void goTo(String selector) {
         page.waitForResponse(Response::ok, () -> page.locator(selector).click());
         page.waitForLoadState(DOMCONTENTLOADED);
