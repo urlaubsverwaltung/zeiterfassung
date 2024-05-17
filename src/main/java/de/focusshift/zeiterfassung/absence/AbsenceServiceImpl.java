@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.absence;
 
+import de.focusshift.zeiterfassung.CachedFunction;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -8,33 +9,60 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import org.slf4j.Logger;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.LongFunction;
+import java.util.stream.Stream;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.SICK;
+import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
 class AbsenceServiceImpl implements AbsenceService {
 
+    private static final Logger LOG = getLogger(lookup().lookupClass());
+
+    private static final AbsenceColor ABSENCE_SICK_COLOR = AbsenceColor.RED;
+
     private final AbsenceRepository absenceRepository;
+    private final AbsenceTypeService absenceTypeService;
     private final UserSettingsProvider userSettingsProvider;
     private final TenantContextHolder tenantContextHolder;
     private final UserManagementService userManagementService;
+    private final MessageSource messageSource;
 
-    AbsenceServiceImpl(AbsenceRepository absenceRepository, UserSettingsProvider userSettingsProvider, TenantContextHolder tenantContextHolder, UserManagementService userManagementService) {
+    AbsenceServiceImpl(AbsenceRepository absenceRepository,
+                       AbsenceTypeService absenceTypeService,
+                       UserSettingsProvider userSettingsProvider,
+                       TenantContextHolder tenantContextHolder,
+                       UserManagementService userManagementService,
+                       MessageSource messageSource) {
+
         this.absenceRepository = absenceRepository;
+        this.absenceTypeService = absenceTypeService;
         this.userSettingsProvider = userSettingsProvider;
         this.tenantContextHolder = tenantContextHolder;
         this.userManagementService = userManagementService;
+        this.messageSource = messageSource;
     }
 
     @Override
@@ -43,11 +71,10 @@ class AbsenceServiceImpl implements AbsenceService {
         final ZoneId zoneId = userSettingsProvider.zoneId();
         final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
 
-        final List<Absence> absences =
-            absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, List.of(userId.value()), toExclusive, from)
-                .stream()
-                .map(entity -> toAbsence(entity, zoneId))
-                .toList();
+        final List<AbsenceWriteEntity> absenceEntities =
+            absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, List.of(userId.value()), toExclusive, from);
+
+        final List<Absence> absences = toAbsences(absenceEntities).toList();
 
         final Map<LocalDate, List<Absence>> absencesByDate = new HashMap<>();
 
@@ -81,9 +108,10 @@ class AbsenceServiceImpl implements AbsenceService {
 
         final Map<UserId, UserIdComposite> idCompositeByUserId = users.stream().collect(toMap(User::userId, User::userIdComposite));
 
-        final Map<UserIdComposite, List<Absence>> result = absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, userIdValues, period.toExclusive, period.from)
-            .stream()
-            .map(absenceWriteEntity -> toAbsence(absenceWriteEntity, period.zoneId))
+        final List<AbsenceWriteEntity> absenceEntities =
+            absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, userIdValues, period.toExclusive, period.from);
+
+        final Map<UserIdComposite, List<Absence>> result = toAbsences(absenceEntities)
             .collect(groupingBy(absence -> idCompositeByUserId.get(absence.userId())));
 
         // add empty lists for users without absences
@@ -98,9 +126,10 @@ class AbsenceServiceImpl implements AbsenceService {
         final InstantPeriod period = getInstantPeriod(from, toExclusive);
         final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
 
-        final Map<UserId, List<Absence>> absenceByUserId = absenceRepository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, period.toExclusive, period.from)
-            .stream()
-            .map(entity -> toAbsence(entity, period.zoneId))
+        final List<AbsenceWriteEntity> absenceEntities =
+            absenceRepository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, period.toExclusive, period.from);
+
+        final Map<UserId, List<Absence>> absenceByUserId = toAbsences(absenceEntities)
             .collect(groupingBy(Absence::userId));
 
         final Map<UserId, UserIdComposite> idCompositeByUserId = userManagementService.findAllUsers().stream()
@@ -122,10 +151,10 @@ class AbsenceServiceImpl implements AbsenceService {
         final InstantPeriod period = getInstantPeriod(from, toExclusive);
         final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
 
-        return absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, List.of(userId.value()), period.toExclusive, period.from)
-            .stream()
-            .map(entity -> toAbsence(entity, period.zoneId))
-            .toList();
+        final List<AbsenceWriteEntity> absenceEntities =
+            absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, List.of(userId.value()), period.toExclusive, period.from);
+
+        return toAbsences(absenceEntities).toList();
     }
 
     private static void doFromUntil(LocalDate from, LocalDate toExclusive, Consumer<LocalDate> consumer) {
@@ -136,15 +165,80 @@ class AbsenceServiceImpl implements AbsenceService {
         }
     }
 
-    private static Absence toAbsence(AbsenceWriteEntity entity, ZoneId zoneId) {
-        return new Absence(
-            new UserId(entity.getUserId()),
-            entity.getStartDate().atZone(zoneId),
-            entity.getEndDate().atZone(zoneId),
-            entity.getDayLength(),
-            new AbsenceType(entity.getType().getCategory(), entity.getType().getSourceId()),
-            entity.getColor()
+    private Stream<Absence> toAbsences(List<AbsenceWriteEntity> absenceEntities) {
+
+        final ZoneId zoneId = userSettingsProvider.zoneId();
+
+        final Map<Long, AbsenceType> absenceTypeBySourceId = findAbsenceTypes(absenceEntities).stream()
+            .collect(toMap(AbsenceType::sourceId, identity()));
+
+        final Function<Locale, String> sickLabel = new CachedFunction<>(this::sickLabel);
+
+        return absenceEntities.stream()
+            .map(entity -> toAbsence(entity, zoneId, absenceTypeBySourceId::get, sickLabel))
+            .filter(Optional::isPresent)
+            .map(Optional::get);
+    }
+
+    private String sickLabel(Locale locale) {
+        return messageSource.getMessage("absence.type.category.SICK", null, locale);
+    }
+
+    private Optional<Absence> toAbsence(AbsenceWriteEntity entity, ZoneId zoneId, LongFunction<AbsenceType> absenceTypeBySourceIdSupplier, Function<Locale, String> sickLabelSupplier) {
+
+        final AbsenceType absenceType;
+        if (entity.getType().getCategory().equals(SICK)) {
+            absenceType = new AbsenceType(SICK, null, sickLabelSupplier, ABSENCE_SICK_COLOR);
+        } else {
+            final AbsenceTypeEntityEmbeddable type = entity.getType();
+            absenceType = absenceTypeBySourceIdSupplier.apply(type.getSourceId());
+            if (absenceType == null) {
+                LOG.warn("Ignore Absence id={} since AbsenceType with sourceId={} is unknown. Will be resolved eventually, hopefully.", entity.getId(), type.getSourceId());
+                return Optional.empty();
+            }
+        }
+
+        final DayLength dayLength = entity.getDayLength();
+        final Function<Locale, String> label = getAbsenceTypeLabelWithDayLength(dayLength, absenceType);
+
+        return Optional.of(
+            new Absence(
+                new UserId(entity.getUserId()),
+                entity.getStartDate().atZone(zoneId),
+                entity.getEndDate().atZone(zoneId),
+                dayLength,
+                label,
+                absenceType.color(),
+                absenceType.category()
+            )
         );
+    }
+
+    private Function<Locale, String> getAbsenceTypeLabelWithDayLength(DayLength dayLength, AbsenceType absenceType) {
+        return locale -> {
+            String label = absenceType.label(locale);
+            if (label == null) {
+                final Locale fallbackLocale = Locale.of(locale.getLanguage());
+                LOG.info("could not resolve label of absenceType={} for locale={}. falling back to {}", absenceType, locale, fallbackLocale);
+                label = absenceType.label(fallbackLocale);
+                if (label == null) {
+                    LOG.info("could not resolve label of absenceType={} for locale={}. falling back to GERMAN", absenceType, fallbackLocale);
+                    label = absenceType.label(Locale.GERMAN);
+                }
+            }
+            return messageSource.getMessage("absence.label." + dayLength, new Object[]{label}, locale);
+        };
+    }
+
+    private List<AbsenceType> findAbsenceTypes(Collection<AbsenceWriteEntity> absenceEntities) {
+
+        final List<Long> absenceTypeSourceIds = absenceEntities.stream()
+            .map(entity -> entity.getType().getSourceId())
+            .filter(Objects::nonNull) // category SICK does not have a sourceId
+            .distinct()
+            .toList();
+
+        return absenceTypeService.findAllByAbsenceTypeSourceIds(absenceTypeSourceIds);
     }
 
     private record InstantPeriod(ZoneId zoneId, Instant from, Instant toExclusive) {}

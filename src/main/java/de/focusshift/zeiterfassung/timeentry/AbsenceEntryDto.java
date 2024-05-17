@@ -4,5 +4,5 @@ import de.focusshift.zeiterfassung.absence.AbsenceColor;
 
 import java.time.LocalDate;
 
-record AbsenceEntryDto(LocalDate date, String nameMessageKey, AbsenceColor color) {
+record AbsenceEntryDto(LocalDate date, String name, AbsenceColor color) {
 }

@@ -409,9 +409,7 @@
                       class="report-view-entry-box-absence__absence-color-box"
                       th:style="|background-color:var(--absence-color-${absence.color})|"
                     ></div>
-                    <p th:text="${#messages.msg(absence.nameMessageKey)}">
-                      Erholungsurlaub
-                    </p>
+                    <p th:text="${absence.name}">Erholungsurlaub</p>
                   </div>
                 </div>
               </li>

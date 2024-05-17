@@ -1,0 +1,17 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+  <changeSet author="seber" id="cleanup-absence-color">
+
+    <preConditions>
+      <tableExists tableName="absence" />
+      <columnExists tableName="absence" columnName="color" />
+    </preConditions>
+
+    <dropColumn tableName="absence" columnName="color" />
+
+  </changeSet>
+</databaseChangeLog>
+

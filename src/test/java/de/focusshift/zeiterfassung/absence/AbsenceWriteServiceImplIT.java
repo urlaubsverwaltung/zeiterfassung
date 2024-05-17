@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -35,8 +36,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
         existingEntity.setStartDate(startDate);
         existingEntity.setEndDate(endDate);
         existingEntity.setDayLength(DayLength.FULL);
-        existingEntity.setType(new AbsenceTypeEntityEmbeddable(AbsenceType.HOLIDAY.category(), AbsenceType.HOLIDAY.sourceId()));
-        existingEntity.setColor(AbsenceColor.PINK);
+        existingEntity.setType(new AbsenceTypeEntityEmbeddable(HOLIDAY, 1000L));
         repository.save(existingEntity);
 
         final AbsenceWrite absence = new AbsenceWrite(
@@ -46,8 +46,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
             startDate,
             endDate,
             DayLength.FULL,
-            AbsenceType.HOLIDAY,
-            AbsenceColor.BLUE
+            HOLIDAY
         );
 
         assertThat(repository.findAll()).hasSize(1);
@@ -70,8 +69,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
         existingEntity.setStartDate(startDate);
         existingEntity.setEndDate(endDate);
         existingEntity.setDayLength(DayLength.FULL);
-        existingEntity.setType(new AbsenceTypeEntityEmbeddable(AbsenceType.HOLIDAY.category(), AbsenceType.HOLIDAY.sourceId()));
-        existingEntity.setColor(AbsenceColor.PINK);
+        existingEntity.setType(new AbsenceTypeEntityEmbeddable(HOLIDAY, 1000L));
         repository.save(existingEntity);
 
         final AbsenceWrite absence = new AbsenceWrite(
@@ -81,8 +79,7 @@ class AbsenceWriteServiceImplIT extends TestContainersBase {
             startDate,
             endDate,
             DayLength.FULL,
-            AbsenceType.HOLIDAY,
-            AbsenceColor.BLUE
+            HOLIDAY
         );
 
         sut.deleteAbsence(absence);

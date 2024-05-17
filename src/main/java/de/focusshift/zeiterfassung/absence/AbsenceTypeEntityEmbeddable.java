@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Enumerated;
 
+import java.util.Objects;
+
 import static jakarta.persistence.EnumType.STRING;
 
 @Embeddable
@@ -39,5 +41,26 @@ public class AbsenceTypeEntityEmbeddable {
 
     public void setSourceId(Long sourceId) {
         this.sourceId = sourceId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AbsenceTypeEntityEmbeddable that = (AbsenceTypeEntityEmbeddable) o;
+        return category == that.category && Objects.equals(sourceId, that.sourceId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(category, sourceId);
+    }
+
+    @Override
+    public String toString() {
+        return "AbsenceTypeEntityEmbeddable{" +
+            "category=" + category +
+            ", sourceId=" + sourceId +
+            '}';
     }
 }

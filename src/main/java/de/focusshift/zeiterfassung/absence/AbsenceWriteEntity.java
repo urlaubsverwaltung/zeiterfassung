@@ -50,10 +50,6 @@ public class AbsenceWriteEntity implements AdminAware<Long> {
     @Embedded
     private AbsenceTypeEntityEmbeddable type;
 
-    @Column(nullable = false)
-    @Enumerated(STRING)
-    private AbsenceColor color;
-
     public String getTenantId() {
         return tenantId;
     }
@@ -116,14 +112,6 @@ public class AbsenceWriteEntity implements AdminAware<Long> {
 
     public void setType(AbsenceTypeEntityEmbeddable type) {
         this.type = type;
-    }
-
-    public AbsenceColor getColor() {
-        return color;
-    }
-
-    public void setColor(AbsenceColor color) {
-        this.color = color;
     }
 
     @Override

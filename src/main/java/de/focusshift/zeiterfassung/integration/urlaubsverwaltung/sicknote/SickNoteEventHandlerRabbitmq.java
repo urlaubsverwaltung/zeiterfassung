@@ -4,8 +4,7 @@ import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteCancelled
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteConvertedToApplicationEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteCreatedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteUpdatedEventDTO;
-import de.focusshift.zeiterfassung.absence.AbsenceColor;
-import de.focusshift.zeiterfassung.absence.AbsenceType;
+import de.focusshift.zeiterfassung.absence.AbsenceTypeCategory;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
@@ -82,8 +81,7 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
                 event.getPeriod().getStartDate(),
                 event.getPeriod().getEndDate(),
                 dayLength,
-                AbsenceType.SICK,
-                AbsenceColor.RED
+                AbsenceTypeCategory.SICK
             ));
     }
 

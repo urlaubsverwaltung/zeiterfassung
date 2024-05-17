@@ -1,8 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.absence.Absence;
-import de.focusshift.zeiterfassung.absence.AbsenceColor;
-import de.focusshift.zeiterfassung.absence.AbsenceType;
 import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
@@ -32,6 +30,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceColor.YELLOW;
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
@@ -77,7 +77,7 @@ class TimeEntryControllerTest {
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
         final ZonedDateTime absenceStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime absenceEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
-        final Absence absence = new Absence(new UserId("batman"), absenceStart, absenceEnd, DayLength.FULL, AbsenceType.HOLIDAY, AbsenceColor.BLUE);
+        final Absence absence = new Absence(new UserId("batman"), absenceStart, absenceEnd, DayLength.FULL, locale -> "", YELLOW, HOLIDAY);
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryDay timeEntryDayWithAbsence = new TimeEntryDay(LocalDate.of(2022, 9, 20), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of(absence));
@@ -112,7 +112,7 @@ class TimeEntryControllerTest {
             .absenceEntries(List.of())
             .build();
 
-        AbsenceEntryDto absenceDto = new AbsenceEntryDto(LocalDate.of(2022,9,20), "absence.HOLIDAY.1000.FULL", AbsenceColor.BLUE);
+        final AbsenceEntryDto absenceDto = new AbsenceEntryDto(LocalDate.of(2022,9,20), "", YELLOW);
         final TimeEntryDayDto expectedTimeEntryDayDtoTUESDAY = TimeEntryDayDto.builder()
             .date("formatted-2022-9-20")
             .dayOfWeek(DayOfWeek.TUESDAY)
@@ -124,7 +124,6 @@ class TimeEntryControllerTest {
             .timeEntries(List.of())
             .absenceEntries(List.of(absenceDto))
             .build();
-
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
             .calendarWeek(38)

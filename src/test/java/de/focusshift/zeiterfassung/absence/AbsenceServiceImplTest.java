@@ -12,27 +12,38 @@ import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.CYAN;
+import static de.focusshift.zeiterfassung.absence.AbsenceColor.PINK;
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.VIOLET;
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.YELLOW;
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.OTHER;
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.SICK;
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.SPECIALLEAVE;
 import static de.focusshift.zeiterfassung.absence.DayLength.FULL;
 import static de.focusshift.zeiterfassung.absence.DayLength.MORNING;
 import static de.focusshift.zeiterfassung.absence.DayLength.NOON;
 import static java.time.ZoneOffset.UTC;
+import static java.util.Locale.ENGLISH;
+import static java.util.Locale.GERMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -44,15 +55,19 @@ class AbsenceServiceImplTest {
     @Mock
     private AbsenceRepository repository;
     @Mock
+    private AbsenceTypeService absenceTypeService;
+    @Mock
     private UserSettingsProvider userSettingsProvider;
     @Mock
     private TenantContextHolder tenantContextHolder;
     @Mock
     private UserManagementService userManagementService;
+    @Mock
+    private MessageSource messageSource;
 
     @BeforeEach
     void setUp() {
-        sut = new AbsenceServiceImpl(repository, userSettingsProvider, tenantContextHolder, userManagementService);
+        sut = new AbsenceServiceImpl(repository, absenceTypeService, userSettingsProvider, tenantContextHolder, userManagementService, messageSource);
     }
 
     @Test
@@ -72,8 +87,7 @@ class AbsenceServiceImplTest {
         entity_1.setStartDate(today.plusDays(1).toInstant());
         entity_1.setEndDate(today.plusDays(2).toInstant());
         entity_1.setDayLength(FULL);
-        entity_1.setType(new AbsenceTypeEntityEmbeddable(AbsenceType.HOLIDAY.category(), AbsenceType.HOLIDAY.sourceId()));
-        entity_1.setColor(AbsenceColor.PINK);
+        entity_1.setType(new AbsenceTypeEntityEmbeddable(HOLIDAY, 1000L));
 
         final AbsenceWriteEntity entity_2 = new AbsenceWriteEntity();
         entity_2.setId(2L);
@@ -81,28 +95,35 @@ class AbsenceServiceImplTest {
         entity_2.setStartDate(today.plusDays(4).toInstant());
         entity_2.setEndDate(today.plusDays(4).toInstant());
         entity_2.setDayLength(MORNING);
-        entity_2.setType(new AbsenceTypeEntityEmbeddable(AbsenceType.SPECIALLEAVE.category(), AbsenceType.SPECIALLEAVE.sourceId()));
-        entity_2.setColor(VIOLET);
+        entity_2.setType(new AbsenceTypeEntityEmbeddable(SPECIALLEAVE, 2000L));
 
         when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
             .thenReturn(List.of(entity_1, entity_2));
 
+        final AbsenceType absenceType1 = new AbsenceType(HOLIDAY, 1000L, label(GERMAN, "1000-de", ENGLISH, "1000-en"), PINK);
+        final AbsenceType absenceType2 = new AbsenceType(SPECIALLEAVE, 2000L, label(GERMAN, "2000-de", ENGLISH, "2000-en"), VIOLET);
+
+        when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L, 2000L)))
+            .thenReturn(List.of(absenceType1, absenceType2));
+
+        final Function<Locale, String> anyLabel = locale -> "";
         final Absence expectedAbsence_1 = new Absence(
             new UserId("user"),
             today.plusDays(1).withZoneSameInstant(berlin),
             today.plusDays(2).withZoneSameInstant(berlin),
             FULL,
-            AbsenceType.HOLIDAY,
-            AbsenceColor.PINK
+            anyLabel,
+            PINK,
+            HOLIDAY
         );
-
         final Absence expectedAbsence_2 = new Absence(
             new UserId("user"),
             today.plusDays(4).withZoneSameInstant(berlin),
             today.plusDays(4).withZoneSameInstant(berlin),
             MORNING,
-            AbsenceType.SPECIALLEAVE,
-            VIOLET
+            anyLabel,
+            VIOLET,
+            SPECIALLEAVE
         );
 
         final Map<LocalDate, List<Absence>> actual = sut.findAllAbsences(new UserId("user"), startDate, endDateExclusive);
@@ -115,6 +136,81 @@ class AbsenceServiceImplTest {
             .containsEntry(today.plusDays(4).toLocalDate(), List.of(expectedAbsence_2))
             .containsEntry(today.plusDays(5).toLocalDate(), List.of())
             .containsEntry(today.plusDays(6).toLocalDate(), List.of());
+    }
+
+    @ParameterizedTest
+    @EnumSource(DayLength.class)
+    void ensureFindAllAbsencesWithLabelForDayLength(DayLength givenDayLength) {
+
+        final ZonedDateTime today = LocalDate.now().atStartOfDay(UTC);
+        final Instant startDate = today.toInstant();
+        final Instant endDateExclusive = today.plusWeeks(1).toInstant();
+
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(berlin);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+
+        final AbsenceWriteEntity entity = new AbsenceWriteEntity();
+        entity.setId(1L);
+        entity.setUserId("user");
+        entity.setStartDate(today.toInstant());
+        entity.setEndDate(today.toInstant());
+        entity.setDayLength(givenDayLength);
+        entity.setType(new AbsenceTypeEntityEmbeddable(HOLIDAY, 1000L));
+
+        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
+            .thenReturn(List.of(entity));
+
+        final AbsenceType absenceType = new AbsenceType(HOLIDAY, 1000L, label(GERMAN, "de", ENGLISH, "en"), PINK);
+
+        when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L)))
+            .thenReturn(List.of(absenceType));
+
+        // SupportedLanguages are GERMAN and ENGLISH right now
+        when(messageSource.getMessage("absence.label." + givenDayLength, new Object[]{"de"}, GERMAN)).thenReturn("message-de");
+        when(messageSource.getMessage("absence.label." + givenDayLength, new Object[]{"en"}, ENGLISH)).thenReturn("message-en");
+
+        final Map<LocalDate, List<Absence>> actual = sut.findAllAbsences(new UserId("user"), startDate, endDateExclusive);
+        assertThat(actual.get(today.toLocalDate())).satisfies(absences -> {
+            assertThat(absences.getFirst().label(GERMAN)).isEqualTo("message-de");
+            assertThat(absences.getFirst().label(ENGLISH)).isEqualTo("message-en");
+        });
+    }
+
+    @ParameterizedTest
+    @EnumSource(DayLength.class)
+    void ensureFindAllAbsencesWithLabelForDayLengthAndCategorySickness(DayLength givenDayLength) {
+
+        final ZonedDateTime today = LocalDate.now().atStartOfDay(UTC);
+        final Instant startDate = today.toInstant();
+        final Instant endDateExclusive = today.plusWeeks(1).toInstant();
+
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(berlin);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+
+        final AbsenceWriteEntity entitySickness = new AbsenceWriteEntity();
+        entitySickness.setId(2L);
+        entitySickness.setUserId("user");
+        entitySickness.setStartDate(today.toInstant());
+        entitySickness.setEndDate(today.toInstant());
+        entitySickness.setDayLength(givenDayLength);
+        entitySickness.setType(new AbsenceTypeEntityEmbeddable(SICK, null));
+
+        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
+            .thenReturn(List.of(entitySickness));
+
+        // SupportedLanguages are GERMAN and ENGLISH right now
+        when(messageSource.getMessage("absence.type.category.SICK", null, GERMAN)).thenReturn("Krank");
+        when(messageSource.getMessage("absence.type.category.SICK", null, ENGLISH)).thenReturn("Sickness");
+        when(messageSource.getMessage("absence.label." + givenDayLength, new Object[]{"Krank"}, GERMAN)).thenReturn("sick-message-de");
+        when(messageSource.getMessage("absence.label." + givenDayLength, new Object[]{"Sickness"}, ENGLISH)).thenReturn("sick-message-en");
+
+        final Map<LocalDate, List<Absence>> actual = sut.findAllAbsences(new UserId("user"), startDate, endDateExclusive);
+        assertThat(actual.get(today.toLocalDate())).satisfies(absences -> {
+            assertThat(absences.getFirst().label(GERMAN)).isEqualTo("sick-message-de");
+            assertThat(absences.getFirst().label(ENGLISH)).isEqualTo("sick-message-en");
+        });
     }
 
     @Test
@@ -178,7 +274,6 @@ class AbsenceServiceImplTest {
         absenceEntity_1.setEndDate(absence_1_end);
         absenceEntity_1.setDayLength(FULL);
         absenceEntity_1.setType(new AbsenceTypeEntityEmbeddable(OTHER, 1000L));
-        absenceEntity_1.setColor(YELLOW);
 
         final Instant absence_2_1_start = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
         final Instant absence_2_1_end = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
@@ -188,7 +283,6 @@ class AbsenceServiceImplTest {
         absenceEntity_2_1.setEndDate(absence_2_1_end);
         absenceEntity_2_1.setDayLength(MORNING);
         absenceEntity_2_1.setType(new AbsenceTypeEntityEmbeddable(OTHER, 2000L));
-        absenceEntity_2_1.setColor(VIOLET);
 
         final Instant absence_2_2_start = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
         final Instant absence_2_2_end = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
@@ -198,22 +292,77 @@ class AbsenceServiceImplTest {
         absenceEntity_2_2.setEndDate(absence_2_2_end);
         absenceEntity_2_2.setDayLength(NOON);
         absenceEntity_2_2.setType(new AbsenceTypeEntityEmbeddable(OTHER, 3000L));
-        absenceEntity_2_2.setColor(CYAN);
 
         when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of(userId_1.value(), userId_2.value()), toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity_1, absenceEntity_2_1, absenceEntity_2_2));
 
+        final AbsenceType absenceType1 = new AbsenceType(OTHER, 1000L, label(GERMAN, "1000-de", ENGLISH, "1000-en"), YELLOW);
+        final AbsenceType absenceType2 = new AbsenceType(OTHER, 2000L, label(GERMAN, "2000-de", ENGLISH, "2000-en"), VIOLET);
+        final AbsenceType absenceType3 = new AbsenceType(OTHER, 3000L, label(GERMAN, "3000-de", ENGLISH, "3000-en"), CYAN);
+
+        when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L, 2000L, 3000L)))
+            .thenReturn(List.of(absenceType1, absenceType2, absenceType3));
+
         final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesByUserIds(List.of(userLocalId_1, userLocalId_2), from, toExclusive);
 
+        final Function<Locale, String> anyLabel = locale -> "";
         assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
             userIdComposite_1, List.of(
-                new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, new AbsenceType(OTHER, 1000L), YELLOW)
+                new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, anyLabel, YELLOW, OTHER)
             ),
             userIdComposite_2, List.of(
-                new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, new AbsenceType(OTHER, 2000L), VIOLET),
-                new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, new AbsenceType(OTHER, 3000L), CYAN)
+                new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, anyLabel, VIOLET, OTHER),
+                new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, anyLabel, CYAN, OTHER)
             )
         ));
+    }
+
+    @ParameterizedTest
+    @EnumSource(DayLength.class)
+    void ensureGetAbsencesByUserIdsLabelForDayLength(DayLength givenDayLength) {
+
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(berlin);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+
+        final LocalDate from = LocalDate.of(2023, 11, 1);
+        final LocalDate toExclusive = LocalDate.of(2023, 11, 30);
+        final Instant fromStartOfDay = Instant.from(from.atStartOfDay().atZone(berlin));
+        final Instant toExclusiveStartOfDay = Instant.from(toExclusive.atStartOfDay().atZone(berlin));
+
+        final UserId userId = new UserId(UUID.randomUUID().toString());
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId))).thenReturn(List.of(
+            new User(userIdComposite, "Bruce", null, null, Set.of())
+        ));
+
+        final Instant absence_start = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
+        final Instant absence_end = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
+        final AbsenceWriteEntity absenceEntity = new AbsenceWriteEntity();
+        absenceEntity.setUserId(userId.value());
+        absenceEntity.setStartDate(absence_start);
+        absenceEntity.setEndDate(absence_end);
+        absenceEntity.setDayLength(givenDayLength);
+        absenceEntity.setType(new AbsenceTypeEntityEmbeddable(OTHER, 1000L));
+
+        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of(userId.value()), toExclusiveStartOfDay, fromStartOfDay))
+            .thenReturn(List.of(absenceEntity));
+
+        final AbsenceType absenceType = new AbsenceType(OTHER, 1000L, label(GERMAN, "de", ENGLISH, "en"), YELLOW);
+
+        when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L)))
+            .thenReturn(List.of(absenceType));
+
+        // SupportedLanguages are GERMAN and ENGLISH right now
+        when(messageSource.getMessage("absence.label." + givenDayLength, new Object[]{"de"}, GERMAN)).thenReturn("message-de");
+        when(messageSource.getMessage("absence.label." + givenDayLength, new Object[]{"en"}, ENGLISH)).thenReturn("message-en");
+
+        final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesByUserIds(List.of(userLocalId), from, toExclusive);
+        final Absence actualAbsence = actual.get(userIdComposite).getFirst();
+        assertThat(actualAbsence.label(GERMAN)).isEqualTo("message-de");
+        assertThat(actualAbsence.label(ENGLISH)).isEqualTo("message-en");
     }
 
     @Test
@@ -273,7 +422,6 @@ class AbsenceServiceImplTest {
         absenceEntity_1.setEndDate(absence_1_end);
         absenceEntity_1.setDayLength(FULL);
         absenceEntity_1.setType(new AbsenceTypeEntityEmbeddable(OTHER, 1000L));
-        absenceEntity_1.setColor(YELLOW);
 
         final Instant absence_2_1_start = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
         final Instant absence_2_1_end = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
@@ -283,7 +431,6 @@ class AbsenceServiceImplTest {
         absenceEntity_2_1.setEndDate(absence_2_1_end);
         absenceEntity_2_1.setDayLength(MORNING);
         absenceEntity_2_1.setType(new AbsenceTypeEntityEmbeddable(OTHER, 2000L));
-        absenceEntity_2_1.setColor(VIOLET);
 
         final Instant absence_2_2_start = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
         final Instant absence_2_2_end = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
@@ -293,20 +440,146 @@ class AbsenceServiceImplTest {
         absenceEntity_2_2.setEndDate(absence_2_2_end);
         absenceEntity_2_2.setDayLength(NOON);
         absenceEntity_2_2.setType(new AbsenceTypeEntityEmbeddable(OTHER, 3000L));
-        absenceEntity_2_2.setColor(CYAN);
 
         when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity_1, absenceEntity_2_1, absenceEntity_2_2));
 
+        final AbsenceType absenceType1 = new AbsenceType(OTHER, 1000L, label(GERMAN, "1000-de", ENGLISH, "1000-en"), YELLOW);
+        final AbsenceType absenceType2 = new AbsenceType(OTHER, 2000L, label(GERMAN, "2000-de", ENGLISH, "2000-en"), VIOLET);
+        final AbsenceType absenceType3 = new AbsenceType(OTHER, 3000L, label(GERMAN, "3000-de", ENGLISH, "3000-en"), CYAN);
+
+        when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L, 2000L, 3000L)))
+            .thenReturn(List.of(absenceType1, absenceType2, absenceType3));
+
         final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesForAllUsers(from, toExclusive);
+
+        final Function<Locale, String> anyLabel = locale -> "";
         assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
             userIdComposite_1, List.of(
-                new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, new AbsenceType(OTHER, 1000L), YELLOW)
+                new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, anyLabel, YELLOW, OTHER)
             ),
             userIdComposite_2, List.of(
-                new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, new AbsenceType(OTHER, 2000L), VIOLET),
-                new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, new AbsenceType(OTHER, 3000L), CYAN)
+                new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, anyLabel, VIOLET, OTHER),
+                new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, anyLabel, CYAN, OTHER)
             )
         ));
+    }
+
+    @ParameterizedTest
+    @EnumSource(DayLength.class)
+    void ensureGetAbsencesForAllUsersLabelForDayLength(DayLength givenDayLength) {
+
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(berlin);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+
+        final LocalDate from = LocalDate.of(2023, 11, 1);
+        final LocalDate toExclusive = LocalDate.of(2023, 11, 30);
+        final Instant fromStartOfDay = Instant.from(from.atStartOfDay().atZone(berlin));
+        final Instant toExclusiveStartOfDay = Instant.from(toExclusive.atStartOfDay().atZone(berlin));
+
+        final UserId userId = new UserId(UUID.randomUUID().toString());
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+
+        when(userManagementService.findAllUsers()).thenReturn(List.of(user));
+
+        final Instant absence_start = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
+        final Instant absence_end = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
+        final AbsenceWriteEntity absenceEntity = new AbsenceWriteEntity();
+        absenceEntity.setUserId(userId.value());
+        absenceEntity.setStartDate(absence_start);
+        absenceEntity.setEndDate(absence_end);
+        absenceEntity.setDayLength(givenDayLength);
+        absenceEntity.setType(new AbsenceTypeEntityEmbeddable(OTHER, 1000L));
+
+        when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
+            .thenReturn(List.of(absenceEntity));
+
+        final AbsenceType absenceType = new AbsenceType(OTHER, 1000L, label(GERMAN, "de", ENGLISH, "en"), YELLOW);
+
+        when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L)))
+            .thenReturn(List.of(absenceType));
+
+        // SupportedLanguages are GERMAN and ENGLISH right now
+        when(messageSource.getMessage("absence.label." + givenDayLength, new Object[]{"de"}, GERMAN)).thenReturn("message-de");
+        when(messageSource.getMessage("absence.label." + givenDayLength, new Object[]{"en"}, ENGLISH)).thenReturn("message-en");
+
+        final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesForAllUsers(from, toExclusive);
+        final Absence actualAbsence = actual.get(userIdComposite).getFirst();
+        assertThat(actualAbsence.label(GERMAN)).isEqualTo("message-de");
+        assertThat(actualAbsence.label(ENGLISH)).isEqualTo("message-en");
+    }
+
+    @Test
+    void getAbsencesByUserId() {
+        final UserId userId = new UserId("user");
+
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        final ZonedDateTime today = LocalDate.now().atStartOfDay(berlin);
+        final Instant startDate = today.toInstant();
+        final Instant endDateExclusive = today.plusWeeks(1).toInstant();
+
+        when(userSettingsProvider.zoneId()).thenReturn(berlin);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+
+        final AbsenceWriteEntity entity_1 = new AbsenceWriteEntity();
+        entity_1.setId(1L);
+        entity_1.setUserId("user");
+        entity_1.setStartDate(today.plusDays(1).toInstant());
+        entity_1.setEndDate(today.plusDays(2).toInstant());
+        entity_1.setDayLength(FULL);
+        entity_1.setType(new AbsenceTypeEntityEmbeddable(HOLIDAY, 1000L));
+
+        final AbsenceWriteEntity entity_2 = new AbsenceWriteEntity();
+        entity_2.setId(2L);
+        entity_2.setUserId("user");
+        entity_2.setStartDate(today.plusDays(4).toInstant());
+        entity_2.setEndDate(today.plusDays(4).toInstant());
+        entity_2.setDayLength(MORNING);
+        entity_2.setType(new AbsenceTypeEntityEmbeddable(SPECIALLEAVE, 2000L));
+
+        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
+                .thenReturn(List.of(entity_1, entity_2));
+
+        final AbsenceType absenceType1 = new AbsenceType(HOLIDAY, 1000L, label(GERMAN, "1000-de", ENGLISH, "1000-en"), PINK);
+        final AbsenceType absenceType2 = new AbsenceType(SPECIALLEAVE, 2000L, label(GERMAN, "2000-de", ENGLISH, "2000-en"), VIOLET);
+
+        when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(1000L, 2000L)))
+                .thenReturn(List.of(absenceType1, absenceType2));
+
+        final List<Absence> absencesByUserId = sut.getAbsencesByUserId(userId, startDate.atZone(berlin).toLocalDate(), endDateExclusive.atZone(berlin).toLocalDate());
+
+        final Function<Locale, String> anyLabel = locale -> "";
+
+        final Absence expectedAbsence_1 = new Absence(
+                new UserId("user"),
+                today.plusDays(1).withZoneSameInstant(berlin),
+                today.plusDays(2).withZoneSameInstant(berlin),
+                FULL,
+                anyLabel,
+                PINK,
+                HOLIDAY
+        );
+
+        final Absence expectedAbsence_2 = new Absence(
+                new UserId("user"),
+                today.plusDays(4).withZoneSameInstant(berlin),
+                today.plusDays(4).withZoneSameInstant(berlin),
+                MORNING,
+                anyLabel,
+                VIOLET,
+                SPECIALLEAVE
+        );
+
+        assertThat(absencesByUserId).containsExactlyInAnyOrder(expectedAbsence_1, expectedAbsence_2);
+    }
+
+    private static Function<Locale, String> label(Locale locale, String label, Locale locale2, String label2) {
+        final Map<Locale, String> labelByLocale = Map.of(locale, label, locale2, label2);
+        return labelByLocale::get;
     }
 }

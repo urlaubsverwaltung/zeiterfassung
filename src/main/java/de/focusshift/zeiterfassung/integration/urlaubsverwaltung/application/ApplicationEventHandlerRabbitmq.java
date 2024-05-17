@@ -3,9 +3,9 @@ package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationAllowedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCancelledEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCreatedFromSickNoteEventDTO;
-import de.focusshift.zeiterfassung.absence.AbsenceColor;
-import de.focusshift.zeiterfassung.absence.AbsenceType;
+import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeCategory;
+import de.focusshift.zeiterfassung.absence.AbsenceTypeSourceId;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
@@ -69,10 +69,10 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
 
         final List<LocalDate> absentWorkingDays = event.getAbsentWorkingDays().stream().sorted().toList();
         final Optional<DayLength> maybeDayLength = toDayLength(event.getPeriod().getDayLength());
-        final Optional<AbsenceType> maybeAbsenceType = toAbsenceType(event.getVacationType().getCategory(), event.getVacationType().getSourceId());
-        final Optional<AbsenceColor> maybeAbsenceColor = toAbsenceColor(event.getVacationType().getColor());
+        final Optional<AbsenceTypeCategory> maybeAbsenceTypeCategory = toAbsenceType(event.getVacationType());
+        final AbsenceTypeSourceId absenceTypeSourceId = new AbsenceTypeSourceId(event.getVacationType().getSourceId());
 
-        if (absentWorkingDays.isEmpty() || maybeDayLength.isEmpty() || maybeAbsenceType.isEmpty() || maybeAbsenceColor.isEmpty()) {
+        if (absentWorkingDays.isEmpty() || maybeDayLength.isEmpty() || maybeAbsenceTypeCategory.isEmpty()) {
             return Optional.empty();
         }
 
@@ -83,8 +83,8 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
             event.getPeriod().getStartDate(),
             event.getPeriod().getEndDate(),
             maybeDayLength.get(),
-            maybeAbsenceType.get(),
-            maybeAbsenceColor.get()
+            maybeAbsenceTypeCategory.get(),
+            absenceTypeSourceId
         ));
     }
 
@@ -92,12 +92,7 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
         return mapToEnum(dayLength.name(), DayLength.class);
     }
 
-    private static Optional<AbsenceType> toAbsenceType(String absenceTypeCategoryName, Long sourceId) {
-        return mapToEnum(absenceTypeCategoryName, AbsenceTypeCategory.class)
-            .map(category -> new AbsenceType(category, sourceId));
-    }
-
-    private static Optional<AbsenceColor> toAbsenceColor(String vacationTypeColor) {
-        return mapToEnum(vacationTypeColor, AbsenceColor.class);
+    private static Optional<AbsenceTypeCategory> toAbsenceType(VacationTypeDTO vacationType) {
+        return mapToEnum(vacationType.getCategory(), AbsenceTypeCategory.class);
     }
 }

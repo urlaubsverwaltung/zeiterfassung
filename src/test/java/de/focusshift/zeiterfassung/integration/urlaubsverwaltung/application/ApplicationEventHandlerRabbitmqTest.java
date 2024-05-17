@@ -7,8 +7,7 @@ import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCre
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPeriodDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPersonDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
-import de.focusshift.zeiterfassung.absence.AbsenceColor;
-import de.focusshift.zeiterfassung.absence.AbsenceType;
+import de.focusshift.zeiterfassung.absence.AbsenceTypeSourceId;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
@@ -25,7 +24,9 @@ import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationEventHandlerRabbitmqTest {
@@ -56,14 +57,14 @@ class ApplicationEventHandlerRabbitmqTest {
         sut.on(event);
 
         final AbsenceWrite absence = new AbsenceWrite(
-                new TenantId("tenantId"),
-                1L,
-                new UserId("userId"),
-                Instant.ofEpochMilli(0L),
-                Instant.ofEpochMilli(1L),
-                DayLength.FULL,
-                AbsenceType.HOLIDAY,
-                AbsenceColor.CYAN
+            new TenantId("tenantId"),
+            1L,
+            new UserId("userId"),
+            Instant.ofEpochMilli(0L),
+            Instant.ofEpochMilli(1L),
+            DayLength.FULL,
+            HOLIDAY,
+            new AbsenceTypeSourceId(1000L)
         );
         verify(absenceWriteService).addAbsence(absence);
     }
@@ -84,14 +85,14 @@ class ApplicationEventHandlerRabbitmqTest {
         sut.on(event);
 
         final AbsenceWrite absence = new AbsenceWrite(
-                new TenantId("tenantId"),
-                1L,
-                new UserId("userId"),
-                Instant.ofEpochMilli(0L),
-                Instant.ofEpochMilli(1L),
-                DayLength.FULL,
-                AbsenceType.HOLIDAY,
-                AbsenceColor.CYAN
+            new TenantId("tenantId"),
+            1L,
+            new UserId("userId"),
+            Instant.ofEpochMilli(0L),
+            Instant.ofEpochMilli(1L),
+            DayLength.FULL,
+            HOLIDAY,
+            new AbsenceTypeSourceId(1000L)
         );
         verify(absenceWriteService).addAbsence(absence);
     }
@@ -112,15 +113,33 @@ class ApplicationEventHandlerRabbitmqTest {
         sut.on(event);
 
         final AbsenceWrite absence = new AbsenceWrite(
-                new TenantId("tenantId"),
-                1L,
-                new UserId("userId"),
-                Instant.ofEpochMilli(0L),
-                Instant.ofEpochMilli(1L),
-                DayLength.FULL,
-                AbsenceType.HOLIDAY,
-                AbsenceColor.CYAN
+            new TenantId("tenantId"),
+            1L,
+            new UserId("userId"),
+            Instant.ofEpochMilli(0L),
+            Instant.ofEpochMilli(1L),
+            DayLength.FULL,
+            HOLIDAY,
+            new AbsenceTypeSourceId(1000L)
         );
         verify(absenceWriteService).deleteAbsence(absence);
+    }
+
+    @Test
+    void onApplicationWithAbsentWorkingDays() {
+        final ApplicationAllowedEventDTO event = ApplicationAllowedEventDTO.builder()
+                .id(UUID.randomUUID())
+                .tenantId("tenantId")
+                .sourceId(1L)
+                .person(ApplicationPersonDTO.builder().personId(2L).username("userId").build())
+                .period(ApplicationPeriodDTO.builder().startDate(Instant.ofEpochMilli(0L)).endDate(Instant.ofEpochMilli(1L)).dayLength(de.focus_shift.urlaubsverwaltung.extension.api.application.DayLength.FULL).build())
+                .vacationType(VacationTypeDTO.builder().category("HOLIDAY").sourceId(1000L).color("CYAN").build())
+                .createdAt(Instant.ofEpochMilli(0L))
+                .status("status")
+                .absentWorkingDays(Set.of())
+                .build();
+        sut.on(event);
+
+        verifyNoInteractions(absenceWriteService);
     }
 }

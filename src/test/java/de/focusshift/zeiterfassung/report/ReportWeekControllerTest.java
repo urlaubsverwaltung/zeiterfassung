@@ -1,8 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.absence.Absence;
-import de.focusshift.zeiterfassung.absence.AbsenceColor;
-import de.focusshift.zeiterfassung.absence.AbsenceType;
 import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
@@ -33,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceColor.ORANGE;
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static java.time.ZoneOffset.UTC;
 import static java.util.Locale.GERMAN;
 import static org.mockito.Mockito.when;
@@ -146,8 +146,9 @@ class ReportWeekControllerTest {
                         absenceDate.atStartOfDay(UTC),
                         absenceDate.atStartOfDay(UTC),
                         DayLength.FULL,
-                        AbsenceType.HOLIDAY,
-                        AbsenceColor.VIOLET
+                        locale -> "absence-full-de",
+                        ORANGE,
+                        HOLIDAY
                     ))
                 ))
             )
@@ -166,8 +167,8 @@ class ReportWeekControllerTest {
                         new DetailDayAbsenceDto(
                             "Bruce Wayne",
                             "FULL",
-                            "absence.HOLIDAY.1000.FULL",
-                            "VIOLET"
+                            "absence-full-de",
+                            "ORANGE"
                         )
                     )
                 )

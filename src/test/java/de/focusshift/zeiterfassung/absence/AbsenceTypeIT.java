@@ -10,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -59,7 +58,7 @@ class AbsenceTypeIT extends TestContainersBase {
         );
 
         await().untilAsserted(() -> {
-            final List<AbsenceTypeEntity> all = absenceTypeRepository.findAll();
+            final Iterable<AbsenceTypeEntity> all = absenceTypeRepository.findAll();
             assertThat(all)
                 .hasSize(1)
                 .first()
