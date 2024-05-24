@@ -1,0 +1,32 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+  <changeSet author="schneider" id="add-fk-from-time-entry-to-tenant-user">
+    <preConditions>
+      <tableExists tableName="time_entry"/>
+      <tableExists tableName="tenant_user"/>
+    </preConditions>
+
+    <dropForeignKeyConstraint baseTableName="time_entry" constraintName="FK_TENANT_ENTRY_OWNER"/>
+    <addForeignKeyConstraint baseColumnNames="owner" baseTableName="time_entry"
+                             constraintName="FK_TENANT_ENTRY_OWNER"
+                             deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+                             referencedColumnNames="uuid" referencedTableName="tenant_user"/>
+  </changeSet>
+
+  <changeSet author="schneider" id="add-fk-from-time-clock-to-tenant-user">
+    <preConditions>
+      <tableExists tableName="time_clock"/>
+      <tableExists tableName="tenant_user"/>
+    </preConditions>
+
+    <dropForeignKeyConstraint baseTableName="time_clock" constraintName="FK_TENANT_CLOCK_OWNER"/>
+    <addForeignKeyConstraint baseColumnNames="owner" baseTableName="time_clock"
+                             constraintName="FK_TENANT_CLOCK_OWNER"
+                             deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+                             referencedColumnNames="uuid" referencedTableName="tenant_user"/>
+  </changeSet>
+</databaseChangeLog>
+
