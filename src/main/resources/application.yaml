@@ -21,6 +21,9 @@ spring:
     hibernate:
       ddl-auto: none
     open-in-view: false
+  session:
+    jdbc:
+      initialize-schema: always
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-main.xml
   mail:

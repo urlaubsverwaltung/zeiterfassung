@@ -85,6 +85,12 @@
       <version>1.8.0</version>
     </dependency>
 
+    <!-- SESSION -->
+    <dependency>
+      <groupId>org.springframework.session</groupId>
+      <artifactId>spring-session-jdbc</artifactId>
+    </dependency>
+
     <!-- Web -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

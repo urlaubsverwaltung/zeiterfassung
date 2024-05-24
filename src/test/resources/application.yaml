@@ -51,6 +51,9 @@ spring:
     test-connection: false
   main:
     banner-mode: 'off'
+  session:
+    jdbc:
+      initialize-schema: always
   messages:
     fallback-to-system-locale: false
   security:

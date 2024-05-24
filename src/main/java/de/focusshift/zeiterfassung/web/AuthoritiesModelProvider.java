@@ -6,12 +6,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -33,9 +35,10 @@ class AuthoritiesModelProvider implements HandlerInterceptor {
 
         if (modelAndView != null && navigationHeaderVisible(modelAndView)) {
 
-            final Principal userPrincipal = request.getUserPrincipal();
+            final SecurityContext securityContext = SecurityContextHolder.getContext();
+            final Authentication authentication = securityContext.getAuthentication();
 
-            if (userPrincipal instanceof OAuth2AuthenticationToken token) {
+            if (authentication instanceof OAuth2AuthenticationToken token) {
                 final List<SecurityRole> roles = token.getAuthorities()
                     .stream()
                     .map(SecurityRole::fromAuthority)
