@@ -4,10 +4,13 @@ import * as Turbo from "@hotwired/turbo";
 Turbo.session.drive = false;
 
 document.addEventListener("turbo:click", function (event: CustomEvent) {
-  const target = event.target as HTMLElement;
-  if (target.classList.contains("ajax-loader")) {
-    target.classList.add("ajax-loader--loading");
-  }
+  maybeToggleAjaxLoading(event.target as HTMLElement);
+});
+
+document.addEventListener("turbo:submit-start", function (event: CustomEvent) {
+  maybeToggleAjaxLoading(
+    event.detail.formSubmission.submitter as HTMLButtonElement,
+  );
 });
 
 document.addEventListener(
@@ -30,3 +33,17 @@ document.addEventListener(
     window.location.reload();
   },
 );
+
+/**
+ * Ajax loading class will be added to the element if required.
+ *
+ * <p>
+ * Removing the class is not required as the whole element will be re-rendered by hotwired/turbo
+ *
+ * @param element
+ */
+function maybeToggleAjaxLoading(element: HTMLElement) {
+  if (element.classList.contains("ajax-loader")) {
+    element.classList.add("ajax-loader--loading");
+  }
+}

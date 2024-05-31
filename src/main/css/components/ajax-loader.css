@@ -20,6 +20,14 @@
   @apply inset-0;
   @apply bg-gradient-to-r;
   @apply from-transparent;
-  @apply to-blue-600;
   @apply opacity-10;
+}
+
+.ajax-loader.ajax-loader--loading::before {
+  @apply to-blue-600;
+}
+
+.ajax-loader.ajax-loader--loading.button-primary::before,
+.ajax-loader.ajax-loader--loading[class*="bg-blue-"]::before {
+  @apply to-white;
 }

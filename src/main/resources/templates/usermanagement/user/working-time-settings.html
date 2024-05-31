@@ -159,7 +159,7 @@
                   <a
                     href="#"
                     th:href="@{/users/{id}/working-time/{workingTimeId} (id=${user.id},workingTimeId=${workingTime.id})}"
-                    class="flex justify-center w-full xs:w-auto button-secondary button-secondary-icon button-secondary--subtle button-secondary--narrow"
+                    class="ajax-loader flex justify-center w-full xs:w-auto button-secondary button-secondary-icon button-secondary--subtle button-secondary--narrow"
                     data-turbo-action="advance"
                   >
                     <svg
@@ -176,7 +176,7 @@
                   >
                     <button
                       type="submit"
-                      class="flex justify-center w-full xs:w-auto button-secondary button-secondary-icon button-secondary--subtle button-secondary--narrow"
+                      class="ajax-loader flex justify-center w-full xs:w-auto button-secondary button-secondary-icon button-secondary--subtle button-secondary--narrow"
                     >
                       <svg
                         th:replace="~{icons/trash::svg(className='w-4 h-4')}"
