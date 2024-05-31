@@ -129,7 +129,7 @@
           <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
             <button
               type="submit"
-              class="ajax-loader bg-blue-700 border border-blue-700 text-white font-medium rounded px-4 py-2 flex items-center gap-2 justify-center sm:justify-start"
+              class="ajax-loader button-primary button-primary-icon"
               data-test-id="permissions-submit-button"
             >
               <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
@@ -141,7 +141,7 @@
               id="overtime-account-settings-reset-button"
               href="#"
               th:href="@{/users/{id} (id=${user.id}, query=${query})}"
-              class="whitespace-nowrap border border-blue-700 text-blue-700 font-medium rounded px-4 py-2 text-center sm:text-left"
+              class="button-secondary"
               th:text="#{usermanagement.revert}"
             >
               Änderungen verwerfen
