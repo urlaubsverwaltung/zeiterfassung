@@ -5,8 +5,11 @@ import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TenantContextHolderMultiTenantTest {
 
@@ -26,6 +29,16 @@ class TenantContextHolderMultiTenantTest {
     void hasTenantId() {
         sut.setTenantId(new TenantId("a154bc4e"));
         assertThat(sut.getCurrentTenantId()).hasValue(new TenantId("a154bc4e"));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    void hasDetectsInvalidTenantId(String value) {
+        assertThatThrownBy(() -> {
+            sut.setTenantId(new TenantId(value));
+        })
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Invalid tenantId passed!");
     }
 
     @Test

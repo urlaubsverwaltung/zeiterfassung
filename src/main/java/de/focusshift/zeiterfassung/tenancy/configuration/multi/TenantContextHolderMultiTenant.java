@@ -27,6 +27,10 @@ class TenantContextHolderMultiTenant implements TenantContextHolder {
 
     @Override
     public void setTenantId(TenantId tenantId) {
+        if (!tenantId.valid()) {
+            throw new IllegalArgumentException("Invalid tenantId passed!");
+        }
+
         LOG.debug("Setting tenantId to {}", tenantId);
         currentTenantId.set(tenantId);
     }

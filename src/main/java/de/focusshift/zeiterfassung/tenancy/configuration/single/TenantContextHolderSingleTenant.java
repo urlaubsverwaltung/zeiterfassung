@@ -24,13 +24,4 @@ class TenantContextHolderSingleTenant implements TenantContextHolder {
         return Optional.of(new TenantId(defaultTenantId));
     }
 
-    @Override
-    public void setTenantId(TenantId tenantId) {
-        // do nothing
-    }
-
-    @Override
-    public void clear() {
-        // do nothing
-    }
 }

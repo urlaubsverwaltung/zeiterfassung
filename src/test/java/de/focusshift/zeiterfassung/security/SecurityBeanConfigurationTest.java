@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
@@ -24,6 +26,7 @@ class SecurityBeanConfigurationTest {
         .withPropertyValues("zeiterfassung.security.oidc.login-form-url=http://localhost")
         .withUserConfiguration(SecurityBeanConfiguration.class)
         .withBean(InMemoryClientRegistrationRepository.class, anyClientRegistration())
+        .withBean(TenantContextHolder.class, NoopTenantContextHolder::new)
         .withBean(TenantUserService.class, NoopTenantUserService::new);
 
     @Test
@@ -57,6 +60,10 @@ class SecurityBeanConfigurationTest {
 
     private ClientRegistration anyClientRegistration() {
         return ClientRegistration.withRegistrationId("realm").authorizationGrantType(JWT_BEARER).build();
+    }
+
+    private static class NoopTenantContextHolder implements TenantContextHolder {
+
     }
 
     private static class NoopTenantUserService implements TenantUserService {

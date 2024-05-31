@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
@@ -7,7 +9,9 @@ import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,6 +35,8 @@ import java.util.Set;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.oauth2.core.AuthorizationGrantType.JWT_BEARER;
 import static org.springframework.security.oauth2.core.OAuth2AccessToken.TokenType.BEARER;
@@ -45,10 +51,17 @@ class OAuth2UserServiceMultiTenantTest {
     private OidcUserService oidcUserService;
     @Mock
     private TenantUserService tenantUserService;
+    @Mock
+    private TenantContextHolder tenantContextHolder;
+
+    private static OAuth2AccessToken oAuth2AccessToken() {
+        final Instant now = Instant.now();
+        return new OAuth2AccessToken(BEARER, "token-value", now, now.plusMillis(1));
+    }
 
     @BeforeEach
     void setUp() {
-        sut = new OAuth2UserServiceMultiTenant(oidcUserService, tenantUserService);
+        sut = new OAuth2UserServiceMultiTenant(oidcUserService, tenantUserService, tenantContextHolder);
     }
 
     @Test
@@ -84,7 +97,7 @@ class OAuth2UserServiceMultiTenantTest {
     }
 
     @Test
-    void ensureSecurityContextIsSet() {
+    void ensureTenantIdContextIsMaintained() {
 
         final Map<String, Object> claims = Map.of(SUB, "uuid");
         final OidcIdToken oidcToken = oidcIdToken(claims);
@@ -92,21 +105,29 @@ class OAuth2UserServiceMultiTenantTest {
         final DefaultOidcUser oidcUser = new DefaultOidcUser(List.of(new SimpleGrantedAuthority("remote-role")), oidcToken, new OidcUserInfo(claims));
         when(oidcUserService.loadUser(oidcUserRequest)).thenReturn(oidcUser);
 
-        when(tenantUserService.findById(new UserId("uuid"))).thenAnswer(invocation -> {
+        when(tenantUserService.findById(new UserId("uuid"))).thenReturn(Optional.of(anyTenantUser("uuid")));
 
-            final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            assertThat(authentication).isInstanceOf(OAuth2AuthenticationToken.class);
+        OidcUser actual = sut.loadUser(oidcUserRequest);
 
-            final String tenantId = ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
-            assertThat(tenantId).isEqualTo("most-awesome-tenant");
+        assertThat(actual).isEqualTo(oidcUser);
+        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        inOrder.verify(tenantContextHolder).setTenantId(new TenantId("most-awesome-tenant"));
+        inOrder.verify(tenantContextHolder).clear();
+    }
 
-            return Optional.of(anyTenantUser("uuid"));
-        });
+    @Test
+    void ensureNoUserIsReturnedWhenTenantIdIsUnavailable() {
 
-        sut.loadUser(oidcUserRequest);
+        final Map<String, Object> claims = Map.of(SUB, "uuid");
+        final OidcIdToken oidcToken = oidcIdToken(claims);
+        final OidcUserRequest oidcUserRequest = oidcUserRequestWithoutTenantId(oidcToken);
+        final DefaultOidcUser oidcUser = new DefaultOidcUser(List.of(new SimpleGrantedAuthority("remote-role")), oidcToken, new OidcUserInfo(claims));
 
-        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assertThat(authentication).isNull();
+        sut.loadTenantUser(oidcUserRequest, oidcUser);
+
+        verifyNoInteractions(tenantUserService);
+        verify(tenantContextHolder, Mockito.never()).setTenantId(Mockito.any());
+        verify(tenantContextHolder).clear();
     }
 
     private OidcUserRequest oidcUserRequest(OidcIdToken oidcToken) {
@@ -114,13 +135,14 @@ class OAuth2UserServiceMultiTenantTest {
         return new OidcUserRequest(clientRegistration, oAuth2AccessToken(), oidcToken);
     }
 
-    private OidcIdToken oidcIdToken(Map<String, Object> claims) {
-        return OidcIdToken.withTokenValue("token-value").claims(map -> map.putAll(claims)).build();
+    private OidcUserRequest oidcUserRequestWithoutTenantId(OidcIdToken oidcToken) {
+        final ClientRegistration clientRegistration = Mockito.mock(ClientRegistration.class);
+        when(clientRegistration.getRegistrationId()).thenReturn("");
+        return new OidcUserRequest(clientRegistration, oAuth2AccessToken(), oidcToken);
     }
 
-    private static OAuth2AccessToken oAuth2AccessToken() {
-        final Instant now = Instant.now();
-        return new OAuth2AccessToken(BEARER, "token-value", now, now.plusMillis(1));
+    private OidcIdToken oidcIdToken(Map<String, Object> claims) {
+        return OidcIdToken.withTokenValue("token-value").claims(map -> map.putAll(claims)).build();
     }
 
     private TenantUser anyTenantUser(String id) {
