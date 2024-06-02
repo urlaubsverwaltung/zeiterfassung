@@ -93,22 +93,20 @@ class TenantImporterComponent {
 
             LOG.info("Found existing tenantId={} - going to import users", tenantId.tenantId());
 
-            try {
-                this.tenantContextHolder.setTenantId(tenantId);
-
-                if (!tenantUserService.findAllUsers().isEmpty()) {
-                    LOG.info("tenantId={} already has users, skipping import", tenantId.tenantId());
-                    return;
+            tenantContextHolder.runInTenantIdContext(tenantId, passedTenantId -> {
+                try {
+                    if (!tenantUserService.findAllUsers().isEmpty()) {
+                        LOG.info("tenantId={} already has users, skipping import", passedTenantId);
+                        return;
+                    }
+                    LOG.info("tenantId={} has no users, starting import {} users!", passedTenantId, importerData.users().size());
+                    importerData.users().forEach(userToImport -> importUser(userToImport, new TenantId(passedTenantId)));
+                    LOG.info("finished importing {} users of tenantId={}", importerData.users().size(), passedTenantId);
+                } catch (Exception e) {
+                    LOG.error("Error occurred while importing users", e);
                 }
+            });
 
-                LOG.info("tenantId={} has no users, starting import {} users!", tenantId.tenantId(), importerData.users().size());
-                importerData.users().forEach(userToImport -> importUser(userToImport, tenantId));
-                LOG.info("finished importing {} users of tenantId={}", importerData.users().size(), tenantId.tenantId());
-            } catch (Exception e) {
-                LOG.error("Error occurred while importing users", e);
-            } finally {
-                this.tenantContextHolder.clear();
-            }
 
             LOG.info("Finished import for tenant={}", tenantId.tenantId());
 

@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.vacationtype;
 
 import de.focusshift.zeiterfassung.absence.AbsenceTypeService;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
@@ -18,8 +19,8 @@ class VacationTypeRabbitmqConfiguration {
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_VACATIONTYPE_UPDATED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.vacationtype.updated";
 
     @Bean
-    VacationTypeHandlerRabbitmq vacationTypeHandlerRabbitmq(AbsenceTypeService absenceTypeService) {
-        return new VacationTypeHandlerRabbitmq(absenceTypeService);
+    VacationTypeHandlerRabbitmq vacationTypeHandlerRabbitmq(AbsenceTypeService absenceTypeService, TenantContextHolder tenantContextHolder) {
+        return new VacationTypeHandlerRabbitmq(absenceTypeService, tenantContextHolder);
     }
 
     @ConditionalOnProperty(value = "zeiterfassung.integration.urlaubsverwaltung.vacationtype.manage-topology", havingValue = "true")

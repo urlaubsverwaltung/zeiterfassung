@@ -6,7 +6,7 @@ import de.focusshift.zeiterfassung.absence.AbsenceTypeCategory;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeService;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeUpdate;
 import de.focusshift.zeiterfassung.integration.urlaubsverwaltung.RabbitMessageConsumer;
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import org.slf4j.Logger;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
@@ -21,21 +21,23 @@ class VacationTypeHandlerRabbitmq extends RabbitMessageConsumer {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final AbsenceTypeService absenceTypeService;
+    private final TenantContextHolder tenantContextHolder;
 
-    VacationTypeHandlerRabbitmq(AbsenceTypeService absenceTypeService) {
+    VacationTypeHandlerRabbitmq(AbsenceTypeService absenceTypeService, TenantContextHolder tenantContextHolder) {
         this.absenceTypeService = absenceTypeService;
+        this.tenantContextHolder = tenantContextHolder;
     }
 
     @RabbitListener(queues = ZEITERFASSUNG_URLAUBSVERWALTUNG_VACATIONTYPE_UPDATED_QUEUE)
     void on(VacationTypeUpdatedEventDTO event) {
-
-        LOG.info("Received VacationTypeUpdatedEvent id={} for tenantId={}", event.getId(), event.getTenantId());
-
-        toAbsenceTypeUpdate(event)
-            .ifPresentOrElse(
-                absenceTypeService::updateAbsenceType,
-                () -> LOG.info("could not map VacationTypeUpdatedEvent -> could not update AbsenceType")
-            );
+        tenantContextHolder.runInTenantIdContext(event.getTenantId(), tenantId -> {
+            LOG.info("Received VacationTypeUpdatedEvent id={} for tenantId={}", event.getId(), event.getTenantId());
+            toAbsenceTypeUpdate(event)
+                .ifPresentOrElse(
+                    absenceTypeService::updateAbsenceType,
+                    () -> LOG.info("could not map VacationTypeUpdatedEvent -> could not update AbsenceType")
+                );
+        });
     }
 
     private Optional<AbsenceTypeUpdate> toAbsenceTypeUpdate(VacationTypeUpdatedEventDTO eventDTO) {
@@ -44,7 +46,6 @@ class VacationTypeHandlerRabbitmq extends RabbitMessageConsumer {
                 toAbsenceTypeCategory(eventDTO.getCategory())
                     .map(category ->
                         new AbsenceTypeUpdate(
-                            new TenantId(eventDTO.getTenantId()),
                             eventDTO.getSourceId(),
                             category,
                             color,

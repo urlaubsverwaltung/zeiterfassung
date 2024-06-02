@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.absence;
 
-import de.focusshift.zeiterfassung.tenancy.configuration.multi.AdminAware;
+import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -10,7 +10,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -19,11 +18,7 @@ import static jakarta.persistence.EnumType.STRING;
 
 @Entity
 @Table(name = "absence")
-public class AbsenceWriteEntity implements AdminAware<Long> {
-
-    @Size(max = 255)
-    @Column(name = "tenant_id")
-    private String tenantId;
+public class AbsenceWriteEntity extends AbstractTenantAwareEntity {
 
     @Id
     @Column(name = "id", unique = true, nullable = false, updatable = false)
@@ -50,12 +45,8 @@ public class AbsenceWriteEntity implements AdminAware<Long> {
     @Embedded
     private AbsenceTypeEntityEmbeddable type;
 
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
+    public AbsenceWriteEntity() {
+        super(null);
     }
 
     public Long getId() {
@@ -130,7 +121,6 @@ public class AbsenceWriteEntity implements AdminAware<Long> {
     @Override
     public String toString() {
         return "AbsenceEntity{" +
-            "tenantId=" + tenantId +
             ", id=" + id +
             '}';
     }

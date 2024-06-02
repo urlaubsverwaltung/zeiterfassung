@@ -10,7 +10,7 @@ import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.integration.urlaubsverwaltung.RabbitMessageConsumer;
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.slf4j.Logger;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -30,39 +30,11 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final AbsenceWriteService absenceWriteService;
+    private final TenantContextHolder tenantContextHolder;
 
-    ApplicationEventHandlerRabbitmq(AbsenceWriteService absenceWriteService) {
+    ApplicationEventHandlerRabbitmq(AbsenceWriteService absenceWriteService, TenantContextHolder tenantContextHolder) {
         this.absenceWriteService = absenceWriteService;
-    }
-
-    @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE})
-    void on(ApplicationAllowedEventDTO event) {
-
-        LOG.info("Received ApplicationAllowedEvent id={} for person={} and tenantId={}",
-            event.getId(), event.getPerson(), event.getTenantId());
-
-        toAbsence(new ApplicationEventDtoAdapter(event))
-            .ifPresentOrElse(
-                absenceWriteService::addAbsence,
-                () -> LOG.info("could not map ApplicationAllowedEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), event.getTenantId()));
-    }
-
-    @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE})
-    void on(ApplicationCreatedFromSickNoteEventDTO event) {
-        LOG.info("Received ApplicationCreatedFromSicknoteEvent for person={} and tenantId={}", event.getPerson(), event.getTenantId());
-        toAbsence(new ApplicationEventDtoAdapter(event))
-            .ifPresentOrElse(
-                absenceWriteService::addAbsence,
-                () -> LOG.info("could not map ApplicationCreatedFromSicknoteEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), event.getTenantId()));
-    }
-
-    @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE})
-    void on(ApplicationCancelledEventDTO event) {
-        LOG.info("Received ApplicationCancelledEvent for person={} and tenantId={}", event.getPerson(), event.getTenantId());
-        toAbsence(new ApplicationEventDtoAdapter(event))
-            .ifPresentOrElse(
-                absenceWriteService::deleteAbsence,
-                () -> LOG.info("could not map ApplicationCancelledEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), event.getTenantId()));
+        this.tenantContextHolder = tenantContextHolder;
     }
 
     private static Optional<AbsenceWrite> toAbsence(ApplicationEventDtoAdapter event) {
@@ -77,7 +49,6 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
         }
 
         return Optional.of(new AbsenceWrite(
-            new TenantId(event.getTenantId()),
             event.getSourceId(),
             new UserId(event.getPerson().getUsername()),
             event.getPeriod().getStartDate(),
@@ -94,5 +65,39 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
 
     private static Optional<AbsenceTypeCategory> toAbsenceType(VacationTypeDTO vacationType) {
         return mapToEnum(vacationType.getCategory(), AbsenceTypeCategory.class);
+    }
+
+    @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE})
+    void on(ApplicationAllowedEventDTO event) {
+        tenantContextHolder.runInTenantIdContext(event.getTenantId(), tenantId -> {
+            LOG.info("Received ApplicationAllowedEvent id={} for person={} and tenantId={}",
+                event.getId(), event.getPerson(), tenantId);
+            toAbsence(new ApplicationEventDtoAdapter(event))
+                .ifPresentOrElse(
+                    absenceWriteService::addAbsence,
+                    () -> LOG.info("could not map ApplicationAllowedEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), tenantId));
+        });
+    }
+
+    @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE})
+    void on(ApplicationCreatedFromSickNoteEventDTO event) {
+        tenantContextHolder.runInTenantIdContext(event.getTenantId(), tenantId -> {
+            LOG.info("Received ApplicationCreatedFromSicknoteEvent for person={} and tenantId={}", event.getPerson(), tenantId);
+            toAbsence(new ApplicationEventDtoAdapter(event))
+                .ifPresentOrElse(
+                    absenceWriteService::addAbsence,
+                    () -> LOG.info("could not map ApplicationCreatedFromSicknoteEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), tenantId));
+        });
+    }
+
+    @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE})
+    void on(ApplicationCancelledEventDTO event) {
+        tenantContextHolder.runInTenantIdContext(event.getTenantId(), tenantId -> {
+            LOG.info("Received ApplicationCancelledEvent for person={} and tenantId={}", event.getPerson(), tenantId);
+            toAbsence(new ApplicationEventDtoAdapter(event))
+                .ifPresentOrElse(
+                    absenceWriteService::deleteAbsence,
+                    () -> LOG.info("could not map ApplicationCancelledEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), tenantId));
+        });
     }
 }

@@ -12,11 +12,15 @@ import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.AbsenceService;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Answers;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,6 +34,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -69,6 +74,8 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
 
     @MockBean
     private UserSettingsProvider userSettingsProvider;
+    @MockBean(answer = Answers.CALLS_REAL_METHODS)
+    private TenantContextHolder tenantContextHolder;
 
     @Autowired
     private AbsenceService absenceService;
@@ -91,6 +98,9 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
         final Instant startOfNextDay = now.plusDays(1).atStartOfDay().toInstant(ZONE_ID);
 
         final SickNotePersonDTO boss = SickNotePersonDTO.builder().personId(1L).username("boss").build();
+
+        TenantId tenantId = new TenantId(TENANT_ID);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(tenantId));
 
         // CREATE sick note absence
         rabbitTemplate.convertAndSend(TOPIC, CREATED_ROUTING_KEY, SickNoteCreatedEventDTO.builder()
@@ -116,6 +126,10 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
             assertThat(absences)
                 .hasSize(1)
                 .containsOnly(Map.entry(now, List.of(expected)));
+
+            InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+            inOrder.verify(tenantContextHolder).setTenantId(tenantId);
+            inOrder.verify(tenantContextHolder).clear();
         });
 
         // UPDATE to period of two days
@@ -139,6 +153,9 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
             assertThat(absences)
                 .hasSize(2)
                 .containsOnly(Map.entry(now, List.of(expected)), Map.entry(now.plusDays(1), List.of(expected)));
+            InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+            inOrder.verify(tenantContextHolder).setTenantId(tenantId);
+            inOrder.verify(tenantContextHolder).clear();
         });
 
         // CANCEL sick note absence
@@ -160,7 +177,12 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
             assertThat(absences)
                 .hasSize(1)
                 .containsOnly(Map.entry(now, List.of()));
+
+            InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+            inOrder.verify(tenantContextHolder).setTenantId(tenantId);
+            inOrder.verify(tenantContextHolder).clear();
         });
+
     }
 
     @Test
@@ -173,7 +195,10 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
         final SickNotePersonDTO boss = SickNotePersonDTO.builder().personId(1L).username("boss").build();
         final UserId userId = new UserId("boss");
 
-        final AbsenceWrite absence = new AbsenceWrite(new TenantId(TENANT_ID), 1L, userId, startOfDay, startOfDay, FULL, SICK);
+        TenantId tenantId = new TenantId(TENANT_ID);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(tenantId));
+
+        final AbsenceWrite absence = new AbsenceWrite(1L, userId, startOfDay, startOfDay, FULL, SICK);
         absenceWriteService.addAbsence(absence);
 
         // CANCEL sick note absence
@@ -196,5 +221,9 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
                 .hasSize(1)
                 .containsOnly(Map.entry(now, List.of()));
         });
+
+        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        inOrder.verify(tenantContextHolder).setTenantId(tenantId);
+        inOrder.verify(tenantContextHolder).clear();
     }
 }

@@ -1,8 +1,6 @@
 package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -11,11 +9,16 @@ import java.util.Optional;
 class SettingsService implements FederalStateSettingsService {
 
     private final FederalStateSettingsRepository federalStateSettingsRepository;
-    private final TenantContextHolder tenantContextHolder;
 
-    SettingsService(FederalStateSettingsRepository federalStateSettingsRepository, TenantContextHolder tenantContextHolder) {
+    SettingsService(FederalStateSettingsRepository federalStateSettingsRepository) {
         this.federalStateSettingsRepository = federalStateSettingsRepository;
-        this.tenantContextHolder = tenantContextHolder;
+    }
+
+    private static FederalStateSettings toFederalStateSettings(FederalStateSettingsEntity federalStateSettingsEntity) {
+        return new FederalStateSettings(
+            federalStateSettingsEntity.getFederalState(),
+            federalStateSettingsEntity.isWorksOnPublicHoliday()
+        );
     }
 
     @Override
@@ -37,17 +40,6 @@ class SettingsService implements FederalStateSettingsService {
     }
 
     private Optional<FederalStateSettingsEntity> getFederalStateEntity() {
-
-        final TenantId tenantId = tenantContextHolder.getCurrentTenantId()
-            .orElseThrow(() -> new IllegalStateException("expected a tenantId to exist."));
-
-        return federalStateSettingsRepository.findByTenantId(tenantId.tenantId());
-    }
-
-    private static FederalStateSettings toFederalStateSettings(FederalStateSettingsEntity federalStateSettingsEntity) {
-        return new FederalStateSettings(
-            federalStateSettingsEntity.getFederalState(),
-            federalStateSettingsEntity.isWorksOnPublicHoliday()
-        );
+        return federalStateSettingsRepository.findAll().stream().findFirst();
     }
 }

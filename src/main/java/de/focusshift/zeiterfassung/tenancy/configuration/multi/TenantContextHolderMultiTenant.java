@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -32,12 +33,14 @@ class TenantContextHolderMultiTenant implements TenantContextHolder {
         }
 
         LOG.debug("Setting tenantId to {}", tenantId);
+        MDC.put("tenantId", tenantId.tenantId());
         currentTenantId.set(tenantId);
     }
 
     @Override
     public void clear() {
         LOG.debug("Clearing tenantId");
+        MDC.remove("tenantId");
         currentTenantId.remove();
     }
 }

@@ -15,7 +15,6 @@ import java.util.Set;
  */
 class ApplicationEventDtoAdapter {
 
-    private final String tenantId;
     private final Long sourceId;
     private final ApplicationPersonDTO person;
     private final VacationTypeDTO vacationType;
@@ -23,7 +22,6 @@ class ApplicationEventDtoAdapter {
     private final Set<LocalDate> absentWorkingDays;
 
     ApplicationEventDtoAdapter(ApplicationAllowedEventDTO event) {
-        this.tenantId = event.getTenantId();
         this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();
@@ -32,7 +30,6 @@ class ApplicationEventDtoAdapter {
     }
 
     ApplicationEventDtoAdapter(ApplicationCancelledEventDTO event) {
-        this.tenantId = event.getTenantId();
         this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();
@@ -41,16 +38,11 @@ class ApplicationEventDtoAdapter {
     }
 
     ApplicationEventDtoAdapter(ApplicationCreatedFromSickNoteEventDTO event) {
-        this.tenantId = event.getTenantId();
         this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();
         this.period = event.getPeriod();
         this.absentWorkingDays = event.getAbsentWorkingDays();
-    }
-
-    public String getTenantId() {
-        return tenantId;
     }
 
     public Long getSourceId() {

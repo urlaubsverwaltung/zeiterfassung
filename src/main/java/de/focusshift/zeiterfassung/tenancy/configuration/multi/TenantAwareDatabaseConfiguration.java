@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.tenancy.configuration.multi;
 
 import com.zaxxer.hikari.HikariDataSource;
+import de.focusshift.zeiterfassung.absence.AbsenceTypeEntity;
+import de.focusshift.zeiterfassung.absence.AbsenceWriteEntity;
 import de.focusshift.zeiterfassung.settings.FederalStateSettingsEntity;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserEntity;
@@ -34,6 +36,8 @@ import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
 @EnableTransactionManagement
 @EnableJpaRepositories(
     basePackageClasses = {
+        AbsenceWriteEntity.class,
+        AbsenceTypeEntity.class,
         TimeEntryEntity.class,
         TimeClockEntity.class,
         TenantUserEntity.class,
@@ -76,6 +80,8 @@ class TenantAwareDatabaseConfiguration {
             .dataSource(tenantAwareDataSource)
             // List all tenant aware related entity packages here
             .packages(
+                AbsenceWriteEntity.class,
+                AbsenceTypeEntity.class,
                 TimeEntryEntity.class,
                 TimeClockEntity.class,
                 TenantUserEntity.class,

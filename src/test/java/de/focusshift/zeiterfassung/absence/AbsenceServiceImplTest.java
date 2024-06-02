@@ -1,7 +1,5 @@
 package de.focusshift.zeiterfassung.absence;
 
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -25,7 +23,6 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -59,15 +56,13 @@ class AbsenceServiceImplTest {
     @Mock
     private UserSettingsProvider userSettingsProvider;
     @Mock
-    private TenantContextHolder tenantContextHolder;
-    @Mock
     private UserManagementService userManagementService;
     @Mock
     private MessageSource messageSource;
 
     @BeforeEach
     void setUp() {
-        sut = new AbsenceServiceImpl(repository, absenceTypeService, userSettingsProvider, tenantContextHolder, userManagementService, messageSource);
+        sut = new AbsenceServiceImpl(repository, absenceTypeService, userSettingsProvider, userManagementService, messageSource);
     }
 
     @Test
@@ -79,7 +74,6 @@ class AbsenceServiceImplTest {
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(berlin);
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
 
         final AbsenceWriteEntity entity_1 = new AbsenceWriteEntity();
         entity_1.setId(1L);
@@ -97,7 +91,7 @@ class AbsenceServiceImplTest {
         entity_2.setDayLength(MORNING);
         entity_2.setType(new AbsenceTypeEntityEmbeddable(SPECIALLEAVE, 2000L));
 
-        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
+        when(repository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(List.of("user"), endDateExclusive, startDate))
             .thenReturn(List.of(entity_1, entity_2));
 
         final AbsenceType absenceType1 = new AbsenceType(HOLIDAY, 1000L, label(GERMAN, "1000-de", ENGLISH, "1000-en"), PINK);
@@ -148,7 +142,6 @@ class AbsenceServiceImplTest {
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(berlin);
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
 
         final AbsenceWriteEntity entity = new AbsenceWriteEntity();
         entity.setId(1L);
@@ -158,7 +151,7 @@ class AbsenceServiceImplTest {
         entity.setDayLength(givenDayLength);
         entity.setType(new AbsenceTypeEntityEmbeddable(HOLIDAY, 1000L));
 
-        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
+        when(repository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(List.of("user"), endDateExclusive, startDate))
             .thenReturn(List.of(entity));
 
         final AbsenceType absenceType = new AbsenceType(HOLIDAY, 1000L, label(GERMAN, "de", ENGLISH, "en"), PINK);
@@ -187,7 +180,6 @@ class AbsenceServiceImplTest {
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(berlin);
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
 
         final AbsenceWriteEntity entitySickness = new AbsenceWriteEntity();
         entitySickness.setId(2L);
@@ -197,7 +189,7 @@ class AbsenceServiceImplTest {
         entitySickness.setDayLength(givenDayLength);
         entitySickness.setType(new AbsenceTypeEntityEmbeddable(SICK, null));
 
-        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
+        when(repository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(List.of("user"), endDateExclusive, startDate))
             .thenReturn(List.of(entitySickness));
 
         // SupportedLanguages are GERMAN and ENGLISH right now
@@ -218,7 +210,6 @@ class AbsenceServiceImplTest {
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(berlin);
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
 
         final LocalDate from = LocalDate.of(2023, 11, 16);
         final LocalDate toExclusive = LocalDate.of(2023, 11, 16);
@@ -235,7 +226,7 @@ class AbsenceServiceImplTest {
 
         final List<String> userIdsValues = List.of(userId.value());
 
-        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", userIdsValues, toExclusiveStartOfDay, fromStartOfDay))
+        when(repository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(userIdsValues, toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of());
 
         final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesByUserIds(List.of(userLocalId), from, toExclusive);
@@ -247,7 +238,6 @@ class AbsenceServiceImplTest {
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(berlin);
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
 
         final LocalDate from = LocalDate.of(2023, 11, 1);
         final LocalDate toExclusive = LocalDate.of(2023, 11, 30);
@@ -293,7 +283,7 @@ class AbsenceServiceImplTest {
         absenceEntity_2_2.setDayLength(NOON);
         absenceEntity_2_2.setType(new AbsenceTypeEntityEmbeddable(OTHER, 3000L));
 
-        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of(userId_1.value(), userId_2.value()), toExclusiveStartOfDay, fromStartOfDay))
+        when(repository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(List.of(userId_1.value(), userId_2.value()), toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity_1, absenceEntity_2_1, absenceEntity_2_2));
 
         final AbsenceType absenceType1 = new AbsenceType(OTHER, 1000L, label(GERMAN, "1000-de", ENGLISH, "1000-en"), YELLOW);
@@ -323,7 +313,6 @@ class AbsenceServiceImplTest {
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(berlin);
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
 
         final LocalDate from = LocalDate.of(2023, 11, 1);
         final LocalDate toExclusive = LocalDate.of(2023, 11, 30);
@@ -347,7 +336,7 @@ class AbsenceServiceImplTest {
         absenceEntity.setDayLength(givenDayLength);
         absenceEntity.setType(new AbsenceTypeEntityEmbeddable(OTHER, 1000L));
 
-        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of(userId.value()), toExclusiveStartOfDay, fromStartOfDay))
+        when(repository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(List.of(userId.value()), toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity));
 
         final AbsenceType absenceType = new AbsenceType(OTHER, 1000L, label(GERMAN, "de", ENGLISH, "en"), YELLOW);
@@ -370,7 +359,6 @@ class AbsenceServiceImplTest {
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(berlin);
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
 
         final LocalDate from = LocalDate.of(2023, 11, 1);
         final LocalDate toExclusive = LocalDate.of(2023, 11, 30);
@@ -383,7 +371,7 @@ class AbsenceServiceImplTest {
         final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
         when(userManagementService.findAllUsers()).thenReturn(List.of(user));
 
-        when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
+        when(repository.findAllByStartDateLessThanAndEndDateGreaterThanEqual(toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of());
 
         final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesForAllUsers(from, toExclusive);
@@ -395,7 +383,6 @@ class AbsenceServiceImplTest {
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(berlin);
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
 
         final LocalDate from = LocalDate.of(2023, 11, 1);
         final LocalDate toExclusive = LocalDate.of(2023, 11, 30);
@@ -441,7 +428,7 @@ class AbsenceServiceImplTest {
         absenceEntity_2_2.setDayLength(NOON);
         absenceEntity_2_2.setType(new AbsenceTypeEntityEmbeddable(OTHER, 3000L));
 
-        when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
+        when(repository.findAllByStartDateLessThanAndEndDateGreaterThanEqual(toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity_1, absenceEntity_2_1, absenceEntity_2_2));
 
         final AbsenceType absenceType1 = new AbsenceType(OTHER, 1000L, label(GERMAN, "1000-de", ENGLISH, "1000-en"), YELLOW);
@@ -471,7 +458,6 @@ class AbsenceServiceImplTest {
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(berlin);
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
 
         final LocalDate from = LocalDate.of(2023, 11, 1);
         final LocalDate toExclusive = LocalDate.of(2023, 11, 30);
@@ -494,7 +480,7 @@ class AbsenceServiceImplTest {
         absenceEntity.setDayLength(givenDayLength);
         absenceEntity.setType(new AbsenceTypeEntityEmbeddable(OTHER, 1000L));
 
-        when(repository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", toExclusiveStartOfDay, fromStartOfDay))
+        when(repository.findAllByStartDateLessThanAndEndDateGreaterThanEqual(toExclusiveStartOfDay, fromStartOfDay))
             .thenReturn(List.of(absenceEntity));
 
         final AbsenceType absenceType = new AbsenceType(OTHER, 1000L, label(GERMAN, "de", ENGLISH, "en"), YELLOW);
@@ -516,15 +502,12 @@ class AbsenceServiceImplTest {
     void getAbsencesByUserId() {
         final UserId userId = new UserId("user");
 
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
-
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
         final ZonedDateTime today = LocalDate.now().atStartOfDay(berlin);
         final Instant startDate = today.toInstant();
         final Instant endDateExclusive = today.plusWeeks(1).toInstant();
 
         when(userSettingsProvider.zoneId()).thenReturn(berlin);
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
 
         final AbsenceWriteEntity entity_1 = new AbsenceWriteEntity();
         entity_1.setId(1L);
@@ -542,7 +525,7 @@ class AbsenceServiceImplTest {
         entity_2.setDayLength(MORNING);
         entity_2.setType(new AbsenceTypeEntityEmbeddable(SPECIALLEAVE, 2000L));
 
-        when(repository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual("tenant", List.of("user"), endDateExclusive, startDate))
+        when(repository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(List.of("user"), endDateExclusive, startDate))
                 .thenReturn(List.of(entity_1, entity_2));
 
         final AbsenceType absenceType1 = new AbsenceType(HOLIDAY, 1000L, label(GERMAN, "1000-de", ENGLISH, "1000-en"), PINK);

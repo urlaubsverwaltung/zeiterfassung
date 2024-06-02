@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.absence;
 
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,11 +36,10 @@ class AbsenceWriteServiceImplTest {
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
 
-        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, SPECIALLEAVE))
+        when(repository.findBySourceIdAndType_Category(42L, SPECIALLEAVE))
             .thenReturn(Optional.empty());
 
         final AbsenceWrite absence = new AbsenceWrite(
-            new TenantId("tenant-id"),
             42L,
             new UserId("user-id"),
             startDate,
@@ -56,7 +54,7 @@ class AbsenceWriteServiceImplTest {
         verify(repository).save(captor.capture());
 
         final AbsenceWriteEntity actualPersistedEntity = captor.getValue();
-        assertThat(actualPersistedEntity.getTenantId()).isEqualTo("tenant-id");
+        assertThat(actualPersistedEntity.getTenantId()).isNull();
         assertThat(actualPersistedEntity.getId()).isNull();
         assertThat(actualPersistedEntity.getUserId()).isEqualTo("user-id");
         assertThat(actualPersistedEntity.getStartDate()).isEqualTo(startDate);
@@ -71,11 +69,10 @@ class AbsenceWriteServiceImplTest {
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
 
-        when(repository.findByTenantIdAndSourceIdAndType_Category("tenant-id", 42L, SPECIALLEAVE))
+        when(repository.findBySourceIdAndType_Category(42L, SPECIALLEAVE))
             .thenReturn(Optional.of(new AbsenceWriteEntity()));
 
         final AbsenceWrite absence = new AbsenceWrite(
-            new TenantId("tenant-id"),
             42L,
             new UserId("user-id"),
             startDate,

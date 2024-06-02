@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.absence;
 
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -28,10 +27,9 @@ class AbsenceTypeServiceImplTest {
     @Test
     void ensureCreatingNewAbsenceType() {
 
-        when(repository.findByTenantIdAndSourceId("tenant", 42L)).thenReturn(Optional.empty());
+        when(repository.findBySourceId(42L)).thenReturn(Optional.empty());
 
         final AbsenceTypeUpdate absenceTypeUpdate = new AbsenceTypeUpdate(
-            new TenantId("tenant"),
             42L,
             AbsenceTypeCategory.OTHER,
             AbsenceColor.VIOLET,
@@ -48,7 +46,7 @@ class AbsenceTypeServiceImplTest {
 
         assertThat(captor.getValue()).satisfies(entity -> {
             assertThat(entity.getId()).isNull();
-            assertThat(entity.getTenantId()).isEqualTo("tenant");
+            assertThat(entity.getTenantId()).isNull();
             assertThat(entity.getCategory()).isEqualTo(AbsenceTypeCategory.OTHER);
             assertThat(entity.getColor()).isEqualTo(AbsenceColor.VIOLET);
             assertThat(entity.getLabelByLocale()).containsExactlyInAnyOrderEntriesOf(Map.of(
@@ -63,12 +61,12 @@ class AbsenceTypeServiceImplTest {
 
         final AbsenceTypeEntity existingEntity = new AbsenceTypeEntity();
         existingEntity.setId(1L);
+        existingEntity.setTenantId("tenant");
 
-        when(repository.findByTenantIdAndSourceId("tenant", 42L))
+        when(repository.findBySourceId(42L))
             .thenReturn(Optional.of(existingEntity));
 
         final AbsenceTypeUpdate absenceTypeUpdate = new AbsenceTypeUpdate(
-            new TenantId("tenant"),
             42L,
             AbsenceTypeCategory.OTHER,
             AbsenceColor.VIOLET,

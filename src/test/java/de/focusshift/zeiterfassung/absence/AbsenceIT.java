@@ -6,12 +6,16 @@ import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPer
 import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
 import de.focusshift.zeiterfassung.RabbitTestConfiguration;
 import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Answers;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,6 +29,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -36,6 +41,8 @@ import static java.util.Locale.ENGLISH;
 import static java.util.Locale.GERMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(
@@ -59,6 +66,8 @@ class AbsenceIT extends TestContainersBase {
 
     @MockBean
     private UserSettingsProvider userSettingsProvider;
+    @MockBean(answer = Answers.CALLS_REAL_METHODS)
+    private TenantContextHolder tenantContextHolder;
 
     @Autowired
     private AbsenceService absenceService;
@@ -75,6 +84,7 @@ class AbsenceIT extends TestContainersBase {
     @BeforeEach
     void setUp() {
         when(userSettingsProvider.zoneId()).thenReturn(ZONE_ID);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId(TENANT_ID)));
     }
 
     @AfterEach
@@ -96,7 +106,6 @@ class AbsenceIT extends TestContainersBase {
         final AbsenceTypeCategory erholungsurlaubCategory = HOLIDAY;
 
         absenceTypeService.updateAbsenceType(new AbsenceTypeUpdate(
-            new TenantId(TENANT_ID),
             erholungsUrlaubSourceId,
             erholungsurlaubCategory,
             erholungsUrlaubColor,
@@ -129,5 +138,11 @@ class AbsenceIT extends TestContainersBase {
                 .hasSize(1)
                 .contains(Map.entry(now, List.of(expectedAbsence)));
         });
+
+        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        inOrder.verify(tenantContextHolder).setTenantId(new TenantId(TENANT_ID));
+        inOrder.verify(tenantContextHolder).clear();
+
+        verify(tenantContextHolder, times(2)).getCurrentTenantId();
     }
 }

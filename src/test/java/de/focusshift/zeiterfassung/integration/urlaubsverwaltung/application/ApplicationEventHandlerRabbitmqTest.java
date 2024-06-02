@@ -11,12 +11,16 @@ import de.focusshift.zeiterfassung.absence.AbsenceTypeSourceId;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.absence.DayLength;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
+import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
@@ -36,16 +40,21 @@ class ApplicationEventHandlerRabbitmqTest {
     @Mock
     private AbsenceWriteService absenceWriteService;
 
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
+    private TenantContextHolder tenantContextHolder;
+
     @BeforeEach
     void setUp() {
-        sut = new ApplicationEventHandlerRabbitmq(absenceWriteService);
+        sut = new ApplicationEventHandlerRabbitmq(absenceWriteService, tenantContextHolder);
     }
 
     @Test
     void onApplicationAllowedEvent() {
+        TenantId tenantId = new TenantId("tenantId");
+
         final ApplicationAllowedEventDTO event = ApplicationAllowedEventDTO.builder()
                 .id(UUID.randomUUID())
-                .tenantId("tenantId")
+                .tenantId(tenantId.tenantId())
                 .sourceId(1L)
                 .person(ApplicationPersonDTO.builder().personId(2L).username("userId").build())
                 .period(ApplicationPeriodDTO.builder().startDate(Instant.ofEpochMilli(0L)).endDate(Instant.ofEpochMilli(1L)).dayLength(de.focus_shift.urlaubsverwaltung.extension.api.application.DayLength.FULL).build())
@@ -54,10 +63,10 @@ class ApplicationEventHandlerRabbitmqTest {
                 .status("status")
                 .absentWorkingDays(Set.of(LocalDate.now()))
                 .build();
+
         sut.on(event);
 
         final AbsenceWrite absence = new AbsenceWrite(
-            new TenantId("tenantId"),
             1L,
             new UserId("userId"),
             Instant.ofEpochMilli(0L),
@@ -67,13 +76,19 @@ class ApplicationEventHandlerRabbitmqTest {
             new AbsenceTypeSourceId(1000L)
         );
         verify(absenceWriteService).addAbsence(absence);
+
+        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        inOrder.verify(tenantContextHolder).setTenantId(tenantId);
+        inOrder.verify(tenantContextHolder).clear();
     }
 
     @Test
     void onApplicationCreatedFromSickNoteEvent() {
+        TenantId tenantId = new TenantId("tenantId");
+
         final ApplicationCreatedFromSickNoteEventDTO event = ApplicationCreatedFromSickNoteEventDTO.builder()
                 .id(UUID.randomUUID())
-                .tenantId("tenantId")
+                .tenantId(tenantId.tenantId())
                 .sourceId(1L)
                 .person(ApplicationPersonDTO.builder().personId(2L).username("userId").build())
                 .period(ApplicationPeriodDTO.builder().startDate(Instant.ofEpochMilli(0L)).endDate(Instant.ofEpochMilli(1L)).dayLength(de.focus_shift.urlaubsverwaltung.extension.api.application.DayLength.FULL).build())
@@ -85,7 +100,6 @@ class ApplicationEventHandlerRabbitmqTest {
         sut.on(event);
 
         final AbsenceWrite absence = new AbsenceWrite(
-            new TenantId("tenantId"),
             1L,
             new UserId("userId"),
             Instant.ofEpochMilli(0L),
@@ -95,13 +109,19 @@ class ApplicationEventHandlerRabbitmqTest {
             new AbsenceTypeSourceId(1000L)
         );
         verify(absenceWriteService).addAbsence(absence);
+
+        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        inOrder.verify(tenantContextHolder).setTenantId(tenantId);
+        inOrder.verify(tenantContextHolder).clear();
     }
 
     @Test
     void onApplicationCancelledEvent() {
+        TenantId tenantId = new TenantId("tenantId");
+
         final ApplicationCancelledEventDTO event = ApplicationCancelledEventDTO.builder()
                 .id(UUID.randomUUID())
-                .tenantId("tenantId")
+                .tenantId(tenantId.tenantId())
                 .sourceId(1L)
                 .person(ApplicationPersonDTO.builder().personId(2L).username("userId").build())
                 .period(ApplicationPeriodDTO.builder().startDate(Instant.ofEpochMilli(0L)).endDate(Instant.ofEpochMilli(1L)).dayLength(de.focus_shift.urlaubsverwaltung.extension.api.application.DayLength.FULL).build())
@@ -113,7 +133,6 @@ class ApplicationEventHandlerRabbitmqTest {
         sut.on(event);
 
         final AbsenceWrite absence = new AbsenceWrite(
-            new TenantId("tenantId"),
             1L,
             new UserId("userId"),
             Instant.ofEpochMilli(0L),
@@ -123,13 +142,19 @@ class ApplicationEventHandlerRabbitmqTest {
             new AbsenceTypeSourceId(1000L)
         );
         verify(absenceWriteService).deleteAbsence(absence);
+
+        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        inOrder.verify(tenantContextHolder).setTenantId(tenantId);
+        inOrder.verify(tenantContextHolder).clear();
     }
 
     @Test
     void onApplicationWithAbsentWorkingDays() {
+        TenantId tenantId = new TenantId("tenantId");
+
         final ApplicationAllowedEventDTO event = ApplicationAllowedEventDTO.builder()
                 .id(UUID.randomUUID())
-                .tenantId("tenantId")
+                .tenantId(tenantId.tenantId())
                 .sourceId(1L)
                 .person(ApplicationPersonDTO.builder().personId(2L).username("userId").build())
                 .period(ApplicationPeriodDTO.builder().startDate(Instant.ofEpochMilli(0L)).endDate(Instant.ofEpochMilli(1L)).dayLength(de.focus_shift.urlaubsverwaltung.extension.api.application.DayLength.FULL).build())
@@ -141,5 +166,9 @@ class ApplicationEventHandlerRabbitmqTest {
         sut.on(event);
 
         verifyNoInteractions(absenceWriteService);
+
+        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        inOrder.verify(tenantContextHolder).setTenantId(tenantId);
+        inOrder.verify(tenantContextHolder).clear();
     }
 }

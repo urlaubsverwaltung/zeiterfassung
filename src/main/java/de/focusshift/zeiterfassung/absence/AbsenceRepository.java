@@ -10,23 +10,23 @@ import java.util.Optional;
 
 interface AbsenceRepository extends CrudRepository<AbsenceWriteEntity, Long> {
 
-    Optional<AbsenceWriteEntity> findByTenantIdAndSourceIdAndType_Category(String tenantId, Long sourceId, AbsenceTypeCategory absenceTypeCategory);
+    Optional<AbsenceWriteEntity> findBySourceIdAndType_Category(Long sourceId, AbsenceTypeCategory absenceTypeCategory);
 
     /**
-     * Finds all absences of tenantId, userId of set and intersection with interval from and toExclusive-1
+     * Finds all absences of userId of set and intersection with interval from and toExclusive-1
      */
-    List<AbsenceWriteEntity> findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(
-        String tenantId, List<String> userIds, Instant toExclusive, Instant from
+    List<AbsenceWriteEntity> findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(
+        List<String> userIds, Instant toExclusive, Instant from
     );
 
     /**
-     * Finds all absences of tenantId and intersection with interval from and toExclusive-1
+     * Finds all absences of intersection with interval from and toExclusive-1
      */
-    List<AbsenceWriteEntity> findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual(
-            String tenantId, Instant toExclusive, Instant from
+    List<AbsenceWriteEntity> findAllByStartDateLessThanAndEndDateGreaterThanEqual(
+            Instant toExclusive, Instant from
     );
 
     @Modifying
     @Transactional
-    int deleteByTenantIdAndSourceIdAndType_Category(String tenantId, Long sourceId, AbsenceTypeCategory absenceTypeCategory);
+    int deleteBySourceIdAndType_Category(Long sourceId, AbsenceTypeCategory absenceTypeCategory);
 }
