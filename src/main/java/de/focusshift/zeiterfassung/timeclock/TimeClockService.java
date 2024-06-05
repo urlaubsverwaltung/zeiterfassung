@@ -10,7 +10,7 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 
 @Service
-class TimeClockService {
+public class TimeClockService {
 
     private final TimeClockRepository timeClockRepository;
     private final TimeEntryService timeEntryService;
@@ -30,6 +30,15 @@ class TimeClockService {
         final ZonedDateTime now = ZonedDateTime.now(userSettingsProvider.zoneId());
         final TimeClock timeClock = new TimeClock(userId, now);
 
+        timeClockRepository.save(toEntity(timeClock));
+    }
+
+    /**
+     * Import a {@linkplain TimeClock} from another system.
+     *
+     * @param timeClock to import
+     */
+    public void importTimeClock(TimeClock timeClock) {
         timeClockRepository.save(toEntity(timeClock));
     }
 
