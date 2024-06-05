@@ -8,10 +8,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
-class TimeClockService {
+public class TimeClockService {
 
     private final TimeClockRepository timeClockRepository;
     private final TimeEntryService timeEntryService;
@@ -58,6 +59,12 @@ class TimeClockService {
 
                 timeEntryService.createTimeEntry(userId, timeClock.comment(), start, end, timeClock.isBreak());
             });
+    }
+
+    public List<TimeClock> findAllTimeClocks(UserId userId) {
+        return timeClockRepository.findAllByOwnerOrderByIdAsc(userId.value()).stream()
+            .map(TimeClockService::toTimeClock)
+            .toList();
     }
 
     private static TimeClockEntity toEntity(TimeClock timeClock) {

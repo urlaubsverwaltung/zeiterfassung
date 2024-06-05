@@ -5,7 +5,7 @@ import de.focusshift.zeiterfassung.user.UserId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-record TimeClock(Long id, UserId userId, ZonedDateTime startedAt, String comment, boolean isBreak, Optional<ZonedDateTime> stoppedAt) {
+public record TimeClock(Long id, UserId userId, ZonedDateTime startedAt, String comment, boolean isBreak, Optional<ZonedDateTime> stoppedAt) {
 
     TimeClock(UserId userId, ZonedDateTime startedAt) {
         this(null, userId, startedAt, "", false, Optional.empty());

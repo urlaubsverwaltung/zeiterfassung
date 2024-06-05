@@ -33,6 +33,15 @@ public interface TimeEntryService {
     List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserId userId);
 
     /**
+     * {@linkplain TimeEntry}s for the given criteria sorted by {@linkplain TimeEntry#id()}.
+     *
+     * @param userId to get {@linkplain TimeEntry}s for
+     *
+     * @return sorted list of {@linkplain TimeEntry}s
+     */
+    List<TimeEntry> getEntries(UserId userId);
+
+    /**
      * {@linkplain TimeEntry}s for all users and the given interval.
      *
      * @param from first date of interval
