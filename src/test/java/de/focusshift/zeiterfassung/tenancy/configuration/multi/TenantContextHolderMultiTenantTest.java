@@ -34,8 +34,9 @@ class TenantContextHolderMultiTenantTest {
     @ParameterizedTest
     @NullAndEmptySource
     void hasDetectsInvalidTenantId(String value) {
+        TenantId tenantId = new TenantId(value);
         assertThatThrownBy(() -> {
-            sut.setTenantId(new TenantId(value));
+            sut.setTenantId(tenantId);
         })
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Invalid tenantId passed!");
