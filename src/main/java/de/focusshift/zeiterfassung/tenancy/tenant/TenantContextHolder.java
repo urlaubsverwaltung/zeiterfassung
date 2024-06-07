@@ -4,5 +4,15 @@ import java.util.Optional;
 
 public interface TenantContextHolder {
 
-    Optional<TenantId> getCurrentTenantId();
+    default Optional<TenantId> getCurrentTenantId() {
+        return Optional.empty();
+    }
+
+    default void setTenantId(TenantId tenantId) {
+
+    }
+
+    default void clear() {
+
+    }
 }

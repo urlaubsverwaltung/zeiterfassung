@@ -2,56 +2,53 @@ package de.focusshift.zeiterfassung.tenancy.configuration.multi;
 
 
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextImpl;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-
-import java.util.List;
-import java.util.stream.Stream;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TenantContextHolderMultiTenantTest {
 
     private final TenantContextHolderMultiTenant sut = new TenantContextHolderMultiTenant();
 
-    @Test
-    void ensureTenantForOAuth2AuthenticationToken() {
-
-        final OAuth2User oAuth2User = mock(OAuth2User.class);
-        final Authentication authentication = new OAuth2AuthenticationToken(oAuth2User, List.of(), "a154bc4e");
-
-        final SecurityContext securityContext = new SecurityContextImpl();
-        securityContext.setAuthentication(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        assertThat(sut.getCurrentTenantId()).hasValue(new TenantId("a154bc4e"));
-
+    @BeforeEach
+    void setup() {
+        sut.clear();
     }
 
-    private static Stream<Authentication> authenticationSource() {
-        return Stream.of(
-            null,
-            UsernamePasswordAuthenticationToken.authenticated(null, null, List.of())
-        );
+    @AfterEach
+    void tearDown() {
+        sut.clear();
+    }
+
+    @Test
+    void hasTenantId() {
+        sut.setTenantId(new TenantId("a154bc4e"));
+        assertThat(sut.getCurrentTenantId()).hasValue(new TenantId("a154bc4e"));
     }
 
     @ParameterizedTest
-    @MethodSource("authenticationSource")
-    void ensureExceptionWithoutOAuth2AuthenticationToken(final Authentication authentication) {
-
-        final SecurityContext securityContext = new SecurityContextImpl();
-        securityContext.setAuthentication(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        assertThat(sut.getCurrentTenantId()).isNotPresent();
+    @NullAndEmptySource
+    void hasDetectsInvalidTenantId(String value) {
+        TenantId tenantId = new TenantId(value);
+        assertThatThrownBy(() -> {
+            sut.setTenantId(tenantId);
+        })
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Invalid tenantId passed!");
     }
+
+    @Test
+    void clearsTenantId() {
+        sut.setTenantId(new TenantId("a154bc4e"));
+        assertThat(sut.getCurrentTenantId()).hasValue(new TenantId("a154bc4e"));
+
+        sut.clear();
+        assertThat(sut.getCurrentTenantId()).isEmpty();
+    }
+
 }

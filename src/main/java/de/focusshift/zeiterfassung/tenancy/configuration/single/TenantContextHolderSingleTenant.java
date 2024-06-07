@@ -19,7 +19,9 @@ class TenantContextHolderSingleTenant implements TenantContextHolder {
         this.defaultTenantId = singleTenantConfigurationProperties.getDefaultTenantId();
     }
 
+    @Override
     public Optional<TenantId> getCurrentTenantId() {
         return Optional.of(new TenantId(defaultTenantId));
     }
+
 }

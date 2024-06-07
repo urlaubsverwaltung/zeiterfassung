@@ -2,6 +2,8 @@ package de.focusshift.zeiterfassung.tenancy.configuration.multi;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.ConnectionProxy;
 import org.springframework.jdbc.datasource.DelegatingDataSource;
 import org.springframework.lang.NonNull;
@@ -16,9 +18,12 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static java.lang.String.format;
+import static java.lang.invoke.MethodHandles.lookup;
 
 class TenantAwareDataSource extends DelegatingDataSource {
+
+    private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
+    private static final String FALLBACK_TENANT_ID = "DEFAULT";
 
     private final TenantContextHolder tenantContextHolder;
 
@@ -45,9 +50,20 @@ class TenantAwareDataSource extends DelegatingDataSource {
 
     private void setTenantId(Connection connection) throws SQLException {
         try (final Statement sql = connection.createStatement()) {
-            final String tenantId = tenantContextHolder.getCurrentTenantId().map(TenantId::tenantId).orElse("");
-            sql.execute(format("SET app.tenant_id TO '%s'", tenantId));
+            final String tenantId = resolveTenantId();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("setting parameter app.tenant_id={}", tenantId);
+            }
+            sql.execute("SET app.tenant_id TO '%s'".formatted(tenantId));
         }
+    }
+
+    private String resolveTenantId() {
+        return tenantContextHolder.getCurrentTenantId().map(TenantId::tenantId)
+            .orElseGet(() -> {
+                LOG.warn("using fallback tenantId={}", FALLBACK_TENANT_ID);
+                return FALLBACK_TENANT_ID;
+            });
     }
 
     // Connection Proxy that intercepts close() to reset the tenant_id
@@ -95,6 +111,9 @@ class TenantAwareDataSource extends DelegatingDataSource {
         private void clearTenantId(Connection connection) throws SQLException {
             try (final PreparedStatement sql = connection.prepareStatement("RESET app.tenant_id")) {
                 sql.execute();
+            }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("parameter app.tenant_id has been reset");
             }
         }
     }

@@ -11,8 +11,6 @@ class OidcClientRegistrationRabbitmqConfigurationProperties {
 
     private boolean enabled = false;
 
-    private boolean manageTopology = false;
-
     @NotEmpty
     private String topic = "oidc_provider.topic";
 
@@ -28,14 +26,6 @@ class OidcClientRegistrationRabbitmqConfigurationProperties {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-    }
-
-    public boolean isManageTopology() {
-        return manageTopology;
-    }
-
-    public void setManageTopology(boolean manageTopology) {
-        this.manageTopology = manageTopology;
     }
 
     public String getTopic() {
