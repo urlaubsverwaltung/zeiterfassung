@@ -173,6 +173,8 @@ public class TenantImporterComponent {
     }
 
     private static ZonedDateTime adjustWithDefaultTimeZone(ZonedDateTime zonedDateTime) {
+        // current export is done with hard coded timezone europe/berlin.
+        // this changes as soon as the user can configure a custom timezone (see UserSettingsProvider)
         return zonedDateTime.withZoneSameInstant(EUROPE_BERLIN);
     }
 
