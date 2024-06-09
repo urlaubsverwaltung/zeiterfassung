@@ -24,7 +24,15 @@ public class TenantImportConfiguration {
     }
 
     @Bean
-    TenantImporterComponent tenantImporterComponent(TenantContextHolder tenantContextHolder, TenantService tenantService, TenantUserService tenantUserService, OvertimeAccountService overtimeAccountService, TimeClockService timeClockService, TimeEntryService timeEntryService, WorkingTimeService workingTimeService, ImportInputProvider importInputProvider) {
-        return new TenantImporterComponent(tenantContextHolder, tenantService, tenantUserService, overtimeAccountService, timeClockService, timeEntryService, workingTimeService, importInputProvider);
+    TenantImporterComponent tenantImporterComponent(TenantContextHolder tenantContextHolder,
+                                                    TenantService tenantService,
+                                                    TenantUserService tenantUserService,
+                                                    OvertimeAccountService overtimeAccountService,
+                                                    TimeClockService timeClockService,
+                                                    TimeEntryService timeEntryService,
+                                                    WorkingTimeService workingTimeService,
+                                                    ImportInputProvider importInputProvider) {
+        return new TenantImporterComponent(tenantContextHolder, tenantService, tenantUserService,
+            overtimeAccountService, timeClockService, timeEntryService, workingTimeService, importInputProvider);
     }
 }
