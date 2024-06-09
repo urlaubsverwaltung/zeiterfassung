@@ -61,32 +61,25 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class TenantImporterComponentTest {
 
-    @Mock
-    private TenantContextHolder tenantContextHolder;
-
-    @Mock
-    private TenantService tenantService;
-
-    @Mock
-    private TenantUserService tenantUserService;
-
-    @Mock
-    private OvertimeAccountService overtimeAccountService;
-
-    @Mock
-    private TimeClockService timeClockService;
-
-    @Mock
-    private TimeEntryService timeEntryService;
-
-    @Mock
-    private WorkingTimeService workingTimeService;
-
-    @Mock
-    private ImportInputProvider importInputProvider;
-
     @InjectMocks
     private TenantImporterComponent sut;
+
+    @Mock
+    private TenantContextHolder tenantContextHolder;
+    @Mock
+    private TenantService tenantService;
+    @Mock
+    private TenantUserService tenantUserService;
+    @Mock
+    private OvertimeAccountService overtimeAccountService;
+    @Mock
+    private TimeClockService timeClockService;
+    @Mock
+    private TimeEntryService timeEntryService;
+    @Mock
+    private WorkingTimeService workingTimeService;
+    @Mock
+    private ImportInputProvider importInputProvider;
 
     private static TenantExport exportedData() {
         UserExport userExport = new UserExport(

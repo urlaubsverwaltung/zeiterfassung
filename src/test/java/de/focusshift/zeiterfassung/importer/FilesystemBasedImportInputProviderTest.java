@@ -28,14 +28,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class FilesystemBasedImportInputProviderTest {
 
-
-    private static ObjectMapper objectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.registerModule(new Jdk8Module());
-        return objectMapper;
-    }
-
     @Test
     void handlesImportFileNotFound() {
         FilesystemBasedImportInputProvider sut = new FilesystemBasedImportInputProvider(objectMapper(), "src/test/resources/doesnt_exists.json");
@@ -84,5 +76,12 @@ class FilesystemBasedImportInputProviderTest {
             new TimeEntryDTO("das", parse("2024-06-01T10:00:00.124Z"), parse("2024-06-01T11:00:00.125Z"), false),
             new TimeEntryDTO("ananas", parse("2024-06-01T11:00:00.126Z"), parse("2024-06-01T15:00:00.127Z"), false)
         );
+    }
+
+    private static ObjectMapper objectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.registerModule(new Jdk8Module());
+        return objectMapper;
     }
 }
