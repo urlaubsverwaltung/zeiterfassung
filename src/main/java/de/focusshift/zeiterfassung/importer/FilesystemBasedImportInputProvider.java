@@ -10,14 +10,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class FilesystemBasedImportInputProvider implements ImportInputProvider {
+class FilesystemBasedImportInputProvider implements ImportInputProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(FilesystemBasedImportInputProvider.class);
 
     private final ObjectMapper objectMapper;
     private final Path path;
 
-    public FilesystemBasedImportInputProvider(ObjectMapper objectMapper, String importFile) {
+    FilesystemBasedImportInputProvider(ObjectMapper objectMapper, String importFile) {
         this.objectMapper = objectMapper;
         this.path = Path.of(importFile);
     }

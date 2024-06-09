@@ -45,7 +45,7 @@ import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 
-public class TenantImporterComponent {
+class TenantImporterComponent {
 
     private static final Logger LOG = LoggerFactory.getLogger(TenantImporterComponent.class);
     private static final ZoneId EUROPE_BERLIN = ZoneId.of("Europe/Berlin");
@@ -59,7 +59,7 @@ public class TenantImporterComponent {
     private final WorkingTimeService workingTimeService;
     private final ImportInputProvider importInputProvider;
 
-    public TenantImporterComponent(TenantContextHolder tenantContextHolder, TenantService tenantService,
+    TenantImporterComponent(TenantContextHolder tenantContextHolder, TenantService tenantService,
                                    TenantUserService tenantUserService, OvertimeAccountService overtimeAccountService,
                                    TimeClockService timeClockService, TimeEntryService timeEntryService,
                                    WorkingTimeService workingTimeService, ImportInputProvider importInputProvider) {
