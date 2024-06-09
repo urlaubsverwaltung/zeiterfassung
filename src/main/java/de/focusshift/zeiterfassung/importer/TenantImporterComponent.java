@@ -172,12 +172,11 @@ public class TenantImporterComponent {
         workingTimeService.createWorkingTime(userLocalId, null, FederalState.GLOBAL, null, workdays);
     }
 
-    private ZonedDateTime adjustWithDefaultTimeZone(ZonedDateTime zonedDateTime) {
+    private static ZonedDateTime adjustWithDefaultTimeZone(ZonedDateTime zonedDateTime) {
         return zonedDateTime.withZoneSameInstant(EUROPE_BERLIN);
     }
 
-    private Optional<ZonedDateTime> adjustWithDefaultTimeZone(Optional<ZonedDateTime> zonedDateTime) {
-        return zonedDateTime.map(this::adjustWithDefaultTimeZone);
+    private static Optional<ZonedDateTime> adjustWithDefaultTimeZone(Optional<ZonedDateTime> zonedDateTime) {
+        return zonedDateTime.map(TenantImporterComponent::adjustWithDefaultTimeZone);
     }
-
 }
