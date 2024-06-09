@@ -86,7 +86,7 @@ class TenantImporterComponentTest {
     private ImportInputProvider importInputProvider;
 
     @InjectMocks
-    private TenantImporterComponent tenantImporterComponent;
+    private TenantImporterComponent sut;
 
     private static TenantExport exportedData() {
         UserExport userExport = new UserExport(
@@ -124,7 +124,7 @@ class TenantImporterComponentTest {
             new TenantUser("externalId", 1L, "marlene", "muster", new EMailAddress("my.name@example.org"), Set.of(SecurityRole.ZEITERFASSUNG_USER))
         );
 
-        tenantImporterComponent.runImport();
+        sut.runImport();
 
         InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(new TenantId("tenantId"));
@@ -172,7 +172,7 @@ class TenantImporterComponentTest {
         when(importInputProvider.fromExport()).thenReturn(Optional.of(tenantExport));
         when(tenantService.getTenantByTenantId(anyString())).thenReturn(Optional.empty());
 
-        tenantImporterComponent.runImport();
+        sut.runImport();
 
         verifyNoInteractions(tenantContextHolder);
         verifyNoInteractions(tenantUserService);
@@ -191,7 +191,7 @@ class TenantImporterComponentTest {
         when(tenantService.getTenantByTenantId(anyString())).thenReturn(Optional.of(new Tenant("tenantId", Instant.now().minus(365, ChronoUnit.DAYS), Instant.now().minus(365, ChronoUnit.DAYS), TenantStatus.ACTIVE)));
         when(tenantUserService.findAllUsers()).thenReturn(List.of(new TenantUser("externalId", 1L, "marlene", "muster", new EMailAddress("my.name@example.org"), Set.of(SecurityRole.ZEITERFASSUNG_USER))));
 
-        tenantImporterComponent.runImport();
+        sut.runImport();
 
         verify(tenantContextHolder).setTenantId(new TenantId("tenantId"));
         verify(tenantUserService).findAllUsers();
@@ -210,7 +210,7 @@ class TenantImporterComponentTest {
 
         when(importInputProvider.fromExport()).thenReturn(Optional.of(tenantExport));
 
-        tenantImporterComponent.runImport();
+        sut.runImport();
 
         verifyNoInteractions(tenantService);
         verifyNoInteractions(tenantContextHolder);
