@@ -177,7 +177,7 @@ public class TenantImporterComponent {
     }
 
     private Optional<ZonedDateTime> adjustWithDefaultTimeZone(Optional<ZonedDateTime> zonedDateTime) {
-        return zonedDateTime.map(zdt -> zdt.withZoneSameInstant(EUROPE_BERLIN));
+        return zonedDateTime.map(this::adjustWithDefaultTimeZone);
     }
 
 }
