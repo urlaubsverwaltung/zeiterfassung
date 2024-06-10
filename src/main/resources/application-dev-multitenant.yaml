@@ -13,6 +13,10 @@ zeiterfassung:
           redirect-uri-template: '{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}'
           server-url: http://localhost:8090
   tenant:
+    import:
+      enabled: false
+      filesystem:
+        path: /tmp/export_default-20240605_230107.json
     mode: multi
     registration:
       property:
