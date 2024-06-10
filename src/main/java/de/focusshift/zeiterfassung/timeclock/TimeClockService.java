@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -40,6 +41,23 @@ public class TimeClockService {
      */
     public void importTimeClock(TimeClock timeClock) {
         timeClockRepository.save(toEntity(timeClock));
+    }
+
+    /**
+     * Get all {@linkplain TimeClock}s for the given user.
+     *
+     * <p>
+     * Note that {@linkplain TimeClock}s are not of interest, actually. <br />
+     * A {@linkplain TimeClock} is temporary and {@linkplain TimeClockService#stopTimeClock(UserId) stopping it}
+     * creates a new {@linkplain de.focusshift.zeiterfassung.timeentry.TimeEntry time entry}.
+     *
+     * @param userId external user id
+     * @return list of all {@linkplain TimeClock}s
+     */
+    public List<TimeClock> findAllTimeClocks(UserId userId) {
+        return timeClockRepository.findAllByOwnerOrderByIdAsc(userId.value()).stream()
+            .map(TimeClockService::toTimeClock)
+            .toList();
     }
 
     TimeClock updateTimeClock(UserId userId, TimeClockUpdate timeClockUpdate) throws TimeClockNotStartedException {

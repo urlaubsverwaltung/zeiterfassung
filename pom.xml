@@ -77,6 +77,23 @@
       <artifactId>testcontainers-keycloak</artifactId>
       <version>3.3.1</version>
       <scope>test</scope>
+      <exclusions>
+        <!--
+        resteasy-client 6.x depends on an older jandex version as spring-boot-starter-data-jpa which then throws:
+        java.lang.NoSuchMethodError: 'org.jboss.jandex.ClassSummary org.jboss.jandex.Indexer.indexWithSummary(java.io.InputStream)'
+        -->
+        <exclusion>
+          <groupId>org.jboss.resteasy</groupId>
+          <artifactId>resteasy-client</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-client</artifactId>
+      <!-- resteasy-client 7.x does not include jandex dependency -->
+      <version>7.0.0.Alpha2</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
