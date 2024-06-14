@@ -39,7 +39,7 @@
     "eslint-plugin-unicorn": "53.0.0",
     "fast-glob": "3.3.2",
     "jsdom": "24.1.0",
-    "lint-staged": "15.2.5",
+    "lint-staged": "15.2.7",
     "postcss": "8.4.38",
     "postcss-cli": "11.0.0",
     "postcss-import": "16.1.0",
