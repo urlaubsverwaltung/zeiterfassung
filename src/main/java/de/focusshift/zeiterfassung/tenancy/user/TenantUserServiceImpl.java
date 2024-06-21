@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -55,8 +54,7 @@ class TenantUserServiceImpl implements TenantUserService {
 
         final Instant now = clock.instant();
 
-        final TenantUserEntity current = tenantUserRepository.findById(user.localId())
-            .orElseThrow(uerNotFoundAsIllegalState(user.localId()));
+        final TenantUserEntity current = getTenantUserOrThrow(user.localId());
 
         final TenantUserEntity next =
             new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), now, user.givenName(), user.familyName(), user.eMail().value(), distinct(user.authorities()), current.getCreatedAt(), now, current.getDeactivatedAt(), current.getDeletedAt(), current.getStatus());
@@ -103,7 +101,7 @@ class TenantUserServiceImpl implements TenantUserService {
 
         final Instant now = clock.instant();
 
-        final TenantUserEntity current = tenantUserRepository.findById(id).orElseThrow(uerNotFoundAsIllegalState(id));
+        final TenantUserEntity current = getTenantUserOrThrow(id);
 
         final TenantUserEntity next =
             new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), current.getLastLoginAt(), current.getGivenName(), current.getFamilyName(), current.getEmail(), current.getAuthorities(), current.getCreatedAt(), now, current.getDeactivatedAt(), now, UserStatus.DELETED);
@@ -116,7 +114,7 @@ class TenantUserServiceImpl implements TenantUserService {
 
         final Instant now = clock.instant();
 
-        final TenantUserEntity current = tenantUserRepository.findById(id).orElseThrow(uerNotFoundAsIllegalState(id));
+        final TenantUserEntity current = getTenantUserOrThrow(id);
 
         if (UserStatus.DEACTIVATED.equals(current.getStatus()) || UserStatus.DELETED.equals(current.getStatus())) {
             LOG.warn("Detected suspicious update for userId={}: status={} -> status=ACTIVE ...", id, current.getStatus());
@@ -133,7 +131,7 @@ class TenantUserServiceImpl implements TenantUserService {
 
         final Instant now = clock.instant();
 
-        final TenantUserEntity current = tenantUserRepository.findById(id).orElseThrow(uerNotFoundAsIllegalState(id));
+        final TenantUserEntity current = getTenantUserOrThrow(id);
 
         final TenantUserEntity next =
             new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), current.getLastLoginAt(), current.getGivenName(), current.getFamilyName(), current.getEmail(), current.getAuthorities(), current.getCreatedAt(), now, now, current.getDeletedAt(), UserStatus.DEACTIVATED);
@@ -149,8 +147,9 @@ class TenantUserServiceImpl implements TenantUserService {
         return collection.stream().map(TenantUserServiceImpl::entityToTenantUser).toList();
     }
 
-    private static Supplier<IllegalArgumentException> uerNotFoundAsIllegalState(Long id) {
-        return () -> new IllegalArgumentException(String.format("could not find user with id=%s", id));
+    private TenantUserEntity getTenantUserOrThrow(Long id) {
+        return tenantUserRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException(String.format("could not find user with id=%s", id)));
     }
 
     private static TenantUser entityToTenantUser(TenantUserEntity tenantUserEntity) {
