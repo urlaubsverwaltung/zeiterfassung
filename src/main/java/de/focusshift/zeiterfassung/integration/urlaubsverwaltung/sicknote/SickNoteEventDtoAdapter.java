@@ -12,14 +12,12 @@ import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteUpdatedEv
  */
 class SickNoteEventDtoAdapter {
 
-    private final String tenantId;
     private final Long sourceId;
     private final SickNotePersonDTO person;
     private final String type;
     private final SickNotePeriodDTO period;
 
     SickNoteEventDtoAdapter(SickNoteCreatedEventDTO event) {
-        this.tenantId = event.getTenantId();
         this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.type = event.getType();
@@ -27,7 +25,6 @@ class SickNoteEventDtoAdapter {
     }
 
     SickNoteEventDtoAdapter(SickNoteUpdatedEventDTO event) {
-        this.tenantId = event.getTenantId();
         this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.type = event.getType();
@@ -35,7 +32,6 @@ class SickNoteEventDtoAdapter {
     }
 
     SickNoteEventDtoAdapter(SickNoteConvertedToApplicationEventDTO event) {
-        this.tenantId = event.getTenantId();
         this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.type = event.getType();
@@ -43,15 +39,10 @@ class SickNoteEventDtoAdapter {
     }
 
     SickNoteEventDtoAdapter(SickNoteCancelledEventDTO event) {
-        this.tenantId = event.getTenantId();
         this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.type = event.getType();
         this.period = event.getPeriod();
-    }
-
-    public String getTenantId() {
-        return tenantId;
     }
 
     public Long getSourceId() {

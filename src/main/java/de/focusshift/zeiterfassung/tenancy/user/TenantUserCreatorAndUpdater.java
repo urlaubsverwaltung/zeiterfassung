@@ -34,33 +34,28 @@ class TenantUserCreatorAndUpdater {
     public void handle(InteractiveAuthenticationSuccessEvent event) {
 
         if (event.getAuthentication() instanceof final OAuth2AuthenticationToken oauthToken) {
-            try {
                 final TenantId tenantId = new TenantId(oauthToken.getAuthorizedClientRegistrationId());
                 if (!tenantId.valid()) {
                     LOG.warn("Ignoring InteractiveAuthenticationSuccessEvent for invalid tenantId={}", tenantId.tenantId());
                 } else {
-                    tenantContextHolder.setTenantId(tenantId);
-                    createOrUpdateTenantUser(tenantId, oauthToken.getPrincipal());
+                    tenantContextHolder.runInTenantIdContext(tenantId, passedTenantId -> createOrUpdateTenantUser(oauthToken.getPrincipal(), passedTenantId));
                 }
-            } finally {
-                tenantContextHolder.clear();
-            }
         } else {
             LOG.warn("Ignoring InteractiveAuthenticationSuccessEvent for unexpected authentication token type={}", event.getAuthentication().getClass());
         }
     }
 
-    private void createOrUpdateTenantUser(TenantId tenantId, OAuth2User oauth2User) {
+    private void createOrUpdateTenantUser(OAuth2User oauth2User, String tenantId) {
         if (oauth2User instanceof final DefaultOidcUser oidcUser) {
             final EMailAddress eMailAddress = new EMailAddress(oidcUser.getEmail());
             final UserId userId = new UserId(oidcUser.getSubject());
 
             tenantUserService.findById(userId).ifPresentOrElse(user -> {
                 final TenantUser tenantUser = new TenantUser(user.id(), user.localId(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, user.authorities());
-                LOG.info("updating existing user={} of tenantId={} with data from oidc token", userId.value(), tenantId.tenantId());
+                LOG.info("updating existing user={} of tenantId={} with data from oidc token", userId.value(), tenantId);
                 tenantUserService.updateUser(tenantUser);
             }, () -> {
-                LOG.info("creating new user={} for tenantId={} with data from oidc token", userId.value(), tenantId.tenantId());
+                LOG.info("creating new user={} for tenantId={} with data from oidc token", userId.value(), tenantId);
                 tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, Set.of(ZEITERFASSUNG_USER));
             });
         }

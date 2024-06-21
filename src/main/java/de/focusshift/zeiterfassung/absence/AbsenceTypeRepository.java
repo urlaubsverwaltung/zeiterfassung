@@ -8,7 +8,7 @@ import java.util.Optional;
 
 interface AbsenceTypeRepository extends CrudRepository<AbsenceTypeEntity, Long> {
 
-    Optional<AbsenceTypeEntity> findByTenantIdAndSourceId(String tenantId, Long sourceId);
+    Optional<AbsenceTypeEntity> findBySourceId(Long sourceId);
 
-    List<AbsenceTypeEntity> findByTenantIdAndSourceIdIsIn(String tenantId, Collection<Long> sourceIds);
+    List<AbsenceTypeEntity> findBySourceIdIsIn(Collection<Long> sourceIds);
 }

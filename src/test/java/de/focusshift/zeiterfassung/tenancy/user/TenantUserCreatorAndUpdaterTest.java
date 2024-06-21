@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -38,7 +39,7 @@ class TenantUserCreatorAndUpdaterTest {
     @InjectMocks
     private TenantUserCreatorAndUpdater sut;
 
-    @Mock
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
     private TenantContextHolder tenantContextHolder;
     @Mock
     private TenantUserService tenantUserService;
@@ -121,7 +122,7 @@ class TenantUserCreatorAndUpdaterTest {
         verifyNoInteractions(tenantUserService);
 
         verify(tenantContextHolder, never()).setTenantId(any());
-        verify(tenantContextHolder).clear();
+        verify(tenantContextHolder, never()).clear();
     }
 
     private static class OAuth2AuthenticationTokenWithoutClientRegistrationId extends OAuth2AuthenticationToken {

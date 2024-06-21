@@ -4,12 +4,17 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Enumerated;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Objects;
 
 import static jakarta.persistence.EnumType.STRING;
 
 @Embeddable
-public class AbsenceTypeEntityEmbeddable {
+public class AbsenceTypeEntityEmbeddable implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = -393457998708034020L;
 
     @Column(name = "type_category", nullable = false)
     @Enumerated(STRING)

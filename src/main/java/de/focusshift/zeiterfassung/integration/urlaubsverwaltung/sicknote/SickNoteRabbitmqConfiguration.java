@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote;
 
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
@@ -23,8 +24,8 @@ class SickNoteRabbitmqConfiguration {
 
 
     @Bean
-    SickNoteEventHandlerRabbitmq sickNoteEventHandlerRabbitmq(AbsenceWriteService absenceWriteService) {
-        return new SickNoteEventHandlerRabbitmq(absenceWriteService);
+    SickNoteEventHandlerRabbitmq sickNoteEventHandlerRabbitmq(AbsenceWriteService absenceWriteService, TenantContextHolder tenantContextHolder) {
+        return new SickNoteEventHandlerRabbitmq(absenceWriteService, tenantContextHolder);
     }
 
     @Configuration

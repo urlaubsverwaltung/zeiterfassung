@@ -27,6 +27,7 @@ import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -64,7 +65,7 @@ class TenantImporterComponentTest {
     @InjectMocks
     private TenantImporterComponent sut;
 
-    @Mock
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
     private TenantContextHolder tenantContextHolder;
     @Mock
     private TenantService tenantService;

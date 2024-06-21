@@ -1,8 +1,6 @@
 package de.focusshift.zeiterfassung.absence;
 
 import de.focusshift.zeiterfassung.CachedFunction;
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -46,21 +44,18 @@ class AbsenceServiceImpl implements AbsenceService {
     private final AbsenceRepository absenceRepository;
     private final AbsenceTypeService absenceTypeService;
     private final UserSettingsProvider userSettingsProvider;
-    private final TenantContextHolder tenantContextHolder;
     private final UserManagementService userManagementService;
     private final MessageSource messageSource;
 
     AbsenceServiceImpl(AbsenceRepository absenceRepository,
                        AbsenceTypeService absenceTypeService,
                        UserSettingsProvider userSettingsProvider,
-                       TenantContextHolder tenantContextHolder,
                        UserManagementService userManagementService,
                        MessageSource messageSource) {
 
         this.absenceRepository = absenceRepository;
         this.absenceTypeService = absenceTypeService;
         this.userSettingsProvider = userSettingsProvider;
-        this.tenantContextHolder = tenantContextHolder;
         this.userManagementService = userManagementService;
         this.messageSource = messageSource;
     }
@@ -69,10 +64,9 @@ class AbsenceServiceImpl implements AbsenceService {
     public Map<LocalDate, List<Absence>> findAllAbsences(UserId userId, Instant from, Instant toExclusive) {
 
         final ZoneId zoneId = userSettingsProvider.zoneId();
-        final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
 
         final List<AbsenceWriteEntity> absenceEntities =
-            absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, List.of(userId.value()), toExclusive, from);
+            absenceRepository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(List.of(userId.value()), toExclusive, from);
 
         final List<Absence> absences = toAbsences(absenceEntities).toList();
 
@@ -96,7 +90,6 @@ class AbsenceServiceImpl implements AbsenceService {
     public Map<UserIdComposite, List<Absence>> getAbsencesByUserIds(List<UserLocalId> userLocalIds, LocalDate from, LocalDate toExclusive) {
 
         final InstantPeriod period = getInstantPeriod(from, toExclusive);
-        final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
 
         final List<User> users = userManagementService.findAllUsersByLocalIds(userLocalIds);
 
@@ -109,7 +102,7 @@ class AbsenceServiceImpl implements AbsenceService {
         final Map<UserId, UserIdComposite> idCompositeByUserId = users.stream().collect(toMap(User::userId, User::userIdComposite));
 
         final List<AbsenceWriteEntity> absenceEntities =
-            absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, userIdValues, period.toExclusive, period.from);
+            absenceRepository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(userIdValues, period.toExclusive, period.from);
 
         final Map<UserIdComposite, List<Absence>> result = toAbsences(absenceEntities)
             .collect(groupingBy(absence -> idCompositeByUserId.get(absence.userId())));
@@ -124,10 +117,9 @@ class AbsenceServiceImpl implements AbsenceService {
     public Map<UserIdComposite, List<Absence>> getAbsencesForAllUsers(LocalDate from, LocalDate toExclusive) {
 
         final InstantPeriod period = getInstantPeriod(from, toExclusive);
-        final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
 
         final List<AbsenceWriteEntity> absenceEntities =
-            absenceRepository.findAllByTenantIdAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, period.toExclusive, period.from);
+            absenceRepository.findAllByStartDateLessThanAndEndDateGreaterThanEqual(period.toExclusive, period.from);
 
         final Map<UserId, List<Absence>> absenceByUserId = toAbsences(absenceEntities)
             .collect(groupingBy(Absence::userId));
@@ -149,10 +141,8 @@ class AbsenceServiceImpl implements AbsenceService {
     public List<Absence> getAbsencesByUserId(UserId userId, LocalDate from, LocalDate toExclusive) {
 
         final InstantPeriod period = getInstantPeriod(from, toExclusive);
-        final String tenantId = tenantContextHolder.getCurrentTenantId().orElse(new TenantId("")).tenantId();
 
-        final List<AbsenceWriteEntity> absenceEntities =
-            absenceRepository.findAllByTenantIdAndUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(tenantId, List.of(userId.value()), period.toExclusive, period.from);
+        final List<AbsenceWriteEntity> absenceEntities = absenceRepository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(List.of(userId.value()), period.toExclusive, period.from);
 
         return toAbsences(absenceEntities).toList();
     }

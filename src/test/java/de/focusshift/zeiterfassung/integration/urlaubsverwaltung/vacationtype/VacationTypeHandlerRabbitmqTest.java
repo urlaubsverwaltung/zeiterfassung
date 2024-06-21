@@ -6,14 +6,18 @@ import de.focusshift.zeiterfassung.absence.AbsenceColor;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeCategory;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeService;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeUpdate;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Answers;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Locale;
@@ -27,18 +31,23 @@ import static org.mockito.Mockito.verifyNoInteractions;
 @ExtendWith(MockitoExtension.class)
 class VacationTypeHandlerRabbitmqTest {
 
+    private static final TenantId TENANT_ID = new TenantId("tenant");
+
     @InjectMocks
     private VacationTypeHandlerRabbitmq sut;
 
     @Mock
     private AbsenceTypeService absenceTypeService;
 
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
+    private TenantContextHolder tenantContextHolder;
+
     @Test
     void ensureAbsenceTypeUpdateIsIgnoredWhenCategoryCannotBeMapped() {
 
         final VacationTypeUpdatedEventDTO eventDto = VacationTypeUpdatedEventDTO.builder()
             .id(UUID.randomUUID())
-            .tenantId("tenant")
+            .tenantId(TENANT_ID.tenantId())
             .sourceId(42L)
             .category("unknown")
             .color("VIOLET")
@@ -47,6 +56,10 @@ class VacationTypeHandlerRabbitmqTest {
 
         sut.on(eventDto);
         verifyNoInteractions(absenceTypeService);
+
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        inOrder.verify(tenantContextHolder).setTenantId(TENANT_ID);
+        inOrder.verify(tenantContextHolder).clear();
     }
 
     @Test
@@ -54,7 +67,7 @@ class VacationTypeHandlerRabbitmqTest {
 
         final VacationTypeUpdatedEventDTO eventDto = VacationTypeUpdatedEventDTO.builder()
             .id(UUID.randomUUID())
-            .tenantId("tenant")
+            .tenantId(TENANT_ID.tenantId())
             .sourceId(42L)
             .category("OTHER")
             .color("unknown")
@@ -63,6 +76,10 @@ class VacationTypeHandlerRabbitmqTest {
 
         sut.on(eventDto);
         verifyNoInteractions(absenceTypeService);
+
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        inOrder.verify(tenantContextHolder).setTenantId(TENANT_ID);
+        inOrder.verify(tenantContextHolder).clear();
     }
 
     static Stream<Arguments> categoryColorPermutation() {
@@ -80,7 +97,7 @@ class VacationTypeHandlerRabbitmqTest {
 
         final VacationTypeUpdatedEventDTO eventDto = VacationTypeUpdatedEventDTO.builder()
             .id(UUID.randomUUID())
-            .tenantId("tenant")
+            .tenantId(TENANT_ID.tenantId())
             .sourceId(42L)
             .category(category.name())
             .color(color.name())
@@ -90,11 +107,14 @@ class VacationTypeHandlerRabbitmqTest {
         sut.on(eventDto);
 
         verify(absenceTypeService).updateAbsenceType(new AbsenceTypeUpdate(
-            new TenantId("tenant"),
             42L,
             category,
             color,
             labels
         ));
+
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        inOrder.verify(tenantContextHolder).setTenantId(TENANT_ID);
+        inOrder.verify(tenantContextHolder).clear();
     }
 }

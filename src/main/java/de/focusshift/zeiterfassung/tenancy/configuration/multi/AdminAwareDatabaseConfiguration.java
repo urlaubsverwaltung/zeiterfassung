@@ -1,8 +1,6 @@
 package de.focusshift.zeiterfassung.tenancy.configuration.multi;
 
 import com.zaxxer.hikari.HikariDataSource;
-import de.focusshift.zeiterfassung.absence.AbsenceTypeEntity;
-import de.focusshift.zeiterfassung.absence.AbsenceWriteEntity;
 import de.focusshift.zeiterfassung.security.oidc.clientregistration.OidcClientEntity;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantEntity;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,7 +25,7 @@ import static java.util.Objects.requireNonNull;
 @Configuration(proxyBeanMethods = false)
 @EnableTransactionManagement
 @EnableJpaRepositories(
-    basePackageClasses = {TenantEntity.class, OidcClientEntity.class, AbsenceWriteEntity.class, AbsenceTypeEntity.class},
+    basePackageClasses = {TenantEntity.class, OidcClientEntity.class},
     entityManagerFactoryRef = "adminEntityManagerFactory",
     transactionManagerRef = "adminTransactionManager"
 )
@@ -57,7 +55,7 @@ class AdminAwareDatabaseConfiguration {
         return builder
             .dataSource(adminDataSource)
             // List all admin related entity packages here
-            .packages(TenantEntity.class, OidcClientEntity.class, AbsenceWriteEntity.class, AbsenceTypeEntity.class)
+            .packages(TenantEntity.class, OidcClientEntity.class)
             .persistenceUnit("admin")
             .build();
     }

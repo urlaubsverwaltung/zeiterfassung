@@ -26,7 +26,6 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
 
         final Optional<AbsenceWriteEntity> existing = findEntity(absence);
 
-        final String tenantId = absence.tenantId().tenantId();
         final Long sourceId = absence.sourceId();
         final AbsenceTypeSourceId typeId = absence.absenceTypeSourceId();
 
@@ -34,9 +33,9 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
             final AbsenceWriteEntity entity = new AbsenceWriteEntity();
             setEntityFields(entity, absence);
             repository.save(entity);
-            LOG.info("successfully persisted absence in database. tenantId={} sourceId={} type={}", tenantId, sourceId, typeId);
+            LOG.info("successfully persisted absence in database. sourceId={} type={}", sourceId, typeId);
         } else {
-            LOG.info("did not persist absence because it exists already. tenantId={} sourceId={} type={}", tenantId, sourceId, typeId);
+            LOG.info("did not persist absence because it exists already. sourceId={} type={}", sourceId, typeId);
         }
     }
 
@@ -46,7 +45,6 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
 
         final Optional<AbsenceWriteEntity> existing = findEntity(absence);
 
-        final String tenantId = absence.tenantId().tenantId();
         final Long sourceId = absence.sourceId();
         final AbsenceTypeSourceId typeId = absence.absenceTypeSourceId();
 
@@ -54,9 +52,9 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
             final AbsenceWriteEntity entity = existing.get();
             setEntityFields(entity, absence);
             repository.save(entity);
-            LOG.info("successfully updated absence in database. tenantId={} sourceId={} type={}", tenantId, sourceId, typeId);
+            LOG.info("successfully updated absence in database. sourceId={} type={}", sourceId, typeId);
         } else {
-            LOG.info("no absence found that could be updated. tenantId={} sourceId={} type={}", tenantId, sourceId, typeId);
+            LOG.info("no absence found that could be updated, sourceId={} type={}", sourceId, typeId);
         }
     }
 
@@ -64,26 +62,24 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
     @Transactional
     public void deleteAbsence(AbsenceWrite absence) {
 
-        final String tenantId = absence.tenantId().tenantId();
         final Long sourceId = absence.sourceId();
         final AbsenceTypeSourceId typeSourceId = absence.absenceTypeSourceId();
         final AbsenceTypeCategory category = absence.absenceTypeCategory();
 
-        final int countOfDeletedAbsences = repository.deleteByTenantIdAndSourceIdAndType_Category(tenantId, sourceId, category);
+        final int countOfDeletedAbsences = repository.deleteBySourceIdAndType_Category(sourceId, category);
 
         if (countOfDeletedAbsences >= 1) {
-            LOG.info("successfully deleted {} absences. tenantId={} sourceId={} typeSourceId={} typeCategory={}", countOfDeletedAbsences, tenantId, sourceId, typeSourceId, category);
+            LOG.info("successfully deleted {} absences. sourceId={} typeSourceId={} typeCategory={}", countOfDeletedAbsences, sourceId, typeSourceId, category);
         } else {
-            LOG.info("did not delete absence. tenantId={} sourceId={} typeSourceId={} typeCategory={}", tenantId, sourceId, typeSourceId, category);
+            LOG.info("did not delete absence. sourceId={} typeSourceId={} typeCategory={}", sourceId, typeSourceId, category);
         }
     }
 
     private Optional<AbsenceWriteEntity> findEntity(AbsenceWrite absence) {
-        return repository.findByTenantIdAndSourceIdAndType_Category(absence.tenantId().tenantId(), absence.sourceId(), absence.absenceTypeCategory());
+        return repository.findBySourceIdAndType_Category(absence.sourceId(), absence.absenceTypeCategory());
     }
 
     private static void setEntityFields(AbsenceWriteEntity entity, AbsenceWrite absence) {
-        entity.setTenantId(absence.tenantId().tenantId());
         entity.setSourceId(absence.sourceId());
         entity.setUserId(absence.userId().value());
         entity.setStartDate(absence.startDate());
