@@ -45,7 +45,7 @@ public class PortalUserEventHandlerRabbitmq {
             return;
         }
 
-        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), (tenantId) -> {
+        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), tenantId -> {
             if (tenantUserService.findById(new UserId(event.uuid())).isPresent()) {
                 LOG.info("Can not create user with userId={} of tenantId={} - user already exists", event.uuid(), tenantId);
                 return;
@@ -65,7 +65,7 @@ public class PortalUserEventHandlerRabbitmq {
             return;
         }
 
-        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), (tenantId) -> tenantUserService.findById(new UserId(event.uuid()))
+        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), tenantId -> tenantUserService.findById(new UserId(event.uuid()))
             .ifPresentOrElse(existing -> {
                 LOG.info("Found existing user with userId={} of tenantId={} - updating user ...", event.uuid(), tenantId);
                 tenantUserService.updateUser(new TenantUser(existing.id(), existing.localId(), event.firstName(), event.lastName(), new EMailAddress(event.email()), existing.firstLoginAt(), existing.authorities(), existing.createdAt(), existing.updatedAt(), existing.deactivatedAt(), existing.deletedAt(), existing.status()));
@@ -88,7 +88,7 @@ public class PortalUserEventHandlerRabbitmq {
             return;
         }
 
-        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), (tenantId) -> tenantUserService.findById(new UserId(event.uuid()))
+        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), tenantId -> tenantUserService.findById(new UserId(event.uuid()))
             .ifPresentOrElse(existing -> {
                 LOG.info("Found existing user with userId={} of tenantId={} - deleting user ...", event.uuid(), tenantId);
                 tenantUserService.deleteUser(existing.localId());
@@ -104,7 +104,7 @@ public class PortalUserEventHandlerRabbitmq {
             return;
         }
 
-        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), (tenantId) -> tenantUserService.findById(new UserId(event.uuid()))
+        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), tenantId -> tenantUserService.findById(new UserId(event.uuid()))
             .ifPresentOrElse(existing -> {
                 LOG.info("Found existing user with userId={} of tenantId={} - activating user ...", event.uuid(), tenantId);
                 tenantUserService.activateUser(existing.localId());
@@ -120,7 +120,7 @@ public class PortalUserEventHandlerRabbitmq {
             return;
         }
 
-        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), (tenantId) -> tenantUserService.findById(new UserId(event.uuid()))
+        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), tenantId -> tenantUserService.findById(new UserId(event.uuid()))
             .ifPresentOrElse(existing -> {
                 LOG.info("Found existing user with userId={} of tenantId={} - deactivating user ...", event.uuid(), tenantId);
                 tenantUserService.deactivateUser(existing.localId());
