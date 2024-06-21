@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import static java.util.stream.StreamSupport.stream;
+
 @Service
 class SettingsService implements FederalStateSettingsService {
 
@@ -40,6 +42,9 @@ class SettingsService implements FederalStateSettingsService {
     }
 
     private Optional<FederalStateSettingsEntity> getFederalStateEntity() {
-        return federalStateSettingsRepository.findAll().stream().findFirst();
+        // `findFirst` is sufficient as there exists only one FederalStateSettingsEntity per tenant.
+        // however, the tenantId is handled transparently in the background. and we only have the public API of `findAll`.
+        final Iterable<FederalStateSettingsEntity> settings = federalStateSettingsRepository.findAll();
+        return stream(settings.spliterator(), false).findFirst();
     }
 }
