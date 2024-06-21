@@ -53,7 +53,7 @@ class AbsenceTypeIT extends TestContainersBase {
     @Test
     void ensureAbsenceTypeCreation() {
 
-        TenantId tenantId = new TenantId("default");
+        final TenantId tenantId = new TenantId("default");
         when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(tenantId));
 
         rabbitTemplate.convertAndSend("vacationtype.topic", "updated", VacationTypeUpdatedEventDTO.builder()
@@ -90,7 +90,7 @@ class AbsenceTypeIT extends TestContainersBase {
                 });
         });
 
-        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(tenantId);
         inOrder.verify(tenantContextHolder).clear();
 

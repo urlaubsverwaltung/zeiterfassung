@@ -57,7 +57,7 @@ class VacationTypeHandlerRabbitmqTest {
         sut.on(eventDto);
         verifyNoInteractions(absenceTypeService);
 
-        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(TENANT_ID);
         inOrder.verify(tenantContextHolder).clear();
     }
@@ -77,7 +77,7 @@ class VacationTypeHandlerRabbitmqTest {
         sut.on(eventDto);
         verifyNoInteractions(absenceTypeService);
 
-        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(TENANT_ID);
         inOrder.verify(tenantContextHolder).clear();
     }
@@ -113,7 +113,7 @@ class VacationTypeHandlerRabbitmqTest {
             labels
         ));
 
-        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(TENANT_ID);
         inOrder.verify(tenantContextHolder).clear();
     }

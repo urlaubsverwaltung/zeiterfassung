@@ -99,7 +99,7 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
 
         final SickNotePersonDTO boss = SickNotePersonDTO.builder().personId(1L).username("boss").build();
 
-        TenantId tenantId = new TenantId(TENANT_ID);
+        final TenantId tenantId = new TenantId(TENANT_ID);
         when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(tenantId));
 
         // CREATE sick note absence
@@ -127,7 +127,7 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
                 .hasSize(1)
                 .containsOnly(Map.entry(now, List.of(expected)));
 
-            InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+            final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(tenantId);
             inOrder.verify(tenantContextHolder).clear();
         });
@@ -153,7 +153,8 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
             assertThat(absences)
                 .hasSize(2)
                 .containsOnly(Map.entry(now, List.of(expected)), Map.entry(now.plusDays(1), List.of(expected)));
-            InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+
+            final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(tenantId);
             inOrder.verify(tenantContextHolder).clear();
         });
@@ -178,7 +179,7 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
                 .hasSize(1)
                 .containsOnly(Map.entry(now, List.of()));
 
-            InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+            final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(tenantId);
             inOrder.verify(tenantContextHolder).clear();
         });
@@ -195,7 +196,7 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
         final SickNotePersonDTO boss = SickNotePersonDTO.builder().personId(1L).username("boss").build();
         final UserId userId = new UserId("boss");
 
-        TenantId tenantId = new TenantId(TENANT_ID);
+        final TenantId tenantId = new TenantId(TENANT_ID);
         when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(tenantId));
 
         final AbsenceWrite absence = new AbsenceWrite(1L, userId, startOfDay, startOfDay, FULL, SICK);
@@ -222,7 +223,7 @@ class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
                 .containsOnly(Map.entry(now, List.of()));
         });
 
-        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(tenantId);
         inOrder.verify(tenantContextHolder).clear();
     }

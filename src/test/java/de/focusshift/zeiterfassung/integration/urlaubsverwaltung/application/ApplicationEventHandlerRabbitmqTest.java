@@ -50,7 +50,7 @@ class ApplicationEventHandlerRabbitmqTest {
 
     @Test
     void onApplicationAllowedEvent() {
-        TenantId tenantId = new TenantId("tenantId");
+        final TenantId tenantId = new TenantId("tenantId");
 
         final ApplicationAllowedEventDTO event = ApplicationAllowedEventDTO.builder()
                 .id(UUID.randomUUID())
@@ -77,14 +77,14 @@ class ApplicationEventHandlerRabbitmqTest {
         );
         verify(absenceWriteService).addAbsence(absence);
 
-        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(tenantId);
         inOrder.verify(tenantContextHolder).clear();
     }
 
     @Test
     void onApplicationCreatedFromSickNoteEvent() {
-        TenantId tenantId = new TenantId("tenantId");
+        final TenantId tenantId = new TenantId("tenantId");
 
         final ApplicationCreatedFromSickNoteEventDTO event = ApplicationCreatedFromSickNoteEventDTO.builder()
                 .id(UUID.randomUUID())
@@ -110,14 +110,14 @@ class ApplicationEventHandlerRabbitmqTest {
         );
         verify(absenceWriteService).addAbsence(absence);
 
-        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(tenantId);
         inOrder.verify(tenantContextHolder).clear();
     }
 
     @Test
     void onApplicationCancelledEvent() {
-        TenantId tenantId = new TenantId("tenantId");
+        final TenantId tenantId = new TenantId("tenantId");
 
         final ApplicationCancelledEventDTO event = ApplicationCancelledEventDTO.builder()
                 .id(UUID.randomUUID())
@@ -143,14 +143,14 @@ class ApplicationEventHandlerRabbitmqTest {
         );
         verify(absenceWriteService).deleteAbsence(absence);
 
-        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(tenantId);
         inOrder.verify(tenantContextHolder).clear();
     }
 
     @Test
     void onApplicationWithAbsentWorkingDays() {
-        TenantId tenantId = new TenantId("tenantId");
+        final TenantId tenantId = new TenantId("tenantId");
 
         final ApplicationAllowedEventDTO event = ApplicationAllowedEventDTO.builder()
                 .id(UUID.randomUUID())
@@ -167,7 +167,7 @@ class ApplicationEventHandlerRabbitmqTest {
 
         verifyNoInteractions(absenceWriteService);
 
-        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(tenantId);
         inOrder.verify(tenantContextHolder).clear();
     }
