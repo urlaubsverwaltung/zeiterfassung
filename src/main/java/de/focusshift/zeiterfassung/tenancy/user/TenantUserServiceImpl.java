@@ -149,7 +149,7 @@ class TenantUserServiceImpl implements TenantUserService {
 
     private TenantUserEntity getTenantUserOrThrow(Long id) {
         return tenantUserRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException(String.format("could not find user with id=%s", id)));
+            .orElseThrow(() -> new IllegalArgumentException("could not find user with id=%s".formatted(id)));
     }
 
     private static TenantUser entityToTenantUser(TenantUserEntity tenantUserEntity) {
