@@ -34,31 +34,6 @@ class TenantUserServiceImpl implements TenantUserService {
         this.clock = clock;
     }
 
-    private static Supplier<IllegalArgumentException> uerNotFoundAsIllegalState(Long id) {
-        return () -> new IllegalArgumentException(String.format("could not find user with id=%s", id));
-    }
-
-    private static TenantUser entityToTenantUser(TenantUserEntity tenantUserEntity) {
-        final String uuid = tenantUserEntity.getUuid();
-        final Long id = tenantUserEntity.getId();
-        final String givenName = tenantUserEntity.getGivenName();
-        final String familyName = tenantUserEntity.getFamilyName();
-        final EMailAddress eMail = new EMailAddress(tenantUserEntity.getEmail());
-        final Instant firstLoginAt = tenantUserEntity.getFirstLoginAt();
-        final Set<SecurityRole> authorities = new HashSet<>(tenantUserEntity.getAuthorities());
-        final Instant createdAt = tenantUserEntity.getCreatedAt();
-        final Instant updatedAt = tenantUserEntity.getUpdatedAt();
-        final Instant deactivatedAt = tenantUserEntity.getDeactivatedAt();
-        final Instant deletedAt = tenantUserEntity.getDeletedAt();
-        final UserStatus status = tenantUserEntity.getStatus();
-
-        return new TenantUser(uuid, id, givenName, familyName, eMail, firstLoginAt, authorities, createdAt, updatedAt, deactivatedAt, deletedAt, status);
-    }
-
-    private static <T> Set<T> distinct(Collection<T> collection) {
-        return new HashSet<>(collection);
-    }
-
     @Override
     public TenantUser createNewUser(String uuid, String givenName, String familyName, EMailAddress eMailAddress, Collection<SecurityRole> authorities) {
 
@@ -172,5 +147,31 @@ class TenantUserServiceImpl implements TenantUserService {
 
     private List<TenantUser> mapToTenantUser(Collection<TenantUserEntity> collection) {
         return collection.stream().map(TenantUserServiceImpl::entityToTenantUser).toList();
+    }
+
+    private static Supplier<IllegalArgumentException> uerNotFoundAsIllegalState(Long id) {
+        return () -> new IllegalArgumentException(String.format("could not find user with id=%s", id));
+    }
+
+    private static TenantUser entityToTenantUser(TenantUserEntity tenantUserEntity) {
+
+        final String uuid = tenantUserEntity.getUuid();
+        final Long id = tenantUserEntity.getId();
+        final String givenName = tenantUserEntity.getGivenName();
+        final String familyName = tenantUserEntity.getFamilyName();
+        final EMailAddress eMail = new EMailAddress(tenantUserEntity.getEmail());
+        final Instant firstLoginAt = tenantUserEntity.getFirstLoginAt();
+        final Set<SecurityRole> authorities = new HashSet<>(tenantUserEntity.getAuthorities());
+        final Instant createdAt = tenantUserEntity.getCreatedAt();
+        final Instant updatedAt = tenantUserEntity.getUpdatedAt();
+        final Instant deactivatedAt = tenantUserEntity.getDeactivatedAt();
+        final Instant deletedAt = tenantUserEntity.getDeletedAt();
+        final UserStatus status = tenantUserEntity.getStatus();
+
+        return new TenantUser(uuid, id, givenName, familyName, eMail, firstLoginAt, authorities, createdAt, updatedAt, deactivatedAt, deletedAt, status);
+    }
+
+    private static <T> Set<T> distinct(Collection<T> collection) {
+        return new HashSet<>(collection);
     }
 }

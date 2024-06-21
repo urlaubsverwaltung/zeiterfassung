@@ -30,15 +30,6 @@ class TenantUserCreatorAndUpdater {
         this.tenantUserService = tenantUserService;
     }
 
-    private static UserStatus determineUserStatus(UserStatus status) {
-        if (UserStatus.UNKNOWN.equals(status)) {
-            // if the user status is unknown, we assume the user is active
-            // because there was a successful login
-            return UserStatus.ACTIVE;
-        }
-        return status;
-    }
-
     @EventListener
     public void handle(InteractiveAuthenticationSuccessEvent event) {
 
@@ -71,5 +62,14 @@ class TenantUserCreatorAndUpdater {
                 tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, Set.of(ZEITERFASSUNG_USER));
             });
         }
+    }
+
+    private static UserStatus determineUserStatus(UserStatus status) {
+        if (UserStatus.UNKNOWN.equals(status)) {
+            // if the user status is unknown, we assume the user is active
+            // because there was a successful login
+            return UserStatus.ACTIVE;
+        }
+        return status;
     }
 }
