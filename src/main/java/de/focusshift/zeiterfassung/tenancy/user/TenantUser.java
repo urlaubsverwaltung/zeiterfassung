@@ -28,6 +28,11 @@ public record TenantUser(
             '}';
     }
 
+    /**
+     * user is active when {@linkplain #status()} is {@linkplain UserStatus#ACTIVE} or {@linkplain UserStatus#UNKNOWN}.
+     *
+     * @return {@code true} when user is active, {@code false} otherwise
+     */
     public boolean isActive() {
         return status == UserStatus.ACTIVE || status == UserStatus.UNKNOWN;
     }
