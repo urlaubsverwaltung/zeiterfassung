@@ -26,20 +26,22 @@ abstract class OAuth2TenantUserService implements OAuth2UserService<OidcUserRequ
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
 
         final OidcUser oidcUser = delegate.loadUser(userRequest);
-        final Optional<TenantUser> tenantUser = loadTenantUser(userRequest, oidcUser);
+        final Optional<TenantUser> maybeTenantUser = loadTenantUser(userRequest, oidcUser);
 
-        if (tenantUser.isEmpty()) {
+        if (maybeTenantUser.isEmpty()) {
             return oidcUser;
         }
 
-        if (!tenantUser.get().isActive()) {
+        final TenantUser tenantUser = maybeTenantUser.get();
+
+        if (!tenantUser.isActive()) {
             // prevent login of non-active users
-            throw new UserNotActiveException(tenantUser.get().id());
+            throw new UserNotActiveException(tenantUser.id());
         }
 
         final List<GrantedAuthority> combinedAuthorities = Stream.concat(
             oidcUser.getAuthorities().stream(),
-            tenantUser.get().authorities().stream().map(SecurityRole::authority)
+            tenantUser.authorities().stream().map(SecurityRole::authority)
         ).toList();
 
         return new DefaultOidcUser(combinedAuthorities, oidcUser.getIdToken(), oidcUser.getUserInfo());
