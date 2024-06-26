@@ -21,6 +21,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -200,7 +201,7 @@ class TenantUserServiceImplTest {
                 final Set<SecurityRole> authorities = Set.of(SecurityRole.ZEITERFASSUNG_USER);
                 final Instant now = clock.instant();
 
-                when(repository.save(any(TenantUserEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                when(repository.save(any(TenantUserEntity.class))).thenAnswer(returnsFirstArg());
 
                 final TenantUser result = sut.createNewUser(uuid, givenName, familyName, eMailAddress, authorities);
 
@@ -253,7 +254,7 @@ class TenantUserServiceImplTest {
                 final TenantUser update = updateFromEntity(currentEntity, "updatedGivenName", "updatedFamilyName", "updatedEmail@example.com");
 
                 when(repository.findById(any())).thenReturn(Optional.of(currentEntity));
-                when(repository.save(any(TenantUserEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                when(repository.save(any(TenantUserEntity.class))).thenAnswer(returnsFirstArg());
 
                 TenantUser result = sut.updateUser(update);
 
