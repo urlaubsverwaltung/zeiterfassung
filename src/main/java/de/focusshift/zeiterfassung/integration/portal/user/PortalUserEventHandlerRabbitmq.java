@@ -69,6 +69,8 @@ public class PortalUserEventHandlerRabbitmq {
             .ifPresentOrElse(existing -> {
                 LOG.info("Found existing user with userId={} of tenantId={} - updating user ...", event.uuid(), tenantId);
                 tenantUserService.updateUser(new TenantUser(existing.id(), existing.localId(), event.firstName(), event.lastName(), new EMailAddress(event.email()), existing.firstLoginAt(), existing.authorities(), existing.createdAt(), existing.updatedAt(), existing.deactivatedAt(), existing.deletedAt(), existing.status()));
+                // all users who existed before the introduction of this feature have the status UNKNOWN
+                // therefore we're handling this state like an active user -> activate the user / toggle the userStatus
                 if(UserStatus.UNKNOWN.equals(existing.status())) {
                     LOG.info("Found existing user with userId={} of tenantId={} with status=UNKNOWN - activating user ...", event.uuid(), tenantId);
                     tenantUserService.activateUser(existing.localId());
