@@ -34,7 +34,7 @@ abstract class OAuth2TenantUserService implements OAuth2UserService<OidcUserRequ
 
         if (!tenantUser.get().isActive()) {
             // prevent login of non-active users
-            throw new UserNotActiveException();
+            throw new UserNotActiveException(tenantUser.get().id());
         }
 
         final List<GrantedAuthority> combinedAuthorities = Stream.concat(
@@ -51,8 +51,8 @@ abstract class OAuth2TenantUserService implements OAuth2UserService<OidcUserRequ
         @Serial
         private static final long serialVersionUID = 8861681937476923606L;
 
-        public UserNotActiveException() {
-            super("user is not active!");
+        public UserNotActiveException(String userId) {
+            super("user with id=%s is not active!".formatted(userId));
         }
     }
 }
