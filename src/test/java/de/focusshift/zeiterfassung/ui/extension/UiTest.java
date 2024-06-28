@@ -32,7 +32,7 @@ public @interface UiTest {
             return new Options()
                 .setConnectOptions(new BrowserType.ConnectOptions()
                     // increase to make test steps slower and be able to follow it with your own eyes.
-                    .setSlowMo(200)
+                    .setSlowMo(0)
                 )
                 .setContextOptions(new Browser.NewContextOptions()
                     .setRecordVideoDir(Paths.get("target"))
