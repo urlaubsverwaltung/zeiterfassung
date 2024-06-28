@@ -86,6 +86,12 @@ public class TimeClockService {
             });
     }
 
+    public List<TimeClock> findAllTimeClocks(UserId userId) {
+        return timeClockRepository.findAllByOwnerOrderByIdAsc(userId.value()).stream()
+            .map(TimeClockService::toTimeClock)
+            .toList();
+    }
+
     private static TimeClockEntity toEntity(TimeClock timeClock) {
         return TimeClockEntity.builder()
             .id(timeClock.id())

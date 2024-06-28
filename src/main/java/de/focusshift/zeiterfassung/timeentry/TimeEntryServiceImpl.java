@@ -96,6 +96,14 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
+    public List<TimeEntry> getEntries(UserId userId) {
+        return timeEntryRepository.findAllByOwnerOrderByIdAsc(userId.value())
+            .stream()
+            .map(this::toTimeEntry)
+            .toList();
+    }
+
+    @Override
     public Map<UserIdComposite, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive) {
 
         final Instant fromInstant = toInstant(from);
