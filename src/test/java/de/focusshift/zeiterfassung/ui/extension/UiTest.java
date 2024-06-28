@@ -59,6 +59,7 @@ public @interface UiTest {
         @Override
         public Options getOptions() {
             return new Options()
+                // you may have to adapt the CI build workflow when changing the browser
 //                .setBrowserName("chromium") // webkit | firefox | chromium (default)
                 .setConnectOptions(new BrowserType.ConnectOptions()
                     // increase to make test steps slower and be able to follow it with your own eyes.
