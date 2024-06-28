@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
+import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -47,11 +48,13 @@ class TenantUserCreatorAndUpdaterTest {
     @Test
     void ensureToUpdateTenantUserIfTenantUserWithSubjectDoesExist() {
 
+        final TenantUser tenantUser = anyTenantUser("uniqueIdentifier", Set.of());
+
         final Map<String, Object> sub = Map.of(
-            "sub", "uniqueIdentifier",
-            "given_name", "Samuel",
-            "family_name", "Jackson",
-            "email", "s.jackson@example.org"
+            "sub", tenantUser.id(),
+            "given_name", tenantUser.givenName(),
+            "family_name", tenantUser.familyName(),
+            "email", tenantUser.eMail().value()
         );
         final OidcIdToken idToken = new OidcIdToken("tokenValue", Instant.now(), Instant.MAX, sub);
 
@@ -60,7 +63,7 @@ class TenantUserCreatorAndUpdaterTest {
         final Authentication authentication = new OAuth2AuthenticationToken(new DefaultOidcUser(grantedAuthorities, idToken), grantedAuthorities, "myRegistrationId");
         final InteractiveAuthenticationSuccessEvent event = new InteractiveAuthenticationSuccessEvent(authentication, this.getClass());
 
-        final TenantUser tenantUser = new TenantUser("uniqueIdentifier", 1L, "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), Set.of());
+
         when(tenantUserService.findById(new UserId("uniqueIdentifier"))).thenReturn(Optional.of(tenantUser));
 
         sut.handle(event);
@@ -134,5 +137,10 @@ class TenantUserCreatorAndUpdaterTest {
             // yes - this is an ugly solution, but it is an easy way to test the invalid tenantId case
             return "";
         }
+    }
+
+    private TenantUser anyTenantUser(String id, Set<SecurityRole> authorities) {
+        Instant now = Instant.now();
+        return new TenantUser(id, 1L, "Bruce", "Wayne", new EMailAddress("batman@example.org"), now, authorities, now, now, null, null, UserStatus.ACTIVE);
     }
 }

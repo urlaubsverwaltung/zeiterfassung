@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
+import de.focusshift.zeiterfassung.tenancy.user.UserStatus;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -45,14 +47,10 @@ class UserManagementServiceImplTest {
 
     @Test
     void ensureFindUserById() {
-
-        final UserId userId = new UserId("user-id");
-        final UserLocalId userLocalId = new UserLocalId(42L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        final EMailAddress email = new EMailAddress("mail@example.org");
-
-        final TenantUser tenantUser = new TenantUser(userId.value(), userLocalId.value(), "givenName", "familyName", email, Set.of());
-        final User user = new User(userIdComposite, "givenName", "familyName", email, Set.of());
+        final Instant now = Instant.now();
+        final TenantUser tenantUser = activeTenantUserOne(now);
+        final User user = activeUserOne(now);
+        final UserId userId = user.userId();
 
         when(tenantUserService.findById(userId)).thenReturn(Optional.of(tenantUser));
 
@@ -75,13 +73,10 @@ class UserManagementServiceImplTest {
     @Test
     void ensureFindUserByLocalId() {
 
-        final UserId userId = new UserId("user-id");
-        final UserLocalId userLocalId = new UserLocalId(42L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        final EMailAddress email = new EMailAddress("mail@example.org");
-
-        final TenantUser tenantUser = new TenantUser(userId.value(), userLocalId.value(), "givenName", "familyName", email, Set.of());
-        final User user = new User(userIdComposite, "givenName", "familyName", email, Set.of());
+        final Instant now = Instant.now();
+        final TenantUser tenantUser = activeTenantUserOne(now);
+        final User user = activeUserOne(now);
+        final UserLocalId userLocalId = user.userLocalId();
 
         when(tenantUserService.findByLocalId(userLocalId)).thenReturn(Optional.of(tenantUser));
 
@@ -104,26 +99,17 @@ class UserManagementServiceImplTest {
     @Test
     void ensureFindAllUsersWithQuery() {
 
-        final UserId userId_1 = new UserId("user-id");
-        final UserLocalId userLocalId_1 = new UserLocalId(42L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final EMailAddress email = new EMailAddress("mail@example.org");
+        Instant now = Instant.now();
+        final TenantUser tenantUserOne = activeTenantUserOne(now);
+        final User userOne = activeUserOne(now);
 
-        final TenantUser tenantUser = new TenantUser(userId_1.value(), userLocalId_1.value(), "givenName", "familyName", email, Set.of());
-        final User user = new User(userIdComposite_1, "givenName", "familyName", email, Set.of());
+        final TenantUser tenantUserTwo = activeTenantUserTwo(now);
+        final User userTwo = activeUserTwo(now);
 
-        final UserId userId_2 = new UserId("user-id-2");
-        final UserLocalId userLocalId_2 = new UserLocalId(1337L);
-        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
-        final EMailAddress email2 = new EMailAddress("mail-2@example.org");
-
-        final TenantUser tenantUser2 = new TenantUser(userId_2.value(), userLocalId_2.value(), "givenName-2", "familyName-2", email2, Set.of());
-        final User user2 = new User(userIdComposite_2, "givenName-2", "familyName-2", email2, Set.of());
-
-        when(tenantUserService.findAllUsers("batman")).thenReturn(List.of(tenantUser, tenantUser2));
+        when(tenantUserService.findAllUsers("batman")).thenReturn(List.of(tenantUserOne, tenantUserTwo));
 
         final List<User> actual = sut.findAllUsers("batman");
-        assertThat(actual).containsExactly(user, user2);
+        assertThat(actual).containsExactly(userOne, userTwo);
     }
 
     @Test
@@ -140,26 +126,16 @@ class UserManagementServiceImplTest {
     @Test
     void ensureFindAllByIds() {
 
-        final UserId userId_1 = new UserId("user-id");
-        final UserLocalId userLocalId_1 = new UserLocalId(42L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final EMailAddress email = new EMailAddress("mail@example.org");
+        final Instant now = Instant.now();
+        final TenantUser tenantUserOne = activeTenantUserOne(now);
+        final User userOne = activeUserOne(now);
+        final TenantUser tenantUserTwo = activeTenantUserOne(now);
+        final User userTwo = activeUserOne(now);
 
-        final TenantUser tenantUser = new TenantUser(userId_1.value(), userLocalId_1.value(), "givenName", "familyName", email, Set.of());
-        final User user = new User(userIdComposite_1, "givenName", "familyName", email, Set.of());
+        when(tenantUserService.findAllUsersById(List.of(userOne.userId(), userTwo.userId()))).thenReturn(List.of(tenantUserOne, tenantUserTwo));
 
-        final UserId userId_2 = new UserId("user-id-2");
-        final UserLocalId userLocalId_2 = new UserLocalId(1337L);
-        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
-        final EMailAddress email2 = new EMailAddress("mail-2@example.org");
-
-        final TenantUser tenantUser2 = new TenantUser(userId_2.value(), userLocalId_2.value(), "givenName-2", "familyName-2", email2, Set.of());
-        final User user2 = new User(userIdComposite_2, "givenName-2", "familyName-2", email2, Set.of());
-
-        when(tenantUserService.findAllUsersById(List.of(userId_1, userId_2))).thenReturn(List.of(tenantUser, tenantUser2));
-
-        final List<User> actual = sut.findAllUsersByIds(List.of(userId_1, userId_2));
-        assertThat(actual).containsExactly(user, user2);
+        final List<User> actual = sut.findAllUsersByIds(List.of(userOne.userId(), userTwo.userId()));
+        assertThat(actual).containsExactly(userOne, userTwo);
     }
 
     @Test
@@ -176,26 +152,16 @@ class UserManagementServiceImplTest {
     @Test
     void ensureFindAllByLocalIds() {
 
-        final UserId userId_1 = new UserId("user-id");
-        final UserLocalId userLocalId_1 = new UserLocalId(42L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final EMailAddress email = new EMailAddress("mail@example.org");
+        final Instant now = Instant.now();
+        final TenantUser tenantUserOne = activeTenantUserOne(now);
+        final User userOne = activeUserOne(now);
+        final TenantUser tenantUserTwo = activeTenantUserOne(now);
+        final User userTwo = activeUserOne(now);
 
-        final TenantUser tenantUser = new TenantUser(userId_1.value(), userLocalId_1.value(), "givenName", "familyName", email, Set.of());
-        final User user = new User(userIdComposite_1, "givenName", "familyName", email, Set.of());
+        when(tenantUserService.findAllUsersByLocalId(List.of(userOne.userLocalId(), userTwo.userLocalId()))).thenReturn(List.of(tenantUserOne, tenantUserTwo));
 
-        final UserId userId_2 = new UserId("user-id-2");
-        final UserLocalId userLocalId_2 = new UserLocalId(1337L);
-        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
-        final EMailAddress email2 = new EMailAddress("mail-2@example.org");
-
-        final TenantUser tenantUser2 = new TenantUser(userId_2.value(), userLocalId_2.value(), "givenName-2", "familyName-2", email2, Set.of());
-        final User user2 = new User(userIdComposite_2, "givenName-2", "familyName-2", email2, Set.of());
-
-        when(tenantUserService.findAllUsersByLocalId(List.of(userLocalId_1, userLocalId_2))).thenReturn(List.of(tenantUser, tenantUser2));
-
-        final List<User> actual = sut.findAllUsersByLocalIds((List.of(userLocalId_1, userLocalId_2)));
-        assertThat(actual).containsExactly(user, user2);
+        final List<User> actual = sut.findAllUsersByLocalIds(List.of(userOne.userLocalId(), userTwo.userLocalId()));
+        assertThat(actual).containsExactly(userOne, userTwo);
     }
 
     @Test
@@ -212,44 +178,49 @@ class UserManagementServiceImplTest {
     @Test
     void ensureUpdateUserPermissions() throws Exception {
 
-        final UserId userId = new UserId("user-id");
-        final UserLocalId userLocalId = new UserLocalId(42L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        final EMailAddress email = new EMailAddress("mail@example.org");
-
-        when(tenantUserService.findByLocalId(userLocalId)).thenReturn(
-            Optional.of(
-                new TenantUser(
-                    "user-id",
-                    42L,
-                    "given name",
-                    "family name",
-                    email,
-                    Set.of()
-                )
-            )
-        );
+        TenantUser existing = activeTenantUserOne(Instant.now());
+        UserLocalId localId = new UserLocalId(existing.localId());
+        when(tenantUserService.findByLocalId(localId)).thenReturn(Optional.of(existing));
 
         final TenantUser expectedUpdatedTenant = new TenantUser(
-            "user-id",
-            42L,
-            "given name",
-            "family name",
-            email,
-            Set.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL)
+            existing.id(),
+            existing.localId(),
+            existing.givenName(),
+            existing.familyName(),
+            existing.eMail(),
+            existing.firstLoginAt(),
+            Set.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL),
+            existing.createdAt(),
+            existing.updatedAt(),
+            existing.deactivatedAt(),
+            existing.deletedAt(),
+            existing.status()
         );
 
         when(tenantUserService.updateUser(expectedUpdatedTenant)).thenAnswer(returnsFirstArg());
 
-        final User actualUpdatedUser = sut.updateUserPermissions(userLocalId, Set.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL));
-        assertThat(actualUpdatedUser).isEqualTo(
-            new User(
-                userIdComposite,
-                "given name",
-                "family name",
-                email,
-                Set.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL)
-            )
-        );
+        final User actualUpdatedUser = sut.updateUserPermissions(localId, Set.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL));
+        assertThat(actualUpdatedUser.authorities()).isEqualTo(Set.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL));
     }
+
+    private static TenantUser activeTenantUserOne(Instant now) {
+        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
+    }
+
+    private static User activeUserOne(Instant now) {
+        return fromTenantUser(activeTenantUserOne(now));
+    }
+
+    private static TenantUser activeTenantUserTwo(Instant now) {
+        return new TenantUser("my-external-id-2", 2L, "petra", "panter", new EMailAddress("petra@panter.com"), now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
+    }
+
+    private static User activeUserTwo(Instant now) {
+        return fromTenantUser(activeTenantUserTwo(now));
+    }
+
+    private static User fromTenantUser(TenantUser input) {
+        return new User(new UserIdComposite(new UserId(input.id()), new UserLocalId(input.localId())), input.givenName(), input.familyName(), input.eMail(), input.authorities());
+    }
+
 }

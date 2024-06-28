@@ -27,4 +27,8 @@ public interface TenantUserService {
     Optional<TenantUser> findByLocalId(UserLocalId localId);
 
     void deleteUser(Long id);
+
+    void activateUser(Long id);
+
+    void deactivateUser(Long id);
 }

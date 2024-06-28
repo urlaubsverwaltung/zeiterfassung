@@ -34,12 +34,12 @@ class TenantUserCreatorAndUpdater {
     public void handle(InteractiveAuthenticationSuccessEvent event) {
 
         if (event.getAuthentication() instanceof final OAuth2AuthenticationToken oauthToken) {
-                final TenantId tenantId = new TenantId(oauthToken.getAuthorizedClientRegistrationId());
-                if (!tenantId.valid()) {
-                    LOG.warn("Ignoring InteractiveAuthenticationSuccessEvent for invalid tenantId={}", tenantId.tenantId());
-                } else {
-                    tenantContextHolder.runInTenantIdContext(tenantId, passedTenantId -> createOrUpdateTenantUser(oauthToken.getPrincipal(), passedTenantId));
-                }
+            final TenantId tenantId = new TenantId(oauthToken.getAuthorizedClientRegistrationId());
+            if (!tenantId.valid()) {
+                LOG.warn("Ignoring InteractiveAuthenticationSuccessEvent for invalid tenantId={}", tenantId.tenantId());
+            } else {
+                tenantContextHolder.runInTenantIdContext(tenantId, passedTenantId -> createOrUpdateTenantUser(oauthToken.getPrincipal(), passedTenantId));
+            }
         } else {
             LOG.warn("Ignoring InteractiveAuthenticationSuccessEvent for unexpected authentication token type={}", event.getAuthentication().getClass());
         }
@@ -51,7 +51,10 @@ class TenantUserCreatorAndUpdater {
             final UserId userId = new UserId(oidcUser.getSubject());
 
             tenantUserService.findById(userId).ifPresentOrElse(user -> {
-                final TenantUser tenantUser = new TenantUser(user.id(), user.localId(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, user.authorities());
+
+                final UserStatus userStatus = determineUserStatus(user.status());
+
+                final TenantUser tenantUser = new TenantUser(user.id(), user.localId(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, user.firstLoginAt(), user.authorities(), user.createdAt(), user.updatedAt(), user.deactivatedAt(), user.deletedAt(), userStatus);
                 LOG.info("updating existing user={} of tenantId={} with data from oidc token", userId.value(), tenantId);
                 tenantUserService.updateUser(tenantUser);
             }, () -> {
@@ -59,5 +62,14 @@ class TenantUserCreatorAndUpdater {
                 tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, Set.of(ZEITERFASSUNG_USER));
             });
         }
+    }
+
+    private static UserStatus determineUserStatus(UserStatus status) {
+        if (UserStatus.UNKNOWN.equals(status)) {
+            // if the user status is unknown, we assume the user is active
+            // because there was a successful login
+            return UserStatus.ACTIVE;
+        }
+        return status;
     }
 }
