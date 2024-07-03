@@ -10,6 +10,7 @@ import org.springframework.security.web.context.SecurityContextPersistenceFilter
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.transaction.TransactionSystemException;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -63,7 +65,6 @@ class TimeClockControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("referer-url"));
 
-        verify(timeClockService).getCurrentTimeClock(new UserId("batman"));
         verify(timeClockService).startTimeClock(new UserId("batman"));
         verifyNoMoreInteractions(timeClockService);
     }
@@ -71,17 +72,17 @@ class TimeClockControllerTest {
     @Test
     void ensureStartTimeClockThrowsWhenClockIsRunningAlready() throws Exception {
 
-        final ZonedDateTime startedAt = ZonedDateTime.of(2023, 1, 11, 13, 37, 0, 0, ZONE_EUROPE_BERLIN);
-        final TimeClock timeClock = new TimeClock(1L, new UserId("batman"), startedAt, "awesome comment", false, Optional.empty());
-        when(timeClockService.getCurrentTimeClock(new UserId("batman"))).thenReturn(Optional.of(timeClock));
+        doThrow(new TransactionSystemException(""))
+            .when(timeClockService).startTimeClock(new UserId("batman"));
 
         perform(
             post("/timeclock/start")
                 .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .header("Referer", "referer-url")
         )
-            .andExpect(status().isConflict());
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("referer-url"));
 
-        verify(timeClockService).getCurrentTimeClock(new UserId("batman"));
         verifyNoMoreInteractions(timeClockService);
     }
 

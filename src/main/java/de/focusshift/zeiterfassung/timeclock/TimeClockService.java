@@ -3,15 +3,24 @@ package de.focusshift.zeiterfassung.timeclock;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
+
 @Service
 public class TimeClockService {
+
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final TimeClockRepository timeClockRepository;
     private final TimeEntryService timeEntryService;
@@ -27,10 +36,27 @@ public class TimeClockService {
         return timeClockRepository.findByOwnerAndStoppedAtIsNull(userId.value()).map(TimeClockService::toTimeClock);
     }
 
-    void startTimeClock(UserId userId) {
+    /**
+     * Starts the {@linkplain TimeClock} for the given user. Does nothing when one is running already.
+     *
+     * @param userId user to start the {@linkplain TimeClock}
+     *
+     * @throws org.springframework.transaction.TransactionSystemException
+     *      when there are concurrent hits and the TimeClock cannot be written anymore
+     */
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE)
+    public void startTimeClock(UserId userId) {
+
+        final boolean present = timeClockRepository.findByOwnerAndStoppedAtIsNull(userId.value()).isPresent();
+        if (present) {
+            LOG.info("Not starting TimeClock for user {} since already started", userId.value());
+            return;
+        }
+
         final ZonedDateTime now = ZonedDateTime.now(userSettingsProvider.zoneId());
         final TimeClock timeClock = new TimeClock(userId, now);
 
+        LOG.info("Starting TimeClock for user {}", userId.value());
         timeClockRepository.save(toEntity(timeClock));
     }
 
@@ -60,7 +86,21 @@ public class TimeClockService {
             .toList();
     }
 
-    TimeClock updateTimeClock(UserId userId, TimeClockUpdate timeClockUpdate) throws TimeClockNotStartedException {
+    /**
+     * Updates the current {@linkplain TimeClock}.
+     *
+     * @param userId user to update the {@linkplain TimeClock}
+     * @param timeClockUpdate new timeClock info
+     *
+     * @return the updated {@linkplain TimeClock}
+     *
+     * @throws TimeClockNotStartedException
+     *              when there is no running timeClock
+     * @throws org.springframework.transaction.TransactionSystemException
+     *              when there are concurrent hits and the TimeClock cannot be written anymore
+     */
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE)
+    public TimeClock updateTimeClock(UserId userId, TimeClockUpdate timeClockUpdate) throws TimeClockNotStartedException {
 
         final TimeClock timeClock = getCurrentTimeClock(userId)
             .map(existingTimeClock -> prepareTimeClockUpdate(existingTimeClock, timeClockUpdate))
@@ -71,6 +111,11 @@ public class TimeClockService {
         return toTimeClock(timeClockRepository.save(timeClockEntity));
     }
 
+    /**
+     * When there is a running {@linkplain TimeClock} it will be stopped, otherwise nothing is done.
+     *
+     * @param userId id of the user which timeClock will be stopped
+     */
     void stopTimeClock(UserId userId) {
         timeClockRepository.findByOwnerAndStoppedAtIsNull(userId.value())
             .map(entity -> timeClockEntityWithStoppedAt(entity, ZonedDateTime.now(userSettingsProvider.zoneId())))
