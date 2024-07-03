@@ -108,6 +108,9 @@ public class TimeClockService {
 
         final TimeClockEntity timeClockEntity = toEntity(timeClock);
 
+        LOG.info("Updating TimeClock for user {}", userId.value());
+        LOG.debug("Next TimeClock: {}", timeClock);
+
         return toTimeClock(timeClockRepository.save(timeClockEntity));
     }
 
@@ -121,14 +124,16 @@ public class TimeClockService {
             .map(entity -> timeClockEntityWithStoppedAt(entity, ZonedDateTime.now(userSettingsProvider.zoneId())))
             .map(timeClockRepository::save)
             .map(TimeClockService::toTimeClock)
-            .ifPresent(timeClock -> {
+            .ifPresentOrElse(
+                timeClock -> {
+                    final ZonedDateTime start = timeClock.startedAt();
+                    final ZonedDateTime end = timeClock.stoppedAt()
+                        .orElseThrow(() -> new IllegalStateException("expected stoppedAt to contain a value."));
 
-                final ZonedDateTime start = timeClock.startedAt();
-                final ZonedDateTime end = timeClock.stoppedAt()
-                    .orElseThrow(() -> new IllegalStateException("expected stoppedAt to contain a value."));
-
-                timeEntryService.createTimeEntry(userId, timeClock.comment(), start, end, timeClock.isBreak());
-            });
+                    LOG.info("Stopping TimeClock={} for user={} and creating TimeEntry for it.", timeClock.id(), userId.value());
+                    timeEntryService.createTimeEntry(userId, timeClock.comment(), start, end, timeClock.isBreak());
+                },
+                () -> LOG.info("Not stopping TimeClock for user {} since nothing found. No TimeEntry created.", userId.value()));
     }
 
     private static TimeClockEntity toEntity(TimeClock timeClock) {
