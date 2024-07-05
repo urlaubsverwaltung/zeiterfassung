@@ -3,6 +3,7 @@ import "../components/details-dropdown";
 import "../components/feedback-form";
 import "../components/navigation";
 import "../components/time-clock";
+import { initPreventDoubleClickSubmit } from "../components/form";
 import { initFeedbackHeartView } from "../components/feedback-heart";
 
 const showFeedbackKudo =
@@ -15,3 +16,5 @@ initFeedbackHeartView({
     showFeedbackKudo: showFeedbackKudo,
   },
 });
+
+initPreventDoubleClickSubmit();
