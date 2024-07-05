@@ -1,3 +1,12 @@
+/**
+ * Adds `input` and `change` event listeners and submits forms automatically.
+ *
+ * <p>Autosubmit can be configured with the `data-autosubmit` attribute on HTML elements.
+ * ```html
+ * <input type="text" data-autosubmit="submitter" data-auto-submit-delay="100" />
+ * <button type="submit" id="submitter">Submit</button>
+ * ```
+ */
 export function initAutosubmit() {
   let keyupSubmit;
 
