@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,10 +46,12 @@ class ReloadAuthenticationAuthoritiesFilterTest {
     private SessionService sessionService;
     @Mock
     private DelegatingSecurityContextRepository securityContextRepository;
+    @Mock(answer = CALLS_REAL_METHODS)
+    private TenantContextHolder tenantContextHolder;
 
     @BeforeEach
     void setUp() {
-        sut = new ReloadAuthenticationAuthoritiesFilter(userManagementService, sessionService, securityContextRepository);
+        sut = new ReloadAuthenticationAuthoritiesFilter(userManagementService, sessionService, securityContextRepository, tenantContextHolder);
     }
 
     @Test
