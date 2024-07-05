@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -36,14 +37,17 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
     private final UserManagementService userManagementService;
     private final SessionService sessionService;
     private final DelegatingSecurityContextRepository securityContextRepository;
+    private final TenantContextHolder tenantContextHolder;
 
     ReloadAuthenticationAuthoritiesFilter(UserManagementService userManagementService,
                                           SessionService sessionService,
-                                          DelegatingSecurityContextRepository securityContextRepository) {
+                                          DelegatingSecurityContextRepository securityContextRepository,
+                                          TenantContextHolder tenantContextHolder) {
 
         this.userManagementService = userManagementService;
         this.sessionService = sessionService;
         this.securityContextRepository = securityContextRepository;
+        this.tenantContextHolder = tenantContextHolder;
     }
 
     @Override
@@ -69,15 +73,18 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
         final OAuth2AuthenticationToken oAuth2Auth = (OAuth2AuthenticationToken) authentication;
         final OAuth2User oAuth2User = oAuth2Auth.getPrincipal();
 
-        final User user = userManagementService.findUserById(new UserId(oAuth2User.getName()))
-            .orElseThrow(() -> new IllegalStateException("no user found with userId=" + authentication.getName()));
+        tenantContextHolder.runInTenantIdContext(oAuth2Auth.getAuthorizedClientRegistrationId(), tenantId -> {
+            final User user = userManagementService.findUserById(new UserId(oAuth2User.getName()))
+                .orElseThrow(() -> new IllegalStateException("no user found with userId=" + authentication.getName()));
 
-        final Set<GrantedAuthority> updatedAuthorities = mergeAuthorities(oAuth2Auth, user);
-        final Authentication updatedAuthentication = new OAuth2AuthenticationToken(oAuth2User, updatedAuthorities, oAuth2Auth.getAuthorizedClientRegistrationId());
+            final Set<GrantedAuthority> updatedAuthorities = mergeAuthorities(oAuth2Auth, user);
+            final Authentication updatedAuthentication = new OAuth2AuthenticationToken(oAuth2User, updatedAuthorities, tenantId);
 
-        context.setAuthentication(updatedAuthentication);
-        securityContextRepository.saveContext(context, request, response);
-        LOG.info("Updated authorities of person with the id {} from {} to {}", user.userIdComposite(), authentication.getAuthorities(), updatedAuthorities);
+            context.setAuthentication(updatedAuthentication);
+            securityContextRepository.saveContext(context, request, response);
+            LOG.info("Updated authorities of person with the id {} from {} to {}", user.userIdComposite(), authentication.getAuthorities(), updatedAuthorities);
+
+        });
 
         chain.doFilter(request, response);
     }

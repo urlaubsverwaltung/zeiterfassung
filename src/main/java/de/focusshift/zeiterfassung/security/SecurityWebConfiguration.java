@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
@@ -44,7 +45,7 @@ public class SecurityWebConfiguration {
     }
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http, DelegatingSecurityContextRepository securityContextRepository) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http, DelegatingSecurityContextRepository securityContextRepository, TenantContextHolder tenantContextHolder) throws Exception {
         //@formatter:off
         http
             .authorizeHttpRequests(authorizeHttpRequests ->
@@ -79,7 +80,7 @@ public class SecurityWebConfiguration {
         );
 
         http.securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository));
-        http.addFilterAfter(new ReloadAuthenticationAuthoritiesFilter(userManagementService, sessionService, securityContextRepository), BasicAuthenticationFilter.class);
+        http.addFilterAfter(new ReloadAuthenticationAuthoritiesFilter(userManagementService, sessionService, securityContextRepository, tenantContextHolder), BasicAuthenticationFilter.class);
 
         //@formatter:on
         return http.build();
