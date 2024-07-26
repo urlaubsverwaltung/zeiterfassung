@@ -1,7 +1,6 @@
 package de.focusshift.zeiterfassung.importer;
 
 import de.focusshift.zeiterfassung.MultiTenantTestContainersBase;
-import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantService;
