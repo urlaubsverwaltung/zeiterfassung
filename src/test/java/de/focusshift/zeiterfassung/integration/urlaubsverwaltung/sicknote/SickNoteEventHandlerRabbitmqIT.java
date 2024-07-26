@@ -7,7 +7,7 @@ import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNotePeriodDTO
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNotePersonDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteUpdatedEventDTO;
 import de.focusshift.zeiterfassung.RabbitTestConfiguration;
-import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.AbsenceService;
 import de.focusshift.zeiterfassung.absence.AbsenceWrite;
@@ -61,7 +61,7 @@ import static org.mockito.Mockito.when;
     }
 )
 @Import(RabbitTestConfiguration.class)
-class SickNoteEventHandlerRabbitmqIT extends TestContainersBase {
+class SickNoteEventHandlerRabbitmqIT extends SingleTenantTestContainersBase {
 
     protected static final String TENANT_ID = "tenant";
     protected static final String TOPIC = "topic";

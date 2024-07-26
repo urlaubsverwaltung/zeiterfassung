@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
-import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-class ReportCsvServiceIT extends TestContainersBase {
+class ReportCsvServiceIT extends SingleTenantTestContainersBase {
 
     @Autowired
     private ReportCsvService sut;

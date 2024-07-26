@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
-import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Rollback(value = false)
-class TenantUserRepositoryIT extends TestContainersBase {
+class TenantUserRepositoryIT extends SingleTenantTestContainersBase {
 
     @Autowired
     private TenantUserRepository sut;

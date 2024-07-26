@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.absence;
 
 
-import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @Transactional
-class AbsenceRepositoryIT extends TestContainersBase {
+class AbsenceRepositoryIT extends SingleTenantTestContainersBase {
 
     private static final TenantId TENANT_ID = new TenantId("default");
     private static final String USER = "user-id";

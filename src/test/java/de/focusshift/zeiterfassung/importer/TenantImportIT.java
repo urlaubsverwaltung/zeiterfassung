@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.importer;
 
-import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.MultiTenantTestContainersBase;
+import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantService;
@@ -49,7 +50,7 @@ import static org.awaitility.Awaitility.await;
     }
 )
 @TestPropertySource("classpath:application-dev-multitenant.yaml")
-class TenantImportIT extends TestContainersBase {
+class TenantImportIT extends MultiTenantTestContainersBase {
 
     private static final String TENANT_ID = "bac98fef";
     private static final UserId EXTERNAL_USER_ID = new UserId("58400ef7-1cc9-48cb-93a8-f45c7af186ad");

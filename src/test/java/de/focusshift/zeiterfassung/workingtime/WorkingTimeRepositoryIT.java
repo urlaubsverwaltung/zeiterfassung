@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.workingtime;
 
-import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-class WorkingTimeRepositoryIT extends TestContainersBase {
+class WorkingTimeRepositoryIT extends SingleTenantTestContainersBase {
 
     @Autowired
     private WorkingTimeRepository sut;

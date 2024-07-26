@@ -2,7 +2,7 @@ package de.focusshift.zeiterfassung.ui;
 
 import com.microsoft.playwright.Page;
 import de.focusshift.zeiterfassung.TestKeycloakContainer;
-import de.focusshift.zeiterfassung.TestPostgreSQLContainer;
+import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
 import de.focusshift.zeiterfassung.ui.extension.UiTest;
 import de.focusshift.zeiterfassung.ui.pages.LoginPage;
 import de.focusshift.zeiterfassung.ui.pages.NavigationPage;
@@ -28,7 +28,7 @@ class UsersUIIT {
     private int port;
 
     @Container
-    private static final TestPostgreSQLContainer postgre = new TestPostgreSQLContainer();
+    private static final SingleTenantPostgreSQLContainer postgre = new SingleTenantPostgreSQLContainer();
     @Container
     private static final TestKeycloakContainer keycloak = new TestKeycloakContainer();
 

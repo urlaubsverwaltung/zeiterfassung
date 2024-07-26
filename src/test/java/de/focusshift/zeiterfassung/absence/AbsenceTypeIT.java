@@ -2,7 +2,7 @@ package de.focusshift.zeiterfassung.absence;
 
 import de.focus_shift.urlaubsverwaltung.extension.api.vacationtype.VacationTypeUpdatedEventDTO;
 import de.focusshift.zeiterfassung.RabbitTestConfiguration;
-import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
 )
 @Import(RabbitTestConfiguration.class)
 @Transactional
-class AbsenceTypeIT extends TestContainersBase {
+class AbsenceTypeIT extends SingleTenantTestContainersBase {
 
     @Autowired
     private AbsenceTypeService absenceTypeService;
