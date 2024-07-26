@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.mock;
 
 @SpringBootTest
 @Transactional
-class TimeEntryRepositoryIT extends TestContainersBase {
+class TimeEntryRepositoryIT extends SingleTenantTestContainersBase {
 
     @Autowired
     private TimeEntryRepository sut;

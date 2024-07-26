@@ -29,8 +29,8 @@ server:
 
 spring:
   datasource:
-    username: app_user
-    password: app_password
+    username: admin_user
+    password: admin_password
   jpa:
     hibernate:
       ddl-auto: validate

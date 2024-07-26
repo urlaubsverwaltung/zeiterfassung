@@ -19,32 +19,17 @@ zeiterfassung:
     single:
       defaultTenantId: default
 
-admin:
-  datasource:
-    password: admin_password
-    url: ${spring.datasource.url}
-    username: admin_user
-
 server:
   compression:
     enabled: true
 
 spring:
-  datasource:
-    password: app_password
-    url: jdbc:postgresql://localhost:5432/zeiterfassung
-    username: app_user
   jpa:
     hibernate:
       ddl-auto: validate
     open-in-view: false
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-main.xml
-    parameters:
-      database: zeiterfassung
-      password: ${spring.datasource.password}
-      restricteduser: ${spring.datasource.username}
-      schema: public
   mail:
     host: localhost
     port: 1025

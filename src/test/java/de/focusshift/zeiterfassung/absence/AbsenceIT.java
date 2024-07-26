@@ -5,7 +5,7 @@ import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPer
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPersonDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
 import de.focusshift.zeiterfassung.RabbitTestConfiguration;
-import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -56,7 +56,7 @@ import static org.mockito.Mockito.when;
     }
 )
 @Import(RabbitTestConfiguration.class)
-class AbsenceIT extends TestContainersBase {
+class AbsenceIT extends SingleTenantTestContainersBase {
 
     protected static final String TENANT_ID = "default";
     protected static final String TOPIC = "topic";

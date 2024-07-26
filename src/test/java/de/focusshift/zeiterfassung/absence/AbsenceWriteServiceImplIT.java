@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.absence;
 
-import de.focusshift.zeiterfassung.TestContainersBase;
+import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @Transactional
-class AbsenceWriteServiceImplIT extends TestContainersBase {
+class AbsenceWriteServiceImplIT extends SingleTenantTestContainersBase {
 
     @Autowired
     private AbsenceWriteServiceImpl sut;
