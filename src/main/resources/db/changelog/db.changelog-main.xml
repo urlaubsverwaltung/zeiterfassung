@@ -28,5 +28,6 @@
   <include relativeToChangelogFile="true" file="changelog-2.4.0-cleanup-absence.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.5.0-delete-tenant-user-cascade.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.7.0-add-user-status.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-2.6.4-enable-row-level-security-on-absence.xml"/>
 
 </databaseChangeLog>
