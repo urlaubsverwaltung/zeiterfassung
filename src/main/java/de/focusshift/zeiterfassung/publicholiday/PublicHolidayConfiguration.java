@@ -14,7 +14,7 @@ import static de.focus_shift.jollyday.core.ManagerParameters.create;
 @Configuration
 class PublicHolidayConfiguration {
 
-    private static final List<String> COUNTRIES = List.of("de", "at", "ch", "gb", "gr", "mt", "it", "hr", "es", "nl");
+    private static final List<String> COUNTRIES = List.of("de", "at", "ch", "gb", "gr", "mt", "it", "hr", "es", "nl", "lt", "be", "pl");
 
     @Bean
     Map<String, HolidayManager> holidayManagerMap() {
