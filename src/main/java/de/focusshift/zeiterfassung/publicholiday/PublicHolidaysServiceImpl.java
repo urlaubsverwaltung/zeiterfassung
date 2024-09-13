@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import static de.focus_shift.jollyday.core.HolidayType.PUBLIC_HOLIDAY;
 import static java.util.stream.Collectors.groupingBy;
 
 @Service
@@ -49,7 +50,7 @@ class PublicHolidaysServiceImpl implements PublicHolidaysService {
         }
 
         final HolidayManager holidayManager = holidayManagers.get(federalState.getCountry());
-        return holidayManager.getHolidays(from, to, federalState.getCodes())
+        return holidayManager.getHolidays(from, to, PUBLIC_HOLIDAY, federalState.getCodes())
             .stream()
             .map(holiday -> new PublicHoliday(holiday.getDate(), holiday::getDescription))
             .collect(groupingBy(PublicHoliday::date));
