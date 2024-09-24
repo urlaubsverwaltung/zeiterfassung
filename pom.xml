@@ -20,6 +20,14 @@
     <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
     <java.version>21</java.version>
     <jollyday.version>0.32.0</jollyday.version>
+
+    <!-- Remove commons-compress dependency when testcontainers ships with commons-compress >= 1.27.1, see
+     https://github.com/testcontainers/testcontainers-java/issues/8338
+     https://www.cve.org/CVERecord?id=CVE-2024-25710
+     https://www.cve.org/CVERecord?id=CVE-2024-26308
+    -->
+    <commons-compress.version>1.27.1</commons-compress.version>
+
     <node.env>production</node.env>
     <docker-publish-registry>registry.example.com</docker-publish-registry>
     <docker-publish-registry-path>path/example</docker-publish-registry-path>
@@ -230,6 +238,12 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>${commons-compress.version}</version>
       <scope>test</scope>
     </dependency>
 
