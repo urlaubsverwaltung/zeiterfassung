@@ -84,14 +84,18 @@ class DurationFormatterTest {
     }
 
     @Test
-    void ensuresEmptyStringOnNull() {
-        final String durationString = DurationFormatter.toDurationString(null, messageSource, GERMAN);
-        assertThat(durationString).isEmpty();
+    void ensuresWithEmptyHoursAndMinutes() {
+
+        when(messageSource.getMessage("duration.hours", new Object[]{0}, GERMAN)).thenReturn("0 Stunden");
+
+        final Duration duration = Duration.ZERO;
+        final String durationString = DurationFormatter.toDurationString(duration, messageSource, GERMAN);
+        assertThat(durationString).isEqualTo("0 Stunden");
     }
 
     @Test
-    void ensuresWithEmptyHoursAndMinutes() {
-        final String durationString = DurationFormatter.toDurationString(Duration.ofSeconds(0), messageSource, GERMAN);
+    void ensuresEmptyStringOnNull() {
+        final String durationString = DurationFormatter.toDurationString(null, messageSource, GERMAN);
         assertThat(durationString).isEmpty();
     }
 }
