@@ -75,7 +75,7 @@ class ReportCsvServiceTest {
         sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, new UserId("batman"), printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
             """);
     }
 
@@ -103,8 +103,8 @@ class ReportCsvServiceTest {
         sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, batmanId, printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;0,500;hard work;false
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;10:00;10:30;0,500;hard work;false
             """);
     }
 
@@ -143,10 +143,10 @@ class ReportCsvServiceTest {
         sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, batmanId, printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;1,000;hard work;false
-            04.01.2021;Bruce;Wayne;1,000;hard work;false
-            05.01.2021;Bruce;Wayne;8,000;hard work;false
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;10:00;11:00;1,000;hard work;false
+            04.01.2021;Bruce;Wayne;14:00;15:00;1,000;hard work;false
+            05.01.2021;Bruce;Wayne;09:00;17:00;8,000;hard work;false
             """);
     }
 
@@ -166,7 +166,7 @@ class ReportCsvServiceTest {
         sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, new UserId("batman"), printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
             """);
     }
 
@@ -200,8 +200,8 @@ class ReportCsvServiceTest {
         sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, batmanId, printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;0,500;hard work;false
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;10:00;10:30;0,500;hard work;false
             """);
     }
 
@@ -245,10 +245,10 @@ class ReportCsvServiceTest {
         sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, batmanId, printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;1,000;hard work;false
-            04.01.2021;Bruce;Wayne;1,000;hard work;false
-            05.01.2021;Bruce;Wayne;8,000;hard work;false
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;10:00;11:00;1,000;hard work;false
+            04.01.2021;Bruce;Wayne;14:00;15:00;1,000;hard work;false
+            05.01.2021;Bruce;Wayne;09:00;17:00;8,000;hard work;false
             """);
     }
 

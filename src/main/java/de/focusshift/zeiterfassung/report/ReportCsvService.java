@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.PrintWriter;
 import java.text.NumberFormat;
+import java.time.LocalTime;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
@@ -74,11 +75,13 @@ class ReportCsvService {
         final String date = messageSource.getMessage("report.csv.header.date", new Object[]{}, locale);
         final String givenName = messageSource.getMessage("report.csv.header.person.givenName", new Object[]{}, locale);
         final String familyName = messageSource.getMessage("report.csv.header.person.familyName", new Object[]{}, locale);
+        final String start = messageSource.getMessage("report.csv.header.start", new Object[]{}, locale);
+        final String end = messageSource.getMessage("report.csv.header.end", new Object[]{}, locale);
         final String workedHours = messageSource.getMessage("report.csv.header.workedHours", new Object[]{}, locale);
         final String comment = messageSource.getMessage("report.csv.header.comment", new Object[]{}, locale);
         final String isBreak = messageSource.getMessage("report.csv.header.break", new Object[]{}, locale);
 
-        writer.println(String.format("%s;%s;%s;%s;%s;%s", date, givenName, familyName, workedHours, comment, isBreak));
+        writer.println(String.format("%s;%s;%s;%s;%s;%s;%s;%s", date, givenName, familyName, start, end, workedHours, comment, isBreak));
     }
 
     private void writeWeek(ReportWeek reportWeek, Locale locale, PrintWriter writer) {
@@ -99,10 +102,12 @@ class ReportCsvService {
         final String date = dateFormatter.formatDate(reportDayEntry.start().toLocalDate());
         final String givenName = reportDayEntry.user().givenName();
         final String familyName = reportDayEntry.user().familyName();
+        final LocalTime start = reportDayEntry.start().toLocalTime();
+        final LocalTime end = reportDayEntry.end().toLocalTime();
         final String hoursWorked = numberFormat.format(reportDayEntry.workDuration().hoursDoubleValue());
         final String comment = reportDayEntry.comment();
         final boolean isBreak = reportDayEntry.isBreak();
 
-        return String.format("%s;%s;%s;%s;%s;%s", date, givenName, familyName, hoursWorked, comment, isBreak);
+        return String.format("%s;%s;%s;%s;%s;%s;%s;%s", date, givenName, familyName, start, end, hoursWorked, comment, isBreak);
     }
 }
