@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
@@ -74,6 +75,27 @@ class ReportServiceRaw {
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
+    // TODO: Implementation should be aligned to de.focusshift.zeiterfassung.timeentry.TimeEntryServiceImpl.getEntryWeekPage
+    ReportSummary getWeekSummary(Year year, int week, UserId userId) {
+        final User user = userManagementService.findUserById(userId)
+                .orElseThrow(() -> new IllegalStateException("could not find user id=%s".formatted(userId)));
+
+        final LocalDate firstDateOfWeek = userDateService.firstDayOfWeek(year, week);
+        final Period period = new Period(firstDateOfWeek, firstDateOfWeek.plusWeeks(1));
+
+        //TODO: how to handle absences?
+        final Duration plannedWorkingHours =
+                workingTimeCalendarService.getWorkingTimeCalender(period.from, period.toExclusive(), user.userLocalId()).plannedWorkingHours(period.from, period.toExclusive()).duration();
+
+        final Duration hoursWorked = timeEntryService.getEntries(period.from, period.toExclusive(), userId).stream()
+                .map(t -> t.workDuration().duration())
+                .reduce(Duration.ZERO, Duration::plus);
+
+        return new ReportSummary(plannedWorkingHours, hoursWorked, hoursWorked.minus(plannedWorkingHours));
+
+
+    }
+
     ReportWeek getReportWeek(Year year, int week, List<UserLocalId> userLocalIds) {
         return createReportWeek(year, week,
             period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), userLocalIds),
@@ -97,6 +119,25 @@ class ReportServiceRaw {
             period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), List.of(user.userLocalId())),
             period -> Map.of(user.userIdComposite(), absenceService.getAbsencesByUserId(userId, period.from(), period.toExclusive())),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
+    }
+
+    ReportSummary getMonthSummary(YearMonth yearMonth, UserId userId) {
+
+        final User user = userManagementService.findUserById(userId)
+                .orElseThrow(() -> new IllegalStateException("could not find user id=%s".formatted(userId)));
+
+        final Period period = new Period(yearMonth.atDay(1), yearMonth.atEndOfMonth());
+
+        //TODO: how to handle absences?
+        final Duration plannedWorkingHours =
+                workingTimeCalendarService.getWorkingTimeCalender(period.from, period.toExclusive(), user.userLocalId())
+                        .plannedWorkingHours(period.from, period.toExclusive()).duration();
+
+        final Duration hoursWorked = timeEntryService.getEntries(period.from, period.toExclusive(), userId).stream()
+                .map(t -> t.workDuration().duration())
+                .reduce(Duration.ZERO, Duration::plus);
+
+        return new ReportSummary(plannedWorkingHours, hoursWorked, hoursWorked.minus(plannedWorkingHours));
     }
 
     ReportMonth getReportMonth(YearMonth yearMonth, List<UserLocalId> userLocalIds) {

@@ -24,4 +24,8 @@ interface ReportService {
     ReportMonth getReportMonth(YearMonth yearMonth, List<UserLocalId> userLocalIds);
 
     ReportMonth getReportMonthForAllUsers(YearMonth yearMonth);
+
+    ReportSummary getWeekSummary(Year reportYear, int week, UserId userId);
+
+    ReportSummary getMonthSummary(YearMonth yearMonth, UserId userId);
 }
