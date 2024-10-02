@@ -16,8 +16,11 @@ public class DurationFormatter {
         final long hours = javaTimeDuration.abs().toHours();
         final int minutes = javaTimeDuration.abs().toMinutesPart();
 
-        String value = "";
+        if (hours == 0 && minutes == 0) {
+            return messageSource.getMessage("duration.hours", new Object[]{0}, locale);
+        }
 
+        String value = "";
         if (hours != 0) {
             value += messageSource.getMessage("duration.hours", new Object[]{Math.abs(hours)}, locale);
         }

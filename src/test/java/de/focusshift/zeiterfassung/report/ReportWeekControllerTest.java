@@ -22,6 +22,7 @@ import org.threeten.extra.YearWeek;
 
 import java.sql.Date;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Year;
@@ -162,7 +163,7 @@ class ReportWeekControllerTest {
             Date.from(ZonedDateTime.of(LocalDate.of(2023, 2,5), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
             5,
             List.of(
-                new DetailDayDto(true, "F", "Freitag", "03.02.2023", 0d, List.of(),
+                new DetailDayDto(true, "F", "Freitag", "03.02.2023", Duration.ZERO, List.of(),
                     List.of(
                         new DetailDayAbsenceDto(
                             "Bruce Wayne",

@@ -303,7 +303,7 @@
           <p
             th:id="${listLabelId}"
             class="text-gray-400 text-sm text-left px-2 mb-2"
-            th:text="#{report.detail.day.head(${day.dayOfWeekFull}, ${day.date}, ${day.hoursWorked})}"
+            th:text="#{report.detail.day.head(${day.dayOfWeekFull}, ${day.date}, ${{day.hoursWorked}})}"
             th:attrappend="aria-hidden=${hasEntries ? 'true' : null}"
           >
             Zeiten
