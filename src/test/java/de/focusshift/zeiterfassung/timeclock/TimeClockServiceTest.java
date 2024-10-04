@@ -101,6 +101,17 @@ class TimeClockServiceTest {
     }
 
     @Test
+    void ensureStartTimeClockDoesNothingWhenThereIsAlreadyOne() {
+
+        when(timeClockRepository.findByOwnerAndStoppedAtIsNull("batman")).thenReturn(Optional.of(new TimeClockEntity()));
+
+        sut.startTimeClock(new UserId("batman"));
+
+        verifyNoMoreInteractions(timeClockRepository);
+        verifyNoInteractions(userSettingsProvider);
+    }
+
+    @Test
     void ensureStopTimeClockDoesNothingWhenThereIsNothingRunningCurrently() {
 
         when(timeClockRepository.findByOwnerAndStoppedAtIsNull("batman")).thenReturn(Optional.empty());
