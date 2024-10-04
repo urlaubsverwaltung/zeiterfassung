@@ -128,7 +128,7 @@
                   topShould=${paddingTop + chartHeight - heightShould},
                   bottom=${paddingTop + chartHeight},
                   left=${(weekIt.index * weekGap) + (weekIt.index * 7 * barWidth) + (weekIt.index * 6 * dayGap) + (dayIt.index * dayGap) + (dayIt.index * barWidth)},
-                  radius=${barWidth/2}
+                  radius=0
                 "
                 th:classappend="${day.differentMonth ? 'report-graph-group--different-month' : ''}"
               >
@@ -153,7 +153,7 @@
                   <path
                     th:fragment="clip-path-dept"
                     th:if="${day.hoursWorkedShould != 0 && day.hoursWorkedShould > day.hoursWorked}"
-                    th:with="radius=${(heightShould - radius) < 0 ? heightShould : (day.hoursWorked > day.hoursWorkedShould ? 0 : radius)}"
+                    th:with="radius=0"
                     th:d="|M${left},${bottom} v${-1 * (heightShould - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${heightShould - radius} z|"
                     class="report-graph-day-should-bar"
                     d=""
@@ -186,7 +186,7 @@
                       d=""
                     />
                     <path
-                      th:with="radius=${(heightHours - radius) < 0 ? heightHours : (day.hoursWorked > day.hoursWorkedShould ? 0 : radius)}"
+                      th:with="radius=0"
                       th:d="|M${left},${bottom} v${-1 * (heightShould - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${heightShould - radius} z|"
                       class="report-graph-day-bar"
                       th:mask="${'url(#'+maskId+')'}"
@@ -200,7 +200,7 @@
                     <path
                       th:with="
                         yMax=${bottom - heightHours},
-                        radius=${radius + yMax}
+                        radius=0
                       "
                       th:d="|M${left},${bottom} v${-1*heightHours} h${barWidth} v${heightHours} z|"
                       th:clip-path="${'url(#'+clipPathId+')'}"

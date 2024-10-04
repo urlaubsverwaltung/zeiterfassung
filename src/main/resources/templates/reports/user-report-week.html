@@ -146,7 +146,7 @@
                 topShould=${paddingTop + chartHeight - heightShould},
                 bottom=${paddingTop + chartHeight},
                 left=${paddingLeft + (dayIt.index * dayGap) + (dayIt.index * barWidth)},
-                radius=${barWidth/2}
+                radius=0
               "
             >
               <rect
@@ -168,7 +168,7 @@
                 >
                   <path
                     th:fragment="clip-path-dept"
-                    th:with="radius=${(heightShould - radius) < 0 ? heightShould : (day.hoursWorked > day.hoursWorkedShould ? 0 : radius)}"
+                    th:with="radius=0"
                     th:d="|M${left},${bottom} v${-1 * (heightShould - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${heightShould - radius} z|"
                     class="report-graph-day-should-bar"
                     d=""
@@ -205,7 +205,7 @@
                   />
                   <path
                     th:with="
-                      radius=${(heightHours - radius) < 0 ? heightHours : (day.hoursWorked > day.hoursWorkedShould ? 0 : radius)},
+                      radius=0,
                       clipPathId=${'mask-overtime-' + #strings.toLowerCase(day.dayOfWeekFull)}
                     "
                     th:d="|M${left},${bottom} v${-1 * (heightShould - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${heightShould - radius} z|"
@@ -221,7 +221,7 @@
                   <path
                     th:with="
                       yMax=${bottom - heightHours},
-                      radius=${radius + yMax},
+                      radius=0,
                       clipPathId=${'clip-path-dept-' + #strings.toLowerCase(day.dayOfWeekFull)}
                     "
                     th:d="|M${left},${bottom} v${-1*heightHours} h${barWidth} v${heightHours} z|"
@@ -251,28 +251,6 @@
                 />
               </g>
             </g>
-          </g>
-          <g
-            th:with="y=${paddingTop + (chartHeight * (1 - (weekReport.averageHoursWorked / weekReport.graphLegendMaxHour)))}"
-            class="pointer-events-none"
-          >
-            <line
-              x1="0"
-              th:y1="${y}"
-              th:x2="${chartWidth + paddingLeft + paddingRight}"
-              th:y2="${y}"
-              stroke-dasharray="6 2"
-              class="report-graph-avg-line"
-            />
-            <text
-              th:x="${0}"
-              th:y="${y}"
-              text-anchor="start"
-              dominant-baseline="text-after-edge"
-              class="report-graph-avg-text"
-            >
-              avg
-            </text>
           </g>
         </svg>
       </div>
