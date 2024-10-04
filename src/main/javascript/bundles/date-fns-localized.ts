@@ -4,6 +4,6 @@ import { setLocale } from "../date-fns-locale-aware/locale-resolver";
 // otherwise the default (en) is used to format a date.
 import { de } from "date-fns/locale/de";
 
-if (window.navigator.language.slice(0, 2) === "de") {
+if (globalThis.navigator.language.slice(0, 2) === "de") {
   setLocale(de);
 }
