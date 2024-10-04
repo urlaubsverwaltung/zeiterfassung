@@ -72,9 +72,7 @@ class ReportControllerHelper {
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
-        final double hoursWorkedAverageADay = reportWeek.averageDayWorkDuration().hoursDoubleValue();
-
-        return new GraphWeekDto(yearMonthWeek, dayReports, maxHoursWorked, hoursWorkedAverageADay);
+        return new GraphWeekDto(yearMonthWeek, dayReports, maxHoursWorked);
     }
 
     private GraphDayDto toUserReportDayReportDto(ReportDay reportDay, boolean differentMonth) {

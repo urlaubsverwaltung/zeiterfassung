@@ -222,28 +222,6 @@
               </g>
             </g>
           </g>
-          <g
-            th:with="y=${paddingTop + (chartHeight * (1 - (monthReport.averageHoursWorked / monthReport.graphLegendMaxHour)))}"
-            class="pointer-events-none"
-          >
-            <line
-              x1="0"
-              th:y1="${y}"
-              th:x2="${chartWidth}"
-              th:y2="${y}"
-              stroke-dasharray="6 2"
-              class="report-graph-avg-line"
-            />
-            <text
-              th:x="${0}"
-              th:y="${y}"
-              text-anchor="start"
-              dominant-baseline="text-after-edge"
-              class="report-graph-avg-text"
-            >
-              avg
-            </text>
-          </g>
         </svg>
       </div>
     </th:block>

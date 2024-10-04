@@ -159,9 +159,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
-        final double hoursWorkedAverageADay = reportMonth.averageDayWorkDuration().hoursDoubleValue();
-
-        return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked, hoursWorkedAverageADay);
+        return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked);
     }
 
     private DetailMonthDto toDetailMonthDto(ReportMonth reportMonth, Locale locale) {
