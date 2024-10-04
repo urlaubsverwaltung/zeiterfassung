@@ -3,7 +3,7 @@ import { defineCustomElements } from "@duetds/date-picker/custom-element";
 import "@duetds/date-picker/dist/collection/themes/default.css";
 
 // register @duet/datepicker
-defineCustomElements(window);
+defineCustomElements(globalThis);
 
 export function createDatepicker(selector: string): HTMLDuetDatePickerElement {
   // eslint-disable-next-line unicorn/prefer-query-selector
@@ -19,7 +19,7 @@ export function createDatepicker(selector: string): HTMLDuetDatePickerElement {
     );
   }
 
-  if (window.navigator.language.slice(0, 2) === "de") {
+  if (globalThis.navigator.language.slice(0, 2) === "de") {
     duetDateElement.dateAdapter = dateAdapterDE;
     duetDateElement.localization =
       globalThis.zeiterfassung.datepicker.localization;

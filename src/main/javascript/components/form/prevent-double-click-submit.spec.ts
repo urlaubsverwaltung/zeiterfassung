@@ -15,10 +15,7 @@ describe("DoubleClickSubmitGuard", () => {
 
   beforeEach(() => {
     // prevent HTMLFormElement.prototype.requestSubmit is not implemented log.
-    //
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    window._virtualConsole.emit = () => {};
+    globalThis._virtualConsole.emit = () => {};
   });
 
   afterEach(() => {
