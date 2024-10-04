@@ -60,18 +60,24 @@
               </div>
               <th:block th:if="${{reportSummary != null}}">
                 <dl class="mt-8 sm:ml-8 report-summary-grid">
-                  <dt>Geplante Arbeitszeit:</dt>
+                  <dt th:text="#{report.detail.summary.planned-working-hours}">
+                    Geplante Arbeitszeit:
+                  </dt>
                   <dd th:text="${{reportSummary.plannedWorkingHours}}"></dd>
-                  <dt>Geleistete Arbeitszeit:</dt>
+                  <dt th:text="#{report.detail.summary.hours-worked}">
+                    Geleistete Arbeitszeit:
+                  </dt>
                   <dd th:text="${{reportSummary.hoursWorked}}"></dd>
                   <dt>
                     <th:block
                       th:if="${{reportSummary.hoursDelta.isNegative()}}"
+                      th:text="#{report.detail.summary.hoursDelta.negative}"
                     >
                       Noch zu leistende Arbeitszeit:
                     </th:block>
                     <th:block
                       th:if="${{reportSummary.hoursDelta.isPositive()}}"
+                      th:text="#{report.detail.summary.hoursDelta.positive}"
                     >
                       Mehr geleistete Arbeitszeit:
                     </th:block>
