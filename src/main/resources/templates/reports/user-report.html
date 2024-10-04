@@ -58,15 +58,9 @@
               <th:block th:if="${{reportSummary != null}}">
                 <dl class="report-summary-grid">
                   <dt>Geplante Arbeitszeit:</dt>
-                  <dd
-                    class="font-bold whitespace-nowrap"
-                    th:text="${{reportSummary.plannedWorkingHours}}"
-                  ></dd>
+                  <dd th:text="${{reportSummary.plannedWorkingHours}}"></dd>
                   <dt>Geleistete Arbeitszeit:</dt>
-                  <dd
-                    class="font-bold whitespace-nowrap"
-                    th:text="${{reportSummary.hoursWorked}}"
-                  ></dd>
+                  <dd th:text="${{reportSummary.hoursWorked}}"></dd>
                   <dt>
                     <th:block
                       th:if="${{reportSummary.hoursDelta.isNegative()}}"
@@ -79,10 +73,7 @@
                       Mehr geleistete Arbeitszeit:
                     </th:block>
                   </dt>
-                  <dd
-                    class="font-bold whitespace-nowrap"
-                    th:text="${{reportSummary.hoursDelta.abs()}}"
-                  ></dd>
+                  <dd th:text="${{reportSummary.hoursDelta.abs()}}"></dd>
                 </dl>
               </th:block>
               <div class="p-8 bg-gradient-to-b from-gray-100 rounded-t-3xl">
