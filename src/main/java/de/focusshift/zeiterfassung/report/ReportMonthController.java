@@ -120,11 +120,11 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         final ReportSummary monthSummary;
 
         if (allUsersSelected) {
-            monthSummary = null;
+            monthSummary = reportService.getMonthSummaryForAllUsers(yearMonth);
         } else if (userLocalIds.isEmpty()) {
             monthSummary = reportService.getMonthSummary(yearMonth, helper.principalToUserId(principal));
         } else {
-            monthSummary = null;
+            monthSummary = reportService.getMonthSummary(yearMonth, userLocalIds);
         }
 
         return monthSummary;

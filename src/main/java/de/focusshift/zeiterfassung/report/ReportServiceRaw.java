@@ -75,24 +75,34 @@ class ReportServiceRaw {
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
-    // TODO: Implementation should be aligned to de.focusshift.zeiterfassung.timeentry.TimeEntryServiceImpl.getEntryWeekPage
     ReportSummary getWeekSummary(Year year, int week, UserId userId) {
+
         final User user = userManagementService.findUserById(userId)
                 .orElseThrow(() -> new IllegalStateException("could not find user id=%s".formatted(userId)));
+
+        return getWeekSummary(year, week, List.of(user.userLocalId()));
+    }
+
+    // TODO: Implementation should be aligned to de.focusshift.zeiterfassung.timeentry.TimeEntryServiceImpl.getEntryWeekPage
+    ReportSummary getWeekSummary(Year year, int week, List<UserLocalId> userLocalIds) {
 
         final LocalDate firstDateOfWeek = userDateService.firstDayOfWeek(year, week);
         final Period period = new Period(firstDateOfWeek, firstDateOfWeek.plusWeeks(1));
 
-        //TODO: how to handle absences?
-        final Duration plannedWorkingHours = workingTimeCalendarService.getWorkingTimeCalender(period.from, period.toExclusive(), user.userLocalId())
-                    .plannedWorkingHours(period.from, period.toExclusive())
-                    .duration();
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarForUsers = workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds);
 
-        final Duration hoursWorked = timeEntryService.getEntries(period.from, period.toExclusive(), userId).stream()
-                .map(t -> t.workDuration().duration())
-                .reduce(Duration.ZERO, Duration::plus);
+        final Duration summedPlannedWorkingHours = workingTimeCalendarForUsers.values().stream()
+            .map(calendar -> calendar.plannedWorkingHours(period.from, period.toExclusive))
+            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus)
+            .duration();
 
-        return new ReportSummary(plannedWorkingHours, hoursWorked, hoursWorked.minus(plannedWorkingHours));
+        final Duration summedHoursWorked = timeEntryService.getEntriesByUserLocalIds(period.from, period.toExclusive(), userLocalIds)
+            .values().stream()
+            .flatMap(Collection::stream)
+            .map(timeEntry -> timeEntry.workDuration().duration())
+            .reduce(Duration.ZERO, Duration::plus);
+
+        return new ReportSummary(summedPlannedWorkingHours, summedHoursWorked, summedHoursWorked.minus(summedPlannedWorkingHours));
     }
 
     ReportWeek getReportWeek(Year year, int week, List<UserLocalId> userLocalIds) {
@@ -121,22 +131,27 @@ class ReportServiceRaw {
     }
 
     ReportSummary getMonthSummary(YearMonth yearMonth, UserId userId) {
-
         final User user = userManagementService.findUserById(userId)
                 .orElseThrow(() -> new IllegalStateException("could not find user id=%s".formatted(userId)));
+        return getMonthSummary(yearMonth, List.of(user.userLocalId()));
+    }
 
-        final Period period = new Period(yearMonth.atDay(1), yearMonth.atEndOfMonth());
+    ReportSummary getMonthSummary(YearMonth yearMonth, List<UserLocalId> userLocalIds) {
 
-        //TODO: how to handle absences?
-        final Duration plannedWorkingHours =
-                workingTimeCalendarService.getWorkingTimeCalender(period.from, period.toExclusive(), user.userLocalId())
-                        .plannedWorkingHours(period.from, period.toExclusive()).duration();
+        final Period period = new Period(yearMonth.atDay(1), yearMonth.atEndOfMonth().plusDays(1));
 
-        final Duration hoursWorked = timeEntryService.getEntries(period.from, period.toExclusive(), userId).stream()
-                .map(t -> t.workDuration().duration())
-                .reduce(Duration.ZERO, Duration::plus);
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarForUsers = workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds);
+        final Duration summedPlannedWorkingHours = workingTimeCalendarForUsers.values().stream()
+            .map(calendar -> calendar.plannedWorkingHours(period.from, period.toExclusive()))
+            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus)
+            .duration();
 
-        return new ReportSummary(plannedWorkingHours, hoursWorked, hoursWorked.minus(plannedWorkingHours));
+        final Duration hoursWorked = timeEntryService.getEntriesByUserLocalIds(period.from, period.toExclusive(), userLocalIds).values().stream()
+            .flatMap(Collection::stream)
+            .map(timeEntry -> timeEntry.workDuration().duration())
+            .reduce(Duration.ZERO, Duration::plus);
+
+        return new ReportSummary(summedPlannedWorkingHours, hoursWorked, hoursWorked.minus(summedPlannedWorkingHours));
     }
 
     ReportMonth getReportMonth(YearMonth yearMonth, List<UserLocalId> userLocalIds) {

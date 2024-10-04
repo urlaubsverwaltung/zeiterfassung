@@ -102,8 +102,30 @@ class ReportServicePermissionAware implements ReportService {
     }
 
     @Override
+    public ReportSummary getWeekSummary(Year reportYear, int week, List<UserLocalId> permittedUserLocalIds) {
+        return reportServiceRaw.getWeekSummary(reportYear, week, permittedUserLocalIds);
+    }
+
+    @Override
+    public ReportSummary getWeekSummaryForAllUsers(Year reportYear, int week) {
+        final List<UserLocalId> permittedUserLocalIds = reportPermissionService.findAllPermittedUserLocalIdsForCurrentUser();
+        return reportServiceRaw.getWeekSummary(reportYear, week, permittedUserLocalIds);
+    }
+
+    @Override
     public ReportSummary getMonthSummary(YearMonth yearMonth, UserId userId) {
         return reportServiceRaw.getMonthSummary(yearMonth, userId);
+    }
+
+    @Override
+    public ReportSummary getMonthSummary(YearMonth yearMonth, List<UserLocalId> permittedUserLocalIds) {
+        return reportServiceRaw.getMonthSummary(yearMonth, permittedUserLocalIds);
+    }
+
+    @Override
+    public ReportSummary getMonthSummaryForAllUsers(YearMonth yearMonth) {
+        final List<UserLocalId> permittedUserLocalIds = reportPermissionService.findAllPermittedUserLocalIdsForCurrentUser();
+        return reportServiceRaw.getMonthSummary(yearMonth, permittedUserLocalIds);
     }
 
     private ReportWeek reportWeekForPermittedUserIds(Year year, int week, List<UserLocalId> permittedUserLocalIds) {
