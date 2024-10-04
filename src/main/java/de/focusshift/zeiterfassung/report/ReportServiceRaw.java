@@ -84,16 +84,15 @@ class ReportServiceRaw {
         final Period period = new Period(firstDateOfWeek, firstDateOfWeek.plusWeeks(1));
 
         //TODO: how to handle absences?
-        final Duration plannedWorkingHours =
-                workingTimeCalendarService.getWorkingTimeCalender(period.from, period.toExclusive(), user.userLocalId()).plannedWorkingHours(period.from, period.toExclusive()).duration();
+        final Duration plannedWorkingHours = workingTimeCalendarService.getWorkingTimeCalender(period.from, period.toExclusive(), user.userLocalId())
+                    .plannedWorkingHours(period.from, period.toExclusive())
+                    .duration();
 
         final Duration hoursWorked = timeEntryService.getEntries(period.from, period.toExclusive(), userId).stream()
                 .map(t -> t.workDuration().duration())
                 .reduce(Duration.ZERO, Duration::plus);
 
         return new ReportSummary(plannedWorkingHours, hoursWorked, hoursWorked.minus(plannedWorkingHours));
-
-
     }
 
     ReportWeek getReportWeek(Year year, int week, List<UserLocalId> userLocalIds) {

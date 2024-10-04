@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
     th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scriptsDefer=~{::scriptsDefer})}"
@@ -56,26 +56,34 @@
               style="top: calc(var(--navigation-header-height) + 1rem)"
             >
               <th:block th:if="${{reportSummary != null}}">
-              <div>Geplante Arbeitszeit:
-                <span
-                  class="font-bold whitespace-nowrap"
-                  th:text="${{reportSummary.plannedWorkingHours}}"
-                ></span>
-              </div>
-              <div>Geleistete Arbeitszeit:
-                <span
-                  class="font-bold whitespace-nowrap"
-                  th:text="${{reportSummary.hoursWorked}}"
-                ></span>
-              </div>
-              <div class="pb-8">
-                <span th:if="${{reportSummary.hoursDelta.isNegative()}}">Noch zu leistende Arbeitszeit:</span>
-                <span th:if="${{reportSummary.hoursDelta.isPositive()}}">Mehr geleistete Arbeitszeit:</span>
-                <span
-                  class="font-bold whitespace-nowrap"
-                  th:text="${{reportSummary.hoursDelta.abs()}}"
-                ></span>
-              </div>
+                <dl class="report-summary-grid">
+                  <dt>Geplante Arbeitszeit:</dt>
+                  <dd
+                    class="font-bold whitespace-nowrap"
+                    th:text="${{reportSummary.plannedWorkingHours}}"
+                  ></dd>
+                  <dt>Geleistete Arbeitszeit:</dt>
+                  <dd
+                    class="font-bold whitespace-nowrap"
+                    th:text="${{reportSummary.hoursWorked}}"
+                  ></dd>
+                  <dt>
+                    <th:block
+                      th:if="${{reportSummary.hoursDelta.isNegative()}}"
+                    >
+                      Noch zu leistende Arbeitszeit:
+                    </th:block>
+                    <th:block
+                      th:if="${{reportSummary.hoursDelta.isPositive()}}"
+                    >
+                      Mehr geleistete Arbeitszeit:
+                    </th:block>
+                  </dt>
+                  <dd
+                    class="font-bold whitespace-nowrap"
+                    th:text="${{reportSummary.hoursDelta.abs()}}"
+                  ></dd>
+                </dl>
               </th:block>
               <div class="p-8 bg-gradient-to-b from-gray-100 rounded-t-3xl">
                 <div th:replace="~{__${chartFragment}__}"></div>
