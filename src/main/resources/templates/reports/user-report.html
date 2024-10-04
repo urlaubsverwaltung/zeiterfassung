@@ -50,13 +50,16 @@
               th:insert="~{__${chartNavigationFragment}__}"
             ></div>
           </div>
-          <div class="px-8 grid grid-cols-1 2xl:grid-cols-2 2xl:gap-8">
+          <div class="px-8 grid grid-cols-1 gap-8 2xl:grid-cols-2">
             <div
               class="2xl:sticky 2xl:self-start"
               style="top: calc(var(--navigation-header-height) + 1rem)"
             >
+              <div class="p-8 bg-gradient-to-b from-gray-100 rounded-t-3xl">
+                <div th:replace="~{__${chartFragment}__}"></div>
+              </div>
               <th:block th:if="${{reportSummary != null}}">
-                <dl class="report-summary-grid">
+                <dl class="mt-8 report-summary-grid">
                   <dt>Geplante Arbeitszeit:</dt>
                   <dd th:text="${{reportSummary.plannedWorkingHours}}"></dd>
                   <dt>Geleistete Arbeitszeit:</dt>
@@ -76,9 +79,6 @@
                   <dd th:text="${{reportSummary.hoursDelta.abs()}}"></dd>
                 </dl>
               </th:block>
-              <div class="p-8 bg-gradient-to-b from-gray-100 rounded-t-3xl">
-                <div th:replace="~{__${chartFragment}__}"></div>
-              </div>
             </div>
             <div class="">
               <div class="p-4 bg-white border border-gray-100 rounded-3xl">
