@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.user.DateFormatter;
+import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -28,10 +29,12 @@ class ReportControllerHelper {
 
     private final ReportPermissionService reportPermissionService;
     private final DateFormatter dateFormatter;
+    private final DateRangeFormatter dateRangeFormatter;
 
-    ReportControllerHelper(ReportPermissionService reportPermissionService, DateFormatter dateFormatter) {
+    ReportControllerHelper(ReportPermissionService reportPermissionService, DateFormatter dateFormatter, DateRangeFormatter dateRangeFormatter) {
         this.reportPermissionService = reportPermissionService;
         this.dateFormatter = dateFormatter;
+        this.dateRangeFormatter = dateRangeFormatter;
     }
 
     UserId principalToUserId(OidcUser principal) {
@@ -65,14 +68,15 @@ class ReportControllerHelper {
             .map(reportDay -> toUserReportDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot)))
             .toList();
 
-        final String yearMonthWeek = dateFormatter.formatYearMonthWeek(reportWeek.firstDateOfWeek());
+        final int calendarWeek = reportWeek.firstDateOfWeek().get(ChronoField.ALIGNED_WEEK_OF_YEAR);
+        final String dateRangeString = dateRangeFormatter.toDateRangeString(reportWeek.firstDateOfWeek(), reportWeek.lastDateOfWeek());
 
         final double maxHoursWorked = dayReports.stream()
             .map(GraphDayDto::hoursWorked)
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
-        return new GraphWeekDto(yearMonthWeek, dayReports, maxHoursWorked);
+        return new GraphWeekDto(calendarWeek, dateRangeString, dayReports, maxHoursWorked);
     }
 
     private GraphDayDto toUserReportDayReportDto(ReportDay reportDay, boolean differentMonth) {
