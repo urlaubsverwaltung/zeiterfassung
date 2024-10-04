@@ -59,7 +59,7 @@
                 <div th:replace="~{__${chartFragment}__}"></div>
               </div>
               <th:block th:if="${{reportSummary != null}}">
-                <dl class="mt-8 report-summary-grid">
+                <dl class="mt-8 sm:ml-8 report-summary-grid">
                   <dt>Geplante Arbeitszeit:</dt>
                   <dd th:text="${{reportSummary.plannedWorkingHours}}"></dd>
                   <dt>Geleistete Arbeitszeit:</dt>
