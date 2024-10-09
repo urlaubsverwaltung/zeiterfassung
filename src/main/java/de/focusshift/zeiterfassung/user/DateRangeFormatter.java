@@ -13,7 +13,7 @@ public class DateRangeFormatter {
     private final DateFormatter dateFormatter;
     private final MessageSource messageSource;
 
-    DateRangeFormatter(DateFormatter dateFormatter, MessageSource messageSource) {
+    public DateRangeFormatter(DateFormatter dateFormatter, MessageSource messageSource) {
         this.dateFormatter = dateFormatter;
         this.messageSource = messageSource;
     }

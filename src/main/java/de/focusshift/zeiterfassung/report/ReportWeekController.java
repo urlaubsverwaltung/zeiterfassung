@@ -70,12 +70,10 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         final List<UserLocalId> userLocalIds = optionalUserIds.orElse(List.of()).stream().map(UserLocalId::new).toList();
         final boolean allUsersSelected = optionalAllUsersSelected.isPresent();
 
-        final ReportSummary weekSummaryDto = getWeekSummary(principal, reportYearWeek, allUsersSelected, reportYear, userLocalIds);
         final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, userLocalIds);
         final GraphWeekDto graphWeekDto = helper.toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
         final DetailWeekDto detailWeekDto = helper.toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth(), locale);
 
-        model.addAttribute("reportSummary", weekSummaryDto);
         model.addAttribute("weekReport", graphWeekDto);
         model.addAttribute("weekReportDetail", detailWeekDto);
 
@@ -111,21 +109,6 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         helper.addUserFilterModelAttributes(model, allUsersSelected, userLocalIds, format("/report/year/%d/week/%d", year, week));
 
         return "reports/user-report";
-    }
-
-    private ReportSummary getWeekSummary(OidcUser principal, YearWeek reportYearWeek, boolean allUsersSelected, Year reportYear, List<UserLocalId> userLocalIds) {
-
-        final ReportSummary weekSummary;
-
-        if (allUsersSelected) {
-            weekSummary = reportService.getWeekSummaryForAllUsers(reportYear, reportYearWeek.getWeek());
-        } else if (userLocalIds.isEmpty()) {
-            weekSummary = reportService.getWeekSummary(reportYear, reportYearWeek.getWeek(), helper.principalToUserId(principal));
-        } else {
-            weekSummary = reportService.getWeekSummary(reportYear, reportYearWeek.getWeek(), userLocalIds);
-        }
-
-        return weekSummary;
     }
 
     private ReportWeek getReportWeek(OidcUser principal, YearWeek reportYearWeek, boolean allUsersSelected, Year reportYear, List<UserLocalId> userLocalIds) {

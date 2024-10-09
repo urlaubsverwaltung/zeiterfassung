@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
+import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -10,6 +12,8 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -76,7 +80,23 @@ class ReportControllerHelper {
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
-        return new GraphWeekDto(calendarWeek, dateRangeString, dayReports, maxHoursWorked);
+        final WorkDuration workDuration = reportWeek.workDuration();
+        final ShouldWorkingHours shouldWorkingHours = reportWeek.shouldWorkingHours();
+        final String shouldWorkingHoursString = durationToTimeString(shouldWorkingHours.duration());
+        final String workedWorkingHoursString = durationToTimeString(workDuration.duration());
+
+        final Duration deltaDuration = workDuration.duration().minus(shouldWorkingHours.duration());
+        final String deltaHours = durationToTimeString(deltaDuration);
+
+        final double weekRatio = reportWeek.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
+
+        return new GraphWeekDto(calendarWeek, dateRangeString, dayReports, maxHoursWorked, workedWorkingHoursString, shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), weekRatio);
+    }
+
+    private static String durationToTimeString(Duration duration) {
+        // use positive values to format duration string
+        // negative value is handled in template
+        return String.format("%02d:%02d", Math.abs(duration.toHours()), Math.abs(duration.toMinutesPart()));
     }
 
     private GraphDayDto toUserReportDayReportDto(ReportDay reportDay, boolean differentMonth) {

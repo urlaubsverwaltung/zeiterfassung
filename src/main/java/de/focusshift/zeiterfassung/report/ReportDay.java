@@ -1,5 +1,8 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.absence.DayLength;
+import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -27,6 +30,28 @@ record ReportDay(
 
     public PlannedWorkingHours plannedWorkingHours() {
         return plannedWorkingHoursByUser.values().stream().reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+    }
+
+    public ShouldWorkingHours shouldWorkingHours() {
+
+        final double absenceDayLengthValue = detailDayAbsencesByUser.values().stream()
+            .flatMap(Collection::stream)
+            .map(ReportDayAbsence::absence)
+            .map(Absence::dayLength)
+            .map(DayLength::getValue)
+            .reduce(0.0, Double::sum);
+
+        if (absenceDayLengthValue >= 1.0) {
+            return ShouldWorkingHours.ZERO;
+        }
+
+        final PlannedWorkingHours plannedWorkingHours = plannedWorkingHours();
+
+        if (absenceDayLengthValue == 0.5) {
+            return new ShouldWorkingHours(plannedWorkingHours.duration().dividedBy(2));
+        }
+
+        return new ShouldWorkingHours(plannedWorkingHours.duration());
     }
 
     public PlannedWorkingHours plannedWorkingHoursByUser(UserLocalId userLocalId) {

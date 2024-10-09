@@ -86,33 +86,56 @@
               <p
                 class="tabular-nums text-sm text-gray-800 font-medium sm:flex-1 sm:absolute sm:left-0 sm:right-0 sm:text-center"
               >
-                <span class="inline-flex items-center">+01:58</span>
-                <!--              <span class="inline-flex items-center">-->
-                <!--                <th:block th:if="${week.hoursDeltaNegative}">-</th:block>-->
-                <!--                <th:block th:if="${not week.hoursDeltaNegative}">+</th:block>-->
-                <!--                <span class="font-bold tabular-nums" th:text="${week.hoursDelta}">-->
-                <!--                  01:30-->
-                <!--                </span>-->
-                <!--                <th:block th:if="${not week.hoursDeltaNegative and week.hoursDelta != '00:00'}">-->
-                <!--                  <svg-->
-                <!--                    th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1')}"-->
-                <!--                  ></svg>-->
-                <!--                </th:block>-->
-                <!--              </span>-->
+                <!--                <span class="inline-flex items-center">+01:58</span>-->
+                <span class="inline-flex items-center">
+                  <th:block th:if="${weekReport.hoursDeltaNegative}"
+                    >-</th:block
+                  >
+                  <th:block th:if="${not weekReport.hoursDeltaNegative}"
+                    >+</th:block
+                  >
+                  <span
+                    class="font-bold tabular-nums"
+                    th:text="${weekReport.hoursDelta}"
+                  >
+                    01:30
+                  </span>
+                  <th:block
+                    th:if="${not weekReport.hoursDeltaNegative and weekReport.hoursDelta != '00:00'}"
+                  >
+                    <svg
+                      th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1')}"
+                    ></svg>
+                  </th:block>
+                </span>
               </p>
               <p class="sr-only sm:not-sr-only">
                 Geleistet:
-                <span class="font-bold tabular-nums"> 41:58 </span>
+                <span
+                  th:text="${weekReport.workedWorkingHours}"
+                  class="font-bold tabular-nums"
+                >
+                  41:58
+                </span>
                 (<th:block
                   th:text="#{time-entry.overview.week.group.hours-bar.should}"
                   >Soll: </th:block
-                ><span class="font-bold tabular-nums">40:00</span>)
+                ><span
+                  th:text="${weekReport.shouldWorkingHours}"
+                  class="font-bold tabular-nums"
+                >
+                  40:00 </span
+                >)
               </p>
             </div>
-            <div
-              class="translate-y-1 h-1 rounded-full bg-gradient-to-r from-gray-200 to-gray-600"
-              th:styleappend="${'width:100%'}"
-            ></div>
+            <div class="translate-y-1 rounded border border-gray-300">
+              <div
+                class="h-2 rounded-full bg-gradient-to-r from-gray-200 to-gray-600"
+                th:styleappend="${'width:' + weekReport.hoursWorkedRatio + '%'}"
+              >
+                <div></div>
+              </div>
+            </div>
           </div>
           <div class="time-entry-box__controls"></div>
         </div>

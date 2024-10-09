@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
+import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
@@ -23,11 +25,15 @@ import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import static java.time.ZoneOffset.UTC;
 import static java.util.Locale.GERMAN;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,12 +51,16 @@ class ReportMonthControllerTest {
     @Mock
     private ReportPermissionService reportPermissionService;
 
+    @Mock
+    private MessageSource messageSource;
+
     private final Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
         final DateFormatterImpl dateFormatter = new DateFormatterImpl();
-        final ReportControllerHelper helper = new ReportControllerHelper(reportPermissionService, dateFormatter);
+        final DateRangeFormatter dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
+        final ReportControllerHelper helper = new ReportControllerHelper(reportPermissionService, dateFormatter, dateRangeFormatter);
         sut = new ReportMonthController(reportService, dateFormatter, helper, clock);
     }
 
@@ -66,6 +76,8 @@ class ReportMonthControllerTest {
 
     @Test
     void ensureReportMonth() throws Exception {
+
+        when(messageSource.getMessage(anyString(), any(), any(Locale.class))).thenAnswer(returnsFirstArg());
 
         final UserId userId = new UserId("user-id");
         final UserLocalId userLocalId = new UserLocalId(1L);
@@ -86,7 +98,8 @@ class ReportMonthControllerTest {
             "Februar 2023",
             List.of(
                 new GraphWeekDto(
-                    "Januar 2023 KW 5",
+        5,
+                    "date-range",
                     List.of(
                         new GraphDayDto(true, "M", "Montag", "30.01.2023", 8d, 8d),
                         new GraphDayDto(true, "D", "Dienstag", "31.01.2023", 8d, 8d),
@@ -96,7 +109,12 @@ class ReportMonthControllerTest {
                         new GraphDayDto(false, "S", "Samstag", "04.02.2023", 0d, 0d),
                         new GraphDayDto(false, "S", "Sonntag", "05.02.2023", 0d, 0d)
                     ),
-                    8d
+                    8d,
+                    "40:00",
+                    "40:00",
+                    "00:00",
+                    false,
+                    100d
                 )
             ),
             8d
