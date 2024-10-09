@@ -19,6 +19,4 @@ public interface DateFormatter {
     String formatDate(LocalDate date);
 
     String formatDate(LocalDate date, MonthFormat monthFormat, YearFormat yearFormat);
-
-    String formatYearMonthWeek(LocalDate date);
 }

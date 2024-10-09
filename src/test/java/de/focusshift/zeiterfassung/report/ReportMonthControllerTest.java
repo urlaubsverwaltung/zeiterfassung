@@ -96,11 +96,9 @@ class ReportMonthControllerTest {
                         new GraphDayDto(false, "S", "Samstag", "04.02.2023", 0d, 0d),
                         new GraphDayDto(false, "S", "Sonntag", "05.02.2023", 0d, 0d)
                     ),
-                    8d,
                     8d
                 )
             ),
-            8d,
             8d
         );
 

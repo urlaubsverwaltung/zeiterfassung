@@ -247,7 +247,6 @@ class TimeEntryServiceImpl implements TimeEntryService {
         }
 
         return new ShouldWorkingHours(plannedWorkingHours.duration());
-
     }
 
     private void updateEntityTimeSpan(TimeEntryEntity entity, ZonedDateTime start, ZonedDateTime end, Duration duration)

@@ -8,7 +8,6 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
-import java.time.temporal.ChronoField;
 import java.util.Locale;
 
 @Service
@@ -51,11 +50,6 @@ public class DateFormatterImpl implements DateFormatter {
         final String pattern = day + month + year;
 
         return DateTimeFormatter.ofPattern(pattern, locale).format(date);
-    }
-
-    public String formatYearMonthWeek(LocalDate date) {
-        final String yearMonth = formatYearMonth(YearMonth.from(date));
-        return yearMonth + " KW " + date.get(ChronoField.ALIGNED_WEEK_OF_YEAR);
     }
 
     private Locale locale() {

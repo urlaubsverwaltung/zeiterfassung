@@ -72,10 +72,12 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         final List<UserLocalId> userLocalIds = optionalUserIds.orElse(List.of()).stream().map(UserLocalId::new).toList();
         final boolean allUsersSelected = optionalAllUsersSelected.isPresent();
 
+        final ReportSummary monthSummaryDto = getMonthSummary(principal, allUsersSelected, yearMonth, userLocalIds);
         final ReportMonth reportMonth = getReportMonth(principal, allUsersSelected, yearMonth, userLocalIds);
         final GraphMonthDto graphMonthDto = toGraphMonthDto(reportMonth);
         final DetailMonthDto detailMonthDto = toDetailMonthDto(reportMonth, locale);
 
+        model.addAttribute("reportSummary", monthSummaryDto);
         model.addAttribute("monthReport", graphMonthDto);
         model.addAttribute("monthReportDetail", detailMonthDto);
 
@@ -113,6 +115,21 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         return "reports/user-report";
     }
 
+    private ReportSummary getMonthSummary(OidcUser principal, boolean allUsersSelected, YearMonth yearMonth, List<UserLocalId> userLocalIds) {
+
+        final ReportSummary monthSummary;
+
+        if (allUsersSelected) {
+            monthSummary = reportService.getMonthSummaryForAllUsers(yearMonth);
+        } else if (userLocalIds.isEmpty()) {
+            monthSummary = reportService.getMonthSummary(yearMonth, helper.principalToUserId(principal));
+        } else {
+            monthSummary = reportService.getMonthSummary(yearMonth, userLocalIds);
+        }
+
+        return monthSummary;
+    }
+
     private ReportMonth getReportMonth(OidcUser principal, boolean allUsersSelected, YearMonth yearMonth, List<UserLocalId> userLocalIds) {
 
         final ReportMonth reportMonth;
@@ -142,9 +159,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
-        final double hoursWorkedAverageADay = reportMonth.averageDayWorkDuration().hoursDoubleValue();
-
-        return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked, hoursWorkedAverageADay);
+        return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked);
     }
 
     private DetailMonthDto toDetailMonthDto(ReportMonth reportMonth, Locale locale) {
