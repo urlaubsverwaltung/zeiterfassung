@@ -1,11 +1,16 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.ZeitDuration;
 
 import java.time.Duration;
 
 /**
- * Hours that should be worked. (e.g. PlannedWorkingHours 40h - Absence 8h = ShouldWorkingHours 32h)
+ * Hours that should be worked.
+ *
+ * <p>
+ * (e.g. {@linkplain PlannedWorkingHours} 40h - {@linkplain Absence} 8h = ShouldWorkingHours 32h)
  *
  * @param duration the exact duration. not rounded up to minutes.
  */

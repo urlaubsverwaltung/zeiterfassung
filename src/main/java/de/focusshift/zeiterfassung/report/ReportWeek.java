@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 
@@ -15,6 +16,12 @@ record ReportWeek(LocalDate firstDateOfWeek, List<ReportDay> reportDays) {
         return reportDays.stream()
             .map(ReportDay::plannedWorkingHours)
             .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+    }
+
+    public ShouldWorkingHours shouldWorkingHours() {
+        return reportDays.stream()
+            .map(ReportDay::shouldWorkingHours)
+            .reduce(ShouldWorkingHours.ZERO, ShouldWorkingHours::plus);
     }
 
     public WorkDuration averageDayWorkDuration() {

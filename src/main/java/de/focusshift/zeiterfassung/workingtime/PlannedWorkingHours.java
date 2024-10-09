@@ -1,9 +1,16 @@
 package de.focusshift.zeiterfassung.workingtime;
 
+import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
+
 import java.time.Duration;
 
 /**
- * Defines a {@linkplain Duration} of planned working hours.
+ * Defines a {@linkplain Duration} of planned working hours. This does not include {@linkplain Absence}s.
+ * e.g. the employment contract of 40h a week.
+ *
+ * <p>
+ * see {@linkplain ShouldWorkingHours} if you are interested in a value that includes sick days for instance.
  *
  * @param duration the exact duration. not rounded up to minutes.
  */

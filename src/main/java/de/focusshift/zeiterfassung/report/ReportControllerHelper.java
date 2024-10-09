@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
+import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -76,7 +78,19 @@ class ReportControllerHelper {
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
-        return new GraphWeekDto(calendarWeek, dateRangeString, dayReports, maxHoursWorked);
+        final WorkDuration workDuration = reportWeek.workDuration();
+        final ShouldWorkingHours shouldWorkingHours = reportWeek.shouldWorkingHours();
+
+        final Duration deltaDuration = workDuration.duration().minus(shouldWorkingHours.duration());
+        final String deltaHours = durationToTimeString(deltaDuration);
+
+        return new GraphWeekDto(calendarWeek, dateRangeString, dayReports, maxHoursWorked, deltaHours, deltaDuration.isNegative());
+    }
+
+    private static String durationToTimeString(Duration duration) {
+        // use positive values to format duration string
+        // negative value is handled in template
+        return String.format("%02d:%02d", Math.abs(duration.toHours()), Math.abs(duration.toMinutesPart()));
     }
 
     private GraphDayDto toUserReportDayReportDto(ReportDay reportDay, boolean differentMonth) {

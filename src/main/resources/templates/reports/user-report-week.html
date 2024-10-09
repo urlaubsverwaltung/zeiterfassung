@@ -86,19 +86,28 @@
               <p
                 class="tabular-nums text-sm text-gray-800 font-medium sm:flex-1 sm:absolute sm:left-0 sm:right-0 sm:text-center"
               >
-                <span class="inline-flex items-center">+01:58</span>
-                <!--              <span class="inline-flex items-center">-->
-                <!--                <th:block th:if="${week.hoursDeltaNegative}">-</th:block>-->
-                <!--                <th:block th:if="${not week.hoursDeltaNegative}">+</th:block>-->
-                <!--                <span class="font-bold tabular-nums" th:text="${week.hoursDelta}">-->
-                <!--                  01:30-->
-                <!--                </span>-->
-                <!--                <th:block th:if="${not week.hoursDeltaNegative and week.hoursDelta != '00:00'}">-->
-                <!--                  <svg-->
-                <!--                    th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1')}"-->
-                <!--                  ></svg>-->
-                <!--                </th:block>-->
-                <!--              </span>-->
+                <!--                <span class="inline-flex items-center">+01:58</span>-->
+                <span class="inline-flex items-center">
+                  <th:block th:if="${weekReport.hoursDeltaNegative}"
+                    >-</th:block
+                  >
+                  <th:block th:if="${not weekReport.hoursDeltaNegative}"
+                    >+</th:block
+                  >
+                  <span
+                    class="font-bold tabular-nums"
+                    th:text="${weekReport.hoursDelta}"
+                  >
+                    01:30
+                  </span>
+                  <th:block
+                    th:if="${not weekReport.hoursDeltaNegative and weekReport.hoursDelta != '00:00'}"
+                  >
+                    <svg
+                      th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1')}"
+                    ></svg>
+                  </th:block>
+                </span>
               </p>
               <p class="sr-only sm:not-sr-only">
                 Geleistet:

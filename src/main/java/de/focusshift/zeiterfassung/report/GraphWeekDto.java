@@ -2,7 +2,14 @@ package de.focusshift.zeiterfassung.report;
 
 import java.util.List;
 
-record GraphWeekDto(int calendarWeek, String dateRangeString, List<GraphDayDto> dayReports, Double maxHoursWorked) {
+record GraphWeekDto(
+    int calendarWeek,
+    String dateRangeString,
+    List<GraphDayDto> dayReports,
+    Double maxHoursWorked,
+    String hoursDelta,
+    boolean hoursDeltaNegative
+) {
 
     public Double graphLegendMaxHour() {
 
