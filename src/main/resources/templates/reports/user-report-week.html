@@ -423,7 +423,7 @@
                           th:replace="~{icons/clock::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')}"
                         />
                         <span
-                          class=""
+                          class="tabular-nums"
                           th:text="#{report.detail.time(${dayEntry.start}, ${dayEntry.end})}"
                         ></span>
                       </p>
@@ -432,7 +432,7 @@
                           th:replace="~{icons/timer::svg(className='-translate-x-px shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')}"
                         />
                         <span
-                          class="whitespace-nowrap"
+                          class="tabular-nums whitespace-nowrap"
                           th:text="${{dayEntry.duration}}"
                         ></span>
                       </p>
