@@ -352,22 +352,21 @@
               Montag, 07.10.2024
             </span>
             <p class="tabular-nums">
-              <span class="inline-flex items-center">
+              <span
+                th:if="${day.hoursDelta != '00:00'}"
+                class="inline-flex items-center"
+              >
                 <th:block th:if="${day.hoursDeltaNegative}">-</th:block>
-                <th:block th:if="${not day.hoursDeltaNegative}">+</th:block>
+                <th:block
+                  th:if="${not day.hoursDeltaNegative and day.hoursDelta != '00:00'}"
+                  >+</th:block
+                >
                 <span
                   class="font-bold tabular-nums"
                   th:text="${day.hoursDelta}"
                 >
                   01:30
                 </span>
-                <th:block
-                  th:if="${not day.hoursDeltaNegative and day.hoursDelta != '00:00'}"
-                >
-                  <svg
-                    th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1')}"
-                  ></svg>
-                </th:block>
               </span>
             </p>
             <p class="sr-only sm:not-sr-only">
