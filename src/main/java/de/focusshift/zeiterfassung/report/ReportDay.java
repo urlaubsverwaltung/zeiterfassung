@@ -21,7 +21,6 @@ record ReportDay(
     Map<UserIdComposite, PlannedWorkingHours> plannedWorkingHoursByUser,
     Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser,
     Map<UserIdComposite, List<ReportDayAbsence>> detailDayAbsencesByUser
-
 ) {
 
     public List<ReportDayEntry> reportDayEntries() {

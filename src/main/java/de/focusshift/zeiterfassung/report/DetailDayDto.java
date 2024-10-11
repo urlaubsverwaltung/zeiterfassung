@@ -8,7 +8,11 @@ record DetailDayDto(
     String dayOfWeek,
     String dayOfWeekFull,
     String date,
-    Duration hoursWorked,
+    Duration hoursWorked, /* todo remove maybe? */
+    String workedWorkingHours,
+    String shouldWorkingHours,
+    String hoursDelta,
+    boolean hoursDeltaNegative,
     List<DetailDayEntryDto> dayEntries,
     List<DetailDayAbsenceDto> absences
 ) {

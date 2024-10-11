@@ -22,7 +22,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.threeten.extra.YearWeek;
 
-import java.sql.Date;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -30,6 +29,7 @@ import java.time.LocalTime;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -180,7 +180,7 @@ class ReportWeekControllerTest {
             Date.from(ZonedDateTime.of(LocalDate.of(2023, 2,5), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
             5,
             List.of(
-                new DetailDayDto(true, "F", "Freitag", "03.02.2023", Duration.ZERO, List.of(),
+                new DetailDayDto(true, "F", "Freitag", "03.02.2023", Duration.ZERO, "00:00", "00:00", "00:00", false, List.of(),
                     List.of(
                         new DetailDayAbsenceDto(
                             "Bruce Wayne",

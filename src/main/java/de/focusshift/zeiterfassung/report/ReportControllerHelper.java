@@ -166,7 +166,15 @@ class ReportControllerHelper {
             .map(reportDayAbsence -> toDetailDayAbsenceDto(reportDayAbsence, locale))
             .toList();
 
-        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, dayEntryDtos, detailDayAbsenceDto);
+        final WorkDuration workDuration = reportDay.workDuration();
+        final ShouldWorkingHours shouldWorkingHours = reportDay.shouldWorkingHours();
+        final String shouldWorkingHoursString = durationToTimeString(shouldWorkingHours.duration());
+        final String workedWorkingHoursString = durationToTimeString(workDuration.duration());
+
+        final Duration deltaDuration = workDuration.duration().minus(shouldWorkingHours.duration());
+        final String deltaHours = durationToTimeString(deltaDuration);
+
+        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, workedWorkingHoursString, shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), dayEntryDtos, detailDayAbsenceDto);
     }
 
     private DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry) {

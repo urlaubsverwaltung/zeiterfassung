@@ -340,17 +340,59 @@
                    listLabelId=${'day-' + #strings.randomAlphanumeric(9)},
                    hasAbsences=${not #lists.isEmpty(day.absences)}"
         >
-          <p
-            th:id="${listLabelId}"
-            class="text-gray-400 text-sm text-left px-2 mb-2"
-            th:text="#{report.detail.day.head(${day.dayOfWeekFull}, ${day.date}, ${{day.hoursWorked}})}"
+          <div
+            class="relative flex justify-between gap-x-2 flex-wrap text-sm"
             th:attrappend="aria-hidden=${hasEntries ? 'true' : null}"
           >
-            Zeiten
-          </p>
+            <span
+              th:id="${listLabelId}"
+              class="flex-1 font-medium"
+              th:text="#{report.detail.day.head(${day.dayOfWeekFull}, ${day.date})}"
+            >
+              Montag, 07.10.2024
+            </span>
+            <p class="tabular-nums">
+              <span class="inline-flex items-center">
+                <th:block th:if="${day.hoursDeltaNegative}">-</th:block>
+                <th:block th:if="${not day.hoursDeltaNegative}">+</th:block>
+                <span
+                  class="font-bold tabular-nums"
+                  th:text="${day.hoursDelta}"
+                >
+                  01:30
+                </span>
+                <th:block
+                  th:if="${not day.hoursDeltaNegative and day.hoursDelta != '00:00'}"
+                >
+                  <svg
+                    th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1')}"
+                  ></svg>
+                </th:block>
+              </span>
+            </p>
+            <p class="sr-only sm:not-sr-only">
+              Geleistet:
+              <span
+                th:text="${day.workedWorkingHours}"
+                class="font-bold tabular-nums"
+              >
+                41:58
+              </span>
+              (<th:block
+                th:text="#{time-entry.overview.week.group.hours-bar.should}"
+                >Soll: </th:block
+              ><span
+                th:text="${day.shouldWorkingHours}"
+                class="font-bold tabular-nums"
+              >
+                40:00 </span
+              >)
+            </p>
+          </div>
+
           <th:block th:if="${not hasEntries && not hasAbsences}">
             <p
-              class="px-2 text-sm text-gray-700"
+              class="p-2 text-sm text-gray-500"
               th:text="#{report.detail.no-entries}"
             >
               Für diesen Tag wurden noch keine Zeiten erfasst.
@@ -405,7 +447,7 @@
                       </p>
                     </div>
                     <p
-                      class="flex-1 flex items-start gap-1 text-base text-gray-800 transition-colors group-hover:text-black"
+                      class="flex-1 flex items-start gap-1 text-sm text-gray-500 transition-colors group-hover:text-black"
                     >
                       <svg
                         th:replace="~{icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')}"
