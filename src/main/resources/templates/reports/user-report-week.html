@@ -329,7 +329,6 @@
         aria-hidden="true"
       ></p>
       <section
-        class="space-y-4"
         is="z-report-breakdown-section"
         th:aria-labelledby="${weekGroupLabelId}"
       >
@@ -341,7 +340,12 @@
                    hasAbsences=${not #lists.isEmpty(day.absences)}"
         >
           <div
-            class="relative flex justify-between gap-x-2 flex-wrap text-sm border-b border-gray-200"
+            class="sticky bg-white h-4"
+            style="top: calc(var(--navigation-header-height))"
+          ></div>
+          <div
+            class="sticky flex justify-between gap-x-2 flex-wrap text-sm border-b border-gray-200 bg-white"
+            style="top: calc(var(--navigation-header-height) + 1rem)"
             th:attrappend="aria-hidden=${hasEntries ? 'true' : null}"
           >
             <span
@@ -429,7 +433,7 @@
                       </p>
                       <p class="flex items-center gap-0.5">
                         <svg
-                          th:replace="~{icons/timer::svg(className='-translate-x-px shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')}"
+                          th:replace="~{icons/timer::svg(className='shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')}"
                         />
                         <span
                           class="tabular-nums whitespace-nowrap"
