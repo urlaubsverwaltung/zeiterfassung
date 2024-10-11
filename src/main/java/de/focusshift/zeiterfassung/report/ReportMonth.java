@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.timeentry.HasWorkedHoursRatio;
+import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 
@@ -10,7 +12,19 @@ import java.util.List;
 
 import static java.util.function.Predicate.not;
 
-record ReportMonth(YearMonth yearMonth, List<ReportWeek> weeks) {
+record ReportMonth(YearMonth yearMonth, List<ReportWeek> weeks) implements HasWorkedHoursRatio {
+
+    public PlannedWorkingHours plannedWorkingHours() {
+        return weeks.stream()
+            .map(ReportWeek::plannedWorkingHours)
+            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+    }
+
+    public ShouldWorkingHours shouldWorkingHours() {
+        return weeks.stream()
+            .map(ReportWeek::shouldWorkingHours)
+            .reduce(ShouldWorkingHours.ZERO, ShouldWorkingHours::plus);
+    }
 
     public WorkDuration averageDayWorkDuration() {
 
@@ -29,9 +43,10 @@ record ReportMonth(YearMonth yearMonth, List<ReportWeek> weeks) {
         return new WorkDuration(duration);
     }
 
-    public PlannedWorkingHours plannedWorkingHours() {
-        return weeks.stream()
-            .map(ReportWeek::plannedWorkingHours)
-            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+    public WorkDuration workDuration() {
+        return weeks
+            .stream()
+            .map(ReportWeek::workDuration)
+            .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
 }

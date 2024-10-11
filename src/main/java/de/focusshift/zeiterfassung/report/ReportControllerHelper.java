@@ -1,7 +1,10 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
+import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
+import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -9,6 +12,8 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -28,10 +33,12 @@ class ReportControllerHelper {
 
     private final ReportPermissionService reportPermissionService;
     private final DateFormatter dateFormatter;
+    private final DateRangeFormatter dateRangeFormatter;
 
-    ReportControllerHelper(ReportPermissionService reportPermissionService, DateFormatter dateFormatter) {
+    ReportControllerHelper(ReportPermissionService reportPermissionService, DateFormatter dateFormatter, DateRangeFormatter dateRangeFormatter) {
         this.reportPermissionService = reportPermissionService;
         this.dateFormatter = dateFormatter;
+        this.dateRangeFormatter = dateRangeFormatter;
     }
 
     UserId principalToUserId(OidcUser principal) {
@@ -65,16 +72,31 @@ class ReportControllerHelper {
             .map(reportDay -> toUserReportDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot)))
             .toList();
 
-        final String yearMonthWeek = dateFormatter.formatYearMonthWeek(reportWeek.firstDateOfWeek());
+        final int calendarWeek = reportWeek.firstDateOfWeek().get(ChronoField.ALIGNED_WEEK_OF_YEAR);
+        final String dateRangeString = dateRangeFormatter.toDateRangeString(reportWeek.firstDateOfWeek(), reportWeek.lastDateOfWeek());
 
         final double maxHoursWorked = dayReports.stream()
             .map(GraphDayDto::hoursWorked)
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
-        final double hoursWorkedAverageADay = reportWeek.averageDayWorkDuration().hoursDoubleValue();
+        final WorkDuration workDuration = reportWeek.workDuration();
+        final ShouldWorkingHours shouldWorkingHours = reportWeek.shouldWorkingHours();
+        final String shouldWorkingHoursString = durationToTimeString(shouldWorkingHours.duration());
+        final String workedWorkingHoursString = durationToTimeString(workDuration.duration());
 
-        return new GraphWeekDto(yearMonthWeek, dayReports, maxHoursWorked, hoursWorkedAverageADay);
+        final Duration deltaDuration = workDuration.duration().minus(shouldWorkingHours.duration());
+        final String deltaHours = durationToTimeString(deltaDuration);
+
+        final double weekRatio = reportWeek.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
+
+        return new GraphWeekDto(calendarWeek, dateRangeString, dayReports, maxHoursWorked, workedWorkingHoursString, shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), weekRatio);
+    }
+
+    private static String durationToTimeString(Duration duration) {
+        // use positive values to format duration string
+        // negative value is handled in template
+        return String.format("%02d:%02d", Math.abs(duration.toHours()), Math.abs(duration.toMinutesPart()));
     }
 
     private GraphDayDto toUserReportDayReportDto(ReportDay reportDay, boolean differentMonth) {
@@ -136,7 +158,6 @@ class ReportControllerHelper {
         final String dayOfWeekNarrow = dateFormatter.formatDayOfWeekNarrow(reportDay.date().getDayOfWeek());
         final String dayOfWeekFull = dateFormatter.formatDayOfWeekFull(reportDay.date().getDayOfWeek());
         final String dateString = dateFormatter.formatDate(reportDay.date());
-        final Duration hoursWorked = reportDay.workDuration().duration();
         final List<DetailDayEntryDto> dayEntryDtos = reportDay.reportDayEntries().stream().map(this::toDetailDayEntryDto).toList();
 
         final List<DetailDayAbsenceDto> detailDayAbsenceDto = reportDay.detailDayAbsencesByUser().values().stream()
@@ -144,7 +165,15 @@ class ReportControllerHelper {
             .map(reportDayAbsence -> toDetailDayAbsenceDto(reportDayAbsence, locale))
             .toList();
 
-        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, dayEntryDtos, detailDayAbsenceDto);
+        final WorkDuration workDuration = reportDay.workDuration();
+        final ShouldWorkingHours shouldWorkingHours = reportDay.shouldWorkingHours();
+        final String shouldWorkingHoursString = durationToTimeString(shouldWorkingHours.duration());
+        final String workedWorkingHoursString = durationToTimeString(workDuration.duration());
+
+        final Duration deltaDuration = workDuration.duration().minus(shouldWorkingHours.duration());
+        final String deltaHours = durationToTimeString(deltaDuration);
+
+        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, workedWorkingHoursString, shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), dayEntryDtos, detailDayAbsenceDto);
     }
 
     private DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry) {

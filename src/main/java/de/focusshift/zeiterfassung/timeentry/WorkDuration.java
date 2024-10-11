@@ -12,6 +12,7 @@ import java.time.Duration;
 public record WorkDuration(Duration duration) implements ZeitDuration {
 
     public static final WorkDuration ZERO = new WorkDuration(Duration.ZERO);
+    public static final WorkDuration EIGHT = new WorkDuration(Duration.ofHours(8));
 
     /**
      * Returns a copy of this workDuration with the specified workDuration added.

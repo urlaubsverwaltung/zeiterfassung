@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.report;
 
-import java.time.Duration;
 import java.util.List;
 
 record DetailDayDto(
@@ -8,7 +7,10 @@ record DetailDayDto(
     String dayOfWeek,
     String dayOfWeekFull,
     String date,
-    Duration hoursWorked,
+    String workedWorkingHours,
+    String shouldWorkingHours,
+    String hoursDelta,
+    boolean hoursDeltaNegative,
     List<DetailDayEntryDto> dayEntries,
     List<DetailDayAbsenceDto> absences
 ) {

@@ -312,6 +312,10 @@ class ReportServiceRawTest {
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
+        return anyUser(userIdComposite);
+    }
+
+    private static User anyUser(UserIdComposite userIdComposite) {
         return new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
     }
 

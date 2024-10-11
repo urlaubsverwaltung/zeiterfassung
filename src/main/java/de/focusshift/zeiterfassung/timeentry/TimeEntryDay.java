@@ -3,12 +3,9 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
-
-import static java.math.RoundingMode.CEILING;
 
 /**
  *
@@ -24,7 +21,7 @@ record TimeEntryDay(
     ShouldWorkingHours shouldWorkingHours,
     List<TimeEntry> timeEntries,
     List<Absence> absences
-) {
+) implements HasWorkedHoursRatio {
 
     /**
      *
@@ -39,28 +36,5 @@ record TimeEntryDay(
             .stream()
             .map(TimeEntry::workDuration)
             .reduce(WorkDuration.ZERO, WorkDuration::plus);
-    }
-
-    /**
-     * Ratio of worked hours to planned hours. Does not include absences like public holidays.
-     *
-     * @return value between 0 and 1
-     */
-    public BigDecimal workedHoursRatio() {
-
-        final double should = shouldWorkingHours.hoursDoubleValue();
-        final double worked = workDuration().hoursDoubleValue();
-
-        if (worked == 0) {
-            return BigDecimal.ZERO;
-        }
-
-        if (should == 0) {
-            return BigDecimal.ONE;
-        }
-
-        final BigDecimal ratio = BigDecimal.valueOf(worked).divide(BigDecimal.valueOf(should), 2, CEILING);
-
-        return ratio.compareTo(BigDecimal.ONE) > 0 ? BigDecimal.ONE : ratio;
     }
 }

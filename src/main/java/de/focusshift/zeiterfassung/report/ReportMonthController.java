@@ -2,6 +2,8 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
+import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,8 +20,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.Clock;
 import java.time.DateTimeException;
+import java.time.Duration;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Locale;
@@ -142,9 +147,17 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
             .mapToDouble(value -> value)
             .max().orElse(0.0);
 
-        final double hoursWorkedAverageADay = reportMonth.averageDayWorkDuration().hoursDoubleValue();
+        final WorkDuration workDuration = reportMonth.workDuration();
+        final ShouldWorkingHours shouldWorkingHours = reportMonth.shouldWorkingHours();
+        final String shouldWorkingHoursString = durationToTimeString(shouldWorkingHours.duration());
+        final String workedWorkingHoursString = durationToTimeString(workDuration.duration());
 
-        return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked, hoursWorkedAverageADay);
+        final Duration deltaDuration = workDuration.duration().minus(shouldWorkingHours.duration());
+        final String deltaHours = durationToTimeString(deltaDuration);
+
+        final double weekRatio = reportMonth.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
+
+        return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked, workedWorkingHoursString, shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), weekRatio);
     }
 
     private DetailMonthDto toDetailMonthDto(ReportMonth reportMonth, Locale locale) {
@@ -166,5 +179,11 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
             LOG.error("could not create YearMonth with year={} month={}", year, month, exception);
             return Optional.empty();
         }
+    }
+
+    private static String durationToTimeString(Duration duration) {
+        // use positive values to format duration string
+        // negative value is handled in template
+        return String.format("%02d:%02d", Math.abs(duration.toHours()), Math.abs(duration.toMinutesPart()));
     }
 }

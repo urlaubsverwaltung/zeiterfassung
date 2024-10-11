@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
   <head
     th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scriptsDefer=~{::scriptsDefer})}"
@@ -50,12 +50,14 @@
               th:insert="~{__${chartNavigationFragment}__}"
             ></div>
           </div>
-          <div class="px-8 grid grid-cols-1 2xl:grid-cols-2 2xl:gap-8">
+          <div class="px-8 grid grid-cols-1 gap-8 2xl:grid-cols-2">
             <div
               class="2xl:sticky 2xl:self-start"
               style="top: calc(var(--navigation-header-height) + 1rem)"
             >
-              <div class="p-8 bg-gradient-to-b from-gray-100 rounded-t-3xl">
+              <div
+                class="p-8 pt-9 bg-gradient-to-b from-gray-100 rounded-t-3xl"
+              >
                 <div th:replace="~{__${chartFragment}__}"></div>
               </div>
             </div>

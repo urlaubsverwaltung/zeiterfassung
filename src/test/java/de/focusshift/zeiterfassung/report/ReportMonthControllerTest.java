@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
+import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
@@ -23,11 +25,15 @@ import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import static java.time.ZoneOffset.UTC;
 import static java.util.Locale.GERMAN;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,12 +51,16 @@ class ReportMonthControllerTest {
     @Mock
     private ReportPermissionService reportPermissionService;
 
+    @Mock
+    private MessageSource messageSource;
+
     private final Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
         final DateFormatterImpl dateFormatter = new DateFormatterImpl();
-        final ReportControllerHelper helper = new ReportControllerHelper(reportPermissionService, dateFormatter);
+        final DateRangeFormatter dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
+        final ReportControllerHelper helper = new ReportControllerHelper(reportPermissionService, dateFormatter, dateRangeFormatter);
         sut = new ReportMonthController(reportService, dateFormatter, helper, clock);
     }
 
@@ -67,6 +77,8 @@ class ReportMonthControllerTest {
     @Test
     void ensureReportMonth() throws Exception {
 
+        when(messageSource.getMessage(anyString(), any(), any(Locale.class))).thenAnswer(returnsFirstArg());
+
         final UserId userId = new UserId("user-id");
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -75,7 +87,33 @@ class ReportMonthControllerTest {
         final ReportMonth reportMonth = new ReportMonth(
             YearMonth.of(2023, 2),
             List.of(
-                fourtyHourWeek(user, LocalDate.of(2023, 1, 30))
+                new ReportWeek(
+                    LocalDate.of(2023, 1, 30),
+                    List.of(
+                        zeroHoursDay(LocalDate.of(2023, 1, 30), user),
+                        zeroHoursDay(LocalDate.of(2023, 1, 31), user),
+                        eightHoursDay(LocalDate.of(2023, 2, 1), user),
+                        eightHoursDay(LocalDate.of(2023, 2, 2), user),
+                        eightHoursDay(LocalDate.of(2023, 2, 3), user),
+                        zeroHoursDay(LocalDate.of(2023, 2, 4), user),
+                        zeroHoursDay(LocalDate.of(2023, 2, 5), user)
+                    )
+                ),
+                fourtyHourWeek(user, LocalDate.of(2023, 2, 6)),
+                fourtyHourWeek(user, LocalDate.of(2023, 2, 13)),
+                fourtyHourWeek(user, LocalDate.of(2023, 2, 20)),
+                new ReportWeek(
+                    LocalDate.of(2023, 2, 27),
+                    List.of(
+                        eightHoursDay(LocalDate.of(2023, 2, 27), user),
+                        eightHoursDay(LocalDate.of(2023, 2, 28), user),
+                        zeroHoursDay(LocalDate.of(2023, 3, 1), user),
+                        zeroHoursDay(LocalDate.of(2023, 3, 2), user),
+                        zeroHoursDay(LocalDate.of(2023, 3, 3), user),
+                        zeroHoursDay(LocalDate.of(2023, 3, 4), user),
+                        zeroHoursDay(LocalDate.of(2023, 3, 5), user)
+                    )
+                )
             )
         );
 
@@ -86,10 +124,11 @@ class ReportMonthControllerTest {
             "Februar 2023",
             List.of(
                 new GraphWeekDto(
-                    "Januar 2023 KW 5",
+        5,
+                    "date-range",
                     List.of(
-                        new GraphDayDto(true, "M", "Montag", "30.01.2023", 8d, 8d),
-                        new GraphDayDto(true, "D", "Dienstag", "31.01.2023", 8d, 8d),
+                        new GraphDayDto(true, "M", "Montag", "30.01.2023", 0d, 0d),
+                        new GraphDayDto(true, "D", "Dienstag", "31.01.2023", 0d, 0d),
                         new GraphDayDto(false, "M", "Mittwoch", "01.02.2023", 8d, 8d),
                         new GraphDayDto(false, "D", "Donnerstag", "02.02.2023", 8d, 8d),
                         new GraphDayDto(false, "F", "Freitag", "03.02.2023", 8d, 8d),
@@ -97,11 +136,95 @@ class ReportMonthControllerTest {
                         new GraphDayDto(false, "S", "Sonntag", "05.02.2023", 0d, 0d)
                     ),
                     8d,
-                    8d
+                    "24:00",
+                    "24:00",
+                    "00:00",
+                    false,
+                    100d
+                ),
+                new GraphWeekDto(
+        6,
+                    "date-range",
+                    List.of(
+                        new GraphDayDto(false, "M", "Montag", "06.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "D", "Dienstag", "07.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "M", "Mittwoch", "08.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "D", "Donnerstag", "09.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "F", "Freitag", "10.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "S", "Samstag", "11.02.2023", 0d, 0d),
+                        new GraphDayDto(false, "S", "Sonntag", "12.02.2023", 0d, 0d)
+                    ),
+                    8d,
+                    "40:00",
+                    "40:00",
+                    "00:00",
+                    false,
+                    100d
+                ),
+                new GraphWeekDto(
+        7,
+                    "date-range",
+                    List.of(
+                        new GraphDayDto(false, "M", "Montag", "13.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "D", "Dienstag", "14.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "M", "Mittwoch", "15.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "D", "Donnerstag", "16.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "F", "Freitag", "17.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "S", "Samstag", "18.02.2023", 0d, 0d),
+                        new GraphDayDto(false, "S", "Sonntag", "19.02.2023", 0d, 0d)
+                    ),
+                    8d,
+                    "40:00",
+                    "40:00",
+                    "00:00",
+                    false,
+                    100d
+                ),
+                new GraphWeekDto(
+        8,
+                    "date-range",
+                    List.of(
+                        new GraphDayDto(false, "M", "Montag", "20.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "D", "Dienstag", "21.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "M", "Mittwoch", "22.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "D", "Donnerstag", "23.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "F", "Freitag", "24.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "S", "Samstag", "25.02.2023", 0d, 0d),
+                        new GraphDayDto(false, "S", "Sonntag", "26.02.2023", 0d, 0d)
+                    ),
+                    8d,
+                    "40:00",
+                    "40:00",
+                    "00:00",
+                    false,
+                    100d
+                ),
+                new GraphWeekDto(
+        9,
+                    "date-range",
+                    List.of(
+                        new GraphDayDto(false, "M", "Montag", "27.02.2023", 8d, 8d),
+                        new GraphDayDto(false, "D", "Dienstag", "28.02.2023", 8d, 8d),
+                        new GraphDayDto(true, "M", "Mittwoch", "01.03.2023", 0d, 0d),
+                        new GraphDayDto(true, "D", "Donnerstag", "02.03.2023", 0d, 0d),
+                        new GraphDayDto(true, "F", "Freitag", "03.03.2023", 0d, 0d),
+                        new GraphDayDto(true, "S", "Samstag", "04.03.2023", 0d, 0d),
+                        new GraphDayDto(true, "S", "Sonntag", "05.03.2023", 0d, 0d)
+                    ),
+                    8d,
+                    "16:00",
+                    "16:00",
+                    "00:00",
+                    false,
+                    100d
                 )
             ),
             8d,
-            8d
+            "160:00",
+            "160:00",
+            "00:00",
+            false,
+            100d
         );
 
         perform(
@@ -360,6 +483,15 @@ class ReportMonthControllerTest {
             date,
             Map.of(user.userIdComposite(), PlannedWorkingHours.EIGHT),
             Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
+            Map.of(user.userIdComposite(), List.of())
+        );
+    }
+
+    private ReportDay zeroHoursDay(LocalDate date, User user) {
+        return new ReportDay(
+            date,
+            Map.of(user.userIdComposite(), PlannedWorkingHours.ZERO),
+            Map.of(user.userIdComposite(), List.of()),
             Map.of(user.userIdComposite(), List.of())
         );
     }
