@@ -72,9 +72,68 @@
             >Dieser Monat</th:block
           >
         </span>
-        <span class="font-bold" th:text="${monthReport.yearMonth}">
-          Dezember 2021
-        </span>
+        <div th:id="${'month-banner-'}" class="flex items-center">
+          <div class="flex-1 w-full">
+            <div
+              class="relative flex justify-between gap-x-2 flex-wrap text-sm"
+            >
+              <span class="font-bold" th:text="${monthReport.yearMonth}">
+                Oktober 2024
+              </span>
+              <p
+                class="tabular-nums text-sm text-gray-800 font-medium sm:flex-1 sm:absolute sm:left-0 sm:right-0 sm:text-center"
+              >
+                <span class="inline-flex items-center">
+                  <th:block th:if="${monthReport.hoursDeltaNegative}"
+                    >-</th:block
+                  >
+                  <th:block th:if="${not monthReport.hoursDeltaNegative}"
+                    >+</th:block
+                  >
+                  <span
+                    class="font-bold tabular-nums"
+                    th:text="${monthReport.hoursDelta}"
+                  >
+                    01:30
+                  </span>
+                  <th:block
+                    th:if="${not monthReport.hoursDeltaNegative and monthReport.hoursDelta != '00:00'}"
+                  >
+                    <svg
+                      th:replace="~{icons/trending-up::svg(className='w-4 h-4 ml-1')}"
+                    ></svg>
+                  </th:block>
+                </span>
+              </p>
+              <p class="sr-only sm:not-sr-only">
+                Geleistet:
+                <span
+                  th:text="${monthReport.workedWorkingHours}"
+                  class="font-bold tabular-nums"
+                >
+                  41:58
+                </span>
+                (<th:block
+                  th:text="#{time-entry.overview.week.group.hours-bar.should}"
+                  >Soll: </th:block
+                ><span
+                  th:text="${monthReport.shouldWorkingHours}"
+                  class="font-bold tabular-nums"
+                >
+                  40:00 </span
+                >)
+              </p>
+            </div>
+            <div class="translate-y-1 rounded border border-gray-300">
+              <div
+                class="h-2 rounded-full bg-gradient-to-r from-gray-200 to-gray-600"
+                th:styleappend="${'width:' + monthReport.hoursWorkedRatio + '%'}"
+              >
+                <div></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div is="z-report-graph">
         <svg
