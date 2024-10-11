@@ -77,12 +77,10 @@
             <div
               class="relative flex justify-between gap-x-2 flex-wrap text-sm"
             >
-              <span class="font-bold" th:text="${monthReport.yearMonth}">
+              <span class="font-bold flex-1" th:text="${monthReport.yearMonth}">
                 Oktober 2024
               </span>
-              <p
-                class="tabular-nums text-sm text-gray-800 font-medium sm:flex-1 sm:absolute sm:left-0 sm:right-0 sm:text-center"
-              >
+              <p class="tabular-nums text-sm text-gray-800 font-medium">
                 <span class="inline-flex items-center">
                   <th:block th:if="${monthReport.hoursDeltaNegative}"
                     >-</th:block
