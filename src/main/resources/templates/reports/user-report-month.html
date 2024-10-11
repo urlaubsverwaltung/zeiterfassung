@@ -184,8 +184,7 @@
                   topHours=${paddingTop + chartHeight - heightHours},
                   topShould=${paddingTop + chartHeight - heightShould},
                   bottom=${paddingTop + chartHeight},
-                  left=${(weekIt.index * weekGap) + (weekIt.index * 7 * barWidth) + (weekIt.index * 6 * dayGap) + (dayIt.index * dayGap) + (dayIt.index * barWidth)},
-                  radius=0
+                  left=${(weekIt.index * weekGap) + (weekIt.index * 7 * barWidth) + (weekIt.index * 6 * dayGap) + (dayIt.index * dayGap) + (dayIt.index * barWidth)}
                 "
                 th:classappend="${day.differentMonth ? 'report-graph-group--different-month' : ''}"
               >
@@ -210,8 +209,7 @@
                   <path
                     th:fragment="clip-path-dept"
                     th:if="${day.hoursWorkedShould != 0 && day.hoursWorkedShould > day.hoursWorked}"
-                    th:with="radius=0"
-                    th:d="|M${left},${bottom} v${-1 * (heightShould - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${heightShould - radius} z|"
+                    th:d="|M${left},${bottom} v${-1 * heightShould} h${barWidth} v${heightShould} z|"
                     class="report-graph-day-should-bar"
                     d=""
                   />
@@ -232,19 +230,18 @@
                   >
                     <mask th:id="${maskId}">
                       <path
-                        th:d="|M${left},${bottom} v${-1 * (heightOvertime - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${heightOvertime - radius} z|"
+                        th:d="|M${left},${bottom} v${-1 * heightOvertime} h${barWidth} v${heightOvertime} z|"
                         fill="white"
                         d=""
                       />
                     </mask>
                     <path
-                      th:d="|M${left},${bottom} v${-1 * (heightOvertime - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${heightOvertime - radius} z|"
+                      th:d="|M${left},${bottom} v${-1 * heightOvertime} h${barWidth} v${heightOvertime} z|"
                       class="report-graph-day-overtime-bar"
                       d=""
                     />
                     <path
-                      th:with="radius=0"
-                      th:d="|M${left},${bottom} v${-1 * (heightShould - radius)} q${0},${-1*radius} ${barWidth/2},${-1*radius} h0 q${barWidth/2},${0} ${barWidth/2},${radius} v${heightShould - radius} z|"
+                      th:d="|M${left},${bottom} v${-1 * heightShould} h${barWidth} v${heightShould} z|"
                       class="report-graph-day-bar"
                       th:mask="${'url(#'+maskId+')'}"
                       fill="url(#gradient)"
@@ -255,10 +252,7 @@
                     th:if="${day.hoursWorked != 0 && day.hoursWorked <= day.hoursWorkedShould}"
                   >
                     <path
-                      th:with="
-                        yMax=${bottom - heightHours},
-                        radius=0
-                      "
+                      th:with="yMax=${bottom - heightHours}"
                       th:d="|M${left},${bottom} v${-1*heightHours} h${barWidth} v${heightHours} z|"
                       th:clip-path="${'url(#'+clipPathId+')'}"
                       fill="url(#gradient)"
