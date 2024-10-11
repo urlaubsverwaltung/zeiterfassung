@@ -369,7 +369,10 @@
                 </span>
               </span>
             </p>
-            <p class="sr-only sm:not-sr-only">
+            <p
+              th:if="${day.workedWorkingHours != '00:00' or day.shouldWorkingHours != '00:00'}"
+              class="sr-only sm:not-sr-only"
+            >
               Geleistet:
               <span
                 th:text="${day.workedWorkingHours}"
