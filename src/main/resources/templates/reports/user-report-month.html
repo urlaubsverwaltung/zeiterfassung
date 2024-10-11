@@ -297,7 +297,7 @@
         Zeiteinträge für Januar
       </p>
       <section th:aria-labelledby="${monthGroupLabelId}">
-        <ol class="space-y-8" th:aria-labelledby="${monthGroupLabelId}">
+        <ol class="space-y-4" th:aria-labelledby="${monthGroupLabelId}">
           <li th:each="weekReportDetail : ${monthReportDetail.weekReports}">
             <th:block th:replace="~{reports/user-report-week::entries}" />
           </li>

@@ -329,7 +329,7 @@
         aria-hidden="true"
       ></p>
       <section
-        class="space-y-8"
+        class="space-y-4"
         is="z-report-breakdown-section"
         th:aria-labelledby="${weekGroupLabelId}"
       >
@@ -341,7 +341,7 @@
                    hasAbsences=${not #lists.isEmpty(day.absences)}"
         >
           <div
-            class="relative flex justify-between gap-x-2 flex-wrap text-sm"
+            class="relative flex justify-between gap-x-2 flex-wrap text-sm border-b border-gray-200"
             th:attrappend="aria-hidden=${hasEntries ? 'true' : null}"
           >
             <span
@@ -389,19 +389,8 @@
             </p>
           </div>
 
-          <th:block th:if="${not hasEntries && not hasAbsences}">
-            <p
-              class="p-2 text-sm text-gray-500"
-              th:text="#{report.detail.no-entries}"
-            >
-              Für diesen Tag wurden noch keine Zeiten erfasst.
-            </p>
-          </th:block>
           <th:block th:if="${hasEntries || hasAbsences}">
-            <ol
-              class="w-full divide-y divide-blue-50"
-              th:aria-labelledby="${listLabelId}"
-            >
+            <ol class="mt-1 w-full" th:aria-labelledby="${listLabelId}">
               <li th:each="dayEntry : ${day.dayEntries}">
                 <div
                   class="group flex items-start gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
