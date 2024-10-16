@@ -13,7 +13,7 @@
           data-turbo-action="advance"
         >
           <svg th:replace="~{icons/arrow-left::svg(className='w-5 h-5')}"></svg>
-          <th:block>zurück zu Arbeitszeiten</th:block>
+          <th:block th:text="#{usermanagement.working-time.backlink}">zurück zu Arbeitszeiten</th:block>
         </a>
       </div>
       <form
@@ -141,14 +141,14 @@
             th:with="hasError=${#fields.hasErrors('validFrom') or #fields.hasErrors('validFrom')}"
             th:if="${workingTime.id == null or workingTime.validFrom != null}"
           >
-            <legend class="text-sm font-medium text-gray-400">
+            <legend th:text="#{usermanagement.working-time.validity}" class="text-sm font-medium text-gray-400">
               Gültigkeit
             </legend>
             <div class="mt-2 sm:mt-4">
               <div class="flex items-center gap-2">
                 <span>
-                  Die Arbeitszeit ist
-                  <label for="working-time-valid-from-input">gültig ab</label>
+                  <span th:text="#{usermanagement.working-time.valid-from.select}">Die Arbeitszeit ist</span>
+                  <label th:text="#{usermanagement.working-time.valid-from.select.label}" for="working-time-valid-from-input">gültig ab</label>
                 </span>
                 <input
                   type="date"

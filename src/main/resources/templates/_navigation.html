@@ -70,7 +70,7 @@
                       data-test-id="navigation-link-users"
                     >
                       <svg th:replace="~{icons/users::svg}"></svg>
-                      <th:block>Personen</th:block>
+                      <th:block th:text="#{navigation.main.users}">Personen</th:block>
                     </a>
                   </li>
                   <li th:if="${showMainNavigationSettings}">
@@ -84,7 +84,7 @@
                       data-test-id="navigation-link-settings"
                     >
                       <svg th:replace="~{icons/cog::svg}"></svg>
-                      <th:block>Einstellungen</th:block>
+                      <th:block th:text="#{navigation.main.settings}">Einstellungen</th:block>
                     </a>
                   </li>
                 </ul>
