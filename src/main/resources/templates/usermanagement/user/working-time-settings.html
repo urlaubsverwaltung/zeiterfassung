@@ -28,7 +28,7 @@
           data-turbo-action="advance"
         >
           <svg th:replace="~{icons/edit::svg(className='w-4 h-4')}"></svg>
-          <th:block>Bearbeiten</th:block>
+          <th:block th:text="#{usermanagement.working-time.edit}">Bearbeiten</th:block>
         </a>
       </div>
       <th:block th:if="${#lists.size(workingTimes) > 1}">
