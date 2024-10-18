@@ -8,7 +8,7 @@ import { initFeedbackHeartView } from "../components/feedback-heart";
 
 const showFeedbackKudo =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).zeiterfassung?.feedback?.showFeedbackKudo ?? false;
+  (globalThis as any).zeiterfassung?.feedback?.showFeedbackKudo ?? false;
 
 initFeedbackHeartView({
   target: document.body,

@@ -2,7 +2,7 @@
  * Adds a global `submit` listener and disables the submitter.
  */
 export function initPreventDoubleClickSubmit() {
-  window.addEventListener("submit", function (event) {
+  globalThis.addEventListener("submit", function (event) {
     if (!event.defaultPrevented) {
       event.submitter?.setAttribute("disabled", "");
       // full page reload renders the form again with enabled submitter.
