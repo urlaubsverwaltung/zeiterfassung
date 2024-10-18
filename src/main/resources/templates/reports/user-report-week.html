@@ -443,6 +443,7 @@
                     <p
                       class="flex-1 flex items-start gap-1 text-sm text-gray-500 transition-colors group-hover:text-black"
                     >
+                      <th:block th:if="${not #strings.isEmpty(dayEntry.comment)}">
                       <svg
                         th:replace="~{icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')}"
                       />
@@ -450,7 +451,7 @@
                         class="sr-only"
                         th:text="#{report.detail.day.comment.label}"
                       >
-                        Kommentar:&nbsp;
+                        Kommentar:
                       </span>
                       <span
                         th:text="${dayEntry.comment}"
@@ -458,6 +459,12 @@
                       >
                         hard work!
                       </span>
+                      </th:block>
+                      <th:block th:if="${#strings.isEmpty(dayEntry.comment)}">
+                        <svg
+                          th:replace="~{icons/message-circle-off::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')}"
+                        />
+                      </th:block>
                     </p>
                   </div>
                 </div>
