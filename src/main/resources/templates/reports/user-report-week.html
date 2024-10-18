@@ -424,9 +424,16 @@
                         ></span>
                       </p>
                       <p class="flex items-center gap-0.5">
-                        <svg
-                          th:replace="~{icons/timer::svg(className='shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')}"
-                        />
+                        <th:block th:if="${!dayEntry.isBreak}">
+                          <svg
+                            th:replace="~{icons/timer::svg(className='shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')}"
+                          />
+                        </th:block>
+                        <th:block th:if="${dayEntry.isBreak}">
+                          <svg
+                            th:replace="~{icons/coffee::svg(className='shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')}"
+                          />
+                        </th:block>
                         <span
                           class="tabular-nums whitespace-nowrap"
                           th:text="${{dayEntry.duration}}"

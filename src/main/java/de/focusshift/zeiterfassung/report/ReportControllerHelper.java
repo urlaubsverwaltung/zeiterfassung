@@ -177,7 +177,7 @@ class ReportControllerHelper {
     }
 
     private DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry) {
-        return new DetailDayEntryDto(reportDayEntry.user().fullName(), reportDayEntry.comment(), reportDayEntry.start().toLocalTime(), reportDayEntry.end().toLocalTime());
+        return new DetailDayEntryDto(reportDayEntry.user().fullName(), reportDayEntry.comment(), reportDayEntry.isBreak(), reportDayEntry.start().toLocalTime(), reportDayEntry.end().toLocalTime());
     }
 
     private DetailDayAbsenceDto toDetailDayAbsenceDto(ReportDayAbsence reportDayAbsence, Locale locale) {
