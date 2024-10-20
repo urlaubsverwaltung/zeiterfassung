@@ -1,5 +1,6 @@
 @import "tailwindcss/components.css";
 @import "./components/ajax-loader.css";
+@import "./components/avatar-group.css";
 @import "./components/body-overlay.css";
 @import "./components/checkbox-switch.css";
 @import "./components/info-banner.css";
