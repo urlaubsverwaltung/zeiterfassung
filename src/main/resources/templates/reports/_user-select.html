@@ -9,6 +9,7 @@
       action="#"
       th:action="${userReportFilterUrl}"
       method="get"
+      class="flex gap-2"
     >
       <div class="relative">
         <a
@@ -93,6 +94,23 @@
             Übernehmen
           </button>
         </div>
+      </div>
+      <div
+        th:if="${not #lists.isEmpty(selectedUserIds)}"
+        class="flex avatar-group"
+      >
+        <th:block th:each="user : ${users}">
+          <div
+            th:if="${allUsersSelected or user.selected}"
+            class="avatar text-blue-300"
+          >
+            <img
+              alt=""
+              src=""
+              th:replace="~{fragments/avatar::avatar(${user.fullName},38,38)}"
+            />
+          </div>
+        </th:block>
       </div>
     </form>
   </body>
