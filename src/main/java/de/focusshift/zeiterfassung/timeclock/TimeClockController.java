@@ -4,9 +4,11 @@ import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.user.UserId;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +23,8 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import static java.lang.String.format;
-import static org.springframework.http.HttpStatus.CONFLICT;
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.util.StringUtils.hasText;
@@ -29,6 +32,8 @@ import static org.springframework.util.StringUtils.hasText;
 @Controller
 @RequestMapping("timeclock")
 class TimeClockController implements HasTimeClock, HasLaunchpad {
+
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final TimeClockService timeClockService;
 
@@ -78,13 +83,13 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
 
         final UserId userId = principalToUserId(principal);
 
-        // TODO should we do this in the service?
-        final Optional<TimeClock> maybeCurrentTimeClock = timeClockService.getCurrentTimeClock(userId);
-        if (maybeCurrentTimeClock.isPresent()) {
-            throw new ResponseStatusException(CONFLICT, "Time clock has been started already.");
+        try {
+            timeClockService.startTimeClock(userId);
+        } catch (TransactionSystemException e) {
+            // just log and redirect the user to the previous page
+            // since the time clock should be running already
+            LOG.warn("TimeClock could not be started. Maybe it is running already and user submitted the form twice with a double click.", e);
         }
-
-        timeClockService.startTimeClock(userId);
 
         return redirectToPreviousPage(request);
     }
