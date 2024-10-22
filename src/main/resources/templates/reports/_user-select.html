@@ -9,8 +9,9 @@
       action="#"
       th:action="${userReportFilterUrl}"
       method="get"
+      class="report-actions__persons"
     >
-      <div class="relative">
+      <div class="report-actions__persons-select relative">
         <a
           href="#report-user-selection"
           class="button-secondary button-secondary-icon"
@@ -28,9 +29,11 @@
               <svg th:replace="~{icons/users.html::svg(className='w-4 h-4')}" />
             </th:block>
           </th:block>
-          <th:block th:text="#{report.filter.users}"> Personen </th:block>
+          <span th:text="#{report.filter.users}" class="flex-1 text-left"
+            >Personen</span
+          >
           <svg
-            th:replace="~{icons/chevron-down::svg(className='ml-4 w-4 h-4')}"
+            th:replace="~{icons/chevron-down::svg(className='ml-4 w-4 h-4 justify-self-end')}"
           ></svg>
         </a>
         <div id="report-user-selection" data-js-hidden>
@@ -92,6 +95,25 @@
           >
             Übernehmen
           </button>
+        </div>
+      </div>
+      <div
+        th:if="${not #lists.isEmpty(selectedUserIds)}"
+        class="report-actions__avatars"
+      >
+        <div class="avatar-group flex w-fit">
+          <th:block th:each="user : ${users}">
+            <div
+              th:if="${allUsersSelected or user.selected}"
+              class="avatar text-blue-300"
+            >
+              <img
+                alt=""
+                src=""
+                th:replace="~{fragments/avatar::avatar(${user.fullName},38,38)}"
+              />
+            </div>
+          </th:block>
         </div>
       </div>
     </form>
