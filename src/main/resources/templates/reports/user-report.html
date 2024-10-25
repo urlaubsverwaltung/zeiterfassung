@@ -60,6 +60,37 @@
               >
                 <div th:replace="~{__${chartFragment}__}"></div>
               </div>
+              <div class="px-4">
+                <table class="report-person-detail-table">
+                  <thead>
+                    <tr>
+                      <th><span class="sr-only">Person</span></th>
+                      <th class="text-right">Abweichung</th>
+                      <th class="text-right">Geleistet</th>
+                      <th class="text-right">Soll</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="user : ${selectedUsers}">
+                      <td>
+                        <div class="flex items-center gap-2">
+                          <span class="report-person-detail-table__avatar">
+                            <img
+                              alt=""
+                              src=""
+                              th:replace="~{fragments/avatar::avatar(${user.fullName},38,38)}"
+                            />
+                          </span>
+                          <span th:text="${user.fullName}"> Bruce Wayne </span>
+                        </div>
+                      </td>
+                      <td class="text-right tabular-nums">-</td>
+                      <td class="text-right tabular-nums">-</td>
+                      <td class="text-right tabular-nums">-</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
             <div class="">
               <div class="p-4 bg-white border border-gray-100 rounded-3xl">
