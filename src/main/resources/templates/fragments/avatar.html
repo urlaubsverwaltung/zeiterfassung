@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
@@ -11,6 +11,7 @@
       src="#"
       th:src="@{/invalid-avatar-url}"
       alt=""
+      th:alt="${fullName}"
       class="rounded-full"
       th:classappend="${className}"
       th:width="${width == null ? '32px' : width}"

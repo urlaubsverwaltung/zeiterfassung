@@ -1,16 +1,25 @@
 import { doGet } from "../../http";
+import { Tooltip } from "../tooltip";
 
 export class Avatar extends HTMLImageElement {
   connectedCallback() {
+    const altText = this.getAttribute("alt");
+
     if (this.complete) {
       doGet(this.src).then((response) => {
         if (!response.ok || (response.status >= 400 && response.status < 500)) {
-          this.#useFallback();
+          this.#useFallback().finally(() => this.addTooltip(altText));
         }
       });
     } else {
-      this.addEventListener("error", () => this.#useFallback());
+      this.addEventListener("error", () =>
+        this.#useFallback().finally(() => this.addTooltip(altText)),
+      );
     }
+
+    // add tooltip for the img element.
+    // fallback replaces the img element with a svg and finally adds the tooltip again.
+    this.addTooltip(altText);
   }
 
   async #useFallback() {
@@ -31,6 +40,18 @@ export class Avatar extends HTMLImageElement {
     const parent = this.parentElement;
     parent.replaceChild(t.content, this);
     parent.querySelector("svg").classList.add(...clazzes);
+  }
+
+  private addTooltip(altText: string) {
+    if (altText) {
+      const tooltipText = document.createElement("p");
+      tooltipText.textContent = altText;
+
+      const tooltip = new Tooltip();
+      tooltip.append(tooltipText);
+
+      this.parentElement.append(tooltip);
+    }
   }
 }
 
