@@ -25,29 +25,21 @@
 }
 
 .report-actions__csv {
+  display: none;
 }
 
 @screen xxs {
   .report-actions {
-    grid-template-columns: auto 1fr auto;
-  }
-  .report-actions__pagination {
-    grid-column: span 3;
+    grid-template-columns: auto;
   }
   .report-actions__persons--persons-selected {
     grid-row: span 2;
   }
   .report-actions__persons-select {
-    grid-column: 1 / span 3;
     grid-row: auto;
   }
   .report-actions__avatars {
-    grid-column: 1 / span 3;
     grid-row: 3;
-  }
-  .report-actions__csv {
-    grid-row: 2;
-    grid-column: 3;
   }
 }
 
@@ -73,6 +65,7 @@
     grid-column: 1 / span 2;
   }
   .report-actions__csv {
+    display: block;
     grid-row: 2;
     grid-column: 3;
   }
