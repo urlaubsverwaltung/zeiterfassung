@@ -55,6 +55,7 @@ class ReportControllerHelper {
                 .toList();
 
             model.addAttribute("users", selectableUserDtos);
+            model.addAttribute("selectedUsers", selectableUserDtos.stream().filter(SelectableUserDto::selected).toList());
             model.addAttribute("selectedUserIds", selectedUserLocalIds.stream().map(UserLocalId::value).toList());
             model.addAttribute("allUsersSelected", allUsersSelected);
             model.addAttribute("userReportFilterUrl", userReportFilterUrl);

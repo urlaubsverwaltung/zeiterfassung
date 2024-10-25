@@ -96,13 +96,14 @@
         </div>
       </div>
       <div
-        th:if="${not #lists.isEmpty(selectedUserIds)}"
+        th:with="maximum=7"
+        th:if="${not #lists.isEmpty(selectedUsers)}"
         class="report-actions__avatars"
       >
         <div class="avatar-group flex w-fit">
-          <th:block th:each="user : ${users}">
+          <th:block th:each="user : ${selectedUsers}">
             <div
-              th:if="${allUsersSelected or user.selected}"
+              th:if="${userStat.index < maximum}"
               class="avatar text-blue-300"
             >
               <img
@@ -112,6 +113,14 @@
               />
             </div>
           </th:block>
+          <div
+            th:if="${#lists.size(selectedUsers) > maximum}"
+            class="avatar-more"
+          >
+            <div
+              th:replace="~{icons/ellipsis::svg(className='w-8 h-8 text-white')}"
+            ></div>
+          </div>
         </div>
       </div>
     </form>

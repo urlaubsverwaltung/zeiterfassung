@@ -4,7 +4,7 @@
   @apply bg-gradient-to-b from-transparent via-blue-100 to-blue-100;
   @apply rounded-full;
 
-  & > *:not(:first-child) {
+  & > *:not(:first-child):not(.avatar-more) {
     margin-left: -0.5rem;
   }
 
@@ -21,5 +21,11 @@
       cursor: default;
       border: 2px solid white;
     }
+  }
+
+  .avatar-more {
+    @apply flex;
+    @apply items-center;
+    @apply rounded-full;
   }
 }
