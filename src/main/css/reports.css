@@ -30,6 +30,7 @@
 
 .report-person-detail-table {
   width: 100%;
+  @apply text-sm;
 
   th,
   td {

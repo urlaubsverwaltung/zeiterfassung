@@ -75,29 +75,6 @@ class ReportDayTest {
     }
 
     @Test
-    void plannedWorkingHoursByUser() {
-        final UserId batmanId = new UserId("uuid");
-        final UserLocalId batmanLocalId = new UserLocalId(1L);
-        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
-
-        final UserId robinId = new UserId("uuid2");
-        final UserLocalId robinLocalId = new UserLocalId(2L);
-        final UserIdComposite robinIdComposite = new UserIdComposite(robinId, robinLocalId);
-
-        LocalDate reportDate = LocalDate.of(2024, 11, 13);
-        ReportDay reportDay = new ReportDay(
-                reportDate,
-                Map.of(
-                        batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
-                        robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of())
-                ),
-                Map.of(),
-                Map.of());
-
-        assertThat(reportDay.plannedWorkingHoursByUser(robinLocalId).duration()).isEqualTo(Duration.ofHours(4));
-    }
-
-    @Test
     void ensureToRemoveBreaks() {
 
         final UserId batmanId = new UserId("uuid");

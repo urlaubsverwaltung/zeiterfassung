@@ -26,7 +26,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 
 @Component
 class ReportControllerHelper {
@@ -57,6 +59,7 @@ class ReportControllerHelper {
             model.addAttribute("users", selectableUserDtos);
             model.addAttribute("selectedUsers", selectableUserDtos.stream().filter(SelectableUserDto::selected).toList());
             model.addAttribute("selectedUserIds", selectedUserLocalIds.stream().map(UserLocalId::value).toList());
+            model.addAttribute("selectedUsersById", selectableUserDtos.stream().collect(toMap(SelectableUserDto::id, identity())));
             model.addAttribute("allUsersSelected", allUsersSelected);
             model.addAttribute("userReportFilterUrl", userReportFilterUrl);
         }

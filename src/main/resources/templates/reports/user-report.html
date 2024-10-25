@@ -68,10 +68,14 @@
                       <th class="text-right">Abweichung</th>
                       <th class="text-right">Geleistet</th>
                       <th class="text-right">Soll</th>
+                      <th class="text-right">Geplant</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr th:each="user : ${selectedUsers}">
+                    <tr
+                      th:each="userDurationAggregation : ${selectedUserDurationAggregation}"
+                      th:with="user=${selectedUsersById.get(userDurationAggregation.userId)}"
+                    >
                       <td>
                         <div class="flex items-center gap-2">
                           <span class="report-person-detail-table__avatar">
@@ -84,9 +88,30 @@
                           <span th:text="${user.fullName}"> Bruce Wayne </span>
                         </div>
                       </td>
-                      <td class="text-right tabular-nums">-</td>
-                      <td class="text-right tabular-nums">-</td>
-                      <td class="text-right tabular-nums">-</td>
+                      <td
+                        class="text-right tabular-nums"
+                        th:text="${{userDurationAggregation.delta}}"
+                      >
+                        -
+                      </td>
+                      <td
+                        class="text-right tabular-nums"
+                        th:text="${{userDurationAggregation.worked}}"
+                      >
+                        -
+                      </td>
+                      <td
+                        class="text-right tabular-nums"
+                        th:text="${{userDurationAggregation.should}}"
+                      >
+                        -
+                      </td>
+                      <td
+                        class="text-right tabular-nums"
+                        th:text="${{userDurationAggregation.planned}}"
+                      >
+                        -
+                      </td>
                     </tr>
                   </tbody>
                 </table>
