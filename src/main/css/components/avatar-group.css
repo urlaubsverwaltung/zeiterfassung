@@ -1,0 +1,31 @@
+.avatar-group {
+  display: flex;
+  @apply p-0.5;
+  @apply bg-gradient-to-b from-transparent via-blue-100 to-blue-100;
+  @apply rounded-full;
+
+  & > *:not(:first-child):not(.avatar-more) {
+    margin-left: -0.5rem;
+  }
+
+  .avatar {
+    transition: transform 100ms ease-out;
+
+    &:hover {
+      transform: translateY(-0.25rem);
+      z-index: 1;
+    }
+
+    svg,
+    img {
+      cursor: default;
+      border: 2px solid white;
+    }
+  }
+
+  .avatar-more {
+    @apply flex;
+    @apply items-center;
+    @apply rounded-full;
+  }
+}

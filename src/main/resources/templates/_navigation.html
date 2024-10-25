@@ -70,7 +70,9 @@
                       data-test-id="navigation-link-users"
                     >
                       <svg th:replace="~{icons/users::svg}"></svg>
-                      <th:block th:text="#{navigation.main.users}">Personen</th:block>
+                      <th:block th:text="#{navigation.main.users}"
+                        >Personen</th:block
+                      >
                     </a>
                   </li>
                   <li th:if="${showMainNavigationSettings}">
@@ -84,7 +86,9 @@
                       data-test-id="navigation-link-settings"
                     >
                       <svg th:replace="~{icons/cog::svg}"></svg>
-                      <th:block th:text="#{navigation.main.settings}">Einstellungen</th:block>
+                      <th:block th:text="#{navigation.main.settings}"
+                        >Einstellungen</th:block
+                      >
                     </a>
                   </li>
                 </ul>
@@ -167,7 +171,7 @@
                   >
                     <span class="inline-flex text-blue-200">
                       <img
-                        th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='52px',height='52px',className='w-10 h-10 lg:w-9 lg:h-9')}"
+                        th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='52px',height='52px',className='w-10 h-10 lg:w-9 lg:h-9',tooltip=false)}"
                         alt=""
                       />
                     </span>
@@ -186,7 +190,7 @@
                       >
                         <span class="text-blue-200">
                           <img
-                            th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='64px',height='64px')}"
+                            th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='64px',height='64px',tooltip=false)}"
                             alt=""
                           />
                         </span>

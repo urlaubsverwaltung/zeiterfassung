@@ -4,12 +4,9 @@
     <title>Zeiterfassung - Bericht</title>
   </head>
   <body>
-    <div
-      th:fragment="chart-navigation"
-      class="flex flex-row gap-4 flex-wrap items-start 2xl:grid 2xl:grid-cols-2 2xl:gap-8"
-    >
+    <div th:fragment="chart-navigation" class="report-actions">
       <nav
-        class="flex items-center gap-1"
+        class="report-actions__pagination"
         th:aria-label="#{report.time.pagination.navigation.aria-label}"
       >
         <a
@@ -29,7 +26,7 @@
         <a
           href="#"
           th:href="${userReportTodaySectionUrl}"
-          class="button-primary"
+          class="button-primary flex-1 justify-center xs:flex-none xs:justify-normal"
           th:text="#{report.month.navigation.button.today}"
         >
           Heute
@@ -47,18 +44,16 @@
           >
         </a>
       </nav>
-      <div class="flex-1 flex justify-between gap-2">
-        <form th:replace="~{reports/_user-select::form}" />
-        <a
-          href="#"
-          th:href="${userReportCsvDownloadUrl}"
-          download
-          class="button-secondary sm:ml-auto inline-block"
-          th:text="#{report.week.button.csv-download}"
-        >
-          CSV Download
-        </a>
-      </div>
+      <form th:replace="~{reports/_user-select::form}" />
+      <a
+        href="#"
+        th:href="${userReportCsvDownloadUrl}"
+        download
+        class="report-actions__csv button-secondary"
+        th:text="#{report.week.button.csv-download}"
+      >
+        CSV Download
+      </a>
     </div>
 
     <th:block th:fragment="chart">
@@ -443,22 +438,24 @@
                     <p
                       class="flex-1 flex items-start gap-1 text-sm text-gray-500 transition-colors group-hover:text-black"
                     >
-                      <th:block th:if="${not #strings.isEmpty(dayEntry.comment)}">
-                      <svg
-                        th:replace="~{icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')}"
-                      />
-                      <span
-                        class="sr-only"
-                        th:text="#{report.detail.day.comment.label}"
+                      <th:block
+                        th:if="${not #strings.isEmpty(dayEntry.comment)}"
                       >
-                        Kommentar:
-                      </span>
-                      <span
-                        th:text="${dayEntry.comment}"
-                        class="flex-1 break-words leading-5"
-                      >
-                        hard work!
-                      </span>
+                        <svg
+                          th:replace="~{icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')}"
+                        />
+                        <span
+                          class="sr-only"
+                          th:text="#{report.detail.day.comment.label}"
+                        >
+                          Kommentar:
+                        </span>
+                        <span
+                          th:text="${dayEntry.comment}"
+                          class="flex-1 break-words leading-5"
+                        >
+                          hard work!
+                        </span>
                       </th:block>
                       <th:block th:if="${#strings.isEmpty(dayEntry.comment)}">
                         <svg

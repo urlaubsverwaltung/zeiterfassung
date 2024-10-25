@@ -4,12 +4,9 @@
     <title>Zeiterfassung - Bericht</title>
   </head>
   <body>
-    <div
-      th:fragment="chart-navigation"
-      class="flex flex-row gap-4 flex-wrap items-start 2xl:grid 2xl:grid-cols-2 2xl:gap-8"
-    >
+    <div th:fragment="chart-navigation" class="report-actions">
       <nav
-        class="flex items-center gap-1"
+        class="report-actions__pagination"
         th:aria-label="#{report.time.pagination.navigation.aria-label}"
       >
         <a
@@ -27,7 +24,7 @@
         <a
           href="#"
           th:href="${userReportTodaySectionUrl}"
-          class="button-primary button-primary-icon"
+          class="button-primary button-primary-icon flex-1 justify-center xs:flex-none xs:justify-normal"
           th:text="#{report.month.navigation.button.today}"
         >
           Heute
@@ -45,18 +42,16 @@
           >
         </a>
       </nav>
-      <div class="flex-1 flex justify-between gap-2">
-        <form th:replace="~{reports/_user-select::form}" />
-        <a
-          href="#"
-          th:href="${userReportCsvDownloadUrl}"
-          download
-          class="button-secondary sm:ml-auto inline-block"
-          th:text="#{report.month.button.csv-download}"
-        >
-          CSV Download
-        </a>
-      </div>
+      <form th:replace="~{reports/_user-select::form}" />
+      <a
+        href="#"
+        th:href="${userReportCsvDownloadUrl}"
+        download
+        class="report-actions__csv button-secondary"
+        th:text="#{report.month.button.csv-download}"
+      >
+        CSV Download
+      </a>
     </div>
 
     <th:block th:fragment="chart">
