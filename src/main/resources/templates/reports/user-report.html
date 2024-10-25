@@ -64,11 +64,37 @@
                 <table class="report-person-detail-table">
                   <thead>
                     <tr>
-                      <th><span class="sr-only">Person</span></th>
-                      <th class="text-right">Abweichung</th>
-                      <th class="text-right">Geleistet</th>
-                      <th class="text-right">Soll</th>
-                      <th class="text-right">Geplant</th>
+                      <th>
+                        <span
+                          class="sr-only"
+                          th:text="#{report.aggregated.table.head.user}"
+                          >Person</span
+                        >
+                      </th>
+                      <th
+                        class="text-right"
+                        th:text="#{report.aggregated.table.head.delta}"
+                      >
+                        Abweichung
+                      </th>
+                      <th
+                        class="text-right"
+                        th:text="#{report.aggregated.table.head.worked}"
+                      >
+                        Geleistet
+                      </th>
+                      <th
+                        class="text-right"
+                        th:text="#{report.aggregated.table.head.should}"
+                      >
+                        Soll
+                      </th>
+                      <th
+                        class="text-right"
+                        th:text="#{report.aggregated.table.head.planned}"
+                      >
+                        Geplant
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
