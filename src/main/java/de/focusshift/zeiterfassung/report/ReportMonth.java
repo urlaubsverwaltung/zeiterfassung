@@ -15,7 +15,7 @@ import java.util.Map;
 
 import static java.util.function.Predicate.not;
 
-record ReportMonth(YearMonth yearMonth, List<ReportWeek> weeks) implements HasWorkedHoursRatio {
+record ReportMonth(YearMonth yearMonth, List<ReportWeek> weeks) implements HasWorkDurationByUser, HasWorkedHoursRatio {
 
     public PlannedWorkingHours plannedWorkingHours() {
         return weeks.stream()

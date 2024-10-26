@@ -32,7 +32,7 @@ record ReportDay(
     Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser,
     Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser,
     Map<UserIdComposite, List<ReportDayAbsence>> detailDayAbsencesByUser
-) {
+) implements HasWorkDurationByUser {
 
     public List<ReportDayEntry> reportDayEntries() {
         return reportDayEntriesByUser.values().stream().flatMap(Collection::stream).toList();

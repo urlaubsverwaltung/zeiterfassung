@@ -5,9 +5,7 @@ import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
-import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
-import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +28,6 @@ import java.time.Duration;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
@@ -117,7 +114,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         model.addAttribute("userReportCsvDownloadUrl", csvDownloadUrl);
 
         helper.addUserFilterModelAttributes(model, allUsersSelected, userLocalIds, String.format("/report/year/%d/month/%d", year, month));
-        model.addAttribute("selectedUserDurationAggregation", toReportSelectedUserDurationAggregationDto(reportMonth));
+        helper.addSelectedUserDurationAggregationModelAttributes(model, reportMonth);
 
         return "reports/user-report";
     }
@@ -162,20 +159,6 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         final double weekRatio = reportMonth.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
 
         return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked, workedWorkingHoursString, shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), weekRatio);
-    }
-
-    private List<ReportSelectedUserDurationAggregationDto> toReportSelectedUserDurationAggregationDto(ReportMonth reportMonth) {
-
-        final Map<UserIdComposite, WorkDuration> workedByUser = reportMonth.workDurationByUser();
-        final Map<UserIdComposite, ShouldWorkingHours> shouldByUser = reportMonth.shouldWorkingHoursByUser();
-        final Map<UserIdComposite, PlannedWorkingHours> plannedByUser = reportMonth.plannedWorkingHoursByUser();
-
-        return plannedByUser.keySet().stream().map(userIdComposite -> new ReportSelectedUserDurationAggregationDto(
-            userIdComposite.localId().value(),
-            durationToTimeString(Duration.ZERO), // TODO
-            durationToTimeString(workedByUser.get(userIdComposite).duration()),
-            durationToTimeString(shouldByUser.get(userIdComposite).duration())
-        )).toList();
     }
 
     private DetailMonthDto toDetailMonthDto(ReportMonth reportMonth, Locale locale) {

@@ -108,11 +108,17 @@
                           <span th:text="${user.fullName}"> Bruce Wayne </span>
                         </div>
                       </td>
-                      <td
-                        class="text-right tabular-nums"
-                        th:text="${{userDurationAggregation.delta}}"
-                      >
-                        -
+                      <td class="text-right tabular-nums">
+                        <span th:if="${userDurationAggregation.deltaNegative}"
+                          >-</span
+                        >
+                        <span
+                          th:if="${not userDurationAggregation.deltaNegative}"
+                          >+</span
+                        >
+                        <span th:text="${{userDurationAggregation.delta}}"
+                          >00:00</span
+                        >
                       </td>
                       <td
                         class="text-right tabular-nums"

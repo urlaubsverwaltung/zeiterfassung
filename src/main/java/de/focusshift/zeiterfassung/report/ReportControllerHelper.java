@@ -6,8 +6,10 @@ import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
@@ -25,6 +27,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
@@ -65,6 +68,29 @@ class ReportControllerHelper {
             model.addAttribute("allUsersSelected", allUsersSelected);
             model.addAttribute("userReportFilterUrl", userReportFilterUrl);
         }
+    }
+
+    void addSelectedUserDurationAggregationModelAttributes(Model model, HasWorkDurationByUser report) {
+
+        final Map<UserIdComposite, WorkDuration> workedByUser = report.workDurationByUser();
+        final Map<UserIdComposite, ShouldWorkingHours> shouldByUser = report.shouldWorkingHoursByUser();
+        final Map<UserIdComposite, PlannedWorkingHours> plannedByUser = report.plannedWorkingHoursByUser();
+        final Map<UserIdComposite, DeltaWorkingHours> deltaByUser = report.deltaDurationByUser();
+
+        final List<ReportSelectedUserDurationAggregationDto> dtos = plannedByUser.keySet().stream()
+            .map(userIdComposite -> {
+                final DeltaWorkingHours delta = deltaByUser.get(userIdComposite);
+                return new ReportSelectedUserDurationAggregationDto(
+                    userIdComposite.localId().value(),
+                    durationToTimeString(delta.durationInMinutes()),
+                    delta.isNegative(),
+                    durationToTimeString(workedByUser.get(userIdComposite).durationInMinutes()),
+                    durationToTimeString(shouldByUser.get(userIdComposite).durationInMinutes())
+                );
+            })
+            .toList();
+
+        model.addAttribute("selectedUserDurationAggregation", dtos);
     }
 
     private static SelectableUserDto userToSelectableUserDto(User user, boolean selected) {
