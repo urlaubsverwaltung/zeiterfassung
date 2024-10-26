@@ -164,8 +164,6 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked, workedWorkingHoursString, shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), weekRatio);
     }
 
-    record ReportSelectedUserDurationAggregationDto(Long userId, String delta, String worked, String should) {}
-
     private List<ReportSelectedUserDurationAggregationDto> toReportSelectedUserDurationAggregationDto(ReportMonth reportMonth) {
 
         final Map<UserIdComposite, WorkDuration> workedByUser = reportMonth.workDurationByUser();

@@ -133,8 +133,6 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return reportWeek;
     }
 
-    record ReportSelectedUserDurationAggregationDto(Long userId, String delta, String worked, String should) {}
-
     private List<ReportSelectedUserDurationAggregationDto> toReportSelectedUserDurationAggregationDto(ReportWeek reportWeek) {
 
         final Map<UserIdComposite, WorkDuration> workedByUser = reportWeek.workDurationByUser();
