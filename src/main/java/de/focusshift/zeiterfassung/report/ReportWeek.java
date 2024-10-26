@@ -6,87 +6,46 @@ import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 
-import java.time.Duration;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.function.Predicate.not;
+import static de.focusshift.zeiterfassung.report.ReportFunctions.calculateAverageDayWorkDuration;
+import static de.focusshift.zeiterfassung.report.ReportFunctions.summarizePlannedWorkingHours;
+import static de.focusshift.zeiterfassung.report.ReportFunctions.summarizePlannedWorkingHoursByUser;
+import static de.focusshift.zeiterfassung.report.ReportFunctions.summarizeShouldWorkingHours;
+import static de.focusshift.zeiterfassung.report.ReportFunctions.summarizeShouldWorkingHoursByUser;
+import static de.focusshift.zeiterfassung.report.ReportFunctions.summarizeWorkDuration;
+import static de.focusshift.zeiterfassung.report.ReportFunctions.summarizeWorkDurationByUser;
 
 record ReportWeek(LocalDate firstDateOfWeek, List<ReportDay> reportDays) implements HasWorkDurationByUser, HasWorkedHoursRatio {
 
     public PlannedWorkingHours plannedWorkingHours() {
-        return reportDays.stream()
-            .map(ReportDay::plannedWorkingHours)
-            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+        return summarizePlannedWorkingHours(reportDays, ReportDay::plannedWorkingHours);
     }
 
     public Map<UserIdComposite, PlannedWorkingHours> plannedWorkingHoursByUser() {
-        final HashMap<UserIdComposite, PlannedWorkingHours> plannedWorkingHoursByUser = new HashMap<>();
-
-        for (ReportDay reportDay : reportDays) {
-            reportDay.plannedWorkingHoursByUser().forEach((userIdComposite, plannedWorkingHours) -> {
-                final PlannedWorkingHours hours = plannedWorkingHoursByUser.getOrDefault(userIdComposite, PlannedWorkingHours.ZERO);
-                plannedWorkingHoursByUser.put(userIdComposite, hours.plus(plannedWorkingHours));
-            });
-        }
-
-        return plannedWorkingHoursByUser;
+        return summarizePlannedWorkingHoursByUser(reportDays);
     }
 
     public ShouldWorkingHours shouldWorkingHours() {
-        return reportDays.stream()
-            .map(ReportDay::shouldWorkingHours)
-            .reduce(ShouldWorkingHours.ZERO, ShouldWorkingHours::plus);
+        return summarizeShouldWorkingHours(reportDays, ReportDay::shouldWorkingHours);
     }
 
     public Map<UserIdComposite, ShouldWorkingHours> shouldWorkingHoursByUser() {
-        final HashMap<UserIdComposite, ShouldWorkingHours> shouldWorkingHoursByUser = new HashMap<>();
-
-        for (ReportDay reportDay : reportDays) {
-            reportDay.shouldWorkingHoursByUser().forEach((userIdComposite, shouldWorkingHours) -> {
-                final ShouldWorkingHours hours = shouldWorkingHoursByUser.getOrDefault(userIdComposite, ShouldWorkingHours.ZERO);
-                shouldWorkingHoursByUser.put(userIdComposite, hours.plus(shouldWorkingHours));
-            });
-        }
-
-        return shouldWorkingHoursByUser;
+        return summarizeShouldWorkingHoursByUser(reportDays);
     }
 
     public WorkDuration averageDayWorkDuration() {
-
-        final double averageMinutes = reportDays().stream()
-            .map(ReportDay::workDuration)
-            .filter(not(WorkDuration.ZERO::equals))
-            .map(WorkDuration::durationInMinutes)
-            .mapToLong(Duration::toMinutes)
-            .average()
-            .orElse(0.0);// o.O
-
-        final Duration duration = Duration.ofMinutes(Math.round(averageMinutes));
-
-        return new WorkDuration(duration);
+        return calculateAverageDayWorkDuration(reportDays, ReportDay::workDuration);
     }
 
     public WorkDuration workDuration() {
-        return reportDays
-            .stream()
-            .map(ReportDay::workDuration)
-            .reduce(WorkDuration.ZERO, WorkDuration::plus);
+        return summarizeWorkDuration(this.reportDays, ReportDay::workDuration);
     }
 
     public Map<UserIdComposite, WorkDuration> workDurationByUser() {
-        final HashMap<UserIdComposite, WorkDuration> byUser = new HashMap<>();
-
-        for (ReportDay reportDay : reportDays) {
-            reportDay.workDurationByUser().forEach((userIdComposite, dayDuration) -> {
-                final WorkDuration summedDuration = byUser.getOrDefault(userIdComposite, WorkDuration.ZERO);
-                byUser.put(userIdComposite, summedDuration.plus(dayDuration));
-            });
-        }
-
-        return byUser;
+        return summarizeWorkDurationByUser(this.reportDays);
     }
 
     public LocalDate lastDateOfWeek() {
