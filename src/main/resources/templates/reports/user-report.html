@@ -100,7 +100,7 @@
                   <tbody>
                     <tr
                       th:each="userDurationAggregation : ${selectedUserDurationAggregation}"
-                      th:with="user=${selectedUsersById.get(userDurationAggregation.userId)}"
+                      th:with="user=${usersById.get(userDurationAggregation.userId)}"
                     >
                       <td>
                         <div class="flex items-center gap-2">

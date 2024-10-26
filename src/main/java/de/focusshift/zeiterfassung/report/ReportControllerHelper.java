@@ -50,16 +50,18 @@ class ReportControllerHelper {
     void addUserFilterModelAttributes(Model model, boolean allUsersSelected, List<UserLocalId> selectedUserLocalIds, String userReportFilterUrl) {
 
         final List<User> permittedUsers = reportPermissionService.findAllPermittedUsersForCurrentUser();
-        if (permittedUsers.size() > 1) {
-            final List<SelectableUserDto> selectableUserDtos = permittedUsers
-                .stream()
-                .map(user -> userToSelectableUserDto(user, selectedUserLocalIds.contains(user.userLocalId())))
-                .toList();
 
-            model.addAttribute("users", selectableUserDtos);
+        final List<SelectableUserDto> selectableUserDtos = permittedUsers
+            .stream()
+            .map(user -> userToSelectableUserDto(user, selectedUserLocalIds.contains(user.userLocalId())))
+            .toList();
+
+        model.addAttribute("users", selectableUserDtos);
+        model.addAttribute("usersById", selectableUserDtos.stream().collect(toMap(SelectableUserDto::id, identity())));
+
+        if (permittedUsers.size() > 1) {
             model.addAttribute("selectedUsers", selectableUserDtos.stream().filter(SelectableUserDto::selected).toList());
             model.addAttribute("selectedUserIds", selectedUserLocalIds.stream().map(UserLocalId::value).toList());
-            model.addAttribute("selectedUsersById", selectableUserDtos.stream().collect(toMap(SelectableUserDto::id, identity())));
             model.addAttribute("allUsersSelected", allUsersSelected);
             model.addAttribute("userReportFilterUrl", userReportFilterUrl);
         }
