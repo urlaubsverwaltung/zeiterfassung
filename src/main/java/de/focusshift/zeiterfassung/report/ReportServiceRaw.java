@@ -226,19 +226,23 @@ class ReportServiceRaw {
                                          Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars,
                                          Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportDayEntriesForDate) {
 
-        final Map<UserIdComposite, List<ReportDayAbsence>> absencesByUser = workingTimeCalendars.entrySet().stream().collect(
-            toMap(
-                Map.Entry::getKey,
-                entry -> {
-                    final List<Absence> absencesAtDate = entry.getValue().absence(date).orElse(List.of());
-                    return absencesAtDate.stream()
-                        .map(absence -> new ReportDayAbsence(userById.get(entry.getKey()), absence))
-                        .toList();
-                }
-            )
-        );
+        final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser = reportDayEntriesForDate.apply(date);
+        final Map<UserIdComposite, List<ReportDayAbsence>> reportDayAbsencesByUser = new HashMap<>();
 
-        return new ReportDay(date, workingTimeCalendars, reportDayEntriesForDate.apply(date), absencesByUser);
+        // to avoid NullPointer exceptions Maps must contain values for every user that has planned working hours at this day
+        // todoo: workingTimeCalendar map contains ALL users, we may want to handle only relevant users some time
+        for (Map.Entry<UserIdComposite, WorkingTimeCalendar> entry : workingTimeCalendars.entrySet()) {
+            final UserIdComposite userIdComposite = entry.getKey();
+            final WorkingTimeCalendar workingTimeCalendar = entry.getValue();
+
+            final List<Absence> absences = workingTimeCalendar.absence(date).orElse(List.of());
+            final List<ReportDayAbsence> reportDayAbsences = absences.stream().map(absence -> new ReportDayAbsence(userById.get(entry.getKey()), absence)).toList();
+
+            reportDayAbsencesByUser.put(userIdComposite, reportDayAbsences);
+            reportDayEntriesByUser.putIfAbsent(userIdComposite, List.of());
+        }
+
+        return new ReportDay(date, workingTimeCalendars, reportDayEntriesForDate.apply(date), reportDayAbsencesByUser);
     }
 
     private static boolean isPreviousMonth(LocalDate possiblePreviousMonthDate, YearMonth yearMonth) {

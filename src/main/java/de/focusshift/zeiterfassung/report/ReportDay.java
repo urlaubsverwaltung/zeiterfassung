@@ -16,6 +16,17 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
 
+/**
+ * Report information for a certain date and users.
+ *
+ * <p>
+ * All byUser Maps contains values for the same keys. (Please ensure this on constructing this object.)
+ *
+ * @param date
+ * @param workingTimeCalendarByUser
+ * @param reportDayEntriesByUser
+ * @param detailDayAbsencesByUser
+ */
 record ReportDay(
     LocalDate date,
     Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser,
