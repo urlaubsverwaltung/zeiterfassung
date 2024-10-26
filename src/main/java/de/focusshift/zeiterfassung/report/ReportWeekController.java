@@ -2,7 +2,11 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
+import de.focusshift.zeiterfassung.timeentry.WorkDuration;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +24,11 @@ import org.threeten.extra.YearWeek;
 
 import java.time.Clock;
 import java.time.DateTimeException;
+import java.time.Duration;
 import java.time.Year;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import static java.lang.String.format;
@@ -107,6 +113,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         model.addAttribute("userReportCsvDownloadUrl", csvDownloadUrl);
 
         helper.addUserFilterModelAttributes(model, allUsersSelected, userLocalIds, format("/report/year/%d/week/%d", year, week));
+        model.addAttribute("selectedUserDurationAggregation", toReportSelectedUserDurationAggregationDto(reportWeek));
 
         return "reports/user-report";
     }
@@ -126,6 +133,22 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return reportWeek;
     }
 
+    record ReportSelectedUserDurationAggregationDto(Long userId, String delta, String worked, String should) {}
+
+    private List<ReportSelectedUserDurationAggregationDto> toReportSelectedUserDurationAggregationDto(ReportWeek reportWeek) {
+
+        final Map<UserIdComposite, WorkDuration> workedByUser = reportWeek.workDurationByUser();
+        final Map<UserIdComposite, ShouldWorkingHours> shouldByUser = reportWeek.shouldWorkingHoursByUser();
+        final Map<UserIdComposite, PlannedWorkingHours> plannedByUser = reportWeek.plannedWorkingHoursByUser();
+
+        return plannedByUser.keySet().stream().map(userIdComposite -> new ReportSelectedUserDurationAggregationDto(
+            userIdComposite.localId().value(),
+            durationToTimeString(Duration.ZERO), // TODO
+            durationToTimeString(workedByUser.get(userIdComposite).duration()),
+            durationToTimeString(shouldByUser.get(userIdComposite).duration())
+        )).toList();
+    }
+
     private static Optional<YearWeek> yearWeek(int year, int week) {
         try {
             return Optional.of(YearWeek.of(Year.of(year), week));
@@ -133,5 +156,11 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
             LOG.error("could not create YearWeek with year={} week={}", year, week, exception);
             return Optional.empty();
         }
+    }
+
+    private static String durationToTimeString(Duration duration) {
+        // use positive values to format duration string
+        // negative value is handled in template
+        return String.format("%02d:%02d", Math.abs(duration.toHours()), Math.abs(duration.toMinutesPart()));
     }
 }
