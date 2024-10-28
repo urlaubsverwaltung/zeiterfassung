@@ -201,13 +201,16 @@
                   <clipPath th:id="${clipPathId}">
                     <path d="" th:replace="~{::clip-path-dept}" />
                   </clipPath>
-                  <path
-                    th:fragment="clip-path-dept"
+                  <th:block
                     th:if="${day.hoursWorkedShould != 0 && day.hoursWorkedShould > day.hoursWorked}"
-                    th:d="|M${left},${bottom} v${-1 * heightShould} h${barWidth} v${heightShould} z|"
-                    class="report-graph-day-should-bar"
-                    d=""
-                  />
+                  >
+                    <path
+                      th:fragment="clip-path-dept"
+                      th:d="|M${left},${bottom} v${-1 * heightShould} h${barWidth} v${heightShould} z|"
+                      class="report-graph-day-should-bar"
+                      d=""
+                    />
+                  </th:block>
                   <rect
                     th:if="${day.hoursWorkedShould == 0}"
                     th:y="${topShould}"
