@@ -16,6 +16,11 @@ record DetailDayEntryDto(
 ) {
 
     public Duration getDuration() {
-        return Duration.between(start, end);
+        Duration duration = Duration.between(start, end);
+        // this is the case if timeentry ends on next day
+        if (end.isBefore(start)) {
+            return duration.plus(Duration.ofDays(1));
+        }
+        return duration;
     }
 }
