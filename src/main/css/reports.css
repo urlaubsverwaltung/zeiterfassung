@@ -54,6 +54,10 @@
         @apply text-blue-100;
         @apply transition-colors;
       }
+      > * {
+        @apply bg-transparent;
+        @apply transition-colors;
+      }
       > *:first-child {
         @apply rounded-l-2xl;
       }
@@ -63,10 +67,8 @@
       th {
         @apply font-normal;
         @apply text-left;
-      }
-      td {
-        @apply bg-transparent;
-        @apply transition-colors;
+        @apply sticky;
+        @apply left-0;
       }
       &:hover {
         > * {
