@@ -96,7 +96,7 @@
                       th:each="userDurationAggregation : ${selectedUserDurationAggregation}"
                       th:with="user=${usersById.get(userDurationAggregation.userId)}"
                     >
-                      <td>
+                      <th>
                         <div class="flex items-center gap-2">
                           <span class="report-person-detail-table__avatar">
                             <img
@@ -107,7 +107,7 @@
                           </span>
                           <span th:text="${user.fullName}"> Bruce Wayne </span>
                         </div>
-                      </td>
+                      </th>
                       <td class="text-right tabular-nums">
                         <span th:if="${userDurationAggregation.deltaNegative}"
                           >-</span
