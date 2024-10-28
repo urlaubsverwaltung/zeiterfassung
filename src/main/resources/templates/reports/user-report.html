@@ -60,7 +60,10 @@
               >
                 <div th:replace="~{__${chartFragment}__}"></div>
               </div>
-              <div class="xs:px-4 w-full overflow-x-auto">
+              <div
+                th:if="${selectedUserDurationAggregation != null}"
+                class="xs:px-4 w-full overflow-x-auto"
+              >
                 <table class="report-person-detail-table">
                   <thead>
                     <tr>

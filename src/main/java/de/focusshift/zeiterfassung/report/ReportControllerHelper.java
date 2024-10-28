@@ -77,20 +77,24 @@ class ReportControllerHelper {
         final Map<UserIdComposite, PlannedWorkingHours> plannedByUser = report.plannedWorkingHoursByUser();
         final Map<UserIdComposite, DeltaWorkingHours> deltaByUser = report.deltaDurationByUser();
 
-        final List<ReportSelectedUserDurationAggregationDto> dtos = plannedByUser.keySet().stream()
-            .map(userIdComposite -> {
-                final DeltaWorkingHours delta = deltaByUser.get(userIdComposite);
-                return new ReportSelectedUserDurationAggregationDto(
-                    userIdComposite.localId().value(),
-                    durationToTimeString(delta.durationInMinutes()),
-                    delta.isNegative(),
-                    durationToTimeString(workedByUser.get(userIdComposite).durationInMinutes()),
-                    durationToTimeString(shouldByUser.get(userIdComposite).durationInMinutes())
-                );
-            })
-            .toList();
+        final boolean showAggregatedInformation = report.deltaDurationByUser().size() > 1;
 
-        model.addAttribute("selectedUserDurationAggregation", dtos);
+        if (showAggregatedInformation) {
+            final List<ReportSelectedUserDurationAggregationDto> dtos = plannedByUser.keySet().stream()
+                .map(userIdComposite -> {
+                    final DeltaWorkingHours delta = deltaByUser.get(userIdComposite);
+                    return new ReportSelectedUserDurationAggregationDto(
+                        userIdComposite.localId().value(),
+                        durationToTimeString(delta.durationInMinutes()),
+                        delta.isNegative(),
+                        durationToTimeString(workedByUser.get(userIdComposite).durationInMinutes()),
+                        durationToTimeString(shouldByUser.get(userIdComposite).durationInMinutes())
+                    );
+                })
+                .toList();
+
+            model.addAttribute("selectedUserDurationAggregation", dtos);
+        }
     }
 
     private static SelectableUserDto userToSelectableUserDto(User user, boolean selected) {
