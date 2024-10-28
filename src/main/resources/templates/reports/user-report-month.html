@@ -99,21 +99,23 @@
                 </span>
               </p>
               <p class="sr-only sm:not-sr-only">
-                Geleistet:
+                <th:block
+                  th:text="#{report.month.group.hours-bar.worked-hours}"
+                  >Geleistet:</th:block
+                >
                 <span
                   th:text="${monthReport.workedWorkingHours}"
                   class="font-bold tabular-nums"
+                  >41:58</span
                 >
-                  41:58
-                </span>
                 (<th:block
-                  th:text="#{time-entry.overview.week.group.hours-bar.should}"
-                  >Soll: </th:block
-                ><span
+                  th:text="#{report.month.group.hours-bar.should}"
+                  >Geplant:</th:block
+                >
+                <span
                   th:text="${monthReport.shouldWorkingHours}"
                   class="font-bold tabular-nums"
-                >
-                  40:00 </span
+                  >40:00</span
                 >)
               </p>
             </div>
