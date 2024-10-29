@@ -24,7 +24,7 @@
                 <li>
                   <a
                     href="#"
-                    th:href="@{/report/week}"
+                    th:href="${#lists.isEmpty(selectedUserIds)} ? @{/report/week} : @{/report/week (user=${selectedUserIds})}"
                     class="report-view-selection-link"
                     th:aria-current="${weekAriaCurrent}"
                     th:text="#{report.view.select.week}"
@@ -35,7 +35,7 @@
                 <li>
                   <a
                     href="#"
-                    th:href="@{/report/month}"
+                    th:href="${#lists.isEmpty(selectedUserIds)} ? @{/report/month} : @{/report/month (user=${selectedUserIds})}"
                     class="report-view-selection-link"
                     th:aria-current="${monthAriaCurrent}"
                     th:text="#{report.view.select.month}"
