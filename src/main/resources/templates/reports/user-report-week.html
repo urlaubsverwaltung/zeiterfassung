@@ -102,21 +102,23 @@
                 </span>
               </p>
               <p class="sr-only sm:not-sr-only">
-                Geleistet:
+                <th:block
+                  th:text="#{report.week.group.hours-bar.worked-hours}"
+                  >Geleistet:</th:block
+                >
                 <span
                   th:text="${weekReport.workedWorkingHours}"
                   class="font-bold tabular-nums"
+                  >41:58</span
                 >
-                  41:58
-                </span>
                 (<th:block
-                  th:text="#{time-entry.overview.week.group.hours-bar.should}"
-                  >Soll: </th:block
-                ><span
+                  th:text="#{report.week.group.hours-bar.should}"
+                  >Geplant:</th:block
+                >
+                <span
                   th:text="${weekReport.shouldWorkingHours}"
                   class="font-bold tabular-nums"
-                >
-                  40:00 </span
+                  >40:00</span
                 >)
               </p>
             </div>
@@ -364,21 +366,23 @@
               th:if="${day.workedWorkingHours != '00:00' or day.shouldWorkingHours != '00:00'}"
               class="sr-only sm:not-sr-only"
             >
-              Geleistet:
+              <th:block
+                th:text="#{report.week.group.hours-bar.worked-hours}"
+                >Geleistet:</th:block
+              >
               <span
                 th:text="${day.workedWorkingHours}"
                 class="font-bold tabular-nums"
+                >41:58</span
               >
-                41:58
-              </span>
               (<th:block
-                th:text="#{time-entry.overview.week.group.hours-bar.should}"
-                >Soll: </th:block
-              ><span
+                th:text="#{report.week.group.hours-bar.should}"
+                >Geplant:</th:block
+              >
+              <span
                 th:text="${day.shouldWorkingHours}"
                 class="font-bold tabular-nums"
-              >
-                40:00 </span
+                >40:00</span
               >)
             </p>
           </div>
