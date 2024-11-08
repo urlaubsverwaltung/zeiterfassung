@@ -9,6 +9,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -31,8 +32,69 @@ class ReportDayTest {
 
     private static final ZoneId ZONE_ID_BERLIN = ZoneId.of("Europe/Berlin");
 
-    private static ZonedDateTime dateTime(int year, int month, int dayOfMonth, int hour, int minute) {
-        return ZonedDateTime.of(LocalDateTime.of(year, month, dayOfMonth, hour, minute), ZONE_ID_BERLIN);
+    @Test
+    void reportDayEntries() {
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+
+        final ZonedDateTime from = dateTime(2024, 11, 13, 1, 0);
+        final ZonedDateTime to = dateTime(2024, 11, 13, 2, 0);
+        final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, true);
+
+        LocalDate reportDate = LocalDate.of(2024, 11, 13);
+        ReportDay reportDay = new ReportDay(reportDate, Map.of(), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
+
+        List<ReportDayEntry> reportDayEntries = reportDay.reportDayEntries();
+
+        assertThat(reportDayEntries).hasSize(1).containsExactly(reportDayEntry);
+    }
+
+    @Test
+    void plannedWorkingHours() {
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1337L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId robinId = new UserId("uuid2");
+        final UserLocalId robinLocalId = new UserLocalId(1337L);
+        final UserIdComposite robinIdComposite = new UserIdComposite(robinId, robinLocalId);
+
+        LocalDate reportDate = LocalDate.of(2024, 11, 13);
+        ReportDay reportDay = new ReportDay(
+                reportDate,
+                Map.of(
+                        batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
+                        robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of())
+                ),
+                Map.of(),
+                Map.of());
+
+        assertThat(reportDay.plannedWorkingHours().duration()).isEqualTo(Duration.ofHours(12));
+    }
+
+    @Test
+    void plannedWorkingHoursByUser() {
+        final UserId batmanId = new UserId("uuid");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId robinId = new UserId("uuid2");
+        final UserLocalId robinLocalId = new UserLocalId(2L);
+        final UserIdComposite robinIdComposite = new UserIdComposite(robinId, robinLocalId);
+
+        LocalDate reportDate = LocalDate.of(2024, 11, 13);
+        ReportDay reportDay = new ReportDay(
+                reportDate,
+                Map.of(
+                        batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
+                        robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of())
+                ),
+                Map.of(),
+                Map.of());
+
+        assertThat(reportDay.plannedWorkingHoursByUser(robinLocalId).duration()).isEqualTo(Duration.ofHours(4));
     }
 
     @Test
@@ -47,7 +109,9 @@ class ReportDayTest {
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
         final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, true);
 
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
+        LocalDate reportDate = LocalDate.of(2021, 1, 4);
+        WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of());
+        final ReportDay reportDay = new ReportDay(reportDate, Map.of(batmanIdComposite, workingTimeCalendar), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
 
         assertThat(reportDay.workDuration().duration()).isEqualTo(Duration.ZERO);
     }
@@ -64,7 +128,9 @@ class ReportDayTest {
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
         Absence absence = new Absence(batmanId, from, to, FULL, locale -> "foo", RED, HOLIDAY);
 
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT), Map.of(batmanIdComposite, List.of()), Map.of(batmanIdComposite, List.of(new ReportDayAbsence(batman, absence))));
+        LocalDate reportDate = LocalDate.of(2021, 1, 4);
+        WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of(reportDate, List.of(absence)));
+        final ReportDay reportDay = new ReportDay(reportDate, Map.of(batmanIdComposite, workingTimeCalendar), Map.of(batmanIdComposite, List.of()), Map.of(batmanIdComposite, List.of(new ReportDayAbsence(batman, absence))));
 
         assertThat(reportDay.shouldWorkingHours()).isEqualTo(new ShouldWorkingHours(Duration.ZERO));
     }
@@ -82,7 +148,9 @@ class ReportDayTest {
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
         Absence absence = new Absence(batmanId, from, to, dayLength, locale -> "foo", RED, HOLIDAY);
 
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT), Map.of(batmanIdComposite, List.of()), Map.of(batmanIdComposite, List.of(new ReportDayAbsence(batman, absence))));
+        LocalDate reportDate = LocalDate.of(2021, 1, 4);
+        WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of(reportDate, List.of(absence)));
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batmanIdComposite, workingTimeCalendar), Map.of(batmanIdComposite, List.of()), Map.of(batmanIdComposite, List.of(new ReportDayAbsence(batman, absence))));
 
         assertThat(reportDay.shouldWorkingHours()).isEqualTo(new ShouldWorkingHours(Duration.ofHours(4)));
     }
@@ -105,8 +173,17 @@ class ReportDayTest {
 
         Map<UserIdComposite, List<ReportDayEntry>> entriesByUser = Map.of(batmanIdComposite, List.of(), robinIdComposite, List.of());
         Map<UserIdComposite, List<ReportDayAbsence>> absencesByUser = Map.of(batmanIdComposite, List.of(new ReportDayAbsence(batman, absence)), robinIdComposite, List.of());
-        Map<UserIdComposite, PlannedWorkingHours> plannedWorkingHoursByUser = Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT, robinIdComposite, new PlannedWorkingHours(Duration.ofHours(4L)));
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), plannedWorkingHoursByUser, entriesByUser, absencesByUser);
+
+        LocalDate reportDate = LocalDate.of(2021, 1, 4);
+        Map<UserIdComposite, WorkingTimeCalendar> plannedWorkingHoursByUser = Map.of(
+                batmanIdComposite, new WorkingTimeCalendar(
+                        Map.of(reportDate, PlannedWorkingHours.EIGHT),
+                        Map.of(reportDate, List.of(absence))),
+                robinIdComposite, new WorkingTimeCalendar(
+                        Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))),
+                        Map.of(reportDate, List.of()))
+        );
+        final ReportDay reportDay = new ReportDay(reportDate, plannedWorkingHoursByUser, entriesByUser, absencesByUser);
 
         assertThat(reportDay.shouldWorkingHours()).isEqualTo(new ShouldWorkingHours(Duration.ofHours(4L)));
     }
@@ -130,9 +207,21 @@ class ReportDayTest {
 
         Map<UserIdComposite, List<ReportDayEntry>> entriesByUser = Map.of(batmanIdComposite, List.of(), robinIdComposite, List.of());
         Map<UserIdComposite, List<ReportDayAbsence>> absencesByUser = Map.of(batmanIdComposite, List.of(new ReportDayAbsence(batman, absence)), robinIdComposite, List.of());
-        Map<UserIdComposite, PlannedWorkingHours> plannedWorkingHoursByUser = Map.of(batmanIdComposite, PlannedWorkingHours.EIGHT, robinIdComposite, new PlannedWorkingHours(Duration.ofHours(4L)));
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), plannedWorkingHoursByUser, entriesByUser, absencesByUser);
+        LocalDate reportDate = LocalDate.of(2021, 1, 4);
+        Map<UserIdComposite, WorkingTimeCalendar> plannedWorkingHoursByUser = Map.of(
+                batmanIdComposite, new WorkingTimeCalendar(
+                        Map.of(reportDate, PlannedWorkingHours.EIGHT),
+                        Map.of(reportDate, List.of(absence))),
+                robinIdComposite, new WorkingTimeCalendar(
+                        Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))),
+                        Map.of(reportDate, List.of()))
+        );
+        final ReportDay reportDay = new ReportDay(reportDate, plannedWorkingHoursByUser, entriesByUser, absencesByUser);
 
         assertThat(reportDay.shouldWorkingHours()).isEqualTo(new ShouldWorkingHours(Duration.ofHours(8L)));
+    }
+
+    private static ZonedDateTime dateTime(int year, int month, int dayOfMonth, int hour, int minute) {
+        return ZonedDateTime.of(LocalDateTime.of(year, month, dayOfMonth, hour, minute), ZONE_ID_BERLIN);
     }
 }

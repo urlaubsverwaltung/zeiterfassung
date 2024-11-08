@@ -8,6 +8,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -465,23 +466,23 @@ class ReportMonthControllerTest {
             eightHoursDay(firstDateOfWeek.plusDays(4), user),
             new ReportDay(
                 firstDateOfWeek.plusDays(5),
-                Map.of(user.userIdComposite(), PlannedWorkingHours.ZERO),
+                Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(5), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(5), List.of()))),
                 Map.of(user.userIdComposite(), List.of()),
                 Map.of(user.userIdComposite(), List.of())
             ),
             new ReportDay(
                 firstDateOfWeek.plusDays(6),
-                Map.of(user.userIdComposite(), PlannedWorkingHours.ZERO),
+                Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(6), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(6), List.of()))),
                 Map.of(user.userIdComposite(), List.of()),
                 Map.of(user.userIdComposite(), List.of())
-            )
-        ));
+            ))
+        );
     }
 
     private ReportDay eightHoursDay(LocalDate date, User user) {
         return new ReportDay(
             date,
-            Map.of(user.userIdComposite(), PlannedWorkingHours.EIGHT),
+            Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.EIGHT), Map.of(date, List.of()))),
             Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
             Map.of(user.userIdComposite(), List.of())
         );
@@ -490,7 +491,7 @@ class ReportMonthControllerTest {
     private ReportDay zeroHoursDay(LocalDate date, User user) {
         return new ReportDay(
             date,
-            Map.of(user.userIdComposite(), PlannedWorkingHours.ZERO),
+            Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.ZERO), Map.of(date, List.of()))),
             Map.of(user.userIdComposite(), List.of()),
             Map.of(user.userIdComposite(), List.of())
         );

@@ -22,4 +22,12 @@ public enum DayLength {
     public double plus(DayLength dayLength) {
         return this.value + dayLength.value;
     }
+
+    public boolean isFull() {
+        return this.value == FULL.value;
+    }
+
+    public boolean isHalf() {
+        return !isFull();
+    }
 }

@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.DateRange;
+import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.absence.AbsenceService;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidayCalendar;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidaysService;
@@ -9,6 +11,8 @@ import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -23,10 +27,14 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
 
     private final WorkingTimeService workingTimeService;
     private final PublicHolidaysService publicHolidaysService;
+    private final AbsenceService absenceService;
 
-    WorkingTimeCalendarServiceImpl(WorkingTimeService workingTimeService, PublicHolidaysService publicHolidaysService) {
+    WorkingTimeCalendarServiceImpl(WorkingTimeService workingTimeService,
+                                   PublicHolidaysService publicHolidaysService,
+                                   AbsenceService absenceService) {
         this.workingTimeService = workingTimeService;
         this.publicHolidaysService = publicHolidaysService;
+        this.absenceService = absenceService;
     }
 
     @Override
@@ -58,18 +66,32 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
         final Map<FederalState, PublicHolidayCalendar> publicHolidayCalendars =
             publicHolidaysService.getPublicHolidays(from, toExclusive, federalStates);
 
+        final List<UserLocalId> userLocalIds = sortedWorkingTimes.keySet().stream().map(UserIdComposite::localId).toList();
+        final Map<UserIdComposite, List<Absence>> absencesByUser = absenceService.getAbsencesByUserIds(userLocalIds, from, toExclusive);
+
         final BiPredicate<LocalDate, FederalState> isPublicHoliday = (localDate, federalState) ->
             publicHolidayCalendars.containsKey(federalState) && publicHolidayCalendars.get(federalState).isPublicHoliday(localDate);
 
         sortedWorkingTimes.forEach((userIdComposite, workingTimes) -> {
-            final WorkingTimeCalendar workingTimeCalendar = toWorkingTimeCalendar(from, toExclusive, workingTimes, isPublicHoliday);
+
+            final Map<LocalDate, List<Absence>> absencesByDate = new HashMap<>();
+            for (Absence absence : absencesByUser.get(userIdComposite)) {
+                ZonedDateTime date = absence.startDate();
+                while (!date.isAfter(absence.endDate())) {
+                    absencesByDate.computeIfAbsent(date.toLocalDate(), unused -> new ArrayList<>()).add(absence);
+                    date = date.plusDays(1);
+                }
+            }
+
+            final WorkingTimeCalendar workingTimeCalendar = toWorkingTimeCalendar(from, toExclusive, workingTimes, absencesByDate, isPublicHoliday);
             result.put(userIdComposite, workingTimeCalendar);
         });
 
         return result;
     }
 
-    private WorkingTimeCalendar toWorkingTimeCalendar(LocalDate from, LocalDate toExclusive, List<WorkingTime> sortedWorkingTimes, BiPredicate<LocalDate, FederalState> isPublicHoliday) {
+    private WorkingTimeCalendar toWorkingTimeCalendar(LocalDate from, LocalDate toExclusive, List<WorkingTime> sortedWorkingTimes,
+                                                      Map<LocalDate, List<Absence>> absencesByDate, BiPredicate<LocalDate, FederalState> isPublicHoliday) {
 
         final Map<LocalDate, PlannedWorkingHours> plannedWorkingHoursByDate = new HashMap<>();
 
@@ -95,7 +117,7 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
             }
         }
 
-        return new WorkingTimeCalendar(plannedWorkingHoursByDate);
+        return new WorkingTimeCalendar(plannedWorkingHoursByDate, absencesByDate);
     }
 
     private static DateRange getDateRange(LocalDate from, WorkingTime workingTime, LocalDate nextEnd) {
