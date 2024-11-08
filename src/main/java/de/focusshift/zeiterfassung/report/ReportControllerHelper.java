@@ -106,7 +106,7 @@ class ReportControllerHelper {
         final String dayOfWeekFull = dateFormatter.formatDayOfWeekFull(reportDay.date().getDayOfWeek());
         final String dateString = dateFormatter.formatDate(reportDay.date());
         final double hoursWorked = reportDay.workDuration().hoursDoubleValue();
-        final double hoursWorkedShould = reportDay.plannedWorkingHours().hoursDoubleValue();
+        final double hoursWorkedShould = reportDay.shouldWorkingHours().hoursDoubleValue();
 
         return new GraphDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, hoursWorkedShould);
     }

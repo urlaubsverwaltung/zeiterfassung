@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.AbsenceService;
-import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserDateService;
@@ -128,8 +127,7 @@ class ReportServiceRaw {
         final Map<UserId, User> userById = userByIdFor(timeEntries, absenceEntries);
 
         final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
-        final Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingTimeByDate = plannedWorkingTimeForDate(workingTimeCalendars, absenceEntries);
-
+        final Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingTimeByDate = plannedWorkingTimeForDate(workingTimeCalendars);
 
         return reportWeek(firstDateOfWeek, timeEntries, userById, plannedWorkingTimeByDate, absenceEntries);
     }
@@ -162,7 +160,7 @@ class ReportServiceRaw {
         final Map<UserId, User> userById = userByIdFor(timeEntries, absenceEntries);
 
         final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
-        final Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingTimeForDate = plannedWorkingTimeForDate(workingTimeCalendars, absenceEntries);
+        final Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingTimeForDate = plannedWorkingTimeForDate(workingTimeCalendars);
 
         final List<ReportWeek> weeks = getStartOfWeekDatesForMonth(yearMonth)
             .stream()
@@ -180,35 +178,14 @@ class ReportServiceRaw {
         return new ReportMonth(yearMonth, weeks);
     }
 
-    private Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingTimeForDate(
-        Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars, Map<UserIdComposite, List<Absence>> absenceEntries) {
-
+    private Function<LocalDate, Map<UserIdComposite, PlannedWorkingHours>> plannedWorkingTimeForDate(Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars) {
         return date ->
             workingTimeCalendars.entrySet()
                 .stream()
                 .collect(
                     toMap(
                         Map.Entry::getKey,
-                        entry -> {
-
-                            final PlannedWorkingHours plannedWorkingHours = entry.getValue().plannedWorkingHours(date)
-                                .orElse(PlannedWorkingHours.ZERO);
-
-                            if (absenceEntries != null) {
-
-                                final List<Absence> absences = absenceEntries.get(entry.getKey());
-                                if (absences != null) {
-                                    final List<Absence> absencesAtDate = absences.stream()
-                                        .filter(isInAbsencePeriod(date))
-                                        .toList();
-                                    if (!absencesAtDate.isEmpty()) {
-                                        return calculatePlannedWorkingHoursWithAbsences(plannedWorkingHours, absencesAtDate);
-                                    }
-                                }
-
-                            }
-                            return plannedWorkingHours;
-                        }
+                        entry -> entry.getValue().plannedWorkingHours(date).orElse(PlannedWorkingHours.ZERO)
                     )
                 );
     }
@@ -216,22 +193,6 @@ class ReportServiceRaw {
     private Predicate<Absence> isInAbsencePeriod(LocalDate date) {
         return absence -> (absence.startDate().toLocalDate().isBefore(date) || absence.startDate().toLocalDate().equals(date)) &&
             (absence.endDate().toLocalDate().isAfter(date) || absence.endDate().toLocalDate().equals(date));
-    }
-
-    private static PlannedWorkingHours calculatePlannedWorkingHoursWithAbsences(PlannedWorkingHours actuallyPlanned, List<Absence> absences) {
-
-        final double absenceDayLengthValue = absences.stream()
-            .map(Absence::dayLength)
-            .map(DayLength::getValue)
-            .reduce(0.0, Double::sum);
-
-        if (absenceDayLengthValue >= 1.0) {
-            return PlannedWorkingHours.ZERO;
-        } else if (absenceDayLengthValue == 0.5) {
-            return new PlannedWorkingHours(actuallyPlanned.duration().dividedBy(2));
-        }
-
-        return actuallyPlanned;
     }
 
     private Map<UserId, User> userByIdFor(Map<UserIdComposite, List<TimeEntry>> timeEntries, Map<UserIdComposite, List<Absence>> absenceEntries) {
