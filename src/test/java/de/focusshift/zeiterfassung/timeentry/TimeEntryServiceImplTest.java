@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-import de.focusshift.zeiterfassung.absence.AbsenceService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -62,15 +61,13 @@ class TimeEntryServiceImplTest {
     private UserManagementService userManagementService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
-    @Mock
-    private AbsenceService absenceService;
 
     private static final Clock clockFixed = Clock.fixed(Instant.now(), UTC);
 
     @BeforeEach
     void setUp() {
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeCalendarService,
-            userDateService, userSettingsProvider, absenceService, clockFixed);
+            userDateService, userSettingsProvider, clockFixed);
     }
 
     @Test
