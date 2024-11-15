@@ -175,7 +175,7 @@ class ReportServiceRaw {
         }
 
         final Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> resolveReportDayEntries =
-            (LocalDate date) -> reportEntriesByDate.getOrDefault(date, Map.of());
+            (LocalDate date) -> reportEntriesByDate.getOrDefault(date, new HashMap<>());
 
         final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
             .mapToObj(daysToAdd ->
@@ -230,7 +230,7 @@ class ReportServiceRaw {
         final Map<UserIdComposite, List<ReportDayAbsence>> reportDayAbsencesByUser = new HashMap<>();
 
         // to avoid NullPointer exceptions Maps must contain values for every user that has planned working hours at this day
-        // todoo: workingTimeCalendar map contains ALL users, we may want to handle only relevant users some time
+        // todo: workingTimeCalendar map contains ALL users, we may want to handle only relevant users some time
         for (Map.Entry<UserIdComposite, WorkingTimeCalendar> entry : workingTimeCalendars.entrySet()) {
             final UserIdComposite userIdComposite = entry.getKey();
             final WorkingTimeCalendar workingTimeCalendar = entry.getValue();
