@@ -28,6 +28,60 @@
   display: none;
 }
 
+.report-person-detail-table {
+  width: 100%;
+  @apply text-sm;
+
+  th,
+  td {
+    @apply px-2;
+    @apply py-1;
+    &:last-of-type {
+      @apply pr-4;
+    }
+  }
+
+  thead {
+    th {
+      @apply font-medium;
+      @apply text-sm;
+    }
+  }
+
+  tbody {
+    tr {
+      .report-person-detail-table__avatar {
+        @apply text-blue-100;
+        @apply transition-colors;
+      }
+      > * {
+        @apply bg-transparent;
+        @apply transition-colors;
+      }
+      > *:first-child {
+        @apply rounded-l-2xl;
+      }
+      > *:last-child {
+        @apply rounded-r-2xl;
+      }
+      th {
+        @apply font-normal;
+        @apply text-left;
+        @apply sticky;
+        @apply left-0;
+      }
+      &:hover {
+        > * {
+          @apply bg-blue-50;
+        }
+        .report-person-detail-table__avatar {
+          @apply text-blue-200;
+        }
+      }
+    }
+  }
+}
+
 @screen xxs {
   .report-actions {
     grid-template-columns: auto;

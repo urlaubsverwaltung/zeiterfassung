@@ -10,6 +10,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,8 @@ import java.util.Set;
 
 import static java.time.DayOfWeek.MONDAY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -116,7 +119,7 @@ class ReportServiceRawTest {
         when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userId()))
             .thenReturn(List.of(firstTimeEntry, secondTimeEntry));
 
-        when(userManagementService.findAllUsersByIds(List.of(user.userId()))).thenReturn(List.of(user));
+        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
 
         final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userId());
 
@@ -151,7 +154,7 @@ class ReportServiceRawTest {
         when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userId()))
             .thenReturn(List.of(morningTimeEntry, noonTimeEntry));
 
-        when(userManagementService.findAllUsersByIds(List.of(user.userId()))).thenReturn(List.of(user));
+        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
 
         final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, new UserId("batman"));
 
@@ -182,7 +185,7 @@ class ReportServiceRawTest {
         when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userId()))
             .thenReturn(List.of(timeEntry));
 
-        when(userManagementService.findAllUsersByIds(List.of(user.userId()))).thenReturn(List.of(user));
+        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
 
         final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userId());
 
@@ -198,7 +201,7 @@ class ReportServiceRawTest {
     }
 
     @Test
-    void getReportWeek() {
+    void ensureReportWeek() {
         final User user = anyUser();
         LocalDate start = LocalDate.of(2024, 1, 1);
         LocalDate endExclusive = LocalDate.of(2024, 1, 8);
@@ -213,9 +216,43 @@ class ReportServiceRawTest {
     }
 
     @Test
-    void getReportWeekForAllUsers() {
+    void ensureReportWeekIncludesEntriesForEveryUserDespiteNoTimeEntries() {
+
+        final User user = anyUser(new UserIdComposite(new UserId("batman"), new UserLocalId(1L)));
+        final User userTwo = anyUser(new UserIdComposite(new UserId("robin"), new UserLocalId(2L)));
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(user.userLocalId(), userTwo.userLocalId())))
+            .thenReturn(List.of(user, userTwo));
+
+        when(workingTimeCalendarService.getWorkingTimeCalendarForUsers(any(), any(), any()))
+            .thenReturn(Map.of(
+                user.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()),
+                userTwo.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
+            );
+
+        when(timeEntryService.getEntriesByUserLocalIds(any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(Map.of(
+                user.userIdComposite(), List.of(),
+                userTwo.userIdComposite(), List.of()
+            ));
+
         LocalDate start = LocalDate.of(2024, 1, 1);
-        LocalDate endExclusive = LocalDate.of(2024, 1, 8);
+        when(userDateService.firstDayOfWeek(Year.of(2024), 1))
+            .thenReturn(start);
+
+        final ReportWeek reportWeek = sut.getReportWeek(Year.of(2024), 1, List.of(user.userLocalId(), userTwo.userLocalId()));
+
+        for (ReportDay reportDay : reportWeek.reportDays()) {
+            assertThat(reportDay.workingTimeCalendarByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+            assertThat(reportDay.reportDayEntriesByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+            assertThat(reportDay.detailDayAbsencesByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+        }
+    }
+
+    @Test
+    void getReportWeekForAllUsers() {
+        final LocalDate start = LocalDate.of(2024, 1, 1);
+        final LocalDate endExclusive = LocalDate.of(2024, 1, 8);
 
         when(userDateService.firstDayOfWeek(Year.of(2024), 1))
                 .thenReturn(start);
@@ -224,6 +261,39 @@ class ReportServiceRawTest {
 
         verify(timeEntryService).getEntriesForAllUsers(start, endExclusive);
         verify(workingTimeCalendarService).getWorkingTimeCalendarForAllUsers(start, endExclusive);
+    }
+
+    @Test
+    void ensureReportWeekForAllUsersIncludesEntriesForEveryUserDespiteNoTimeEntries() {
+
+        final User user = anyUser(new UserIdComposite(new UserId("batman"), new UserLocalId(1L)));
+        final User userTwo = anyUser(new UserIdComposite(new UserId("robin"), new UserLocalId(2L)));
+
+        when(userManagementService.findAllUsers()).thenReturn(List.of(user, userTwo));
+
+        when(workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(any(), any()))
+            .thenReturn(Map.of(
+                user.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()),
+                userTwo.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
+            );
+
+        when(timeEntryService.getEntriesForAllUsers(any(LocalDate.class), any(LocalDate.class)))
+            .thenReturn(Map.of(
+                user.userIdComposite(), List.of(),
+                userTwo.userIdComposite(), List.of()
+            ));
+
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        when(userDateService.firstDayOfWeek(Year.of(2024), 1))
+            .thenReturn(start);
+
+        final ReportWeek reportWeek = sut.getReportWeekForAllUsers(Year.of(2024), 1);
+
+        for (ReportDay reportDay : reportWeek.reportDays()) {
+            assertThat(reportDay.workingTimeCalendarByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+            assertThat(reportDay.reportDayEntriesByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+            assertThat(reportDay.detailDayAbsencesByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+        }
     }
 
     // ------------------------------------------------------------
@@ -318,7 +388,7 @@ class ReportServiceRawTest {
         when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of(user.userIdComposite(), List.of(w1_d1_TimeEntry, w1_d2_TimeEntry, w2_d1_TimeEntry, w2_d2_TimeEntry, w3_d1_TimeEntry, w3_d2_TimeEntry, w4_d1_TimeEntry, w4_d2_TimeEntry)));
 
-        when(userManagementService.findAllUsersByIds(List.of(user.userId()))).thenReturn(List.of(user));
+        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
 
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), user.userId());
 
@@ -335,17 +405,54 @@ class ReportServiceRawTest {
     @Test
     void getReportMonth() {
         final User user = anyUser();
-        YearMonth month = YearMonth.of(2024, 1);
-        LocalDate start = month.atDay(1);
-        LocalDate endExclusive = month.atEndOfMonth().plusDays(1);
+        final YearMonth yearMonth = YearMonth.of(2024, 1);
+        final LocalDate start = yearMonth.atDay(1);
+        final LocalDate endExclusive = yearMonth.atEndOfMonth().plusDays(1);
 
         when(userDateService.localDateToFirstDateOfWeek(start))
                 .thenReturn(start);
 
-        sut.getReportMonth(month, List.of(user.userLocalId()));
+        sut.getReportMonth(yearMonth, List.of(user.userLocalId()));
 
         verify(timeEntryService).getEntriesByUserLocalIds(start, endExclusive, List.of(user.userLocalId()));
         verify(workingTimeCalendarService).getWorkingTimeCalendarForUsers(start, endExclusive, List.of(user.userLocalId()));
+    }
+
+    @Test
+    void ensureReportMonthIncludesEntriesForEveryUserDespiteNoTimeEntries() {
+
+        final YearMonth yearMonth = YearMonth.of(2024, 1);
+
+        final User user = anyUser(new UserIdComposite(new UserId("batman"), new UserLocalId(1L)));
+        final User userTwo = anyUser(new UserIdComposite(new UserId("robin"), new UserLocalId(2L)));
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(user.userLocalId(), userTwo.userLocalId())))
+            .thenReturn(List.of(user, userTwo));
+
+        when(workingTimeCalendarService.getWorkingTimeCalendarForUsers(any(), any(), any()))
+            .thenReturn(Map.of(
+                user.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()),
+                userTwo.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
+            );
+
+        when(timeEntryService.getEntriesByUserLocalIds(any(LocalDate.class), any(LocalDate.class), anyList()))
+            .thenReturn(Map.of(
+                user.userIdComposite(), List.of(),
+                userTwo.userIdComposite(), List.of()
+            ));
+
+        final LocalDate start = LocalDate.of(2024, 1, 1);
+        when(userDateService.localDateToFirstDateOfWeek(start)).thenReturn(start);
+
+        final ReportMonth actual = sut.getReportMonth(yearMonth, List.of(user.userLocalId(), userTwo.userLocalId()));
+
+        for (ReportWeek reportWeek : actual.weeks()) {
+            for (ReportDay reportDay : reportWeek.reportDays()) {
+                assertThat(reportDay.workingTimeCalendarByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+                assertThat(reportDay.reportDayEntriesByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+                assertThat(reportDay.detailDayAbsencesByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+            }
+        }
     }
 
     @Test
@@ -361,6 +468,42 @@ class ReportServiceRawTest {
 
         verify(timeEntryService).getEntriesForAllUsers(start, endExclusive);
         verify(workingTimeCalendarService).getWorkingTimeCalendarForAllUsers(start, endExclusive);
+    }
+
+    @Test
+    void ensureReportMonthForAllUsersIncludesEntriesForEveryUserDespiteNoTimeEntries() {
+
+        final YearMonth yearMonth = YearMonth.of(2024, 1);
+
+        final User user = anyUser(new UserIdComposite(new UserId("batman"), new UserLocalId(1L)));
+        final User userTwo = anyUser(new UserIdComposite(new UserId("robin"), new UserLocalId(2L)));
+
+        when(userManagementService.findAllUsers()).thenReturn(List.of(user, userTwo));
+
+        when(workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(any(), any()))
+            .thenReturn(Map.of(
+                user.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()),
+                userTwo.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
+            );
+
+        when(timeEntryService.getEntriesForAllUsers(any(LocalDate.class), any(LocalDate.class)))
+            .thenReturn(Map.of(
+                user.userIdComposite(), List.of(),
+                userTwo.userIdComposite(), List.of()
+            ));
+
+        final LocalDate start = LocalDate.of(2024, 1, 1);
+        when(userDateService.localDateToFirstDateOfWeek(start)).thenReturn(start);
+
+        final ReportMonth actual = sut.getReportMonthForAllUsers(yearMonth);
+
+        for (ReportWeek reportWeek : actual.weeks()) {
+            for (ReportDay reportDay : reportWeek.reportDays()) {
+                assertThat(reportDay.workingTimeCalendarByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+                assertThat(reportDay.reportDayEntriesByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+                assertThat(reportDay.detailDayAbsencesByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+            }
+        }
     }
 
     private static User anyUser() {

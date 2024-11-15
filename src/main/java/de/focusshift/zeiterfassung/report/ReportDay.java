@@ -3,24 +3,36 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
-import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toMap;
+
+/**
+ * Report information for a certain date and users.
+ *
+ * <p>
+ * All byUser Maps contains values for the same keys. (Please ensure this on constructing this object.)
+ *
+ * @param date
+ * @param workingTimeCalendarByUser {@linkplain WorkingTimeCalendar} for all relevant users
+ * @param reportDayEntriesByUser {@linkplain ReportDayEntry entries} for all relevant users
+ * @param detailDayAbsencesByUser {@linkplain ReportDayAbsence absences} for all relevant users
+ */
 record ReportDay(
     LocalDate date,
     Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser,
     Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser,
     Map<UserIdComposite, List<ReportDayAbsence>> detailDayAbsencesByUser
-) {
+) implements HasWorkDurationByUser {
 
     public List<ReportDayEntry> reportDayEntries() {
         return reportDayEntriesByUser.values().stream().flatMap(Collection::stream).toList();
@@ -33,6 +45,13 @@ record ReportDay(
             .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
     }
 
+    public Map<UserIdComposite, PlannedWorkingHours> plannedWorkingHoursByUser() {
+        return workingTimeCalendarByUser.entrySet().stream().collect(toMap(
+            Map.Entry::getKey,
+            entry -> entry.getValue().plannedWorkingHours(date).orElse(PlannedWorkingHours.ZERO)
+        ));
+    }
+
     public ShouldWorkingHours shouldWorkingHours() {
         return workingTimeCalendarByUser.values().stream()
             .map(calendar -> calendar.shouldWorkingHours(date))
@@ -40,10 +59,12 @@ record ReportDay(
             .reduce(ShouldWorkingHours.ZERO, ShouldWorkingHours::plus);
     }
 
-    public PlannedWorkingHours plannedWorkingHoursByUser(UserLocalId userLocalId) {
-        return findValueByFirstKeyMatch(workingTimeCalendarByUser, userIdComposite -> userLocalId.equals(userIdComposite.localId()))
-            .flatMap(calendar -> calendar.plannedWorkingHours(date))
-            .orElse(PlannedWorkingHours.ZERO);
+    public Map<UserIdComposite, ShouldWorkingHours> shouldWorkingHoursByUser() {
+        return workingTimeCalendarByUser.entrySet().stream()
+            .collect(toMap(
+                Map.Entry::getKey,
+                entry -> entry.getValue().shouldWorkingHours(date).orElse(ShouldWorkingHours.ZERO))
+            );
     }
 
     public WorkDuration workDuration() {
@@ -55,26 +76,27 @@ record ReportDay(
         return calculateWorkDurationFrom(allReportDayEntries);
     }
 
-    public WorkDuration workDurationByUser(UserLocalId userLocalId) {
-        return workDurationByUserPredicate(userIdComposite -> userLocalId.equals(userIdComposite.localId()));
-    }
+    public Map<UserIdComposite, WorkDuration> workDurationByUser() {
 
-    private WorkDuration workDurationByUserPredicate(Predicate<UserIdComposite> predicate) {
-        final List<ReportDayEntry> reportDayEntries = findValueByFirstKeyMatch(reportDayEntriesByUser, predicate).orElse(List.of());
-        return calculateWorkDurationFrom(reportDayEntries.stream());
+        final HashMap<UserIdComposite, WorkDuration> workDurationByUser = new HashMap<>();
+
+        for (Map.Entry<UserIdComposite, List<ReportDayEntry>> entry : reportDayEntriesByUser.entrySet()) {
+            final UserIdComposite id = entry.getKey();
+            final List<ReportDayEntry> reportDayEntries = entry.getValue();
+
+            final WorkDuration workDuration = reportDayEntries.stream()
+                .map(ReportDayEntry::workDuration)
+                .reduce(WorkDuration.ZERO, WorkDuration::plus);
+
+            workDurationByUser.put(id, workDuration);
+        }
+
+        return workDurationByUser;
     }
 
     private WorkDuration calculateWorkDurationFrom(Stream<ReportDayEntry> reportDayEntries) {
         return reportDayEntries
             .map(ReportDayEntry::workDuration)
             .reduce(WorkDuration.ZERO, WorkDuration::plus);
-    }
-
-    private <K, T> Optional<T> findValueByFirstKeyMatch(Map<K, T> map, Predicate<K> predicate) {
-        return map.entrySet()
-            .stream()
-            .filter(entry -> predicate.test(entry.getKey()))
-            .findFirst()
-            .map(Map.Entry::getValue);
     }
 }

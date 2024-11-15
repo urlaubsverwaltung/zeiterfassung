@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -21,22 +22,25 @@ import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 
 @Component
 class ReportControllerHelper {
 
-    private final ReportPermissionService reportPermissionService;
     private final DateFormatter dateFormatter;
     private final DateRangeFormatter dateRangeFormatter;
 
-    ReportControllerHelper(ReportPermissionService reportPermissionService, DateFormatter dateFormatter, DateRangeFormatter dateRangeFormatter) {
-        this.reportPermissionService = reportPermissionService;
+    ReportControllerHelper(DateFormatter dateFormatter, DateRangeFormatter dateRangeFormatter) {
         this.dateFormatter = dateFormatter;
         this.dateRangeFormatter = dateRangeFormatter;
     }
@@ -45,16 +49,17 @@ class ReportControllerHelper {
         return new UserId(principal.getUserInfo().getSubject());
     }
 
-    void addUserFilterModelAttributes(Model model, boolean allUsersSelected, List<UserLocalId> selectedUserLocalIds, String userReportFilterUrl) {
+    void addUserFilterModelAttributes(Model model, boolean allUsersSelected, List<User> users, List<UserLocalId> selectedUserLocalIds, String userReportFilterUrl) {
 
-        final List<User> permittedUsers = reportPermissionService.findAllPermittedUsersForCurrentUser();
-        if (permittedUsers.size() > 1) {
-            final List<SelectableUserDto> selectableUserDtos = permittedUsers
-                .stream()
-                .map(user -> userToSelectableUserDto(user, selectedUserLocalIds.contains(user.userLocalId())))
-                .toList();
+        final List<SelectableUserDto> selectableUserDtos = users
+            .stream()
+            .map(user -> userToSelectableUserDto(user, selectedUserLocalIds.contains(user.userLocalId())))
+            .sorted(Comparator.comparing(SelectableUserDto::fullName))
+            .toList();
 
+        if (users.size() > 1) {
             model.addAttribute("users", selectableUserDtos);
+            model.addAttribute("usersById", selectableUserDtos.stream().collect(toMap(SelectableUserDto::id, identity())));
             model.addAttribute("selectedUsers", selectableUserDtos.stream().filter(SelectableUserDto::selected).toList());
             model.addAttribute("selectedUserIds", selectedUserLocalIds.stream().map(UserLocalId::value).toList());
             model.addAttribute("allUsersSelected", allUsersSelected);
@@ -62,8 +67,51 @@ class ReportControllerHelper {
         }
     }
 
+    void addSelectedUserDurationAggregationModelAttributes(Model model, boolean allUsersSelected, List<User> users, List<UserLocalId> selectedUserLocalIds, HasWorkDurationByUser report) {
+
+        final List<User> usersToShowInTable = getSelectedUsers(allUsersSelected, users, selectedUserLocalIds)
+            .stream()
+            .sorted(Comparator.comparing(User::fullName))
+            .toList();
+
+        final Map<UserIdComposite, WorkDuration> workedByUser = report.workDurationByUser();
+        final Map<UserIdComposite, ShouldWorkingHours> shouldByUser = report.shouldWorkingHoursByUser();
+        final Map<UserIdComposite, DeltaWorkingHours> deltaByUser = report.deltaDurationByUser();
+
+        final boolean showAggregatedInformation = report.deltaDurationByUser().size() > 1;
+
+        if (showAggregatedInformation) {
+
+            final List<ReportSelectedUserDurationAggregationDto> dtos = new ArrayList<>();
+
+            for (User user : usersToShowInTable) {
+                final UserIdComposite userIdComposite = user.userIdComposite();
+                final DeltaWorkingHours delta = deltaByUser.get(userIdComposite);
+                final ReportSelectedUserDurationAggregationDto dto = new ReportSelectedUserDurationAggregationDto(
+                        userIdComposite.localId().value(),
+                        user.fullName(),
+                        durationToTimeString(delta.durationInMinutes()),
+                        delta.isNegative(),
+                        durationToTimeString(workedByUser.get(userIdComposite).durationInMinutes()),
+                        durationToTimeString(shouldByUser.get(userIdComposite).durationInMinutes())
+                );
+                dtos.add(dto);
+            }
+
+            model.addAttribute("selectedUserDurationAggregation", dtos);
+        }
+    }
+
+    private List<User> getSelectedUsers(boolean allUsersSelected, List<User> users, List<UserLocalId> selectedUserLocalIds) {
+        if (allUsersSelected) {
+            return users;
+        } else {
+            return users.stream().filter(user -> selectedUserLocalIds.contains(user.userLocalId())).toList();
+        }
+    }
+
     private static SelectableUserDto userToSelectableUserDto(User user, boolean selected) {
-        return new SelectableUserDto(user.userLocalId().value(), user.givenName() + " " + user.familyName(), selected);
+        return new SelectableUserDto(user.userLocalId().value(), user.fullName(), selected);
     }
 
     GraphWeekDto toGraphWeekDto(ReportWeek reportWeek, Month monthPivot) {

@@ -39,7 +39,7 @@ export class Avatar extends HTMLImageElement {
 
     const parent = this.parentElement;
     parent.replaceChild(t.content, this);
-    parent.querySelector("svg").classList.add(...clazzes);
+    parent.querySelector("svg").classList.add(...clazzes, "cursor-default");
   }
 
   private addTooltip(altText: string) {

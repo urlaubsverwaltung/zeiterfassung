@@ -60,6 +60,88 @@
               >
                 <div th:replace="~{__${chartFragment}__}"></div>
               </div>
+              <div
+                th:if="${selectedUserDurationAggregation != null}"
+                class="xs:px-4 w-full overflow-x-auto"
+              >
+                <table class="report-person-detail-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">
+                        <span
+                          class="sr-only"
+                          th:text="#{report.aggregated.table.head.user}"
+                          >Person</span
+                        >
+                      </th>
+                      <th
+                        scope="col"
+                        class="text-right"
+                        th:text="#{report.aggregated.table.head.delta}"
+                      >
+                        Abweichung
+                      </th>
+                      <th
+                        scope="col"
+                        class="text-right"
+                        th:text="#{report.aggregated.table.head.worked}"
+                      >
+                        Geleistet
+                      </th>
+                      <th
+                        scope="col"
+                        class="text-right"
+                        th:text="#{report.aggregated.table.head.should}"
+                      >
+                        Geplant
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      th:each="userDurationAggregation : ${selectedUserDurationAggregation}"
+                      th:with="user=${usersById.get(userDurationAggregation.userId)}"
+                    >
+                      <th scope="row">
+                        <div class="flex items-center gap-2">
+                          <span class="report-person-detail-table__avatar">
+                            <img
+                              alt=""
+                              src=""
+                              th:replace="~{fragments/avatar::avatar(fullName=${user.fullName},width='38px',height='38px',tooltip=false)}"
+                            />
+                          </span>
+                          <span th:text="${user.fullName}"> Bruce Wayne </span>
+                        </div>
+                      </th>
+                      <td class="text-right tabular-nums">
+                        <span th:if="${userDurationAggregation.deltaNegative}"
+                          >-</span
+                        >
+                        <span
+                          th:if="${not userDurationAggregation.deltaNegative}"
+                          >+</span
+                        >
+                        <span th:text="${{userDurationAggregation.delta}}"
+                          >00:00</span
+                        >
+                      </td>
+                      <td
+                        class="text-right tabular-nums"
+                        th:text="${{userDurationAggregation.worked}}"
+                      >
+                        -
+                      </td>
+                      <td
+                        class="text-right tabular-nums"
+                        th:text="${{userDurationAggregation.should}}"
+                      >
+                        -
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
             <div class="">
               <div class="p-4 bg-white border border-gray-100 rounded-3xl">
