@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.report;
 
-import de.focusshift.zeiterfassung.absence.AbsenceService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
@@ -32,6 +31,7 @@ import java.util.Set;
 
 import static java.time.DayOfWeek.MONDAY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,12 +53,9 @@ class ReportServiceRawTest {
     @Mock
     private WorkingTimeCalendarService workingTimeCalendarService;
 
-    @Mock
-    private AbsenceService absenceService;
-
     @BeforeEach
     void setUp() {
-        sut = new ReportServiceRaw(timeEntryService, userManagementService, userDateService, workingTimeCalendarService, absenceService);
+        sut = new ReportServiceRaw(timeEntryService, userManagementService, userDateService, workingTimeCalendarService);
     }
 
     // ------------------------------------------------------------
@@ -200,6 +197,35 @@ class ReportServiceRawTest {
         assertThat(actualReportWeek.reportDays().get(6).workDuration().duration()).isZero();
     }
 
+    @Test
+    void getReportWeek() {
+        final User user = anyUser();
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate endExclusive = LocalDate.of(2024, 1, 8);
+
+        when(userDateService.firstDayOfWeek(Year.of(2024), 1))
+                .thenReturn(start);
+
+        sut.getReportWeek(Year.of(2024), 1, List.of(user.userLocalId()));
+
+        verify(timeEntryService).getEntriesByUserLocalIds(start, endExclusive, List.of(user.userLocalId()));
+        verify(workingTimeCalendarService).getWorkingTimeCalendarForUsers(start, endExclusive, List.of(user.userLocalId()));
+    }
+
+    @Test
+    void getReportWeekForAllUsers() {
+        LocalDate start = LocalDate.of(2024, 1, 1);
+        LocalDate endExclusive = LocalDate.of(2024, 1, 8);
+
+        when(userDateService.firstDayOfWeek(Year.of(2024), 1))
+                .thenReturn(start);
+
+        sut.getReportWeekForAllUsers(Year.of(2024), 1);
+
+        verify(timeEntryService).getEntriesForAllUsers(start, endExclusive);
+        verify(workingTimeCalendarService).getWorkingTimeCalendarForAllUsers(start, endExclusive);
+    }
+
     // ------------------------------------------------------------
     // MONTH report
     // ------------------------------------------------------------
@@ -304,6 +330,37 @@ class ReportServiceRawTest {
         assertThat(actualReportMonth.weeks().get(2).workDuration().duration()).isEqualTo(Duration.ofHours(4));
         assertThat(actualReportMonth.weeks().get(3).workDuration().duration()).isEqualTo(Duration.ofHours(6));
         assertThat(actualReportMonth.weeks().get(4).workDuration().duration()).isEqualTo(Duration.ofHours(8));
+    }
+
+    @Test
+    void getReportMonth() {
+        final User user = anyUser();
+        YearMonth month = YearMonth.of(2024, 1);
+        LocalDate start = month.atDay(1);
+        LocalDate endExclusive = month.atEndOfMonth().plusDays(1);
+
+        when(userDateService.localDateToFirstDateOfWeek(start))
+                .thenReturn(start);
+
+        sut.getReportMonth(month, List.of(user.userLocalId()));
+
+        verify(timeEntryService).getEntriesByUserLocalIds(start, endExclusive, List.of(user.userLocalId()));
+        verify(workingTimeCalendarService).getWorkingTimeCalendarForUsers(start, endExclusive, List.of(user.userLocalId()));
+    }
+
+    @Test
+    void getReportMonthForAllUsers() {
+        YearMonth month = YearMonth.of(2024, 1);
+        LocalDate start = month.atDay(1);
+        LocalDate endExclusive = month.atEndOfMonth().plusDays(1);
+
+        when(userDateService.localDateToFirstDateOfWeek(start))
+                .thenReturn(start);
+
+        sut.getReportMonthForAllUsers(month);
+
+        verify(timeEntryService).getEntriesForAllUsers(start, endExclusive);
+        verify(workingTimeCalendarService).getWorkingTimeCalendarForAllUsers(start, endExclusive);
     }
 
     private static User anyUser() {

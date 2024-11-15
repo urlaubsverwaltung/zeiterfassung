@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-import de.focusshift.zeiterfassung.absence.AbsenceService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -62,15 +61,13 @@ class TimeEntryServiceImplTest {
     private UserManagementService userManagementService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
-    @Mock
-    private AbsenceService absenceService;
 
     private static final Clock clockFixed = Clock.fixed(Instant.now(), UTC);
 
     @BeforeEach
     void setUp() {
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeCalendarService,
-            userDateService, userSettingsProvider, absenceService, clockFixed);
+            userDateService, userSettingsProvider, clockFixed);
     }
 
     @Test
@@ -1026,7 +1023,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2022, 1, 7), PlannedWorkingHours.EIGHT,
                 LocalDate.of(2022, 1, 8), PlannedWorkingHours.ZERO, // saturday
                 LocalDate.of(2022, 1, 9), PlannedWorkingHours.ZERO  // sunday
-            )));
+            ), Map.of()));
 
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(userId, 2022, 1);
 
@@ -1137,7 +1134,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2023, 2, 3), PlannedWorkingHours.EIGHT,
                 LocalDate.of(2023, 2, 4), PlannedWorkingHours.ZERO,
                 LocalDate.of(2023, 2, 5), PlannedWorkingHours.ZERO
-            )));
+            ), Map.of()));
 
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(userId, 2023, 5);
 
@@ -1240,7 +1237,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2023, 6, 16), PlannedWorkingHours.EIGHT,
                 LocalDate.of(2023, 6, 17), PlannedWorkingHours.ZERO,
                 LocalDate.of(2023, 6, 18), PlannedWorkingHours.ZERO
-            )));
+            ), Map.of()));
 
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(userId, 2023, 24);
 

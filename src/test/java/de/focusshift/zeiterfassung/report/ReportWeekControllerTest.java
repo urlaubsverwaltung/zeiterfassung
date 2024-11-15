@@ -10,6 +10,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -91,21 +92,34 @@ class ReportWeekControllerTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
+        final WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(
+            Map.of(
+                LocalDate.of(2023, 1, 30), PlannedWorkingHours.EIGHT,
+                LocalDate.of(2023, 1, 31), PlannedWorkingHours.EIGHT,
+                LocalDate.of(2023, 2, 1), PlannedWorkingHours.EIGHT,
+                LocalDate.of(2023, 2, 2), PlannedWorkingHours.EIGHT,
+                LocalDate.of(2023, 2, 3), PlannedWorkingHours.EIGHT,
+                LocalDate.of(2023, 2, 4), PlannedWorkingHours.ZERO,
+                LocalDate.of(2023, 2, 5), PlannedWorkingHours.ZERO
+            ),
+            Map.of()
+        );
+
         final ReportWeek reportWeek = new ReportWeek(LocalDate.of(2023, 1, 30), List.of(
-            eightHoursDay(LocalDate.of(2023, 1, 30), user),
-            eightHoursDay(LocalDate.of(2023, 1, 31), user),
-            eightHoursDay(LocalDate.of(2023, 2, 1), user),
-            eightHoursDay(LocalDate.of(2023, 2, 2), user),
-            eightHoursDay(LocalDate.of(2023, 2, 3), user),
+            eightHoursDay(LocalDate.of(2023, 1, 30), user, workingTimeCalendar),
+            eightHoursDay(LocalDate.of(2023, 1, 31), user, workingTimeCalendar),
+            eightHoursDay(LocalDate.of(2023, 2, 1), user, workingTimeCalendar),
+            eightHoursDay(LocalDate.of(2023, 2, 2), user, workingTimeCalendar),
+            eightHoursDay(LocalDate.of(2023, 2, 3), user, workingTimeCalendar),
             new ReportDay(
                 LocalDate.of(2023, 2, 4),
-                Map.of(userIdComposite, PlannedWorkingHours.ZERO),
+                Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
                 Map.of(userIdComposite, List.of())
             ),
             new ReportDay(
                 LocalDate.of(2023, 2, 5),
-                Map.of(userIdComposite, PlannedWorkingHours.ZERO),
+                Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
                 Map.of(userIdComposite, List.of())
             )
@@ -151,22 +165,29 @@ class ReportWeekControllerTest {
         final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
         final LocalDate absenceDate = LocalDate.of(2023, 2, 3);
+        Absence absence = new Absence(
+                user.userId(),
+                absenceDate.atStartOfDay(UTC),
+                absenceDate.atStartOfDay(UTC),
+                DayLength.FULL,
+                locale -> "absence-full-de",
+                ORANGE,
+                HOLIDAY
+        );
+
+        final WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(
+            Map.of(LocalDate.of(2023, 2, 3), PlannedWorkingHours.EIGHT),
+            Map.of(LocalDate.of(2023, 2, 3), List.of(absence))
+        );
+
 
         final ReportWeek reportWeek = new ReportWeek(LocalDate.of(2023, 1, 30), List.of(
             new ReportDay(
                 absenceDate,
-                Map.of(userIdComposite, PlannedWorkingHours.EIGHT),
+                Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
                 Map.of(userIdComposite, List.of(
-                    new ReportDayAbsence(user, new Absence(
-                        user.userId(),
-                        absenceDate.atStartOfDay(UTC),
-                        absenceDate.atStartOfDay(UTC),
-                        DayLength.FULL,
-                        locale -> "absence-full-de",
-                        ORANGE,
-                        HOLIDAY
-                    ))
+                    new ReportDayAbsence(user, absence)
                 ))
             )
         ));
@@ -304,25 +325,25 @@ class ReportWeekControllerTest {
     @Test
     void ensureWeekReportUserFilterRelatedUrls() throws Exception {
 
-        final UserId userId_1 = new UserId("batman");
-        final UserLocalId userLocalId_1 = new UserLocalId(1L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final UserId userId1 = new UserId("batman");
+        final UserLocalId userLocalId1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite1 = new UserIdComposite(userId1, userLocalId1);
+        final User user1 = new User(userIdComposite1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
-        final UserId userId_2 = new UserId("joker");
-        final UserLocalId userLocalId_2 = new UserLocalId(2L);
-        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
-        final User user_2 = new User(userIdComposite_2, "Jack", "Napier", new EMailAddress(""), Set.of());
+        final UserId userId2 = new UserId("joker");
+        final UserLocalId userLocalId2 = new UserLocalId(2L);
+        final UserIdComposite userIdComposite2 = new UserIdComposite(userId2, userLocalId2);
+        final User user2 = new User(userIdComposite2, "Jack", "Napier", new EMailAddress(""), Set.of());
 
-        final UserId userId_3 = new UserId("robin");
-        final UserLocalId userLocalId_3 = new UserLocalId(3L);
-        final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
-        final User user_3 = new User(userIdComposite_3, "Dick", "Grayson", new EMailAddress(""), Set.of());
+        final UserId userId3 = new UserId("robin");
+        final UserLocalId userLocalId3 = new UserLocalId(3L);
+        final UserIdComposite userIdComposite3 = new UserIdComposite(userId3, userLocalId3);
+        final User user3 = new User(userIdComposite3, "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
-            .thenReturn(List.of(user_1, user_2, user_3));
+            .thenReturn(List.of(user1, user2, user3));
 
-        when(reportService.getReportWeek(Year.of(2022), 1, userId_1))
+        when(reportService.getReportWeek(Year.of(2022), 1, userId1))
             .thenReturn(anyReportWeek());
 
         perform(get("/report/year/2022/week/1").with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))))
@@ -339,23 +360,23 @@ class ReportWeekControllerTest {
     @Test
     void ensureWeekReportUserFilterRelatedUrlsForEveryone() throws Exception {
 
-        final UserId userId_1 = new UserId("batman");
-        final UserLocalId userLocalId_1 = new UserLocalId(1L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final UserId userId1 = new UserId("batman");
+        final UserLocalId userLocalId1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite1 = new UserIdComposite(userId1, userLocalId1);
+        final User user1 = new User(userIdComposite1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
-        final UserId userId_2 = new UserId("joker");
-        final UserLocalId userLocalId_2 = new UserLocalId(2L);
-        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
-        final User user_2 = new User(userIdComposite_2, "Jack", "Napier", new EMailAddress(""), Set.of());
+        final UserId userId2 = new UserId("joker");
+        final UserLocalId userLocalId2 = new UserLocalId(2L);
+        final UserIdComposite userIdComposite2 = new UserIdComposite(userId2, userLocalId2);
+        final User user2 = new User(userIdComposite2, "Jack", "Napier", new EMailAddress(""), Set.of());
 
-        final UserId userId_3 = new UserId("robin");
-        final UserLocalId userLocalId_3 = new UserLocalId(3L);
-        final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
-        final User user_3 = new User(userIdComposite_3, "Dick", "Grayson", new EMailAddress(""), Set.of());
+        final UserId userId3 = new UserId("robin");
+        final UserLocalId userLocalId3 = new UserLocalId(3L);
+        final UserIdComposite userIdComposite3 = new UserIdComposite(userId3, userLocalId3);
+        final User user3 = new User(userIdComposite3, "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
-            .thenReturn(List.of(user_1, user_2, user_3));
+            .thenReturn(List.of(user1, user2, user3));
 
         when(reportService.getReportWeekForAllUsers(Year.of(2022), 1))
             .thenReturn(anyReportWeek());
@@ -378,25 +399,25 @@ class ReportWeekControllerTest {
     @Test
     void ensureWeekReportUserFilterRelatedUrlsForWithSelectedUser() throws Exception {
 
-        final UserId userId_1 = new UserId("batman");
-        final UserLocalId userLocalId_1 = new UserLocalId(1L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final UserId userId1 = new UserId("batman");
+        final UserLocalId userLocalId1 = new UserLocalId(1L);
+        final UserIdComposite userIdComposite1 = new UserIdComposite(userId1, userLocalId1);
+        final User user1 = new User(userIdComposite1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
-        final UserId userId_2 = new UserId("joker");
-        final UserLocalId userLocalId_2 = new UserLocalId(2L);
-        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
-        final User user_2 = new User(userIdComposite_2, "Jack", "Napier", new EMailAddress(""), Set.of());
+        final UserId userId2 = new UserId("joker");
+        final UserLocalId userLocalId2 = new UserLocalId(2L);
+        final UserIdComposite userIdComposite2 = new UserIdComposite(userId2, userLocalId2);
+        final User user2 = new User(userIdComposite2, "Jack", "Napier", new EMailAddress(""), Set.of());
 
-        final UserId userId_3 = new UserId("robin");
-        final UserLocalId userLocalId_3 = new UserLocalId(3L);
-        final UserIdComposite userIdComposite_3 = new UserIdComposite(userId_3, userLocalId_3);
-        final User user_3 = new User(userIdComposite_3, "Dick", "Grayson", new EMailAddress(""), Set.of());
+        final UserId userId3 = new UserId("robin");
+        final UserLocalId userLocalId3 = new UserLocalId(3L);
+        final UserIdComposite userIdComposite3 = new UserIdComposite(userId3, userLocalId3);
+        final User user3 = new User(userIdComposite3, "Dick", "Grayson", new EMailAddress(""), Set.of());
 
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
-            .thenReturn(List.of(user_1, user_2, user_3));
+            .thenReturn(List.of(user1, user2, user3));
 
-        when(reportService.getReportWeek(Year.of(2022), 1, List.of(userLocalId_2, userLocalId_3)))
+        when(reportService.getReportWeek(Year.of(2022), 1, List.of(userLocalId2, userLocalId3)))
             .thenReturn(anyReportWeek());
 
         perform(
@@ -427,10 +448,10 @@ class ReportWeekControllerTest {
         return new ReportWeek(LocalDate.of(2022, 1, 1), List.of());
     }
 
-    private ReportDay eightHoursDay(LocalDate date, User user) {
+    private ReportDay eightHoursDay(LocalDate date, User user, WorkingTimeCalendar workingTimeCalendar) {
         return new ReportDay(
             date,
-            Map.of(user.userIdComposite(), PlannedWorkingHours.EIGHT),
+            Map.of(user.userIdComposite(), workingTimeCalendar),
             Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
             Map.of(user.userIdComposite(), List.of())
         );

@@ -16,7 +16,7 @@ class WorkingTimeCalendarTest {
 
     @Test
     void ensurePlannedWorkingHoursBetweenDatesIsZeroForEmptyCalendar() {
-        final WorkingTimeCalendar sut = new WorkingTimeCalendar(Map.of());
+        final WorkingTimeCalendar sut = new WorkingTimeCalendar(Map.of(), Map.of());
         final PlannedWorkingHours actual = sut.plannedWorkingHours(LocalDate.now(), LocalDate.now().plusDays(1));
         assertThat(actual).isEqualTo(PlannedWorkingHours.ZERO);
     }
@@ -34,7 +34,7 @@ class WorkingTimeCalendarTest {
     void ensurePlannedWorkingHoursBetweenDatesIsZeroWhenGivenDatesAreOutOfRange(LocalDate pivot, LocalDate from, LocalDate toExclusive) {
         final WorkingTimeCalendar sut = new WorkingTimeCalendar(Map.of(
             pivot, PlannedWorkingHours.EIGHT
-        ));
+        ), Map.of());
         final PlannedWorkingHours actual = sut.plannedWorkingHours(from, toExclusive);
         assertThat(actual).isEqualTo(PlannedWorkingHours.ZERO);
     }
@@ -49,7 +49,7 @@ class WorkingTimeCalendarTest {
             now.plusDays(1), PlannedWorkingHours.EIGHT,
             now.plusDays(2), PlannedWorkingHours.EIGHT,
             now.plusDays(3), PlannedWorkingHours.EIGHT
-        ));
+        ), Map.of());
 
         final PlannedWorkingHours actual = sut.plannedWorkingHours(now, now.plusDays(2));
         assertThat(actual).isEqualTo(new PlannedWorkingHours(Duration.ofHours(16)));

@@ -1,8 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.absence.Absence;
-import de.focusshift.zeiterfassung.absence.AbsenceService;
-import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -16,7 +14,6 @@ import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -56,20 +53,17 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final UserDateService userDateService;
     private final UserSettingsProvider userSettingsProvider;
-    private final AbsenceService absenceService;
     private final Clock clock;
 
-    @Autowired
     TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, UserManagementService userManagementService,
                          WorkingTimeCalendarService workingTimeCalendarService, UserDateService userDateService,
-                         UserSettingsProvider userSettingsProvider, AbsenceService absenceService, Clock clock) {
+                         UserSettingsProvider userSettingsProvider, Clock clock) {
 
         this.timeEntryRepository = timeEntryRepository;
         this.userManagementService = userManagementService;
         this.workingTimeCalendarService = workingTimeCalendarService;
         this.userDateService = userDateService;
         this.userSettingsProvider = userSettingsProvider;
-        this.absenceService = absenceService;
         this.clock = clock;
     }
 
@@ -158,15 +152,13 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, user))
             .collect(groupingBy(entry -> LocalDate.ofInstant(entry.start().toInstant(), userZoneId)));
 
-        final Map<LocalDate, List<Absence>> absencesByDate = absenceService.findAllAbsences(userId, from, toExclusive);
-
         // TODO refactor getEntryWeekPage to accept UserLocalId to replace userManagementService call
         final UserLocalId userLocalId = user.userLocalId();
 
         final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarService
             .getWorkingTimeCalender(fromLocalDate, toLocalDateExclusive, userLocalId);
 
-        final List<TimeEntryDay> daysOfWeek = createTimeEntryDays(fromLocalDate, toLocalDateExclusive, timeEntriesByDate, absencesByDate, workingTimeCalendar);
+        final List<TimeEntryDay> daysOfWeek = createTimeEntryDays(fromLocalDate, toLocalDateExclusive, timeEntriesByDate, workingTimeCalendar);
 
         final PlannedWorkingHours weekPlannedHours = workingTimeCalendar
             .plannedWorkingHours(fromLocalDate, toLocalDateExclusive);
@@ -209,7 +201,6 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     private static List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,
                                                           Map<LocalDate, List<TimeEntry>> timeEntriesByDate,
-                                                          Map<LocalDate, List<Absence>> absencesByDate,
                                                           WorkingTimeCalendar workingTimeCalendar) {
 
         final List<TimeEntryDay> timeEntryDays = new ArrayList<>();
@@ -223,30 +214,14 @@ class TimeEntryServiceImpl implements TimeEntryService {
                 .orElseThrow(() -> new IllegalStateException("expected plannedWorkingHours to exist in calendar."));
 
             final List<TimeEntry> timeEntries = timeEntriesByDate.getOrDefault(date, List.of());
-            final List<Absence> absences = absencesByDate.getOrDefault(date, List.of());
-            final ShouldWorkingHours shouldWorkingHours = dayShouldHoursWorked(plannedWorkingHours, absences);
+            final List<Absence> absences = workingTimeCalendar.absence(date).orElse(List.of());
+            final ShouldWorkingHours shouldWorkingHours = workingTimeCalendar.shouldWorkingHours(date).orElse(ShouldWorkingHours.ZERO);
             timeEntryDays.add(new TimeEntryDay(date, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
 
             date = date.minusDays(1);
         }
 
         return timeEntryDays;
-    }
-
-    private static ShouldWorkingHours dayShouldHoursWorked(PlannedWorkingHours plannedWorkingHours, List<Absence> absences) {
-
-        final double absenceDayLengthValue = absences.stream()
-            .map(Absence::dayLength)
-            .map(DayLength::getValue)
-            .reduce(0.0, Double::sum);
-
-        if (absenceDayLengthValue >= 1.0) {
-            return ShouldWorkingHours.ZERO;
-        } else if (absenceDayLengthValue == 0.5) {
-            return new ShouldWorkingHours(plannedWorkingHours.duration().dividedBy(2));
-        }
-
-        return new ShouldWorkingHours(plannedWorkingHours.duration());
     }
 
     private void updateEntityTimeSpan(TimeEntryEntity entity, ZonedDateTime start, ZonedDateTime end, Duration duration)

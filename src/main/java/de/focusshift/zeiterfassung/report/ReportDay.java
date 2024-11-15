@@ -1,16 +1,13 @@
 package de.focusshift.zeiterfassung.report;
 
-import de.focusshift.zeiterfassung.absence.Absence;
-import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 
-import java.time.Duration;
 import java.time.LocalDate;
-import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -18,11 +15,9 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toMap;
-
 record ReportDay(
     LocalDate date,
-    Map<UserIdComposite, PlannedWorkingHours> plannedWorkingHoursByUser,
+    Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser,
     Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser,
     Map<UserIdComposite, List<ReportDayAbsence>> detailDayAbsencesByUser
 ) {
@@ -32,42 +27,22 @@ record ReportDay(
     }
 
     public PlannedWorkingHours plannedWorkingHours() {
-        return plannedWorkingHoursByUser.values().stream().reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
+        return workingTimeCalendarByUser.values().stream()
+            .map(calendar -> calendar.plannedWorkingHours(date))
+            .flatMap(Optional::stream)
+            .reduce(PlannedWorkingHours.ZERO, PlannedWorkingHours::plus);
     }
 
     public ShouldWorkingHours shouldWorkingHours() {
-
-        final Map<UserIdComposite, Double> absenceLengthByUser = detailDayAbsencesByUser.entrySet().stream()
-            .map(entry ->
-                new AbstractMap.SimpleEntry<>(
-                    entry.getKey(),
-                    entry.getValue().stream().map(ReportDayAbsence::absence)
-                        .map(Absence::dayLength)
-                        .map(DayLength::getValue)
-                        .reduce(0.0, Double::sum)
-                )
-            )
-            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        Duration plannedWorkingHoursOfAllUsers = plannedWorkingHours().duration();
-        for (final Map.Entry<UserIdComposite, Double> absenceLengths : absenceLengthByUser.entrySet()) {
-
-            final Duration plannedWorkingHoursOfUser = plannedWorkingHoursByUser.get(absenceLengths.getKey()).duration();
-            final Double absenceLength = absenceLengths.getValue();
-
-            if (absenceLength == 1.0) {
-                plannedWorkingHoursOfAllUsers = plannedWorkingHoursOfAllUsers.minus(plannedWorkingHoursOfUser);
-            }
-            else if (absenceLength == 0.5) {
-                plannedWorkingHoursOfAllUsers = plannedWorkingHoursOfAllUsers.minus(plannedWorkingHoursOfUser.dividedBy(2));
-            }
-        }
-
-        return new ShouldWorkingHours(plannedWorkingHoursOfAllUsers);
+        return workingTimeCalendarByUser.values().stream()
+            .map(calendar -> calendar.shouldWorkingHours(date))
+            .flatMap(Optional::stream)
+            .reduce(ShouldWorkingHours.ZERO, ShouldWorkingHours::plus);
     }
 
     public PlannedWorkingHours plannedWorkingHoursByUser(UserLocalId userLocalId) {
-        return findValueByFirstKeyMatch(plannedWorkingHoursByUser, userIdComposite -> userLocalId.equals(userIdComposite.localId()))
+        return findValueByFirstKeyMatch(workingTimeCalendarByUser, userIdComposite -> userLocalId.equals(userIdComposite.localId()))
+            .flatMap(calendar -> calendar.plannedWorkingHours(date))
             .orElse(PlannedWorkingHours.ZERO);
     }
 
