@@ -108,7 +108,7 @@
                             <img
                               alt=""
                               src=""
-                              th:replace="~{fragments/avatar::avatar(${user.fullName},38,38)}"
+                              th:replace="~{fragments/avatar::avatar(fullName=${user.fullName},width='38px',height='38px',tooltip=false)}"
                             />
                           </span>
                           <span th:text="${user.fullName}"> Bruce Wayne </span>
