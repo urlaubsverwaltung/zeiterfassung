@@ -77,6 +77,34 @@ class ReportDayTest {
     }
 
     @Test
+    void ensurePlannedWorkingHoursByUser() {
+
+        final UserIdComposite batmanIdComposite = new UserIdComposite(new UserId("uuid"), new UserLocalId(1L));
+        final UserIdComposite robinIdComposite = new UserIdComposite(new UserId("uuid2"), new UserLocalId(2L));
+        final UserIdComposite jokerIdComposite = new UserIdComposite(new UserId("uuid3"), new UserLocalId(3L));
+
+        final LocalDate reportDate = LocalDate.of(2024, 11, 13);
+
+        final ReportDay sut = new ReportDay(
+            reportDate,
+            Map.of(
+                batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
+                robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of()),
+                // enforce empty optional value while calculating planned working hours
+                // which then use the fallback value of ZERO
+                jokerIdComposite, new WorkingTimeCalendar(Map.of(reportDate.plusDays(1), PlannedWorkingHours.EIGHT), Map.of())
+            ),
+            Map.of(),
+            Map.of());
+
+        assertThat(sut.plannedWorkingHoursByUser()).isEqualTo(Map.of(
+            batmanIdComposite, PlannedWorkingHours.EIGHT,
+            robinIdComposite, new PlannedWorkingHours(Duration.ofHours(4)),
+            jokerIdComposite, PlannedWorkingHours.ZERO)
+        );
+    }
+
+    @Test
     void ensureToRemoveBreaks() {
 
         final UserId batmanId = new UserId("uuid");
