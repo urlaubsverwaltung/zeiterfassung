@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -35,11 +36,13 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
     private final ReportService reportService;
+    private final ReportPermissionService reportPermissionService;
     private final ReportControllerHelper helper;
     private final Clock clock;
 
-    ReportWeekController(ReportService reportService, ReportControllerHelper helper, Clock clock) {
+    ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService, ReportControllerHelper helper, Clock clock) {
         this.reportService = reportService;
+        this.reportPermissionService = reportPermissionService;
         this.helper = helper;
         this.clock = clock;
     }
@@ -67,10 +70,10 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST));
 
         final Year reportYear = Year.of(reportYearWeek.getYear());
-        final List<UserLocalId> userLocalIds = optionalUserIds.orElse(List.of()).stream().map(UserLocalId::new).toList();
+        final List<UserLocalId> selectedUserLocalIds = optionalUserIds.orElse(List.of()).stream().map(UserLocalId::new).toList();
         final boolean allUsersSelected = optionalAllUsersSelected.isPresent();
 
-        final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, userLocalIds);
+        final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, selectedUserLocalIds);
         final GraphWeekDto graphWeekDto = helper.toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
         final DetailWeekDto detailWeekDto = helper.toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth(), locale);
 
@@ -88,17 +91,17 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
         final int previousYear = reportYearWeek.minusWeeks(1).getYear();
         final int previousWeek = reportYearWeek.minusWeeks(1).getWeek();
-        final String previousSectionUrl = helper.createUrl(format("/report/year/%d/week/%d", previousYear, previousWeek), allUsersSelected, userLocalIds);
+        final String previousSectionUrl = helper.createUrl(format("/report/year/%d/week/%d", previousYear, previousWeek), allUsersSelected, selectedUserLocalIds);
 
-        final String todaySectionUrl = helper.createUrl("/report/week", allUsersSelected, userLocalIds);
+        final String todaySectionUrl = helper.createUrl("/report/week", allUsersSelected, selectedUserLocalIds);
 
         final int nextYear = reportYearWeek.plusWeeks(1).getYear();
         final int nextWeek = reportYearWeek.plusWeeks(1).getWeek();
-        final String nextSectionUrl = helper.createUrl(format("/report/year/%d/week/%d", nextYear, nextWeek), allUsersSelected, userLocalIds);
+        final String nextSectionUrl = helper.createUrl(format("/report/year/%d/week/%d", nextYear, nextWeek), allUsersSelected, selectedUserLocalIds);
 
         final int selectedYear = reportYearWeek.getYear();
         final int selectedWeek = reportYearWeek.getWeek();
-        final String selectedYearWeekUrl = helper.createUrl(format("/report/year/%d/week/%d", selectedYear, selectedWeek), allUsersSelected, userLocalIds);
+        final String selectedYearWeekUrl = helper.createUrl(format("/report/year/%d/week/%d", selectedYear, selectedWeek), allUsersSelected, selectedUserLocalIds);
         final String csvDownloadUrl = selectedYearWeekUrl.contains("?") ? selectedYearWeekUrl + "&csv" : selectedYearWeekUrl + "?csv";
 
         model.addAttribute("userReportPreviousSectionUrl", previousSectionUrl);
@@ -106,8 +109,10 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         model.addAttribute("userReportNextSectionUrl", nextSectionUrl);
         model.addAttribute("userReportCsvDownloadUrl", csvDownloadUrl);
 
-        helper.addUserFilterModelAttributes(model, allUsersSelected, userLocalIds, format("/report/year/%d/week/%d", year, week));
-        helper.addSelectedUserDurationAggregationModelAttributes(model, reportWeek);
+        final List<User> users = reportPermissionService.findAllPermittedUsersForCurrentUser();
+
+        helper.addUserFilterModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, format("/report/year/%d/week/%d", year, week));
+        helper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, reportWeek);
 
         return "reports/user-report";
     }

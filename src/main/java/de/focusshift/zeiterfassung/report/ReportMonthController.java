@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
+import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -43,12 +44,14 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
     private final DateFormatter dateFormatter;
     private final ReportControllerHelper helper;
     private final Clock clock;
+    private final ReportPermissionService reportPermissionService;
 
-    ReportMonthController(ReportService reportService, DateFormatter dateFormatter, ReportControllerHelper helper, Clock clock) {
+    ReportMonthController(ReportService reportService, ReportPermissionService reportPermissionService, DateFormatter dateFormatter, ReportControllerHelper helper, Clock clock) {
         this.reportService = reportService;
         this.dateFormatter = dateFormatter;
         this.helper = helper;
         this.clock = clock;
+        this.reportPermissionService = reportPermissionService;
     }
 
     @GetMapping("/report/month")
@@ -113,8 +116,10 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         model.addAttribute("userReportNextSectionUrl", nextSectionUrl);
         model.addAttribute("userReportCsvDownloadUrl", csvDownloadUrl);
 
-        helper.addUserFilterModelAttributes(model, allUsersSelected, userLocalIds, String.format("/report/year/%d/month/%d", year, month));
-        helper.addSelectedUserDurationAggregationModelAttributes(model, reportMonth);
+        final List<User> users = reportPermissionService.findAllPermittedUsersForCurrentUser();
+
+        helper.addUserFilterModelAttributes(model, allUsersSelected, users, userLocalIds, String.format("/report/year/%d/month/%d", year, month));
+        helper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, userLocalIds, reportMonth);
 
         return "reports/user-report";
     }
