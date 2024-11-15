@@ -67,7 +67,7 @@
                 <table class="report-person-detail-table">
                   <thead>
                     <tr>
-                      <th>
+                      <th scope="col">
                         <span
                           class="sr-only"
                           th:text="#{report.aggregated.table.head.user}"
@@ -75,18 +75,21 @@
                         >
                       </th>
                       <th
+                        scope="col"
                         class="text-right"
                         th:text="#{report.aggregated.table.head.delta}"
                       >
                         Abweichung
                       </th>
                       <th
+                        scope="col"
                         class="text-right"
                         th:text="#{report.aggregated.table.head.worked}"
                       >
                         Geleistet
                       </th>
                       <th
+                        scope="col"
                         class="text-right"
                         th:text="#{report.aggregated.table.head.should}"
                       >
@@ -99,7 +102,7 @@
                       th:each="userDurationAggregation : ${selectedUserDurationAggregation}"
                       th:with="user=${usersById.get(userDurationAggregation.userId)}"
                     >
-                      <th>
+                      <th scope="row">
                         <div class="flex items-center gap-2">
                           <span class="report-person-detail-table__avatar">
                             <img
