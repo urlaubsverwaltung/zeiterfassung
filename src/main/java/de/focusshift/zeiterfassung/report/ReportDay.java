@@ -23,9 +23,9 @@ import static java.util.stream.Collectors.toMap;
  * All byUser Maps contains values for the same keys. (Please ensure this on constructing this object.)
  *
  * @param date
- * @param workingTimeCalendarByUser
- * @param reportDayEntriesByUser
- * @param detailDayAbsencesByUser
+ * @param workingTimeCalendarByUser {@linkplain WorkingTimeCalendar} for all relevant users
+ * @param reportDayEntriesByUser {@linkplain ReportDayEntry entries} for all relevant users
+ * @param detailDayAbsencesByUser {@linkplain ReportDayAbsence absences} for all relevant users
  */
 record ReportDay(
     LocalDate date,

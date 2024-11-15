@@ -6,6 +6,16 @@ import de.focusshift.zeiterfassung.workingtime.ZeitDuration;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 
+/**
+ * Describes one time entry of a user.
+ *
+ * @param id id of this time entry
+ * @param userIdComposite id composite of the corresponding user
+ * @param comment comment of the time entry, never {@code null}
+ * @param start start timestamp
+ * @param end end timestamp, never {@code null} ({@linkplain de.focusshift.zeiterfassung.timeclock.TimeClock} is something with start but without end)
+ * @param isBreak whether time entry is a break or not
+ */
 public record TimeEntry(
     TimeEntryId id,
     UserIdComposite userIdComposite,
