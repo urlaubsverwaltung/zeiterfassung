@@ -35,6 +35,8 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
+    private static final String REPORT_YEAR_WEEK_URL_TEMPLATE = "/report/year/%d/week/%d";
+
     private final ReportService reportService;
     private final ReportPermissionService reportPermissionService;
     private final ReportControllerHelper helper;
@@ -91,17 +93,17 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
         final int previousYear = reportYearWeek.minusWeeks(1).getYear();
         final int previousWeek = reportYearWeek.minusWeeks(1).getWeek();
-        final String previousSectionUrl = helper.createUrl(format("/report/year/%d/week/%d", previousYear, previousWeek), allUsersSelected, selectedUserLocalIds);
+        final String previousSectionUrl = helper.createUrl(format(REPORT_YEAR_WEEK_URL_TEMPLATE, previousYear, previousWeek), allUsersSelected, selectedUserLocalIds);
 
         final String todaySectionUrl = helper.createUrl("/report/week", allUsersSelected, selectedUserLocalIds);
 
         final int nextYear = reportYearWeek.plusWeeks(1).getYear();
         final int nextWeek = reportYearWeek.plusWeeks(1).getWeek();
-        final String nextSectionUrl = helper.createUrl(format("/report/year/%d/week/%d", nextYear, nextWeek), allUsersSelected, selectedUserLocalIds);
+        final String nextSectionUrl = helper.createUrl(format(REPORT_YEAR_WEEK_URL_TEMPLATE, nextYear, nextWeek), allUsersSelected, selectedUserLocalIds);
 
         final int selectedYear = reportYearWeek.getYear();
         final int selectedWeek = reportYearWeek.getWeek();
-        final String selectedYearWeekUrl = helper.createUrl(format("/report/year/%d/week/%d", selectedYear, selectedWeek), allUsersSelected, selectedUserLocalIds);
+        final String selectedYearWeekUrl = helper.createUrl(format(REPORT_YEAR_WEEK_URL_TEMPLATE, selectedYear, selectedWeek), allUsersSelected, selectedUserLocalIds);
         final String csvDownloadUrl = selectedYearWeekUrl.contains("?") ? selectedYearWeekUrl + "&csv" : selectedYearWeekUrl + "?csv";
 
         model.addAttribute("userReportPreviousSectionUrl", previousSectionUrl);
@@ -111,7 +113,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
         final List<User> users = reportPermissionService.findAllPermittedUsersForCurrentUser();
 
-        helper.addUserFilterModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, format("/report/year/%d/week/%d", year, week));
+        helper.addUserFilterModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, format(REPORT_YEAR_WEEK_URL_TEMPLATE, year, week));
         helper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, reportWeek);
 
         return "reports/user-report";
