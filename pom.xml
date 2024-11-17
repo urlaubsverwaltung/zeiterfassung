@@ -446,12 +446,7 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
             <configuration>
-              <excludes>
-                <exclude>none</exclude>
-              </excludes>
-              <includes>
-                <include>**/*UIIT.java</include>
-              </includes>
+              <groups>ui</groups>
             </configuration>
           </plugin>
         </plugins>

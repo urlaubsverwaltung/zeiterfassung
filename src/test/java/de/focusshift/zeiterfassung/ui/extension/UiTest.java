@@ -5,6 +5,7 @@ import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.junit.Options;
 import com.microsoft.playwright.junit.OptionsFactory;
 import com.microsoft.playwright.junit.UsePlaywright;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -52,6 +53,7 @@ import java.nio.file.Paths;
 @UsePlaywright(UiTest.CustomOptions.class)
 @ExtendWith({ PlaywrightTraceExtension.class, TestRecordVideoExtension.class })
 @ContextConfiguration(initializers = UITestInitializer.class)
+@Tag("ui")
 public @interface UiTest {
 
     class CustomOptions implements OptionsFactory {

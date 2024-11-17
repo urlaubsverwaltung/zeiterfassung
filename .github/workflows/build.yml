@@ -33,11 +33,8 @@ jobs:
           java-version: 21
           cache: 'maven'
 
-      - name: Install Playwright Browsers (UI tests)
-        run: ./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.classpathScope="test" -D exec.args="install --with-deps chromium"
-
       - name: Build
-        run: ./mvnw -Pcoverage dependency:go-offline clean verify
+        run: ./mvnw -Pcoverage dependency:go-offline clean verify -Dgroups="!ui"
 
       - name: Analyse with SonarCloud
         if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
@@ -57,13 +54,6 @@ jobs:
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: Upload artifacts of failed tests
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: failed-ui-tests
-          path: target/ui-test/**/FAILED-*
 
   ui-test:
     name: UI Test
