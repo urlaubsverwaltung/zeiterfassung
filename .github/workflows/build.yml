@@ -64,3 +64,38 @@ jobs:
         with:
           name: failed-ui-tests
           path: target/ui-test/**/FAILED-*
+
+  ui-test:
+    name: UI Test
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        browser: ["chromium", "firefox", "webkit"]
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-ui-test-${{ matrix.browser }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'liberica'
+          java-version: 21
+          cache: 'maven'
+
+      - name: Install Playwright Browsers (UI tests)
+        run: ./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.classpathScope="test" -D exec.args="install --with-deps ${{matrix.browser}}"
+
+      - name: Test
+        run: ./mvnw dependency:go-offline clean verify -Pui-test -Dbrowser=${{matrix.browser}}
+
+      - name: Upload artifacts of failed tests
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: failed-ui-tests
+          path: target/ui-test/**/FAILED-*
