@@ -58,15 +58,19 @@ public @interface UiTest {
 
         @Override
         public Options getOptions() {
+
+            // webkit | firefox | chromium (playwright-default)
+            final String browser = System.getProperty("browser", "chromium");
+
             return new Options()
                 // you may have to adapt the CI build workflow when changing the browser
-//                .setBrowserName("chromium") // webkit | firefox | chromium (default)
+                .setBrowserName(browser)
                 .setConnectOptions(new BrowserType.ConnectOptions()
                     // increase to make test steps slower and be able to follow it with your own eyes.
                     .setSlowMo(200)
                 )
                 .setContextOptions(new Browser.NewContextOptions()
-                    .setRecordVideoDir(Paths.get("target"))
+                    .setRecordVideoDir(Paths.get("target/ui-test", browser))
                     .setLocale("de")
                     .setScreenSize(1500, 1080)
                     .setViewportSize(1500, 1080)
