@@ -2,15 +2,15 @@
   import HeartIcon from "./HeartIcon.svelte";
   import FloatingHeart from "./FloatingHeart.svelte";
 
-  export let showInitialHeart = false;
+  let { showInitialHeart = false } = $props();
 
-  let movingHeartsCount = showInitialHeart ? 1 : 0;
+  let movingHeartsCount = $state(showInitialHeart ? 1 : 0);
 
   function floatingHeart() {
     movingHeartsCount = movingHeartsCount + 1;
   }
 
-  function handleMouseClick() {
+  function onclick() {
     floatingHeart();
   }
 </script>
@@ -21,15 +21,7 @@
 {/each}
 
 <div class="fixed left-0 bottom-0 p-2">
-  <div
-    on:click={handleMouseClick}
-    on:keypress={() => {
-      /**/
-    }}
-    role="button"
-    tabindex="0"
-    class="cursor-pointer"
-  >
+  <button type="button" {onclick} class="cursor-pointer">
     <HeartIcon class="w-8 h-8" />
-  </div>
+  </button>
 </div>

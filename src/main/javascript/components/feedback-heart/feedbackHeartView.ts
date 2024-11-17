@@ -1,5 +1,5 @@
 import FeedbackHeart from "./FeedbackHeart.svelte";
-import type { SvelteComponent } from "svelte";
+import { mount } from "svelte";
 
 type Arguments = {
   target: HTMLElement;
@@ -8,12 +8,11 @@ type Arguments = {
   };
 };
 
-export function initFeedbackHeartView({
-  target,
-  props,
-}: Arguments): SvelteComponent {
-  return new FeedbackHeart({
+export function initFeedbackHeartView({ target, props }: Arguments): void {
+  mount(FeedbackHeart, {
     target,
-    props: { showInitialHeart: props.showFeedbackKudo },
+    props: {
+      showInitialHeart: props.showFeedbackKudo,
+    },
   });
 }
