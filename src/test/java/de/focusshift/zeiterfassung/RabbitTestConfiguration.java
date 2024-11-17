@@ -12,7 +12,7 @@ public class RabbitTestConfiguration {
     @Bean
     @ServiceConnection
     public RabbitMQContainer rabbitMQContainer() {
-        return new RabbitMQContainer(DockerImageName.parse("rabbitmq:3.7.25-management-alpine"))
+        return new RabbitMQContainer(DockerImageName.parse("rabbitmq:3.13.7-management-alpine"))
             .withReuse(true);
     }
 }

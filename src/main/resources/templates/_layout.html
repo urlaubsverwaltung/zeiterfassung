@@ -24,7 +24,6 @@
       window.zeiterfassung.feedback = window.zeiterfassung.feedback || {};
       window.zeiterfassung.feedback.showFeedbackKudo = /*[[${showFeedbackKudo}]]*/ false;
     </script>
-    <script src="#" th:src="@{/assets/custom-elements-polyfill.js}"></script>
     <script>
       function injectStyle(r, t) {
         t === void 0 && (t = {});
@@ -80,6 +79,11 @@
     <link rel="stylesheet" type="text/css" th:href="@{/3-utilities.css}" />
 
     <th:block th:replace="${preload}"></th:block>
+    <script
+      src="#"
+      th:src="@{/assets/custom-elements-polyfill.js}"
+      type="module"
+    ></script>
     <script src="#" th:src="@{/assets/user-common.js}" type="module"></script>
     <th:block th:replace="${scriptsDefer}"></th:block>
     <th:block th:replace="${prefetchOrPrerender}"></th:block>
