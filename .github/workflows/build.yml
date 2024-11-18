@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'liberica'
-          java-version: 21
+          java-version: '21'
           cache: 'maven'
 
       - name: Build
@@ -39,7 +39,7 @@ jobs:
       - name: Analyse with SonarCloud
         if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         run: >
-            ./mvnw $MAVEN_CLI_OPTS
+            ./mvnw
             -Pcoverage
             sonar:sonar
             -Dsonar.host.url=https://sonarcloud.io
