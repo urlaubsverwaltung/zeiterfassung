@@ -10,7 +10,7 @@ env:
 
 jobs:
   create-github-release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -36,7 +36,7 @@ jobs:
   container-upload-docker-hub-zeiterfassung:
     needs:
       - create-github-release
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -57,7 +57,7 @@ jobs:
   container-upload-github:
     needs:
       - create-github-release
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

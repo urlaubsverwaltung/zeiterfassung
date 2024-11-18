@@ -11,12 +11,12 @@ on:
 
 env:
   MAVEN_ARGS: "--no-transfer-progress --errors --fail-at-end --show-version"
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1 # required browsers are installed below
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1  # required browsers are installed below
 
 jobs:
   build:
     name: build and analyse
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'liberica'
-          java-version: 21
+          java-version: '21'
           cache: 'maven'
 
       - name: Build
@@ -39,7 +39,7 @@ jobs:
       - name: Analyse with SonarCloud
         if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         run: >
-            ./mvnw $MAVEN_CLI_OPTS
+            ./mvnw
             -Pcoverage
             sonar:sonar
             -Dsonar.host.url=https://sonarcloud.io
@@ -52,12 +52,12 @@ jobs:
             -Dsonar.coverage.exclusions=**/*.spec.ts,**/*.test.ts,**/*.spec.js,**/*.test.js
             -Dsonar.sources=src/main
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   ui-test:
     name: UI Test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         browser: ["chromium", "firefox", "webkit"]
