@@ -41,6 +41,29 @@
           <fieldset class="border-t border-gray-100">
             <legend
               class="text-sm font-medium text-gray-400"
+              th:text="#{usermanagement.permissions.timeentries.title}"
+            >
+              Zeiteinträge
+            </legend>
+            <div class="mt-2 sm:mt-4">
+              <div class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="permissions-timeentry-edit-all-checkbox"
+                  th:field="*{timeEntryEditAll}"
+                />
+                <label
+                  for="permissions-timeentry-edit-all-checkbox"
+                  th:text="#{usermanagement.permissions.timeentry-edit-all.allowed.label}"
+                >
+                  darf die Zeiteinträge aller Personen bearbeiten
+                </label>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="border-t border-gray-100">
+            <legend
+              class="text-sm font-medium text-gray-400"
               th:text="#{usermanagement.permissions.working-time.title}"
             >
               Arbeitszeiten

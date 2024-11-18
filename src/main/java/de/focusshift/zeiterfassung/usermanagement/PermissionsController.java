@@ -26,6 +26,7 @@ import java.util.function.Function;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.userToDto;
@@ -111,6 +112,7 @@ class PermissionsController implements HasLaunchpad, HasTimeClock {
         model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, securityContext));
         model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, securityContext));
         model.addAttribute("allowedToEditPermissions", hasAuthority(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, securityContext));
+        model.addAttribute("allowedToEditTimeentries", hasAuthority(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL, securityContext));
     }
 
     private PermissionsDto userToPermissionsDto(User user) {
@@ -124,6 +126,7 @@ class PermissionsController implements HasLaunchpad, HasTimeClock {
                 case ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL -> permissionsDto.setWorkingTimeEditGlobal(true);
                 case ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL -> permissionsDto.setOvertimeEditAll(true);
                 case ZEITERFASSUNG_PERMISSIONS_EDIT_ALL -> permissionsDto.setPermissionsEditAll(true);
+                case ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL -> permissionsDto.setTimeEntryEditAll(true);
                 case ZEITERFASSUNG_OPERATOR, ZEITERFASSUNG_USER -> { /* ok */ }
             }
         }
@@ -147,6 +150,7 @@ class PermissionsController implements HasLaunchpad, HasTimeClock {
                 case ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL -> adder.accept(permissionsDto::isWorkingTimeEditGlobal, role);
                 case ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL -> adder.accept(permissionsDto::isOvertimeEditAll, role);
                 case ZEITERFASSUNG_PERMISSIONS_EDIT_ALL -> adder.accept(permissionsDto::isPermissionsEditAll, role);
+                case ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL -> adder.accept(permissionsDto::isTimeEntryEditAll, role);
                 case ZEITERFASSUNG_OPERATOR, ZEITERFASSUNG_USER -> { /* ok */ }
             }
         }
