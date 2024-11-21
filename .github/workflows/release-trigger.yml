@@ -18,6 +18,7 @@ on:
 
 env:
   MAVEN_ARGS: "--no-transfer-progress --errors --fail-at-end --show-version"
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1  # required browsers are installed below
 
 jobs:
   run-unit-and-integration-tests:
