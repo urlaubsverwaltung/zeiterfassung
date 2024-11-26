@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.IContext;
 
@@ -33,13 +33,13 @@ class FeedbackGivenListenerEmailTest {
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
-    @MockBean
+    @MockitoBean
     private EMailService eMailService;
 
-    @MockBean(name = "emailTemplateEngine")
+    @MockitoBean(name = "emailTemplateEngine")
     private ITemplateEngine emailTemplateEngine;
 
-    @MockBean
+    @MockitoBean
     private FeedbackConfigurationProperties feedbackConfigurationProperties;
 
     @Test

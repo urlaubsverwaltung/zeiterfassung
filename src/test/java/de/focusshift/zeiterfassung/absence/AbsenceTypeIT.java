@@ -12,8 +12,8 @@ import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
@@ -47,7 +47,7 @@ class AbsenceTypeIT extends SingleTenantTestContainersBase {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    @MockBean(answer = Answers.CALLS_REAL_METHODS)
+    @MockitoBean(answers = Answers.CALLS_REAL_METHODS)
     private TenantContextHolder tenantContextHolder;
 
     @Test
