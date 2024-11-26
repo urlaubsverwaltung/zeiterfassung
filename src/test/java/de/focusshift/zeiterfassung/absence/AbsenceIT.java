@@ -19,8 +19,8 @@ import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -64,9 +64,9 @@ class AbsenceIT extends SingleTenantTestContainersBase {
 
     private static final ZoneOffset ZONE_ID = UTC;
 
-    @MockBean
+    @MockitoBean
     private UserSettingsProvider userSettingsProvider;
-    @MockBean(answer = Answers.CALLS_REAL_METHODS)
+    @MockitoBean(answers = Answers.CALLS_REAL_METHODS)
     private TenantContextHolder tenantContextHolder;
 
     @Autowired
