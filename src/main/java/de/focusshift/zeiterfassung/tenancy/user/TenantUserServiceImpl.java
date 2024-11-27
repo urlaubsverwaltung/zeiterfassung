@@ -39,7 +39,7 @@ class TenantUserServiceImpl implements TenantUserService {
         final Instant now = clock.instant();
 
         final TenantUserEntity tenantUserEntity =
-            new TenantUserEntity(null, uuid, now, now, givenName, familyName, eMailAddress.value(), distinct(authorities), now, now, null, null, UserStatus.ACTIVE);
+            new TenantUserEntity(null, uuid, now, now, givenName.strip(), familyName.strip(), eMailAddress.value(), distinct(authorities), now, now, null, null, UserStatus.ACTIVE);
 
         final TenantUserEntity persisted = tenantUserRepository.save(tenantUserEntity);
 
@@ -56,8 +56,13 @@ class TenantUserServiceImpl implements TenantUserService {
 
         final TenantUserEntity current = getTenantUserOrThrow(user.localId());
 
+        final String givenName = user.givenName().strip();
+        final String familyName = user.familyName().strip();
+        final String email = user.eMail().value();
+        final Set<SecurityRole> authorities = distinct(user.authorities());
+
         final TenantUserEntity next =
-            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), now, user.givenName(), user.familyName(), user.eMail().value(), distinct(user.authorities()), current.getCreatedAt(), now, current.getDeactivatedAt(), current.getDeletedAt(), current.getStatus());
+            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), now, givenName, familyName, email, authorities, current.getCreatedAt(), now, current.getDeactivatedAt(), current.getDeletedAt(), current.getStatus());
 
         final TenantUserEntity persisted = tenantUserRepository.save(next);
 

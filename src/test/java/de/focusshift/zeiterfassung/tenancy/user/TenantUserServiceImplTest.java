@@ -30,27 +30,13 @@ import static org.mockito.Mockito.when;
 class TenantUserServiceImplTest {
 
     private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
+
     private TenantUserServiceImpl sut;
+
     @Mock
     private TenantUserRepository repository;
     @Mock
     private ApplicationEventPublisher publisher;
-
-    private static TenantUser activeTenantUserOne(Instant now) {
-        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
-    }
-
-    private static TenantUserEntity activeUserEntityOne(Instant now) {
-        return new TenantUserEntity(1L, "my-external-id-1", now, now, "batman", "batman", "batman@batman.com", Set.of(), now, now, null, null, UserStatus.ACTIVE);
-    }
-
-    private static TenantUser activeTenantUserTwo(Instant now) {
-        return new TenantUser("my-external-id-2", 2L, "petra", "panter", new EMailAddress("petra@panter.com"), now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
-    }
-
-    private static TenantUserEntity activeUserEntityTwo(Instant now) {
-        return new TenantUserEntity(2L, "my-external-id-2", now, now, "petra", "panter", "petra@panter.com", Set.of(), now, now, null, null, UserStatus.ACTIVE);
-    }
 
     @BeforeEach
     void setUp() {
@@ -237,6 +223,30 @@ class TenantUserServiceImplTest {
 
                 verify(publisher).publishEvent(any(TenantUserCreatedEvent.class));
             }
+
+            @Test
+            void ensureGivenNameAndFamilyNameIsStripped() {
+
+                final String uuid = "my-external-id";
+                final String givenName = " Hans Joachim  ";
+                final String familyName = "  Sonnencreme ";
+                final EMailAddress eMailAddress = new EMailAddress("hans@example.com");
+
+                when(repository.save(any(TenantUserEntity.class))).thenAnswer(returnsFirstArg());
+
+                final TenantUser result = sut.createNewUser(uuid, givenName, familyName, eMailAddress, Set.of());
+
+                final ArgumentCaptor<TenantUserEntity> entityArgumentCaptor = ArgumentCaptor.forClass(TenantUserEntity.class);
+                verify(repository).save(entityArgumentCaptor.capture());
+
+                assertThat(entityArgumentCaptor.getValue()).satisfies(entity -> {
+                    assertThat(entity.getGivenName()).isEqualTo("Hans Joachim");
+                    assertThat(entity.getFamilyName()).isEqualTo("Sonnencreme");
+                });
+
+                assertThat(result.givenName()).isEqualTo("Hans Joachim");
+                assertThat(result.familyName()).isEqualTo("Sonnencreme");
+            }
         }
 
         @Nested
@@ -257,7 +267,6 @@ class TenantUserServiceImplTest {
                 when(repository.save(any(TenantUserEntity.class))).thenAnswer(returnsFirstArg());
 
                 TenantUser result = sut.updateUser(update);
-
 
                 ArgumentCaptor<TenantUserEntity> entityArgumentCaptor = ArgumentCaptor.forClass(TenantUserEntity.class);
 
@@ -286,6 +295,31 @@ class TenantUserServiceImplTest {
                     assertThat(updatedUser.updatedAt()).isEqualTo(now);
                     assertThat(updatedUser.status()).isEqualTo(UserStatus.ACTIVE);
                 });
+            }
+
+            @Test
+            void ensureGivenNameAndFamilyNameIsStripped() {
+
+                final Instant now = clock.instant();
+
+                final TenantUserEntity currentEntity = activeUserEntityOne(now);
+                final TenantUser update = updateFromEntity(currentEntity, "  Hans Joachim ", " Sonnencreme  ", "hans@example.com");
+
+                when(repository.findById(any())).thenReturn(Optional.of(currentEntity));
+                when(repository.save(any(TenantUserEntity.class))).thenAnswer(returnsFirstArg());
+
+                final TenantUser result = sut.updateUser(update);
+
+                final ArgumentCaptor<TenantUserEntity> entityArgumentCaptor = ArgumentCaptor.forClass(TenantUserEntity.class);
+                verify(repository).save(entityArgumentCaptor.capture());
+
+                assertThat(entityArgumentCaptor.getValue()).satisfies(entity -> {
+                    assertThat(entity.getGivenName()).isEqualTo("Hans Joachim");
+                    assertThat(entity.getFamilyName()).isEqualTo("Sonnencreme");
+                });
+
+                assertThat(result.givenName()).isEqualTo("Hans Joachim");
+                assertThat(result.familyName()).isEqualTo("Sonnencreme");
             }
 
             @Test
@@ -413,8 +447,22 @@ class TenantUserServiceImplTest {
 
                 verify(repository).findById(userId);
             }
-
         }
+    }
 
+    private static TenantUser activeTenantUserOne(Instant now) {
+        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
+    }
+
+    private static TenantUserEntity activeUserEntityOne(Instant now) {
+        return new TenantUserEntity(1L, "my-external-id-1", now, now, "batman", "batman", "batman@batman.com", Set.of(), now, now, null, null, UserStatus.ACTIVE);
+    }
+
+    private static TenantUser activeTenantUserTwo(Instant now) {
+        return new TenantUser("my-external-id-2", 2L, "petra", "panter", new EMailAddress("petra@panter.com"), now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
+    }
+
+    private static TenantUserEntity activeUserEntityTwo(Instant now) {
+        return new TenantUserEntity(2L, "my-external-id-2", now, now, "petra", "panter", "petra@panter.com", Set.of(), now, now, null, null, UserStatus.ACTIVE);
     }
 }
