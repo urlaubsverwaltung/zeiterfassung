@@ -37,6 +37,7 @@ class AvatarControllerTest {
         "The Batman,TB",
         "Batman,B",
         "The ultimate Batman,TB",
+        "' normal one  ',NO",
     })
     void ensureGeneratesAvatarWithInitials(String name, String expectedInitials) throws Exception {
 
