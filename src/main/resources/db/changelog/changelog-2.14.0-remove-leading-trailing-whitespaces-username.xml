@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+  <changeSet author="seber" id="remove-leading-trailing-whitespaces-given-name">
+    <preConditions>
+      <tableExists tableName="tenant_user"/>
+      <columnExists tableName="tenant_user" columnName="given_name"/>
+    </preConditions>
+    <update tableName="tenant_user">
+      <column name="given_name" value="TRIM(given_name)" />
+      <where>
+        given_name LIKE ' %' OR given_name LIKE '% '
+      </where>
+    </update>
+  </changeSet>
+
+  <changeSet author="seber" id="remove-leading-trailing-whitespaces-family-name">
+    <preConditions>
+      <tableExists tableName="tenant_user"/>
+      <columnExists tableName="tenant_user" columnName="family_name"/>
+    </preConditions>
+    <update tableName="tenant_user">
+      <column name="family_name" value="TRIM(family_name)" />
+      <where>
+        family_name LIKE ' %' OR family_name LIKE '% '
+      </where>
+    </update>
+  </changeSet>
+
+</databaseChangeLog>
+
