@@ -55,8 +55,8 @@ info:
 management:
   endpoint:
     prometheus:
-      enabled: false
+      access: none
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health, info
