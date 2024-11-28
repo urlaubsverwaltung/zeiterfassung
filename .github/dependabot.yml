@@ -7,6 +7,10 @@ updates:
     labels:
       - "type: dependencies"
       - "javascript"
+    groups:
+      vitest:
+        patterns:
+          - "*vitest*"
 
   - package-ecosystem: "maven"
     directory: "/"
