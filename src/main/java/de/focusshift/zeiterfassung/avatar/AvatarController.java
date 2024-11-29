@@ -34,13 +34,13 @@ public class AvatarController {
 
     private static String getInitials(String niceName) {
 
-        final String normalized = niceName.strip();
+        final String normalizedNiceName = niceName.strip();
 
-        final int idxLastWhitespace = normalized.strip().lastIndexOf(' ');
+        final int idxLastWhitespace = normalizedNiceName.lastIndexOf(' ');
         if (idxLastWhitespace == -1) {
-            return normalized.substring(0, 1).toUpperCase();
+            return normalizedNiceName.substring(0, 1).toUpperCase();
         }
 
-        return (normalized.charAt(0) + normalized.substring(idxLastWhitespace + 1, idxLastWhitespace + 2)).toUpperCase();
+        return (normalizedNiceName.charAt(0) + normalizedNiceName.substring(idxLastWhitespace + 1, idxLastWhitespace + 2)).toUpperCase();
     }
 }
