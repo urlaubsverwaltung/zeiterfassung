@@ -102,8 +102,7 @@
                 </span>
               </p>
               <p class="sr-only sm:not-sr-only">
-                <th:block
-                  th:text="#{report.week.group.hours-bar.worked-hours}"
+                <th:block th:text="#{report.week.group.hours-bar.worked-hours}"
                   >Geleistet:</th:block
                 >
                 <span
@@ -111,8 +110,7 @@
                   class="font-bold tabular-nums"
                   >41:58</span
                 >
-                (<th:block
-                  th:text="#{report.week.group.hours-bar.should}"
+                (<th:block th:text="#{report.week.group.hours-bar.should}"
                   >Geplant:</th:block
                 >
                 <span
@@ -366,8 +364,7 @@
               th:if="${day.workedWorkingHours != '00:00' or day.shouldWorkingHours != '00:00'}"
               class="sr-only sm:not-sr-only"
             >
-              <th:block
-                th:text="#{report.week.group.hours-bar.worked-hours}"
+              <th:block th:text="#{report.week.group.hours-bar.worked-hours}"
                 >Geleistet:</th:block
               >
               <span
@@ -375,8 +372,7 @@
                 class="font-bold tabular-nums"
                 >41:58</span
               >
-              (<th:block
-                th:text="#{report.week.group.hours-bar.should}"
+              (<th:block th:text="#{report.week.group.hours-bar.should}"
                 >Geplant:</th:block
               >
               <span
@@ -467,6 +463,19 @@
                         />
                       </th:block>
                     </p>
+                  </div>
+                  <div>
+                    <a
+                      href="#"
+                      th:href="@{/report/year/{year}/week/{week}/timeentry/{id} (year=${year}, week=${week}, id=${dayEntry.timeEntryId})}"
+                      class="button"
+                      title="Bearbeiten"
+                    >
+                      <span class="sr-only">Bearbeiten</span>
+                      <svg
+                        th:replace="~{icons/edit::svg(className='w-4 h-4 text-gray-400')}"
+                      ></svg>
+                    </a>
                   </div>
                 </div>
               </li>
