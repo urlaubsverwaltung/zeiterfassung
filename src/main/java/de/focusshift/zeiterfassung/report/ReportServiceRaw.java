@@ -221,7 +221,7 @@ class ReportServiceRaw {
             return Optional.empty();
         }
 
-        final ReportDayEntry first = new ReportDayEntry(user, comment, startDateTime, endDateTime, timeEntry.isBreak());
+        final ReportDayEntry first = new ReportDayEntry(timeEntry.id(), user, comment, startDateTime, endDateTime, timeEntry.isBreak());
         return Optional.of(first);
     }
 
