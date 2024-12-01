@@ -2,8 +2,12 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import de.focusshift.zeiterfassung.timeentry.TimeEntry;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,12 +45,16 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     private final ReportPermissionService reportPermissionService;
     private final ReportControllerHelper helper;
     private final Clock clock;
+    private final TimeEntryService timeEntryService;
+    private final UserManagementService userManagementService;
 
-    ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService, ReportControllerHelper helper, Clock clock) {
+    ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService, ReportControllerHelper helper, Clock clock, TimeEntryService timeEntryService, UserManagementService userManagementService) {
         this.reportService = reportService;
         this.reportPermissionService = reportPermissionService;
         this.helper = helper;
         this.clock = clock;
+        this.timeEntryService = timeEntryService;
+        this.userManagementService = userManagementService;
     }
 
     @GetMapping("/report/week")
@@ -117,6 +125,29 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         helper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, reportWeek);
 
         return "reports/user-report";
+    }
+
+    @GetMapping("/report/year/{year}/week/{week}/timeentry/{id}")
+    public String editTimeEntry(@PathVariable("year") Integer year, @PathVariable("week") Integer week, @PathVariable("id") Long id, Model model, Locale locale) {
+
+        final TimeEntry timeEntry = timeEntryService.findTimeEntry(id)
+            .orElseThrow(() -> new IllegalArgumentException("Could not find timeEntry with id=%s".formatted(id)));
+
+//        final User user = userManagementService.findUserByLocalId(timeEntry.userIdComposite().localId())
+//            .orElseThrow(() -> new IllegalStateException("Could not find user with id=%s".formatted(timeEntry.userIdComposite())));
+
+        final TimeEntryDTO dto = TimeEntryDTO.builder()
+            // TODO this has to be transformed to the user timezone (not just mapping to system localTime same hour/minute ...)
+            .date(timeEntry.start().toLocalDate())
+            .start(timeEntry.start().toLocalTime())
+            .start(timeEntry.end().toLocalTime())
+            .duration(timeEntry.duration().toString())
+            .isBreak(timeEntry.isBreak())
+            .build();
+
+        model.addAttribute("timeEntry", dto);
+
+        return "reports/dialog";
     }
 
     private ReportWeek getReportWeek(OidcUser principal, YearWeek reportYearWeek, boolean allUsersSelected, Year reportYear, List<UserLocalId> userLocalIds) {

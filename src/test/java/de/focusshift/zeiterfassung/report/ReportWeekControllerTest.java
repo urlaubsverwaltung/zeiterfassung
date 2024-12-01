@@ -457,7 +457,7 @@ class ReportWeekControllerTest {
     }
 
     private ReportDayEntry reportDayEntry(User user, LocalDate date) {
-        return new ReportDayEntry(user, "", date.atStartOfDay().plusHours(8).atZone(UTC), date.atStartOfDay().plusHours(16).atZone(UTC), false);
+        return new ReportDayEntry(null, user, "", date.atStartOfDay().plusHours(8).atZone(UTC), date.atStartOfDay().plusHours(16).atZone(UTC), false);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
