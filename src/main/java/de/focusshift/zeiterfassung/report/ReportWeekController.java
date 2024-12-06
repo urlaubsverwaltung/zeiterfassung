@@ -4,11 +4,14 @@ import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryUpdateNotPlausibleException;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
-import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,7 +20,9 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -25,7 +30,11 @@ import org.threeten.extra.YearWeek;
 
 import java.time.Clock;
 import java.time.DateTimeException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.Year;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -33,6 +42,7 @@ import java.util.Optional;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.util.StringUtils.hasText;
 
 @Controller
 class ReportWeekController implements HasTimeClock, HasLaunchpad {
@@ -46,15 +56,17 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     private final ReportControllerHelper helper;
     private final Clock clock;
     private final TimeEntryService timeEntryService;
-    private final UserManagementService userManagementService;
+    private final UserSettingsProvider userSettingsProvider;
 
-    ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService, ReportControllerHelper helper, Clock clock, TimeEntryService timeEntryService, UserManagementService userManagementService) {
+    ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService,
+                         ReportControllerHelper helper, Clock clock, TimeEntryService timeEntryService,
+                         UserSettingsProvider userSettingsProvider) {
         this.reportService = reportService;
         this.reportPermissionService = reportPermissionService;
         this.helper = helper;
         this.clock = clock;
         this.timeEntryService = timeEntryService;
-        this.userManagementService = userManagementService;
+        this.userSettingsProvider = userSettingsProvider;
     }
 
     @GetMapping("/report/week")
@@ -73,8 +85,29 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         @PathVariable("week") Integer week,
         @RequestParam(value = "everyone", required = false) Optional<String> optionalAllUsersSelected,
         @RequestParam(value = "user", required = false) Optional<List<Long>> optionalUserIds,
+        @RequestParam(value = "timeentry", required = false) Long id,
         @AuthenticationPrincipal DefaultOidcUser principal,
         Model model, Locale locale) {
+
+        if (id != null) {
+            final TimeEntry timeEntry = timeEntryService.findTimeEntry(id)
+                .orElseThrow(() -> new IllegalArgumentException("Could not find timeEntry with id=%s".formatted(id)));
+
+            final TimeEntryDTO dto = TimeEntryDTO.builder()
+                .id(timeEntry.id().value())
+                // TODO this has to be transformed to the user timezone (not just mapping to system localTime same hour/minute ...)
+                .date(timeEntry.start().toLocalDate())
+                .start(timeEntry.start().toLocalTime())
+                .start(timeEntry.end().toLocalTime())
+                .duration(toTimeEntryDTODurationString(timeEntry.durationInMinutes()))
+                .isBreak(timeEntry.isBreak())
+                .comment(timeEntry.comment())
+                .build();
+
+            model.addAttribute("timeEntry", dto);
+
+            return "reports/user-report-edit-time-entry";
+        }
 
         final YearWeek reportYearWeek = yearWeek(year, week)
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST));
@@ -127,27 +160,61 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return "reports/user-report";
     }
 
-    @GetMapping("/report/year/{year}/week/{week}/timeentry/{id}")
-    public String editTimeEntry(@PathVariable("year") Integer year, @PathVariable("week") Integer week, @PathVariable("id") Long id, Model model, Locale locale) {
+//    @GetMapping("/report/year/{year}/week/{week}")
+//    public String editTimeEntry(@PathVariable("year") Integer year, @PathVariable("week") Integer week, @RequestParam("timeentry") Long id, Model model, Locale locale) {
+//
+//        final TimeEntry timeEntry = timeEntryService.findTimeEntry(id)
+//            .orElseThrow(() -> new IllegalArgumentException("Could not find timeEntry with id=%s".formatted(id)));
+//
+////        final User user = userManagementService.findUserByLocalId(timeEntry.userIdComposite().localId())
+////            .orElseThrow(() -> new IllegalStateException("Could not find user with id=%s".formatted(timeEntry.userIdComposite())));
+//
+//        final TimeEntryDTO dto = TimeEntryDTO.builder()
+//            .id(timeEntry.id().value())
+//            // TODO this has to be transformed to the user timezone (not just mapping to system localTime same hour/minute ...)
+//            .date(timeEntry.start().toLocalDate())
+//            .start(timeEntry.start().toLocalTime())
+//            .start(timeEntry.end().toLocalTime())
+//            .duration(toTimeEntryDTODurationString(timeEntry.durationInMinutes()))
+//            .isBreak(timeEntry.isBreak())
+//            .comment(timeEntry.comment())
+//            .build();
+//
+//        model.addAttribute("timeEntry", dto);
+//
+////        if (hasText(turboRequestId)) {
+//////            return "reports/dialog::time-entry-edit-modal";
+////            return "reports/user-report-edit-time-entry::turbo-modal";
+////        } else {
+//            return "reports/user-report-edit-time-entry";
+////        }
+//    }
 
-        final TimeEntry timeEntry = timeEntryService.findTimeEntry(id)
-            .orElseThrow(() -> new IllegalArgumentException("Could not find timeEntry with id=%s".formatted(id)));
+    @PostMapping("/report/year/{year}/week/{week}/timeentry/{id}")
+    public String postEditTimeEntry(
+        @PathVariable("year") Integer year,
+        @PathVariable("week") Integer week,
+        @PathVariable("id") Long id,
+        @Valid @ModelAttribute(name = "timeEntry") TimeEntryDTO timeEntryDTO, RedirectAttributes redirectAttributes,
+        Model model, Locale locale) {
 
-//        final User user = userManagementService.findUserByLocalId(timeEntry.userIdComposite().localId())
-//            .orElseThrow(() -> new IllegalStateException("Could not find user with id=%s".formatted(timeEntry.userIdComposite())));
+        // TODO TimeEntryController already handles everthing with mapping stuff and validation -> reuse it somehow
 
-        final TimeEntryDTO dto = TimeEntryDTO.builder()
-            // TODO this has to be transformed to the user timezone (not just mapping to system localTime same hour/minute ...)
-            .date(timeEntry.start().toLocalDate())
-            .start(timeEntry.start().toLocalTime())
-            .start(timeEntry.end().toLocalTime())
-            .duration(timeEntry.duration().toString())
-            .isBreak(timeEntry.isBreak())
-            .build();
+        final ZoneId zoneId = userSettingsProvider.zoneId();
 
-        model.addAttribute("timeEntry", dto);
+        try {
+            updateTimeEntry(timeEntryDTO, zoneId);
+        } catch (TimeEntryUpdateNotPlausibleException e) {
+            throw new RuntimeException(e);
+        }
 
-        return "reports/dialog";
+        redirectAttributes.addFlashAttribute("turboVisitControlReload", true);
+
+//        final ModelAndView modelAndView = new ModelAndView("redirect:/report/year/%s/week/%s".formatted(year, week));
+//        modelAndView.setStatus(SEE_OTHER);
+//        return modelAndView;
+
+        return "redirect:/report/year/%s/week/%s".formatted(year, week);
     }
 
     private ReportWeek getReportWeek(OidcUser principal, YearWeek reportYearWeek, boolean allUsersSelected, Year reportYear, List<UserLocalId> userLocalIds) {
@@ -171,6 +238,43 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         } catch (DateTimeException exception) {
             LOG.error("could not create YearWeek with year={} week={}", year, week, exception);
             return Optional.empty();
+        }
+    }
+
+    private void updateTimeEntry(TimeEntryDTO dto, ZoneId zoneId) throws TimeEntryUpdateNotPlausibleException {
+
+        final Duration duration = toDuration(dto.getDuration());
+        final ZonedDateTime start = dto.getStart() == null ? null : ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
+        final ZonedDateTime end = getEndDate(dto, zoneId);
+
+        timeEntryService.updateTimeEntry(new TimeEntryId(dto.getId()), dto.getComment(), start, end, duration, dto.isBreak());
+    }
+
+    private static Duration toDuration(String timeEntryDTODurationString) {
+        if (hasText(timeEntryDTODurationString)) {
+            final String[] split = timeEntryDTODurationString.split(":");
+            return Duration.ofHours(Integer.parseInt(split[0])).plusMinutes(Integer.parseInt(split[1]));
+        }
+        return Duration.ZERO;
+    }
+
+    private static String toTimeEntryDTODurationString(Duration duration) {
+        if (duration == null) {
+            return "00:00";
+        }
+        return String.format("%02d:%02d", duration.toHours(), duration.toMinutes() % 60);
+    }
+
+    private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {
+        if (dto.getEnd() == null) {
+            return null;
+        } else if (dto.getStart() == null) {
+            return ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getEnd()), zoneId);
+        } else if (dto.getEnd().isBefore(dto.getStart())) {
+            // end is on next day
+            return ZonedDateTime.of(LocalDateTime.of(dto.getDate().plusDays(1), dto.getEnd()), zoneId);
+        } else {
+            return ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getEnd()), zoneId);
         }
     }
 }

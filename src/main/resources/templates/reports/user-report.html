@@ -5,6 +5,7 @@
   >
     <title th:text="#{report.page.meta.title}">Zeiterfassung - Bericht</title>
     <th:block th:fragment="styles">
+      <meta name="turbo-refresh-method" content="morph" />
       <link rel="stylesheet" type="text/css" th:href="@{/reports.css}" />
     </th:block>
     <th:block th:fragment="scriptsDefer">

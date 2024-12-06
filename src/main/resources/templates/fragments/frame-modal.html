@@ -1,0 +1,19 @@
+<!-- turbo frame handling the modal with JavaScript -->
+<turbo-frame id="frame-modal" th:fragment="frame-modal(content)">
+  <turbo-stream th:if="${content}" target="frame-modal" action="replace">
+    <template>
+      <turbo-frame id="frame-modal" th:insert="${content}"></turbo-frame>
+    </template>
+  </turbo-stream>
+</turbo-frame>
+
+<!-- the default modal component -->
+<th:block th:fragment="modal(content)">
+  <div
+    class="fixed inset-0 bg-blue-100 backdrop-blur-sm supports-backdrop-blur:bg-blue-100/[0.85] transition-opacity"
+  >
+    <div style="margin-top: calc(2rem + var(--navigation-header-height))">
+      <th:block th:insert="${content}"></th:block>
+    </div>
+  </div>
+</th:block>
