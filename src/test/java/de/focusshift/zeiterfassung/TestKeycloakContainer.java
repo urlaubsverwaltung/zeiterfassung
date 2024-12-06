@@ -12,7 +12,6 @@ public class TestKeycloakContainer extends KeycloakContainer {
     public TestKeycloakContainer() {
         super(IMAGE + ":" + VERSION);
         this.withRealmImportFiles(
-            "/docker/keycloak/export/master-realm.json",
             "/docker/keycloak/export/zeiterfassung-realm-realm.json",
             "/docker/keycloak/export/zeiterfassung-realm-users-0.json"
         );
