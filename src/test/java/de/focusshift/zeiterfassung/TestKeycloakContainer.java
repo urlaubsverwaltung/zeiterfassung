@@ -5,14 +5,13 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 
 public class TestKeycloakContainer extends KeycloakContainer {
 
-    private static final String VERSION = "25.0.6";
+    private static final String VERSION = "26.0.6";
     private static final String IMAGE = "quay.io/keycloak/keycloak";
     public static final String REALM_ZEITERFASSUNG = "zeiterfassung-realm";
 
     public TestKeycloakContainer() {
         super(IMAGE + ":" + VERSION);
         this.withRealmImportFiles(
-            "/docker/keycloak/export/master-realm.json",
             "/docker/keycloak/export/zeiterfassung-realm-realm.json",
             "/docker/keycloak/export/zeiterfassung-realm-users-0.json"
         );
