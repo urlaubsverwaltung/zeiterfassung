@@ -14,10 +14,10 @@
       <div
         th:fragment="timeentry-slot-form-content(timeEntry, actions, class)"
         th:with="rnd=${#strings.randomAlphanumeric(6)}"
-        th:object="${timeEntry}"
         class="flex flex-col-reverse md:flex-col"
         th:classappend="${class}"
       >
+        <input type="hidden" name="id" th:value="${timeEntry.id}" />
         <h4
           class="sr-only"
           th:text="${#temporals.format(timeEntry.date, 'dd. MMMM yyyy')}"
