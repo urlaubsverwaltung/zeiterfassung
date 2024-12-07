@@ -317,6 +317,7 @@
       grid-column: inherit;
 
       .time-entry-history-list__element__summary {
+        cursor: pointer;
         display: inherit;
         grid-template-columns: subgrid;
         grid-column: inherit;
