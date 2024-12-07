@@ -20,19 +20,19 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.util.StringUtils.hasText;
 
 @Component
-class TimeEntryControllerHelper {
+class TimeEntryViewHelper {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final TimeEntryService timeEntryService;
     private final UserSettingsProvider userSettingsProvider;
 
-    TimeEntryControllerHelper(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider) {
+    TimeEntryViewHelper(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider) {
         this.timeEntryService = timeEntryService;
         this.userSettingsProvider = userSettingsProvider;
     }
 
-    public void addToModel(Model model, TimeEntryDTO timeEntryDTO) {
+    public void addTimeEntryToModel(Model model, TimeEntryDTO timeEntryDTO) {
         model.addAttribute("timeEntry", timeEntryDTO);
     }
 
@@ -59,7 +59,7 @@ class TimeEntryControllerHelper {
             .build();
     }
 
-    public void saveOrUpdate(TimeEntryDTO dto, BindingResult bindingResult, Model model, OidcUser principal) {
+    public void saveTimeEntry(TimeEntryDTO dto, BindingResult bindingResult, Model model, OidcUser principal) {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("timeEntryErrorId", dto.getId());

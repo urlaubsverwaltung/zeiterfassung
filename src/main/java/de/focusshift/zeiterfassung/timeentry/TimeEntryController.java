@@ -44,15 +44,15 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private final TimeEntryService timeEntryService;
     private final UserSettingsProvider userSettingsProvider;
     private final DateFormatter dateFormatter;
-    private final TimeEntryControllerHelper timeEntryControllerHelper;
+    private final TimeEntryViewHelper viewHelper;
     private final Clock clock;
 
     public TimeEntryController(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider,
-                               DateFormatter dateFormatter, TimeEntryControllerHelper timeEntryControllerHelper, Clock clock) {
+                               DateFormatter dateFormatter, TimeEntryViewHelper viewHelper, Clock clock) {
         this.timeEntryService = timeEntryService;
         this.userSettingsProvider = userSettingsProvider;
         this.dateFormatter = dateFormatter;
-        this.timeEntryControllerHelper = timeEntryControllerHelper;
+        this.viewHelper = viewHelper;
         this.clock = clock;
     }
 
@@ -85,7 +85,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     }
 
     private String prepareTimeEntriesView(int year, int weekOfYear, Model model, OidcUser principal, Locale locale) {
-        timeEntryControllerHelper.addToModel(model, new TimeEntryDTO());
+        viewHelper.addTimeEntryToModel(model, new TimeEntryDTO());
         addTimeEntriesToModel(year, weekOfYear, model, principal, locale);
 
         return "timeentries/index";
@@ -111,7 +111,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             throw new InvalidTimeEntryException("invalid time entry. date must be set.");
         }
 
-        timeEntryControllerHelper.saveOrUpdate(timeEntryDTO, bindingResult, model, principal);
+        viewHelper.saveTimeEntry(timeEntryDTO, bindingResult, model, principal);
 
         if (bindingResult.hasErrors()) {
             addTimeEntriesToModel(year, weekOfYear, model, principal, locale);
@@ -143,7 +143,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             throw new InvalidTimeEntryException("invalid time entry. date must be set.");
         }
 
-        timeEntryControllerHelper.saveOrUpdate(timeEntryDTO, bindingResult, model, principal);
+        viewHelper.saveTimeEntry(timeEntryDTO, bindingResult, model, principal);
 
         final String viewName;
         if (bindingResult.hasErrors()) {
@@ -173,7 +173,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
                 model.addAttribute("turboEditedWeek", toTimeEntryWeekDto(timeEntryWeek, locale));
                 model.addAttribute("turboEditedDay", toTimeEntryDayDto(timeEntryDay, locale));
-                model.addAttribute("turboEditedTimeEntry", timeEntryControllerHelper.toTimeEntryDto(editedTimeEntry));
+                model.addAttribute("turboEditedTimeEntry", viewHelper.toTimeEntryDto(editedTimeEntry));
             }
             return new ModelAndView("timeentries/index::#frame-time-entry");
         } else {
@@ -215,7 +215,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
         model.addAttribute("turboEditedWeek", toTimeEntryWeekDto(timeEntryWeek, locale));
         model.addAttribute("turboEditedDay", timeEntryDay.map(entry -> toTimeEntryDayDto(entry, locale)).orElse(null));
-        model.addAttribute("turboDeletedTimeEntry", timeEntryControllerHelper.toTimeEntryDto(timeEntry));
+        model.addAttribute("turboDeletedTimeEntry", viewHelper.toTimeEntryDto(timeEntry));
 
         return "timeentries/index::#" + turboFrame;
     }
@@ -292,7 +292,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final String workedHoursShould = durationToTimeString(timeEntryDay.shouldWorkingHours().durationInMinutes());
         final Duration hoursDelta = timeEntryDay.overtime();
         final double ratio = timeEntryDay.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
-        final List<TimeEntryDTO> dayTimeEntryDtos = timeEntryDay.timeEntries().stream().map(timeEntryControllerHelper::toTimeEntryDto).toList();
+        final List<TimeEntryDTO> dayTimeEntryDtos = timeEntryDay.timeEntries().stream().map(viewHelper::toTimeEntryDto).toList();
         final List<AbsenceEntryDto> absenceEntryDtos = timeEntryDay.absences().stream()
             .map(absence -> new AbsenceEntryDto(timeEntryDay.date(), absence.label(locale), absence.color()))
             .toList();
