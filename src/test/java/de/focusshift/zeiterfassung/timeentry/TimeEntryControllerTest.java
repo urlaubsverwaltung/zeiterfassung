@@ -61,7 +61,7 @@ class TimeEntryControllerTest {
     @Mock
     private DateFormatter dateFormatter;
     @Mock
-    private TimeEntryControllerHelper timeEntryControllerHelper;
+    private TimeEntryViewHelper timeEntryControllerHelper;
 
     @BeforeEach
     void setUp() {

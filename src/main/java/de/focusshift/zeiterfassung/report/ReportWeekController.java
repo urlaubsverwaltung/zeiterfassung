@@ -39,10 +39,10 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
     private final ReportService reportService;
     private final ReportPermissionService reportPermissionService;
-    private final ReportControllerHelper helper;
+    private final ReportViewHelper helper;
     private final Clock clock;
 
-    ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService, ReportControllerHelper helper, Clock clock) {
+    ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService, ReportViewHelper helper, Clock clock) {
         this.reportService = reportService;
         this.reportPermissionService = reportPermissionService;
         this.helper = helper;
