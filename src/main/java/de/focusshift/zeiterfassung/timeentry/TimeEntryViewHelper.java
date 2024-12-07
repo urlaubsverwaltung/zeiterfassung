@@ -68,8 +68,6 @@ public class TimeEntryViewHelper {
     public void saveTimeEntry(TimeEntryDTO dto, BindingResult bindingResult, Model model, OidcUser principal) {
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("timeEntryErrorId", dto.getId());
-
             final boolean hasErrorStart = bindingResult.hasFieldErrors("start");
             final boolean hasErrorEnd = bindingResult.hasFieldErrors("end");
             final boolean hasErrorDuration = bindingResult.hasFieldErrors("value");
@@ -102,8 +100,6 @@ public class TimeEntryViewHelper {
             bindingResult.rejectValue("start", "");
             bindingResult.rejectValue("end", "");
             bindingResult.rejectValue("duration", "");
-
-            model.addAttribute("timeEntryErrorId", dto.getId());
         }
     }
 
