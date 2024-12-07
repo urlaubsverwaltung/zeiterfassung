@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME;
 import static java.time.Month.DECEMBER;
 import static java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
 import static java.time.temporal.TemporalAdjusters.previousOrSame;
@@ -93,7 +94,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     @PostMapping("/timeentries")
     public String save(
-        @Valid @ModelAttribute(name = "timeEntry") TimeEntryDTO timeEntryDTO,
+        @Valid @ModelAttribute(name = TIME_ENTRY_MODEL_NAME) TimeEntryDTO timeEntryDTO,
         BindingResult bindingResult,
         Model model, Locale locale,
         @AuthenticationPrincipal OidcUser principal,
@@ -124,7 +125,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     @PostMapping(value = "/timeentries/{id}")
     public ModelAndView update(
         @PathVariable("id") Long id,
-        @Valid @ModelAttribute(name = "timeEntry") TimeEntryDTO timeEntryDTO,
+        @Valid @ModelAttribute(name = TIME_ENTRY_MODEL_NAME) TimeEntryDTO timeEntryDTO,
         BindingResult bindingResult,
         @AuthenticationPrincipal OidcUser principal,
         @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,

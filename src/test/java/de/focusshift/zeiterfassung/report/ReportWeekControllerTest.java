@@ -5,13 +5,13 @@ import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
-import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,7 +65,7 @@ class ReportWeekControllerTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
-    private UserManagementService userManagementService;
+    private TimeEntryViewHelper timeEntryViewHelper;
     @Mock
     private MessageSource messageSource;
 
@@ -75,8 +75,8 @@ class ReportWeekControllerTest {
     void setUp() {
         final DateFormatterImpl dateFormatter = new DateFormatterImpl();
         final DateRangeFormatter dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
-        final ReportViewHelper helper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
-        sut = new ReportWeekController(reportService, reportPermissionService, helper, timeEntryService, userManagementService, clock);
+        final ReportViewHelper reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
+        sut = new ReportWeekController(reportService, reportPermissionService, timeEntryService, reportViewHelper, timeEntryViewHelper, clock);
     }
 
     @Test

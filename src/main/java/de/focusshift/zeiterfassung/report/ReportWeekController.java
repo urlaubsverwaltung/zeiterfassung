@@ -5,10 +5,11 @@ import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
-import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,10 +17,14 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.threeten.extra.YearWeek;
 
@@ -30,6 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -43,19 +49,19 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
     private final ReportService reportService;
     private final ReportPermissionService reportPermissionService;
-    private final ReportViewHelper reportViewHelper;
     private final TimeEntryService timeEntryService;
-    private final UserManagementService userManagementService;
+    private final ReportViewHelper reportViewHelper;
+    private final TimeEntryViewHelper timeEntryViewHelper;
     private final Clock clock;
 
     ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService,
-                         ReportViewHelper reportViewHelper, TimeEntryService timeEntryService,
-                         UserManagementService userManagementService, Clock clock) {
+                         TimeEntryService timeEntryService, ReportViewHelper reportViewHelper,
+                         TimeEntryViewHelper timeEntryViewHelper, Clock clock) {
         this.reportService = reportService;
         this.reportPermissionService = reportPermissionService;
-        this.reportViewHelper = reportViewHelper;
         this.timeEntryService = timeEntryService;
-        this.userManagementService = userManagementService;
+        this.reportViewHelper = reportViewHelper;
+        this.timeEntryViewHelper = timeEntryViewHelper;
         this.clock = clock;
     }
 
@@ -75,8 +81,13 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         @PathVariable("week") Integer week,
         @RequestParam(value = "everyone", required = false) Optional<String> optionalAllUsersSelected,
         @RequestParam(value = "user", required = false) Optional<List<Long>> optionalUserIds,
+        @RequestParam(value = "timeentry", required = false) Long id,
         @AuthenticationPrincipal DefaultOidcUser principal,
         Model model, Locale locale) {
+
+        if (id != null) {
+            return weeklyUserReportWithDialog(id, model);
+        }
 
         final YearWeek reportYearWeek = yearWeek(year, week)
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST));
@@ -129,27 +140,42 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return "reports/user-report";
     }
 
-    @GetMapping("/report/year/{year}/week/{week}/timeentry/{id}")
-    public String editTimeEntry(@PathVariable("year") Integer year, @PathVariable("week") Integer week, @PathVariable("id") Long id, Model model, Locale locale) {
+    @PostMapping("/report/year/{year}/week/{week}/timeentry/{timeEntryId}")
+    public ModelAndView postEditTimeEntry(
+        @PathVariable("year") Integer year,
+        @PathVariable("week") Integer week,
+        @PathVariable("timeEntryId") Long timeEntryId,
+        @Valid @ModelAttribute(name = "timeEntry") TimeEntryDTO timeEntryDTO, BindingResult errors,
+        @AuthenticationPrincipal OidcUser oidcUser,
+        RedirectAttributes redirectAttributes, Model model) {
 
-        final TimeEntry timeEntry = timeEntryService.findTimeEntry(id)
-            .orElseThrow(() -> new IllegalArgumentException("Could not find timeEntry with id=%s".formatted(id)));
+        timeEntryViewHelper.saveTimeEntry(timeEntryDTO, errors, model, oidcUser);
+        if (errors.hasErrors()) {
+            LOG.debug("validation errors occurred on editing TimeEntry via ReportWeek TimeEntry Dialog. Redirecting to Dialog.");
+            final String viewName = "redirect:/report/year/%s/week/%s?timeentry=%s".formatted(year, week, timeEntryId);
+            redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + TIME_ENTRY_MODEL_NAME, errors);
+            redirectAttributes.addFlashAttribute(TIME_ENTRY_MODEL_NAME, timeEntryDTO);
+            return new ModelAndView(viewName);
+        }
 
-//        final User user = userManagementService.findUserByLocalId(timeEntry.userIdComposite().localId())
-//            .orElseThrow(() -> new IllegalStateException("Could not find user with id=%s".formatted(timeEntry.userIdComposite())));
+        redirectAttributes.addFlashAttribute("turboVisitControlReload", true);
 
-        final TimeEntryDTO dto = TimeEntryDTO.builder()
-            // TODO this has to be transformed to the user timezone (not just mapping to system localTime same hour/minute ...)
-            .date(timeEntry.start().toLocalDate())
-            .start(timeEntry.start().toLocalTime())
-            .start(timeEntry.end().toLocalTime())
-            .duration(timeEntry.duration().toString())
-            .isBreak(timeEntry.isBreak())
-            .build();
+        return new ModelAndView("redirect:/report/year/%s/week/%s".formatted(year, week));
+    }
 
-        model.addAttribute("timeEntry", dto);
+    private String weeklyUserReportWithDialog(Long timeEntryId, Model model) {
 
-        return "reports/dialog";
+        // timeEntry could already exist in model in case of a POST-Redirect-GET after form validation errors
+        // we must not add it again, otherwise user input and BindingResult/Errors are lost.
+        if (!model.containsAttribute("timeEntry")) {
+
+            final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
+                .orElseThrow(() -> new IllegalArgumentException("Could not find timeEntry with id=%s".formatted(timeEntryId)));
+
+            timeEntryViewHelper.addTimeEntryToModel(model, timeEntry);
+        }
+
+        return "reports/user-report-edit-time-entry";
     }
 
     private ReportWeek getReportWeek(OidcUser principal, YearWeek reportYearWeek, boolean allUsersSelected, Year reportYear, List<UserLocalId> userLocalIds) {
