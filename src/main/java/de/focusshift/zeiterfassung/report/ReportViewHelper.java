@@ -35,12 +35,12 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 
 @Component
-class ReportControllerHelper {
+class ReportViewHelper {
 
     private final DateFormatter dateFormatter;
     private final DateRangeFormatter dateRangeFormatter;
 
-    ReportControllerHelper(DateFormatter dateFormatter, DateRangeFormatter dateRangeFormatter) {
+    ReportViewHelper(DateFormatter dateFormatter, DateRangeFormatter dateRangeFormatter) {
         this.dateFormatter = dateFormatter;
         this.dateRangeFormatter = dateRangeFormatter;
     }
