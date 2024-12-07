@@ -1,0 +1,8 @@
+<!-- turbo frame handling the modal with JavaScript -->
+<turbo-frame id="frame-modal" th:fragment="frame-modal(content)">
+  <turbo-stream th:if="${content}" target="frame-modal" action="replace">
+    <template>
+      <turbo-frame id="frame-modal" th:insert="${content}"></turbo-frame>
+    </template>
+  </turbo-stream>
+</turbo-frame>
