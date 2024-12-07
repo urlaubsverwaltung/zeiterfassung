@@ -42,14 +42,14 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
     private final ReportService reportService;
 
     private final DateFormatter dateFormatter;
-    private final ReportControllerHelper helper;
+    private final ReportViewHelper viewHelper;
     private final Clock clock;
     private final ReportPermissionService reportPermissionService;
 
-    ReportMonthController(ReportService reportService, ReportPermissionService reportPermissionService, DateFormatter dateFormatter, ReportControllerHelper helper, Clock clock) {
+    ReportMonthController(ReportService reportService, ReportPermissionService reportPermissionService, DateFormatter dateFormatter, ReportViewHelper viewHelper, Clock clock) {
         this.reportService = reportService;
         this.dateFormatter = dateFormatter;
-        this.helper = helper;
+        this.viewHelper = viewHelper;
         this.clock = clock;
         this.reportPermissionService = reportPermissionService;
     }
@@ -98,17 +98,17 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
 
         final int previousYear = month == 1 ? year - 1 : year;
         final int previousMonth = month == 1 ? 12 : month - 1;
-        final String previousSectionUrl = helper.createUrl(String.format("/report/year/%d/month/%d", previousYear, previousMonth), allUsersSelected, userLocalIds);
+        final String previousSectionUrl = viewHelper.createUrl(String.format("/report/year/%d/month/%d", previousYear, previousMonth), allUsersSelected, userLocalIds);
 
-        final String todaySectionUrl = helper.createUrl("/report/month", allUsersSelected, userLocalIds);
+        final String todaySectionUrl = viewHelper.createUrl("/report/month", allUsersSelected, userLocalIds);
 
         final int nextYear = month == 12 ? year + 1 : year;
         final int nextMonth = month == 12 ? 1 : month + 1;
-        final String nextSectionUrl = helper.createUrl(String.format("/report/year/%d/month/%d", nextYear, nextMonth), allUsersSelected, userLocalIds);
+        final String nextSectionUrl = viewHelper.createUrl(String.format("/report/year/%d/month/%d", nextYear, nextMonth), allUsersSelected, userLocalIds);
 
         final int selectedYear = year;
         final int selectedMonth = month;
-        final String selectedYearMonthUrl = helper.createUrl(String.format("/report/year/%d/month/%d", selectedYear, selectedMonth), allUsersSelected, userLocalIds);
+        final String selectedYearMonthUrl = viewHelper.createUrl(String.format("/report/year/%d/month/%d", selectedYear, selectedMonth), allUsersSelected, userLocalIds);
         final String csvDownloadUrl = selectedYearMonthUrl.contains("?") ? selectedYearMonthUrl + "&csv" : selectedYearMonthUrl + "?csv";
 
         model.addAttribute("userReportPreviousSectionUrl", previousSectionUrl);
@@ -118,8 +118,8 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
 
         final List<User> users = reportPermissionService.findAllPermittedUsersForCurrentUser();
 
-        helper.addUserFilterModelAttributes(model, allUsersSelected, users, userLocalIds, String.format("/report/year/%d/month/%d", year, month));
-        helper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, userLocalIds, reportMonth);
+        viewHelper.addUserFilterModelAttributes(model, allUsersSelected, users, userLocalIds, String.format("/report/year/%d/month/%d", year, month));
+        viewHelper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, userLocalIds, reportMonth);
 
         return "reports/user-report";
     }
@@ -131,7 +131,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         if (allUsersSelected) {
             reportMonth = reportService.getReportMonthForAllUsers(yearMonth);
         } else if (userLocalIds.isEmpty()) {
-            reportMonth = reportService.getReportMonth(yearMonth, helper.principalToUserId(principal));
+            reportMonth = reportService.getReportMonth(yearMonth, viewHelper.principalToUserId(principal));
         } else {
             reportMonth = reportService.getReportMonth(yearMonth, userLocalIds);
         }
@@ -142,7 +142,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
     private GraphMonthDto toGraphMonthDto(ReportMonth reportMonth) {
 
         final List<GraphWeekDto> graphWeekDtos = reportMonth.weeks().stream()
-            .map(reportWeek -> helper.toGraphWeekDto(reportWeek, reportMonth.yearMonth().getMonth()))
+            .map(reportWeek -> viewHelper.toGraphWeekDto(reportWeek, reportMonth.yearMonth().getMonth()))
             .toList();
 
         final String yearMonth = dateFormatter.formatYearMonth(reportMonth.yearMonth());
@@ -170,7 +170,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
 
         final List<DetailWeekDto> weeks = reportMonth.weeks()
             .stream()
-            .map(week -> helper.toDetailWeekDto(week, reportMonth.yearMonth().getMonth(), locale))
+            .map(week -> viewHelper.toDetailWeekDto(week, reportMonth.yearMonth().getMonth(), locale))
             .toList();
 
         final String yearMonth = dateFormatter.formatYearMonth(reportMonth.yearMonth());
