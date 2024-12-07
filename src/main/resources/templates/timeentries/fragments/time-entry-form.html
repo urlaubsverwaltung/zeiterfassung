@@ -18,6 +18,7 @@
         class="flex flex-col-reverse md:flex-col"
         th:classappend="${class}"
       >
+        <input type="hidden" th:field="*{id}" />
         <h4
           class="sr-only"
           th:text="${#temporals.format(timeEntry.date, 'dd. MMMM yyyy')}"
@@ -99,7 +100,7 @@
                       id="input-entry-comment"
                       th:id="|${rnd}-input-entry-comment|"
                       name="comment"
-                      th:value="${timeEntry.comment}"
+                      th:field="*{comment}"
                       placeholder="Woran arbeitest du gerade?"
                       th:placeholder="#{time-entry.form.comment.input.placeholder}"
                       class="border border-gray-200"
@@ -118,17 +119,16 @@
                       id="input-entry-from"
                       th:id="|${rnd}-input-entry-from|"
                       name="start"
-                      th:value="${timeEntry.start}"
+                      th:field="*{start}"
                       placeholder="Von"
                       th:placeholder="#{time-entry.form.start.input.placeholder}"
                       class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
+                      th:errorclass="border-red-600"
                     />
                     <label
                       for="input-entry-from"
                       th:for="|${rnd}-input-entry-from|"
                       class="peer-invalid:text-red-600"
-                      th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
                       th:text="#{time-entry.form.start.label}"
                     >
                       Von
@@ -140,17 +140,16 @@
                       id="input-entry-to"
                       th:id="|${rnd}-input-entry-to|"
                       name="end"
-                      th:value="${timeEntry.end}"
+                      th:field="*{end}"
                       placeholder="Bis"
                       th:placeholder="#{time-entry.form.end.input.placeholder}"
                       class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
+                      th:errorclass="border-red-600"
                     />
                     <label
                       for="input-entry-to"
                       th:for="|${rnd}-input-entry-to|"
                       class="peer-invalid:text-red-600"
-                      th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
                       th:text="#{time-entry.form.end.label}"
                     >
                       Bis
@@ -163,17 +162,16 @@
                       id="input-entry-duration"
                       th:id="|${rnd}-input-entry-duration|"
                       name="duration"
-                      th:value="${timeEntry.duration}"
+                      th:field="*{duration}"
                       placeholder="hh:mm"
                       th:placeholder="#{time-entry.form.duration.input.placeholder}"
                       class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
+                      th:errorclass="border-red-600"
                     />
                     <label
                       for="input-entry-duration"
                       th:for="|${rnd}-input-entry-duration|"
                       class="peer-invalid:text-red-600"
-                      th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
                       th:text="#{time-entry.form.duration.label}"
                     >
                       Dauer
@@ -185,8 +183,7 @@
                         type="checkbox"
                         id="input-entry-is-break"
                         th:id="|${rnd}-input-entry-is-break|"
-                        name="break"
-                        th:checked="${timeEntry.isBreak}"
+                        th:field="*{break}"
                         class="peer mt-0.5"
                       />
                     </span>
