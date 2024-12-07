@@ -67,7 +67,7 @@ class ReportWeekControllerTest {
     void setUp() {
         final DateFormatterImpl dateFormatter = new DateFormatterImpl();
         final DateRangeFormatter dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
-        final ReportControllerHelper helper = new ReportControllerHelper(dateFormatter, dateRangeFormatter);
+        final ReportViewHelper helper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
         sut = new ReportWeekController(reportService, reportPermissionService, helper, clock);
     }
 
