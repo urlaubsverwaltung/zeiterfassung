@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -97,6 +98,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         @Valid @ModelAttribute(name = TIME_ENTRY_MODEL_NAME) TimeEntryDTO timeEntryDTO,
         BindingResult bindingResult,
         Model model, Locale locale,
+        RedirectAttributes redirectAttributes,
         @AuthenticationPrincipal OidcUser principal,
         HttpServletRequest request
     ) throws InvalidTimeEntryException {
@@ -112,7 +114,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             throw new InvalidTimeEntryException("invalid time entry. date must be set.");
         }
 
-        viewHelper.saveTimeEntry(timeEntryDTO, bindingResult, model, principal);
+        viewHelper.saveTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes, principal);
 
         if (bindingResult.hasErrors()) {
             addTimeEntriesToModel(year, weekOfYear, model, principal, locale);
@@ -130,6 +132,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         @AuthenticationPrincipal OidcUser principal,
         @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
         Model model, Locale locale,
+        RedirectAttributes redirectAttributes,
         HttpServletRequest request
     ) throws InvalidTimeEntryException {
 
@@ -144,7 +147,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             throw new InvalidTimeEntryException("invalid time entry. date must be set.");
         }
 
-        viewHelper.saveTimeEntry(timeEntryDTO, bindingResult, model, principal);
+        viewHelper.saveTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes, principal);
 
         final String viewName;
         if (bindingResult.hasErrors()) {
