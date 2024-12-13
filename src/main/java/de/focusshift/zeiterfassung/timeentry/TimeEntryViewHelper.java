@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -65,7 +66,7 @@ public class TimeEntryViewHelper {
             .build();
     }
 
-    public void saveTimeEntry(TimeEntryDTO dto, BindingResult bindingResult, Model model, OidcUser principal) {
+    public void saveTimeEntry(TimeEntryDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes, OidcUser principal) {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("timeEntryErrorId", dto.getId());
@@ -81,6 +82,9 @@ public class TimeEntryViewHelper {
             } else if (!hasErrorStart && hasErrorEnd && hasErrorDuration) {
                 bindingResult.reject("time-entry.validation.endOrDuration.required");
             }
+
+            redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + TIME_ENTRY_MODEL_NAME, bindingResult);
+            redirectAttributes.addFlashAttribute(TIME_ENTRY_MODEL_NAME, dto);
 
             return;
         }
@@ -104,6 +108,9 @@ public class TimeEntryViewHelper {
             bindingResult.rejectValue("duration", "");
 
             model.addAttribute("timeEntryErrorId", dto.getId());
+
+            redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + TIME_ENTRY_MODEL_NAME, bindingResult);
+            redirectAttributes.addFlashAttribute(TIME_ENTRY_MODEL_NAME, dto);
         }
     }
 
