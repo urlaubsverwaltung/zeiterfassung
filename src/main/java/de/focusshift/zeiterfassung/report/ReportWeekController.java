@@ -2,10 +2,8 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
-import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryEditModalHelper;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,7 +33,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import static de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.ScrollPreservation.PRESERVE;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_REFRESH_SCROLL_ATTRIBUTE;
 import static java.lang.String.format;
@@ -51,19 +48,17 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
     private final ReportService reportService;
     private final ReportPermissionService reportPermissionService;
-    private final TimeEntryService timeEntryService;
     private final ReportViewHelper reportViewHelper;
-    private final TimeEntryViewHelper timeEntryViewHelper;
+    private final TimeEntryEditModalHelper timeEntryEditModalHelper;
     private final Clock clock;
 
     ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService,
-                         TimeEntryService timeEntryService, ReportViewHelper reportViewHelper,
-                         TimeEntryViewHelper timeEntryViewHelper, Clock clock) {
+                         ReportViewHelper reportViewHelper, TimeEntryEditModalHelper timeEntryEditModalHelper,
+                         Clock clock) {
         this.reportService = reportService;
         this.reportPermissionService = reportPermissionService;
-        this.timeEntryService = timeEntryService;
         this.reportViewHelper = reportViewHelper;
-        this.timeEntryViewHelper = timeEntryViewHelper;
+        this.timeEntryEditModalHelper = timeEntryEditModalHelper;
         this.clock = clock;
     }
 
@@ -147,16 +142,14 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         @PathVariable("year") Integer year,
         @PathVariable("week") Integer week,
         @Valid @ModelAttribute(name = "timeEntry") TimeEntryDTO timeEntryDTO, BindingResult errors,
+        Model model,
         @AuthenticationPrincipal OidcUser oidcUser,
-        RedirectAttributes redirectAttributes, Model model) {
+        RedirectAttributes redirectAttributes) {
 
-        timeEntryViewHelper.saveTimeEntry(timeEntryDTO, errors, model, oidcUser);
+        timeEntryEditModalHelper.saveTimeEntry(timeEntryDTO, errors, model, redirectAttributes, oidcUser);
         if (errors.hasErrors()) {
             LOG.debug("validation errors occurred on editing TimeEntry via ReportWeek TimeEntry Dialog. Redirecting to Dialog.");
-            final String viewName = "redirect:/report/year/%s/week/%s?timeentry=%s".formatted(year, week, timeEntryDTO.getId());
-            redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + TIME_ENTRY_MODEL_NAME, errors);
-            redirectAttributes.addFlashAttribute(TIME_ENTRY_MODEL_NAME, timeEntryDTO);
-            return new ModelAndView(viewName);
+            return new ModelAndView("redirect:/report/year/%s/week/%s?timeentry=%s".formatted(year, week, timeEntryDTO.getId()));
         }
 
         // preserve scroll position after editing a timeEntry
@@ -166,17 +159,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     }
 
     private String weeklyUserReportWithDialog(Long timeEntryId, Model model) {
-
-        // timeEntry could already exist in model in case of a POST-Redirect-GET after form validation errors
-        // we must not add it again, otherwise user input and BindingResult/Errors are lost.
-        if (!model.containsAttribute("timeEntry")) {
-
-            final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
-                .orElseThrow(() -> new IllegalArgumentException("Could not find timeEntry with id=%s".formatted(timeEntryId)));
-
-            timeEntryViewHelper.addTimeEntryToModel(model, timeEntry);
-        }
-
+        timeEntryEditModalHelper.addTimeEntryEditToModel(model, timeEntryId);
         return "reports/user-report-edit-time-entry";
     }
 
