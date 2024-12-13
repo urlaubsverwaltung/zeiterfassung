@@ -72,6 +72,12 @@
     />
     <meta name="msapplication-TileColor" content="#5bbad5" />
     <meta name="theme-color" content="#ffffff" />
+    <meta
+      th:if="${turboRefreshScroll}"
+      name="turbo-refresh-scroll"
+      content="reset"
+      th:content="${turboRefreshScroll.value}"
+    />
 
     <link rel="stylesheet" type="text/css" th:href="@{/1-base.css}" />
     <link rel="stylesheet" type="text/css" th:href="@{/2-components.css}" />
@@ -106,6 +112,7 @@
     <div th:replace="~{fragments/feedback-form::feedback}"></div>
 
     <div id="body-overlay" class="body-overlay"></div>
+    <th:block th:replace="~{/fragments/modal/frame::frame-modal(~{})}"></th:block>
 
     <script>
       (function () {

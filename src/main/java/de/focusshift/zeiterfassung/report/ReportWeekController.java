@@ -36,6 +36,8 @@ import java.util.Locale;
 import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.ScrollPreservation.PRESERVE;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_REFRESH_SCROLL_ATTRIBUTE;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -140,11 +142,10 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return "reports/user-report";
     }
 
-    @PostMapping("/report/year/{year}/week/{week}/timeentry/{timeEntryId}")
+    @PostMapping("/report/year/{year}/week/{week}")
     public ModelAndView postEditTimeEntry(
         @PathVariable("year") Integer year,
         @PathVariable("week") Integer week,
-        @PathVariable("timeEntryId") Long timeEntryId,
         @Valid @ModelAttribute(name = "timeEntry") TimeEntryDTO timeEntryDTO, BindingResult errors,
         @AuthenticationPrincipal OidcUser oidcUser,
         RedirectAttributes redirectAttributes, Model model) {
@@ -152,13 +153,14 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         timeEntryViewHelper.saveTimeEntry(timeEntryDTO, errors, model, oidcUser);
         if (errors.hasErrors()) {
             LOG.debug("validation errors occurred on editing TimeEntry via ReportWeek TimeEntry Dialog. Redirecting to Dialog.");
-            final String viewName = "redirect:/report/year/%s/week/%s?timeentry=%s".formatted(year, week, timeEntryId);
+            final String viewName = "redirect:/report/year/%s/week/%s?timeentry=%s".formatted(year, week, timeEntryDTO.getId());
             redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + TIME_ENTRY_MODEL_NAME, errors);
             redirectAttributes.addFlashAttribute(TIME_ENTRY_MODEL_NAME, timeEntryDTO);
             return new ModelAndView(viewName);
         }
 
-        redirectAttributes.addFlashAttribute("turboVisitControlReload", true);
+        // preserve scroll position after editing a timeEntry
+        redirectAttributes.addFlashAttribute(TURBO_REFRESH_SCROLL_ATTRIBUTE, PRESERVE);
 
         return new ModelAndView("redirect:/report/year/%s/week/%s".formatted(year, week));
     }

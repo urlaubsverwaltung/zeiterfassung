@@ -21,179 +21,172 @@
         <div
           class="mx-auto w-full max-w-screen-lg 2xl:max-w-screen-3xl space-y-8"
         >
-          <div
-            th:ref="dialog"
-            class="relative border-4 border-gray-400 rounded-xl overflow-hidden h-full bg-white"
-          >
-            <div class="px-4 relative">
-              <div
-                class="bg-gradient-to-b from-gray-200 via-gray-50 to-white absolute left-0 right-0 top-0 h-3/5"
-              ></div>
-              <div
-                class="px-4 py-1 relative rounded-t-xl flex flex-col items-center"
-              >
-                <h1 class="text-sm font-bold text-gray-500">
-                  Zeitslot bearbeiten
-                </h1>
-                <div class="mt-4 flex flex-col items-center">
-                  <div class="text-blue-200">
-                    <svg
-                      th:replace="~{/fragments/avatar::avatar-bordered(fullName='Max Mustermann',width=54,height=54)}"
-                    ></svg>
-                  </div>
-                  <div class="font-bold text-gray-500">Max Mustermann</div>
-                </div>
-              </div>
-              <form
-                th:action="@{/report/year/{year}/week/{week} (year=${year}, week=${week})}"
-                method="get"
-                class="absolute right-2 top-1"
-              >
-                <button
-                  class="rounded-full p-0.5 border border-gray-400 bg-gray-100 text-gray-500"
-                >
-                  <svg
-                    th:replace="~{icons/plus::svg(className='w-4 h-4 rotate-45')}"
-                  ></svg>
-                  <span class="sr-only">Schließen</span>
-                </button>
-              </form>
-            </div>
-            <div class="mt-4 p-4">
-              <form
-                is="z-time-entry-slot-form"
-                action="#"
-                th:action="@{/report/year/{year}/week/{week}/timeentry/{id} (year=${year}, week=${week}, id=${timeEntry.id})}"
-                method="post"
-                data-turbo="true"
-                data-turbo-frame="_top"
-              >
-                <div>
-                  <div
-                    th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new')}"
-                  ></div>
-                </div>
-                <div class="mt-8 flex justify-end gap-2">
-                  <button type="submit" class="button-primary">
-                    Speichern
-                  </button>
-                  <button
-                    type="reset"
-                    formmethod="dialog"
-                    class="button-secondary"
-                  >
-                    Zurücksetzen
-                  </button>
-                </div>
-              </form>
-              <div class="mt-8">
-                <div
-                  class="bg-gradient-to-r from-blue-200 to-blue-100 p-4 rounded-t-3xl"
-                >
-                  <div class="flex justify-between items-end">
-                    <div class="flex gap-2">
-                      <svg
-                        th:replace="~{icons/gallery-vertical-end::svg(className='w-6 h-6')}"
-                      ></svg>
-                      <h2 class="text-lg font-bold">Historie</h2>
+          <th:block th:replace="~{/fragments/modal/frame::frame-modal(~{::dialog-content})}">
+            <th:block th:ref="dialog-content">
+              <th:block th:replace="~{fragments/modal/modal::modal-centered(~{::modal-content})}">
+                <th:block th:ref="modal-content">
+                  <div class="px-4 relative">
+                    <div
+                      class="bg-gradient-to-b from-gray-200 via-gray-50 to-white absolute left-0 right-0 top-0 h-3/5"
+                    ></div>
+                    <div
+                      class="px-4 py-1 relative rounded-t-xl flex flex-col items-center"
+                    >
+                      <h1 class="text-sm font-bold text-gray-500">
+                        Zeitslot bearbeiten
+                      </h1>
+                      <div class="mt-4 flex flex-col items-center">
+                        <div class="text-blue-200">
+                          <svg
+                            th:replace="~{/fragments/avatar::avatar-bordered(fullName='Max Mustermann',width=54,height=54)}"
+                          ></svg>
+                        </div>
+                        <div class="font-bold text-gray-500">Max Mustermann</div>
+                      </div>
                     </div>
-                    <p class="text-sm">
-                      alle <a href="#" class="underline">öffnen</a> /
-                      <a href="#" class="underline">schließen</a>
-                    </p>
+                    <form
+                      th:action="@{/report/year/{year}/week/{week} (year=${year}, week=${week})}"
+                      method="get"
+                      class="absolute right-2 top-1"
+                      data-turbo-frame="_top"
+                      data-turbo-action="replace"
+                      data-modal-close-button
+                    >
+                      <button
+                        type="submit"
+                        class="rounded-full p-0.5 border border-gray-400 bg-gray-100 text-gray-500"
+                      >
+                        <svg
+                          th:replace="~{icons/plus::svg(className='w-4 h-4 rotate-45')}"
+                        ></svg>
+                        <span class="sr-only">Schließen</span>
+                      </button>
+                    </form>
                   </div>
-                </div>
-                <div
-                  class="border border-t-0 border-gray-200 rounded-b-3xl p-4"
-                >
-                  <!-- TODO history  -->
-                  <ul class="time-entry-history-list">
-                    <li class="time-entry-history-list__element">
-                      <div class="time-entry-history-list__element__details">
-                        <div class="time-entry-history-list__element__summary">
-                          <svg
-                            th:replace="~{icons/chevron-right::svg(className='w-5 h-5 text-blue-400')}"
-                          ></svg>
-                          <span>Montag, 02. Dezember 2024 10:06 Uhr</span>
-                          <span>bearbeitet von</span>
-                          <span>Luisa Müller</span>
-                          <span><!-- empty for now --></span>
-                        </div>
-                        <div class="time-entry-history-list__element__content">
-                          <div
-                            th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${timeEntry}, actions=null, class='timeslot-form-existing')}"
-                          ></div>
+                  <div class="mt-4 p-4">
+                    <form
+                      is="z-time-entry-slot-form"
+                      action="#"
+                      th:action="@{/report/year/{year}/week/{week} (year=${year}, week=${week})}"
+                      method="post"
+                      data-turbo-frame="_top"
+                      data-turbo-action="replace"
+                    >
+                      <div>
+                        <div
+                          th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new')}"
+                        ></div>
+                      </div>
+                      <div class="mt-8 flex justify-end gap-2">
+                        <button type="submit" class="button-primary">
+                          Speichern
+                        </button>
+                        <button
+                          type="reset"
+                          formmethod="dialog"
+                          class="button-secondary"
+                        >
+                          Zurücksetzen
+                        </button>
+                      </div>
+                    </form>
+                    <div class="mt-8">
+                      <div
+                        class="bg-gradient-to-r from-blue-200 to-blue-100 p-4 rounded-t-3xl"
+                      >
+                        <div class="flex justify-between items-end">
+                          <div class="flex gap-2">
+                            <svg
+                              th:replace="~{icons/gallery-vertical-end::svg(className='w-6 h-6')}"
+                            ></svg>
+                            <h2 class="text-lg font-bold">Historie</h2>
+                          </div>
+                          <p class="text-sm">
+                            alle <a href="#" class="underline">öffnen</a> /
+                            <a href="#" class="underline">schließen</a>
+                          </p>
                         </div>
                       </div>
-                    </li>
-                    <li class="time-entry-history-list__element">
-                      <div class="time-entry-history-list__element__details">
-                        <div class="time-entry-history-list__element__summary">
-                          <svg
-                            th:replace="~{icons/chevron-right::svg(className='w-5 h-5 text-blue-400')}"
-                          ></svg>
-                          <span>Montag, 02. Dezember 2024 10:06 Uhr</span>
-                          <span>bearbeitet von</span>
-                          <span>Luisa Müller</span>
-                          <span><!-- empty for now --></span>
-                        </div>
-                        <div class="time-entry-history-list__element__content">
-                          <div
-                            th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${timeEntry}, actions=null, class='timeslot-form-existing')}"
-                          ></div>
-                        </div>
+                      <div
+                        class="border border-t-0 border-gray-200 rounded-b-3xl p-4"
+                      >
+                        <!-- TODO history  -->
+                        <ul class="time-entry-history-list">
+                          <li class="time-entry-history-list__element">
+                            <div class="time-entry-history-list__element__details">
+                              <div class="time-entry-history-list__element__summary">
+                                <svg
+                                  th:replace="~{icons/chevron-right::svg(className='w-5 h-5 text-blue-400')}"
+                                ></svg>
+                                <span>Montag, 02. Dezember 2024 10:06 Uhr</span>
+                                <span>bearbeitet von</span>
+                                <span>Luisa Müller</span>
+                                <span><!-- empty for now --></span>
+                              </div>
+                              <div class="time-entry-history-list__element__content">
+                                <div
+                                  th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${timeEntry}, actions=null, class='timeslot-form-existing')}"
+                                ></div>
+                              </div>
+                            </div>
+                          </li>
+                          <li class="time-entry-history-list__element">
+                            <div class="time-entry-history-list__element__details">
+                              <div class="time-entry-history-list__element__summary">
+                                <svg
+                                  th:replace="~{icons/chevron-right::svg(className='w-5 h-5 text-blue-400')}"
+                                ></svg>
+                                <span>Montag, 02. Dezember 2024 10:06 Uhr</span>
+                                <span>bearbeitet von</span>
+                                <span>Luisa Müller</span>
+                                <span><!-- empty for now --></span>
+                              </div>
+                              <div class="time-entry-history-list__element__content">
+                                <div
+                                  th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${timeEntry}, actions=null, class='timeslot-form-existing')}"
+                                ></div>
+                              </div>
+                            </div>
+                          </li>
+                          <li class="time-entry-history-list__element">
+                            <div class="time-entry-history-list__element__details">
+                              <div class="time-entry-history-list__element__summary">
+                                <svg
+                                  th:replace="~{icons/chevron-right::svg(className='w-5 h-5 text-blue-400')}"
+                                ></svg>
+                                <span>Montag, 02. Dezember 2024 10:06 Uhr</span>
+                                <span>bearbeitet von</span>
+                                <span>Luisa Müller</span>
+                                <span><!-- empty for now --></span>
+                              </div>
+                              <div class="time-entry-history-list__element__content">
+                                <div
+                                  th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${timeEntry}, actions=null, class='timeslot-form-existing')}"
+                                ></div>
+                              </div>
+                            </div>
+                          </li>
+                        </ul>
                       </div>
-                    </li>
-                    <li class="time-entry-history-list__element">
-                      <div class="time-entry-history-list__element__details">
-                        <div class="time-entry-history-list__element__summary">
-                          <svg
-                            th:replace="~{icons/chevron-right::svg(className='w-5 h-5 text-blue-400')}"
-                          ></svg>
-                          <span>Montag, 02. Dezember 2024 10:06 Uhr</span>
-                          <span>bearbeitet von</span>
-                          <span>Luisa Müller</span>
-                          <span><!-- empty for now --></span>
-                        </div>
-                        <div class="time-entry-history-list__element__content">
-                          <div
-                            th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${timeEntry}, actions=null, class='timeslot-form-existing')}"
-                          ></div>
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <form
-                action="#"
-                th:action="@{/report/year/{year}/week/{week} (year=${year}, week=${week})}"
-                method="get"
-                class="mt-8 flex justify-end gap-2"
-              >
-                <button class="button-secondary">Dialog schließen</button>
-              </form>
-            </div>
-          </div>
+                    </div>
+                    <form
+                      action="#"
+                      th:action="@{/report/year/{year}/week/{week} (year=${year}, week=${week})}"
+                      method="get"
+                      class="mt-8 flex justify-end gap-2"
+                      data-turbo-frame="_top"
+                      data-turbo-action="replace"
+                      data-modal-close-button
+                    >
+                      <button type="submit" class="button-secondary">Dialog schließen</button>
+                    </form>
+                  </div>
+                </th:block>
+              </th:block>
+            </th:block>
+          </th:block>
         </div>
       </main>
-    </th:block>
-
-    <th:block th:ref="turbo-modal">
-      <th:block
-        th:replace="~{/fragments/modal/frame::frame-modal(~{::frame-content})}"
-      >
-        <th:block
-          th:ref="frame-content"
-          th:replace="~{/fragments/modal/modal::modal-centered(~{::modal-content})}"
-        >
-          <th:block th:ref="modal-content">
-            <dialog open>
-              <th:block th:replace="~{::dialog}"></th:block>
-            </dialog>
-          </th:block>
-        </th:block>
-      </th:block>
     </th:block>
   </body>
 </html>

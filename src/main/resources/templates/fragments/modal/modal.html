@@ -1,10 +1,10 @@
 <!-- the default modal component -->
 <th:block th:fragment="modal-centered(content)">
-  <div
-    class="fixed inset-0 bg-blue-100 backdrop-blur-sm supports-backdrop-blur:bg-blue-100/[0.85] transition-opacity"
-  >
-    <div style="margin-top: calc(2rem + var(--navigation-header-height))">
-      <th:block th:insert="${content}"></th:block>
+  <div class="modal-overlay-background">
+    <div class="modal-alignment">
+      <div class="modal">
+        <th:block th:replace="${content}"></th:block>
+      </div>
     </div>
   </div>
 </th:block>
