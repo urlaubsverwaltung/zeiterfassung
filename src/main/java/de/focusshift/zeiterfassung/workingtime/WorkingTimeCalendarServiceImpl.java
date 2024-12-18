@@ -11,6 +11,7 @@ import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -76,8 +77,8 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
 
             final Map<LocalDate, List<Absence>> absencesByDate = new HashMap<>();
             for (Absence absence : absencesByUser.get(userIdComposite)) {
-                ZonedDateTime date = absence.startDate();
-                while (!date.isAfter(absence.endDate())) {
+                ZonedDateTime date = absence.startDate().withZoneSameInstant(ZoneId.of("UTC"));
+                while (!date.isAfter(absence.endDate().withZoneSameInstant(ZoneId.of("UTC")))) {
                     absencesByDate.computeIfAbsent(date.toLocalDate(), unused -> new ArrayList<>()).add(absence);
                     date = date.plusDays(1);
                 }
