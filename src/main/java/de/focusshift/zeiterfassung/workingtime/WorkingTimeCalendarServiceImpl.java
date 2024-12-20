@@ -10,8 +10,8 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
 
+import static java.time.ZoneOffset.UTC;
+import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 @Component
@@ -76,10 +78,10 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
 
             final Map<LocalDate, List<Absence>> absencesByDate = new HashMap<>();
             for (Absence absence : absencesByUser.get(userIdComposite)) {
-                ZonedDateTime date = absence.startDate();
+                Instant date = absence.startDate();
                 while (!date.isAfter(absence.endDate())) {
-                    absencesByDate.computeIfAbsent(date.toLocalDate(), unused -> new ArrayList<>()).add(absence);
-                    date = date.plusDays(1);
+                    absencesByDate.computeIfAbsent(LocalDate.ofInstant(date, UTC), unused -> new ArrayList<>()).add(absence);
+                    date = date.plus(1, DAYS);
                 }
             }
 

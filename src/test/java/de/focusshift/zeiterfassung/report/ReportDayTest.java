@@ -15,6 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -133,7 +134,7 @@ class ReportDayTest {
 
         final ZonedDateTime from = dateTime(2021, 1, 4, 1, 0);
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
-        final Absence absence = new Absence(batmanId, from, to, FULL, locale -> "foo", RED, HOLIDAY);
+        final Absence absence = new Absence(batmanId, from.toInstant(), to.toInstant(), FULL, locale -> "foo", RED, HOLIDAY);
 
         final LocalDate reportDate = LocalDate.of(2021, 1, 4);
         final WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of(reportDate, List.of(absence)));
@@ -151,8 +152,8 @@ class ReportDayTest {
         final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
         final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
 
-        final ZonedDateTime from = dateTime(2021, 1, 4, 1, 0);
-        final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
+        final Instant from = dateTime(2021, 1, 4, 1, 0).toInstant();
+        final Instant to = dateTime(2021, 1, 4, 2, 0).toInstant();
         final Absence absence = new Absence(batmanId, from, to, dayLength, locale -> "foo", RED, HOLIDAY);
 
         final LocalDate reportDate = LocalDate.of(2021, 1, 4);
@@ -172,7 +173,7 @@ class ReportDayTest {
 
         final ZonedDateTime from = dateTime(2021, 1, 4, 1, 0);
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
-        final Absence absence = new Absence(batmanId, from, to, FULL, locale -> "foo", RED, HOLIDAY);
+        final Absence absence = new Absence(batmanId, from.toInstant(), to.toInstant(), FULL, locale -> "foo", RED, HOLIDAY);
 
         final UserId robinId = new UserId("uuid2");
         final UserLocalId robinLocalId = new UserLocalId(1337L);
@@ -206,7 +207,7 @@ class ReportDayTest {
 
         final ZonedDateTime from = dateTime(2021, 1, 4, 1, 0);
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
-        final Absence absence = new Absence(batmanId, from, to, dayLength, locale -> "foo", RED, HOLIDAY);
+        final Absence absence = new Absence(batmanId, from.toInstant(), to.toInstant(), dayLength, locale -> "foo", RED, HOLIDAY);
 
         final UserId robinId = new UserId("uuid2");
         final UserLocalId robinLocalId = new UserLocalId(1337L);

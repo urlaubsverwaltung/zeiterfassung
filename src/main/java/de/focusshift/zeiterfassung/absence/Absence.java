@@ -2,7 +2,7 @@ package de.focusshift.zeiterfassung.absence;
 
 import de.focusshift.zeiterfassung.user.UserId;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
@@ -20,8 +20,8 @@ import java.util.function.Function;
  */
 public record Absence(
     UserId userId,
-    ZonedDateTime startDate,
-    ZonedDateTime endDate,
+    Instant startDate,
+    Instant endDate,
     DayLength dayLength,
     Function<Locale, String> label,
     AbsenceColor color,
