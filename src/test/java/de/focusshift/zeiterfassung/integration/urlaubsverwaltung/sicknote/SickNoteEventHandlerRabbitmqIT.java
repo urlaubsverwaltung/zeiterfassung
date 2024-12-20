@@ -30,7 +30,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -120,8 +120,7 @@ class SickNoteEventHandlerRabbitmqIT extends SingleTenantTestContainersBase {
         final Function<Locale, String> anyLabel = locale -> "";
 
         await().untilAsserted(() -> {
-            final ZonedDateTime start = ZonedDateTime.ofInstant(startOfDay, ZONE_ID);
-            final Absence expected = new Absence(userId, start, start, FULL, anyLabel, RED, SICK);
+            final Absence expected = new Absence(userId, startOfDay, startOfDay, FULL, anyLabel, RED, SICK);
             final Map<LocalDate, List<Absence>> absences = absenceService.findAllAbsences(userId, startOfDay, startOfNextDay);
             assertThat(absences)
                 .hasSize(1)
@@ -147,8 +146,7 @@ class SickNoteEventHandlerRabbitmqIT extends SingleTenantTestContainersBase {
             .build());
 
         await().untilAsserted(() -> {
-            final ZonedDateTime start = ZonedDateTime.ofInstant(startOfDay, ZONE_ID);
-            final Absence expected = new Absence(userId, start, start.plusDays(1), FULL, anyLabel, RED, SICK);
+            final Absence expected = new Absence(userId, startOfDay, startOfDay.plus(1, ChronoUnit.DAYS), FULL, anyLabel, RED, SICK);
             final Map<LocalDate, List<Absence>> absences = absenceService.findAllAbsences(userId, startOfDay, startOfNextDay);
             assertThat(absences)
                 .hasSize(2)

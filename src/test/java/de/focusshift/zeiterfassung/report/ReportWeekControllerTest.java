@@ -166,8 +166,8 @@ class ReportWeekControllerTest {
         final LocalDate absenceDate = LocalDate.of(2023, 2, 3);
         Absence absence = new Absence(
                 user.userId(),
-                absenceDate.atStartOfDay(UTC),
-                absenceDate.atStartOfDay(UTC),
+                absenceDate.atStartOfDay(UTC).toInstant(),
+                absenceDate.atStartOfDay(UTC).toInstant(),
                 DayLength.FULL,
                 locale -> "absence-full-de",
                 ORANGE,

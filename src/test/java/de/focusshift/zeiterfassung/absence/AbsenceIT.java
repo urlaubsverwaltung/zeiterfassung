@@ -25,7 +25,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -130,7 +129,7 @@ class AbsenceIT extends SingleTenantTestContainersBase {
 
         final UserId userId = new UserId("boss");
         final Function<Locale, String> anyLabel = locale -> "";
-        final Absence expectedAbsence = new Absence(userId, ZonedDateTime.ofInstant(startOfDay, UTC), ZonedDateTime.ofInstant(startOfDay, ZONE_ID), DayLength.FULL, anyLabel, erholungsUrlaubColor, erholungsurlaubCategory);
+        final Absence expectedAbsence = new Absence(userId, startOfDay, startOfDay, DayLength.FULL, anyLabel, erholungsUrlaubColor, erholungsurlaubCategory);
 
         await().untilAsserted(() -> {
             final Map<LocalDate, List<Absence>> absences = absenceService.findAllAbsences(userId, startOfDay, startOfNextDay);

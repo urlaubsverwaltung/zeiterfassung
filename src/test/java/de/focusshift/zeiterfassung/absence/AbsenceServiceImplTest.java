@@ -39,6 +39,7 @@ import static de.focusshift.zeiterfassung.absence.DayLength.FULL;
 import static de.focusshift.zeiterfassung.absence.DayLength.MORNING;
 import static de.focusshift.zeiterfassung.absence.DayLength.NOON;
 import static java.time.ZoneOffset.UTC;
+import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.Locale.ENGLISH;
 import static java.util.Locale.GERMAN;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,9 +69,9 @@ class AbsenceServiceImplTest {
     @Test
     void ensureFindAllAbsences() {
 
-        final ZonedDateTime today = LocalDate.now().atStartOfDay(UTC);
-        final Instant startDate = today.toInstant();
-        final Instant endDateExclusive = today.plusWeeks(1).toInstant();
+        final Instant today = Instant.now();
+        final Instant startDate = today;
+        final Instant endDateExclusive = today.plus(7, DAYS);
 
         final ZoneId berlin = ZoneId.of("Europe/Berlin");
         when(userSettingsProvider.zoneId()).thenReturn(berlin);
@@ -78,16 +79,16 @@ class AbsenceServiceImplTest {
         final AbsenceWriteEntity entity_1 = new AbsenceWriteEntity();
         entity_1.setId(1L);
         entity_1.setUserId("user");
-        entity_1.setStartDate(today.plusDays(1).toInstant());
-        entity_1.setEndDate(today.plusDays(2).toInstant());
+        entity_1.setStartDate(today.plus(1, DAYS));
+        entity_1.setEndDate(today.plus(2, DAYS));
         entity_1.setDayLength(FULL);
         entity_1.setType(new AbsenceTypeEntityEmbeddable(HOLIDAY, 1000L));
 
         final AbsenceWriteEntity entity_2 = new AbsenceWriteEntity();
         entity_2.setId(2L);
         entity_2.setUserId("user");
-        entity_2.setStartDate(today.plusDays(4).toInstant());
-        entity_2.setEndDate(today.plusDays(4).toInstant());
+        entity_2.setStartDate(today.plus(4, DAYS));
+        entity_2.setEndDate(today.plus(4, DAYS));
         entity_2.setDayLength(MORNING);
         entity_2.setType(new AbsenceTypeEntityEmbeddable(SPECIALLEAVE, 2000L));
 
@@ -103,8 +104,8 @@ class AbsenceServiceImplTest {
         final Function<Locale, String> anyLabel = locale -> "";
         final Absence expectedAbsence_1 = new Absence(
             new UserId("user"),
-            today.plusDays(1).withZoneSameInstant(berlin),
-            today.plusDays(2).withZoneSameInstant(berlin),
+            today.plus(1, DAYS),
+            today.plus(2, DAYS),
             FULL,
             anyLabel,
             PINK,
@@ -112,8 +113,8 @@ class AbsenceServiceImplTest {
         );
         final Absence expectedAbsence_2 = new Absence(
             new UserId("user"),
-            today.plusDays(4).withZoneSameInstant(berlin),
-            today.plusDays(4).withZoneSameInstant(berlin),
+            today.plus(4, DAYS),
+            today.plus(4, DAYS),
             MORNING,
             anyLabel,
             VIOLET,
@@ -123,13 +124,13 @@ class AbsenceServiceImplTest {
         final Map<LocalDate, List<Absence>> actual = sut.findAllAbsences(new UserId("user"), startDate, endDateExclusive);
         assertThat(actual)
             .hasSize(7)
-            .containsEntry(today.toLocalDate(), List.of())
-            .containsEntry(today.plusDays(1).toLocalDate(), List.of(expectedAbsence_1))
-            .containsEntry(today.plusDays(2).toLocalDate(), List.of(expectedAbsence_1))
-            .containsEntry(today.plusDays(3).toLocalDate(), List.of())
-            .containsEntry(today.plusDays(4).toLocalDate(), List.of(expectedAbsence_2))
-            .containsEntry(today.plusDays(5).toLocalDate(), List.of())
-            .containsEntry(today.plusDays(6).toLocalDate(), List.of());
+            .containsEntry(LocalDate.ofInstant(today, UTC), List.of())
+            .containsEntry(LocalDate.ofInstant(today.plus(1, DAYS), UTC), List.of(expectedAbsence_1))
+            .containsEntry(LocalDate.ofInstant(today.plus(2, DAYS), UTC), List.of(expectedAbsence_1))
+            .containsEntry(LocalDate.ofInstant(today.plus(3, DAYS), UTC), List.of())
+            .containsEntry(LocalDate.ofInstant(today.plus(4, DAYS), UTC), List.of(expectedAbsence_2))
+            .containsEntry(LocalDate.ofInstant(today.plus(5, DAYS), UTC), List.of())
+            .containsEntry(LocalDate.ofInstant(today.plus(6, DAYS), UTC), List.of());
     }
 
     @ParameterizedTest
@@ -274,8 +275,8 @@ class AbsenceServiceImplTest {
         absenceEntity_2_1.setDayLength(MORNING);
         absenceEntity_2_1.setType(new AbsenceTypeEntityEmbeddable(OTHER, 2000L));
 
-        final Instant absence_2_2_start = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
-        final Instant absence_2_2_end = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
+        final Instant absence_2_2_start = Instant.from(from.plus(2, DAYS).atStartOfDay().atZone(berlin));
+        final Instant absence_2_2_end = Instant.from(from.plus(2, DAYS).atStartOfDay().atZone(berlin));
         final AbsenceWriteEntity absenceEntity_2_2 = new AbsenceWriteEntity();
         absenceEntity_2_2.setUserId(userId_2.value());
         absenceEntity_2_2.setStartDate(absence_2_2_start);
@@ -298,11 +299,11 @@ class AbsenceServiceImplTest {
         final Function<Locale, String> anyLabel = locale -> "";
         assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
             userIdComposite_1, List.of(
-                new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, anyLabel, YELLOW, OTHER)
+                new Absence(userId_1, absence_1_start.atZone(berlin).toInstant(), absence_1_end.atZone(berlin).toInstant(), FULL, anyLabel, YELLOW, OTHER)
             ),
             userIdComposite_2, List.of(
-                new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, anyLabel, VIOLET, OTHER),
-                new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, anyLabel, CYAN, OTHER)
+                new Absence(userId_2, absence_2_1_start.atZone(berlin).toInstant(), absence_2_1_end.atZone(berlin).toInstant(), MORNING, anyLabel, VIOLET, OTHER),
+                new Absence(userId_2, absence_2_2_start.atZone(berlin).toInstant(), absence_2_2_end.atZone(berlin).toInstant(), NOON, anyLabel, CYAN, OTHER)
             )
         ));
     }
@@ -419,8 +420,8 @@ class AbsenceServiceImplTest {
         absenceEntity_2_1.setDayLength(MORNING);
         absenceEntity_2_1.setType(new AbsenceTypeEntityEmbeddable(OTHER, 2000L));
 
-        final Instant absence_2_2_start = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
-        final Instant absence_2_2_end = Instant.from(from.plusDays(2).atStartOfDay().atZone(berlin));
+        final Instant absence_2_2_start = Instant.from(from.plus(2, DAYS).atStartOfDay().atZone(berlin));
+        final Instant absence_2_2_end = Instant.from(from.plus(2, DAYS).atStartOfDay().atZone(berlin));
         final AbsenceWriteEntity absenceEntity_2_2 = new AbsenceWriteEntity();
         absenceEntity_2_2.setUserId(userId_2.value());
         absenceEntity_2_2.setStartDate(absence_2_2_start);
@@ -443,11 +444,11 @@ class AbsenceServiceImplTest {
         final Function<Locale, String> anyLabel = locale -> "";
         assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
             userIdComposite_1, List.of(
-                new Absence(userId_1, absence_1_start.atZone(berlin), absence_1_end.atZone(berlin), FULL, anyLabel, YELLOW, OTHER)
+                new Absence(userId_1, absence_1_start.atZone(berlin).toInstant(), absence_1_end.atZone(berlin).toInstant(), FULL, anyLabel, YELLOW, OTHER)
             ),
             userIdComposite_2, List.of(
-                new Absence(userId_2, absence_2_1_start.atZone(berlin), absence_2_1_end.atZone(berlin), MORNING, anyLabel, VIOLET, OTHER),
-                new Absence(userId_2, absence_2_2_start.atZone(berlin), absence_2_2_end.atZone(berlin), NOON, anyLabel, CYAN, OTHER)
+                new Absence(userId_2, absence_2_1_start.atZone(berlin).toInstant(), absence_2_1_end.atZone(berlin).toInstant(), MORNING, anyLabel, VIOLET, OTHER),
+                new Absence(userId_2, absence_2_2_start.atZone(berlin).toInstant(), absence_2_2_end.atZone(berlin).toInstant(), NOON, anyLabel, CYAN, OTHER)
             )
         ));
     }
@@ -540,8 +541,8 @@ class AbsenceServiceImplTest {
 
         final Absence expectedAbsence_1 = new Absence(
                 new UserId("user"),
-                today.plusDays(1).withZoneSameInstant(berlin),
-                today.plusDays(2).withZoneSameInstant(berlin),
+                today.plusDays(1).withZoneSameInstant(berlin).toInstant(),
+                today.plusDays(2).withZoneSameInstant(berlin).toInstant(),
                 FULL,
                 anyLabel,
                 PINK,
@@ -550,8 +551,8 @@ class AbsenceServiceImplTest {
 
         final Absence expectedAbsence_2 = new Absence(
                 new UserId("user"),
-                today.plusDays(4).withZoneSameInstant(berlin),
-                today.plusDays(4).withZoneSameInstant(berlin),
+                today.plusDays(4).withZoneSameInstant(berlin).toInstant(),
+                today.plusDays(4).withZoneSameInstant(berlin).toInstant(),
                 MORNING,
                 anyLabel,
                 VIOLET,

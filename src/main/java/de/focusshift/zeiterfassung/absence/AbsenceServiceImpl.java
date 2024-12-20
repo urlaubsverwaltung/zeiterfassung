@@ -60,6 +60,7 @@ class AbsenceServiceImpl implements AbsenceService {
         this.messageSource = messageSource;
     }
 
+    /* TODO is this method ever used?*/
     @Override
     public Map<LocalDate, List<Absence>> findAllAbsences(UserId userId, Instant from, Instant toExclusive) {
 
@@ -73,8 +74,8 @@ class AbsenceServiceImpl implements AbsenceService {
         final Map<LocalDate, List<Absence>> absencesByDate = new HashMap<>();
 
         for (Absence absence : absences) {
-            final LocalDate start = LocalDate.ofInstant(absence.startDate().toInstant(), zoneId);
-            final LocalDate endExclusive = LocalDate.ofInstant(absence.endDate().toInstant(), zoneId).plusDays(1);
+            final LocalDate start = LocalDate.ofInstant(absence.startDate(), zoneId);
+            final LocalDate endExclusive = LocalDate.ofInstant(absence.endDate(), zoneId).plusDays(1);
             doFromUntil(start, endExclusive, date -> absencesByDate.computeIfAbsent(date, unused -> new ArrayList<>()).add(absence));
         }
 
@@ -157,15 +158,13 @@ class AbsenceServiceImpl implements AbsenceService {
 
     private Stream<Absence> toAbsences(List<AbsenceWriteEntity> absenceEntities) {
 
-        final ZoneId zoneId = userSettingsProvider.zoneId();
-
         final Map<Long, AbsenceType> absenceTypeBySourceId = findAbsenceTypes(absenceEntities).stream()
             .collect(toMap(AbsenceType::sourceId, identity()));
 
         final Function<Locale, String> sickLabel = new CachedFunction<>(this::sickLabel);
 
         return absenceEntities.stream()
-            .map(entity -> toAbsence(entity, zoneId, absenceTypeBySourceId::get, sickLabel))
+            .map(entity -> toAbsence(entity, absenceTypeBySourceId::get, sickLabel))
             .filter(Optional::isPresent)
             .map(Optional::get);
     }
@@ -174,7 +173,7 @@ class AbsenceServiceImpl implements AbsenceService {
         return messageSource.getMessage("absence.type.category.SICK", null, locale);
     }
 
-    private Optional<Absence> toAbsence(AbsenceWriteEntity entity, ZoneId zoneId, LongFunction<AbsenceType> absenceTypeBySourceIdSupplier, Function<Locale, String> sickLabelSupplier) {
+    private Optional<Absence> toAbsence(AbsenceWriteEntity entity, LongFunction<AbsenceType> absenceTypeBySourceIdSupplier, Function<Locale, String> sickLabelSupplier) {
 
         final AbsenceType absenceType;
         if (entity.getType().getCategory().equals(SICK)) {
@@ -194,8 +193,8 @@ class AbsenceServiceImpl implements AbsenceService {
         return Optional.of(
             new Absence(
                 new UserId(entity.getUserId()),
-                entity.getStartDate().atZone(zoneId),
-                entity.getEndDate().atZone(zoneId),
+                entity.getStartDate(),
+                entity.getEndDate(),
                 dayLength,
                 label,
                 absenceType.color(),
