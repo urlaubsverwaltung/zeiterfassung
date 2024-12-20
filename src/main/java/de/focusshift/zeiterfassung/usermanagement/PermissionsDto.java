@@ -9,6 +9,7 @@ class PermissionsDto {
     private boolean workingTimeEditGlobal;
     private boolean overtimeEditAll;
     private boolean permissionsEditAll;
+    private boolean timeEntryEditAll;
 
     public boolean isViewReportAll() {
         return viewReportAll;
@@ -50,6 +51,14 @@ class PermissionsDto {
         this.permissionsEditAll = permissionsEditAl;
     }
 
+    public void setTimeEntryEditAll(boolean timeEntryEditAll) {
+        this.timeEntryEditAll = timeEntryEditAll;
+    }
+
+    public boolean isTimeEntryEditAll() {
+        return timeEntryEditAll;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -58,12 +67,13 @@ class PermissionsDto {
         return viewReportAll == that.viewReportAll
             && workingTimeEditAll == that.workingTimeEditAll
             && overtimeEditAll == that.overtimeEditAll
-            && permissionsEditAll == that.permissionsEditAll;
+            && permissionsEditAll == that.permissionsEditAll
+            && timeEntryEditAll == that.timeEntryEditAll;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(viewReportAll, workingTimeEditAll, overtimeEditAll, permissionsEditAll);
+        return Objects.hash(viewReportAll, workingTimeEditAll, overtimeEditAll, permissionsEditAll, timeEntryEditAll);
     }
 
     @Override
@@ -73,6 +83,7 @@ class PermissionsDto {
             ", workingTimeEditAll=" + workingTimeEditAll +
             ", overtimeEditAll=" + overtimeEditAll +
             ", permissionsEditAll=" + permissionsEditAll +
+            ", timeEntryEditAll=" + timeEntryEditAll +
             '}';
     }
 }
