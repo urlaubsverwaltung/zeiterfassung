@@ -1,18 +1,23 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
-import org.threeten.extra.YearWeek;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.Year;
+import java.time.temporal.WeekFields;
 import java.util.Collection;
 import java.util.List;
 
-import static java.time.Month.DECEMBER;
-import static java.time.temporal.WeekFields.ISO;
+import static java.util.Locale.GERMANY;
 import static java.util.function.Predicate.not;
 
+/**
+ * Represents a week of time entries.
+ *
+ * @param firstDateOfWeek the first date of the week, maybe monday or sunday.
+ * @param plannedWorkingHours {@link PlannedWorkingHours} for this week
+ * @param days sorted list of days
+ */
 record TimeEntryWeek(
     LocalDate firstDateOfWeek,
     PlannedWorkingHours plannedWorkingHours,
@@ -46,21 +51,10 @@ record TimeEntryWeek(
             .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
 
-    public int year() {
-        return firstDateOfWeek.getYear();
-    }
-
     public int week() {
-        final int isoWeekOfYear = firstDateOfWeek.get(ISO.weekOfYear());
-        if (isoWeekOfYear != 0) {
-            return isoWeekOfYear;
-        }
-
-        final Year year = Year.of(firstDateOfWeek.getYear());
-        final Year previousYear = year.minusYears(1);
-        final LocalDate endOfDecember = previousYear.atMonth(DECEMBER).atEndOfMonth();
-        final int week = endOfDecember.get(ISO.weekOfYear());
-        return YearWeek.of(previousYear, week).getWeek();
+        final int minimalDaysInFirstWeek = WeekFields.of(GERMANY).getMinimalDaysInFirstWeek();
+        final WeekFields weekFields = WeekFields.of(firstDateOfWeek.getDayOfWeek(), minimalDaysInFirstWeek);
+        return firstDateOfWeek.get(weekFields.weekOfWeekBasedYear());
     }
 
     public LocalDate lastDateOfWeek() {

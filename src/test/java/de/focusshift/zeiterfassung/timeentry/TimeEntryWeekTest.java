@@ -5,6 +5,8 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -62,21 +64,26 @@ class TimeEntryWeekTest {
         assertThat(actualDuration).isEqualTo(Duration.ofHours(3));
     }
 
-    @Test
-    void ensureYear() {
-
-        final LocalDate date = LocalDate.of(2022, 1, 1);
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(date, PlannedWorkingHours.ZERO, List.of());
-
-        assertThat(timeEntryWeek.year()).isEqualTo(2022);
-    }
-
-    @Test
-    void ensureWeek() {
-        // 2021-12-27 would be correct
-        final LocalDate actuallyWrongFirstDayOfWeek = LocalDate.of(2022, 1, 1);
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(actuallyWrongFirstDayOfWeek, PlannedWorkingHours.ZERO, List.of());
-
-        assertThat(timeEntryWeek.week()).isEqualTo(52);
+    @ParameterizedTest
+    @CsvSource({
+        "2021-12-27,52",
+        "2022-01-03,1",
+        "2022-09-26,39",
+        "2022-12-26,52",
+        "2023-01-02,1",
+        "2024-12-23,52",
+        "2024-12-30,1",
+        "2025-01-06,2",
+        "2025-12-22,52",
+        "2025-12-29,1",
+        "2026-01-05,2",
+        "2026-12-28,53",
+        "2027-01-04,1",
+        "2027-12-27,52",
+        "2028-01-03,1",
+    })
+    void ensureWeek(String date, int week) {
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.parse(date), PlannedWorkingHours.ZERO, List.of());
+        assertThat(timeEntryWeek.week()).isEqualTo(week);
     }
 }
