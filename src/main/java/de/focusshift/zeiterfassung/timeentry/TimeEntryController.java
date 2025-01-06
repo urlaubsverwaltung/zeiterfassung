@@ -24,6 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -32,7 +33,6 @@ import java.time.LocalTime;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.WeekFields;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -52,21 +52,24 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private final TimeEntryService timeEntryService;
     private final UserSettingsProvider userSettingsProvider;
     private final DateFormatter dateFormatter;
+    private final Clock clock;
 
-    public TimeEntryController(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider, DateFormatter dateFormatter) {
+    public TimeEntryController(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider,
+                               DateFormatter dateFormatter, Clock clock) {
         this.timeEntryService = timeEntryService;
         this.userSettingsProvider = userSettingsProvider;
         this.dateFormatter = dateFormatter;
+        this.clock = clock;
     }
 
     @GetMapping("/timeentries")
     public String items(Model model, Locale locale, @AuthenticationPrincipal OidcUser principal) {
 
-        final ZoneId userZoneId = userSettingsProvider.zoneId();
-        final LocalDate nowUserAware = LocalDate.now(userZoneId);
+        final LocalDate now = LocalDate.now(clock);
+        final ZonedDateTime userStartOfDay = now.atStartOfDay(userSettingsProvider.zoneId());
 
-        final int year = nowUserAware.getYear();
-        final int weekOfYear = nowUserAware.get(WEEK_OF_WEEK_BASED_YEAR);
+        final int year = userStartOfDay.getYear();
+        final int weekOfYear = userStartOfDay.get(WEEK_OF_WEEK_BASED_YEAR);
 
         return prepareTimeEntriesView(year, weekOfYear, model, principal, locale);
     }
@@ -107,7 +110,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final int weekOfYear;
 
         try {
-            final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDTO.getDate(), DayOfWeek.MONDAY);
+            final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDTO.getDate());
             year = firstDateOfWeek.getYear();
             weekOfYear = firstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR);
         } catch(NullPointerException exception) {
@@ -138,7 +141,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final int weekOfYear;
 
         try {
-            final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDTO.getDate(), DayOfWeek.MONDAY);
+            final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDTO.getDate());
             year = firstDateOfWeek.getYear();
             weekOfYear = firstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR);
         } catch(NullPointerException exception) {
@@ -365,7 +368,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final String weekOvertime = durationToTimeString(weekOvertimeDuration);
         final double weekRatio = timeEntryWeek.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
 
-        return new TimeEntryWeekDto(timeEntryWeek.week(), firstDateString, lastDateString, weekHoursWorked,
+        return new TimeEntryWeekDto(timeEntryWeek.calendarWeek(), firstDateString, lastDateString, weekHoursWorked,
             weekHoursWorkedShould, weekOvertime, weekOvertimeDuration.isNegative(), weekRatio, daysDto);
     }
 
@@ -440,25 +443,19 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     }
 
     private int lastWeekOfYear(int year) {
-        return Year.of(year).atMonth(DECEMBER).atEndOfMonth().get(WEEK_OF_WEEK_BASED_YEAR);
+        final LocalDate date = Year.of(year).atMonth(DECEMBER).atEndOfMonth();
+        final int week = date.get(WEEK_OF_WEEK_BASED_YEAR);
+        if (week == 1) {
+            // last week cannot be the first one of a year :-)
+            // e.g. 2024-12-31 is calWeek 1 (of next year) -> wee need calWeek 52 2024-12-23 to 2024-12-29
+            return date.minusWeeks(1).get(WEEK_OF_WEEK_BASED_YEAR);
+        } else {
+            return week;
+        }
     }
 
-    private LocalDate localDateToFirstDateOfWeek(LocalDate localDate, DayOfWeek firstDayOfWeek) {
-        // using minimalDaysInFirstWeek = 4 since it is defined by ISO-8601 (starting week with monday)
-        // I have no glue whether this value can be use here or not. Some unit tests say we can... so...
-        final WeekFields userWeekFields = WeekFields.of(firstDayOfWeek, 4);
-
-        final int temporalYear = localDate.getYear();
-        final int temporalWeekOfYear = localDate.get(WEEK_OF_WEEK_BASED_YEAR);
-
-        final LocalDate previousOrSame = localDate.with(previousOrSame(firstDayOfWeek));
-
-        final int year = previousOrSame.getYear();
-        final int week = previousOrSame.get(userWeekFields.weekOfWeekBasedYear());
-        if (year == temporalYear && week > temporalWeekOfYear) {
-            return previousOrSame.minusWeeks(1);
-        }
-
-        return previousOrSame;
+    private LocalDate localDateToFirstDateOfWeek(LocalDate localDate) {
+        final DayOfWeek firstDayOfWeek = userSettingsProvider.firstDayOfWeek();
+        return localDate.with(previousOrSame(firstDayOfWeek));
     }
 }

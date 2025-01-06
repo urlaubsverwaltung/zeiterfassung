@@ -9,6 +9,8 @@ import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -92,6 +94,29 @@ class ReportWeekTest {
         final WorkDuration actual = sut.averageDayWorkDuration();
 
         assertThat(actual).isEqualTo(new WorkDuration(Duration.ofHours(8)));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "2021-12-27,52",
+        "2022-01-03,1",
+        "2022-09-26,39",
+        "2022-12-26,52",
+        "2023-01-02,1",
+        "2024-12-23,52",
+        "2024-12-30,1",
+        "2025-01-06,2",
+        "2025-12-22,52",
+        "2025-12-29,1",
+        "2026-01-05,2",
+        "2026-12-28,53",
+        "2027-01-04,1",
+        "2027-12-27,52",
+        "2028-01-03,1",
+    })
+    void ensureCalendarWeek(String date, int week) {
+        final ReportWeek timeEntryWeek = new ReportWeek(LocalDate.parse(date), List.of());
+        assertThat(timeEntryWeek.calenderWeek()).isEqualTo(week);
     }
 
 

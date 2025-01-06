@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.user;
 import org.springframework.stereotype.Service;
 import org.threeten.extra.YearWeek;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Year;
@@ -11,14 +12,17 @@ import java.time.temporal.WeekFields;
 
 import static java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
 import static java.time.temporal.TemporalAdjusters.previousOrSame;
+import static java.util.Locale.GERMANY;
 
 @Service
 class UserDateServiceImpl implements UserDateService {
 
     private final UserSettingsProvider userSettingsProvider;
+    private final Clock clock;
 
-    public UserDateServiceImpl(UserSettingsProvider userSettingsProvider) {
+    public UserDateServiceImpl(UserSettingsProvider userSettingsProvider, Clock clock) {
         this.userSettingsProvider = userSettingsProvider;
+        this.clock = clock;
     }
 
     @Override
@@ -35,15 +39,18 @@ class UserDateServiceImpl implements UserDateService {
 
     @Override
     public LocalDate firstDayOfWeek(Year year, int weekOfYear) {
+
         // `YearWeek.of` throws when the weekOfYear is invalid
-        final YearWeek yearWeek = YearWeek.of(year, weekOfYear);
+        YearWeek.of(year, weekOfYear);
 
+        final int minimalDaysInFirstWeek = WeekFields.of(GERMANY).getMinimalDaysInFirstWeek();
         final DayOfWeek usersFirstDayOfWeek = userSettingsProvider.firstDayOfWeek();
+        final WeekFields weekFields = WeekFields.of(usersFirstDayOfWeek, minimalDaysInFirstWeek);
 
-        return LocalDate.now()
-            .withYear(yearWeek.getYear())
-            .with(usersFirstDayOfWeek)
-            .with(WEEK_OF_WEEK_BASED_YEAR, weekOfYear);
+        return LocalDate.now(clock)
+            .withYear(year.getValue())
+            .with(weekFields.weekOfWeekBasedYear(), weekOfYear)
+            .with(previousOrSame(usersFirstDayOfWeek));
     }
 
     private LocalDate localDateToFirstDateOfWeek(LocalDate localDate, DayOfWeek firstDayOfWeek) {

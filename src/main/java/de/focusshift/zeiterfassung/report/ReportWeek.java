@@ -7,6 +7,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 
 import java.time.LocalDate;
+import java.time.temporal.WeekFields;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +18,7 @@ import static de.focusshift.zeiterfassung.report.ReportFunctions.summarizeShould
 import static de.focusshift.zeiterfassung.report.ReportFunctions.summarizeShouldWorkingHoursByUser;
 import static de.focusshift.zeiterfassung.report.ReportFunctions.summarizeWorkDuration;
 import static de.focusshift.zeiterfassung.report.ReportFunctions.summarizeWorkDurationByUser;
+import static java.util.Locale.GERMANY;
 
 record ReportWeek(LocalDate firstDateOfWeek, List<ReportDay> reportDays) implements HasWorkDurationByUser, HasWorkedHoursRatio {
 
@@ -50,5 +52,11 @@ record ReportWeek(LocalDate firstDateOfWeek, List<ReportDay> reportDays) impleme
 
     public LocalDate lastDateOfWeek() {
         return firstDateOfWeek.plusDays(6);
+    }
+
+    public int calenderWeek() {
+        final int minimalDaysInFirstWeek = WeekFields.of(GERMANY).getMinimalDaysInFirstWeek();
+        final WeekFields weekFields = WeekFields.of(firstDateOfWeek.getDayOfWeek(), minimalDaysInFirstWeek);
+        return firstDateOfWeek.get(weekFields.weekOfWeekBasedYear());
     }
 }

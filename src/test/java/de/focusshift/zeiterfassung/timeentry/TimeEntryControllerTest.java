@@ -21,6 +21,7 @@ import org.springframework.security.web.method.annotation.AuthenticationPrincipa
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.Instant;
@@ -62,7 +63,7 @@ class TimeEntryControllerTest {
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter);
+        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, Clock.systemUTC());
     }
 
     @Test
@@ -72,38 +73,47 @@ class TimeEntryControllerTest {
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
+        // monday     2024-12-30
+        // tuesday    2024-12-31  work
+        // wednesday  2025-01-01
+        // thursday   2025-01-02  absent
+        // friday     2025-01-03
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
-        final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
+        final ZonedDateTime expectedStart = ZonedDateTime.of(2024, 12, 31, 14, 30, 0, 0, zoneIdBerlin);
+        final ZonedDateTime expectedEnd = ZonedDateTime.of(2024, 12, 31, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
-        final Instant absenceStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin).toInstant();
-        final Instant absenceEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin).toInstant();
+        final Instant absenceStart = ZonedDateTime.of(2025, 1, 3, 14, 30, 0, 0, zoneIdBerlin).toInstant();
+        final Instant absenceEnd = ZonedDateTime.of(2025, 1, 3, 15, 0, 0, 0, zoneIdBerlin).toInstant();
         final Absence absence = new Absence(new UserId("batman"), absenceStart, absenceEnd, DayLength.FULL, locale -> "", YELLOW, HOLIDAY);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
-        final TimeEntryDay timeEntryDayWithAbsence = new TimeEntryDay(LocalDate.of(2022, 9, 20), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of(absence));
-        final TimeEntryDay timeEntryDayWithoutTimeEntriesAndWithoutAbsences = new TimeEntryDay(LocalDate.of(2022, 9, 21), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of());
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay, timeEntryDayWithAbsence, timeEntryDayWithoutTimeEntriesAndWithoutAbsences));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2024, 12, 31), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
+        final TimeEntryDay timeEntryDayWithAbsence = new TimeEntryDay(LocalDate.of(2025, 1, 2), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of(absence));
+        final TimeEntryDay timeEntryDayWithoutTimeEntriesAndWithoutAbsences = new TimeEntryDay(LocalDate.of(2025, 1, 3), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of());
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(timeEntryDay, timeEntryDayWithAbsence, timeEntryDayWithoutTimeEntriesAndWithoutAbsences));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2025, 1)).thenReturn(timeEntryWeekPage);
 
-        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 19), MonthFormat.NONE, YearFormat.NONE)).thenReturn("formatted-2022-9-19");
-        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 19), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-19");
-        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 25), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-25");
-        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 20), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-20");
+        // week from to
+        when(dateFormatter.formatDate(LocalDate.of(2024, 12,30), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-30");
+        when(dateFormatter.formatDate(LocalDate.of(2025, 1,5), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2025-01-05");
+
+        // time entry
+        when(dateFormatter.formatDate(LocalDate.of(2024, 12,31) , MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-31");
+        when(dateFormatter.formatDate(LocalDate.of(2025, 1,2) , MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2025-01-02");
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
-            .date(LocalDate.of(2022, 9, 22))
+            .date(LocalDate.of(2024, 12, 31))
             .start(LocalTime.of(14, 30))
             .end(LocalTime.of(15, 0))
             .duration("00:30")
             .comment("hack the planet")
             .build();
 
-        final TimeEntryDayDto expectedTimeEntryDayDtoMONDAY = TimeEntryDayDto.builder()
-            .date("formatted-2022-9-19")
-            .dayOfWeek(DayOfWeek.MONDAY)
+        final TimeEntryDayDto expectedTimeEntryDayDtoTUESDAY = TimeEntryDayDto.builder()
+            .date("formatted-2024-12-31")
+            .dayOfWeek(DayOfWeek.TUESDAY)
             .hoursWorked("00:30")
             .hoursWorkedShould("08:00")
             .hoursDelta("07:30")
@@ -113,10 +123,10 @@ class TimeEntryControllerTest {
             .absenceEntries(List.of())
             .build();
 
-        final AbsenceEntryDto absenceDto = new AbsenceEntryDto(LocalDate.of(2022,9,20), "", YELLOW);
-        final TimeEntryDayDto expectedTimeEntryDayDtoTUESDAY = TimeEntryDayDto.builder()
-            .date("formatted-2022-9-20")
-            .dayOfWeek(DayOfWeek.TUESDAY)
+        final AbsenceEntryDto absenceDto = new AbsenceEntryDto(LocalDate.of(2025,1,2), "", YELLOW);
+        final TimeEntryDayDto expectedTimeEntryDayDtoTHURSDAY = TimeEntryDayDto.builder()
+            .date("formatted-2025-01-02")
+            .dayOfWeek(DayOfWeek.THURSDAY)
             .hoursWorked("00:00")
             .hoursWorkedShould("08:00")
             .hoursDelta("08:00")
@@ -127,22 +137,22 @@ class TimeEntryControllerTest {
             .build();
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
-            .calendarWeek(38)
-            .from("formatted-2022-9-19")
-            .to("formatted-2022-9-25")
+            .calendarWeek(1)
+            .from("formatted-2024-12-30")
+            .to("formatted-2025-01-05")
             .hoursWorked("00:30")
             .hoursWorkedShould("24:00")
             .hoursDelta("23:30")
             .hoursDeltaNegative(true)
             .hoursWorkedRatio(3.0)
-            .days(List.of(expectedTimeEntryDayDtoMONDAY, expectedTimeEntryDayDtoTUESDAY))
+            .days(List.of(expectedTimeEntryDayDtoTUESDAY, expectedTimeEntryDayDtoTHURSDAY))
             .build();
 
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(
-            2022, 39, 2022, 37, expectedTimeEntryWeekDto, 1337);
+            2025, 2, 2024, 52, expectedTimeEntryWeekDto, 1337);
 
         perform(
-            get("/timeentries/2022/38")
+            get("/timeentries/2025/1")
                 .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
         )
             .andExpect(view().name("timeentries/index"))
@@ -158,22 +168,25 @@ class TimeEntryControllerTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
-        final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
+        final ZonedDateTime expectedStart = ZonedDateTime.of(2024, 12, 31, 14, 30, 0, 0, zoneIdBerlin);
+        final ZonedDateTime expectedEnd = ZonedDateTime.of(2024, 12, 31, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
-        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2024, 12, 31), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 42);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 38)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2025, 1)).thenReturn(timeEntryWeekPage);
 
-        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 19), MonthFormat.NONE, YearFormat.NONE)).thenReturn("formatted-2022-9-19");
-        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 19), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-19");
-        when(dateFormatter.formatDate(LocalDate.of(2022, 9, 25), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-25");
+        // week from to
+        when(dateFormatter.formatDate(LocalDate.of(2024, 12, 30), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-30");
+        when(dateFormatter.formatDate(LocalDate.of(2025, 1, 5), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2025-01-05");
+
+        // time entry
+        when(dateFormatter.formatDate(LocalDate.of(2024, 12, 31), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-31");
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
-            .date(LocalDate.of(2022, 9, 22))
+            .date(LocalDate.of(2024, 12, 31))
             .start(LocalTime.of(14, 30))
             .end(LocalTime.of(15, 0))
             .duration("00:30")
@@ -181,8 +194,8 @@ class TimeEntryControllerTest {
             .build();
 
         final TimeEntryDayDto expectedTimeEntryDayDto = TimeEntryDayDto.builder()
-            .date("formatted-2022-9-19")
-            .dayOfWeek(DayOfWeek.MONDAY)
+            .date("formatted-2024-12-31")
+            .dayOfWeek(DayOfWeek.TUESDAY)
             .hoursWorked("00:30")
             .hoursWorkedShould("08:00")
             .hoursDelta("07:30")
@@ -193,9 +206,9 @@ class TimeEntryControllerTest {
             .build();
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
-            .calendarWeek(38)
-            .from("formatted-2022-9-19")
-            .to("formatted-2022-9-25")
+            .calendarWeek(1)
+            .from("formatted-2024-12-30")
+            .to("formatted-2025-01-05")
             .hoursWorked("00:30")
             .hoursWorkedShould("08:00")
             .hoursDelta("07:30")
@@ -205,10 +218,10 @@ class TimeEntryControllerTest {
             .build();
 
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(
-            2022, 39, 2022, 37, expectedTimeEntryWeekDto, 42);
+            2025, 2, 2024, 52, expectedTimeEntryWeekDto, 42);
 
         perform(
-            get("/timeentries/2022/38")
+            get("/timeentries/2025/01")
                 .header("Turbo-Frame", "any-value")
                 .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
         )
@@ -314,9 +327,9 @@ class TimeEntryControllerTest {
     void ensureTimeEntryCreation() throws Exception {
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
+        mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
-        final ResultActions perform = perform(
+        perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
                 .with(
@@ -326,9 +339,7 @@ class TimeEntryControllerTest {
                 .param("start", "14:30:00.000+01:00")
                 .param("end", "15:00:00.000+01:00")
                 .param("comment", "hard work")
-        );
-
-        perform
+        )
             .andExpect(redirectedUrl("/timeentries"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 14, 30, 0, 0, zoneIdBerlin);
@@ -341,9 +352,9 @@ class TimeEntryControllerTest {
     void ensureTimeEntryBreakCreation() throws Exception {
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
+        mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
-        final ResultActions perform = perform(
+        perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
                 .with(
@@ -354,9 +365,7 @@ class TimeEntryControllerTest {
                 .param("end", "15:00:00.000+01:00")
                 .param("comment", "hard work")
                 .param("break", "true")
-        );
-
-        perform
+        )
             .andExpect(redirectedUrl("/timeentries"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 14, 30, 0, 0, zoneIdBerlin);
@@ -369,9 +378,9 @@ class TimeEntryControllerTest {
     void ensureTimeEntryCreationForDateTouchingNextDay() throws Exception {
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
+        mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
-        final ResultActions perform = perform(
+        perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
                 .with(
@@ -381,9 +390,7 @@ class TimeEntryControllerTest {
                 .param("start", "22:30:00.000+01:00")
                 .param("end", "01:15:00.000+01:00")
                 .param("comment", "hard work")
-        );
-
-        perform
+        )
             .andExpect(redirectedUrl("/timeentries"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 22, 30, 0, 0, zoneIdBerlin);
@@ -394,6 +401,8 @@ class TimeEntryControllerTest {
 
     @Test
     void ensureTimeEntryCreationError() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 99);
@@ -416,17 +425,15 @@ class TimeEntryControllerTest {
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(
             2022, 1, 2021, 51, expectedTimeEntryWeekDto, 99);
 
-        final ResultActions perform = perform(
+        perform(
             post("/timeentries")
                 .with(
                     oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
                 )
                 .param("date", "2022-01-02")
                 .param("comment", "hard work")
-            // missing start/end/value
-        );
-
-        perform
+                 // missing start/end/value
+        )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attribute("timeEntryWeeksPage", expectedPage));
     }
@@ -435,9 +442,9 @@ class TimeEntryControllerTest {
     void ensureTimeEntryEditStartGivenAndEndGivenAndDurationNull() throws Exception {
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
+        mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
-        final ResultActions perform = perform(
+        perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
                 .with(
@@ -448,9 +455,7 @@ class TimeEntryControllerTest {
                 .param("start", "20:30:00.000+01:00")
                 .param("end", "21:15:00.000+01:00")
                 .param("comment", "hard work extended")
-        );
-
-        perform
+        )
             .andExpect(redirectedUrl("/timeentries/2022/39"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
@@ -463,9 +468,9 @@ class TimeEntryControllerTest {
     void ensureTimeEntryEditStartNullAndEndGivenAndDurationGiven() throws Exception {
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
+        mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
-        final ResultActions perform = perform(
+        perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
                 .with(
@@ -477,9 +482,7 @@ class TimeEntryControllerTest {
                 .param("end", "21:15:00.000+01:00")
                 .param("duration", "01:00")
                 .param("comment", "")
-        );
-
-        perform
+        )
             .andExpect(redirectedUrl("/timeentries/2022/39"));
 
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
@@ -491,9 +494,9 @@ class TimeEntryControllerTest {
     void ensureTimeEntryEditStartGivenAndEndNullAndDurationGiven() throws Exception {
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
+        mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
-        final ResultActions perform = perform(
+        perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
                 .with(
@@ -505,9 +508,7 @@ class TimeEntryControllerTest {
                 .param("end", "")
                 .param("duration", "01:00")
                 .param("comment", "")
-        );
-
-        perform
+        )
             .andExpect(redirectedUrl("/timeentries/2022/39"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
@@ -519,9 +520,9 @@ class TimeEntryControllerTest {
     void ensureTimeEntryBreakEdit() throws Exception {
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
+        mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
-        final ResultActions perform = perform(
+        perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
                 .with(
@@ -533,9 +534,7 @@ class TimeEntryControllerTest {
                 .param("end", "21:15:00.000+01:00")
                 .param("comment", "hard work extended")
                 .param("break", "true")
-        );
-
-        perform
+        )
             .andExpect(redirectedUrl("/timeentries/2022/39"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
@@ -552,7 +551,7 @@ class TimeEntryControllerTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(zoneIdBerlin);
+        mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
@@ -679,6 +678,7 @@ class TimeEntryControllerTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        mockUserSettings(DayOfWeek.MONDAY);
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
@@ -726,7 +726,7 @@ class TimeEntryControllerTest {
 
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 1, 2021, 51, expectedTimeEntryWeekDto, 1337);
 
-        final ResultActions perform = perform(
+        perform(
             post("/timeentries/1337")
                 .with(
                     oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
@@ -734,9 +734,7 @@ class TimeEntryControllerTest {
                 .param("date", "2022-01-02")
                 .param("comment", "hard work")
             // missing start/end/value
-        );
-
-        perform
+        )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attribute("timeEntryWeeksPage", is(expectedPage)));
     }
@@ -744,7 +742,9 @@ class TimeEntryControllerTest {
     @Test
     void ensureTimeEntryEditWithValidationErrorWithAjax() throws Exception {
 
-        final ResultActions perform = perform(
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        perform(
             post("/timeentries/1337")
                 .header("Turbo-Frame", "any-value")
                 .with(
@@ -755,9 +755,7 @@ class TimeEntryControllerTest {
                 .param("start", "")
                 .param("end", "")
                 .param("comment", "hard work extended")
-        );
-
-        perform
+        )
             .andExpect(model().attributeDoesNotExist("timeEntryWeeks"))
             .andExpect(view().name("timeentries/index::#frame-time-entry"));
 
@@ -926,6 +924,19 @@ class TimeEntryControllerTest {
             .andExpect(model().attribute("turboDeletedTimeEntry", expectedDeletedTimeEntryDto));
 
         verify(timeEntryService).deleteTimeEntry(1);
+    }
+
+    private void mockUserSettings(ZoneId zoneId) {
+        when(userSettingsProvider.zoneId()).thenReturn(zoneId);
+    }
+
+    private void mockUserSettings(DayOfWeek dayOfWeek) {
+        when(userSettingsProvider.firstDayOfWeek()).thenReturn(dayOfWeek);
+    }
+
+    private void mockUserSettings(ZoneId zoneId, DayOfWeek dayOfWeek) {
+        mockUserSettings(zoneId);
+        mockUserSettings(dayOfWeek);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {

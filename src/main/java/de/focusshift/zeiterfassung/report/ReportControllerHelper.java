@@ -121,8 +121,10 @@ class ReportControllerHelper {
             .map(reportDay -> toUserReportDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot)))
             .toList();
 
-        final int calendarWeek = reportWeek.firstDateOfWeek().get(ChronoField.ALIGNED_WEEK_OF_YEAR);
-        final String dateRangeString = dateRangeFormatter.toDateRangeString(reportWeek.firstDateOfWeek(), reportWeek.lastDateOfWeek());
+        final LocalDate firstDateOfWeek = reportWeek.firstDateOfWeek();
+        final int calendarWeek = reportWeek.calenderWeek();
+
+        final String dateRangeString = dateRangeFormatter.toDateRangeString(firstDateOfWeek, reportWeek.lastDateOfWeek());
 
         final double maxHoursWorked = dayReports.stream()
             .map(GraphDayDto::hoursWorked)

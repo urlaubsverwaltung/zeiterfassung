@@ -1,15 +1,21 @@
 package de.focusshift.zeiterfassung.user;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Year;
 import java.util.stream.Stream;
 
 import static java.time.DayOfWeek.FRIDAY;
@@ -20,6 +26,7 @@ import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,7 +39,7 @@ class UserDateServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        sut = new UserDateServiceImpl(userSettingsProvider);
+        sut = new UserDateServiceImpl(userSettingsProvider, Clock.systemUTC());
     }
 
     static Stream<Arguments> firstDayOfWeekArguments() {
@@ -92,5 +99,46 @@ class UserDateServiceImplTest {
     void ensureLocalDateToFirstDateOfWeekAdjuster(DayOfWeek firstDayOfWeek, LocalDate pivot, LocalDate expected) {
         when(userSettingsProvider.firstDayOfWeek()).thenReturn(firstDayOfWeek);
         assertThat(pivot.with(sut.localDateToFirstDateOfWeekAdjuster())).isEqualTo(expected);
+    }
+
+    @Nested
+    class FirstDayOfWeek {
+
+        @ParameterizedTest
+        @CsvSource({
+            "2024,52,2024-12-23",
+            "2025,1,2024-12-30",
+            "2025,2,2025-01-06",
+        })
+        void ensureFirstDayOfWeekForMonday(int year, int week, String expectedDate) {
+
+            when(userSettingsProvider.firstDayOfWeek()).thenReturn(MONDAY);
+
+            final LocalDate actual = sut.firstDayOfWeek(Year.of(year), week);
+            assertThat(actual).isEqualTo(LocalDate.parse(expectedDate));
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            "2024,52,2024-12-22",
+            "2025,1,2024-12-29",
+            "2025,2,2025-01-05",
+        })
+        void ensureFirstDayOfWeekForSunday(int year, int week, String expectedDate) {
+
+            when(userSettingsProvider.firstDayOfWeek()).thenReturn(SUNDAY);
+
+            final LocalDate actual = sut.firstDayOfWeek(Year.of(year), week);
+            assertThat(actual).isEqualTo(LocalDate.parse(expectedDate));
+        }
+
+        @Test
+        void ensureFirstDayOfWeekThrowsForInvalidWeek() {
+
+            final Year year = Year.of(2025);
+
+            assertThatThrownBy(() -> sut.firstDayOfWeek(year, 1337))
+                .isInstanceOf(DateTimeException.class);
+        }
     }
 }
