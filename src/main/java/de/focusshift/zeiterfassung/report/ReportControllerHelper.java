@@ -22,6 +22,7 @@ import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static java.util.Locale.GERMANY;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
@@ -121,8 +123,11 @@ class ReportControllerHelper {
             .map(reportDay -> toUserReportDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot)))
             .toList();
 
-        final int calendarWeek = reportWeek.firstDateOfWeek().get(ChronoField.ALIGNED_WEEK_OF_YEAR);
-        final String dateRangeString = dateRangeFormatter.toDateRangeString(reportWeek.firstDateOfWeek(), reportWeek.lastDateOfWeek());
+        final LocalDate firstDateOfWeek = reportWeek.firstDateOfWeek();
+        final WeekFields weekFields = WeekFields.of(firstDateOfWeek.getDayOfWeek(), WeekFields.of(GERMANY).getMinimalDaysInFirstWeek());
+        final int calendarWeek = firstDateOfWeek.get(weekFields.weekOfWeekBasedYear());
+
+        final String dateRangeString = dateRangeFormatter.toDateRangeString(firstDateOfWeek, reportWeek.lastDateOfWeek());
 
         final double maxHoursWorked = dayReports.stream()
             .map(GraphDayDto::hoursWorked)
