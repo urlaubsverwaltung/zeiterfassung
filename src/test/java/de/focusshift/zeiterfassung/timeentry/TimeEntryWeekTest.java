@@ -45,7 +45,7 @@ class TimeEntryWeekTest {
     }
 
     @Test
-    void ensureWorkDurationSumsUpTouchingNextWeek() {
+    void ensureWorkDurationSumsUpTouchingNextCalendarWeek() {
 
         final LocalDate startOfWeek = LocalDate.of(2022, 1, 4);
 
@@ -82,8 +82,8 @@ class TimeEntryWeekTest {
         "2027-12-27,52",
         "2028-01-03,1",
     })
-    void ensureWeek(String date, int week) {
+    void ensureCalendarWeek(String date, int week) {
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.parse(date), PlannedWorkingHours.ZERO, List.of());
-        assertThat(timeEntryWeek.week()).isEqualTo(week);
+        assertThat(timeEntryWeek.calendarWeek()).isEqualTo(week);
     }
 }

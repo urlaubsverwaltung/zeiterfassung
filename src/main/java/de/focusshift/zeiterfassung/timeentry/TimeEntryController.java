@@ -368,7 +368,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final String weekOvertime = durationToTimeString(weekOvertimeDuration);
         final double weekRatio = timeEntryWeek.workedHoursRatio().multiply(BigDecimal.valueOf(100), new MathContext(2)).doubleValue();
 
-        return new TimeEntryWeekDto(timeEntryWeek.week(), firstDateString, lastDateString, weekHoursWorked,
+        return new TimeEntryWeekDto(timeEntryWeek.calendarWeek(), firstDateString, lastDateString, weekHoursWorked,
             weekHoursWorkedShould, weekOvertime, weekOvertimeDuration.isNegative(), weekRatio, daysDto);
     }
 

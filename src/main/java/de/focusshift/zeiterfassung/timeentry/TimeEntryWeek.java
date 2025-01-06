@@ -51,7 +51,7 @@ record TimeEntryWeek(
             .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
 
-    public int week() {
+    public int calendarWeek() {
         final int minimalDaysInFirstWeek = WeekFields.of(GERMANY).getMinimalDaysInFirstWeek();
         final WeekFields weekFields = WeekFields.of(firstDateOfWeek.getDayOfWeek(), minimalDaysInFirstWeek);
         return firstDateOfWeek.get(weekFields.weekOfWeekBasedYear());
