@@ -22,7 +22,6 @@ import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
-import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -31,7 +30,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import static java.util.Locale.GERMANY;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
@@ -124,8 +122,7 @@ class ReportControllerHelper {
             .toList();
 
         final LocalDate firstDateOfWeek = reportWeek.firstDateOfWeek();
-        final WeekFields weekFields = WeekFields.of(firstDateOfWeek.getDayOfWeek(), WeekFields.of(GERMANY).getMinimalDaysInFirstWeek());
-        final int calendarWeek = firstDateOfWeek.get(weekFields.weekOfWeekBasedYear());
+        final int calendarWeek = reportWeek.calenderWeek();
 
         final String dateRangeString = dateRangeFormatter.toDateRangeString(firstDateOfWeek, reportWeek.lastDateOfWeek());
 
