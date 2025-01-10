@@ -35,12 +35,12 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 
 @Component
-class ReportControllerHelper {
+class ReportViewHelper {
 
     private final DateFormatter dateFormatter;
     private final DateRangeFormatter dateRangeFormatter;
 
-    ReportControllerHelper(DateFormatter dateFormatter, DateRangeFormatter dateRangeFormatter) {
+    ReportViewHelper(DateFormatter dateFormatter, DateRangeFormatter dateRangeFormatter) {
         this.dateFormatter = dateFormatter;
         this.dateRangeFormatter = dateRangeFormatter;
     }
@@ -228,7 +228,7 @@ class ReportControllerHelper {
     }
 
     private DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry) {
-        return new DetailDayEntryDto(reportDayEntry.user().fullName(), reportDayEntry.comment(), reportDayEntry.isBreak(), reportDayEntry.start().toLocalTime(), reportDayEntry.end().toLocalTime());
+        return new DetailDayEntryDto(reportDayEntry.timeEntryId().value(), reportDayEntry.user().fullName(), reportDayEntry.comment(), reportDayEntry.isBreak(), reportDayEntry.start().toLocalTime(), reportDayEntry.end().toLocalTime());
     }
 
     private DetailDayAbsenceDto toDetailDayAbsenceDto(ReportDayAbsence reportDayAbsence, Locale locale) {
