@@ -55,8 +55,20 @@ public class TimeEntryEditModalHelper {
         final List<TimeEntryHistoryItemDto> history = List.of(
             new TimeEntryHistoryItemDto(
                 "Max Mustermann",
-                "angelegt von",
+                "bearbeitet",
                 "Montag, 02. Dezember 2024 10:06 Uhr",
+                timeEntryViewHelper.toTimeEntryDto(timeEntry)
+            ),
+            new TimeEntryHistoryItemDto(
+                "Max Mustermann",
+                "bearbeitet",
+                "Donnerstag, 28. September 2024 10:06 Uhr",
+                timeEntryViewHelper.toTimeEntryDto(timeEntry)
+            ),
+            new TimeEntryHistoryItemDto(
+                "Max Mustermann",
+                "angelegt",
+                "Freitag, 12. Juni 2024 10:06 Uhr",
                 timeEntryViewHelper.toTimeEntryDto(timeEntry)
             )
         );
