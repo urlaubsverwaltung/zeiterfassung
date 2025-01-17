@@ -469,14 +469,14 @@
                       href="#"
                       th:href="@{/report/year/{year}/week/{week} (year=${year}, week=${week}, timeentry=${dayEntry.timeEntryId})}"
                       class="button"
-                      title="Bearbeiten"
+                      title="Details"
                       data-turbo="true"
                       data-turbo-frame="frame-modal"
                       data-turbo-action="advance"
                     >
-                      <span class="sr-only">Bearbeiten</span>
+                      <span class="sr-only">Details</span>
                       <svg
-                        th:replace="~{icons/edit::svg(className='w-4 h-4 text-gray-400')}"
+                        th:replace="~{icons/file-clock::svg(className='w-4 h-4 text-gray-400')}"
                       ></svg>
                     </a>
                   </div>
