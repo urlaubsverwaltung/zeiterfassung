@@ -291,64 +291,39 @@
 /* TODO move into separate component and include it in css files */
 
 .time-entry-history-list {
-  display: grid;
-  grid-template-columns: auto auto auto 1fr auto;
-  row-gap: 0.25rem;
-  column-gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 
   > li {
-    display: grid;
-    grid-template-rows: subgrid;
-    grid-template-columns: subgrid;
-    grid-row: span 2;
-    grid-column: span 5;
+    .time-entry-history-list__element__summary {
+      cursor: pointer;
+      display: block;
 
-    &:not(:last-of-type) {
-      .time-entry-history-list__element__content {
-        padding-bottom: 2rem;
+      svg {
+        display: inline-block;
+        transition: transform 0.2s;
+        margin-top: -3px;
       }
     }
 
-    .time-entry-history-list__element__details {
-      display: inherit;
-      grid-template-rows: subgrid;
-      grid-template-columns: subgrid;
-      grid-row: inherit;
-      grid-column: inherit;
+    .time-entry-history-list__element__content {
+      margin-top: 0.5rem;
+    }
 
+    .time-entry-history-list__element__details[open] {
       .time-entry-history-list__element__summary {
-        cursor: pointer;
-        display: inherit;
-        grid-template-columns: subgrid;
-        grid-column: inherit;
-        align-items: center;
-
         svg {
-          cursor: pointer;
-          transition: transform 0.2s;
+          transform: rotate(90deg);
         }
       }
+    }
+  }
 
+  > li:not(:last-of-type) {
+    .time-entry-history-list__element__details {
       .time-entry-history-list__element__content {
-        display: none; /* overridden on [open] */
-        grid-template-columns: subgrid;
-        grid-column: inherit;
-
-        > :first-child {
-          grid-column: 2/-1;
-        }
-      }
-
-      &[open] {
-        .time-entry-history-list__element__summary {
-          svg {
-            transform: rotate(90deg);
-          }
-        }
-        .time-entry-history-list__element__content {
-          display: inherit;
-          margin-top: 0.5rem;
-        }
+        padding-bottom: 1rem;
       }
     }
   }
