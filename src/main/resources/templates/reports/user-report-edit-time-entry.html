@@ -127,10 +127,10 @@
                             th:each="historyItem : ${timeEntryHistory}"
                             class="time-entry-history-list__element"
                           >
-                            <div
-                              class="time-entry-history-list__element__details"
+                            <details
+                              class="details-unstyled time-entry-history-list__element__details"
                             >
-                              <div
+                              <summary
                                 class="time-entry-history-list__element__summary"
                               >
                                 <svg
@@ -146,7 +146,7 @@
                                   Luisa Müller
                                 </span>
                                 <span><!-- empty for now --></span>
-                              </div>
+                              </summary>
                               <div
                                 class="time-entry-history-list__element__content"
                               >
@@ -154,7 +154,7 @@
                                   th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form-existing')}"
                                 ></div>
                               </div>
-                            </div>
+                            </details>
                           </li>
                         </ul>
                       </div>
