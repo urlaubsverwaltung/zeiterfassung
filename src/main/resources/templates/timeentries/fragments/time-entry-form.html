@@ -13,9 +13,10 @@
     >
       <div
         th:fragment="timeentry-slot-form-content(timeEntry, actions, class)"
-        th:with="rnd=${#strings.randomAlphanumeric(6)}"
+        th:with="rnd=${#strings.randomAlphanumeric(6)}, disabled=${disabled ?: false}"
         class="flex flex-col-reverse md:flex-col"
         th:classappend="${class}"
+        th:object="${timeEntry}"
       >
         <input type="hidden" name="id" th:value="${timeEntry.id}" />
         <h4
@@ -40,6 +41,7 @@
                 data-iso-value="2021-11-27"
                 th:data-iso-value="${#temporals.format(timeEntry.date, 'yyyy-MM-dd')}"
                 data-js-hidden
+                th:disabled="${disabled}"
               />
               <label
                 for="input-entry-date"
@@ -103,6 +105,7 @@
                       placeholder="Woran arbeitest du gerade?"
                       th:placeholder="#{time-entry.form.comment.input.placeholder}"
                       class="border border-gray-200"
+                      th:disabled="${disabled}"
                     />
                     <label
                       for="input-entry-comment"
@@ -123,6 +126,7 @@
                       th:placeholder="#{time-entry.form.start.input.placeholder}"
                       class="peer border border-gray-200 invalid:border-red-600"
                       th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
+                      th:disabled="${disabled}"
                     />
                     <label
                       for="input-entry-from"
@@ -145,6 +149,7 @@
                       th:placeholder="#{time-entry.form.end.input.placeholder}"
                       class="peer border border-gray-200 invalid:border-red-600"
                       th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
+                      th:disabled="${disabled}"
                     />
                     <label
                       for="input-entry-to"
@@ -168,6 +173,7 @@
                       th:placeholder="#{time-entry.form.duration.input.placeholder}"
                       class="peer border border-gray-200 invalid:border-red-600"
                       th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
+                      th:disabled="${disabled}"
                     />
                     <label
                       for="input-entry-duration"
@@ -188,6 +194,7 @@
                         name="break"
                         th:checked="${timeEntry.isBreak}"
                         class="peer mt-0.5"
+                        th:disabled="${disabled}"
                       />
                     </span>
                     <label
