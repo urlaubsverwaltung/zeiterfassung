@@ -24,6 +24,16 @@ duet-date-picker.edited ~ label > span {
   color: theme("colors.blue.600");
 }
 
+details.details-unstyled {
+  > summary {
+    list-style: none;
+  }
+
+  > summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
 .button-primary {
   @apply whitespace-nowrap;
   @apply bg-blue-700;
