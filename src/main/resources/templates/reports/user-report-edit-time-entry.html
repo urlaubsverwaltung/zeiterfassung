@@ -40,7 +40,7 @@
                         class="text-sm font-bold text-gray-500"
                         th:text="#{time-entry-edit-modal.title}"
                       >
-                        Zeitslot bearbeiten
+                        Zeitslot
                       </h1>
                       <div class="mt-4 flex flex-col items-center">
                         <div class="text-blue-200">
@@ -73,32 +73,9 @@
                     </form>
                   </div>
                   <div class="mt-4 p-4">
-                    <form
-                      is="z-time-entry-slot-form"
-                      action="#"
-                      th:action="@{/report/year/{year}/week/{week} (year=${year}, week=${week})}"
-                      method="post"
-                      data-turbo-frame="_top"
-                      data-turbo-action="replace"
-                    >
-                      <div>
-                        <div
-                          th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new')}"
-                        ></div>
-                      </div>
-                      <div class="mt-8 flex justify-end gap-2">
-                        <button type="submit" class="button-primary">
-                          Speichern
-                        </button>
-                        <button
-                          type="reset"
-                          formmethod="dialog"
-                          class="button-secondary"
-                        >
-                          Zurücksetzen
-                        </button>
-                      </div>
-                    </form>
+                    <div
+                      th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new', disabled=true)}"
+                    ></div>
                     <div class="mt-8">
                       <div
                         class="bg-gradient-to-r from-blue-200 to-blue-100 p-4 rounded-t-3xl"
@@ -151,7 +128,7 @@
                                 class="time-entry-history-list__element__content"
                               >
                                 <div
-                                  th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form-existing')}"
+                                  th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form-existing', disabled=true)}"
                                 ></div>
                               </div>
                             </details>
