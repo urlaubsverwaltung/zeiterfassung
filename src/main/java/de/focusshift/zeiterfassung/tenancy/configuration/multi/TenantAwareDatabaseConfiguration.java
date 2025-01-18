@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeEntity;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteEntity;
 import de.focusshift.zeiterfassung.settings.FederalStateSettingsEntity;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserEntity;
 import de.focusshift.zeiterfassung.timeclock.TimeClockEntity;
@@ -18,7 +19,7 @@ import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.envers.repository.config.EnableEnversRepositories;
 import org.springframework.orm.hibernate5.SpringBeanContainer;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -34,7 +35,7 @@ import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
 
 @Configuration(proxyBeanMethods = false)
 @EnableTransactionManagement
-@EnableJpaRepositories(
+@EnableEnversRepositories(
     basePackageClasses = {
         AbsenceWriteEntity.class,
         AbsenceTypeEntity.class,
@@ -80,6 +81,9 @@ class TenantAwareDatabaseConfiguration {
             .dataSource(tenantAwareDataSource)
             // List all tenant aware related entity packages here
             .packages(
+                // envers revinfo
+                TenantAwareRevisionEntity.class,
+                // domain
                 AbsenceWriteEntity.class,
                 AbsenceTypeEntity.class,
                 TimeEntryEntity.class,

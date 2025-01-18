@@ -1,0 +1,132 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+  <changeSet author="seber" id="add-envers-base-audit-table">
+    <preConditions>
+      <not>
+        <tableExists tableName="revinfo"/>
+      </not>
+    </preConditions>
+
+    <createSequence sequenceName="revinfo_seq" incrementBy="50" />
+
+    <createTable tableName="revinfo">
+      <column name="id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="timestamp" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="updated_by" type="VARCHAR(36)">
+        <!-- nullable because this could be updated by some other mechanism than user updates the time-entry -->
+        <constraints nullable="true"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="revinfo"
+                             baseColumnNames="updated_by"
+                             referencedTableName="tenant_user"
+                             referencedColumnNames="uuid"
+                             constraintName="FK_REVINFO_UPDATED_BY_TENANT_USER_UUID"/>
+  </changeSet>
+
+  <changeSet author="seber" id="add-time-entry-audit-table">
+    <preConditions>
+      <not>
+        <tableExists tableName="time_entry_aud"/>
+      </not>
+    </preConditions>
+
+    <createSequence sequenceName="time_entry_aud_seq" incrementBy="50" />
+
+    <createTable tableName="time_entry_aud">
+      <column name="id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(255)"/>
+      <column name="owner" type="VARCHAR(255)"/>
+      <column name="owner_mod" type="BOOLEAN"/>
+      <column name="comment" type="VARCHAR(255)"/>
+      <column name="comment_mod" type="BOOLEAN"/>
+      <column name="start" type="TIMESTAMP WITH TIME ZONE"/>
+      <column name="start_mod" type="BOOLEAN"/>
+      <column name="start_zone_id" type="VARCHAR(255)"/>
+      <column name="start_zone_id_mod" type="BOOLEAN"/>
+      <column name="end" type="TIMESTAMP WITH TIME ZONE"/>
+      <column name="end_mod" type="BOOLEAN"/>
+      <column name="end_zone_id" type="VARCHAR(255)"/>
+      <column name="end_zone_id_mod" type="BOOLEAN"/>
+      <column name="is_break" type="BOOLEAN"/>
+      <column name="is_break_mod" type="BOOLEAN"/>
+
+      <!-- Add audit-specific columns -->
+      <column name="rev" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="revtype" type="TINYINT">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addPrimaryKey tableName="time_entry_aud" columnNames="id,rev" constraintName="PK_TIME_ENTRY_AUD"/>
+
+    <!-- omit foreign key constraint to time_entry.id so we have access to the history. -->
+    <!-- we may introduce a feature to delete the history as well by an authenticated person? -->
+    <!-- however, application has to delete the history on person delete! -->
+
+    <addForeignKeyConstraint baseTableName="time_entry_aud"
+                             baseColumnNames="rev"
+                             referencedTableName="revinfo"
+                             referencedColumnNames="id"
+                             constraintName="FK_TIME_ENTRY_AUD_REV"/>
+
+    <addForeignKeyConstraint baseTableName="time_entry_aud"
+                             baseColumnNames="owner"
+                             referencedTableName="tenant_user"
+                             referencedColumnNames="uuid"
+                             constraintName="FK_TIME_ENTRY_AUD_OWNER"/>
+  </changeSet>
+
+  <changeSet author="seber" id="migrate-existing-time-entries-to-audit">
+    <sql>
+      -- create the first revtype=INSERT audit item
+      -- for every time-entry not existing in the _aud table yet
+      --
+      with new_rev as (
+        select nextval('revinfo_seq') as id,
+               extract(epoch from t.updated_at) * 1000 as timestamp,
+               t.tenant_id,
+               t.owner as updated_by,
+               t.id as time_entry_id
+        from time_entry t
+        where t.id not in (select id from time_entry_aud)
+      ),
+      insert_revinfo as (
+        -- first create the revinfo entry, to be able to reference the id in the _aud table
+        insert into revinfo (id, timestamp, tenant_id, updated_by)
+        select r.id, r.timestamp, r.tenant_id, r.updated_by from new_rev r
+      )
+      -- then create the final revtype=INSERT _aud entry
+      insert into time_entry_aud (
+        id, tenant_id, owner, owner_mod, comment, comment_mod, start, start_mod,
+        start_zone_id, start_zone_id_mod, "end", end_mod, end_zone_id, end_zone_id_mod,
+        is_break, is_break_mod, rev, revtype
+      )
+      select
+        -- tenant_id == null since tenant id is not set in future modification inserts anyway
+        -- tenant_id exists in the revinfo metadata.
+        t.id, null, t.owner, true,
+        t.comment, true, t.start, true,
+        t.start_zone_id, true, t.end, true,
+        t.end_zone_id, true, t.is_break, true,
+        r.id, 0
+      from time_entry t
+      join new_rev r on r.time_entry_id = t.id
+    </sql>
+  </changeSet>
+</databaseChangeLog>
