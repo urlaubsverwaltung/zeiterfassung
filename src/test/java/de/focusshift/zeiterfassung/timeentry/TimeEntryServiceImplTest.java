@@ -1,5 +1,10 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.TenantAwareRevisionMetadata;
+import de.focusshift.zeiterfassung.data.history.EntityRevisionMapper;
+import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
+import de.focusshift.zeiterfassung.data.history.EntityRevisionType;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -12,6 +17,7 @@ import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,6 +26,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.history.Revision;
+import org.springframework.data.history.Revisions;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -43,6 +51,8 @@ import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.data.history.RevisionMetadata.RevisionType.INSERT;
+import static org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE;
 
 @ExtendWith(MockitoExtension.class)
 class TimeEntryServiceImplTest {
@@ -61,13 +71,112 @@ class TimeEntryServiceImplTest {
     private UserManagementService userManagementService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
+    @Mock
+    private EntityRevisionMapper entityRevisionMapper;
 
     private static final Clock clockFixed = Clock.fixed(Instant.now(), UTC);
 
     @BeforeEach
     void setUp() {
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeCalendarService,
-            userDateService, userSettingsProvider, clockFixed);
+            userDateService, userSettingsProvider, entityRevisionMapper, clockFixed);
+    }
+
+    @Nested
+    class FindTimeEntryHistory {
+
+        @Test
+        void ensureFindTimeEntryHistoryEmptyWhenThereAreNoRevisions() {
+
+            when(timeEntryRepository.findRevisions(1L)).thenReturn(Revisions.none());
+
+            final Optional<TimeEntryHistory> actual = sut.findTimeEntryHistory(new TimeEntryId(1L));
+            assertThat(actual).isEmpty();
+        }
+
+        @Test
+        void ensureFindTimeEntryHistory() {
+
+            final UserId userId = new UserId("batman");
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = createUser(userIdComposite, "Bruce", "Wayne");
+
+            final Instant revisionTimestamp = Instant.now(clockFixed);
+            final Instant start = Instant.parse("2025-03-03T21:00:00.00Z");
+            final Instant end = Instant.parse("2025-03-03T21:30:00.00Z");
+
+            final TenantAwareRevisionEntity revisionEntity = new TenantAwareRevisionEntity();
+            revisionEntity.setId(1L);
+            revisionEntity.setTimestamp(revisionTimestamp.toEpochMilli());
+            revisionEntity.setUpdatedBy(userId.value());
+
+            final TimeEntryEntity entityCreated = new TimeEntryEntity();
+            entityCreated.setId(42L);
+            entityCreated.setOwner(userId.value());
+            entityCreated.setStart(start);
+            entityCreated.setStartZoneId("UTC");
+            entityCreated.setEnd(end);
+            entityCreated.setEndZoneId("UTC");
+            entityCreated.setComment("Kickoff");
+
+            final Revision<Long, TimeEntryEntity> revision = Revision.of(new TenantAwareRevisionMetadata(revisionEntity, INSERT), entityCreated);
+
+            when(timeEntryRepository.findRevisions(1L)).thenReturn(Revisions.of(List.of(revision)));
+
+            when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
+            final EntityRevisionMetadata metadata = anyEntityRevisionMetadata();
+            when(entityRevisionMapper.toEntityRevisionMetadata(revision)).thenReturn(metadata);
+
+            final Optional<TimeEntryHistory> actual = sut.findTimeEntryHistory(new TimeEntryId(1L));
+            assertThat(actual).hasValueSatisfying(history -> {
+
+                assertThat(history.timeEntryId()).isEqualTo(new TimeEntryId(1L));
+                assertThat(history.revisions()).hasSize(1);
+
+                final TimeEntryId timeEntryId = new TimeEntryId(42L);
+                final ZonedDateTime startDateTime = ZonedDateTime.ofInstant(start, ZONE_ID_UTC);
+                final ZonedDateTime endDateTime = ZonedDateTime.ofInstant(end, ZONE_ID_UTC);
+
+                final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "Kickoff", startDateTime, endDateTime, false);
+                final TimeEntryHistoryItem historyItem = new TimeEntryHistoryItem(metadata, timeEntry, true, true, true, true);
+
+                assertThat(history.revisions().getFirst()).isEqualTo(historyItem);
+                assertThat(history.revisions().getFirst().metadata()).isSameAs(metadata);
+            });
+        }
+
+        @Test
+        void ensureFindTimeEntryHistoryWithOrderedHistoryItems() {
+
+            final TenantAwareRevisionEntity revisionEntityInsert = new TenantAwareRevisionEntity();
+            revisionEntityInsert.setId(1L);
+            final TenantAwareRevisionEntity revisionEntityUpdate = new TenantAwareRevisionEntity();
+            revisionEntityUpdate.setId(2L);
+
+            final TimeEntryEntity entityCreated = anyTimeEntryEntity();
+            final TimeEntryEntity entityModified = anyTimeEntryEntity();
+
+            final Revision<Long, TimeEntryEntity> revisionInsert = Revision.of(new TenantAwareRevisionMetadata(revisionEntityInsert, INSERT), entityCreated);
+            final Revision<Long, TimeEntryEntity> revisionUpdate = Revision.of(new TenantAwareRevisionMetadata(revisionEntityUpdate, UPDATE), entityModified);
+
+            when(timeEntryRepository.findRevisions(1L)).thenReturn(Revisions.of(List.of(revisionInsert, revisionUpdate)));
+
+            when(userManagementService.findUserById(any())).thenReturn(Optional.of(anyUser()));
+
+            final EntityRevisionMetadata metadataCreated = anyEntityRevisionMetadata();
+            final EntityRevisionMetadata metadataModified = anyEntityRevisionMetadata();
+            when(entityRevisionMapper.toEntityRevisionMetadata(revisionInsert)).thenReturn(metadataCreated);
+            when(entityRevisionMapper.toEntityRevisionMetadata(revisionUpdate)).thenReturn(metadataModified);
+
+            final Optional<TimeEntryHistory> actual = sut.findTimeEntryHistory(new TimeEntryId(1L));
+            assertThat(actual).hasValueSatisfying(history -> {
+                assertThat(history.revisions()).hasSize(2);
+                assertThat(history.revisions().get(0).metadata()).isSameAs(metadataCreated);
+                assertThat(history.revisions().get(1).metadata()).isSameAs(metadataModified);
+            });
+        }
     }
 
     @Test
@@ -1301,5 +1410,38 @@ class TimeEntryServiceImplTest {
                 6
             )
         );
+    }
+
+    private static TimeEntryEntity anyTimeEntryEntity() {
+
+        final Instant start = Instant.parse("2025-03-03T21:00:00.00Z");
+        final Instant end = Instant.parse("2025-03-03T21:30:00.00Z");
+
+        final TimeEntryEntity entity = new TimeEntryEntity();
+
+        entity.setId(42L);
+        entity.setOwner("");
+        entity.setStart(start);
+        entity.setStartZoneId("UTC");
+        entity.setEnd(end);
+        entity.setEndZoneId("UTC");
+        entity.setComment("Kickoff");
+
+        return entity;
+    }
+
+    private static User anyUser() {
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        return createUser(userIdComposite, "Bruce", "Wayne");
+    }
+
+    private static User createUser(UserIdComposite userIdComposite, String givenName, String familyName) {
+        return new User(userIdComposite, givenName, familyName, new EMailAddress(""), Set.of());
+    }
+
+    private static EntityRevisionMetadata anyEntityRevisionMetadata() {
+        return new EntityRevisionMetadata(1L, EntityRevisionType.CREATED, Instant.now(), Optional.empty());
     }
 }
