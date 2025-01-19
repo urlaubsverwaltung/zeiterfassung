@@ -28,7 +28,6 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "time_entry_seq")
     protected Long id;
 
-    @NotAudited
     @Column(name = "owner", nullable = false)
     @NotNull
     @Size(max = 255)
