@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.user.UserId;
+import org.slf4j.Logger;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
@@ -8,9 +10,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
+
 @Component
 public class TimeEntryEditModalHelper {
 
+    private static final Logger LOG = getLogger(lookup().lookupClass());
     private static final String TIME_ENTRY_HISTORY_MODEL_NAME = "timeEntryHistory";
 
     private final TimeEntryService timeEntryService;
@@ -48,31 +54,26 @@ public class TimeEntryEditModalHelper {
             return;
         }
 
-        // this will be `timeEntryService.findTimeEntryHistory(timeEntryId)` soon I think
-        final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
-            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry with id=%d".formatted(timeEntryId)));
-
-        final List<TimeEntryHistoryItemDto> history = List.of(
-            new TimeEntryHistoryItemDto(
-                "Max Mustermann",
-                "bearbeitet",
-                "Montag, 02. Dezember 2024 10:06 Uhr",
-                timeEntryViewHelper.toTimeEntryDto(timeEntry)
-            ),
-            new TimeEntryHistoryItemDto(
-                "Max Mustermann",
-                "bearbeitet",
-                "Donnerstag, 28. September 2024 10:06 Uhr",
-                timeEntryViewHelper.toTimeEntryDto(timeEntry)
-            ),
-            new TimeEntryHistoryItemDto(
-                "Max Mustermann",
-                "angelegt",
-                "Freitag, 12. Juni 2024 10:06 Uhr",
-                timeEntryViewHelper.toTimeEntryDto(timeEntry)
-            )
-        );
-
-        model.addAttribute(TIME_ENTRY_HISTORY_MODEL_NAME, history);
+        timeEntryService.findTimeEntryHistory(new TimeEntryId(timeEntryId))
+            .ifPresentOrElse(
+                history -> {
+                    final List<TimeEntryHistoryItemDto> historyItemDtos = history.revisions()
+                        .stream()
+                        .map(item -> new TimeEntryHistoryItemDto(
+                            // TODO username / email / avatar
+                            item.metadata().modifiedBy().map(UserId::value).map(String::valueOf).orElse(""),
+                            // TODO translation of revision type name
+                            item.metadata().entityRevisionType().name().toLowerCase(),
+                            // TODO text represantation of instant mapped to user time zone
+                            item.metadata().modifiedAt().toString(),
+                            timeEntryViewHelper.toTimeEntryDto(item.timeEntry())
+                        ))
+                        .toList()
+                        .reversed();
+                    model.addAttribute(TIME_ENTRY_HISTORY_MODEL_NAME, historyItemDtos);
+                },
+                // TODO throw and show 5xx? probably there has to be one history item at least -> the CREATED item
+                () -> LOG.error("Could find history for timeEntry with id={}. But seems to be required for view rendering.", timeEntryId)
+            );
     }
 }
