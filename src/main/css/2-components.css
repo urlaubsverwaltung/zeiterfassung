@@ -4,6 +4,7 @@
 @import "./components/body-overlay.css";
 @import "./components/checkbox-switch.css";
 @import "./components/info-banner.css";
+@import "./components/modal.css";
 @import "./components/feedback.css";
 @import "./components/navigation.css";
 @import "./components/time-clock.css";
@@ -21,6 +22,16 @@
 
 duet-date-picker.edited ~ label > span {
   color: theme("colors.blue.600");
+}
+
+details.details-unstyled {
+  > summary {
+    list-style: none;
+  }
+
+  > summary::-webkit-details-marker {
+    display: none;
+  }
 }
 
 .button-primary {

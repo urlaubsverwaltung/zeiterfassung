@@ -60,10 +60,12 @@ class TimeEntryControllerTest {
     private UserSettingsProvider userSettingsProvider;
     @Mock
     private DateFormatter dateFormatter;
+    @Mock
+    private TimeEntryViewHelper timeEntryControllerHelper;
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, Clock.systemUTC());
+        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, timeEntryControllerHelper, Clock.systemUTC());
     }
 
     @Test

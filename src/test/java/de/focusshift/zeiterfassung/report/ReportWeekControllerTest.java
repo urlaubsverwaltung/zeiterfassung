@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -59,6 +60,8 @@ class ReportWeekControllerTest {
     @Mock
     private ReportPermissionService reportPermissionService;
     @Mock
+    private TimeEntryDialogHelper timeEntryDialogHelper;
+    @Mock
     private MessageSource messageSource;
 
     private final Clock clock = Clock.systemUTC();
@@ -67,8 +70,8 @@ class ReportWeekControllerTest {
     void setUp() {
         final DateFormatterImpl dateFormatter = new DateFormatterImpl();
         final DateRangeFormatter dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
-        final ReportControllerHelper helper = new ReportControllerHelper(dateFormatter, dateRangeFormatter);
-        sut = new ReportWeekController(reportService, reportPermissionService, helper, clock);
+        final ReportViewHelper reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
+        sut = new ReportWeekController(reportService, reportPermissionService, reportViewHelper, timeEntryDialogHelper, clock);
     }
 
     @Test
@@ -457,7 +460,7 @@ class ReportWeekControllerTest {
     }
 
     private ReportDayEntry reportDayEntry(User user, LocalDate date) {
-        return new ReportDayEntry(user, "", date.atStartOfDay().plusHours(8).atZone(UTC), date.atStartOfDay().plusHours(16).atZone(UTC), false);
+        return new ReportDayEntry(null, user, "", date.atStartOfDay().plusHours(8).atZone(UTC), date.atStartOfDay().plusHours(16).atZone(UTC), false);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {

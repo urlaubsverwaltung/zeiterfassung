@@ -1,6 +1,7 @@
 import "../components/avatar";
 import "../components/details-dropdown";
 import "../components/feedback-form";
+import "../components/modal";
 import "../components/navigation";
 import "../components/time-clock";
 import { initPreventDoubleClickSubmit } from "../components/form";
