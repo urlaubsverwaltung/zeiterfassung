@@ -17,6 +17,10 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
+/**
+ * Envers Revision Entity extended with custom data like `updated_by` and `tenant_id`.
+ *
+ */
 @Entity
 @Table(name = "revinfo")
 @RevisionEntity(TenantRevisionListener.class)
