@@ -2,12 +2,10 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryEditModalHelper;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,14 +13,10 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.threeten.extra.YearWeek;
 
@@ -33,8 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.ScrollPreservation.PRESERVE;
-import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_REFRESH_SCROLL_ATTRIBUTE;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -135,27 +127,6 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         reportViewHelper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, reportWeek);
 
         return "reports/user-report";
-    }
-
-    @PostMapping("/report/year/{year}/week/{week}")
-    public ModelAndView postEditTimeEntry(
-        @PathVariable("year") Integer year,
-        @PathVariable("week") Integer week,
-        @Valid @ModelAttribute(name = "timeEntry") TimeEntryDTO timeEntryDTO, BindingResult errors,
-        Model model,
-        @AuthenticationPrincipal OidcUser oidcUser,
-        RedirectAttributes redirectAttributes) {
-
-        timeEntryEditModalHelper.saveTimeEntry(timeEntryDTO, errors, model, redirectAttributes, oidcUser);
-        if (errors.hasErrors()) {
-            LOG.debug("validation errors occurred on editing TimeEntry via ReportWeek TimeEntry Dialog. Redirecting to Dialog.");
-            return new ModelAndView("redirect:/report/year/%s/week/%s?timeentry=%s".formatted(year, week, timeEntryDTO.getId()));
-        }
-
-        // preserve scroll position after editing a timeEntry
-        redirectAttributes.addFlashAttribute(TURBO_REFRESH_SCROLL_ATTRIBUTE, PRESERVE);
-
-        return new ModelAndView("redirect:/report/year/%s/week/%s".formatted(year, week));
     }
 
     private String weeklyUserReportWithDialog(Long timeEntryId, Model model) {
