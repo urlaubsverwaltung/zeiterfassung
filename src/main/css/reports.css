@@ -298,9 +298,6 @@
   > li {
     .time-entry-history-list__element__summary {
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
 
       .details-summary-icon {
         display: inline-block;
@@ -326,6 +323,18 @@
     .time-entry-history-list__element__details {
       .time-entry-history-list__element__content {
         padding-bottom: 1rem;
+      }
+    }
+  }
+}
+
+@screen md {
+  .time-entry-history-list {
+    > li {
+      .time-entry-history-list__element__summary {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
       }
     }
   }
