@@ -111,7 +111,7 @@
                                 class="time-entry-history-list__element__summary"
                               >
                                 <svg
-                                  th:replace="~{icons/chevron-right::svg(className='w-5 h-5 text-blue-400')}"
+                                  th:replace="~{icons/chevron-right::svg(className='details-summary-icon w-5 h-5 text-blue-400')}"
                                 ></svg>
                                 <span
                                   th:text="${#temporals.format(historyItem.date, 'FULL')}"
@@ -122,6 +122,11 @@
                                   th:text="${#messages.msg('entity-revision-type.' + historyItem.revisionType)}"
                                 >
                                   bearbeitet von
+                                </span>
+                                <span class="text-blue-200">
+                                  <svg
+                                    th:replace="~{/fragments/avatar::avatar(fullName=${historyItem.username},width=26,height=26,tooltip=false)}"
+                                  ></svg>
                                 </span>
                                 <span th:text="${historyItem.username}">
                                   Luisa Müller
