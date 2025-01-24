@@ -13,6 +13,9 @@ import java.util.Optional;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
+/**
+ * Maps spring data history stuff into our domain objects.
+ */
 @Component
 public class EntityRevisionMapper {
 
