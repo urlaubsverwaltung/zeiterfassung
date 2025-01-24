@@ -298,9 +298,11 @@
   > li {
     .time-entry-history-list__element__summary {
       cursor: pointer;
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
 
-      svg {
+      .details-summary-icon {
         display: inline-block;
         transition: transform 0.2s;
         margin-top: -3px;
@@ -313,7 +315,7 @@
 
     .time-entry-history-list__element__details[open] {
       .time-entry-history-list__element__summary {
-        svg {
+        .details-summary-icon {
           transform: rotate(90deg);
         }
       }
