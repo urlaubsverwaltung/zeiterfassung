@@ -43,7 +43,16 @@ public class TimeEntryEditModalHelper {
     }
 
     public void addTimeEntryEditToModel(Model model, Long timeEntryId) {
-        addTimeEntry(model, timeEntryId);
+
+        final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
+            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry with id=%d".formatted(timeEntryId)));
+
+        final User timeEntryUser = userManagementService.findUserById(timeEntry.userIdComposite().id())
+            .orElseThrow(() -> new IllegalStateException("Could not find user with id=%d".formatted(timeEntryId)));
+
+        model.addAttribute("timeEntryOwner", timeEntryUser.fullName());
+
+        addTimeEntry(model, timeEntry);
         addTimeEntryHistory(model, timeEntryId);
     }
 
@@ -51,15 +60,12 @@ public class TimeEntryEditModalHelper {
         timeEntryViewHelper.saveTimeEntry(timeEntryDTO, errors, model, redirectAttributes, oidcUser);
     }
 
-    private void addTimeEntry(Model model, Long timeEntryId) {
+    private void addTimeEntry(Model model, TimeEntry timeEntry) {
         // timeEntry could already exist in model in case of a POST-Redirect-GET after form validation errors
         // we must not add it again, otherwise user input and BindingResult/Errors are lost.
         if (model.containsAttribute("timeEntry")) {
             return;
         }
-
-        final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
-            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry with id=%d".formatted(timeEntryId)));
 
         timeEntryViewHelper.addTimeEntryToModel(model, timeEntry);
     }
