@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.data.history;
 
+import de.focusshift.zeiterfassung.TenantAwareRevisionMetadata;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,7 +10,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.data.envers.repository.support.DefaultRevisionMetadata;
 import org.springframework.data.history.Revision;
 import org.springframework.data.history.RevisionMetadata;
 
@@ -38,8 +38,8 @@ class EntityRevisionMapperTest {
         entity.setTimestamp(epochMilli);
         entity.setUpdatedBy("updatedBy");
 
-        final DefaultRevisionMetadata metadata = new DefaultRevisionMetadata(entity, RevisionMetadata.RevisionType.INSERT);
-        final Revision<Integer, Object> revision = Revision.of(metadata, entity);
+        final TenantAwareRevisionMetadata metadata = new TenantAwareRevisionMetadata(entity, RevisionMetadata.RevisionType.INSERT);
+        final Revision<Long, Object> revision = Revision.of(metadata, entity);
 
         final EntityRevisionMetadata actual = sut.toEntityRevisionMetadata(revision);
         assertThat(actual.revision()).isEqualTo(42);
@@ -55,8 +55,8 @@ class EntityRevisionMapperTest {
         final TenantAwareRevisionEntity entity = new TenantAwareRevisionEntity();
         entity.setUpdatedBy(givenUpdatedBy);
 
-        final DefaultRevisionMetadata metadata = new DefaultRevisionMetadata(entity, RevisionMetadata.RevisionType.INSERT);
-        final Revision<Integer, Object> revision = Revision.of(metadata, entity);
+        final TenantAwareRevisionMetadata metadata = new TenantAwareRevisionMetadata(entity, RevisionMetadata.RevisionType.INSERT);
+        final Revision<Long, Object> revision = Revision.of(metadata, entity);
 
         final EntityRevisionMetadata actual = sut.toEntityRevisionMetadata(revision);
         assertThat(actual.modifiedBy()).isEmpty();
@@ -76,7 +76,7 @@ class EntityRevisionMapperTest {
 
         final TenantAwareRevisionEntity entity = new TenantAwareRevisionEntity();
 
-        final Revision<Integer, Object> revision = Revision.of(new DefaultRevisionMetadata(entity, revisionType), entity);
+        final Revision<Long, Object> revision = Revision.of(new TenantAwareRevisionMetadata(entity, revisionType), entity);
         final EntityRevisionMetadata actual = sut.toEntityRevisionMetadata(revision);
 
         assertThat(actual.entityRevisionType()).isEqualTo(expectedRevisionType);
@@ -87,7 +87,7 @@ class EntityRevisionMapperTest {
 
         final TenantAwareRevisionEntity entity = new TenantAwareRevisionEntity();
 
-        final Revision<Integer, Object> revision = Revision.of(new DefaultRevisionMetadata(entity, RevisionMetadata.RevisionType.UNKNOWN), entity);
+        final Revision<Long, Object> revision = Revision.of(new TenantAwareRevisionMetadata(entity, RevisionMetadata.RevisionType.UNKNOWN), entity);
 
         assertThatThrownBy(() -> sut.toEntityRevisionMetadata(revision))
             .isInstanceOf(IllegalArgumentException.class)
