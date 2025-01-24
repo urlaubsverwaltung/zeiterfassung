@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <th:block
+      th:fragment="dialog(timeEntry, timeEntryOwner, timeEntryDialogCloseFormAction, timeEntryHistory)"
+    >
+      <th:block
+        th:replace="~{/fragments/modal/frame::frame-modal(~{::dialog-content})}"
+      >
+        <th:block th:ref="dialog-content">
+          <th:block
+            th:replace="~{fragments/modal/modal::modal-centered(~{::modal-content})}"
+          >
+            <th:block th:ref="modal-content">
+              <div class="px-4 relative">
+                <div
+                  class="bg-gradient-to-b from-gray-200 via-gray-50 to-white absolute left-0 right-0 top-0 h-3/5"
+                ></div>
+                <div
+                  class="px-4 py-1 relative rounded-t-xl flex flex-col items-center"
+                >
+                  <h1
+                    class="text-sm font-bold text-gray-500"
+                    th:text="#{time-entry-detail-dialog.title}"
+                  >
+                    Zeitslot
+                  </h1>
+                  <div class="mt-4 flex flex-col items-center">
+                    <div class="text-blue-200">
+                      <svg
+                        th:replace="~{/fragments/avatar::avatar-bordered(fullName=${timeEntryOwner},width=54,height=54)}"
+                      ></svg>
+                    </div>
+                    <div
+                      class="font-bold text-gray-500"
+                      th:text="${timeEntryOwner}"
+                    >
+                      Max Mustermann
+                    </div>
+                  </div>
+                </div>
+                <form
+                  th:action="@{__${timeEntryDialogCloseFormAction}__}"
+                  method="get"
+                  class="absolute right-2 top-1"
+                  data-turbo-frame="_top"
+                  data-turbo-action="replace"
+                  data-modal-close-button
+                >
+                  <button
+                    type="submit"
+                    class="rounded-full p-0.5 border border-gray-400 bg-gray-100 text-gray-500"
+                  >
+                    <svg
+                      th:replace="~{icons/plus::svg(className='w-4 h-4 rotate-45')}"
+                    ></svg>
+                    <span
+                      class="sr-only"
+                      th:text="#{time-entry-detail-dialog.close.button.text}"
+                    >
+                      Schließen
+                    </span>
+                  </button>
+                </form>
+              </div>
+              <div class="mt-4 p-4">
+                <div
+                  th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new', disabled=true)}"
+                ></div>
+                <div class="mt-8">
+                  <div
+                    class="bg-gradient-to-r from-blue-200 to-blue-100 p-4 rounded-t-3xl"
+                  >
+                    <div class="flex justify-between items-end">
+                      <div class="flex gap-2">
+                        <svg
+                          th:replace="~{icons/layers::svg(className='w-6 h-6')}"
+                        ></svg>
+                        <h2
+                          class="text-lg font-bold"
+                          th:text="#{time-entry-detail-dialog.history}"
+                        >
+                          Historie
+                        </h2>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="border border-t-0 border-gray-200 rounded-b-3xl p-4"
+                  >
+                    <ul
+                      th:if="${not #lists.isEmpty(timeEntryHistory)}"
+                      class="time-entry-history-list"
+                    >
+                      <li
+                        th:each="historyItem : ${timeEntryHistory}"
+                        class="time-entry-history-list__element"
+                      >
+                        <details
+                          class="details-unstyled time-entry-history-list__element__details"
+                        >
+                          <summary
+                            class="time-entry-history-list__element__summary"
+                          >
+                            <svg
+                              th:replace="~{icons/chevron-right::svg(className='details-summary-icon w-5 h-5 text-blue-400')}"
+                            ></svg>
+                            <span
+                              th:text="${#temporals.format(historyItem.date, 'FULL')}"
+                            >
+                              Montag, 02. Dezember 2024 10:06 Uhr
+                            </span>
+                            <span
+                              th:with="revisionType=${#messages.msg('entity-revision-type.' + historyItem.revisionType)}"
+                              th:text="#{time-entry-detail-dialog.history.item.revision.by(${revisionType})}"
+                            >
+                              bearbeitet von
+                            </span>
+                            <span class="text-blue-200">
+                              <svg
+                                th:replace="~{/fragments/avatar::avatar(fullName=${historyItem.username},width=24,height=24,tooltip=false, className='inline-block')}"
+                              ></svg>
+                            </span>
+                            <span th:text="${historyItem.username}">
+                              Luisa Müller
+                            </span>
+                            <span><!-- empty for now --></span>
+                          </summary>
+                          <div
+                            class="time-entry-history-list__element__content"
+                          >
+                            <div
+                              th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form-existing', disabled=true)}"
+                            ></div>
+                          </div>
+                        </details>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <form
+                  action="#"
+                  th:action="@{__${timeEntryDialogCloseFormAction}__}"
+                  method="get"
+                  class="mt-8 flex justify-end gap-2"
+                  data-turbo-frame="_top"
+                  data-turbo-action="replace"
+                  data-modal-close-button
+                >
+                  <button
+                    type="submit"
+                    class="button-secondary"
+                    th:text="#{time-entry-detail-dialog.close.button.text}"
+                  >
+                    Dialog schließen
+                  </button>
+                </form>
+              </div>
+            </th:block>
+          </th:block>
+        </th:block>
+      </th:block>
+    </th:block>
+  </body>
+</html>
