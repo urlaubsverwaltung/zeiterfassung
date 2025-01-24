@@ -55,7 +55,7 @@ public class TimeEntryDialogHelper {
     private void addTimeEntry(Model model, TimeEntry timeEntry) {
         // timeEntry could already exist in model in case of a POST-Redirect-GET after form validation errors
         // we must not add it again, otherwise user input and BindingResult/Errors are lost.
-        if (!model.containsAttribute("timeEntry")) {
+        if (!model.containsAttribute(TIME_ENTRY_MODEL_NAME)) {
             final TimeEntryDTO timeEntryDto = timeEntryViewHelper.toTimeEntryDto(timeEntry);
             model.addAttribute(TIME_ENTRY_MODEL_NAME, timeEntryDto);
         }
