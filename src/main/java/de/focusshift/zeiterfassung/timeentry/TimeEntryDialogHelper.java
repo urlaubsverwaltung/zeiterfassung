@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Component
-public class TimeEntryEditModalHelper {
+public class TimeEntryDialogHelper {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
@@ -35,8 +35,8 @@ public class TimeEntryEditModalHelper {
     private final UserSettingsProvider userSettingsProvider;
     private final UserManagementService userManagementService;
 
-    public TimeEntryEditModalHelper(TimeEntryService timeEntryService, TimeEntryViewHelper timeEntryViewHelper,
-                                    UserSettingsProvider userSettingsProvider, UserManagementService userManagementService) {
+    public TimeEntryDialogHelper(TimeEntryService timeEntryService, TimeEntryViewHelper timeEntryViewHelper,
+                                 UserSettingsProvider userSettingsProvider, UserManagementService userManagementService) {
         this.timeEntryService = timeEntryService;
         this.timeEntryViewHelper = timeEntryViewHelper;
         this.userSettingsProvider = userSettingsProvider;

@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryEditModalHelper;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
@@ -73,8 +73,8 @@ class ReportMonthControllerTest {
         final DateRangeFormatter dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
         final ReportViewHelper helper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
         final TimeEntryViewHelper timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
-        final TimeEntryEditModalHelper timeEntryEditModalHelper = new TimeEntryEditModalHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
-        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, helper, timeEntryEditModalHelper, clock);
+        final TimeEntryDialogHelper timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, helper, timeEntryDialogHelper, clock);
     }
 
     @Test

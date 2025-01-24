@@ -2,7 +2,7 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryEditModalHelper;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -42,16 +42,16 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     private final ReportService reportService;
     private final ReportPermissionService reportPermissionService;
     private final ReportViewHelper reportViewHelper;
-    private final TimeEntryEditModalHelper timeEntryEditModalHelper;
+    private final TimeEntryDialogHelper timeEntryDialogHelper;
     private final Clock clock;
 
     ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService,
-                         ReportViewHelper reportViewHelper, TimeEntryEditModalHelper timeEntryEditModalHelper,
+                         ReportViewHelper reportViewHelper, TimeEntryDialogHelper timeEntryDialogHelper,
                          Clock clock) {
         this.reportService = reportService;
         this.reportPermissionService = reportPermissionService;
         this.reportViewHelper = reportViewHelper;
-        this.timeEntryEditModalHelper = timeEntryEditModalHelper;
+        this.timeEntryDialogHelper = timeEntryDialogHelper;
         this.clock = clock;
     }
 
@@ -136,7 +136,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         // TODO use typed spring hateoas link generation?
         final String cancelAction = "/report/year/%s/week/%s".formatted(year, week);
 
-        timeEntryEditModalHelper.addTimeEntryEditToModel(model, timeEntryId, cancelAction);
+        timeEntryDialogHelper.addTimeEntryEditToModel(model, timeEntryId, cancelAction);
 
         return "reports/user-report-edit-time-entry";
     }
