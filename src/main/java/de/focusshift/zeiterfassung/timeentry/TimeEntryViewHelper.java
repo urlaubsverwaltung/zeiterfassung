@@ -30,7 +30,7 @@ public class TimeEntryViewHelper {
     private final TimeEntryService timeEntryService;
     private final UserSettingsProvider userSettingsProvider;
 
-    TimeEntryViewHelper(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider) {
+    public TimeEntryViewHelper(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider) {
         this.timeEntryService = timeEntryService;
         this.userSettingsProvider = userSettingsProvider;
     }

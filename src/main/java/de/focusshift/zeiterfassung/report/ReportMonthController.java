@@ -3,6 +3,8 @@ package de.focusshift.zeiterfassung.report;
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryEditModalHelper;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -43,13 +45,17 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
 
     private final DateFormatter dateFormatter;
     private final ReportViewHelper viewHelper;
+    private final TimeEntryEditModalHelper timeEntryEditModalHelper;
     private final Clock clock;
     private final ReportPermissionService reportPermissionService;
 
-    ReportMonthController(ReportService reportService, ReportPermissionService reportPermissionService, DateFormatter dateFormatter, ReportViewHelper viewHelper, Clock clock) {
+    ReportMonthController(ReportService reportService, ReportPermissionService reportPermissionService,
+                          DateFormatter dateFormatter, ReportViewHelper viewHelper,
+                          TimeEntryEditModalHelper timeEntryEditModalHelper, Clock clock) {
         this.reportService = reportService;
         this.dateFormatter = dateFormatter;
         this.viewHelper = viewHelper;
+        this.timeEntryEditModalHelper = timeEntryEditModalHelper;
         this.clock = clock;
         this.reportPermissionService = reportPermissionService;
     }
@@ -70,9 +76,14 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         @PathVariable("month") Integer month,
         @RequestParam(value = "everyone", required = false) Optional<String> optionalAllUsersSelected,
         @RequestParam(value = "user", required = false) Optional<List<Long>> optionalUserIds,
+        @RequestParam(value = "timeEntryId", required = false) Long timeEntryId,
         @AuthenticationPrincipal DefaultOidcUser principal,
         Model model, Locale locale
     ) {
+
+        if (timeEntryId != null) {
+            return monthlyUserReportWithDialog(year, month, timeEntryId, model);
+        }
 
         final YearMonth yearMonth = yearMonth(year, month)
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Invalid month."));
@@ -124,6 +135,15 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         return "reports/user-report";
     }
 
+    private String monthlyUserReportWithDialog(int year, int month, Long timeEntryId, Model model) {
+
+        final String cancelAction = "/report/year/%s/month/%s".formatted(year, month);
+
+        timeEntryEditModalHelper.addTimeEntryEditToModel(model, timeEntryId, cancelAction);
+
+        return "reports/user-report-edit-time-entry";
+    }
+
     private ReportMonth getReportMonth(OidcUser principal, boolean allUsersSelected, YearMonth yearMonth, List<UserLocalId> userLocalIds) {
 
         final ReportMonth reportMonth;
@@ -168,14 +188,25 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
 
     private DetailMonthDto toDetailMonthDto(ReportMonth reportMonth, Locale locale) {
 
+        final YearMonth yearMonth = reportMonth.yearMonth();
+
         final List<DetailWeekDto> weeks = reportMonth.weeks()
             .stream()
-            .map(week -> viewHelper.toDetailWeekDto(week, reportMonth.yearMonth().getMonth(), locale))
+            .map(week -> viewHelper.toDetailWeekDto(week, reportMonth.yearMonth().getMonth(), locale, id -> this.getTimeEntryDialogUrl(yearMonth, id)))
             .toList();
 
-        final String yearMonth = dateFormatter.formatYearMonth(reportMonth.yearMonth());
+        final String yearMonthFormatted = dateFormatter.formatYearMonth(yearMonth);
 
-        return new DetailMonthDto(yearMonth, weeks);
+        return new DetailMonthDto(yearMonthFormatted, weeks);
+    }
+
+    private String getTimeEntryDialogUrl(YearMonth yearMonth, TimeEntryId timeEntryId) {
+
+        final int year = yearMonth.getYear();
+        final int month = yearMonth.getMonthValue();
+
+        // TODO use typed spring hateoas link generation?
+        return "/report/year/%s/month/%s?timeEntryId=%s".formatted(year, month, timeEntryId.value());
     }
 
     private static Optional<YearMonth> yearMonth(int year, int month) {

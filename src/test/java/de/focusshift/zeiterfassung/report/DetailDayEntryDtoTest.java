@@ -12,13 +12,13 @@ class DetailDayEntryDtoTest {
 
     @Test
     void durationSameDay() {
-        DetailDayEntryDto detailDayEntryDto = new DetailDayEntryDto(null, null, null, false, LocalTime.of(0, 0), LocalTime.of(1, 0));
+        DetailDayEntryDto detailDayEntryDto = new DetailDayEntryDto(null, null, null, false, LocalTime.of(0, 0), LocalTime.of(1, 0), "");
         assertThat(detailDayEntryDto.getDuration()).isEqualTo(Duration.ofHours(1L));
     }
 
     @Test
     void durationWithEndNextDay() {
-        DetailDayEntryDto detailDayEntryDto = new DetailDayEntryDto(null, null, null, false, LocalTime.of(23, 0), LocalTime.of(1, 0));
+        DetailDayEntryDto detailDayEntryDto = new DetailDayEntryDto(null, null, null, false, LocalTime.of(23, 0), LocalTime.of(1, 0), "");
         assertThat(detailDayEntryDto.getDuration()).isEqualTo(Duration.ofHours(2L));
     }
 }
