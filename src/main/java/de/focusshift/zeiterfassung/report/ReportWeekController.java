@@ -3,9 +3,9 @@ package de.focusshift.zeiterfassung.report;
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.threeten.extra.YearWeek;
 
@@ -31,6 +32,8 @@ import java.util.Optional;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.fromMethodCall;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 @Controller
 class ReportWeekController implements HasTimeClock, HasLaunchpad {
@@ -66,7 +69,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping("/report/year/{year}/week/{week}")
-    public String weeklyUserReport(
+    public ModelAndView weeklyUserReport(
         @PathVariable("year") Integer year,
         @PathVariable("week") Integer week,
         @RequestParam(value = "everyone", required = false) Optional<String> optionalAllUsersSelected,
@@ -76,7 +79,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         Model model, Locale locale) {
 
         if (timeEntryId != null) {
-            return weeklyUserReportWithDialog(year, week, timeEntryId, model);
+            return weeklyUserReportWithDialog(year, week, optionalAllUsersSelected, optionalUserIds, timeEntryId, model);
         }
 
         final YearWeek reportYearWeek = yearWeek(year, week)
@@ -89,7 +92,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, selectedUserLocalIds);
         final GraphWeekDto graphWeekDto = reportViewHelper.toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
         final DetailWeekDto detailWeekDto = reportViewHelper.toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth(), locale,
-            id -> this.getTimeEntryDialogUrl(year, week, id));
+            id -> createWeeklyUserReportUrl(year, week, optionalAllUsersSelected, optionalUserIds, id.value()));
 
         model.addAttribute("weekReport", graphWeekDto);
         model.addAttribute("weekReportDetail", detailWeekDto);
@@ -128,22 +131,21 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         reportViewHelper.addUserFilterModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, format(REPORT_YEAR_WEEK_URL_TEMPLATE, year, week));
         reportViewHelper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, reportWeek);
 
-        return "reports/user-report";
+        return new ModelAndView("reports/user-report");
     }
 
-    private String weeklyUserReportWithDialog(int year, int week, Long timeEntryId, Model model) {
+    private ModelAndView weeklyUserReportWithDialog(int year, int week, Optional<String> everyoneParam, Optional<List<Long>> userParam, Long timeEntryId, Model model) {
 
-        // TODO use typed spring hateoas link generation?
-        final String cancelAction = "/report/year/%s/week/%s".formatted(year, week);
+        final String closeDialogUrl = createWeeklyUserReportUrl(year, week, everyoneParam, userParam, null);
+        timeEntryDialogHelper.addTimeEntryEditToModel(model, timeEntryId, closeDialogUrl);
 
-        timeEntryDialogHelper.addTimeEntryEditToModel(model, timeEntryId, cancelAction);
-
-        return "reports/user-report-edit-time-entry";
+        return new ModelAndView("reports/user-report-edit-time-entry");
     }
 
-    private String getTimeEntryDialogUrl(int year, int week, TimeEntryId timeEntryId) {
-        // TODO use typed spring hateoas link generation?
-        return "/report/year/%s/week/%s?timeEntryId=%s".formatted(year, week, timeEntryId.value());
+    private String createWeeklyUserReportUrl(int year, int week, Optional<String> everyoneParam, Optional<List<Long>> userParam, @Nullable Long timeEntryId) {
+        return fromMethodCall(on(ReportWeekController.class)
+            .weeklyUserReport(year, week, everyoneParam, userParam, timeEntryId, null,null,null))
+            .build().toUriString();
     }
 
     private ReportWeek getReportWeek(OidcUser principal, YearWeek reportYearWeek, boolean allUsersSelected, Year reportYear, List<UserLocalId> userLocalIds) {
