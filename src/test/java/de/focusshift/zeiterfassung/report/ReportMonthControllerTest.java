@@ -1,13 +1,18 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryEditModalHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +59,12 @@ class ReportMonthControllerTest {
     @Mock
     private ReportPermissionService reportPermissionService;
     @Mock
+    private TimeEntryService timeEntryService;
+    @Mock
+    private UserSettingsProvider userSettingsProvider;
+    @Mock
+    private UserManagementService userManagementService;
+    @Mock
     private MessageSource messageSource;
 
     private final Clock clock = Clock.systemUTC();
@@ -63,7 +74,9 @@ class ReportMonthControllerTest {
         final DateFormatterImpl dateFormatter = new DateFormatterImpl();
         final DateRangeFormatter dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
         final ReportViewHelper helper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
-        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, helper, clock);
+        final TimeEntryViewHelper timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
+        final TimeEntryEditModalHelper timeEntryEditModalHelper = new TimeEntryEditModalHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, helper, timeEntryEditModalHelper, clock);
     }
 
     @Test
