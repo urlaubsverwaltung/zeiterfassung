@@ -45,10 +45,13 @@
                       <div class="mt-4 flex flex-col items-center">
                         <div class="text-blue-200">
                           <svg
-                            th:replace="~{/fragments/avatar::avatar-bordered(fullName='Max Mustermann',width=54,height=54)}"
+                            th:replace="~{/fragments/avatar::avatar-bordered(fullName=${timeEntryOwner},width=54,height=54)}"
                           ></svg>
                         </div>
-                        <div class="font-bold text-gray-500">
+                        <div
+                          class="font-bold text-gray-500"
+                          th:text="${timeEntryOwner}"
+                        >
                           Max Mustermann
                         </div>
                       </div>
