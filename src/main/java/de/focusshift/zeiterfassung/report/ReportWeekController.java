@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryEditModalHelper;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletRequest;
@@ -75,7 +76,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         Model model, Locale locale) {
 
         if (timeEntryId != null) {
-            return weeklyUserReportWithDialog(timeEntryId, model);
+            return weeklyUserReportWithDialog(year, week, timeEntryId, model);
         }
 
         final YearWeek reportYearWeek = yearWeek(year, week)
@@ -87,7 +88,8 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
         final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, selectedUserLocalIds);
         final GraphWeekDto graphWeekDto = reportViewHelper.toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
-        final DetailWeekDto detailWeekDto = reportViewHelper.toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth(), locale);
+        final DetailWeekDto detailWeekDto = reportViewHelper.toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth(), locale,
+            id -> this.getTimeEntryDialogUrl(year, week, id));
 
         model.addAttribute("weekReport", graphWeekDto);
         model.addAttribute("weekReportDetail", detailWeekDto);
@@ -129,9 +131,19 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return "reports/user-report";
     }
 
-    private String weeklyUserReportWithDialog(Long timeEntryId, Model model) {
-        timeEntryEditModalHelper.addTimeEntryEditToModel(model, timeEntryId);
+    private String weeklyUserReportWithDialog(int year, int week, Long timeEntryId, Model model) {
+
+        // TODO use typed spring hateoas link generation?
+        final String cancelAction = "/report/year/%s/week/%s".formatted(year, week);
+
+        timeEntryEditModalHelper.addTimeEntryEditToModel(model, timeEntryId, cancelAction);
+
         return "reports/user-report-edit-time-entry";
+    }
+
+    private String getTimeEntryDialogUrl(int year, int week, TimeEntryId timeEntryId) {
+        // TODO use typed spring hateoas link generation?
+        return "/report/year/%s/week/%s?timeEntryId=%s".formatted(year, week, timeEntryId.value());
     }
 
     private ReportWeek getReportWeek(OidcUser principal, YearWeek reportYearWeek, boolean allUsersSelected, Year reportYear, List<UserLocalId> userLocalIds) {

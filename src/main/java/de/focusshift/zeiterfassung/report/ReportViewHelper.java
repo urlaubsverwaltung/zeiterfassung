@@ -161,11 +161,11 @@ class ReportViewHelper {
         return new GraphDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, hoursWorked, hoursWorkedShould);
     }
 
-    DetailWeekDto toDetailWeekDto(ReportWeek reportWeek, Month monthPivot, Locale locale) {
+    DetailWeekDto toDetailWeekDto(ReportWeek reportWeek, Month monthPivot, Locale locale, TimeEntryIdLinkBuilder urlBuilder) {
 
         final List<DetailDayDto> dayReports = reportWeek.reportDays()
             .stream()
-            .map(reportDay -> toDetailDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot), locale))
+            .map(reportDay -> toDetailDayReportDto(reportDay, !reportDay.date().getMonth().equals(monthPivot), locale, urlBuilder))
             .toList();
 
         final LocalDate first = reportWeek.firstDateOfWeek();
@@ -204,12 +204,15 @@ class ReportViewHelper {
         return url;
     }
 
-    private DetailDayDto toDetailDayReportDto(ReportDay reportDay, boolean differentMonth, Locale locale) {
+    private DetailDayDto toDetailDayReportDto(ReportDay reportDay, boolean differentMonth, Locale locale, TimeEntryIdLinkBuilder urlBuilder) {
 
         final String dayOfWeekNarrow = dateFormatter.formatDayOfWeekNarrow(reportDay.date().getDayOfWeek());
         final String dayOfWeekFull = dateFormatter.formatDayOfWeekFull(reportDay.date().getDayOfWeek());
         final String dateString = dateFormatter.formatDate(reportDay.date());
-        final List<DetailDayEntryDto> dayEntryDtos = reportDay.reportDayEntries().stream().map(this::toDetailDayEntryDto).toList();
+
+        final List<DetailDayEntryDto> dayEntryDtos = reportDay.reportDayEntries().stream()
+            .map(dayEntry -> toDetailDayEntryDto(dayEntry, urlBuilder))
+            .toList();
 
         final List<DetailDayAbsenceDto> detailDayAbsenceDto = reportDay.detailDayAbsencesByUser().values().stream()
             .flatMap(Collection::stream)
@@ -227,8 +230,13 @@ class ReportViewHelper {
         return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, workedWorkingHoursString, shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), dayEntryDtos, detailDayAbsenceDto);
     }
 
-    private DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry) {
-        return new DetailDayEntryDto(reportDayEntry.timeEntryId().value(), reportDayEntry.user().fullName(), reportDayEntry.comment(), reportDayEntry.isBreak(), reportDayEntry.start().toLocalTime(), reportDayEntry.end().toLocalTime());
+    private DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry, TimeEntryIdLinkBuilder urlBuilder) {
+
+        final String dialogUrl = urlBuilder.getTimeEntryIdUrl(reportDayEntry.timeEntryId());
+
+        return new DetailDayEntryDto(reportDayEntry.timeEntryId().value(), reportDayEntry.user().fullName(),
+            reportDayEntry.comment(), reportDayEntry.isBreak(), reportDayEntry.start().toLocalTime(),
+            reportDayEntry.end().toLocalTime(), dialogUrl);
     }
 
     private DetailDayAbsenceDto toDetailDayAbsenceDto(ReportDayAbsence reportDayAbsence, Locale locale) {

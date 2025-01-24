@@ -32,14 +32,15 @@ public class TimeEntryEditModalHelper {
     private final UserSettingsProvider userSettingsProvider;
     private final UserManagementService userManagementService;
 
-    TimeEntryEditModalHelper(TimeEntryService timeEntryService, TimeEntryViewHelper timeEntryViewHelper, UserSettingsProvider userSettingsProvider, UserManagementService userManagementService) {
+    public TimeEntryEditModalHelper(TimeEntryService timeEntryService, TimeEntryViewHelper timeEntryViewHelper,
+                                    UserSettingsProvider userSettingsProvider, UserManagementService userManagementService) {
         this.timeEntryService = timeEntryService;
         this.timeEntryViewHelper = timeEntryViewHelper;
         this.userSettingsProvider = userSettingsProvider;
         this.userManagementService = userManagementService;
     }
 
-    public void addTimeEntryEditToModel(Model model, Long timeEntryId) {
+    public void addTimeEntryEditToModel(Model model, Long timeEntryId, String cancelFormAction) {
 
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
             .orElseThrow(() -> new IllegalStateException("Could not find timeEntry with id=%d".formatted(timeEntryId)));
@@ -48,6 +49,7 @@ public class TimeEntryEditModalHelper {
             .orElseThrow(() -> new IllegalStateException("Could not find user with id=%d".formatted(timeEntryId)));
 
         model.addAttribute("timeEntryOwner", timeEntryUser.fullName());
+        model.addAttribute("timeEntryDialogCloseFormAction", cancelFormAction);
 
         addTimeEntry(model, timeEntry);
         addTimeEntryHistory(model, timeEntryId);

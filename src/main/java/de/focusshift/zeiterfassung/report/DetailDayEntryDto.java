@@ -13,7 +13,8 @@ record DetailDayEntryDto(
     String comment,
     boolean isBreak,
     @DateTimeFormat(iso = TIME) LocalTime start,
-    @DateTimeFormat(iso = TIME) LocalTime end
+    @DateTimeFormat(iso = TIME) LocalTime end,
+    String detailDialogUrl
 ) {
 
     public Duration getDuration() {
