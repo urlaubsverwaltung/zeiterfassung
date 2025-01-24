@@ -5,9 +5,9 @@
     <title>Title</title>
   </head>
   <body>
-    <th:block
-      th:fragment="dialog(timeEntry, timeEntryOwner, timeEntryDialogCloseFormAction, timeEntryHistory)"
-    >
+    <th:block th:fragment="dialog(timeEntry, timeEntryDialog)">
+      <!-- @thymesVar id="timeEntry" type="de.focusshift.zeiterfassung.timeentry.TimeEntryDTO" -->
+      <!-- @thymesVar id="timeEntryDialog" type="de.focusshift.zeiterfassung.timeentry.TimeEntryDialogDto" -->
       <th:block
         th:replace="~{/fragments/modal/frame::frame-modal(~{::dialog-content})}"
       >
@@ -32,19 +32,19 @@
                   <div class="mt-4 flex flex-col items-center">
                     <div class="text-blue-200">
                       <svg
-                        th:replace="~{/fragments/avatar::avatar-bordered(fullName=${timeEntryOwner},width=54,height=54)}"
+                        th:replace="~{/fragments/avatar::avatar-bordered(fullName=${timeEntryDialog.owner},width=54,height=54)}"
                       ></svg>
                     </div>
                     <div
                       class="font-bold text-gray-500"
-                      th:text="${timeEntryOwner}"
+                      th:text="${timeEntryDialog.owner}"
                     >
                       Max Mustermann
                     </div>
                   </div>
                 </div>
                 <form
-                  th:action="@{__${timeEntryDialogCloseFormAction}__}"
+                  th:action="@{__${timeEntryDialog.dialogCloseFormAction}__}"
                   method="get"
                   class="absolute right-2 top-1"
                   data-turbo-frame="_top"
@@ -93,13 +93,14 @@
                     class="border border-t-0 border-gray-200 rounded-b-3xl p-4"
                   >
                     <ul
-                      th:if="${not #lists.isEmpty(timeEntryHistory)}"
+                      th:if="${not #lists.isEmpty(timeEntryDialog.historyItems)}"
                       class="time-entry-history-list"
                     >
                       <li
-                        th:each="historyItem : ${timeEntryHistory}"
+                        th:each="historyItem : ${timeEntryDialog.historyItems}"
                         class="time-entry-history-list__element"
                       >
+                        <!-- @thymesVar id="historyItem" type="de.focusshift.zeiterfassung.timeentry.TimeEntryDialogDto" -->
                         <details
                           class="details-unstyled time-entry-history-list__element__details"
                         >
@@ -144,7 +145,7 @@
                 </div>
                 <form
                   action="#"
-                  th:action="@{__${timeEntryDialogCloseFormAction}__}"
+                  th:action="@{__${timeEntryDialog.dialogCloseFormAction}__}"
                   method="get"
                   class="mt-8 flex justify-end gap-2"
                   data-turbo-frame="_top"
