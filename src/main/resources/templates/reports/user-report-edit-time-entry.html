@@ -57,7 +57,7 @@
                       </div>
                     </div>
                     <form
-                      th:action="@{/report/year/{year}/week/{week} (year=${year}, week=${week})}"
+                      th:action="@{__${timeEntryCancelFormAction}__}"
                       method="get"
                       class="absolute right-2 top-1"
                       data-turbo-frame="_top"
@@ -146,7 +146,7 @@
                     </div>
                     <form
                       action="#"
-                      th:action="@{/report/year/{year}/week/{week} (year=${year}, week=${week})}"
+                      th:action="@{__${timeEntryDialogCloseFormAction}__}"
                       method="get"
                       class="mt-8 flex justify-end gap-2"
                       data-turbo-frame="_top"
