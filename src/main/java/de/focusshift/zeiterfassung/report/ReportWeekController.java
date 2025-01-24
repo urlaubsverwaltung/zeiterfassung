@@ -70,12 +70,12 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         @PathVariable("week") Integer week,
         @RequestParam(value = "everyone", required = false) Optional<String> optionalAllUsersSelected,
         @RequestParam(value = "user", required = false) Optional<List<Long>> optionalUserIds,
-        @RequestParam(value = "timeentry", required = false) Long id,
+        @RequestParam(value = "timeEntryId", required = false) Long timeEntryId,
         @AuthenticationPrincipal DefaultOidcUser principal,
         Model model, Locale locale) {
 
-        if (id != null) {
-            return weeklyUserReportWithDialog(id, model);
+        if (timeEntryId != null) {
+            return weeklyUserReportWithDialog(timeEntryId, model);
         }
 
         final YearWeek reportYearWeek = yearWeek(year, week)
