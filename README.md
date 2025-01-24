@@ -22,6 +22,13 @@ Wenn du mehr Informationen und Bilder über dieses Projekt sehen möchtest dann 
 
 ## Operation
 
+We do **not offer support for operations** on GitHub for the open-source project [zeiterfassung](https://github.com/urlaubsverwaltung/zeiterfassung).
+However, there is a **Discussions section** under [Operations](https://github.com/urlaubsverwaltung/zeiterfassung/discussions/categories/operation),
+where people can share experiences and discuss questions.
+
+If **paid support** for on-premise installation or operation is needed, you can find more
+information about the available support options at [urlaubsverwaltung.cloud/preis](https://urlaubsverwaltung.cloud/preis/).
+
 ### Prerequisites
 
 * [JDK 21](https://adoptium.net)
