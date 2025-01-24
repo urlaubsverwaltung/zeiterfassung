@@ -25,7 +25,7 @@
                 >
                   <h1
                     class="text-sm font-bold text-gray-500"
-                    th:text="#{time-entry-detail-dialog.title}"
+                    th:text="#{time-entry.dialog.title}"
                   >
                     Zeitslot
                   </h1>
@@ -60,7 +60,7 @@
                     ></svg>
                     <span
                       class="sr-only"
-                      th:text="#{time-entry-detail-dialog.close.button.text}"
+                      th:text="#{time-entry.dialog.close.button.text}"
                     >
                       Schließen
                     </span>
@@ -82,7 +82,7 @@
                         ></svg>
                         <h2
                           class="text-lg font-bold"
-                          th:text="#{time-entry-detail-dialog.history}"
+                          th:text="#{time-entry.dialog.history}"
                         >
                           Historie
                         </h2>
@@ -117,7 +117,7 @@
                             </span>
                             <span
                               th:with="revisionType=${#messages.msg('entity-revision-type.' + historyItem.revisionType)}"
-                              th:text="#{time-entry-detail-dialog.history.item.revision.by(${revisionType})}"
+                              th:text="#{time-entry.dialog.history.item.revision.by(${revisionType})}"
                             >
                               bearbeitet von
                             </span>
@@ -155,7 +155,7 @@
                   <button
                     type="submit"
                     class="button-secondary"
-                    th:text="#{time-entry-detail-dialog.close.button.text}"
+                    th:text="#{time-entry.dialog.close.button.text}"
                   >
                     Dialog schließen
                   </button>

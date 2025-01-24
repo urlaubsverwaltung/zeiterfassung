@@ -3,7 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryEditModalHelper;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
@@ -45,17 +45,17 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
 
     private final DateFormatter dateFormatter;
     private final ReportViewHelper viewHelper;
-    private final TimeEntryEditModalHelper timeEntryEditModalHelper;
+    private final TimeEntryDialogHelper timeEntryDialogHelper;
     private final Clock clock;
     private final ReportPermissionService reportPermissionService;
 
     ReportMonthController(ReportService reportService, ReportPermissionService reportPermissionService,
                           DateFormatter dateFormatter, ReportViewHelper viewHelper,
-                          TimeEntryEditModalHelper timeEntryEditModalHelper, Clock clock) {
+                          TimeEntryDialogHelper timeEntryDialogHelper, Clock clock) {
         this.reportService = reportService;
         this.dateFormatter = dateFormatter;
         this.viewHelper = viewHelper;
-        this.timeEntryEditModalHelper = timeEntryEditModalHelper;
+        this.timeEntryDialogHelper = timeEntryDialogHelper;
         this.clock = clock;
         this.reportPermissionService = reportPermissionService;
     }
@@ -139,7 +139,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
 
         final String cancelAction = "/report/year/%s/month/%s".formatted(year, month);
 
-        timeEntryEditModalHelper.addTimeEntryEditToModel(model, timeEntryId, cancelAction);
+        timeEntryDialogHelper.addTimeEntryEditToModel(model, timeEntryId, cancelAction);
 
         return "reports/user-report-edit-time-entry";
     }
