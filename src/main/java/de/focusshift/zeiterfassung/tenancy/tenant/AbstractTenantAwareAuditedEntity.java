@@ -9,6 +9,9 @@ import org.hibernate.envers.Audited;
 import java.io.Serial;
 import java.io.Serializable;
 
+/**
+ * Pendant to {@link AbstractTenantAwareEntity} but for entities using hibernate {@link Audited}.
+ */
 @Audited
 @MappedSuperclass
 @EntityListeners(TenantListener.class)

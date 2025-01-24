@@ -7,6 +7,10 @@ import jakarta.validation.constraints.Size;
 import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.RevisionEntity;
 
+/**
+ * Envers Revision Entity extended with custom data like `updated_by` and `tenant_id`.
+ *
+ */
 @Entity
 @Table(name = "revinfo")
 @RevisionEntity(TenantRevisionListener.class)
