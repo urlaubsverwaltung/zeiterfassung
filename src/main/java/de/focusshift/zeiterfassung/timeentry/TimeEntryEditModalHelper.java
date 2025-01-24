@@ -1,6 +1,11 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
+import de.focusshift.zeiterfassung.user.HasUserIdComposite;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import de.focusshift.zeiterfassung.usermanagement.User;
+import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.slf4j.Logger;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
@@ -8,9 +13,15 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Component
@@ -21,10 +32,14 @@ public class TimeEntryEditModalHelper {
 
     private final TimeEntryService timeEntryService;
     private final TimeEntryViewHelper timeEntryViewHelper;
+    private final UserSettingsProvider userSettingsProvider;
+    private final UserManagementService userManagementService;
 
-    TimeEntryEditModalHelper(TimeEntryService timeEntryService, TimeEntryViewHelper timeEntryViewHelper) {
+    TimeEntryEditModalHelper(TimeEntryService timeEntryService, TimeEntryViewHelper timeEntryViewHelper, UserSettingsProvider userSettingsProvider, UserManagementService userManagementService) {
         this.timeEntryService = timeEntryService;
         this.timeEntryViewHelper = timeEntryViewHelper;
+        this.userSettingsProvider = userSettingsProvider;
+        this.userManagementService = userManagementService;
     }
 
     public void addTimeEntryEditToModel(Model model, Long timeEntryId) {
@@ -57,15 +72,25 @@ public class TimeEntryEditModalHelper {
         timeEntryService.findTimeEntryHistory(new TimeEntryId(timeEntryId))
             .ifPresentOrElse(
                 history -> {
-                    final List<TimeEntryHistoryItemDto> historyItemDtos = history.revisions()
+
+                    final ZoneId zoneId = userSettingsProvider.zoneId();
+                    final List<TimeEntryHistoryItem> revisions = history.revisions();
+
+                    final List<UserId> userIds = revisions.stream().map(TimeEntryHistoryItem::metadata)
+                        .map(EntityRevisionMetadata::modifiedBy)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .toList();
+
+                    final Map<UserId, User> userById = userManagementService.findAllUsersByIds(userIds).stream()
+                        .collect(toMap(HasUserIdComposite::userId, identity()));
+
+                    final List<TimeEntryHistoryItemDto> historyItemDtos = revisions
                         .stream()
                         .map(item -> new TimeEntryHistoryItemDto(
-                            // TODO username / email / avatar
-                            item.metadata().modifiedBy().map(UserId::value).map(String::valueOf).orElse(""),
-                            // TODO translation of revision type name
-                            item.metadata().entityRevisionType().name().toLowerCase(),
-                            // TODO text represantation of instant mapped to user time zone
-                            item.metadata().modifiedAt().toString(),
+                            item.metadata().modifiedBy().map(userById::get).map(User::fullName).orElse(""),
+                            item.metadata().entityRevisionType(),
+                            LocalDate.ofInstant(item.metadata().modifiedAt(), zoneId),
                             timeEntryViewHelper.toTimeEntryDto(item.timeEntry())
                         ))
                         .toList()

@@ -113,10 +113,14 @@
                                 <svg
                                   th:replace="~{icons/chevron-right::svg(className='w-5 h-5 text-blue-400')}"
                                 ></svg>
-                                <span th:text="${historyItem.date}">
+                                <span
+                                  th:text="${#temporals.format(historyItem.date, 'FULL')}"
+                                >
                                   Montag, 02. Dezember 2024 10:06 Uhr
                                 </span>
-                                <span th:text="${historyItem.status}">
+                                <span
+                                  th:text="${#messages.msg('entity-revision-type.' + historyItem.revisionType)}"
+                                >
                                   bearbeitet von
                                 </span>
                                 <span th:text="${historyItem.username}">
