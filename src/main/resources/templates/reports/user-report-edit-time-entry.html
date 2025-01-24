@@ -22,7 +22,7 @@
           class="mx-auto w-full max-w-screen-lg 2xl:max-w-screen-3xl space-y-8"
         >
           <th:block
-            th:replace="~{timeentries/fragments/time-entry-detail-dialog::dialog(timeEntry, timeEntryOwner, timeEntryDialogCloseFormAction, timeEntryHistory)}"
+            th:replace="~{timeentries/fragments/time-entry-detail-dialog::dialog(${timeEntry}, ${timeEntryDialog})}"
           />
         </div>
       </main>

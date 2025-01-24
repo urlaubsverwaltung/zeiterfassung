@@ -15,6 +15,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.function.Function.identity;
@@ -25,7 +26,9 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class TimeEntryEditModalHelper {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
-    private static final String TIME_ENTRY_HISTORY_MODEL_NAME = "timeEntryHistory";
+
+    private static final String TIME_ENTRY_MODEL_NAME = "timeEntry";
+    private static final String TIME_ENTRY_DIALOG_MODEL_NAME = "timeEntryDialog";
 
     private final TimeEntryService timeEntryService;
     private final TimeEntryViewHelper timeEntryViewHelper;
@@ -45,61 +48,69 @@ public class TimeEntryEditModalHelper {
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
             .orElseThrow(() -> new IllegalStateException("Could not find timeEntry with id=%d".formatted(timeEntryId)));
 
-        final User timeEntryUser = userManagementService.findUserById(timeEntry.userIdComposite().id())
-            .orElseThrow(() -> new IllegalStateException("Could not find user with id=%d".formatted(timeEntryId)));
-
-        model.addAttribute("timeEntryOwner", timeEntryUser.fullName());
-        model.addAttribute("timeEntryDialogCloseFormAction", cancelFormAction);
-
         addTimeEntry(model, timeEntry);
-        addTimeEntryHistory(model, timeEntryId);
+        addTimeEntryDialog(model, timeEntry, cancelFormAction);
     }
 
     private void addTimeEntry(Model model, TimeEntry timeEntry) {
         // timeEntry could already exist in model in case of a POST-Redirect-GET after form validation errors
         // we must not add it again, otherwise user input and BindingResult/Errors are lost.
-        if (model.containsAttribute("timeEntry")) {
-            return;
+        if (!model.containsAttribute("timeEntry")) {
+            final TimeEntryDTO timeEntryDto = timeEntryViewHelper.toTimeEntryDto(timeEntry);
+            model.addAttribute(TIME_ENTRY_MODEL_NAME, timeEntryDto);
         }
-
-        timeEntryViewHelper.addTimeEntryToModel(model, timeEntry);
     }
 
-    private void addTimeEntryHistory(Model model, Long timeEntryId) {
-        if (model.containsAttribute(TIME_ENTRY_HISTORY_MODEL_NAME)) {
-            return;
-        }
+    private void addTimeEntryDialog(Model model, TimeEntry timeEntry, String cancelFormAction) {
 
-        timeEntryService.findTimeEntryHistory(new TimeEntryId(timeEntryId))
-            .ifPresentOrElse(
-                history -> {
+        final User timeEntryUser = userManagementService.findUserById(timeEntry.userIdComposite().id())
+            .orElseThrow(() -> new IllegalStateException("Could not find user with id=%d".formatted(timeEntry.id().value())));
 
-                    final ZoneId zoneId = userSettingsProvider.zoneId();
-                    final List<TimeEntryHistoryItem> revisions = history.revisions();
+        final List<TimeEntryHistoryItemDto> historyItems = getHistory(timeEntry.id());
 
-                    final List<UserId> userIds = revisions.stream().map(TimeEntryHistoryItem::metadata)
-                        .map(EntityRevisionMetadata::modifiedBy)
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .toList();
+        final TimeEntryDialogDto timeEntryDialogDto = new TimeEntryDialogDto(
+            timeEntryUser.fullName(),
+            historyItems,
+            cancelFormAction
+        );
 
-                    final Map<UserId, User> userById = userManagementService.findAllUsersByIds(userIds).stream()
-                        .collect(toMap(HasUserIdComposite::userId, identity()));
+        model.addAttribute(TIME_ENTRY_DIALOG_MODEL_NAME, timeEntryDialogDto);
+    }
 
-                    final List<TimeEntryHistoryItemDto> historyItemDtos = revisions
-                        .stream()
-                        .map(item -> new TimeEntryHistoryItemDto(
-                            item.metadata().modifiedBy().map(userById::get).map(User::fullName).orElse(""),
-                            item.metadata().entityRevisionType(),
-                            LocalDate.ofInstant(item.metadata().modifiedAt(), zoneId),
-                            timeEntryViewHelper.toTimeEntryDto(item.timeEntry())
-                        ))
-                        .toList()
-                        .reversed();
-                    model.addAttribute(TIME_ENTRY_HISTORY_MODEL_NAME, historyItemDtos);
-                },
-                // TODO throw and show 5xx? probably there has to be one history item at least -> the CREATED item
-                () -> LOG.error("Could find history for timeEntry with id={}. But seems to be required for view rendering.", timeEntryId)
-            );
+    private List<TimeEntryHistoryItemDto> getHistory(TimeEntryId timeEntryId) {
+        return timeEntryService.findTimeEntryHistory(timeEntryId)
+            .map(history -> {
+
+                final ZoneId zoneId = userSettingsProvider.zoneId();
+                final List<TimeEntryHistoryItem> revisions = history.revisions();
+
+                final List<UserId> userIds = revisions.stream().map(TimeEntryHistoryItem::metadata)
+                    .map(EntityRevisionMetadata::modifiedBy)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .toList();
+
+                final Map<UserId, User> userById = userManagementService.findAllUsersByIds(userIds).stream()
+                    .collect(toMap(HasUserIdComposite::userId, identity()));
+
+                return revisions.stream()
+                    .map(item -> timeEntryHistoryItemDto(item, userById::get, zoneId))
+                    .toList()
+                    .reversed();
+            }).orElseGet(() -> {
+                LOG.error("Could find history for timeEntry with id={}. But seems to be required for view rendering.", timeEntryId);
+                return List.of();
+            });
+    }
+
+    private TimeEntryHistoryItemDto timeEntryHistoryItemDto(TimeEntryHistoryItem historyItem, Function<UserId, User> userSupplier, ZoneId zoneId) {
+
+        final EntityRevisionMetadata metadata = historyItem.metadata();
+
+        final String username = metadata.modifiedBy().map(userSupplier).map(User::fullName).orElse("");
+        final LocalDate date = LocalDate.ofInstant(metadata.modifiedAt(), zoneId);
+        final TimeEntryDTO timeEntryDto = timeEntryViewHelper.toTimeEntryDto(historyItem.timeEntry());
+
+        return new TimeEntryHistoryItemDto(username, metadata.entityRevisionType(), date, timeEntryDto);
     }
 }

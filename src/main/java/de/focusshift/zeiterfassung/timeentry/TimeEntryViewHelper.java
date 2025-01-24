@@ -35,10 +35,6 @@ public class TimeEntryViewHelper {
         this.userSettingsProvider = userSettingsProvider;
     }
 
-    public void addTimeEntryToModel(Model model, TimeEntry timeEntry) {
-        addTimeEntryToModel(model, toTimeEntryDto(timeEntry));
-    }
-
     public void addTimeEntryToModel(Model model, TimeEntryDTO timeEntryDTO) {
         model.addAttribute(TIME_ENTRY_MODEL_NAME, timeEntryDTO);
     }
