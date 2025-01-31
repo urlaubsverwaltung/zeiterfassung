@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -23,6 +22,14 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
+/**
+ * Adds required data to the view model used by the time entry dialog.
+ *
+ * <p>
+ * The dialog can be used on various pages like ReportWeek and ReportMonth. These pages have different URLs,
+ * different information to display and therefore, different Controllers. The dialog, however, is the same on every
+ * page -> detail view of a time entry.
+ */
 @Component
 public class TimeEntryDialogHelper {
 
