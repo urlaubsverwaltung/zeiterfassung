@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +109,7 @@ public class TimeEntryDialogHelper {
         final EntityRevisionMetadata metadata = historyItem.metadata();
 
         final String username = metadata.modifiedBy().map(userSupplier).map(User::fullName).orElse("");
-        final LocalDate date = LocalDate.ofInstant(metadata.modifiedAt(), zoneId);
+        final LocalDateTime date = LocalDateTime.ofInstant(metadata.modifiedAt(), zoneId);
         final TimeEntryDTO timeEntryDto = timeEntryViewHelper.toTimeEntryDto(historyItem.timeEntry());
 
         return new TimeEntryHistoryItemDto(username, metadata.entityRevisionType(), date, timeEntryDto);

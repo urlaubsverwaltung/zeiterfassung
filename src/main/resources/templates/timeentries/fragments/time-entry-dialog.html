@@ -111,7 +111,8 @@
                               th:replace="~{icons/chevron-right::svg(className='details-summary-icon w-5 h-5 text-blue-400')}"
                             ></svg>
                             <span
-                              th:text="${#temporals.format(historyItem.date, 'FULL')}"
+                              th:with="formattedDateTime=${#temporals.format(historyItem.date, 'dd. MMMM yyyy, HH:mm')}"
+                              th:text="#{time-entry.dialog.history.item.clock(${formattedDateTime})}"
                             >
                               Montag, 02. Dezember 2024 10:06 Uhr
                             </span>
