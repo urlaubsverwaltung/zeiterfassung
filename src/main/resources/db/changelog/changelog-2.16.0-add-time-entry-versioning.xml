@@ -48,30 +48,18 @@
       <column name="id" type="BIGINT">
         <constraints nullable="false"/>
       </column>
-      <column name="tenant_id" type="VARCHAR(255)">
-        <constraints nullable="false"/>
-      </column>
-      <column name="owner" type="VARCHAR(255)">
-        <constraints nullable="false"/>
-      </column>
+      <column name="tenant_id" type="VARCHAR(255)"/>
+      <column name="owner" type="VARCHAR(255)"/>
       <column name="owner_mod" type="BOOLEAN"/>
       <column name="comment" type="VARCHAR(255)"/>
       <column name="comment_mod" type="BOOLEAN"/>
-      <column name="start" type="TIMESTAMP WITH TIME ZONE">
-        <constraints nullable="false"/>
-      </column>
+      <column name="start" type="TIMESTAMP WITH TIME ZONE"/>
       <column name="start_mod" type="BOOLEAN"/>
-      <column name="start_zone_id" type="VARCHAR(255)">
-        <constraints nullable="false"/>
-      </column>
+      <column name="start_zone_id" type="VARCHAR(255)"/>
       <column name="start_zone_id_mod" type="BOOLEAN"/>
-      <column name="end" type="TIMESTAMP WITH TIME ZONE">
-        <constraints nullable="false"/>
-      </column>
+      <column name="end" type="TIMESTAMP WITH TIME ZONE"/>
       <column name="end_mod" type="BOOLEAN"/>
-      <column name="end_zone_id" type="VARCHAR(255)">
-        <constraints nullable="false"/>
-      </column>
+      <column name="end_zone_id" type="VARCHAR(255)"/>
       <column name="end_zone_id_mod" type="BOOLEAN"/>
       <column name="is_break" type="BOOLEAN"/>
       <column name="is_break_mod" type="BOOLEAN"/>
@@ -98,14 +86,5 @@
                              referencedTableName="tenant_user"
                              referencedColumnNames="uuid"
                              constraintName="FK_TIME_ENTRY_AUD_OWNER"/>
-  </changeSet>
-
-  <changeSet author="seber" id="enable-row-level-security-on-time-entry-aud">
-    <sql dbms="postgresql">
-      ALTER TABLE time_entry_aud ENABLE ROW LEVEL SECURITY;
-      DROP POLICY IF EXISTS time_entry_aud_tenant_isolation_policy ON time_entry_aud;
-      CREATE POLICY time_entry_aud_tenant_isolation_policy ON time_entry_aud
-        USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
-    </sql>
   </changeSet>
 </databaseChangeLog>

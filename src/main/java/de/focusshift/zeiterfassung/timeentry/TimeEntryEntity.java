@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareAuditedEntity;
+import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,7 +20,7 @@ import java.util.Objects;
 @Audited(withModifiedFlag = true)
 @Entity
 @Table(name = "time_entry")
-public class TimeEntryEntity extends AbstractTenantAwareAuditedEntity {
+public class TimeEntryEntity extends AbstractTenantAwareEntity {
 
     @Id
     @Column(name = "id", unique = true, nullable = false, updatable = false)
