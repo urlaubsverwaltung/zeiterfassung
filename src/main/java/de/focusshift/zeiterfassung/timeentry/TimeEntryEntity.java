@@ -10,11 +10,14 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Objects;
 
+@Audited(withModifiedFlag = true)
 @Entity
 @Table(name = "time_entry")
 public class TimeEntryEntity extends AbstractTenantAwareEntity {
@@ -50,6 +53,7 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
     @NotNull
     private String endZoneId;
 
+    @NotAudited
     @Column(name = "updated_at", nullable = false)
     @NotNull
     private Instant updatedAt;

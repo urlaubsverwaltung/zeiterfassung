@@ -30,5 +30,6 @@
   <include relativeToChangelogFile="true" file="changelog-2.7.0-add-user-status.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.6.4-enable-row-level-security-on-absence.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.14.0-remove-leading-trailing-whitespaces-username.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-2.16.0-add-time-entry-versioning.xml"/>
 
 </databaseChangeLog>

@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.data.history.EntityRevisionMapper;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -14,6 +15,8 @@ import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.history.Revision;
+import org.springframework.data.history.Revisions;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -31,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.ZoneOffset.UTC;
@@ -53,23 +57,73 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final UserDateService userDateService;
     private final UserSettingsProvider userSettingsProvider;
+    private final EntityRevisionMapper entityRevisionMapper;
     private final Clock clock;
 
     TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, UserManagementService userManagementService,
                          WorkingTimeCalendarService workingTimeCalendarService, UserDateService userDateService,
-                         UserSettingsProvider userSettingsProvider, Clock clock) {
+                         UserSettingsProvider userSettingsProvider, EntityRevisionMapper entityRevisionMapper, Clock clock) {
 
         this.timeEntryRepository = timeEntryRepository;
         this.userManagementService = userManagementService;
         this.workingTimeCalendarService = workingTimeCalendarService;
         this.userDateService = userDateService;
         this.userSettingsProvider = userSettingsProvider;
+        this.entityRevisionMapper = entityRevisionMapper;
         this.clock = clock;
     }
 
     @Override
     public Optional<TimeEntry> findTimeEntry(long id) {
         return timeEntryRepository.findById(id).map(this::toTimeEntry);
+    }
+
+    @Override
+    public Optional<TimeEntryHistory> findTimeEntryHistory(TimeEntryId timeEntryId) {
+
+        final Revisions<Long, TimeEntryEntity> revisions = timeEntryRepository.findRevisions(timeEntryId.value());
+        if (revisions.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final List<TimeEntryHistoryItem> historyItems = new ArrayList<>();
+        Revision<Long, TimeEntryEntity> previousRevision = null;
+
+        for (Revision<Long, TimeEntryEntity> revision : revisions.getContent().reversed()) {
+
+            final TimeEntryEntity entity = revision.getEntity();
+            final TimeEntry timeEntry = toTimeEntry(entity);
+
+            TimeEntryHistoryItem historyItem;
+            if (previousRevision == null) {
+                // TODO there could be an existing TimeEntryEntity which doesn't have a CREATED revision
+                //      since the revision feature has been introduced afterwards... maybe we want to create
+                //      a CREATED entry manually as migration?
+                historyItem = new TimeEntryHistoryItem(
+                    entityRevisionMapper.toEntityRevisionMetadata(revision),
+                    timeEntry,
+                    false,
+                    false,
+                    false,
+                    false
+                );
+            } else {
+                final TimeEntry previousTimeEntry = toTimeEntry(previousRevision.getEntity());
+                historyItem = new TimeEntryHistoryItem(
+                    entityRevisionMapper.toEntityRevisionMetadata(revision),
+                    timeEntry,
+                    hasBeenModified(previousTimeEntry::comment, timeEntry::comment),
+                    hasBeenModified(previousTimeEntry::start, timeEntry::start),
+                    hasBeenModified(previousTimeEntry::end, timeEntry::end),
+                    hasBeenModified(previousTimeEntry::isBreak, timeEntry::isBreak)
+                );
+            }
+
+            historyItems.add(historyItem);
+            previousRevision = revision;
+        }
+
+        return Optional.of(new TimeEntryHistory(timeEntryId, historyItems));
     }
 
     @Override
@@ -342,5 +396,9 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     private static Instant toInstant(LocalDate localDate) {
         return localDate.atStartOfDay(UTC).toInstant();
+    }
+
+    private <T> boolean hasBeenModified(Supplier<T> a, Supplier<T> b) {
+        return !a.get().equals(b.get());
     }
 }
