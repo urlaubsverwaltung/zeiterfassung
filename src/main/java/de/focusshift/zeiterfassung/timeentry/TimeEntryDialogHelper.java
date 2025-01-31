@@ -105,7 +105,7 @@ public class TimeEntryDialogHelper {
                     .map(item -> timeEntryHistoryItemDto(item, userById::get, zoneId))
                     .toList();
             }).orElseGet(() -> {
-                LOG.error("Could find history for timeEntry with id={}. But seems to be required for view rendering.", timeEntryId);
+                LOG.error("Could find history for timeEntry with id={} actually required for view rendering. Using empty list...", timeEntryId);
                 return List.of();
             });
     }
