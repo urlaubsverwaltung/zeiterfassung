@@ -63,7 +63,8 @@ class TimeEntryControllerTest {
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, Clock.systemUTC());
+        final TimeEntryViewHelper viewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
+        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, viewHelper, Clock.systemUTC());
     }
 
     @Test

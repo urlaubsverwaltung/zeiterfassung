@@ -38,9 +38,11 @@
               </h1>
               <div class="time-entry-box__controls"></div>
             </div>
-            <th:block
-              th:insert="~{::timeentry-slot-form(formAction=@{/timeentries}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
-            ></th:block>
+            <th:block th:object="${timeEntry}">
+              <th:block
+                th:insert="~{::timeentry-slot-form(formAction=@{/timeentries}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
+              ></th:block>
+            </th:block>
           </div>
         </div>
         <div
@@ -349,9 +351,13 @@
                           th:id="${'time-entry-' + timeEntry.id}"
                           th:data-date="${#temporals.format(timeEntry.date, 'EEEE, dd. MMMM')}"
                           th:data-duration="${timeEntry.duration}"
-                          th:insert="~{::timeentry-slot-form(formAction=${formAction}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')}"
+                          th:object="${timeEntry}"
                           data-turbo="true"
-                        ></div>
+                        >
+                          <th:block
+                            th:insert="~{::timeentry-slot-form(formAction=${formAction}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')}"
+                          ></th:block>
+                        </div>
                       </th:block>
                     </div>
                   </div>

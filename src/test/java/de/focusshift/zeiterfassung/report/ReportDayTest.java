@@ -42,7 +42,7 @@ class ReportDayTest {
 
         final ZonedDateTime from = dateTime(2024, 11, 13, 1, 0);
         final ZonedDateTime to = dateTime(2024, 11, 13, 2, 0);
-        final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, true);
+        final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, true);
 
         final LocalDate reportDate = LocalDate.of(2024, 11, 13);
         final ReportDay sut = new ReportDay(reportDate, Map.of(), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
@@ -115,7 +115,7 @@ class ReportDayTest {
 
         final ZonedDateTime from = dateTime(2021, 1, 4, 1, 0);
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
-        final ReportDayEntry reportDayEntry = new ReportDayEntry(batman, "hard work", from, to, true);
+        final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, true);
 
         final LocalDate reportDate = LocalDate.of(2021, 1, 4);
         final WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of());

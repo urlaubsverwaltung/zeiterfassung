@@ -1,0 +1,10 @@
+<!-- the default modal component -->
+<th:block th:fragment="modal-centered(content)">
+  <div class="modal-overlay-background">
+    <div class="modal-alignment">
+      <div class="modal">
+        <th:block th:replace="${content}"></th:block>
+      </div>
+    </div>
+  </div>
+</th:block>
