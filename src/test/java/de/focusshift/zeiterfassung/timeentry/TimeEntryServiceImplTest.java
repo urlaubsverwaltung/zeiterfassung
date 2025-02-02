@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.TenantAwareRevisionMetadata;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMapper;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -13,6 +15,7 @@ import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,6 +24,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.history.Revision;
+import org.springframework.data.history.Revisions;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -44,6 +49,8 @@ import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.data.history.RevisionMetadata.RevisionType.INSERT;
+import static org.springframework.data.history.RevisionMetadata.RevisionType.UPDATE;
 
 @ExtendWith(MockitoExtension.class)
 class TimeEntryServiceImplTest {
@@ -71,6 +78,38 @@ class TimeEntryServiceImplTest {
     void setUp() {
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeCalendarService,
             userDateService, userSettingsProvider, entityRevisionMapper, clockFixed);
+    }
+
+    @Nested
+    class FindTimeEntryHistory {
+
+        @Test
+        void ensureFindTimeEntryHistoryEmptyWhenThereAreNoRevisions() {
+
+            when(timeEntryRepository.findRevisions(1L)).thenReturn(Revisions.none());
+
+            final Optional<TimeEntryHistory> actual = sut.findTimeEntryHistory(new TimeEntryId(1L));
+            assertThat(actual).isEmpty();
+        }
+
+        @Test
+        void ensureFindTimeEntryHistory() {
+
+            final TenantAwareRevisionEntity revisionEntity = new TenantAwareRevisionEntity();
+
+            final TimeEntryEntity entityCreated = new TimeEntryEntity();
+            final TimeEntryEntity entityModified = new TimeEntryEntity();
+            final Revision<Long, TimeEntryEntity> revisionCreated = Revision.of(new TenantAwareRevisionMetadata(revisionEntity, INSERT), entityCreated);
+            final Revision<Long, TimeEntryEntity> revisionModified = Revision.of(new TenantAwareRevisionMetadata(revisionEntity, UPDATE), entityModified);
+
+            when(timeEntryRepository.findRevisions(1L)).thenReturn(Revisions.of(List.of(revisionCreated, revisionModified)));
+
+            final Optional<TimeEntryHistory> actual = sut.findTimeEntryHistory(new TimeEntryId(1L));
+            assertThat(actual).hasValueSatisfying(history -> {
+                assertThat(history.timeEntryId()).isEqualTo(new TimeEntryId(1L));
+                assertThat(history.revisions()).hasSize(2);
+            });
+        }
     }
 
     @Test

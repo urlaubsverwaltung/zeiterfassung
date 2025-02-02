@@ -92,6 +92,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         for (Revision<Long, TimeEntryEntity> revision : revisions.getContent().reversed()) {
 
             final TimeEntryEntity entity = revision.getEntity();
+            // TODO User is fetch within toTimeEntry -> fetch it once, the timeEntry owner does not change
             final TimeEntry timeEntry = toTimeEntry(entity);
 
             TimeEntryHistoryItem historyItem;
