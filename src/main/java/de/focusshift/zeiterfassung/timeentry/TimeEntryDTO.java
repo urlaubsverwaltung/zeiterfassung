@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import jakarta.validation.constraints.Pattern;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import jakarta.validation.constraints.Pattern;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
@@ -142,7 +142,7 @@ public class TimeEntryDTO {
 
     @Override
     public int hashCode() {
-        return Objects.hash(date, start, end, duration, comment);
+        return Objects.hash(date, start, end, duration, comment, isBreak);
     }
 
     @Override
