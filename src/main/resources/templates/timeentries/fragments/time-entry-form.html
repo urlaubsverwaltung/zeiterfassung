@@ -10,6 +10,7 @@
       action="#"
       th:action="${formAction}"
       method="post"
+      data-test-id="time-entry-form"
     >
       <div
         th:fragment="timeentry-slot-form-content(timeEntry, actions, class)"
@@ -106,6 +107,7 @@
                       th:placeholder="#{time-entry.form.comment.input.placeholder}"
                       class="border border-gray-200"
                       th:disabled="${disabled}"
+                      data-test-id="input-time-entry-comment"
                     />
                     <label
                       for="input-entry-comment"
@@ -127,6 +129,7 @@
                       class="peer border border-gray-200 invalid:border-red-600"
                       th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
                       th:disabled="${disabled}"
+                      data-test-id="input-time-entry-start"
                     />
                     <label
                       for="input-entry-from"
@@ -150,6 +153,7 @@
                       class="peer border border-gray-200 invalid:border-red-600"
                       th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
                       th:disabled="${disabled}"
+                      data-test-id="input-time-entry-end"
                     />
                     <label
                       for="input-entry-to"
@@ -174,6 +178,7 @@
                       class="peer border border-gray-200 invalid:border-red-600"
                       th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
                       th:disabled="${disabled}"
+                      data-test-id="input-time-entry-duration"
                     />
                     <label
                       for="input-entry-duration"
@@ -195,6 +200,7 @@
                         th:checked="${timeEntry.isBreak}"
                         class="peer mt-0.5"
                         th:disabled="${disabled}"
+                        data-test-id="input-time-entry-break"
                       />
                     </span>
                     <label
