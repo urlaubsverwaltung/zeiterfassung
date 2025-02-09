@@ -87,7 +87,10 @@
 
           <th:block th:if="${hasEntries || hasAbsences}">
             <ol class="mt-1 w-full" th:aria-labelledby="${listLabelId}">
-              <li th:each="dayEntry : ${day.dayEntries}">
+              <li
+                th:each="dayEntry : ${day.dayEntries}"
+                data-test-id="report-time-entry"
+              >
                 <div
                   class="group flex items-start gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
                 >
@@ -175,6 +178,7 @@
                       data-turbo="true"
                       data-turbo-frame="frame-modal"
                       data-turbo-action="advance"
+                      data-test-id="report-time-entry-detail-button"
                     >
                       <span class="sr-only">Bearbeitungshistorie</span>
                       <svg

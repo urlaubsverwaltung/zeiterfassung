@@ -50,10 +50,12 @@
                   </li>
                   <li>
                     <a
+                      id="main-navigation-link-reports"
                       href="#"
                       th:href="@{/report}"
                       class="flex items-center main-nav-link"
                       th:aria-current="${currentRequestURI.startsWith('/report') ? 'page' : 'false'}"
+                      data-test-id="navigation-link-reports"
                     >
                       <svg th:replace="~{icons/chart-pie::svg}"></svg>
                       <th:block th:text="#{navigation.main.reports}"></th:block>
