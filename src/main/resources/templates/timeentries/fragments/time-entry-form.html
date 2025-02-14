@@ -14,12 +14,12 @@
     >
       <div
         th:fragment="timeentry-slot-form-content(timeEntry, actions, class)"
-        th:with="rnd=${#strings.randomAlphanumeric(6)}, disabled=${disabled ?: false}"
+        th:with="rnd=${#strings.randomAlphanumeric(6)}, disabled=${disabled ?: false}, showErrors=${showErrors ?: true}"
         class="flex flex-col-reverse md:flex-col"
         th:classappend="${class}"
         th:object="${timeEntry}"
       >
-        <input type="hidden" name="id" th:value="${timeEntry.id}" />
+        <input type="hidden" name="id" th:value="*{id}" />
         <h4
           class="sr-only"
           th:text="${#temporals.format(timeEntry.date, 'dd. MMMM yyyy')}"
@@ -127,7 +127,7 @@
                       placeholder="Von"
                       th:placeholder="#{time-entry.form.start.input.placeholder}"
                       class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
+                      th:classappend="${showErrors && #fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
                       th:disabled="${disabled}"
                       data-testid="input-time-entry-start"
                     />
@@ -135,7 +135,7 @@
                       for="input-entry-from"
                       th:for="|${rnd}-input-entry-from|"
                       class="peer-invalid:text-red-600"
-                      th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
+                      th:classappend="${showErrors && #fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
                       th:text="#{time-entry.form.start.label}"
                     >
                       Von
@@ -151,7 +151,7 @@
                       placeholder="Bis"
                       th:placeholder="#{time-entry.form.end.input.placeholder}"
                       class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
+                      th:classappend="${showErrors && #fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
                       th:disabled="${disabled}"
                       data-testid="input-time-entry-end"
                     />
@@ -159,7 +159,7 @@
                       for="input-entry-to"
                       th:for="|${rnd}-input-entry-to|"
                       class="peer-invalid:text-red-600"
-                      th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
+                      th:classappend="${showErrors && #fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
                       th:text="#{time-entry.form.end.label}"
                     >
                       Bis
@@ -176,7 +176,7 @@
                       placeholder="hh:mm"
                       th:placeholder="#{time-entry.form.duration.input.placeholder}"
                       class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
+                      th:classappend="${showErrors && #fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
                       th:disabled="${disabled}"
                       data-testid="input-time-entry-duration"
                     />
@@ -184,7 +184,7 @@
                       for="input-entry-duration"
                       th:for="|${rnd}-input-entry-duration|"
                       class="peer-invalid:text-red-600"
-                      th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
+                      th:classappend="${showErrors && #fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
                       th:text="#{time-entry.form.duration.label}"
                     >
                       Dauer
@@ -224,7 +224,7 @@
           data-error-container
           xtra:strip-whitespace="deep"
         >
-          <ul th:if="${#fields.hasGlobalErrors()}">
+          <ul th:if="${showErrors && #fields.hasGlobalErrors()}">
             <li th:each="err : ${#fields.globalErrors()}" th:text="${err}">
               Etwas stimmt nicht, Jim.
             </li>
