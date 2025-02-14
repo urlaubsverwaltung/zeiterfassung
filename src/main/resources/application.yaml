@@ -21,6 +21,10 @@ spring:
     hibernate:
       ddl-auto: none
     open-in-view: false
+    properties:
+      hibernate:
+        envers:
+          modified_column_naming_strategy: improved
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-main.xml
   mail:

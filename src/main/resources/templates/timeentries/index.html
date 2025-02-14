@@ -27,7 +27,10 @@
       th:with="noTimeEntriesYet=${timeEntryWeeksPage.totalTimeEntryElements eq 0}"
     >
       <main class="flex-1 flex flex-col">
-        <div class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28">
+        <div
+          class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28"
+          data-test-id="time-entry-create-container"
+        >
           <div class="px-4">
             <div class="flex">
               <h1
@@ -38,9 +41,11 @@
               </h1>
               <div class="time-entry-box__controls"></div>
             </div>
-            <th:block
-              th:insert="~{::timeentry-slot-form(formAction=@{/timeentries}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
-            ></th:block>
+            <th:block th:object="${timeEntry}">
+              <th:block
+                th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=@{/timeentries}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
+              ></th:block>
+            </th:block>
           </div>
         </div>
         <div
@@ -101,7 +106,7 @@
               th:target="${'week-banner-'+ turboEditedWeek.calendarWeek}"
             >
               <template
-                th:insert="::week-banner(${turboEditedWeek})"
+                th:insert="~{::week-banner(${turboEditedWeek})}"
               ></template>
             </turbo-stream>
             <turbo-stream
@@ -110,7 +115,7 @@
               action="replace"
             >
               <template
-                th:insert="::day-of-week-banner(${turboEditedWeek.calendarWeek}, ${turboEditedDay})"
+                th:insert="~{::day-of-week-banner(${turboEditedWeek.calendarWeek}, ${turboEditedDay})}"
               ></template>
             </turbo-stream>
             <turbo-stream
@@ -349,9 +354,13 @@
                           th:id="${'time-entry-' + timeEntry.id}"
                           th:data-date="${#temporals.format(timeEntry.date, 'EEEE, dd. MMMM')}"
                           th:data-duration="${timeEntry.duration}"
-                          th:insert="~{::timeentry-slot-form(formAction=${formAction}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')}"
+                          th:object="${timeEntry}"
                           data-turbo="true"
-                        ></div>
+                        >
+                          <th:block
+                            th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${formAction}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')}"
+                          ></th:block>
+                        </div>
                       </th:block>
                     </div>
                   </div>
@@ -413,214 +422,8 @@
 
     <template id="z-template-zeitslot">
       <form
-        th:fragment="timeentry-slot-form(formAction, timeEntry, actions, class)"
-        is="z-time-entry-slot-form"
-        action="#"
-        th:action="${formAction}"
-        method="post"
-        class="flex flex-col-reverse md:flex-col"
-        th:classappend="${class}"
-        th:with="rnd=${#strings.randomAlphanumeric(6)}"
-        th:object="${timeEntry}"
-      >
-        <h4
-          class="sr-only"
-          th:text="${#temporals.format(timeEntry.date, 'dd. MMMM yyyy')}"
-        ></h4>
-        <div class="flex flex-col md:flex-row">
-          <div class="flex-1 flex flex-col md:flex-row">
-            <div
-              is="z-time-entry-date-picker"
-              class="time-entry-box__input__date flex flex-col items-center"
-              data-js-class-remove="flex-col"
-            >
-              <input
-                type="date"
-                id="input-entry-date"
-                th:id="|${rnd}-input-entry-date|"
-                name="date"
-                class="text-black"
-                value="2021-11-27"
-                th:value="${#temporals.format(timeEntry.date, 'yyyy-MM-dd')}"
-                data-iso-value="2021-11-27"
-                th:data-iso-value="${#temporals.format(timeEntry.date, 'yyyy-MM-dd')}"
-                data-js-hidden
-              />
-              <label
-                for="input-entry-date"
-                th:for="|${rnd}-input-entry-date|"
-                class="w-full flex cursor-pointer"
-              >
-                <span
-                  data-day
-                  class="rounded-full w-6 h-6 p-5 flex items-center justify-center bg-timeslot-form-day text-black mr-4 font-bold"
-                  th:text="${#temporals.day(timeEntry.date)}"
-                >
-                  21
-                </span>
-                <span class="flex-1 flex flex-col text-sm">
-                  <span
-                    data-day-text
-                    class="font-semibold"
-                    th:with="dayOfWeekName=${#temporals.dayOfWeekName(timeEntry.date)}"
-                    th:text="${timeEntry.today ? #messages.msg('datepicker.today') + ', ' + dayOfWeekName : dayOfWeekName}"
-                  >
-                    Heute, Sonntag
-                  </span>
-                  <span
-                    data-date
-                    th:text="${#temporals.format(timeEntry.date, 'dd. MMMM yyyy')}"
-                    class="whitespace-nowrap"
-                  >
-                    21. November 2021
-                  </span>
-                </span>
-              </label>
-            </div>
-            <div class="time-entry-box__input__fields">
-              <svg
-                class="hidden md:block h-full text-timeslot-form-datepicker-background border border-timeslot-form border-l-0 border-r-0"
-                width="28"
-                height="76"
-                viewBox="0 0 28 76"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                preserveAspectRatio="none"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M0 76C36.4259 46.2385 36.507 29.5983 0 0V76Z"
-                  fill="currentColor"
-                />
-              </svg>
-              <div
-                class="ajax-loader flex-1 border md:border-l-0 border-timeslot-form rounded-b-3xl md:rounded-b-none md:rounded-r-3xl flex items-center"
-              >
-                <div class="time-entry-cell-container">
-                  <div class="time-entry-cell time-entry-cell__comment">
-                    <input
-                      type="text"
-                      id="input-entry-comment"
-                      th:id="|${rnd}-input-entry-comment|"
-                      name="comment"
-                      th:value="${timeEntry.comment}"
-                      placeholder="Woran arbeitest du gerade?"
-                      th:placeholder="#{time-entry.form.comment.input.placeholder}"
-                      class="border border-gray-200"
-                    />
-                    <label
-                      for="input-entry-comment"
-                      th:for="|${rnd}-input-entry-comment|"
-                      th:text="#{time-entry.form.comment.label}"
-                    >
-                      Kommentar
-                    </label>
-                  </div>
-                  <div class="time-entry-cell time-entry-cell__from">
-                    <input
-                      type="time"
-                      id="input-entry-from"
-                      th:id="|${rnd}-input-entry-from|"
-                      name="start"
-                      th:value="${timeEntry.start}"
-                      placeholder="Von"
-                      th:placeholder="#{time-entry.form.start.input.placeholder}"
-                      class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
-                    />
-                    <label
-                      for="input-entry-from"
-                      th:for="|${rnd}-input-entry-from|"
-                      class="peer-invalid:text-red-600"
-                      th:classappend="${#fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
-                      th:text="#{time-entry.form.start.label}"
-                    >
-                      Von
-                    </label>
-                  </div>
-                  <div class="time-entry-cell time-entry-cell__to">
-                    <input
-                      type="time"
-                      id="input-entry-to"
-                      th:id="|${rnd}-input-entry-to|"
-                      name="end"
-                      th:value="${timeEntry.end}"
-                      placeholder="Bis"
-                      th:placeholder="#{time-entry.form.end.input.placeholder}"
-                      class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
-                    />
-                    <label
-                      for="input-entry-to"
-                      th:for="|${rnd}-input-entry-to|"
-                      class="peer-invalid:text-red-600"
-                      th:classappend="${#fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
-                      th:text="#{time-entry.form.end.label}"
-                    >
-                      Bis
-                    </label>
-                  </div>
-                  <div class="time-entry-cell time-entry-cell__duration">
-                    <input
-                      is="z-time-entry-duration-input"
-                      type="text"
-                      id="input-entry-duration"
-                      th:id="|${rnd}-input-entry-duration|"
-                      name="duration"
-                      th:value="${timeEntry.duration}"
-                      placeholder="hh:mm"
-                      th:placeholder="#{time-entry.form.duration.input.placeholder}"
-                      class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
-                    />
-                    <label
-                      for="input-entry-duration"
-                      th:for="|${rnd}-input-entry-duration|"
-                      class="peer-invalid:text-red-600"
-                      th:classappend="${#fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
-                      th:text="#{time-entry.form.duration.label}"
-                    >
-                      Dauer
-                    </label>
-                  </div>
-                  <div class="time-entry-cell time-entry-cell__break">
-                    <span class="checkbox-switch">
-                      <input
-                        type="checkbox"
-                        id="input-entry-is-break"
-                        th:id="|${rnd}-input-entry-is-break|"
-                        name="break"
-                        th:checked="${timeEntry.isBreak}"
-                        class="peer mt-0.5"
-                      />
-                    </span>
-                    <label
-                      for="input-entry-is-break"
-                      th:for="|${rnd}-input-entry-is-break|"
-                      th:text="#{time-entry.form.is-break.label}"
-                    >
-                      Pause
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="time-entry-box__controls" th:insert="${actions}"></div>
-        </div>
-        <div
-          class="text-red-600"
-          data-error-container
-          xtra:strip-whitespace="deep"
-        >
-          <ul th:if="${#fields.hasGlobalErrors()}">
-            <li th:each="err : ${#fields.globalErrors()}" th:text="${err}">
-              Etwas stimmt nicht, Jim.
-            </li>
-          </ul>
-        </div>
-      </form>
+        th:replace="~{timeentries/fragments/time-entry-form::timeentry-slot-form}"
+      ></form>
     </template>
 
     <template id="z-template-zeitslot-actions-new">
@@ -628,6 +431,7 @@
         <button
           type="submit"
           class="mr-4 flex items-center justify-center text-blue-700 md:rounded-full md:w-12 md:h-12 hover:md:bg-blue-100 transition-colors duration-200"
+          data-test-id="submit-time-entry"
         >
           <svg
             th:replace="~{icons/plus::svg(className='w-6 h-6 md:w-10 md:h-10 stroke-2 md:stroke-1')}"
@@ -663,6 +467,7 @@
           title="Speichern"
           th:title="#{time-entry.form.save.tooltip}"
           data-turbo-frame="frame-time-entry"
+          data-test-id="submit-time-entry"
         >
           <svg
             th:replace="~{icons/save::svg(className='w-5 h-5 md:w-6 md:h-6')}"

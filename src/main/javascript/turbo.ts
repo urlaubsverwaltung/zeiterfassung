@@ -3,6 +3,20 @@ import * as Turbo from "@hotwired/turbo";
 // opt-in to turbo with `data-turbo="true"`
 Turbo.session.drive = false;
 
+/**
+ * Locks the scroll position for the next turbo rendering.
+ * Useful when called before window.history.back() for instance.
+ */
+export function preserveScrollOnce() {
+  document.addEventListener(
+    "turbo:render",
+    () => {
+      Turbo.navigator.currentVisit.scrolled = true;
+    },
+    { once: true },
+  );
+}
+
 document.addEventListener("turbo:click", function (event: CustomEvent) {
   maybeToggleAjaxLoading(event.target as HTMLElement);
 });

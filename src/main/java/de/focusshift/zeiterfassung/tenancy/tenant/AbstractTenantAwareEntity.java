@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.validation.constraints.Size;
+import org.hibernate.envers.NotAudited;
+
 import java.io.Serial;
 import java.io.Serializable;
 
@@ -14,6 +16,7 @@ public abstract class AbstractTenantAwareEntity implements TenantAware, Serializ
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @NotAudited
     @Size(max = 255)
     @Column(name = "tenant_id")
     private String tenantId;

@@ -102,8 +102,7 @@
                 </span>
               </p>
               <p class="sr-only sm:not-sr-only">
-                <th:block
-                  th:text="#{report.week.group.hours-bar.worked-hours}"
+                <th:block th:text="#{report.week.group.hours-bar.worked-hours}"
                   >Geleistet:</th:block
                 >
                 <span
@@ -111,8 +110,7 @@
                   class="font-bold tabular-nums"
                   >41:58</span
                 >
-                (<th:block
-                  th:text="#{report.week.group.hours-bar.should}"
+                (<th:block th:text="#{report.week.group.hours-bar.should}"
                   >Geplant:</th:block
                 >
                 <span
@@ -307,200 +305,10 @@
       </div>
     </th:block>
 
-    <th:block
-      th:fragment="entries"
-      th:with="weekGroupLabelId=${'week-entries-' + #strings.randomAlphanumeric(9)}"
-    >
-      <p
-        th:id="${weekGroupLabelId}"
-        th:text="#{report.detail.week.section.title(${weekReportDetail.firstDateOfWeek}, ${weekReportDetail.lastDateOfWeek}, ${weekReportDetail.calendarWeek})}"
-        class="sr-only"
-        aria-hidden="true"
-      ></p>
-      <section
-        is="z-report-breakdown-section"
-        th:aria-labelledby="${weekGroupLabelId}"
-      >
-        <div
-          th:each="day : ${weekReportDetail.dayReports}"
-          th:data-date="${day.date}"
-          th:with="hasEntries=${not #lists.isEmpty(day.dayEntries)},
-                   listLabelId=${'day-' + #strings.randomAlphanumeric(9)},
-                   hasAbsences=${not #lists.isEmpty(day.absences)}"
-        >
-          <div
-            class="sticky bg-white h-4"
-            style="top: calc(var(--navigation-header-height))"
-          ></div>
-          <div
-            class="sticky flex justify-between gap-x-2 flex-wrap text-sm border-b border-gray-200 bg-white"
-            style="top: calc(var(--navigation-header-height) + 1rem)"
-            th:attrappend="aria-hidden=${hasEntries ? 'true' : null}"
-          >
-            <span
-              th:id="${listLabelId}"
-              class="flex-1 font-medium"
-              th:text="#{report.detail.day.head(${day.dayOfWeekFull}, ${day.date})}"
-            >
-              Montag, 07.10.2024
-            </span>
-            <p class="tabular-nums">
-              <span
-                th:if="${day.hoursDelta != '00:00'}"
-                class="inline-flex items-center"
-              >
-                <th:block th:if="${day.hoursDeltaNegative}">-</th:block>
-                <th:block
-                  th:if="${not day.hoursDeltaNegative and day.hoursDelta != '00:00'}"
-                  >+</th:block
-                >
-                <span
-                  class="font-bold tabular-nums"
-                  th:text="${day.hoursDelta}"
-                >
-                  01:30
-                </span>
-              </span>
-            </p>
-            <p
-              th:if="${day.workedWorkingHours != '00:00' or day.shouldWorkingHours != '00:00'}"
-              class="sr-only sm:not-sr-only"
-            >
-              <th:block
-                th:text="#{report.week.group.hours-bar.worked-hours}"
-                >Geleistet:</th:block
-              >
-              <span
-                th:text="${day.workedWorkingHours}"
-                class="font-bold tabular-nums"
-                >41:58</span
-              >
-              (<th:block
-                th:text="#{report.week.group.hours-bar.should}"
-                >Geplant:</th:block
-              >
-              <span
-                th:text="${day.shouldWorkingHours}"
-                class="font-bold tabular-nums"
-                >40:00</span
-              >)
-            </p>
-          </div>
-
-          <th:block th:if="${hasEntries || hasAbsences}">
-            <ol class="mt-1 w-full" th:aria-labelledby="${listLabelId}">
-              <li th:each="dayEntry : ${day.dayEntries}">
-                <div
-                  class="group flex items-start gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
-                >
-                  <div class="flex items-center gap-1">
-                    <span
-                      class="text-blue-100 transition-colors group-hover:text-blue-200"
-                      aria-hidden="true"
-                    >
-                      <img
-                        alt=""
-                        th:replace="~{fragments/avatar::avatar(${dayEntry.username},42,42)}"
-                      />
-                    </span>
-                    <span class="sr-only" th:text="${dayEntry.username}">
-                      Bruce Wayne
-                    </span>
-                  </div>
-                  <div
-                    class="flex-1 flex flex-col gap-1 md:flex-row md:items-start md:gap-8 2xl:flex-col 2xl:gap-1"
-                  >
-                    <div
-                      class="shrink-0 flex flex-col gap-1 text-sm transition-colors text-gray-500 group-hover:text-gray-600 xs:flex-row xs:gap-4 md:flex-col md:gap-1 md:w-1/4 2xl:flex-row 2xl:w-full 2xl:gap-4 2xl:text-gray-500 group-hover:2xl:text-gray-600"
-                    >
-                      <p class="flex items-center gap-1">
-                        <svg
-                          th:replace="~{icons/clock::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')}"
-                        />
-                        <span
-                          class="tabular-nums"
-                          th:text="#{report.detail.time(${dayEntry.start}, ${dayEntry.end})}"
-                        ></span>
-                      </p>
-                      <p class="flex items-center gap-0.5">
-                        <th:block th:if="${!dayEntry.isBreak}">
-                          <svg
-                            th:replace="~{icons/timer::svg(className='shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')}"
-                          />
-                        </th:block>
-                        <th:block th:if="${dayEntry.isBreak}">
-                          <svg
-                            th:replace="~{icons/coffee::svg(className='shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')}"
-                          />
-                        </th:block>
-                        <span
-                          class="tabular-nums whitespace-nowrap"
-                          th:text="${{dayEntry.duration}}"
-                        ></span>
-                      </p>
-                    </div>
-                    <p
-                      class="flex-1 flex items-start gap-1 text-sm text-gray-500 transition-colors group-hover:text-black"
-                    >
-                      <th:block
-                        th:if="${not #strings.isEmpty(dayEntry.comment)}"
-                      >
-                        <svg
-                          th:replace="~{icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')}"
-                        />
-                        <span
-                          class="sr-only"
-                          th:text="#{report.detail.day.comment.label}"
-                        >
-                          Kommentar:
-                        </span>
-                        <span
-                          th:text="${dayEntry.comment}"
-                          class="flex-1 break-words leading-5"
-                        >
-                          hard work!
-                        </span>
-                      </th:block>
-                      <th:block th:if="${#strings.isEmpty(dayEntry.comment)}">
-                        <svg
-                          th:replace="~{icons/message-circle-off::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')}"
-                        />
-                      </th:block>
-                    </p>
-                  </div>
-                </div>
-              </li>
-              <li th:each="absence : ${day.absences}">
-                <div
-                  class="group flex gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
-                >
-                  <div class="flex items-center gap-1">
-                    <span
-                      class="text-blue-100 transition-colors group-hover:text-blue-200"
-                      aria-hidden="true"
-                    >
-                      <img
-                        alt=""
-                        th:replace="~{fragments/avatar::avatar(${absence.username},42,42)}"
-                      />
-                    </span>
-                    <span class="sr-only" th:text="${absence.username}">
-                      Bruce Wayne
-                    </span>
-                  </div>
-                  <div class="flex flex-1 items-center gap-3">
-                    <div
-                      class="report-view-entry-box-absence__absence-color-box"
-                      th:style="|background-color:var(--absence-color-${absence.color})|"
-                    ></div>
-                    <p th:text="${absence.name}">Erholungsurlaub</p>
-                  </div>
-                </div>
-              </li>
-            </ol>
-          </th:block>
-        </div>
-      </section>
+    <th:block th:fragment="entries">
+      <th:block
+        th:replace="~{reports/_report-time-entries :: entries(${weekReportDetail})}"
+      />
     </th:block>
   </body>
 </html>

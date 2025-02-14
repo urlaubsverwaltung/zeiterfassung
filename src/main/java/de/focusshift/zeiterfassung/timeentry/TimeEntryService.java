@@ -23,6 +23,14 @@ public interface TimeEntryService {
     Optional<TimeEntry> findTimeEntry(long id);
 
     /**
+     * Find the {@linkplain TimeEntryHistory} for the given time entry.
+     *
+     * @param timeEntryId id of the time entry
+     * @return the {@linkplain TimeEntryHistory} or empty optional when the time entry is unknown
+     */
+    Optional<TimeEntryHistory> findTimeEntryHistory(TimeEntryId timeEntryId);
+
+    /**
      * {@linkplain TimeEntry}s for the given criteria sorted by {@linkplain TimeEntry#start()}, newest is the first item.
      *
      * @param from first date of interval

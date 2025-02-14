@@ -31,12 +31,20 @@ public class NavigationPage {
         goTo(settingsLink());
     }
 
+    public void goToReportsPage() {
+        goTo(reportsLink());
+    }
+
     public Locator usersLink() {
         return page.locator("[data-test-id=navigation-link-users]");
     }
 
     public Locator settingsLink() {
         return page.locator("[data-test-id=navigation-link-settings]");
+    }
+
+    public Locator reportsLink() {
+        return page.locator("[data-test-id=navigation-link-reports]");
     }
 
     private void goTo(Locator locator) {

@@ -351,3 +351,53 @@
     width: 16.6666666667%;
   }
 }
+
+.time-entry-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  > li {
+    .time-entry-history-list__element__summary {
+      cursor: pointer;
+
+      .details-summary-icon {
+        display: inline-block;
+        transition: transform 0.2s;
+        margin-top: -3px;
+      }
+    }
+
+    .time-entry-history-list__element__content {
+      margin-top: 0.5rem;
+    }
+
+    .time-entry-history-list__element__details[open] {
+      .time-entry-history-list__element__summary {
+        .details-summary-icon {
+          transform: rotate(90deg);
+        }
+      }
+    }
+  }
+
+  > li:not(:last-of-type) {
+    .time-entry-history-list__element__details {
+      .time-entry-history-list__element__content {
+        padding-bottom: 1rem;
+      }
+    }
+  }
+}
+
+@screen md {
+  .time-entry-history-list {
+    > li {
+      .time-entry-history-list__element__summary {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+    }
+  }
+}

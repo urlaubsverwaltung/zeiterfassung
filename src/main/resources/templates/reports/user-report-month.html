@@ -99,8 +99,7 @@
                 </span>
               </p>
               <p class="sr-only sm:not-sr-only">
-                <th:block
-                  th:text="#{report.month.group.hours-bar.worked-hours}"
+                <th:block th:text="#{report.month.group.hours-bar.worked-hours}"
                   >Geleistet:</th:block
                 >
                 <span
@@ -108,8 +107,7 @@
                   class="font-bold tabular-nums"
                   >41:58</span
                 >
-                (<th:block
-                  th:text="#{report.month.group.hours-bar.should}"
+                (<th:block th:text="#{report.month.group.hours-bar.should}"
                   >Geplant:</th:block
                 >
                 <span
@@ -291,7 +289,9 @@
       <section th:aria-labelledby="${monthGroupLabelId}">
         <ol class="space-y-4" th:aria-labelledby="${monthGroupLabelId}">
           <li th:each="weekReportDetail : ${monthReportDetail.weekReports}">
-            <th:block th:replace="~{reports/user-report-week::entries}" />
+            <th:block
+              th:replace="~{reports/_report-time-entries::entries(${weekReportDetail})}"
+            />
           </li>
         </ol>
       </section>
