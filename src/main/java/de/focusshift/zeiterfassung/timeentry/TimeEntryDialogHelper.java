@@ -7,8 +7,11 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.slf4j.Logger;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -51,13 +54,17 @@ public class TimeEntryDialogHelper {
         this.userManagementService = userManagementService;
     }
 
-    public void addTimeEntryEditToModel(Model model, Long timeEntryId, String cancelFormAction) {
+    public void addTimeEntryEditToModel(Model model, Long timeEntryId, String editFormAction, String cancelFormAction) {
 
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
             .orElseThrow(() -> new IllegalStateException("Could not find timeEntry with id=%d".formatted(timeEntryId)));
 
         addTimeEntry(model, timeEntry);
-        addTimeEntryDialog(model, timeEntry, cancelFormAction);
+        addTimeEntryDialog(model, timeEntry, editFormAction, cancelFormAction);
+    }
+
+    public void saveTimeEntry(TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes, OidcUser oidcUser) {
+        timeEntryViewHelper.saveTimeEntry(timeEntryDTO, errors, model, redirectAttributes, oidcUser);
     }
 
     private void addTimeEntry(Model model, TimeEntry timeEntry) {
@@ -69,7 +76,7 @@ public class TimeEntryDialogHelper {
         }
     }
 
-    private void addTimeEntryDialog(Model model, TimeEntry timeEntry, String cancelFormAction) {
+    private void addTimeEntryDialog(Model model, TimeEntry timeEntry, String editFormAction, String cancelFormAction) {
 
         final User timeEntryUser = userManagementService.findUserById(timeEntry.userIdComposite().id())
             .orElseThrow(() -> new IllegalStateException("Could not find user with id=%d".formatted(timeEntry.id().value())));
@@ -79,6 +86,7 @@ public class TimeEntryDialogHelper {
         final TimeEntryDialogDto timeEntryDialogDto = new TimeEntryDialogDto(
             timeEntryUser.fullName(),
             historyItems,
+            editFormAction,
             cancelFormAction
         );
 
