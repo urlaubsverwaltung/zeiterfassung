@@ -1,7 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
-import de.focusshift.zeiterfassung.security.AuthenticationService;
 import de.focusshift.zeiterfassung.user.HasUserIdComposite;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -47,26 +46,22 @@ public class TimeEntryDialogHelper {
     private final TimeEntryViewHelper timeEntryViewHelper;
     private final UserSettingsProvider userSettingsProvider;
     private final UserManagementService userManagementService;
-    private final AuthenticationService authenticationService;
-
 
     public TimeEntryDialogHelper(TimeEntryService timeEntryService, TimeEntryViewHelper timeEntryViewHelper,
-                                 UserSettingsProvider userSettingsProvider, UserManagementService userManagementService,
-                                 AuthenticationService authenticationService) {
+                                 UserSettingsProvider userSettingsProvider, UserManagementService userManagementService) {
         this.timeEntryService = timeEntryService;
         this.timeEntryViewHelper = timeEntryViewHelper;
         this.userSettingsProvider = userSettingsProvider;
         this.userManagementService = userManagementService;
-        this.authenticationService = authenticationService;
     }
 
-    public void addTimeEntryEditToModel(Model model, Long timeEntryId, String editFormAction, String cancelFormAction) {
+    public void addTimeEntryEditToModel(Model model, User currentUser, Long timeEntryId, String editFormAction, String cancelFormAction) {
 
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
             .orElseThrow(() -> new IllegalStateException("Could not find timeEntry with id=%d".formatted(timeEntryId)));
 
         addTimeEntry(model, timeEntry);
-        addTimeEntryDialog(model, timeEntry, editFormAction, cancelFormAction);
+        addTimeEntryDialog(model, currentUser, timeEntry, editFormAction, cancelFormAction);
     }
 
     public void saveTimeEntry(TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes, OidcUser oidcUser) {
@@ -82,13 +77,13 @@ public class TimeEntryDialogHelper {
         }
     }
 
-    private void addTimeEntryDialog(Model model, TimeEntry timeEntry, String editFormAction, String cancelFormAction) {
+    private void addTimeEntryDialog(Model model, User currentUser, TimeEntry timeEntry, String editFormAction, String cancelFormAction) {
 
         final User timeEntryUser = userManagementService.findUserById(timeEntry.userIdComposite().id())
             .orElseThrow(() -> new IllegalStateException("Could not find user with id=%d".formatted(timeEntry.id().value())));
 
         final List<TimeEntryHistoryItemDto> historyItems = getHistory(timeEntry.id());
-        final boolean allowedToEdit = authenticationService.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
+        final boolean allowedToEdit = currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL) || timeEntryUser.equals(currentUser);
 
         final TimeEntryDialogDto timeEntryDialogDto = new TimeEntryDialogDto(
             allowedToEdit,
