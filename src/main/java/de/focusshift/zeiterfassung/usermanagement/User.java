@@ -19,6 +19,10 @@ public record User(
         return givenName + " " + familyName;
     }
 
+    public boolean hasRole(SecurityRole role) {
+        return authorities.contains(role);
+    }
+
     @Override
     public String toString() {
         return "User{" +
