@@ -106,7 +106,7 @@ public class TimeEntryDialogHelper {
                     .toList()
                     .reversed();
             }).orElseGet(() -> {
-                LOG.error("Could find history for timeEntry with id={} actually required for view rendering. Using empty list...", timeEntryId);
+                LOG.error("Could not find history for timeEntry with id={}, which is actually required for view rendering. Using empty list...", timeEntryId);
                 return List.of();
             });
     }
