@@ -1,9 +1,9 @@
 package de.focusshift.zeiterfassung.user;
 
+import de.focusshift.zeiterfassung.security.AuthenticationService;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -12,20 +12,18 @@ import org.springframework.stereotype.Service;
 @Service
 class CurrentUserProviderImpl implements CurrentUserProvider {
 
+    private final AuthenticationService authenticationService;
     private final UserManagementService userManagementService;
 
-    CurrentUserProviderImpl(UserManagementService userManagementService) {
+    CurrentUserProviderImpl(AuthenticationService authenticationService, UserManagementService userManagementService) {
+        this.authenticationService = authenticationService;
         this.userManagementService = userManagementService;
     }
 
     @Override
-    public Authentication getCurrentAuthentication() {
-        return SecurityContextHolder.getContext().getAuthentication();
-    }
-
-    @Override
     public User getCurrentUser() {
-        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        final Authentication authentication = authenticationService.getCurrentAuthentication();
 
         if (authentication instanceof OAuth2AuthenticationToken token) {
             final OAuth2User oAuth2User = token.getPrincipal();
