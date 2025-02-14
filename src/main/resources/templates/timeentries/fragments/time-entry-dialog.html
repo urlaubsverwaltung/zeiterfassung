@@ -68,27 +68,34 @@
                 </form>
               </div>
               <div class="mt-4 p-4">
-                <form
-                  is="z-time-entry-slot-form"
-                  action="#"
-                  th:action="@{${timeEntryDialog.editTimeEntryFormAction}}"
-                  method="post"
-                  data-turbo-frame="_top"
-                  data-turbo-action="replace"
-                >
+                <th:block th:if="${timeEntryDialog.allowedToEdit}">
+                  <form
+                    is="z-time-entry-slot-form"
+                    action="#"
+                    th:action="@{${timeEntryDialog.editTimeEntryFormAction}}"
+                    method="post"
+                    data-turbo-frame="_top"
+                    data-turbo-action="replace"
+                  >
+                    <div
+                      th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new')}"
+                    ></div>
+                    <div class="mt-8 flex justify-end">
+                      <button
+                        type="submit"
+                        class="button-primary"
+                        th:text="#{time-entry.dialog.edit.save.button.text}"
+                      >
+                        Speichern
+                      </button>
+                    </div>
+                  </form>
+                </th:block>
+                <th:block th:if="${not timeEntryDialog.allowedToEdit}">
                   <div
-                    th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new')}"
+                    th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new', disabled=true)}"
                   ></div>
-                  <div class="mt-8 flex justify-end">
-                    <button
-                      type="submit"
-                      class="button-primary"
-                      th:text="#{time-entry.dialog.edit.save.button.text}"
-                    >
-                      Speichern
-                    </button>
-                  </div>
-                </form>
+                </th:block>
                 <div class="mt-8">
                   <div
                     class="bg-gradient-to-r from-blue-200 to-blue-100 p-4 rounded-t-3xl"

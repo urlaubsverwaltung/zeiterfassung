@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
+import de.focusshift.zeiterfassung.security.AuthenticationService;
 import de.focusshift.zeiterfassung.user.HasUserIdComposite;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -45,13 +47,17 @@ public class TimeEntryDialogHelper {
     private final TimeEntryViewHelper timeEntryViewHelper;
     private final UserSettingsProvider userSettingsProvider;
     private final UserManagementService userManagementService;
+    private final AuthenticationService authenticationService;
+
 
     public TimeEntryDialogHelper(TimeEntryService timeEntryService, TimeEntryViewHelper timeEntryViewHelper,
-                                 UserSettingsProvider userSettingsProvider, UserManagementService userManagementService) {
+                                 UserSettingsProvider userSettingsProvider, UserManagementService userManagementService,
+                                 AuthenticationService authenticationService) {
         this.timeEntryService = timeEntryService;
         this.timeEntryViewHelper = timeEntryViewHelper;
         this.userSettingsProvider = userSettingsProvider;
         this.userManagementService = userManagementService;
+        this.authenticationService = authenticationService;
     }
 
     public void addTimeEntryEditToModel(Model model, Long timeEntryId, String editFormAction, String cancelFormAction) {
@@ -82,8 +88,10 @@ public class TimeEntryDialogHelper {
             .orElseThrow(() -> new IllegalStateException("Could not find user with id=%d".formatted(timeEntry.id().value())));
 
         final List<TimeEntryHistoryItemDto> historyItems = getHistory(timeEntry.id());
+        final boolean allowedToEdit = authenticationService.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
 
         final TimeEntryDialogDto timeEntryDialogDto = new TimeEntryDialogDto(
+            allowedToEdit,
             timeEntryUser.fullName(),
             historyItems,
             editFormAction,
