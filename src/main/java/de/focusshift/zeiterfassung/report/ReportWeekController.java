@@ -4,6 +4,7 @@ import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
+import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.annotation.Nullable;
@@ -53,15 +54,17 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     private final ReportPermissionService reportPermissionService;
     private final ReportViewHelper reportViewHelper;
     private final TimeEntryDialogHelper timeEntryDialogHelper;
+    private final CurrentUserProvider currentUserProvider;
     private final Clock clock;
 
     ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService,
                          ReportViewHelper reportViewHelper, TimeEntryDialogHelper timeEntryDialogHelper,
-                         Clock clock) {
+                         CurrentUserProvider currentUserProvider, Clock clock) {
         this.reportService = reportService;
         this.reportPermissionService = reportPermissionService;
         this.reportViewHelper = reportViewHelper;
         this.timeEntryDialogHelper = timeEntryDialogHelper;
+        this.currentUserProvider = currentUserProvider;
         this.clock = clock;
     }
 
@@ -85,8 +88,10 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         @AuthenticationPrincipal DefaultOidcUser principal,
         Model model, Locale locale) {
 
+        final User currentUser = currentUserProvider.getCurrentUser();
+
         if (timeEntryId != null) {
-            return weeklyUserReportWithDialog(year, week, allUsersSelectedParam, userIdsParam, timeEntryId, model);
+            return weeklyUserReportWithDialog(currentUser, year, week, allUsersSelectedParam, userIdsParam, timeEntryId, model);
         }
 
         final YearWeek reportYearWeek = yearWeek(year, week)
@@ -166,11 +171,11 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return new ModelAndView("redirect:%s".formatted(url));
     }
 
-    private ModelAndView weeklyUserReportWithDialog(int year, int week, @Nullable String everyoneParam, List<Long> userParam, Long timeEntryId, Model model) {
+    private ModelAndView weeklyUserReportWithDialog(User currentUser, int year, int week, @Nullable String everyoneParam, List<Long> userParam, Long timeEntryId, Model model) {
 
         final String editFormAction = createEditTimeEntryFormAction(year, week, everyoneParam, userParam);
         final String closeDialogUrl = createWeeklyUserReportUrl(year, week, everyoneParam, userParam, null);
-        timeEntryDialogHelper.addTimeEntryEditToModel(model, timeEntryId, editFormAction, closeDialogUrl);
+        timeEntryDialogHelper.addTimeEntryEditToModel(model, currentUser, timeEntryId, editFormAction, closeDialogUrl);
 
         return new ModelAndView("reports/user-report-edit-time-entry");
     }

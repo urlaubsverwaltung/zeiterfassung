@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
+import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -56,18 +57,21 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
     private final DateFormatter dateFormatter;
     private final ReportViewHelper viewHelper;
     private final TimeEntryDialogHelper timeEntryDialogHelper;
-    private final Clock clock;
     private final ReportPermissionService reportPermissionService;
+    private final CurrentUserProvider currentUserProvider;
+    private final Clock clock;
 
     ReportMonthController(ReportService reportService, ReportPermissionService reportPermissionService,
                           DateFormatter dateFormatter, ReportViewHelper viewHelper,
-                          TimeEntryDialogHelper timeEntryDialogHelper, Clock clock) {
+                          TimeEntryDialogHelper timeEntryDialogHelper, CurrentUserProvider currentUserProvider,
+                          Clock clock) {
         this.reportService = reportService;
         this.dateFormatter = dateFormatter;
         this.viewHelper = viewHelper;
         this.timeEntryDialogHelper = timeEntryDialogHelper;
-        this.clock = clock;
         this.reportPermissionService = reportPermissionService;
+        this.currentUserProvider = currentUserProvider;
+        this.clock = clock;
     }
 
     @GetMapping("/report/month")
@@ -91,8 +95,10 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         Model model, Locale locale
     ) {
 
+        final User currentUser = currentUserProvider.getCurrentUser();
+
         if (timeEntryId != null) {
-            return monthlyUserReportWithDialog(year, month, allUsersSelectedParam, userIdsParam, timeEntryId, model);
+            return monthlyUserReportWithDialog(currentUser, year, month, allUsersSelectedParam, userIdsParam, timeEntryId, model);
         }
 
         final YearMonth yearMonth = yearMonth(year, month)
@@ -170,11 +176,11 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         return new ModelAndView("redirect:%s".formatted(url));
     }
 
-    private ModelAndView monthlyUserReportWithDialog(int year, int month, @Nullable String everyoneParam, List<Long> userParam, Long timeEntryId, Model model) {
+    private ModelAndView monthlyUserReportWithDialog(User currentUser, int year, int month, @Nullable String everyoneParam, List<Long> userParam, Long timeEntryId, Model model) {
 
         final String editFormAction = getEditTimeEntryFormAction(year, month, everyoneParam, userParam);
         final String cancelAction = getMonthlyUserReportUrl(year, month, everyoneParam, userParam, null);
-        timeEntryDialogHelper.addTimeEntryEditToModel(model, timeEntryId, editFormAction, cancelAction);
+        timeEntryDialogHelper.addTimeEntryEditToModel(model, currentUser, timeEntryId, editFormAction, cancelAction);
 
         return new ModelAndView("reports/user-report-edit-time-entry");
     }
