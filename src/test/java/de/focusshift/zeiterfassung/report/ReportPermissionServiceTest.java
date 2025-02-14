@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.security.AuthenticationService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -12,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.TestingAuthenticationToken;
 
 import java.util.List;
 import java.util.Set;
@@ -27,39 +27,33 @@ class ReportPermissionServiceTest {
     private ReportPermissionService sut;
 
     @Mock
+    private AuthenticationService authenticationService;
+    @Mock
     private CurrentUserProvider currentUserProvider;
-
     @Mock
     private UserManagementService userManagementService;
 
     @BeforeEach
     void setUp() {
-        sut = new ReportPermissionService(currentUserProvider, userManagementService);
+        sut = new ReportPermissionService(authenticationService, currentUserProvider, userManagementService);
     }
 
     @Test
     void ensureCurrentUserHasPermissionForAllUsers() {
-
-        when(currentUserProvider.getCurrentAuthentication())
-            .thenReturn(new TestingAuthenticationToken("", "", List.of(ZEITERFASSUNG_VIEW_REPORT_ALL.authority())));
-
+        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
         assertThat(sut.currentUserHasPermissionForAllUsers()).isTrue();
     }
 
     @Test
     void ensureCurrentUserHasPermissionForAllUsersIsFalseWhenAuthorityIsNotGiven() {
-
-        when(currentUserProvider.getCurrentAuthentication())
-            .thenReturn(new TestingAuthenticationToken("", "", List.of()));
-
+        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
         assertThat(sut.currentUserHasPermissionForAllUsers()).isFalse();
     }
 
     @Test
     void ensureFilterUserLocalIdsByCurrentUserHasPermissionForReturnsTheListWhenUserHasPermissionForAll() {
 
-        when(currentUserProvider.getCurrentAuthentication())
-            .thenReturn(new TestingAuthenticationToken("", "", List.of(ZEITERFASSUNG_VIEW_REPORT_ALL.authority())));
+        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
 
         final List<UserLocalId> userLocalIds = List.of(new UserLocalId(1L), new UserLocalId(2L));
 
@@ -70,8 +64,7 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFilterUserLocalIdsByCurrentUserHasPermissionForReturnsListForCurrentUserOnly() {
 
-        when(currentUserProvider.getCurrentAuthentication())
-            .thenReturn(new TestingAuthenticationToken("", "", List.of()));
+        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
 
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(2L);
@@ -88,8 +81,7 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFilterUserLocalIdsByCurrentUserHasPermissionForReturnsEmptyList() {
 
-        when(currentUserProvider.getCurrentAuthentication())
-            .thenReturn(new TestingAuthenticationToken("", "", List.of()));
+        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
 
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(2L);
@@ -106,8 +98,7 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFindAllPermittedUserLocalIdsForCurrentUser() {
 
-        when(currentUserProvider.getCurrentAuthentication())
-            .thenReturn(new TestingAuthenticationToken("", "", List.of(ZEITERFASSUNG_VIEW_REPORT_ALL.authority())));
+        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
 
         final UserId userId_1 = new UserId("");
         final UserLocalId userLocalId_1 = new UserLocalId(1L);
@@ -135,8 +126,7 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFindAllPermittedUserLocalIdsForCurrentUserReturnsCurrentUserOnly() {
 
-        when(currentUserProvider.getCurrentAuthentication())
-            .thenReturn(new TestingAuthenticationToken("", "", List.of()));
+        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
 
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(1L);
@@ -150,8 +140,7 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFindAllPermittedUsersForCurrentUser() {
 
-        when(currentUserProvider.getCurrentAuthentication())
-            .thenReturn(new TestingAuthenticationToken("", "", List.of(ZEITERFASSUNG_VIEW_REPORT_ALL.authority())));
+        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
 
         final UserId userId_1 = new UserId("");
         final UserLocalId userLocalId_1 = new UserLocalId(1L);
@@ -179,8 +168,7 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFindAllPermittedUsersForCurrentUserReturnsOnlyItself() {
 
-        when(currentUserProvider.getCurrentAuthentication())
-            .thenReturn(new TestingAuthenticationToken("", "", List.of()));
+        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
 
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(2L);
