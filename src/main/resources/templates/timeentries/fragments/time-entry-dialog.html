@@ -156,7 +156,7 @@
                             class="time-entry-history-list__element__content"
                           >
                             <div
-                              th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form-existing', disabled=true)}"
+                              th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form-existing', disabled=true, showErrors=false)}"
                             ></div>
                           </div>
                         </details>

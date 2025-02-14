@@ -79,8 +79,7 @@ public class TimeEntryViewHelper {
                 bindingResult.reject("time-entry.validation.endOrDuration.required");
             }
 
-            redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + TIME_ENTRY_MODEL_NAME, bindingResult);
-            redirectAttributes.addFlashAttribute(TIME_ENTRY_MODEL_NAME, dto);
+            setTimeEntryErrorAttributes(redirectAttributes, dto, bindingResult);
 
             return;
         }
@@ -103,11 +102,14 @@ public class TimeEntryViewHelper {
             bindingResult.rejectValue("end", "");
             bindingResult.rejectValue("duration", "");
 
-            model.addAttribute("timeEntryErrorId", dto.getId());
-
-            redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + TIME_ENTRY_MODEL_NAME, bindingResult);
-            redirectAttributes.addFlashAttribute(TIME_ENTRY_MODEL_NAME, dto);
+            setTimeEntryErrorAttributes(redirectAttributes, dto, bindingResult);
         }
+    }
+
+    private void setTimeEntryErrorAttributes(RedirectAttributes redirectAttributes, TimeEntryDTO timeEntryDto, BindingResult  bindingResult) {
+        redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + TIME_ENTRY_MODEL_NAME, bindingResult);
+        redirectAttributes.addFlashAttribute(TIME_ENTRY_MODEL_NAME, timeEntryDto);
+        redirectAttributes.addFlashAttribute("timeEntryErrorId", timeEntryDto.getId());
     }
 
     private void createTimeEntry(TimeEntryDTO dto, UserId userId, ZoneId zoneId) {
