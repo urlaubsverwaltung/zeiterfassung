@@ -59,7 +59,7 @@ class TimeEntryDialogHelperTest {
         final ConcurrentModel model = new ConcurrentModel();
         model.addAttribute("timeEntry", -1);
 
-        sut.addTimeEntryEditToModel(model, 1L, "");
+        sut.addTimeEntryEditToModel(model, 1L, "", "");
 
         assertThat(model.getAttribute("timeEntry")).isEqualTo(-1);
     }
@@ -77,7 +77,7 @@ class TimeEntryDialogHelperTest {
         when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
 
         final ConcurrentModel model = new ConcurrentModel();
-        sut.addTimeEntryEditToModel(model, 1L, "");
+        sut.addTimeEntryEditToModel(model, 1L, "", "");
 
         assertThat(model.getAttribute("timeEntry")).isSameAs(timeEntryDTO);
     }
@@ -97,9 +97,9 @@ class TimeEntryDialogHelperTest {
         final ConcurrentModel model = new ConcurrentModel();
         model.addAttribute("timeEntry", -1);
 
-        sut.addTimeEntryEditToModel(model, 1L, "close-form-action");
+        sut.addTimeEntryEditToModel(model, 1L, "edit-form-action",  "close-form-action");
 
-        final TimeEntryDialogDto expected = new TimeEntryDialogDto(user.fullName(), List.of(), "close-form-action");
+        final TimeEntryDialogDto expected = new TimeEntryDialogDto(user.fullName(), List.of(), "edit-form-action", "close-form-action");
         assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
     }
 
@@ -139,13 +139,14 @@ class TimeEntryDialogHelperTest {
         when(timeEntryViewHelper.toTimeEntryDto(modifiedTimeEntry)).thenReturn(modifiedTimeEntryDto);
 
         final ConcurrentModel model = new ConcurrentModel();
-        sut.addTimeEntryEditToModel(model, 1L, "close-form-action");
+        sut.addTimeEntryEditToModel(model, 1L, "edit-form-action", "close-form-action");
 
         assertThat(model.getAttribute("timeEntryDialog"))
             .isInstanceOf(TimeEntryDialogDto.class)
             .satisfies(dialogDto -> {
                 final TimeEntryDialogDto dto = (TimeEntryDialogDto) dialogDto;
                 assertThat(dto.dialogCloseFormAction()).isEqualTo("close-form-action");
+                assertThat(dto.editTimeEntryFormAction()).isEqualTo("edit-form-action");
                 assertThat(dto.owner()).isEqualTo("Bruce Wayne");
                 assertThat(dto.historyItems()).hasSize(2);
                 assertThat(dto.historyItems().get(0).timeEntry()).isSameAs(modifiedTimeEntryDto);

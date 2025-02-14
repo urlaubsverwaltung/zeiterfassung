@@ -68,9 +68,27 @@
                 </form>
               </div>
               <div class="mt-4 p-4">
-                <div
-                  th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new', disabled=true)}"
-                ></div>
+                <form
+                  is="z-time-entry-slot-form"
+                  action="#"
+                  th:action="@{${timeEntryDialog.editTimeEntryFormAction}}"
+                  method="post"
+                  data-turbo-frame="_top"
+                  data-turbo-action="replace"
+                >
+                  <div
+                    th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new')}"
+                  ></div>
+                  <div class="mt-8 flex justify-end">
+                    <button
+                      type="submit"
+                      class="button-primary"
+                      th:text="#{time-entry.dialog.edit.save.button.text}"
+                    >
+                      Speichern
+                    </button>
+                  </div>
+                </form>
                 <div class="mt-8">
                   <div
                     class="bg-gradient-to-r from-blue-200 to-blue-100 p-4 rounded-t-3xl"
