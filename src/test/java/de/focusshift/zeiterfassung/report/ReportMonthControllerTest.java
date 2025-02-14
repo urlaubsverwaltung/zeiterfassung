@@ -1,11 +1,11 @@
 package de.focusshift.zeiterfassung.report;
 
-import de.focusshift.zeiterfassung.security.AuthenticationService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper;
+import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -66,7 +66,7 @@ class ReportMonthControllerTest {
     @Mock
     private UserManagementService userManagementService;
     @Mock
-    private AuthenticationService authenticationService;
+    private CurrentUserProvider currentUserProvider;
     @Mock
     private MessageSource messageSource;
 
@@ -78,8 +78,8 @@ class ReportMonthControllerTest {
         final DateRangeFormatter dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
         final ReportViewHelper helper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
         final TimeEntryViewHelper timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
-        final TimeEntryDialogHelper timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService, authenticationService);
-        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, helper, timeEntryDialogHelper, clock);
+        final TimeEntryDialogHelper timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, helper, timeEntryDialogHelper, currentUserProvider, clock);
     }
 
     @Test
