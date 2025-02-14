@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
+import de.focusshift.zeiterfassung.security.AuthenticationService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -11,6 +12,8 @@ import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ui.ConcurrentModel;
@@ -25,6 +28,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static de.focusshift.zeiterfassung.data.history.EntityRevisionType.CREATED;
 import static de.focusshift.zeiterfassung.data.history.EntityRevisionType.UPDATED;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -41,10 +45,12 @@ class TimeEntryDialogHelperTest {
     private UserSettingsProvider userSettingsProvider;
     @Mock
     private UserManagementService userManagementService;
+    @Mock
+    private AuthenticationService authenticationService;
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService, authenticationService);
     }
 
     @Test
@@ -82,8 +88,9 @@ class TimeEntryDialogHelperTest {
         assertThat(model.getAttribute("timeEntry")).isSameAs(timeEntryDTO);
     }
 
-    @Test
-    void ensureTimeEntryHistoryModelWithoutHistory() {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void ensureTimeEntryHistoryModelWithoutHistory(boolean allowedToEdit) {
 
         final TimeEntry timeEntry = anyTimeEntry();
         when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
@@ -94,12 +101,14 @@ class TimeEntryDialogHelperTest {
         final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
         when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
 
+        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)).thenReturn(allowedToEdit);
+
         final ConcurrentModel model = new ConcurrentModel();
         model.addAttribute("timeEntry", -1);
 
         sut.addTimeEntryEditToModel(model, 1L, "edit-form-action",  "close-form-action");
 
-        final TimeEntryDialogDto expected = new TimeEntryDialogDto(user.fullName(), List.of(), "edit-form-action", "close-form-action");
+        final TimeEntryDialogDto expected = new TimeEntryDialogDto(allowedToEdit, user.fullName(), List.of(), "edit-form-action", "close-form-action");
         assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
     }
 
