@@ -15,11 +15,11 @@ public class UserPermissionsPage {
     }
 
     public Locator getAllowedToEditPermissionsCheckbox() {
-        return page.locator("[data-test-id=permissions-edit-all-checkbox]");
+        return page.getByTestId("permissions-edit-all-checkbox");
     }
 
     public void submit() {
-        final Locator submitButton = page.locator("[data-test-id=permissions-submit-button]");
+        final Locator submitButton = page.getByTestId("permissions-submit-button");
         page.waitForResponse(Response::ok, submitButton::click);
         page.waitForLoadState(DOMCONTENTLOADED);
     }

@@ -15,6 +15,6 @@ public class UserWorkingTimeAccountPage {
     }
 
     public Locator createNewWorkingTimeButton() {
-        return page.locator("[data-test-id=working-time-create-button]");
+        return page.getByTestId("working-time-create-button");
     }
 }

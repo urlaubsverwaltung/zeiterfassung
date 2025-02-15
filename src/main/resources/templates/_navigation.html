@@ -55,7 +55,7 @@
                       th:href="@{/report}"
                       class="flex items-center main-nav-link"
                       th:aria-current="${currentRequestURI.startsWith('/report') ? 'page' : 'false'}"
-                      data-test-id="navigation-link-reports"
+                      data-testid="navigation-link-reports"
                     >
                       <svg th:replace="~{icons/chart-pie::svg}"></svg>
                       <th:block th:text="#{navigation.main.reports}"></th:block>
@@ -69,7 +69,7 @@
                       class="flex items-center main-nav-link"
                       th:classappend="${currentRequestURI.startsWith('/users') ? 'current' : ''}"
                       th:aria-current="${currentRequestURI.equals('/users') ? 'page' : 'false'}"
-                      data-test-id="navigation-link-users"
+                      data-testid="navigation-link-users"
                     >
                       <svg th:replace="~{icons/users::svg}"></svg>
                       <th:block th:text="#{navigation.main.users}"
@@ -85,7 +85,7 @@
                       class="flex items-center main-nav-link"
                       th:classappend="${currentRequestURI.startsWith('/settings') ? 'current' : ''}"
                       th:aria-current="${currentRequestURI.equals('/settings') ? 'page' : 'false'}"
-                      data-test-id="navigation-link-settings"
+                      data-testid="navigation-link-settings"
                     >
                       <svg th:replace="~{icons/cog::svg}"></svg>
                       <th:block th:text="#{navigation.main.settings}"
@@ -169,7 +169,7 @@
                     aria-expanded="false"
                     aria-haspopup="true"
                     class="flex flex-row items-center"
-                    data-test-id="avatar"
+                    data-testid="avatar"
                   >
                     <span class="inline-flex text-blue-200">
                       <img
@@ -224,7 +224,7 @@
                             <button
                               type="submit"
                               class="nav-popup-menu_link rounded-b-2xl"
-                              data-test-id="logout"
+                              data-testid="logout"
                             >
                               <span
                                 class="px-2 py-1 rounded flex items-center ml-2.5"

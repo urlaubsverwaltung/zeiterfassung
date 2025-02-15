@@ -91,7 +91,7 @@
                   </div>
                   <div
                     class="border border-t-0 border-gray-200 rounded-b-3xl p-4"
-                    data-test-id="time-entry-history"
+                    data-testid="time-entry-history"
                   >
                     <ul
                       th:if="${not #lists.isEmpty(timeEntryDialog.historyItems)}"
@@ -100,7 +100,7 @@
                       <li
                         th:each="historyItem : ${timeEntryDialog.historyItems}"
                         class="time-entry-history-list__element"
-                        data-test-id="time-entry-history-item"
+                        data-testid="time-entry-history-item"
                       >
                         <!-- @thymesVar id="historyItem" type="de.focusshift.zeiterfassung.timeentry.TimeEntryDialogDto" -->
                         <details

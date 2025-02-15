@@ -12,8 +12,8 @@ public class ReportPage {
     }
 
     public Locator timeEntryDialogButtonLocator(String comment) {
-        return page.locator("[data-test-id=report-time-entry]")
+        return page.getByTestId("report-time-entry")
             .filter(new Locator.FilterOptions().setHasText(comment))
-            .locator("[data-test-id=report-time-entry-detail-button]");
+            .getByTestId("report-time-entry-detail-button");
     }
 }

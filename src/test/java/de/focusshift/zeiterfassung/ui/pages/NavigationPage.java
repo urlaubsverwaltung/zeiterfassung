@@ -36,15 +36,15 @@ public class NavigationPage {
     }
 
     public Locator usersLink() {
-        return page.locator("[data-test-id=navigation-link-users]");
+        return page.getByTestId("navigation-link-users");
     }
 
     public Locator settingsLink() {
-        return page.locator("[data-test-id=navigation-link-settings]");
+        return page.getByTestId("navigation-link-settings");
     }
 
     public Locator reportsLink() {
-        return page.locator("[data-test-id=navigation-link-reports]");
+        return page.getByTestId("navigation-link-reports");
     }
 
     private void goTo(Locator locator) {
@@ -55,8 +55,8 @@ public class NavigationPage {
     private record AvatarMenu(Page page) {
 
         void logout() {
-            page.locator("[data-test-id=avatar]").click();
-            page.waitForResponse(Response::ok, () -> page.locator("[data-test-id=logout]").click());
+            page.getByTestId("avatar").click();
+            page.waitForResponse(Response::ok, () -> page.getByTestId("logout").click());
             page.waitForLoadState(DOMCONTENTLOADED);
         }
     }

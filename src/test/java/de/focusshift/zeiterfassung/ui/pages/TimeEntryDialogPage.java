@@ -26,11 +26,11 @@ public class TimeEntryDialogPage {
         // adding it to the duet-date-picker invisible input? or adding it to the duet-date-picker? we will see...
         final Locator dateInputLocator = page.locator("input[type=date]");
 
-        final Locator startInputLocator = page.locator("[data-test-id=input-time-entry-start]");
-        final Locator endInputLocator = page.locator("[data-test-id=input-time-entry-end]");
-        final Locator commentInputLocator = page.locator("[data-test-id=input-time-entry-comment]");
+        final Locator startInputLocator = page.getByTestId("input-time-entry-start");
+        final Locator endInputLocator = page.getByTestId("input-time-entry-end");
+        final Locator commentInputLocator = page.getByTestId("input-time-entry-comment");
 
-        final Locator historyItem = page.locator("[data-test-id=time-entry-history-item]")
+        final Locator historyItem = page.getByTestId("time-entry-history-item")
             .filter(havingChild(dateInputLocator.and(page.locator("[value='%s']".formatted(DATE_FORMATTER.format(date))))))
             .filter(havingChild(startInputLocator.and(page.locator("[value='%s']".formatted(TIME_FORMATTER.format(start))))))
             .filter(havingChild(endInputLocator.and(page.locator("[value='%s']".formatted(TIME_FORMATTER.format(end))))))

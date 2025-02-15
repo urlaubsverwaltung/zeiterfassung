@@ -29,7 +29,7 @@
       <main class="flex-1 flex flex-col">
         <div
           class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28"
-          data-test-id="time-entry-create-container"
+          data-testid="time-entry-create-container"
         >
           <div class="px-4">
             <div class="flex">
@@ -431,7 +431,7 @@
         <button
           type="submit"
           class="mr-4 flex items-center justify-center text-blue-700 md:rounded-full md:w-12 md:h-12 hover:md:bg-blue-100 transition-colors duration-200"
-          data-test-id="submit-time-entry"
+          data-testid="submit-time-entry"
         >
           <svg
             th:replace="~{icons/plus::svg(className='w-6 h-6 md:w-10 md:h-10 stroke-2 md:stroke-1')}"
@@ -467,7 +467,7 @@
           title="Speichern"
           th:title="#{time-entry.form.save.tooltip}"
           data-turbo-frame="frame-time-entry"
-          data-test-id="submit-time-entry"
+          data-testid="submit-time-entry"
         >
           <svg
             th:replace="~{icons/save::svg(className='w-5 h-5 md:w-6 md:h-6')}"

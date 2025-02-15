@@ -15,7 +15,7 @@ public class UserOvertimeAccountPage {
     }
 
     public Locator overtimeAllowedInput() {
-        return page.locator("[data-test-id=overtime-allowed-input]");
+        return page.getByTestId("overtime-allowed-input");
     }
 
     public void clickOvertimeAllowed() {
@@ -23,7 +23,7 @@ public class UserOvertimeAccountPage {
     }
 
     public void submit() {
-        page.waitForResponse(Response::ok, () -> page.locator("[data-test-id=overtime-account-submit]").click());
+        page.waitForResponse(Response::ok, () -> page.getByTestId("overtime-account-submit").click());
         page.waitForLoadState(DOMCONTENTLOADED);
     }
 }
