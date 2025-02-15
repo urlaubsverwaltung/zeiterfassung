@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -22,7 +23,6 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
-class UserManagementControllerTest {
+class UserManagementControllerTest implements ControllerTest {
 
     private UserManagementController sut;
 
@@ -59,7 +59,7 @@ class UserManagementControllerTest {
 
         perform(
             get("/users")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -89,7 +89,7 @@ class UserManagementControllerTest {
 
         perform(
             get("/users")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
         )
             .andExpect(status().isOk())
@@ -114,7 +114,7 @@ class UserManagementControllerTest {
 
         perform(
             get("/users")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("query", "bat")
         )
             .andExpect(status().isOk())
@@ -138,7 +138,7 @@ class UserManagementControllerTest {
 
         perform(
             get("/users")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("query", "bat")
         )
@@ -156,7 +156,7 @@ class UserManagementControllerTest {
     void ensureUserForwardsToWorkingTime() throws Exception {
         perform(
             get("/users/42")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(view().name("forward:/users/42/working-time"));
     }
@@ -165,7 +165,7 @@ class UserManagementControllerTest {
     void ensureUserForwardsToOvertimeAccount() throws Exception {
         perform(
             get("/users/42")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
         )
             .andExpect(view().name("forward:/users/42/overtime-account"));
     }
@@ -174,7 +174,7 @@ class UserManagementControllerTest {
     void ensureUserForwardsToPermissions() throws Exception {
         perform(
             get("/users/42")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_PERMISSIONS_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_PERMISSIONS_EDIT_ALL")))
         )
             .andExpect(view().name("forward:/users/42/permissions"));
     }
