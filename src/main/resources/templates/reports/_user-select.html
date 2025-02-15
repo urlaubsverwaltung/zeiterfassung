@@ -18,6 +18,7 @@
           href="#report-user-selection"
           class="button-secondary button-secondary-icon"
           is="z-report-user-select"
+          data-testid="report-person-select"
         >
           <th:block th:if="${personsSelected}">
             <svg
@@ -47,6 +48,7 @@
                 th:checked="${allUsersSelected}"
                 is="z-checkbox-all-option"
                 data-name="user"
+                data-testid="report-person-select-everyone"
               />
               <label
                 for="report-users-select-everyone"
@@ -90,6 +92,7 @@
             type="submit"
             class="button-primary w-full mt-4 rounded"
             th:text="#{report.filter.users.submit}"
+            data-testid="report-person-select-submit"
           >
             Übernehmen
           </button>
