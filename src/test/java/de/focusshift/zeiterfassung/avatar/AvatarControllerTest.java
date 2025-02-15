@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.avatar;
 
+import de.focusshift.zeiterfassung.ControllerTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
-class AvatarControllerTest {
+class AvatarControllerTest implements ControllerTest {
 
     private AvatarController sut;
 

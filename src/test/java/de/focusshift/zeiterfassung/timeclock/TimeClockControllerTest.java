@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeclock;
 
+import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
-class TimeClockControllerTest {
+class TimeClockControllerTest implements ControllerTest {
 
     private static final ZoneId ZONE_EUROPE_BERLIN = ZoneId.of("Europe/Berlin");
 
@@ -57,7 +57,7 @@ class TimeClockControllerTest {
 
         perform(
             post("/timeclock/start")
-                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .with(oidcSubject("batman"))
                 .header("Referer", "referer-url")
         )
             .andExpect(status().is3xxRedirection())
@@ -77,7 +77,7 @@ class TimeClockControllerTest {
 
         perform(
             post("/timeclock/start")
-                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(status().isConflict());
 
@@ -90,7 +90,7 @@ class TimeClockControllerTest {
 
         perform(
             post("/timeclock/stop")
-                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .with(oidcSubject("batman"))
                 .header("Referer", "referer-url")
         )
             .andExpect(status().is3xxRedirection())
@@ -107,7 +107,7 @@ class TimeClockControllerTest {
 
         perform(
             get("/timeclock")
-                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(status().isOk())
             .andExpect(model().attributeDoesNotExist("timeClockUpdate"))
@@ -123,7 +123,7 @@ class TimeClockControllerTest {
 
         perform(
             get("/timeclock")
-                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(status().isOk())
             .andExpect(model().attribute("timeClockUpdate",
@@ -143,7 +143,7 @@ class TimeClockControllerTest {
     void ensureEditTimeClock() throws Exception {
         perform(
             post("/timeclock")
-                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .with(oidcSubject("batman"))
                 .header("Referer", "referer-url")
                 .param("zoneId", "Europe/Berlin")
                 .param("comment", "awesome comment")
@@ -163,7 +163,7 @@ class TimeClockControllerTest {
     void ensureEditTimeClockDisablingBreak() throws Exception {
         perform(
             post("/timeclock")
-                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .with(oidcSubject("batman"))
                 .header("Referer", "referer-url")
                 .param("zoneId", "Europe/Berlin")
                 .param("comment", "awesome comment")
@@ -187,7 +187,7 @@ class TimeClockControllerTest {
 
         perform(
             post("/timeclock")
-                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .with(oidcSubject("batman"))
                 .header("Referer", "referer-url")
                 .param("zoneId", "Europe/Berlin")
                 .param("comment", "awesome comment")
@@ -201,7 +201,7 @@ class TimeClockControllerTest {
     void ensureEditTimeClockValidationForCommentWithJavaScript() throws Exception {
         perform(
             post("/timeclock")
-                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .with(oidcSubject("batman"))
                 .header("Referer", "referer-url")
                 .header("Turbo-Frame", "any-value")
                 // must be defined
@@ -222,7 +222,7 @@ class TimeClockControllerTest {
     void ensureEditTimeClockValidationForComment() throws Exception {
         perform(
             post("/timeclock")
-                .with(oidcLogin().userInfoToken(builder -> builder.subject("batman")))
+                .with(oidcSubject("batman"))
                 .header("Referer", "referer-url")
                 // must be defined
                 .param("zoneId", "Europe/Berlin")

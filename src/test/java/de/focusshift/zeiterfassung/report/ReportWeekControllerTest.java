@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
@@ -47,14 +48,13 @@ import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
-class ReportWeekControllerTest {
+class ReportWeekControllerTest implements ControllerTest {
 
     private ReportWeekController sut;
 
@@ -157,7 +157,7 @@ class ReportWeekControllerTest {
 
         perform(
             get("/report/year/2023/week/5")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .locale(GERMAN)
         )
             .andExpect(model().attribute("weekReport", graphWeekDto));
@@ -222,7 +222,7 @@ class ReportWeekControllerTest {
 
         perform(
             get("/report/year/2023/week/5")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .locale(GERMAN)
         )
             .andExpect(model().attribute("weekReportDetail", detailWeekDto));
@@ -236,7 +236,7 @@ class ReportWeekControllerTest {
 
         perform(
             get("/report/year/2022/week/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(model().attribute("userReportPreviousSectionUrl", "/report/year/2021/week/52"))
             .andExpect(model().attribute("userReportTodaySectionUrl", "/report/week"))
@@ -251,7 +251,7 @@ class ReportWeekControllerTest {
 
         perform(
             get("/report/year/2022/week/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("everyone", "")
         )
             .andExpect(model().attribute("userReportPreviousSectionUrl", "/report/year/2021/week/52?everyone="))
@@ -267,7 +267,7 @@ class ReportWeekControllerTest {
 
         perform(
             get("/report/year/2022/week/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("user", "1", "2", "42")
         )
             .andExpect(model().attribute("userReportPreviousSectionUrl", "/report/year/2021/week/52?user=1&user=2&user=42"))
@@ -283,7 +283,7 @@ class ReportWeekControllerTest {
 
         perform(
             get("/report/year/2022/week/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/week/1?csv"));
     }
@@ -296,7 +296,7 @@ class ReportWeekControllerTest {
 
         perform(
             get("/report/year/2022/week/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("everyone", "")
         )
             .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/week/1?everyone=&csv"));
@@ -310,7 +310,7 @@ class ReportWeekControllerTest {
 
         perform(
             get("/report/year/2022/week/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("user", "1", "2", "42")
         )
             .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/week/1?user=1&user=2&user=42&csv"));
@@ -325,7 +325,7 @@ class ReportWeekControllerTest {
         when(reportService.getReportWeek(Year.of(2022), 1, user.userId()))
             .thenReturn(anyReportWeek());
 
-        perform(get("/report/year/2022/week/1").with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))))
+        perform(get("/report/year/2022/week/1").with(oidcSubject("batman")))
             .andExpect(model().attributeDoesNotExist("users", "selectedUserIds", "allUsersSelected", "userReportFilterUrl"));
     }
 
@@ -353,7 +353,7 @@ class ReportWeekControllerTest {
         when(reportService.getReportWeek(Year.of(2022), 1, userId1))
             .thenReturn(anyReportWeek());
 
-        perform(get("/report/year/2022/week/1").with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))))
+        perform(get("/report/year/2022/week/1").with(oidcSubject("batman")))
             .andExpect(model().attribute("users", List.of(
                 new SelectableUserDto(1L, "Bruce Wayne", false),
                 new SelectableUserDto(3L, "Dick Grayson", false),
@@ -390,7 +390,7 @@ class ReportWeekControllerTest {
 
         perform(
             get("/report/year/2022/week/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("everyone", "")
         )
             .andExpect(model().attribute("users", List.of(
@@ -429,7 +429,7 @@ class ReportWeekControllerTest {
 
         perform(
             get("/report/year/2022/week/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("user", "2", "3")
         )
             .andExpect(model().attribute("users", List.of(
