@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.security.AuthenticationService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
@@ -52,7 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
-class ReportMonthControllerTest {
+class ReportMonthControllerTest implements ControllerTest {
 
     private ReportMonthController sut;
 
@@ -264,7 +265,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(model().attribute("userReportPreviousSectionUrl", "/report/year/2021/month/12"))
             .andExpect(model().attribute("userReportTodaySectionUrl", "/report/month"))
@@ -279,7 +280,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("everyone", "")
         )
             .andExpect(model().attribute("userReportPreviousSectionUrl", "/report/year/2021/month/12?everyone="))
@@ -295,7 +296,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("user", "1", "2", "42")
         )
             .andExpect(model().attribute("userReportPreviousSectionUrl", "/report/year/2021/month/12?user=1&user=2&user=42"))
@@ -311,7 +312,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/month/1?csv"));
     }
@@ -324,7 +325,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("everyone", "")
         )
             .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/month/1?everyone=&csv"));
@@ -338,7 +339,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("user", "1", "2", "42")
         )
             .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/month/1?user=1&user=2&user=42&csv"));
@@ -356,7 +357,7 @@ class ReportMonthControllerTest {
         when(reportService.getReportMonth(YearMonth.of(2022, 1), userId))
             .thenReturn(anyReportMonth());
 
-        perform(get("/report/year/2022/month/1").with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))))
+        perform(get("/report/year/2022/month/1").with(oidcSubject("batman")))
             .andExpect(model().attributeDoesNotExist("users", "selectedUserIds", "allUsersSelected", "userReportFilterUrl"));
     }
 
@@ -384,7 +385,7 @@ class ReportMonthControllerTest {
         when(reportService.getReportMonth(YearMonth.of(2022, 1), new UserId("batman")))
             .thenReturn(anyReportMonth());
 
-        perform(get("/report/year/2022/month/1").with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))))
+        perform(get("/report/year/2022/month/1").with(oidcSubject("batman")))
             .andExpect(model().attribute("users", List.of(
                 new SelectableUserDto(1L, "Bruce Wayne", false),
                 new SelectableUserDto(3L, "Dick Grayson", false),
@@ -421,7 +422,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("everyone", "")
         )
             .andExpect(model().attribute("users", List.of(
@@ -460,7 +461,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("user", "2", "3")
         )
             .andExpect(model().attribute("users", List.of(

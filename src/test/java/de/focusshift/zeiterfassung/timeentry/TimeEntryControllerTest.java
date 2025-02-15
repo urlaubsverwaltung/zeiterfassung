@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.security.AuthenticationService;
@@ -51,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
-class TimeEntryControllerTest {
+class TimeEntryControllerTest implements ControllerTest {
 
     private TimeEntryController sut;
 
@@ -158,7 +159,7 @@ class TimeEntryControllerTest {
 
         perform(
             get("/timeentries/2025/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -259,7 +260,7 @@ class TimeEntryControllerTest {
 
         perform(
             get("/timeentries/2022/52")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -290,7 +291,7 @@ class TimeEntryControllerTest {
 
         perform(
             get("/timeentries/2022/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -321,7 +322,7 @@ class TimeEntryControllerTest {
 
         perform(
             get("/timeentries/2021/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -337,9 +338,8 @@ class TimeEntryControllerTest {
         perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
-                .with(
-                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
-                )
+                .with(oidcSubject("batman")
+            )
                 .param("date", "2022-01-02")
                 .param("start", "14:30:00.000+01:00")
                 .param("end", "15:00:00.000+01:00")
@@ -362,9 +362,8 @@ class TimeEntryControllerTest {
         perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
-                .with(
-                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
-                )
+                .with(oidcSubject("batman")
+            )
                 .param("date", "2022-01-02")
                 .param("start", "14:30:00.000+01:00")
                 .param("end", "15:00:00.000+01:00")
@@ -388,9 +387,8 @@ class TimeEntryControllerTest {
         perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
-                .with(
-                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
-                )
+                .with(oidcSubject("batman")
+            )
                 .param("date", "2022-01-02")
                 .param("start", "22:30:00.000+01:00")
                 .param("end", "01:15:00.000+01:00")
@@ -432,9 +430,8 @@ class TimeEntryControllerTest {
 
         perform(
             post("/timeentries")
-                .with(
-                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
-                )
+                .with(oidcSubject("batman")
+            )
                 .param("date", "2022-01-02")
                 .param("comment", "hard work")
                  // missing start/end/value
@@ -449,12 +446,14 @@ class TimeEntryControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
+        when(timeEntryService.findTimeEntry(1337))
+            .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
+
         perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
-                .with(
-                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
-                )
+                .with(oidcSubject("batman")
+            )
                 .param("id", "1337")
                 .param("date", "2022-09-28")
                 .param("start", "20:30:00.000+01:00")
@@ -475,12 +474,14 @@ class TimeEntryControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
+        when(timeEntryService.findTimeEntry(1337))
+            .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
+
         perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
-                .with(
-                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
-                )
+                .with(oidcSubject("batman")
+            )
                 .param("id", "1337")
                 .param("date", "2022-09-28")
                 .param("start", "")
@@ -501,12 +502,14 @@ class TimeEntryControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
+        when(timeEntryService.findTimeEntry(1337))
+            .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
+
         perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
-                .with(
-                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
-                )
+                .with(oidcSubject("batman")
+            )
                 .param("id", "1337")
                 .param("date", "2022-09-28")
                 .param("start", "21:15:00.000+01:00")
@@ -533,9 +536,8 @@ class TimeEntryControllerTest {
         perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
-                .with(
-                    oidcLogin().idToken(id -> id.subject("batman")).userInfoToken(userInfo -> userInfo.subject("batman"))
-                )
+                .with(oidcSubject("batman")
+            )
                 .param("id", "1337")
                 .param("date", "2022-09-28")
                 .param("start", "20:30:00.000+01:00")
@@ -563,7 +565,10 @@ class TimeEntryControllerTest {
 
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntryToEdit = new TimeEntry(new TimeEntryId(1337L), userIdComposite, "hard work extended", start, end, false);
+        final TimeEntryId timeEntryId = new TimeEntryId(1337L);
+        final TimeEntry timeEntryToEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work extended", start, end, false);
+
+        when(timeEntryService.findTimeEntry(1337L)).thenReturn(Optional.of(timeEntryToEdit));
 
         final ZonedDateTime startOtherDay = ZonedDateTime.of(2022, 9, 29, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime endOtherDay = ZonedDateTime.of(2022, 9, 29, 15, 0, 0, 0, zoneIdBerlin);
@@ -601,9 +606,8 @@ class TimeEntryControllerTest {
         final ResultActions perform = perform(
             post("/timeentries/1337")
                 .header("Turbo-Frame", "any-value")
-                .with(
-                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
-                )
+                .with(oidcSubject("batman")
+            )
                 .param("id", "1337")
                 .param("date", "2022-09-28")
                 .param("start", "20:30:00.000+01:00")
@@ -675,7 +679,7 @@ class TimeEntryControllerTest {
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
 
-        verify(timeEntryService).updateTimeEntry(new TimeEntryId(1337L), "hard work extended", expectedStart, expectedEnd, Duration.ZERO, false);
+        verify(timeEntryService).updateTimeEntry(timeEntryId, "hard work extended", expectedStart, expectedEnd, Duration.ZERO, false);
     }
 
     @Test
@@ -690,7 +694,10 @@ class TimeEntryControllerTest {
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
+        final TimeEntryId timeEntryId = new TimeEntryId(1337L);
+        final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
+
+        when(timeEntryService.findTimeEntry(1337)).thenReturn(Optional.of(timeEntry));
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
@@ -736,9 +743,8 @@ class TimeEntryControllerTest {
 
         perform(
             post("/timeentries/1337")
-                .with(
-                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
-                )
+                .with(oidcSubject("batman")
+            )
                 .param("date", "2022-01-02")
                 .param("comment", "hard work")
             // missing start/end/value
@@ -752,12 +758,14 @@ class TimeEntryControllerTest {
 
         mockUserSettings(DayOfWeek.MONDAY);
 
+        when(timeEntryService.findTimeEntry(1337))
+            .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
+
         perform(
             post("/timeentries/1337")
                 .header("Turbo-Frame", "any-value")
-                .with(
-                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
-                )
+                .with(oidcSubject("batman")
+            )
                 .param("id", "1337")
                 .param("date", "2022-09-28")
                 .param("start", "")
@@ -787,7 +795,8 @@ class TimeEntryControllerTest {
 
         perform(
             post("/timeentries/1337")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman")
+            )
                 .param("delete", "")
         )
             .andExpect(status().is3xxRedirection())
@@ -866,7 +875,8 @@ class TimeEntryControllerTest {
 
         perform(
             post("/timeentries/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman")
+            )
                 .param("delete", "")
                 .header("Turbo-Frame", "awesome-turbo-frame")
         )
@@ -922,7 +932,8 @@ class TimeEntryControllerTest {
 
         perform(
             post("/timeentries/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman")
+            )
                 .param("delete", "")
                 .header("Turbo-Frame", "awesome-turbo-frame")
         )
@@ -943,8 +954,11 @@ class TimeEntryControllerTest {
     }
 
     private TimeEntry anyTimeEntry(UserId userId) {
+        return anyTimeEntry(new TimeEntryId(1L), userId);
+    }
 
-        final TimeEntryId id = new TimeEntryId(1L);
+    private TimeEntry anyTimeEntry(TimeEntryId id, UserId userId) {
+
         final UserIdComposite userIdComposite = anyUserIdComposite(userId);
         final ZonedDateTime start = ZonedDateTime.now(clock).minusHours(1);
         final ZonedDateTime end = ZonedDateTime.now(clock);
