@@ -77,26 +77,26 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
     public ModelAndView monthlyUserReport(
         @PathVariable("year") Integer year,
         @PathVariable("month") Integer month,
-        @RequestParam(value = "everyone", required = false) Optional<String> optionalAllUsersSelected,
-        @RequestParam(value = "user", required = false) Optional<List<Long>> optionalUserIds,
+        @RequestParam(value = "everyone", required = false) String allUsersSelectedParam,
+        @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
         @RequestParam(value = "timeEntryId", required = false) Long timeEntryId,
         @AuthenticationPrincipal DefaultOidcUser principal,
         Model model, Locale locale
     ) {
 
         if (timeEntryId != null) {
-            return monthlyUserReportWithDialog(year, month, optionalAllUsersSelected, optionalUserIds, timeEntryId, model);
+            return monthlyUserReportWithDialog(year, month, allUsersSelectedParam, userIdsParam, timeEntryId, model);
         }
 
         final YearMonth yearMonth = yearMonth(year, month)
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Invalid month."));
 
-        final List<UserLocalId> userLocalIds = optionalUserIds.orElse(List.of()).stream().map(UserLocalId::new).toList();
-        final boolean allUsersSelected = optionalAllUsersSelected.isPresent();
+        final List<UserLocalId> userLocalIds = userIdsParam.stream().map(UserLocalId::new).toList();
+        final boolean allUsersSelected = allUsersSelectedParam != null;
 
         final ReportMonth reportMonth = getReportMonth(principal, allUsersSelected, yearMonth, userLocalIds);
         final GraphMonthDto graphMonthDto = toGraphMonthDto(reportMonth);
-        final DetailMonthDto detailMonthDto = toDetailMonthDto(reportMonth, optionalAllUsersSelected, optionalUserIds, locale);
+        final DetailMonthDto detailMonthDto = toDetailMonthDto(reportMonth, allUsersSelectedParam, userIdsParam, locale);
 
         model.addAttribute("monthReport", graphMonthDto);
         model.addAttribute("monthReportDetail", detailMonthDto);
@@ -138,7 +138,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         return new ModelAndView("reports/user-report");
     }
 
-    private ModelAndView monthlyUserReportWithDialog(int year, int month, Optional<String> everyoneParam, Optional<List<Long>> userParam, Long timeEntryId, Model model) {
+    private ModelAndView monthlyUserReportWithDialog(int year, int month, @Nullable String everyoneParam, List<Long> userParam, Long timeEntryId, Model model) {
 
         final String cancelAction = createMonthlyUserReportUrl(year, month, everyoneParam, userParam, null);
         timeEntryDialogHelper.addTimeEntryEditToModel(model, timeEntryId, cancelAction);
@@ -188,7 +188,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         return new GraphMonthDto(yearMonth, graphWeekDtos, maxHoursWorked, workedWorkingHoursString, shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), weekRatio);
     }
 
-    private DetailMonthDto toDetailMonthDto(ReportMonth reportMonth, Optional<String> everyoneParam, Optional<List<Long>> userParam, Locale locale) {
+    private DetailMonthDto toDetailMonthDto(ReportMonth reportMonth, @Nullable String everyoneParam, List<Long> userParam, Locale locale) {
 
         final YearMonth yearMonth = reportMonth.yearMonth();
 
@@ -203,7 +203,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         return new DetailMonthDto(yearMonthFormatted, weeks);
     }
 
-    private String createMonthlyUserReportUrl(int year, int month, Optional<String> everyoneParam, Optional<List<Long>> userParam, @Nullable Long timeEntryId) {
+    private String createMonthlyUserReportUrl(int year, int month, @Nullable String everyoneParam, List<Long> userParam, @Nullable Long timeEntryId) {
         return fromMethodCall(on(ReportMonthController.class)
             .monthlyUserReport(year, month, everyoneParam, userParam, timeEntryId, null,null,null))
             .build().toUriString();

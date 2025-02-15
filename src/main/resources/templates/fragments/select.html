@@ -15,7 +15,7 @@
         th:id="${id}"
         th:name="${name}"
         class="appearance-none py-1 px-2 pr-8 border border-gray-300 rounded"
-        th:attrappend="data-auto-submit=${autosubmit}, data-test-id=${testId}, is=${is}"
+        th:attrappend="data-auto-submit=${autosubmit}, data-testid=${testId}, is=${is}"
       >
         <option th:replace="${options}"></option>
       </select>
@@ -55,7 +55,7 @@
         th:id="${id}"
         th:name="${name}"
         class="form-control appearance-none pr-8"
-        th:attrappend="data-test-id=${testId}"
+        th:attrappend="data-testid=${testId}"
       >
         <option th:replace="${options}"></option>
       </select>

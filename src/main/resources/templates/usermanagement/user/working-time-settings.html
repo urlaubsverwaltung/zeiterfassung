@@ -11,7 +11,7 @@
           th:href="@{/users/{id}/working-time/new (id=${user.id}, query=${query})}"
           class="button-secondary button-secondary-icon button-secondary--narrow"
           data-turbo-action="advance"
-          data-test-id="working-time-create-button"
+          data-testid="working-time-create-button"
         >
           <svg th:replace="~{icons/plus::svg(className='w-5 h-5')}"></svg>
           <th:block
@@ -28,7 +28,9 @@
           data-turbo-action="advance"
         >
           <svg th:replace="~{icons/edit::svg(className='w-4 h-4')}"></svg>
-          <th:block th:text="#{usermanagement.working-time.edit}">Bearbeiten</th:block>
+          <th:block th:text="#{usermanagement.working-time.edit}"
+            >Bearbeiten</th:block
+          >
         </a>
       </div>
       <th:block th:if="${#lists.size(workingTimes) > 1}">

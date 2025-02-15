@@ -345,6 +345,45 @@ services:
 * open shell to postgres docker container `docker-compose exec postgres bash`
 * exec command inside postgres docker container `PGPASSWORD=$POSTGRES_PASSWORD psql -U $POSTGRES_USER -d $POSTGRES_DB -f /tmp/dumpfile.sql`
 
+### UI Tests with Playwright
+
+The UI tests are located in the [test ui](src/test/java/de/focusshift/zeiterfassung/ui) package.
+These tests cover several end-to-end scenarios, such as enabling/disabling settings and verifying their effects.
+
+The test runner and assertion library used is Playwright-Java.  
+For details, see [Playwright for Java Getting Started](https://playwright.dev/java/docs/intro).
+
+#### Headless Browser
+
+By default, the tests run in headless mode (without a visible browser).
+This behavior can be configured in the [UiTest](src/test/java/de/focusshift/zeiterfassung/ui/extension/UiTest.java)
+using `Options#setHeadless`.
+
+#### Debugging
+
+Playwright provides a built-in inspector. See [Playwright Debugging Tests](https://playwright.dev/java/docs/debug)
+for more information.
+
+To enable it, set the environment variable `PWDEBUG=1` before running the test.
+
+#### UI Test Artifacts
+
+Our Playwright UI tests generate two artifacts upon failure:
+* Video
+* [Trace Report](https://playwright.dev/java/docs/trace-viewer-intro)
+
+These artifacts can be found in the `target` directory.
+
+Videos are useful for quick analysis, as they can be played directly in a browser.
+
+If the video is not sufficient, the trace report provides a detailed analysis.
+To view it, either upload the `.zip` file to https://trace.playwright.dev or launch the locally running
+progressive web app yourself, e.g., using Maven:
+
+```bash
+./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.classpathScope="test" -D exec.args="show-trace target/ui-test/<browser>/FAILED-test.zip"
+```
+
 ## Release
 
 ### GitHub action

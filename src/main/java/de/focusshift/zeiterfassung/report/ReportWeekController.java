@@ -72,27 +72,27 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     public ModelAndView weeklyUserReport(
         @PathVariable("year") Integer year,
         @PathVariable("week") Integer week,
-        @RequestParam(value = "everyone", required = false) Optional<String> optionalAllUsersSelected,
-        @RequestParam(value = "user", required = false) Optional<List<Long>> optionalUserIds,
+        @RequestParam(value = "everyone", required = false) String allUsersSelectedParam,
+        @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
         @RequestParam(value = "timeEntryId", required = false) Long timeEntryId,
         @AuthenticationPrincipal DefaultOidcUser principal,
         Model model, Locale locale) {
 
         if (timeEntryId != null) {
-            return weeklyUserReportWithDialog(year, week, optionalAllUsersSelected, optionalUserIds, timeEntryId, model);
+            return weeklyUserReportWithDialog(year, week, allUsersSelectedParam, userIdsParam, timeEntryId, model);
         }
 
         final YearWeek reportYearWeek = yearWeek(year, week)
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST));
 
         final Year reportYear = Year.of(reportYearWeek.getYear());
-        final List<UserLocalId> selectedUserLocalIds = optionalUserIds.orElse(List.of()).stream().map(UserLocalId::new).toList();
-        final boolean allUsersSelected = optionalAllUsersSelected.isPresent();
+        final List<UserLocalId> selectedUserLocalIds = userIdsParam.stream().map(UserLocalId::new).toList();
+        final boolean allUsersSelected = allUsersSelectedParam != null;
 
         final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, selectedUserLocalIds);
         final GraphWeekDto graphWeekDto = reportViewHelper.toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
         final DetailWeekDto detailWeekDto = reportViewHelper.toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth(), locale,
-            id -> createWeeklyUserReportUrl(year, week, optionalAllUsersSelected, optionalUserIds, id.value()));
+            id -> createWeeklyUserReportUrl(year, week, allUsersSelectedParam, userIdsParam, id.value()));
 
         model.addAttribute("weekReport", graphWeekDto);
         model.addAttribute("weekReportDetail", detailWeekDto);
@@ -134,7 +134,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return new ModelAndView("reports/user-report");
     }
 
-    private ModelAndView weeklyUserReportWithDialog(int year, int week, Optional<String> everyoneParam, Optional<List<Long>> userParam, Long timeEntryId, Model model) {
+    private ModelAndView weeklyUserReportWithDialog(int year, int week, String everyoneParam, List<Long> userParam, Long timeEntryId, Model model) {
 
         final String closeDialogUrl = createWeeklyUserReportUrl(year, week, everyoneParam, userParam, null);
         timeEntryDialogHelper.addTimeEntryEditToModel(model, timeEntryId, closeDialogUrl);
@@ -142,7 +142,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return new ModelAndView("reports/user-report-edit-time-entry");
     }
 
-    private String createWeeklyUserReportUrl(int year, int week, Optional<String> everyoneParam, Optional<List<Long>> userParam, @Nullable Long timeEntryId) {
+    private String createWeeklyUserReportUrl(int year, int week, String everyoneParam, List<Long> userParam, @Nullable Long timeEntryId) {
         return fromMethodCall(on(ReportWeekController.class)
             .weeklyUserReport(year, week, everyoneParam, userParam, timeEntryId, null,null,null))
             .build().toUriString();

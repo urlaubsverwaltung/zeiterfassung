@@ -27,7 +27,7 @@
                 <input
                   type="checkbox"
                   id="overtime-allowed-input"
-                  data-test-id="overtime-allowed-input"
+                  data-testid="overtime-allowed-input"
                   th:field="*{allowed}"
                 />
                 <label
@@ -99,7 +99,7 @@
             <button
               type="submit"
               class="ajax-loader button-primary button-primary-icon"
-              data-test-id="overtime-account-submit"
+              data-testid="overtime-account-submit"
             >
               <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
               <th:block th:text="#{usermanagement.save}">

@@ -13,7 +13,9 @@
           data-turbo-action="advance"
         >
           <svg th:replace="~{icons/arrow-left::svg(className='w-5 h-5')}"></svg>
-          <th:block th:text="#{usermanagement.working-time.backlink}">zurück zu Arbeitszeiten</th:block>
+          <th:block th:text="#{usermanagement.working-time.backlink}"
+            >zurück zu Arbeitszeiten</th:block
+          >
         </a>
       </div>
       <form
@@ -93,7 +95,7 @@
                   name="worksOnPublicHoliday"
                   value="true"
                   th:checked="${workingTime.worksOnPublicHoliday != null && workingTime.worksOnPublicHoliday == true}"
-                  data-test-id="works-on-public-holiday-yes-input"
+                  data-testid="works-on-public-holiday-yes-input"
                 />
                 <label
                   for="works-on-public-holiday-yes-checkbox"
@@ -109,7 +111,7 @@
                   name="worksOnPublicHoliday"
                   value="false"
                   th:checked="${workingTime.worksOnPublicHoliday != null && workingTime.worksOnPublicHoliday == false}"
-                  data-test-id="works-on-public-holiday-no-input"
+                  data-testid="works-on-public-holiday-no-input"
                 />
                 <label
                   for="works-on-public-holiday-no-checkbox"
@@ -125,7 +127,7 @@
                   name="worksOnPublicHoliday"
                   value=""
                   th:checked="${workingTime.worksOnPublicHoliday == null}"
-                  data-test-id="works-on-public-holiday-global-input"
+                  data-testid="works-on-public-holiday-global-input"
                 />
                 <label
                   for="works-on-public-holiday-global-checkbox"
@@ -141,14 +143,24 @@
             th:with="hasError=${#fields.hasErrors('validFrom') or #fields.hasErrors('validFrom')}"
             th:if="${workingTime.id == null or workingTime.validFrom != null}"
           >
-            <legend th:text="#{usermanagement.working-time.validity}" class="text-sm font-medium text-gray-400">
+            <legend
+              th:text="#{usermanagement.working-time.validity}"
+              class="text-sm font-medium text-gray-400"
+            >
               Gültigkeit
             </legend>
             <div class="mt-2 sm:mt-4">
               <div class="flex items-center gap-2">
                 <span>
-                  <span th:text="#{usermanagement.working-time.valid-from.select}">Die Arbeitszeit ist</span>
-                  <label th:text="#{usermanagement.working-time.valid-from.select.label}" for="working-time-valid-from-input">gültig ab</label>
+                  <span
+                    th:text="#{usermanagement.working-time.valid-from.select}"
+                    >Die Arbeitszeit ist</span
+                  >
+                  <label
+                    th:text="#{usermanagement.working-time.valid-from.select.label}"
+                    for="working-time-valid-from-input"
+                    >gültig ab</label
+                  >
                 </span>
                 <input
                   type="date"
@@ -268,7 +280,7 @@
                   th:errorclass="invalid"
                   th:aria-invalid="${#fields.hasErrors('workingTime')}"
                   th:aria-message="${#fields.hasErrors('workingTime') ? 'working-time-error-message' : ''}"
-                  data-test-id="working-time-hours-input"
+                  data-testid="working-time-hours-input"
                 />
                 <label
                   for="input-workingtime"
@@ -351,7 +363,7 @@
               type="submit"
               class="ajax-loader button-primary button-primary-icon"
               data-turbo-action="advance"
-              data-test-id="working-time-submit-button"
+              data-testid="working-time-submit-button"
             >
               <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
               <th:block

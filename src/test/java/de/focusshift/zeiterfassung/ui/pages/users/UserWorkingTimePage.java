@@ -21,19 +21,19 @@ public class UserWorkingTimePage {
     }
 
     public Locator federalStateSelect() {
-        return page.locator("[data-test-id=federal-state-select]");
+        return page.getByTestId("federal-state-select");
     }
 
     public Locator worksOnPublicHolidayGlobalButton() {
-        return page.locator("[data-test-id=works-on-public-holiday-global-input]");
+        return page.getByTestId("works-on-public-holiday-global-input");
     }
 
     public Locator worksOnPublicHolidayYesButton() {
-        return page.locator("[data-test-id=works-on-public-holiday-yes-input]");
+        return page.getByTestId("works-on-public-holiday-yes-input");
     }
 
     public Locator worksOnPublicHolidayNoButton() {
-        return page.locator("[data-test-id=works-on-public-holiday-no-input]");
+        return page.getByTestId("works-on-public-holiday-no-input");
     }
 
     public void selectWorkdays(List<DayOfWeek> weekdays) {
@@ -43,11 +43,11 @@ public class UserWorkingTimePage {
     }
 
     public Locator workingTimeHoursInput() {
-        return page.locator("[data-test-id=working-time-hours-input]");
+        return page.getByTestId("working-time-hours-input");
     }
 
     public void submit() {
-        final Locator submitButton = page.locator("[data-test-id=working-time-submit-button]");
+        final Locator submitButton = page.getByTestId("working-time-submit-button");
         page.waitForResponse(Response::ok, submitButton::click);
         page.waitForLoadState(DOMCONTENTLOADED);
     }

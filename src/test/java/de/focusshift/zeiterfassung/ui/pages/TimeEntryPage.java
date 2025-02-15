@@ -25,13 +25,13 @@ public class TimeEntryPage {
         container.locator("duet-date-picker")
             .evaluate("(node, date) => { node.value = date }", DATE_FORMATTER.format(date));
 
-        container.locator("[data-test-id=input-time-entry-start]").fill(TIME_FORMATTER.format(start));
-        container.locator("[data-test-id=input-time-entry-end]").fill(TIME_FORMATTER.format(end));
-        container.locator("[data-test-id=input-time-entry-comment]").fill(comment);
+        container.getByTestId("input-time-entry-start").fill(TIME_FORMATTER.format(start));
+        container.getByTestId("input-time-entry-end").fill(TIME_FORMATTER.format(end));
+        container.getByTestId("input-time-entry-comment").fill(comment);
     }
 
     public Locator submitNewTimeEntryButton() {
-        return timeEntryCreateContainer().locator("[data-test-id=submit-time-entry]");
+        return timeEntryCreateContainer().getByTestId("submit-time-entry");
     }
 
     /**
@@ -41,18 +41,18 @@ public class TimeEntryPage {
      * @return {@link Locator} of the comment input currently having the given value.
      */
     public Locator getCommentInput(String value) {
-        return page.locator("css=[data-test-id=input-time-entry-comment][value='%s']".formatted(value));
+        return page.locator("css=[data-testid=input-time-entry-comment][value='%s']".formatted(value));
     }
 
     public void submitTimeEntryHaving(Locator childLocator) {
-        timeEntryEditContainer(childLocator).locator("[data-test-id=submit-time-entry]").click();
+        timeEntryEditContainer(childLocator).getByTestId("submit-time-entry").click();
     }
 
     private Locator timeEntryEditContainer(Locator childLocator) {
-        return page.locator("[data-test-id=time-entry-form]").filter(new Locator.FilterOptions().setHas(childLocator));
+        return page.getByTestId("time-entry-form").filter(new Locator.FilterOptions().setHas(childLocator));
     }
 
     private Locator timeEntryCreateContainer() {
-        return page.locator("[data-test-id=time-entry-create-container]");
+        return page.getByTestId("time-entry-create-container");
     }
 }

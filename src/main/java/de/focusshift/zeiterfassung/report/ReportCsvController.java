@@ -46,7 +46,7 @@ class ReportCsvController {
     public void weeklyUserReportCsv(
         @PathVariable("year") Integer year,
         @PathVariable("week") Integer week,
-        @RequestParam(value = "user", required = false) Optional<List<Long>> optionalUserIds,
+        @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
         @AuthenticationPrincipal DefaultOidcUser principal,
         Locale locale,
         HttpServletResponse response
@@ -56,7 +56,7 @@ class ReportCsvController {
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Invalid week."));
 
         final UserId userId = principalToUserId(principal);
-        final List<UserLocalId> userLocalIds = optionalUserIds.orElse(List.of()).stream().map(UserLocalId::new).toList();
+        final List<UserLocalId> userLocalIds = userIdsParam.stream().map(UserLocalId::new).toList();
         final String fileName = messageSource.getMessage("report.weekly.csv.filename", new Object[]{year, week}, locale);
 
         final Consumer<PrintWriter> csvWriteConsumer = userLocalIds.isEmpty()
@@ -70,7 +70,7 @@ class ReportCsvController {
     public void monthlyUserReportCsv(
         @PathVariable("year") Integer year,
         @PathVariable("month") Integer month,
-        @RequestParam(value = "user", required = false) Optional<List<Long>> optionalUserIds,
+        @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
         @AuthenticationPrincipal DefaultOidcUser principal,
         Locale locale,
         HttpServletResponse response
@@ -80,7 +80,7 @@ class ReportCsvController {
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Invalid month."));
 
         final UserId userId = principalToUserId(principal);
-        final List<UserLocalId> userIds = optionalUserIds.orElse(List.of()).stream().map(UserLocalId::new).toList();
+        final List<UserLocalId> userIds = userIdsParam.stream().map(UserLocalId::new).toList();
         final String fileName = messageSource.getMessage("report.monthly.csv.filename", new Object[]{year, month}, locale);
 
         final Consumer<PrintWriter> csvWriteConsumer = userIds.isEmpty()

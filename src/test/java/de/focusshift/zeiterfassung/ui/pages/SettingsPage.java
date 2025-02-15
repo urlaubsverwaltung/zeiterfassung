@@ -15,15 +15,15 @@ public class SettingsPage {
     }
 
     public Locator worksOnPublicHolidayCheckbox() {
-        return page.locator("[data-test-id=works-on-public-holiday-checkbox]");
+        return page.getByTestId("works-on-public-holiday-checkbox");
     }
 
     public Locator federalStateSelect() {
-        return page.locator("[data-test-id=federal-state-select]");
+        return page.getByTestId("federal-state-select");
     }
 
     public void submit() {
-        final Locator submitButton = page.locator("[data-test-id=settings-submit-button]");
+        final Locator submitButton = page.getByTestId("settings-submit-button");
         page.waitForResponse(Response::ok, submitButton::click);
         page.waitForLoadState(DOMCONTENTLOADED);
     }

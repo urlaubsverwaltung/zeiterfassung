@@ -33,24 +33,24 @@ public class UsersPage {
      * go to the overtime-account page of the currently selected person.
      */
     public void goToOvertimeAccountSettings() {
-        goTo("[data-test-id=users-overtime-account-link]");
+        goTo("users-overtime-account-link");
     }
 
     public void goToWorkingTimeAccountSettings() {
-        goTo("[data-test-id=users-working-time-account-link]");
+        goTo("users-working-time-account-link");
     }
 
     public void goToPermissionsSettings() {
-        goTo("[data-test-id=users-permissions-link]");
+        goTo("users-permissions-link");
     }
 
-    private void goTo(String selector) {
-        page.waitForResponse(Response::ok, () -> page.locator(selector).click());
+    private void goTo(String testId) {
+        page.waitForResponse(Response::ok, () -> page.getByTestId(testId).click());
         page.waitForLoadState(DOMCONTENTLOADED);
     }
 
     private Locator personLink(String name) {
-        return page.locator("[data-test-id=users-list-person-link]").filter(hasText(name));
+        return page.getByTestId("users-list-person-link").filter(hasText(name));
     }
 
     private Locator.FilterOptions hasText(String text) {
