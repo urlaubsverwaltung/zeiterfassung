@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
+import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -25,6 +26,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static de.focusshift.zeiterfassung.data.history.EntityRevisionType.CREATED;
 import static de.focusshift.zeiterfassung.data.history.EntityRevisionType.UPDATED;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -59,7 +61,7 @@ class TimeEntryDialogHelperTest {
         final ConcurrentModel model = new ConcurrentModel();
         model.addAttribute("timeEntry", -1);
 
-        sut.addTimeEntryEditToModel(model, 1L, "");
+        sut.addTimeEntryEditToModel(model, user, 1L, "", "");
 
         assertThat(model.getAttribute("timeEntry")).isEqualTo(-1);
     }
@@ -77,7 +79,7 @@ class TimeEntryDialogHelperTest {
         when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
 
         final ConcurrentModel model = new ConcurrentModel();
-        sut.addTimeEntryEditToModel(model, 1L, "");
+        sut.addTimeEntryEditToModel(model, user, 1L, "", "");
 
         assertThat(model.getAttribute("timeEntry")).isSameAs(timeEntryDTO);
     }
@@ -97,9 +99,57 @@ class TimeEntryDialogHelperTest {
         final ConcurrentModel model = new ConcurrentModel();
         model.addAttribute("timeEntry", -1);
 
-        sut.addTimeEntryEditToModel(model, 1L, "close-form-action");
+        sut.addTimeEntryEditToModel(model, user, 1L, "edit-form-action",  "close-form-action");
 
-        final TimeEntryDialogDto expected = new TimeEntryDialogDto(user.fullName(), List.of(), "close-form-action");
+        final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
+        assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
+    }
+
+    @Test
+    void ensureTimeEntryIsEditableForPrivilegedUser() {
+
+        final UserIdComposite priviligedIdComposite = anyUserIdComposite("office");
+        final User priviligedUser = anyUser(priviligedIdComposite, "", "", Set.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
+
+        final TimeEntry timeEntry = anyTimeEntry();
+        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+
+        final User user = anyUser();
+        when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+
+        final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
+        when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
+
+        final ConcurrentModel model = new ConcurrentModel();
+        model.addAttribute("timeEntry", -1);
+
+        sut.addTimeEntryEditToModel(model, priviligedUser, 1L, "edit-form-action",  "close-form-action");
+
+        final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
+        assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
+    }
+
+    @Test
+    void ensureTimeEntryNotEditableForNotPrivilegedUser() {
+
+        final UserIdComposite anyIdComposite = anyUserIdComposite("office");
+        final User anyUser = anyUser(anyIdComposite, "", "", Set.of());
+
+        final TimeEntry timeEntry = anyTimeEntry();
+        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+
+        final User user = anyUser();
+        when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+
+        final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
+        when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
+
+        final ConcurrentModel model = new ConcurrentModel();
+        model.addAttribute("timeEntry", -1);
+
+        sut.addTimeEntryEditToModel(model, anyUser, 1L, "edit-form-action",  "close-form-action");
+
+        final TimeEntryDialogDto expected = new TimeEntryDialogDto(false, user.fullName(), List.of(), "edit-form-action", "close-form-action");
         assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
     }
 
@@ -139,13 +189,14 @@ class TimeEntryDialogHelperTest {
         when(timeEntryViewHelper.toTimeEntryDto(modifiedTimeEntry)).thenReturn(modifiedTimeEntryDto);
 
         final ConcurrentModel model = new ConcurrentModel();
-        sut.addTimeEntryEditToModel(model, 1L, "close-form-action");
+        sut.addTimeEntryEditToModel(model, user, 1L, "edit-form-action", "close-form-action");
 
         assertThat(model.getAttribute("timeEntryDialog"))
             .isInstanceOf(TimeEntryDialogDto.class)
             .satisfies(dialogDto -> {
                 final TimeEntryDialogDto dto = (TimeEntryDialogDto) dialogDto;
                 assertThat(dto.dialogCloseFormAction()).isEqualTo("close-form-action");
+                assertThat(dto.editTimeEntryFormAction()).isEqualTo("edit-form-action");
                 assertThat(dto.owner()).isEqualTo("Bruce Wayne");
                 assertThat(dto.historyItems()).hasSize(2);
                 assertThat(dto.historyItems().get(0).timeEntry()).isSameAs(modifiedTimeEntryDto);
@@ -162,7 +213,11 @@ class TimeEntryDialogHelperTest {
     }
 
     private static User anyUser(UserIdComposite userIdComposite, String givenName, String familyName) {
-        return new User(userIdComposite, givenName, familyName, new EMailAddress(""), Set.of());
+        return anyUser(userIdComposite, givenName, familyName, Set.of());
+    }
+
+    private static User anyUser(UserIdComposite userIdComposite, String givenName, String familyName, Set<SecurityRole> roles) {
+        return new User(userIdComposite, givenName, familyName, new EMailAddress(""), roles);
     }
 
     private static UserIdComposite anyUserIdComposite(String userIdValue) {

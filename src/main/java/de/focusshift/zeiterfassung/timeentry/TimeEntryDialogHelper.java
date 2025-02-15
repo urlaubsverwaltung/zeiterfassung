@@ -9,6 +9,8 @@ import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -17,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -51,13 +54,17 @@ public class TimeEntryDialogHelper {
         this.userManagementService = userManagementService;
     }
 
-    public void addTimeEntryEditToModel(Model model, Long timeEntryId, String cancelFormAction) {
+    public void addTimeEntryEditToModel(Model model, User currentUser, Long timeEntryId, String editFormAction, String cancelFormAction) {
 
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
             .orElseThrow(() -> new IllegalStateException("Could not find timeEntry with id=%d".formatted(timeEntryId)));
 
         addTimeEntry(model, timeEntry);
-        addTimeEntryDialog(model, timeEntry, cancelFormAction);
+        addTimeEntryDialog(model, currentUser, timeEntry, editFormAction, cancelFormAction);
+    }
+
+    public void saveTimeEntry(TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
+        timeEntryViewHelper.updateTimeEntry(timeEntryDTO, errors, model, redirectAttributes);
     }
 
     private void addTimeEntry(Model model, TimeEntry timeEntry) {
@@ -69,16 +76,19 @@ public class TimeEntryDialogHelper {
         }
     }
 
-    private void addTimeEntryDialog(Model model, TimeEntry timeEntry, String cancelFormAction) {
+    private void addTimeEntryDialog(Model model, User currentUser, TimeEntry timeEntry, String editFormAction, String cancelFormAction) {
 
         final User timeEntryUser = userManagementService.findUserById(timeEntry.userIdComposite().id())
             .orElseThrow(() -> new IllegalStateException("Could not find user with id=%d".formatted(timeEntry.id().value())));
 
         final List<TimeEntryHistoryItemDto> historyItems = getHistory(timeEntry.id());
+        final boolean allowedToEdit = currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL) || timeEntryUser.equals(currentUser);
 
         final TimeEntryDialogDto timeEntryDialogDto = new TimeEntryDialogDto(
+            allowedToEdit,
             timeEntryUser.fullName(),
             historyItems,
+            editFormAction,
             cancelFormAction
         );
 

@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
+import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -64,6 +65,8 @@ class ReportWeekControllerTest {
     @Mock
     private TimeEntryDialogHelper timeEntryDialogHelper;
     @Mock
+    private CurrentUserProvider currentUserProvider;
+    @Mock
     private MessageSource messageSource;
 
     private final Clock clock = Clock.systemUTC();
@@ -73,7 +76,7 @@ class ReportWeekControllerTest {
         final DateFormatterImpl dateFormatter = new DateFormatterImpl();
         final DateRangeFormatter dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
         final ReportViewHelper reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
-        sut = new ReportWeekController(reportService, reportPermissionService, reportViewHelper, timeEntryDialogHelper, clock);
+        sut = new ReportWeekController(reportService, reportPermissionService, reportViewHelper, timeEntryDialogHelper, currentUserProvider, clock);
     }
 
     @Test

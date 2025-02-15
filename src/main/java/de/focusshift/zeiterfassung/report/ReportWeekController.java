@@ -2,11 +2,14 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
+import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,8 +17,11 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
@@ -29,6 +35,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.ScrollPreservation.PRESERVE;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_REFRESH_SCROLL_ATTRIBUTE;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -46,15 +54,17 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     private final ReportPermissionService reportPermissionService;
     private final ReportViewHelper reportViewHelper;
     private final TimeEntryDialogHelper timeEntryDialogHelper;
+    private final CurrentUserProvider currentUserProvider;
     private final Clock clock;
 
     ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService,
                          ReportViewHelper reportViewHelper, TimeEntryDialogHelper timeEntryDialogHelper,
-                         Clock clock) {
+                         CurrentUserProvider currentUserProvider, Clock clock) {
         this.reportService = reportService;
         this.reportPermissionService = reportPermissionService;
         this.reportViewHelper = reportViewHelper;
         this.timeEntryDialogHelper = timeEntryDialogHelper;
+        this.currentUserProvider = currentUserProvider;
         this.clock = clock;
     }
 
@@ -78,8 +88,10 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         @AuthenticationPrincipal DefaultOidcUser principal,
         Model model, Locale locale) {
 
+        final User currentUser = currentUserProvider.getCurrentUser();
+
         if (timeEntryId != null) {
-            return weeklyUserReportWithDialog(year, week, allUsersSelectedParam, userIdsParam, timeEntryId, model);
+            return weeklyUserReportWithDialog(currentUser, year, week, allUsersSelectedParam, userIdsParam, timeEntryId, model);
         }
 
         final YearWeek reportYearWeek = yearWeek(year, week)
@@ -134,15 +146,63 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return new ModelAndView("reports/user-report");
     }
 
-    private ModelAndView weeklyUserReportWithDialog(int year, int week, String everyoneParam, List<Long> userParam, Long timeEntryId, Model model) {
+    @PostMapping("/report/year/{year}/week/{week}")
+    public ModelAndView postEditTimeEntry(
+        @PathVariable("year") Integer year,
+        @PathVariable("week") Integer week,
+        @Valid @ModelAttribute(name = "timeEntry") TimeEntryDTO timeEntryDTO, BindingResult errors,
+        @RequestParam(value = "everyone", required = false) String allUsersSelectedParam,
+        @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
+        Model model,
+        RedirectAttributes redirectAttributes) {
 
+        timeEntryDialogHelper.saveTimeEntry(timeEntryDTO, errors, model, redirectAttributes);
+        if (errors.hasErrors()) {
+            LOG.debug("validation errors occurred on editing TimeEntry via ReportWeek TimeEntry Dialog. Redirecting to Dialog.");
+            final String url = createWeeklyUserReportUrl(year, week, allUsersSelectedParam, userIdsParam, timeEntryDTO.getId());
+            return new ModelAndView("redirect:%s".formatted(url));
+        }
+
+        // preserve scroll position after editing a timeEntry
+        redirectAttributes.addFlashAttribute(TURBO_REFRESH_SCROLL_ATTRIBUTE, PRESERVE);
+
+        final String url = createWeeklyUserReportUrl(year, week, allUsersSelectedParam, userIdsParam, null);
+        return new ModelAndView("redirect:%s".formatted(url));
+    }
+
+    private ModelAndView weeklyUserReportWithDialog(User currentUser, int year, int week, @Nullable String everyoneParam, List<Long> userParam, Long timeEntryId, Model model) {
+
+        final String editFormAction = createEditTimeEntryFormAction(year, week, everyoneParam, userParam);
         final String closeDialogUrl = createWeeklyUserReportUrl(year, week, everyoneParam, userParam, null);
-        timeEntryDialogHelper.addTimeEntryEditToModel(model, timeEntryId, closeDialogUrl);
+        timeEntryDialogHelper.addTimeEntryEditToModel(model, currentUser, timeEntryId, editFormAction, closeDialogUrl);
 
         return new ModelAndView("reports/user-report-edit-time-entry");
     }
 
-    private String createWeeklyUserReportUrl(int year, int week, String everyoneParam, List<Long> userParam, @Nullable Long timeEntryId) {
+    /**
+     * Creates the base url to be used for editing a timeEntry on the report view.
+     *
+     * @param year report year
+     * @param week report week
+     * @param everyoneParam whether every user should be shown, or not
+     * @param userParam list of user ids that should be shown
+     */
+    private String createEditTimeEntryFormAction(int year, int week, @Nullable String everyoneParam, List<Long> userParam) {
+        return fromMethodCall(on(ReportWeekController.class)
+            .postEditTimeEntry(year, week, null, null, everyoneParam, userParam, null, null))
+            .build().toUriString();
+    }
+
+    /**
+     * Creates the url which then shows report view or the timeEntry dialog. Depends on value of timeEntryId.
+     *
+     * @param year report year
+     * @param week report week
+     * @param everyoneParam whether every user should be shown, or not
+     * @param userParam list of user ids that should be shown
+     * @param timeEntryId <code>null</code> to show reports, <code>timeEntryId</code> to show the dialog
+     */
+    private String createWeeklyUserReportUrl(int year, int week, @Nullable String everyoneParam, List<Long> userParam, @Nullable Long timeEntryId) {
         return fromMethodCall(on(ReportWeekController.class)
             .weeklyUserReport(year, week, everyoneParam, userParam, timeEntryId, null,null,null))
             .build().toUriString();
