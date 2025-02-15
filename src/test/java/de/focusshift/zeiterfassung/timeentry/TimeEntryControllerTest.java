@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
+import de.focusshift.zeiterfassung.security.AuthenticationService;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -61,10 +62,13 @@ class TimeEntryControllerTest {
     @Mock
     private DateFormatter dateFormatter;
 
+    private final Clock clock = Clock.systemUTC();
+
     @BeforeEach
     void setUp() {
-        final TimeEntryViewHelper viewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, viewHelper, Clock.systemUTC());
+        final AuthenticationService authenticationService = new AuthenticationService();
+        final TimeEntryViewHelper viewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationService);
+        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, viewHelper, clock);
     }
 
     @Test
@@ -523,11 +527,14 @@ class TimeEntryControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
+        final UserId userId = new UserId("batman");
+        when(timeEntryService.findTimeEntry(1337L)).thenReturn(Optional.of(anyTimeEntry(userId)));
+
         perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
                 .with(
-                    oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))
+                    oidcLogin().idToken(id -> id.subject("batman")).userInfoToken(userInfo -> userInfo.subject("batman"))
                 )
                 .param("id", "1337")
                 .param("date", "2022-09-28")
@@ -925,6 +932,24 @@ class TimeEntryControllerTest {
             .andExpect(model().attribute("turboDeletedTimeEntry", expectedDeletedTimeEntryDto));
 
         verify(timeEntryService).deleteTimeEntry(1);
+    }
+
+    private UserIdComposite anyUserIdComposite() {
+        return anyUserIdComposite(new UserId("any-user-id"));
+    }
+
+    private UserIdComposite anyUserIdComposite(UserId userId) {
+        return new UserIdComposite(userId, new UserLocalId(1L));
+    }
+
+    private TimeEntry anyTimeEntry(UserId userId) {
+
+        final TimeEntryId id = new TimeEntryId(1L);
+        final UserIdComposite userIdComposite = anyUserIdComposite(userId);
+        final ZonedDateTime start = ZonedDateTime.now(clock).minusHours(1);
+        final ZonedDateTime end = ZonedDateTime.now(clock);
+
+        return new TimeEntry(id, userIdComposite, "", start, end, false);
     }
 
     private void mockUserSettings(ZoneId zoneId) {

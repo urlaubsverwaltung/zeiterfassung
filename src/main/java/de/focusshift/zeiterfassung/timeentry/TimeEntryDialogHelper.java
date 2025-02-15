@@ -7,7 +7,6 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.slf4j.Logger;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -64,8 +63,8 @@ public class TimeEntryDialogHelper {
         addTimeEntryDialog(model, currentUser, timeEntry, editFormAction, cancelFormAction);
     }
 
-    public void saveTimeEntry(TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes, OidcUser oidcUser) {
-        timeEntryViewHelper.saveTimeEntry(timeEntryDTO, errors, model, redirectAttributes, oidcUser);
+    public void saveTimeEntry(TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
+        timeEntryViewHelper.updateTimeEntry(timeEntryDTO, errors, model, redirectAttributes);
     }
 
     private void addTimeEntry(Model model, TimeEntry timeEntry) {

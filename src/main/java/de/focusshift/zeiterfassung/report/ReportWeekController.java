@@ -154,10 +154,9 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         @RequestParam(value = "everyone", required = false) String allUsersSelectedParam,
         @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
         Model model,
-        @AuthenticationPrincipal OidcUser oidcUser,
         RedirectAttributes redirectAttributes) {
 
-        timeEntryDialogHelper.saveTimeEntry(timeEntryDTO, errors, model, redirectAttributes, oidcUser);
+        timeEntryDialogHelper.saveTimeEntry(timeEntryDTO, errors, model, redirectAttributes);
         if (errors.hasErrors()) {
             LOG.debug("validation errors occurred on editing TimeEntry via ReportWeek TimeEntry Dialog. Redirecting to Dialog.");
             final String url = createWeeklyUserReportUrl(year, week, allUsersSelectedParam, userIdsParam, timeEntryDTO.getId());
@@ -190,7 +189,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
      */
     private String createEditTimeEntryFormAction(int year, int week, @Nullable String everyoneParam, List<Long> userParam) {
         return fromMethodCall(on(ReportWeekController.class)
-            .postEditTimeEntry(year, week, null, null, everyoneParam, userParam, null, null, null))
+            .postEditTimeEntry(year, week, null, null, everyoneParam, userParam, null, null))
             .build().toUriString();
     }
 

@@ -114,7 +114,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             throw new InvalidTimeEntryException("invalid time entry. date must be set.");
         }
 
-        viewHelper.saveTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes, principal);
+        viewHelper.createTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes);
 
         if (bindingResult.hasErrors()) {
             addTimeEntriesToModel(year, weekOfYear, model, principal, locale);
@@ -147,7 +147,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             throw new InvalidTimeEntryException("invalid time entry. date must be set.");
         }
 
-        viewHelper.saveTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes, principal);
+        viewHelper.updateTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes);
 
         final String viewName;
         if (bindingResult.hasErrors()) {
@@ -156,7 +156,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             viewName = "redirect:" + request.getHeader("referer");
         }
 
-        final UserId userId = new UserId(principal.getUserInfo().getSubject());
+        final UserId userId = new UserId(principal.getSubject());
 
         if (hasText(turboFrame)) {
             if (bindingResult.hasErrors()) {
