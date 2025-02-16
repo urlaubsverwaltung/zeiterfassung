@@ -16,6 +16,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ui.ConcurrentModel;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -29,6 +32,8 @@ import static de.focusshift.zeiterfassung.data.history.EntityRevisionType.CREATE
 import static de.focusshift.zeiterfassung.data.history.EntityRevisionType.UPDATED;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -206,6 +211,25 @@ class TimeEntryDialogHelperTest {
                     assertThat(dto.historyItems().get(0).timeEntry()).isSameAs(modifiedTimeEntryDto);
                     assertThat(dto.historyItems().get(1).timeEntry()).isSameAs(createdTimeEntryDto);
                 });
+        }
+    }
+
+    @Nested
+    class SaveTimeEntry {
+
+        @Test
+        void ensureSaveTimeEntryDelegates() {
+
+            final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
+            timeEntryDto.setId(1L);
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+            final Model model = mock(Model.class);
+            final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
+
+            sut.saveTimeEntry(timeEntryDto, bindingResult, model, redirectAttributes);
+
+            verify(timeEntryViewHelper).updateTimeEntry(timeEntryDto, bindingResult, model, redirectAttributes);
         }
     }
 
