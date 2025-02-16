@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.security.AuthenticationService;
-import de.focusshift.zeiterfassung.user.CurrentUserProvider;
+import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -15,13 +15,11 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_VI
 class ReportPermissionService {
 
     private final AuthenticationService authenticationService;
-    private final CurrentUserProvider currentUserProvider;
     private final UserManagementService userManagementService;
 
-    ReportPermissionService(AuthenticationService authenticationService, CurrentUserProvider currentUserProvider,
+    ReportPermissionService(AuthenticationService authenticationService,
                             UserManagementService userManagementService) {
         this.authenticationService = authenticationService;
-        this.currentUserProvider = currentUserProvider;
         this.userManagementService = userManagementService;
     }
 
@@ -34,7 +32,7 @@ class ReportPermissionService {
             return userLocalIds;
         }
 
-        final UserLocalId currentUserLocaleId = currentUserProvider.getCurrentUser().userLocalId();
+        final UserLocalId currentUserLocaleId = authenticationService.getCurrentUserIdComposite().localId();
         if (userLocalIds.contains(currentUserLocaleId)) {
             return List.of(currentUserLocaleId);
         }
@@ -47,7 +45,7 @@ class ReportPermissionService {
             return userManagementService.findAllUsers().stream().map(User::userLocalId).toList();
         }
 
-        final UserLocalId currentUserLocaleId = currentUserProvider.getCurrentUser().userLocalId();
+        final UserLocalId currentUserLocaleId = authenticationService.getCurrentUserIdComposite().localId();
         return List.of(currentUserLocaleId);
     }
 
@@ -62,7 +60,11 @@ class ReportPermissionService {
             return userManagementService.findAllUsers();
         }
 
-        final User currentUser = currentUserProvider.getCurrentUser();
-        return List.of(currentUser);
+        final UserId userId = authenticationService.getCurrentUserIdComposite().id();
+
+        final User user = userManagementService.findUserById(userId)
+            .orElseThrow(() -> new IllegalStateException("could not find user for currently logged in user " + userId));
+
+        return List.of(user);
     }
 }

@@ -1,10 +1,11 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
+import de.focusshift.zeiterfassung.security.CurrentUser;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
-import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.annotation.Nullable;
@@ -12,9 +13,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -54,17 +52,14 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     private final ReportPermissionService reportPermissionService;
     private final ReportViewHelper reportViewHelper;
     private final TimeEntryDialogHelper timeEntryDialogHelper;
-    private final CurrentUserProvider currentUserProvider;
     private final Clock clock;
 
     ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService,
-                         ReportViewHelper reportViewHelper, TimeEntryDialogHelper timeEntryDialogHelper,
-                         CurrentUserProvider currentUserProvider, Clock clock) {
+                         ReportViewHelper reportViewHelper, TimeEntryDialogHelper timeEntryDialogHelper, Clock clock) {
         this.reportService = reportService;
         this.reportPermissionService = reportPermissionService;
         this.reportViewHelper = reportViewHelper;
         this.timeEntryDialogHelper = timeEntryDialogHelper;
-        this.currentUserProvider = currentUserProvider;
         this.clock = clock;
     }
 
@@ -85,10 +80,8 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         @RequestParam(value = "everyone", required = false) String allUsersSelectedParam,
         @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
         @RequestParam(value = "timeEntryId", required = false) Long timeEntryId,
-        @AuthenticationPrincipal DefaultOidcUser principal,
+        @CurrentUser CurrentOidcUser currentUser,
         Model model, Locale locale) {
-
-        final User currentUser = currentUserProvider.getCurrentUser();
 
         if (timeEntryId != null) {
             return weeklyUserReportWithDialog(currentUser, year, week, allUsersSelectedParam, userIdsParam, timeEntryId, model);
@@ -101,7 +94,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         final List<UserLocalId> selectedUserLocalIds = userIdsParam.stream().map(UserLocalId::new).toList();
         final boolean allUsersSelected = allUsersSelectedParam != null;
 
-        final ReportWeek reportWeek = getReportWeek(principal, reportYearWeek, allUsersSelected, reportYear, selectedUserLocalIds);
+        final ReportWeek reportWeek = getReportWeek(currentUser, reportYearWeek, allUsersSelected, reportYear, selectedUserLocalIds);
         final GraphWeekDto graphWeekDto = reportViewHelper.toGraphWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth());
         final DetailWeekDto detailWeekDto = reportViewHelper.toDetailWeekDto(reportWeek, reportWeek.firstDateOfWeek().getMonth(), locale,
             id -> createWeeklyUserReportUrl(year, week, allUsersSelectedParam, userIdsParam, id.value()));
@@ -170,7 +163,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return new ModelAndView("redirect:%s".formatted(url));
     }
 
-    private ModelAndView weeklyUserReportWithDialog(User currentUser, int year, int week, @Nullable String everyoneParam, List<Long> userParam, Long timeEntryId, Model model) {
+    private ModelAndView weeklyUserReportWithDialog(CurrentOidcUser currentUser, int year, int week, @Nullable String everyoneParam, List<Long> userParam, Long timeEntryId, Model model) {
 
         final String editFormAction = createEditTimeEntryFormAction(year, week, everyoneParam, userParam);
         final String closeDialogUrl = createWeeklyUserReportUrl(year, week, everyoneParam, userParam, null);
@@ -208,14 +201,14 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
             .build().toUriString();
     }
 
-    private ReportWeek getReportWeek(OidcUser principal, YearWeek reportYearWeek, boolean allUsersSelected, Year reportYear, List<UserLocalId> userLocalIds) {
+    private ReportWeek getReportWeek(CurrentOidcUser currentUser, YearWeek reportYearWeek, boolean allUsersSelected, Year reportYear, List<UserLocalId> userLocalIds) {
 
         final ReportWeek reportWeek;
 
         if (allUsersSelected) {
             reportWeek = reportService.getReportWeekForAllUsers(reportYear, reportYearWeek.getWeek());
         } else if (userLocalIds.isEmpty()) {
-            reportWeek = reportService.getReportWeek(reportYear, reportYearWeek.getWeek(), reportViewHelper.principalToUserId(principal));
+            reportWeek = reportService.getReportWeek(reportYear, reportYearWeek.getWeek(), currentUser.getUserIdComposite().id());
         } else {
             reportWeek = reportService.getReportWeek(reportYear, reportYearWeek.getWeek(), userLocalIds);
         }

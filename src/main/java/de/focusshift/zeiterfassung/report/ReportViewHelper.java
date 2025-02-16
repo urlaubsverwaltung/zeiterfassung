@@ -5,11 +5,9 @@ import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
-import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 
@@ -43,10 +41,6 @@ class ReportViewHelper {
     ReportViewHelper(DateFormatter dateFormatter, DateRangeFormatter dateRangeFormatter) {
         this.dateFormatter = dateFormatter;
         this.dateRangeFormatter = dateRangeFormatter;
-    }
-
-    UserId principalToUserId(OidcUser principal) {
-        return new UserId(principal.getUserInfo().getSubject());
     }
 
     void addUserFilterModelAttributes(Model model, boolean allUsersSelected, List<User> users, List<UserLocalId> selectedUserLocalIds, String userReportFilterUrl) {
