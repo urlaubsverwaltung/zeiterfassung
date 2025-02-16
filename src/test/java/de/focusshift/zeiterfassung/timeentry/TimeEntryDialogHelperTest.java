@@ -10,6 +10,7 @@ import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -49,159 +50,163 @@ class TimeEntryDialogHelperTest {
         sut = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
     }
 
-    @Test
-    void ensureTimeEntryModelIsNotAddedWhenItExists() {
+    @Nested
+    class AddTimeEntryEditToModel {
 
-        final TimeEntry timeEntry = anyTimeEntry();
-        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+        @Test
+        void ensureTimeEntryModelIsNotAddedWhenItExists() {
 
-        final User user = anyUser();
-        when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+            final TimeEntry timeEntry = anyTimeEntry();
+            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
 
-        final ConcurrentModel model = new ConcurrentModel();
-        model.addAttribute("timeEntry", -1);
+            final User user = anyUser();
+            when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
 
-        sut.addTimeEntryEditToModel(model, user, 1L, "", "");
+            final ConcurrentModel model = new ConcurrentModel();
+            model.addAttribute("timeEntry", -1);
 
-        assertThat(model.getAttribute("timeEntry")).isEqualTo(-1);
-    }
+            sut.addTimeEntryEditToModel(model, user, 1L, "", "");
 
-    @Test
-    void ensureTimeEntryModel() {
+            assertThat(model.getAttribute("timeEntry")).isEqualTo(-1);
+        }
 
-        final TimeEntry timeEntry = anyTimeEntry();
-        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+        @Test
+        void ensureTimeEntryModel() {
 
-        final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-        when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(timeEntryDTO);
+            final TimeEntry timeEntry = anyTimeEntry();
+            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
 
-        final User user = anyUser();
-        when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+            final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+            when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(timeEntryDTO);
 
-        final ConcurrentModel model = new ConcurrentModel();
-        sut.addTimeEntryEditToModel(model, user, 1L, "", "");
+            final User user = anyUser();
+            when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
 
-        assertThat(model.getAttribute("timeEntry")).isSameAs(timeEntryDTO);
-    }
+            final ConcurrentModel model = new ConcurrentModel();
+            sut.addTimeEntryEditToModel(model, user, 1L, "", "");
 
-    @Test
-    void ensureTimeEntryHistoryModelWithoutHistory() {
+            assertThat(model.getAttribute("timeEntry")).isSameAs(timeEntryDTO);
+        }
 
-        final TimeEntry timeEntry = anyTimeEntry();
-        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+        @Test
+        void ensureTimeEntryHistoryModelWithoutHistory() {
 
-        final User user = anyUser();
-        when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+            final TimeEntry timeEntry = anyTimeEntry();
+            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
 
-        final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
-        when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
+            final User user = anyUser();
+            when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
 
-        final ConcurrentModel model = new ConcurrentModel();
-        model.addAttribute("timeEntry", -1);
+            final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
+            when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
 
-        sut.addTimeEntryEditToModel(model, user, 1L, "edit-form-action",  "close-form-action");
+            final ConcurrentModel model = new ConcurrentModel();
+            model.addAttribute("timeEntry", -1);
 
-        final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
-        assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
-    }
+            sut.addTimeEntryEditToModel(model, user, 1L, "edit-form-action",  "close-form-action");
 
-    @Test
-    void ensureTimeEntryIsEditableForPrivilegedUser() {
+            final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
+            assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
+        }
 
-        final UserIdComposite priviligedIdComposite = anyUserIdComposite("office");
-        final User priviligedUser = anyUser(priviligedIdComposite, "", "", Set.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
+        @Test
+        void ensureTimeEntryIsEditableForPrivilegedUser() {
 
-        final TimeEntry timeEntry = anyTimeEntry();
-        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+            final UserIdComposite priviligedIdComposite = anyUserIdComposite("office");
+            final User priviligedUser = anyUser(priviligedIdComposite, "", "", Set.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
 
-        final User user = anyUser();
-        when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+            final TimeEntry timeEntry = anyTimeEntry();
+            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
 
-        final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
-        when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
+            final User user = anyUser();
+            when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
 
-        final ConcurrentModel model = new ConcurrentModel();
-        model.addAttribute("timeEntry", -1);
+            final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
+            when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
 
-        sut.addTimeEntryEditToModel(model, priviligedUser, 1L, "edit-form-action",  "close-form-action");
+            final ConcurrentModel model = new ConcurrentModel();
+            model.addAttribute("timeEntry", -1);
 
-        final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
-        assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
-    }
+            sut.addTimeEntryEditToModel(model, priviligedUser, 1L, "edit-form-action",  "close-form-action");
 
-    @Test
-    void ensureTimeEntryNotEditableForNotPrivilegedUser() {
+            final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
+            assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
+        }
 
-        final UserIdComposite anyIdComposite = anyUserIdComposite("office");
-        final User anyUser = anyUser(anyIdComposite, "", "", Set.of());
+        @Test
+        void ensureTimeEntryNotEditableForNotPrivilegedUser() {
 
-        final TimeEntry timeEntry = anyTimeEntry();
-        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+            final UserIdComposite anyIdComposite = anyUserIdComposite("office");
+            final User anyUser = anyUser(anyIdComposite, "", "", Set.of());
 
-        final User user = anyUser();
-        when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+            final TimeEntry timeEntry = anyTimeEntry();
+            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
 
-        final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
-        when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
+            final User user = anyUser();
+            when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
 
-        final ConcurrentModel model = new ConcurrentModel();
-        model.addAttribute("timeEntry", -1);
+            final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
+            when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
 
-        sut.addTimeEntryEditToModel(model, anyUser, 1L, "edit-form-action",  "close-form-action");
+            final ConcurrentModel model = new ConcurrentModel();
+            model.addAttribute("timeEntry", -1);
 
-        final TimeEntryDialogDto expected = new TimeEntryDialogDto(false, user.fullName(), List.of(), "edit-form-action", "close-form-action");
-        assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
-    }
+            sut.addTimeEntryEditToModel(model, anyUser, 1L, "edit-form-action",  "close-form-action");
 
-    @Test
-    void ensureTimeEntryHistoryModel() {
+            final TimeEntryDialogDto expected = new TimeEntryDialogDto(false, user.fullName(), List.of(), "edit-form-action", "close-form-action");
+            assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
+        }
 
-        final UserIdComposite batmanIdComposite = anyUserIdComposite("batman");
-        final User user = anyUser(batmanIdComposite, "Bruce", "Wayne");
-        final User otherUser = anyUser(anyUserIdComposite("pennyworth"), "Alfred", "Pennyworth");
+        @Test
+        void ensureTimeEntryHistoryModel() {
 
-        final TimeEntry createdTimeEntry = anyTimeEntry(batmanIdComposite, "workshop");
-        final TimeEntry modifiedTimeEntry = anyTimeEntry(batmanIdComposite, "Kickoff Workshop");
-        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(modifiedTimeEntry));
+            final UserIdComposite batmanIdComposite = anyUserIdComposite("batman");
+            final User user = anyUser(batmanIdComposite, "Bruce", "Wayne");
+            final User otherUser = anyUser(anyUserIdComposite("pennyworth"), "Alfred", "Pennyworth");
 
-        when(userManagementService.findUserById(createdTimeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
-        when(userSettingsProvider.zoneId()).thenReturn(ZoneOffset.UTC);
+            final TimeEntry createdTimeEntry = anyTimeEntry(batmanIdComposite, "workshop");
+            final TimeEntry modifiedTimeEntry = anyTimeEntry(batmanIdComposite, "Kickoff Workshop");
+            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(modifiedTimeEntry));
 
-        final Instant createdInstant = Instant.now();
-        final EntityRevisionMetadata createdMetadata = new EntityRevisionMetadata(1, CREATED, createdInstant, Optional.of(user.userId()));
-        final TimeEntryHistoryItem createdHistoryItem = new TimeEntryHistoryItem(createdMetadata, createdTimeEntry, true, true, true, true);
+            when(userManagementService.findUserById(createdTimeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+            when(userSettingsProvider.zoneId()).thenReturn(ZoneOffset.UTC);
 
-        final Instant modifiedInstant = Instant.now();
-        final EntityRevisionMetadata modifiedMetadata = new EntityRevisionMetadata(2, UPDATED, modifiedInstant, Optional.of(otherUser.userId()));
-        final TimeEntryHistoryItem modifiedHistoryItem = new TimeEntryHistoryItem(modifiedMetadata, modifiedTimeEntry, true, false, false, false);
+            final Instant createdInstant = Instant.now();
+            final EntityRevisionMetadata createdMetadata = new EntityRevisionMetadata(1, CREATED, createdInstant, Optional.of(user.userId()));
+            final TimeEntryHistoryItem createdHistoryItem = new TimeEntryHistoryItem(createdMetadata, createdTimeEntry, true, true, true, true);
 
-        final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(createdTimeEntry.id(), List.of(createdHistoryItem, modifiedHistoryItem));
-        when(timeEntryService.findTimeEntryHistory(createdTimeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
+            final Instant modifiedInstant = Instant.now();
+            final EntityRevisionMetadata modifiedMetadata = new EntityRevisionMetadata(2, UPDATED, modifiedInstant, Optional.of(otherUser.userId()));
+            final TimeEntryHistoryItem modifiedHistoryItem = new TimeEntryHistoryItem(modifiedMetadata, modifiedTimeEntry, true, false, false, false);
 
-        when(userManagementService.findAllUsersByIds(List.of(user.userId(), otherUser.userId()))).thenReturn(List.of(otherUser, user));
+            final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(createdTimeEntry.id(), List.of(createdHistoryItem, modifiedHistoryItem));
+            when(timeEntryService.findTimeEntryHistory(createdTimeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
 
-        final TimeEntryDTO createdTimeEntryDto = new TimeEntryDTO();
-        createdTimeEntryDto.setComment(createdTimeEntry.comment());
-        when(timeEntryViewHelper.toTimeEntryDto(createdTimeEntry)).thenReturn(createdTimeEntryDto);
+            when(userManagementService.findAllUsersByIds(List.of(user.userId(), otherUser.userId()))).thenReturn(List.of(otherUser, user));
 
-        final TimeEntryDTO modifiedTimeEntryDto = new TimeEntryDTO();
-        modifiedTimeEntryDto.setComment(modifiedTimeEntry.comment());
-        when(timeEntryViewHelper.toTimeEntryDto(modifiedTimeEntry)).thenReturn(modifiedTimeEntryDto);
+            final TimeEntryDTO createdTimeEntryDto = new TimeEntryDTO();
+            createdTimeEntryDto.setComment(createdTimeEntry.comment());
+            when(timeEntryViewHelper.toTimeEntryDto(createdTimeEntry)).thenReturn(createdTimeEntryDto);
 
-        final ConcurrentModel model = new ConcurrentModel();
-        sut.addTimeEntryEditToModel(model, user, 1L, "edit-form-action", "close-form-action");
+            final TimeEntryDTO modifiedTimeEntryDto = new TimeEntryDTO();
+            modifiedTimeEntryDto.setComment(modifiedTimeEntry.comment());
+            when(timeEntryViewHelper.toTimeEntryDto(modifiedTimeEntry)).thenReturn(modifiedTimeEntryDto);
 
-        assertThat(model.getAttribute("timeEntryDialog"))
-            .isInstanceOf(TimeEntryDialogDto.class)
-            .satisfies(dialogDto -> {
-                final TimeEntryDialogDto dto = (TimeEntryDialogDto) dialogDto;
-                assertThat(dto.dialogCloseFormAction()).isEqualTo("close-form-action");
-                assertThat(dto.editTimeEntryFormAction()).isEqualTo("edit-form-action");
-                assertThat(dto.owner()).isEqualTo("Bruce Wayne");
-                assertThat(dto.historyItems()).hasSize(2);
-                assertThat(dto.historyItems().get(0).timeEntry()).isSameAs(modifiedTimeEntryDto);
-                assertThat(dto.historyItems().get(1).timeEntry()).isSameAs(createdTimeEntryDto);
-            });
+            final ConcurrentModel model = new ConcurrentModel();
+            sut.addTimeEntryEditToModel(model, user, 1L, "edit-form-action", "close-form-action");
+
+            assertThat(model.getAttribute("timeEntryDialog"))
+                .isInstanceOf(TimeEntryDialogDto.class)
+                .satisfies(dialogDto -> {
+                    final TimeEntryDialogDto dto = (TimeEntryDialogDto) dialogDto;
+                    assertThat(dto.dialogCloseFormAction()).isEqualTo("close-form-action");
+                    assertThat(dto.editTimeEntryFormAction()).isEqualTo("edit-form-action");
+                    assertThat(dto.owner()).isEqualTo("Bruce Wayne");
+                    assertThat(dto.historyItems()).hasSize(2);
+                    assertThat(dto.historyItems().get(0).timeEntry()).isSameAs(modifiedTimeEntryDto);
+                    assertThat(dto.historyItems().get(1).timeEntry()).isSameAs(createdTimeEntryDto);
+                });
+        }
     }
 
     private static User anyUser() {
