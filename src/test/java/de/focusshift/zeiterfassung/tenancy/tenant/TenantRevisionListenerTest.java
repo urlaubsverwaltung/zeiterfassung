@@ -1,15 +1,20 @@
 package de.focusshift.zeiterfassung.tenancy.tenant;
 
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -72,11 +77,12 @@ class TenantRevisionListenerTest {
 
         when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
 
-        final Authentication authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn("name");
+        final DefaultOidcUser oidcUser = new DefaultOidcUser(List.of(), OidcIdToken.withTokenValue("token").subject("subject").build());
+        final CurrentOidcUser currentOidcUser = new CurrentOidcUser(oidcUser, List.of(), List.of(), new UserLocalId(1L));
+        final OAuth2AuthenticationToken token = new OAuth2AuthenticationToken(currentOidcUser, List.of(), "client-id");
 
         final SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(securityContext.getAuthentication()).thenReturn(token);
 
         try (MockedStatic<SecurityContextHolder> securityContextMock = mockStatic(SecurityContextHolder.class)) {
             securityContextMock.when(SecurityContextHolder::getContext).thenReturn(securityContext);
@@ -84,7 +90,7 @@ class TenantRevisionListenerTest {
             final TenantAwareRevisionEntity entity = mock(TenantAwareRevisionEntity.class);
             sut.newRevision(entity);
 
-            verify(entity).setUpdatedBy("name");
+            verify(entity).setUpdatedBy("subject");
         }
     }
 

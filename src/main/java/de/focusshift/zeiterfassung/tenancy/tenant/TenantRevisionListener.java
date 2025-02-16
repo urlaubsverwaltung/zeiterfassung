@@ -4,6 +4,9 @@ import org.hibernate.envers.RevisionListener;
 import org.slf4j.Logger;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import static java.lang.invoke.MethodHandles.lookup;
@@ -39,12 +42,19 @@ class TenantRevisionListener implements RevisionListener {
 
     private void setUpdatedBy(TenantAwareRevisionEntity entity) {
 
+        // TODO use AuthenticationService to get userId?
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) {
-            LOG.info("No authentication found. Skip setting updated_by information on audited entity");
+
+        if (auth instanceof OAuth2AuthenticationToken token) {
+            final OAuth2User principal = token.getPrincipal();
+            if (principal instanceof OidcUser oidcUser) {
+                final String userIdValue = oidcUser.getSubject();
+                entity.setUpdatedBy(userIdValue);
+            } else {
+                LOG.info("Skip setting updated_by information on audited entity. Unexpected principal class {}", principal.getClass());
+            }
         } else {
-            final String name = auth.getName();
-            entity.setUpdatedBy(name);
+            LOG.info("Skip setting updated_by information on audited entity. Unexpected authentication: {}", auth);
         }
     }
 }

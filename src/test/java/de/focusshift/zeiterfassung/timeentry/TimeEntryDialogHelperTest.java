@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
 import de.focusshift.zeiterfassung.security.SecurityRole;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -15,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.ui.ConcurrentModel;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -61,16 +64,20 @@ class TimeEntryDialogHelperTest {
         @Test
         void ensureTimeEntryModelIsNotAddedWhenItExists() {
 
-            final TimeEntry timeEntry = anyTimeEntry();
+            final UserIdComposite userIdComposite = anyUserIdComposite("batman");
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(userIdComposite);
+
+            final TimeEntry timeEntry = anyTimeEntry(userIdComposite);
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
 
-            final User user = anyUser();
-            when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+
+            final User user = anyUser(userIdComposite);
+            when(userManagementService.findUserById(userIdComposite.id())).thenReturn(Optional.of(user));
 
             final ConcurrentModel model = new ConcurrentModel();
             model.addAttribute("timeEntry", -1);
 
-            sut.addTimeEntryEditToModel(model, user, 1L, "", "");
+            sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "", "");
 
             assertThat(model.getAttribute("timeEntry")).isEqualTo(-1);
         }
@@ -78,17 +85,20 @@ class TimeEntryDialogHelperTest {
         @Test
         void ensureTimeEntryModel() {
 
-            final TimeEntry timeEntry = anyTimeEntry();
+            final UserIdComposite userIdComposite = anyUserIdComposite("batman");
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(userIdComposite);
+
+            final TimeEntry timeEntry = anyTimeEntry(userIdComposite);
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
             when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(timeEntryDTO);
 
             final User user = anyUser();
-            when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+            when(userManagementService.findUserById(userIdComposite.id())).thenReturn(Optional.of(user));
 
             final ConcurrentModel model = new ConcurrentModel();
-            sut.addTimeEntryEditToModel(model, user, 1L, "", "");
+            sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "", "");
 
             assertThat(model.getAttribute("timeEntry")).isSameAs(timeEntryDTO);
         }
@@ -96,11 +106,14 @@ class TimeEntryDialogHelperTest {
         @Test
         void ensureTimeEntryHistoryModelWithoutHistory() {
 
-            final TimeEntry timeEntry = anyTimeEntry();
+            final UserIdComposite userIdComposite = anyUserIdComposite("batman");
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(userIdComposite);
+
+            final TimeEntry timeEntry = anyTimeEntry(userIdComposite);
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
 
-            final User user = anyUser();
-            when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+            final User user = anyUser(userIdComposite);
+            when(userManagementService.findUserById(userIdComposite.id())).thenReturn(Optional.of(user));
 
             final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
             when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
@@ -108,7 +121,7 @@ class TimeEntryDialogHelperTest {
             final ConcurrentModel model = new ConcurrentModel();
             model.addAttribute("timeEntry", -1);
 
-            sut.addTimeEntryEditToModel(model, user, 1L, "edit-form-action",  "close-form-action");
+            sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "edit-form-action",  "close-form-action");
 
             final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
             assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
@@ -117,8 +130,8 @@ class TimeEntryDialogHelperTest {
         @Test
         void ensureTimeEntryIsEditableForPrivilegedUser() {
 
-            final UserIdComposite priviligedIdComposite = anyUserIdComposite("office");
-            final User priviligedUser = anyUser(priviligedIdComposite, "", "", Set.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
+            final UserIdComposite privilegeduserIdComposite = anyUserIdComposite("office");
+            final CurrentOidcUser privilgegedOidcUser = anyCurrentOidcUser(privilegeduserIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
 
             final TimeEntry timeEntry = anyTimeEntry();
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
@@ -132,7 +145,7 @@ class TimeEntryDialogHelperTest {
             final ConcurrentModel model = new ConcurrentModel();
             model.addAttribute("timeEntry", -1);
 
-            sut.addTimeEntryEditToModel(model, priviligedUser, 1L, "edit-form-action",  "close-form-action");
+            sut.addTimeEntryEditToModel(model, privilgegedOidcUser, 1L, "edit-form-action",  "close-form-action");
 
             final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
             assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
@@ -141,8 +154,8 @@ class TimeEntryDialogHelperTest {
         @Test
         void ensureTimeEntryNotEditableForNotPrivilegedUser() {
 
-            final UserIdComposite anyIdComposite = anyUserIdComposite("office");
-            final User anyUser = anyUser(anyIdComposite, "", "", Set.of());
+            final UserIdComposite anyUserIdComposite = anyUserIdComposite("joker");
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(anyUserIdComposite);
 
             final TimeEntry timeEntry = anyTimeEntry();
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
@@ -156,7 +169,7 @@ class TimeEntryDialogHelperTest {
             final ConcurrentModel model = new ConcurrentModel();
             model.addAttribute("timeEntry", -1);
 
-            sut.addTimeEntryEditToModel(model, anyUser, 1L, "edit-form-action",  "close-form-action");
+            sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "edit-form-action",  "close-form-action");
 
             final TimeEntryDialogDto expected = new TimeEntryDialogDto(false, user.fullName(), List.of(), "edit-form-action", "close-form-action");
             assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
@@ -166,6 +179,8 @@ class TimeEntryDialogHelperTest {
         void ensureTimeEntryHistoryModel() {
 
             final UserIdComposite batmanIdComposite = anyUserIdComposite("batman");
+            final CurrentOidcUser batmanOidcUser = anyCurrentOidcUser(batmanIdComposite);
+
             final User user = anyUser(batmanIdComposite, "Bruce", "Wayne");
             final User otherUser = anyUser(anyUserIdComposite("pennyworth"), "Alfred", "Pennyworth");
 
@@ -198,7 +213,7 @@ class TimeEntryDialogHelperTest {
             when(timeEntryViewHelper.toTimeEntryDto(modifiedTimeEntry)).thenReturn(modifiedTimeEntryDto);
 
             final ConcurrentModel model = new ConcurrentModel();
-            sut.addTimeEntryEditToModel(model, user, 1L, "edit-form-action", "close-form-action");
+            sut.addTimeEntryEditToModel(model, batmanOidcUser, 1L, "edit-form-action", "close-form-action");
 
             assertThat(model.getAttribute("timeEntryDialog"))
                 .isInstanceOf(TimeEntryDialogDto.class)
@@ -237,6 +252,19 @@ class TimeEntryDialogHelperTest {
         return anyUser(anyUserIdComposite("batman"));
     }
 
+    private static CurrentOidcUser anyCurrentOidcUser() {
+        return anyCurrentOidcUser(anyUserIdComposite("batman"));
+    }
+
+    private static CurrentOidcUser anyCurrentOidcUser(UserIdComposite userIdComposite) {
+        return anyCurrentOidcUser(userIdComposite, List.of());
+    }
+
+    private static CurrentOidcUser anyCurrentOidcUser(UserIdComposite userIdComposite, List<SecurityRole> securityRoles) {
+        final DefaultOidcUser defaultOidcUser = new DefaultOidcUser(List.of(), OidcIdToken.withTokenValue("token-value").claim("sub", userIdComposite.id().value()).build());
+        return new CurrentOidcUser(defaultOidcUser, securityRoles.stream().map(SecurityRole::authority).toList(), List.of(), userIdComposite.localId());
+    }
+
     private static User anyUser(UserIdComposite userIdComposite) {
         return anyUser(userIdComposite, "Bruce", "Wayne");
     }
@@ -261,6 +289,10 @@ class TimeEntryDialogHelperTest {
         final TimeEntryId id = new TimeEntryId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(new UserId("abcdefg"), new UserLocalId(42L));
         return new TimeEntry(id, userIdComposite, "hack the planet", ZonedDateTime.now(), ZonedDateTime.now(), false);
+    }
+
+    private TimeEntry anyTimeEntry(UserIdComposite userIdComposite) {
+        return anyTimeEntry(userIdComposite, "");
     }
 
     private TimeEntry anyTimeEntry(UserIdComposite userIdComposite, String comment) {

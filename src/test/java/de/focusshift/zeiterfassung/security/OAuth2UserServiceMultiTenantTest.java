@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
@@ -73,8 +74,16 @@ class OAuth2UserServiceMultiTenantTest {
 
         when(tenantUserService.findById(new UserId("uuid"))).thenReturn(Optional.empty());
 
-        final OidcUser actual = sut.loadUser(oidcUserRequest);
-        assertThat(actual).isSameAs(oidcUser);
+        final CurrentOidcUser actual = sut.loadUser(oidcUserRequest);
+
+        assertThat(actual.getOidcAuthorities()).isSameAs(oidcUser.getAuthorities());
+        assertThat(actual.getApplicationAuthorities()).isEmpty();
+
+        assertThat(actual.getName()).isSameAs(oidcUser.getName());
+        assertThat(actual.getAttributes()).isSameAs(oidcUser.getAttributes());
+        assertThat(actual.getIdToken()).isSameAs(oidcUser.getIdToken());
+        assertThat(actual.getUserInfo()).isSameAs(oidcUser.getUserInfo());
+        assertThat(actual.getClaims()).isSameAs(oidcUser.getClaims());
     }
 
     @Test
@@ -105,9 +114,9 @@ class OAuth2UserServiceMultiTenantTest {
 
         when(tenantUserService.findById(new UserId("uuid"))).thenReturn(Optional.of(anyTenantUser("uuid")));
 
-        OidcUser actual = sut.loadUser(oidcUserRequest);
+        CurrentOidcUser actual = sut.loadUser(oidcUserRequest);
 
-        assertThat(actual).isEqualTo(oidcUser);
+        assertThat(actual.getOidcUser()).isSameAs(oidcUser);
         InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(new TenantId("most-awesome-tenant"));
         inOrder.verify(tenantContextHolder).clear();

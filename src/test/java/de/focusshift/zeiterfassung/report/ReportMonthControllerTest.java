@@ -7,7 +7,6 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper;
-import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -24,7 +23,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
-import org.springframework.security.web.context.SecurityContextPersistenceFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -46,7 +46,6 @@ import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -68,8 +67,6 @@ class ReportMonthControllerTest implements ControllerTest {
     @Mock
     private UserManagementService userManagementService;
     @Mock
-    private CurrentUserProvider currentUserProvider;
-    @Mock
     private AuthenticationService authenticationService;
     @Mock
     private MessageSource messageSource;
@@ -83,7 +80,7 @@ class ReportMonthControllerTest implements ControllerTest {
         final ReportViewHelper helper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
         final TimeEntryViewHelper timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationService);
         final TimeEntryDialogHelper timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
-        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, helper, timeEntryDialogHelper, currentUserProvider, clock);
+        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, helper, timeEntryDialogHelper, clock);
     }
 
     @Test
@@ -101,7 +98,7 @@ class ReportMonthControllerTest implements ControllerTest {
 
         when(messageSource.getMessage(anyString(), any(), any(Locale.class))).thenAnswer(returnsFirstArg());
 
-        final UserId userId = new UserId("user-id");
+        final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
@@ -139,7 +136,7 @@ class ReportMonthControllerTest implements ControllerTest {
             )
         );
 
-        when(reportService.getReportMonth(YearMonth.of(2023, 2), new UserId("batman")))
+        when(reportService.getReportMonth(YearMonth.of(2023, 2), userId))
             .thenReturn(reportMonth);
 
         final GraphMonthDto graphMonthDto = new GraphMonthDto(
@@ -251,7 +248,7 @@ class ReportMonthControllerTest implements ControllerTest {
 
         perform(
             get("/report/year/2023/month/2")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject(userIdComposite))
                 .locale(GERMAN)
         )
             .andExpect(model().attribute("monthReport", graphMonthDto));
@@ -525,7 +522,7 @@ class ReportMonthControllerTest implements ControllerTest {
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
         return standaloneSetup(sut)
-            .addFilters(new SecurityContextPersistenceFilter())
+            .addFilters(new SecurityContextHolderFilter(new HttpSessionSecurityContextRepository()))
             .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
             .build()
             .perform(builder);

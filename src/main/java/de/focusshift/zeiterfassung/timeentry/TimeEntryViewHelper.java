@@ -85,7 +85,7 @@ public class TimeEntryViewHelper {
             return;
         }
 
-        final UserId currentUserId = authenticationService.getCurrentUserId();
+        final UserId currentUserId = authenticationService.getCurrentUserIdComposite().id();
         final ZoneId zoneId = userSettingsProvider.zoneId();
 
         if (dto.getId() == null) {
@@ -119,10 +119,11 @@ public class TimeEntryViewHelper {
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(dto.getId())
             .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
-        final UserId currentUserId = authenticationService.getCurrentUserId();
+        final UserId currentUserId = authenticationService.getCurrentUserIdComposite().id();
+        final boolean idOwner = timeEntry.userIdComposite().id().equals(currentUserId);
         final boolean allowedToEdit = authenticationService.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
 
-        if (!allowedToEdit && !timeEntry.userIdComposite().id().equals(currentUserId)) {
+        if (!allowedToEdit && !idOwner) {
             throw new AccessDeniedException("Not allowed to edit time entry with %s.".formatted(timeEntryId));
         }
 

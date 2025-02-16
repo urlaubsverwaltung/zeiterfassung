@@ -1,20 +1,21 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
 import java.io.Serial;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
-abstract class OAuth2TenantUserService implements OAuth2UserService<OidcUserRequest, OidcUser> {
+abstract class OAuth2TenantUserService implements OAuth2UserService<OidcUserRequest, CurrentOidcUser> {
 
     private final OAuth2UserService<OidcUserRequest, OidcUser> delegate;
 
@@ -23,13 +24,13 @@ abstract class OAuth2TenantUserService implements OAuth2UserService<OidcUserRequ
     }
 
     @Override
-    public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
+    public CurrentOidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
 
         final OidcUser oidcUser = delegate.loadUser(userRequest);
         final Optional<TenantUser> maybeTenantUser = loadTenantUser(userRequest, oidcUser);
 
         if (maybeTenantUser.isEmpty()) {
-            return oidcUser;
+            return new CurrentOidcUser(oidcUser, List.of(), oidcUser.getAuthorities());
         }
 
         final TenantUser tenantUser = maybeTenantUser.get();
@@ -39,12 +40,10 @@ abstract class OAuth2TenantUserService implements OAuth2UserService<OidcUserRequ
             throw new UserNotActiveException(tenantUser.id());
         }
 
-        final List<GrantedAuthority> combinedAuthorities = Stream.concat(
-            oidcUser.getAuthorities().stream(),
-            tenantUser.authorities().stream().map(SecurityRole::authority)
-        ).toList();
+        final UserLocalId userLocalId = new UserLocalId(tenantUser.localId());
+        final Collection<GrantedAuthority> applicationAuthorities = tenantUser.authorities().stream().map(SecurityRole::authority).toList();
 
-        return new DefaultOidcUser(combinedAuthorities, oidcUser.getIdToken(), oidcUser.getUserInfo());
+        return new CurrentOidcUser(oidcUser, applicationAuthorities, oidcUser.getAuthorities(), userLocalId);
     }
 
     protected abstract Optional<TenantUser> loadTenantUser(OidcUserRequest oidcUserRequest, OidcUser oidcUser);

@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.security.oidc.claimmapper;
 
 
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +33,7 @@ class RolesFromClaimMappersInfusedOAuth2UserServiceTest {
     private RolesFromClaimMappersInfusedOAuth2UserService sut;
 
     @Mock
-    private OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserService;
+    private OAuth2UserService<OidcUserRequest, CurrentOidcUser> oAuth2UserService;
     @Mock
     private RolesFromClaimMapper rolesFromClaimMapper;
 
@@ -46,7 +47,7 @@ class RolesFromClaimMappersInfusedOAuth2UserServiceTest {
 
         final OidcUserRequest oidcUserRequest = mock(OidcUserRequest.class);
 
-        final GrantedAuthority user = new SimpleGrantedAuthority("ZEITERFASSUNG_USER");
+        final GrantedAuthority userAuthority = new SimpleGrantedAuthority("ZEITERFASSUNG_USER");
         final Map<String, Object> claims = Map.of(
             SUB, "uniqueID",
             GIVEN_NAME, "givenName",
@@ -54,7 +55,7 @@ class RolesFromClaimMappersInfusedOAuth2UserServiceTest {
             EMAIL, "email"
         );
         final OidcIdToken oidcIdToken = new OidcIdToken("tokenValue", Instant.now(), Instant.MAX, claims);
-        final DefaultOidcUser oidcUser = new DefaultOidcUser(List.of(user), oidcIdToken);
+        final CurrentOidcUser oidcUser = new CurrentOidcUser(new DefaultOidcUser(List.of(userAuthority), oidcIdToken), List.of(), List.of(userAuthority));
         when(oAuth2UserService.loadUser(oidcUserRequest)).thenReturn(oidcUser);
 
         final GrantedAuthority office = new SimpleGrantedAuthority("ZEITERFASSUNG_VIEW_REPORT_ALL");
@@ -62,6 +63,6 @@ class RolesFromClaimMappersInfusedOAuth2UserServiceTest {
 
         final OidcUser expectedOidcUser = sut.loadUser(oidcUserRequest);
         assertThat(expectedOidcUser.getAuthorities().stream().map(GrantedAuthority::getAuthority))
-            .containsExactly("ZEITERFASSUNG_USER", "ZEITERFASSUNG_VIEW_REPORT_ALL");
+            .containsExactlyInAnyOrder("ZEITERFASSUNG_USER", "ZEITERFASSUNG_VIEW_REPORT_ALL");
     }
 }

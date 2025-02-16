@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.feedback;
 
 
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,9 +12,10 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
+
+import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,9 +48,12 @@ class FeedbackViewControllerTest {
         verify(feedbackService).sendFeedback(new EMailAddress("wayne@example.org"), "body");
     }
 
-    private OidcUser getDefaultOidcUser(String subject) {
+    private CurrentOidcUser getDefaultOidcUser(String subject) {
+
         final OidcIdToken token = OidcIdToken.withTokenValue("tokenvalue").claim("claimName", "yeeehaw").subject(subject).build();
         final OidcUserInfo userInfo = OidcUserInfo.builder().name("Bruce").subject(subject).email("wayne@example.org").build();
-        return new DefaultOidcUser(emptyList(), token, userInfo);
+        final DefaultOidcUser oidcUser = new DefaultOidcUser(emptyList(), token, userInfo);
+
+        return new CurrentOidcUser(oidcUser, List.of(), List.of());
     }
 }
