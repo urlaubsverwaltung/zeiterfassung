@@ -123,7 +123,7 @@ public class TimeEntryViewHelper {
         final boolean allowedToEdit = authenticationService.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
 
         if (!allowedToEdit && !timeEntry.userIdComposite().id().equals(currentUserId)) {
-            throw new AccessDeniedException("Not allowed to edit time entry.");
+            throw new AccessDeniedException("Not allowed to edit time entry with %s.".formatted(timeEntryId));
         }
 
         if (bindingResult.hasErrors()) {
@@ -156,7 +156,7 @@ public class TimeEntryViewHelper {
 
         final boolean hasErrorStart = bindingResult.hasFieldErrors("start");
         final boolean hasErrorEnd = bindingResult.hasFieldErrors("end");
-        final boolean hasErrorDuration = bindingResult.hasFieldErrors("value");
+        final boolean hasErrorDuration = bindingResult.hasFieldErrors("duration");
 
         if (hasErrorStart && hasErrorEnd && !hasErrorDuration) {
             bindingResult.reject("time-entry.validation.startOrEnd.required");
