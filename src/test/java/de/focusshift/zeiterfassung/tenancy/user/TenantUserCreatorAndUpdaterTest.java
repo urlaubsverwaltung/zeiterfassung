@@ -1,9 +1,11 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
 import de.focusshift.zeiterfassung.security.SecurityRole;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
@@ -15,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.event.InteractiveAuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
@@ -28,6 +31,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -58,9 +62,11 @@ class TenantUserCreatorAndUpdaterTest {
         );
         final OidcIdToken idToken = new OidcIdToken("tokenValue", Instant.now(), Instant.MAX, sub);
 
-
         final List<GrantedAuthority> grantedAuthorities = List.of();
-        final Authentication authentication = new OAuth2AuthenticationToken(new DefaultOidcUser(grantedAuthorities, idToken), grantedAuthorities, "myRegistrationId");
+        final DefaultOidcUser oidcUser = new DefaultOidcUser(grantedAuthorities, idToken);
+        final CurrentOidcUser currentOidcUser = new CurrentOidcUser(oidcUser, List.of(), grantedAuthorities, new UserLocalId(tenantUser.localId()));
+
+        final Authentication authentication = new OAuth2AuthenticationToken(currentOidcUser, grantedAuthorities, "myRegistrationId");
         final InteractiveAuthenticationSuccessEvent event = new InteractiveAuthenticationSuccessEvent(authentication, this.getClass());
 
 
@@ -88,18 +94,36 @@ class TenantUserCreatorAndUpdaterTest {
         final OidcIdToken idToken = new OidcIdToken("tokenValue", Instant.now(), Instant.MAX, sub);
 
         final List<GrantedAuthority> grantedAuthorities = List.of();
-        final Authentication authentication = new OAuth2AuthenticationToken(new DefaultOidcUser(grantedAuthorities, idToken), grantedAuthorities, "myRegistrationId");
+        final DefaultOidcUser oidcUser = new DefaultOidcUser(grantedAuthorities, idToken);
+        final CurrentOidcUser currentOidcUser = new CurrentOidcUser(oidcUser, List.of(), grantedAuthorities);
+
+        final Authentication authentication = new OAuth2AuthenticationToken(currentOidcUser, grantedAuthorities, "myRegistrationId");
         final InteractiveAuthenticationSuccessEvent event = new InteractiveAuthenticationSuccessEvent(authentication, this.getClass());
 
+        // user does not exist yet
         when(tenantUserService.findById(new UserId("uniqueIdentifier"))).thenReturn(Optional.empty());
+
+        // and will be created
+        final TenantUser createdTenantUser = new TenantUser("uniqueIdentifier", 1L, "Samuel", "Jackson",
+            new EMailAddress("s.jackson@example.org"), Instant.now(), Set.of(ZEITERFASSUNG_USER),
+            Instant.now(), Instant.now(), Instant.now(), Instant.now(), UserStatus.ACTIVE);
+        when(tenantUserService.createNewUser("uniqueIdentifier", "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), Set.of(ZEITERFASSUNG_USER)))
+            .thenReturn(createdTenantUser);
 
         sut.handle(event);
 
-        verify(tenantUserService).createNewUser("uniqueIdentifier", "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), Set.of(ZEITERFASSUNG_USER));
+        final InOrder tenantContextInOrder = Mockito.inOrder(tenantContextHolder);
+        tenantContextInOrder.verify(tenantContextHolder).setTenantId(new TenantId("myRegistrationId"));
+        tenantContextInOrder.verify(tenantContextHolder).clear();
 
-        InOrder inOrder = Mockito.inOrder(tenantContextHolder);
-        inOrder.verify(tenantContextHolder).setTenantId(new TenantId("myRegistrationId"));
-        inOrder.verify(tenantContextHolder).clear();
+        final Authentication updatedAuthentication = SecurityContextHolder.getContext().getAuthentication();
+        assertThat(updatedAuthentication.getPrincipal()).isInstanceOf(CurrentOidcUser.class);
+        assertThat(updatedAuthentication.getPrincipal()).satisfies(principal -> {
+            final CurrentOidcUser actualCurrentOidcUser = (CurrentOidcUser) principal;
+            assertThat(actualCurrentOidcUser.getUserId()).isEqualTo(new UserId("uniqueIdentifier"));
+            assertThat(actualCurrentOidcUser.getUserLocalId()).hasValue(new UserLocalId(1L));
+            assertThat(actualCurrentOidcUser.getOidcUser()).isSameAs(currentOidcUser);
+        });
     }
 
     @Test

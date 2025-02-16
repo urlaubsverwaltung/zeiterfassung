@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.security.AuthenticationService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
-import de.focusshift.zeiterfassung.user.CurrentUserProvider;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -15,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL;
@@ -29,13 +29,11 @@ class ReportPermissionServiceTest {
     @Mock
     private AuthenticationService authenticationService;
     @Mock
-    private CurrentUserProvider currentUserProvider;
-    @Mock
     private UserManagementService userManagementService;
 
     @BeforeEach
     void setUp() {
-        sut = new ReportPermissionService(authenticationService, currentUserProvider, userManagementService);
+        sut = new ReportPermissionService(authenticationService, userManagementService);
     }
 
     @Test
@@ -69,8 +67,7 @@ class ReportPermissionServiceTest {
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(2L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        when(currentUserProvider.getCurrentUser())
-            .thenReturn(new User(userIdComposite, "", "", new EMailAddress(""), Set.of()));
+        when(authenticationService.getCurrentUserIdComposite()).thenReturn(userIdComposite);
 
         final List<UserLocalId> actual = sut.filterUserLocalIdsByCurrentUserHasPermissionFor(
             List.of(new UserLocalId(1L), userLocalId, new UserLocalId(3L)));
@@ -86,8 +83,7 @@ class ReportPermissionServiceTest {
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(2L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        when(currentUserProvider.getCurrentUser())
-            .thenReturn(new User(userIdComposite, "", "", new EMailAddress(""), Set.of()));
+        when(authenticationService.getCurrentUserIdComposite()).thenReturn(userIdComposite);
 
         final List<UserLocalId> actual = sut.filterUserLocalIdsByCurrentUserHasPermissionFor(
             List.of(new UserLocalId(1L), new UserLocalId(3L)));
@@ -131,8 +127,7 @@ class ReportPermissionServiceTest {
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        when(currentUserProvider.getCurrentUser())
-            .thenReturn(new User(userIdComposite, "", "", new EMailAddress(""), Set.of()));
+        when(authenticationService.getCurrentUserIdComposite()).thenReturn(userIdComposite);
 
         assertThat(sut.findAllPermittedUserLocalIdsForCurrentUser()).containsOnly(userLocalId);
     }
@@ -173,8 +168,10 @@ class ReportPermissionServiceTest {
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(2L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        when(authenticationService.getCurrentUserIdComposite()).thenReturn(userIdComposite);
+
         final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
-        when(currentUserProvider.getCurrentUser()).thenReturn(user);
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
 
         assertThat(sut.findAllPermittedUsersForCurrentUser()).containsOnly(user);
     }

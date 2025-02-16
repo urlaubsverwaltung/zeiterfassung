@@ -1,11 +1,13 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.slf4j.Logger;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
@@ -27,19 +29,24 @@ public class AuthenticationService {
     }
 
     /**
-     * Returns the {@link UserId} of the current {@link Authentication}.
+     * Returns the {@link UserIdComposite} of the current user.
      *
-     * @return the {@link UserId} of the current {@link Authentication}
-     * @throws IllegalStateException when authentication is of unexpected type, e.g. not OAuth.
+     * @return the {@link UserIdComposite} of the current user
      */
-    public UserId getCurrentUserId() {
+    public UserIdComposite getCurrentUserIdComposite() {
 
         final Authentication authentication = getCurrentAuthentication();
 
         if (authentication instanceof OAuth2AuthenticationToken token) {
             final OAuth2User oAuth2User = token.getPrincipal();
-            if (oAuth2User instanceof OidcUser oidcUser) {
-                return new UserId(oidcUser.getSubject());
+            if (oAuth2User instanceof CurrentOidcUser oidcUser) {
+
+                final UserId userId = oidcUser.getUserId();
+
+                final UserLocalId localId = oidcUser.getUserLocalId()
+                    .orElseThrow(() -> new IllegalStateException("expected user local id to exist for " + userId));
+
+                return new UserIdComposite(userId, localId);
             }
         }
 
