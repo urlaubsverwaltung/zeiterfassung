@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote;
 
+import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteAcceptedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteCancelledEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteConvertedToApplicationEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteCreatedEventDTO;
@@ -16,6 +17,13 @@ class SickNoteEventDtoAdapter {
     private final SickNotePersonDTO person;
     private final String type;
     private final SickNotePeriodDTO period;
+
+    SickNoteEventDtoAdapter(SickNoteAcceptedEventDTO event) {
+        this.sourceId = event.getSourceId();
+        this.person = event.getPerson();
+        this.type = event.getType();
+        this.period = event.getPeriod();
+    }
 
     SickNoteEventDtoAdapter(SickNoteCreatedEventDTO event) {
         this.sourceId = event.getSourceId();

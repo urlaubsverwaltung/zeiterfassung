@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote;
 
+import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteAcceptedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteCancelledEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteConvertedToApplicationEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.sicknote.SickNoteCreatedEventDTO;
@@ -17,6 +18,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote.SickNoteRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_ACCEPTED_QUEUE;
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote.SickNoteRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CANCELLED_QUEUE;
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote.SickNoteRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CONVERTED_TO_APPLICATION_QUEUE;
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.sicknote.SickNoteRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CREATED_QUEUE;
@@ -79,6 +81,19 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
                 .ifPresentOrElse(
                     absenceWriteService::deleteAbsence,
                     () -> LOG.info("could not map SickNoteConvertedToApplicationEventDTO to Absence -> could not convert SickNote to Absence")
+                );
+
+        });
+    }
+
+    @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_ACCEPTED_QUEUE})
+    void on(SickNoteAcceptedEventDTO event) {
+        tenantContextHolder.runInTenantIdContext(new TenantId(event.getTenantId()), tenantId -> {
+            LOG.info("Received SickNoteAcceptedEvent for person={} and tenantId={}", event.getPerson(), tenantId);
+            toAbsence(new SickNoteEventDtoAdapter(event))
+                .ifPresentOrElse(
+                    absenceWriteService::addAbsence,
+                    () -> LOG.info("could not map SickNoteAcceptedEventDTO to Absence -> could not convert SickNote to Absence")
                 );
 
         });
