@@ -21,6 +21,7 @@ class SickNoteRabbitmqConfiguration {
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_UPDATED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.sicknote.updated";
 
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CONVERTED_TO_APPLICATION_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.sicknote.converted_to_application";
+    static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_ACCEPTED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.sicknote.accepted";
 
 
     @Bean
@@ -89,12 +90,24 @@ class SickNoteRabbitmqConfiguration {
 
         @Bean
         Binding bindZeiterfassungUrlaubsverwaltungSickNoteConvertedToApplicationQueue() {
-            final String routingKeyUpdated = sickNoteRabbitmqConfigurationProperties.getRoutingKeyConvertedToApplication();
+            final String routingKey = sickNoteRabbitmqConfigurationProperties.getRoutingKeyConvertedToApplication();
             return BindingBuilder.bind(zeiterfassungUrlaubsverwaltungSickNoteConvertedToApplicationQueue())
                     .to(sickNoteTopic())
-                    .with(routingKeyUpdated);
+                    .with(routingKey);
         }
 
+        @Bean
+        Queue zeiterfassungUrlaubsverwaltungSickNoteAcceptedQueue() {
+            return new Queue(ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_ACCEPTED_QUEUE, true);
+        }
+
+        @Bean
+        Binding bindZeiterfassungUrlaubsverwaltungSickNoteAcceptedQueue() {
+            final String routingKey = sickNoteRabbitmqConfigurationProperties.getRoutingKeyAccepted();
+            return BindingBuilder.bind(zeiterfassungUrlaubsverwaltungSickNoteAcceptedQueue())
+                .to(sickNoteTopic())
+                .with(routingKey);
+        }
 
     }
 }
