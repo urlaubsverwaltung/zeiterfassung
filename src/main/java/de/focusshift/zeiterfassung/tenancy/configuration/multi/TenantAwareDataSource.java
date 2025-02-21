@@ -61,7 +61,9 @@ class TenantAwareDataSource extends DelegatingDataSource {
     private String resolveTenantId() {
         return tenantContextHolder.getCurrentTenantId().map(TenantId::tenantId)
             .orElseGet(() -> {
-                LOG.warn("using fallback tenantId={}", FALLBACK_TENANT_ID);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("using fallback tenantId={}", FALLBACK_TENANT_ID);
+                }
                 return FALLBACK_TENANT_ID;
             });
     }
