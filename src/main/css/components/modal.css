@@ -12,7 +12,7 @@ body:has(dialog[open] .modal) {
   @apply supports-backdrop-blur:bg-blue-100/[0.85];
   @apply transition-opacity;
   padding: 2rem;
-  padding-top: calc(2rem + var(--navigation-header-height));
+  padding-top: calc(2rem + var(--top-bar-height));
 }
 
 .modal-alignment {
@@ -38,6 +38,6 @@ body:has(dialog[open] .modal) {
 
 @screen md {
   .modal-overlay-background {
-    padding: calc(2 * var(--navigation-header-height));
+    padding: calc(2 * var(--top-bar-height));
   }
 }

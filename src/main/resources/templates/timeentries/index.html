@@ -26,7 +26,7 @@
       th:fragment="content"
       th:with="noTimeEntriesYet=${timeEntryWeeksPage.totalTimeEntryElements eq 0}"
     >
-      <main class="flex-1 flex flex-col">
+      <main class="mt-4 flex-1 flex flex-col">
         <div
           class="mx-auto w-full max-w-screen-lg mb-16 md:mb-28"
           data-testid="time-entry-create-container"
@@ -242,7 +242,10 @@
                     th:classappend="${dayStat.first ? 'mt-2' : 'mt-8 md:mt-4'}"
                     th:id="${'day-of-week-' + calendarWeek + '-' + day.dayOfWeek}"
                   >
-                    <div class="px-4 sticky top-nav-header pt-px z-10">
+                    <div
+                      class="px-4 sticky pt-px z-10"
+                      style="top: var(--top-bar-height)"
+                    >
                       <div
                         th:fragment="day-of-week-banner(calendarWeek, day)"
                         th:id="${'day-of-week-banner-' + calendarWeek + '-' + day.dayOfWeek}"
@@ -440,57 +443,66 @@
             Eintragen
           </span>
         </button>
-        <span class="mr-4 md:block md:w-12" data-js-hidden></span>
-        <span class="md:block md:w-12"></span>
       </th:block>
     </template>
 
     <template id="z-template-zeitslot-actions-existing">
       <th:block th:fragment="timeentry-slot-form-actions-existing(timeEntry)">
-        <button
-          type="reset"
-          class="mr-4 flex items-center justify-center text-gray-500 md:text-gray-300 md:hover:text-gray-700 md:rounded-full md:w-12 md:h-12 hover:md:bg-blue-100 transition-colors duration-200"
-          title="Zurücksetzen"
-          th:title="#{time-entry.form.reset.tooltip}"
-          data-js-hidden
-        >
-          <svg
-            th:replace="~{icons/refresh::svg(className='w-5 h-5 md:w-6 md:h-6')}"
-          ></svg>
-          <span class="ml-2 md:sr-only" th:text="#{time-entry.form.reset}">
-            Zurücksetzen
-          </span>
-        </button>
-        <button
-          type="submit"
-          class="mr-4 flex items-center justify-center text-gray-500 md:text-gray-300 md:hover:text-gray-700 md:rounded-full md:w-12 md:h-12 hover:md:bg-blue-100 transition-colors duration-200"
-          title="Speichern"
-          th:title="#{time-entry.form.save.tooltip}"
-          data-turbo-frame="frame-time-entry"
-          data-testid="submit-time-entry"
-        >
-          <svg
-            th:replace="~{icons/save::svg(className='w-5 h-5 md:w-6 md:h-6')}"
-          ></svg>
-          <span class="ml-2 md:sr-only" th:text="#{time-entry.form.save}">
-            Speichern
-          </span>
-        </button>
-        <button
-          type="submit"
-          name="delete"
-          class="flex items-center justify-center text-gray-500 md:text-gray-300 md:hover:text-gray-700 md:rounded-full md:w-12 md:h-12 hover:md:bg-blue-100 transition-colors duration-200"
-          title="Löschen"
-          th:title="#{time-entry.form.delete.tooltip}"
-          data-turbo-frame="frame-time-entry"
-        >
-          <svg
-            th:replace="~{icons/trash::svg(className='w-5 h-5 md:w-6 md:h-6')}"
-          ></svg>
-          <span class="ml-2 md:sr-only" th:text="#{time-entry.form.delete}">
-            Löschen
-          </span>
-        </button>
+        <div class="time-entry-actions">
+          <button
+            data-toggle-button
+            data-reset-on-body-click
+            type="button"
+            class="flex items-center justify-center gap-2"
+          >
+            <svg
+              th:replace="~{icons/more-vertical::svg(className='w-5 h-5 md:w-6 md:h-6')}"
+            ></svg>
+            <span class="sr-only" th:text="#{time-entry.form.actions.text}">
+              Aktionen
+            </span>
+          </button>
+          <ul class="time-entry-actions-list flex flex-col gap-1">
+            <li>
+              <button
+                type="reset"
+                title="Zurücksetzen"
+                th:title="#{time-entry.form.reset.tooltip}"
+                data-js-hidden
+              >
+                <svg
+                  th:replace="~{icons/refresh::svg(className='w-5 h-5')}"
+                ></svg>
+                <span th:text="#{time-entry.form.reset}"> Zurücksetzen </span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="submit"
+                title="Speichern"
+                th:title="#{time-entry.form.save.tooltip}"
+                data-turbo-frame="frame-time-entry"
+              data-testid="submit-time-entry">
+                <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
+                <span th:text="#{time-entry.form.save}"> Speichern </span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="submit"
+                name="delete"
+                title="Löschen"
+                th:title="#{time-entry.form.delete.tooltip}"
+                data-turbo-frame="frame-time-entry"
+              >
+                <svg
+                  th:replace="~{icons/trash::svg(className='w-5 h-5')}"
+                ></svg>
+                <span th:text="#{time-entry.form.delete}"> Löschen </span>
+              </button>
+            </li>
+          </ul>
+        </div>
       </th:block>
     </template>
   </body>
