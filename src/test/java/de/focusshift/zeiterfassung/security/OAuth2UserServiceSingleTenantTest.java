@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
@@ -29,6 +30,7 @@ import java.util.Set;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.oauth2.core.AuthorizationGrantType.JWT_BEARER;
 import static org.springframework.security.oauth2.core.OAuth2AccessToken.TokenType.BEARER;
@@ -60,8 +62,11 @@ class OAuth2UserServiceSingleTenantTest {
 
         when(tenantUserService.findById(new UserId("uuid"))).thenReturn(Optional.empty());
 
-        final OidcUser actual = sut.loadUser(oidcUserRequest);
-        assertThat(actual).isSameAs(oidcUser);
+        final CurrentOidcUser actual = sut.loadUser(oidcUserRequest);
+        assertThat(actual.getOidcUser()).isSameAs(oidcUser);
+        assertThat(actual.getUserId()).isEqualTo(new UserId("uuid"));
+        assertThat(actual.getUserLocalId()).isEmpty();
+        assertThatThrownBy(actual::getUserIdComposite).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
