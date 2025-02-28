@@ -6,9 +6,9 @@ import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
-import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.YearFormat;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -156,13 +156,13 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             viewName = "redirect:" + request.getHeader("referer");
         }
 
-        final UserId userId = new UserId(currentUser.getSubject());
+        final UserLocalId userLocalId = currentUser.getUserIdComposite().localId();
 
         if (hasText(turboFrame)) {
             if (bindingResult.hasErrors()) {
                 model.addAttribute("turboEditedTimeEntry", timeEntryDTO);
             } else {
-                final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
+                final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userLocalId, year, weekOfYear);
                 final TimeEntryDay timeEntryDay = entryWeekPage.timeEntryWeek().days()
                     .stream()
                     .filter(day -> day.date().equals(timeEntryDTO.getDate()))
@@ -205,8 +205,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             return "redirect:/timeentries/%s/%s".formatted(year, weekOfYear);
         }
 
-        final UserId userId = currentUser.getUserIdComposite().id();
-        final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
+        final UserLocalId userLocalId = currentUser.getUserIdComposite().localId();
+        final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userLocalId, year, weekOfYear);
 
         final Optional<TimeEntryDay> timeEntryDay = entryWeekPage.timeEntryWeek().days()
             .stream()
@@ -226,9 +226,9 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     private void addTimeEntriesToModel(int year, int weekOfYear, Model model, CurrentOidcUser currentUser, Locale locale) {
 
-        final UserId userId = currentUser.getUserIdComposite().id();
+        final UserLocalId userLocalId = currentUser.getUserIdComposite().localId();
 
-        final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
+        final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userLocalId, year, weekOfYear);
         final TimeEntryWeekDto timeEntryWeekDto = toTimeEntryWeekDto(entryWeekPage.timeEntryWeek(), locale);
 
         final int futureYear = lastWeekOfYear(year) == weekOfYear ? year + 1 : year;

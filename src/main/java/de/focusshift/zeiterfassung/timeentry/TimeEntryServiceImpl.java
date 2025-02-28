@@ -180,9 +180,11 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public TimeEntryWeekPage getEntryWeekPage(UserId userId, int year, int weekOfYear) {
+    public TimeEntryWeekPage getEntryWeekPage(UserLocalId userLocalId, int year, int weekOfYear) {
 
-        final User user = findUser(userId);
+        final User user = findUser(userLocalId);
+        final UserId userId = user.userIdComposite().id();
+
         final ZoneId userZoneId = userSettingsProvider.zoneId();
         final ZonedDateTime fromDateTime = userDateService.firstDayOfWeek(Year.of(year), weekOfYear).atStartOfDay(userZoneId);
         final ZonedDateTime toDateTimeExclusive = fromDateTime.plusWeeks(1);
@@ -195,9 +197,6 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .stream()
             .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, user))
             .collect(groupingBy(entry -> LocalDate.ofInstant(entry.start().toInstant(), userZoneId)));
-
-        // TODO refactor getEntryWeekPage to accept UserLocalId to replace userManagementService call
-        final UserLocalId userLocalId = user.userLocalId();
 
         final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarService
             .getWorkingTimeCalender(fromLocalDate, toLocalDateExclusive, userLocalId);
@@ -346,7 +345,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     private User findUser(UserId userId) {
         return userManagementService.findUserById(userId)
-            .orElseThrow(() -> new IllegalStateException("expected user=%s to exist but got nothing.".formatted(userId)));
+            .orElseThrow(() -> new IllegalStateException("expected user id=%s to exist but got nothing.".formatted(userId)));
+    }
+
+    private User findUser(UserLocalId userLocalId) {
+        return userManagementService.findUserByLocalId(userLocalId)
+            .orElseThrow(() -> new IllegalStateException("expected user localId=%s to exist but got nothing.".formatted(userLocalId)));
     }
 
     private TimeEntry toTimeEntry(TimeEntryEntity entity) {

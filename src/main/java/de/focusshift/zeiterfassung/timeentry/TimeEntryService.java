@@ -66,13 +66,12 @@ public interface TimeEntryService {
      * {@linkplain TimeEntryWeekPage}s for the given user and week of year with sorted {@linkplain TimeEntry}s
      * by {@linkplain TimeEntry#start()}, newest is the first item.
      *
-     * @param userId to get the {@linkplain TimeEntryWeekPage} for
-     * @param year given year
-     * @param weekOfYear given week of year
-     *
+     * @param userLocalId to get the {@linkplain TimeEntryWeekPage} for
+     * @param year        given year
+     * @param weekOfYear  given week of year
      * @return {@linkplain TimeEntryWeekPage} with sorted {@linkplain TimeEntry}s.
      */
-    TimeEntryWeekPage getEntryWeekPage(UserId userId, int year, int weekOfYear);
+    TimeEntryWeekPage getEntryWeekPage(UserLocalId userLocalId, int year, int weekOfYear);
 
     /**
      * Creates a new {@linkplain TimeEntry}.

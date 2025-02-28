@@ -25,6 +25,17 @@ public interface ControllerTest {
         final UserId userId = new UserId(subject);
         final UserLocalId userLocalId = new UserLocalId(1L);
 
+        return oidcSubject(userId, userLocalId);
+    }
+
+    /**
+     * Oidc Login using the given userId values.
+     *
+     * @param userId idToken / userInfoToken subject
+     * @param userLocalId user local application id
+     * @return {@link OidcLoginRequestPostProcessor} configured with idToken and userInfoToken
+     */
+    default OidcLoginRequestPostProcessor oidcSubject(UserId userId, UserLocalId userLocalId) {
         return oidcSubject(new UserIdComposite(userId, userLocalId));
     }
 
