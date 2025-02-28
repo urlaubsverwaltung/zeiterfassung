@@ -76,15 +76,14 @@ public interface TimeEntryService {
     /**
      * Creates a new {@linkplain TimeEntry}.
      *
-     * @param userId id of the linked user
-     * @param start start of the time entry.
-     * @param end end of the time entry.
-     * @param isBreak whether it is a break or not.
+     * @param userLocalId id of the linked user
+     * @param start       start of the time entry.
+     * @param end         end of the time entry.
+     * @param isBreak     whether it is a break or not.
      * @return the created {@linkplain TimeEntry} with an id.
-     *
      * @throws IllegalArgumentException when given timeEntry already has an id.
      */
-    TimeEntry createTimeEntry(UserId userId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak);
+    TimeEntry createTimeEntry(UserLocalId userLocalId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak);
 
     /**
      * Updates the existing {@linkplain TimeEntry}
