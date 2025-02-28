@@ -4,8 +4,10 @@ import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
+import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -15,6 +17,7 @@ import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -24,6 +27,9 @@ import org.springframework.security.web.context.SecurityContextPersistenceFilter
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.threeten.extra.YearWeek;
 
 import java.time.Clock;
@@ -46,10 +52,16 @@ import static java.util.Locale.GERMAN;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,13 +78,17 @@ class ReportWeekControllerTest implements ControllerTest {
     @Mock
     private MessageSource messageSource;
 
+    private DateFormatter dateFormatter;
+    private DateRangeFormatter dateRangeFormatter;
+    private ReportViewHelper reportViewHelper;
+
     private final Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
-        final DateFormatterImpl dateFormatter = new DateFormatterImpl();
-        final DateRangeFormatter dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
-        final ReportViewHelper reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
+        dateFormatter = new DateFormatterImpl();
+        dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
+        reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
         sut = new ReportWeekController(reportService, reportPermissionService, reportViewHelper, timeEntryDialogHelper, clock);
     }
 
@@ -437,6 +453,69 @@ class ReportWeekControllerTest implements ControllerTest {
             .andExpect(model().attribute("selectedUserIds", List.of(2L, 3L)))
             .andExpect(model().attribute("allUsersSelected", false))
             .andExpect(model().attribute("userReportFilterUrl", "/report/year/2022/week/1"));
+    }
+
+    @Nested
+    class EditTimeEntry {
+
+        @BeforeEach
+        void setUp() {
+            timeEntryDialogHelper = mock(TimeEntryDialogHelper.class);
+            sut = new ReportWeekController(reportService, reportPermissionService, reportViewHelper, timeEntryDialogHelper, clock);
+        }
+
+        @Test
+        void ensureEditTimeEntryWithValidationConstraints() throws Exception {
+
+            perform(post("/report/year/2025/week/9")
+                .param("id", "1")
+            )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("http://localhost/report/year/2025/week/9?timeEntryId=1"));
+
+            // must be called even with initial constraint violations
+            // since the helper adds further stuff to the model
+            verify(timeEntryDialogHelper).saveTimeEntry(any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+        }
+
+        @Test
+        void ensureEditTimeEntry() throws Exception {
+
+            perform(post("/report/year/2025/week/9")
+                .param("date", "2025-02-28")
+                .param("start", "14:30")
+                .param("end", "15:00")
+            )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("http://localhost/report/year/2025/week/9"))
+                .andExpect(flash().attribute("turboRefreshScroll", "preserve"));
+
+            verify(timeEntryDialogHelper).saveTimeEntry(any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+        }
+
+        @Test
+        void ensureEditTimeEntryWithParameterEveryone() throws Exception {
+
+            perform(post("/report/year/2025/week/9")
+                .param("everyone", "true")
+                .param("date", "2025-02-28")
+                .param("start", "14:30")
+                .param("end", "15:00")
+            )
+                .andExpect(redirectedUrl("http://localhost/report/year/2025/week/9?everyone=true"));
+        }
+
+        @Test
+        void ensureEditTimeEntryWithParameterUser() throws Exception {
+
+            perform(post("/report/year/2025/week/9")
+                .param("user", "1", "2")
+                .param("date", "2025-02-28")
+                .param("start", "14:30")
+                .param("end", "15:00")
+            )
+                .andExpect(redirectedUrl("http://localhost/report/year/2025/week/9?user=1&user=2"));
+        }
     }
 
     private static User anyUser() {
