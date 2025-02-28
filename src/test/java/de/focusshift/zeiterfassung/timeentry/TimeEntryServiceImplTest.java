@@ -239,10 +239,10 @@ class TimeEntryServiceImplTest {
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
 
         final TimeEntry actual = sut.createTimeEntry(
-            userId,
+            userLocalId,
             "hard work",
             ZonedDateTime.of(entryStart, ZONE_ID_UTC),
             ZonedDateTime.of(entryEnd, ZONE_ID_UTC),

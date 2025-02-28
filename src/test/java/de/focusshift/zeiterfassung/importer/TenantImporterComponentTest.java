@@ -116,8 +116,11 @@ class TenantImporterComponentTest {
         when(tenantService.getTenantByTenantId(anyString())).thenReturn(Optional.of(new Tenant("tenantId", firstLoginAt, firstLoginAt, TenantStatus.ACTIVE)));
         when(tenantUserService.findAllUsers()).thenReturn(List.of());
 
+        final UserId userId = new UserId("externalId");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+
         when(tenantUserService.createNewUser(anyString(), anyString(), anyString(), any(EMailAddress.class), anySet())).thenReturn(
-            new TenantUser("externalId", 1L, "marlene", "muster", new EMailAddress("my.name@example.org"), firstLoginAt, Set.of(SecurityRole.ZEITERFASSUNG_USER), firstLoginAt, firstLoginAt, null, null, UserStatus.ACTIVE)
+            new TenantUser(userId.value(), userLocalId.value(), "marlene", "muster", new EMailAddress("my.name@example.org"), firstLoginAt, Set.of(SecurityRole.ZEITERFASSUNG_USER), firstLoginAt, firstLoginAt, null, null, UserStatus.ACTIVE)
         );
 
         sut.runImport();
@@ -151,11 +154,11 @@ class TenantImporterComponentTest {
         verify(workingTimeService).createWorkingTime(new UserLocalId(1L), null, FederalState.GLOBAL, null, workdays);
 
         verify(timeClockService).importTimeClock(
-            new TimeClock(null, new UserId("externalId"), ZonedDateTime.parse("2024-06-01T08:00:33.123+02:00[Europe/Berlin]"), "my comment", false, Optional.of(ZonedDateTime.parse("2024-06-01T12:00:00.123+02:00[Europe/Berlin]")))
+            new TimeClock(null, userId, ZonedDateTime.parse("2024-06-01T08:00:33.123+02:00[Europe/Berlin]"), "my comment", false, Optional.of(ZonedDateTime.parse("2024-06-01T12:00:00.123+02:00[Europe/Berlin]")))
         );
 
         verify(timeEntryService).createTimeEntry(
-            new UserId("externalId"), "lala", ZonedDateTime.parse("2024-06-01T08:00:00.123+02:00[Europe/Berlin]"), ZonedDateTime.parse("2024-06-01T12:00:00.123+02:00[Europe/Berlin]"), false
+            userLocalId, "lala", ZonedDateTime.parse("2024-06-01T08:00:00.123+02:00[Europe/Berlin]"), ZonedDateTime.parse("2024-06-01T12:00:00.123+02:00[Europe/Berlin]"), false
         );
 
     }

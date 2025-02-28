@@ -180,7 +180,8 @@ class TimeEntryViewHelperTest {
         void ensureCreateTimeEntry() {
 
             final UserId userId = new UserId("user-id");
-            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(new UserIdComposite(userId, new UserLocalId(1L)));
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(new UserIdComposite(userId, userLocalId));
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
@@ -202,7 +203,7 @@ class TimeEntryViewHelperTest {
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
 
-            verify(timeEntryService).createTimeEntry(userId, "comment", start, end, false);
+            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false);
             verifyNoMoreInteractions(bindingResult);
         }
     }

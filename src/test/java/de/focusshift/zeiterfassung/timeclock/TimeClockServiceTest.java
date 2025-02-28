@@ -2,7 +2,9 @@ package de.focusshift.zeiterfassung.timeclock;
 
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -103,9 +105,13 @@ class TimeClockServiceTest {
     @Test
     void ensureStopTimeClockDoesNothingWhenThereIsNothingRunningCurrently() {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         when(timeClockRepository.findByOwnerAndStoppedAtIsNull("batman")).thenReturn(Optional.empty());
 
-        sut.stopTimeClock(new UserId("batman"));
+        sut.stopTimeClock(userIdComposite);
 
         verifyNoMoreInteractions(timeClockRepository);
         verifyNoInteractions(timeEntryService);
@@ -117,6 +123,10 @@ class TimeClockServiceTest {
         final ZoneId utc = ZoneId.of("UTC");
         final Instant now = Instant.now();
         final Instant startedAt = now.minusSeconds(120);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final TimeClockEntity runningTimeClockEntity = TimeClockEntity.builder()
             .id(1L)
@@ -146,7 +156,7 @@ class TimeClockServiceTest {
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
-        sut.stopTimeClock(new UserId("batman"));
+        sut.stopTimeClock(userIdComposite);
 
         final ArgumentCaptor<TimeClockEntity> argumentCaptor = ArgumentCaptor.forClass(TimeClockEntity.class);
 
@@ -168,6 +178,10 @@ class TimeClockServiceTest {
         final ZonedDateTime startedAt = ZonedDateTime.ofInstant(startedAtInstant, ZONED_ID_BERLIN);
         final ZonedDateTime stoppedAt = ZonedDateTime.ofInstant(now, ZONED_ID_BERLIN);
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final TimeClockEntity runningTimeClockEntity = TimeClockEntity.builder()
             .id(1L)
             .owner("batman")
@@ -188,9 +202,9 @@ class TimeClockServiceTest {
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
-        sut.stopTimeClock(new UserId("batman"));
+        sut.stopTimeClock(userIdComposite);
 
-        verify(timeEntryService).createTimeEntry(new UserId("batman"), "awesome comment", startedAt, stoppedAt, true);
+        verify(timeEntryService).createTimeEntry(userLocalId, "awesome comment", startedAt, stoppedAt, true);
     }
 
     @Test

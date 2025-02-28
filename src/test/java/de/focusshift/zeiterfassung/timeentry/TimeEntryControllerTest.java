@@ -422,13 +422,17 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntryCreation() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
         perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("date", "2022-01-02")
                 .param("start", "14:30:00.000+01:00")
@@ -440,11 +444,15 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 1, 2, 15, 0, 0, 0, zoneIdBerlin);
 
-        verify(timeEntryService).createTimeEntry(new UserId("batman"), "hard work", expectedStart, expectedEnd, false);
+        verify(timeEntryService).createTimeEntry(userLocalId, "hard work", expectedStart, expectedEnd, false);
     }
 
     @Test
     void ensureTimeEntryBreakCreation() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
@@ -452,7 +460,7 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("date", "2022-01-02")
                 .param("start", "14:30:00.000+01:00")
@@ -465,11 +473,15 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 1, 2, 15, 0, 0, 0, zoneIdBerlin);
 
-        verify(timeEntryService).createTimeEntry(new UserId("batman"), "hard work", expectedStart, expectedEnd, true);
+        verify(timeEntryService).createTimeEntry(userLocalId, "hard work", expectedStart, expectedEnd, true);
     }
 
     @Test
     void ensureTimeEntryCreationForDateTouchingNextDay() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
@@ -477,7 +489,7 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("date", "2022-01-02")
                 .param("start", "22:30:00.000+01:00")
@@ -489,7 +501,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 22, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 1, 3, 1, 15, 0, 0, zoneIdBerlin);
 
-        verify(timeEntryService).createTimeEntry(new UserId("batman"), "hard work", expectedStart, expectedEnd, false);
+        verify(timeEntryService).createTimeEntry(userLocalId, "hard work", expectedStart, expectedEnd, false);
     }
 
     @Test
