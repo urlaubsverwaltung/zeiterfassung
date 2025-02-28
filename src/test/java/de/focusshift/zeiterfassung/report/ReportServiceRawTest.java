@@ -205,7 +205,7 @@ class ReportServiceRawTest {
 
         sut.getReportWeek(Year.of(2024), 1, List.of(user.userLocalId()));
 
-        verify(timeEntryService).getEntriesByUserLocalIds(start, endExclusive, List.of(user.userLocalId()));
+        verify(timeEntryService).getEntries(start, endExclusive, List.of(user.userLocalId()));
         verify(workingTimeCalendarService).getWorkingTimeCalendarForUsers(start, endExclusive, List.of(user.userLocalId()));
     }
 
@@ -224,7 +224,7 @@ class ReportServiceRawTest {
                 userTwo.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
             );
 
-        when(timeEntryService.getEntriesByUserLocalIds(any(LocalDate.class), any(LocalDate.class), anyList()))
+        when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), anyList()))
             .thenReturn(Map.of(
                 user.userIdComposite(), List.of(),
                 userTwo.userIdComposite(), List.of()
@@ -303,7 +303,7 @@ class ReportServiceRawTest {
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 1, 1)))
             .thenReturn(LocalDate.of(2020, 12, 28));
 
-        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
+        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of());
 
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), user.userId());
@@ -324,7 +324,7 @@ class ReportServiceRawTest {
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 12, 1)))
             .thenReturn(LocalDate.of(2021, 11, 29));
 
-        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 12, 1), LocalDate.of(2022, 1, 1), List.of(user.userLocalId())))
+        when(timeEntryService.getEntries(LocalDate.of(2021, 12, 1), LocalDate.of(2022, 1, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of());
 
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 12), user.userId());
@@ -379,7 +379,7 @@ class ReportServiceRawTest {
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 1, 1)))
             .thenReturn(LocalDate.of(2020, 12, 28));
 
-        when(timeEntryService.getEntriesByUserLocalIds(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
+        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of(user.userIdComposite(), List.of(w1_d1_TimeEntry, w1_d2_TimeEntry, w2_d1_TimeEntry, w2_d2_TimeEntry, w3_d1_TimeEntry, w3_d2_TimeEntry, w4_d1_TimeEntry, w4_d2_TimeEntry)));
 
         when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
@@ -408,7 +408,7 @@ class ReportServiceRawTest {
 
         sut.getReportMonth(yearMonth, List.of(user.userLocalId()));
 
-        verify(timeEntryService).getEntriesByUserLocalIds(start, endExclusive, List.of(user.userLocalId()));
+        verify(timeEntryService).getEntries(start, endExclusive, List.of(user.userLocalId()));
         verify(workingTimeCalendarService).getWorkingTimeCalendarForUsers(start, endExclusive, List.of(user.userLocalId()));
     }
 
@@ -429,7 +429,7 @@ class ReportServiceRawTest {
                 userTwo.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
             );
 
-        when(timeEntryService.getEntriesByUserLocalIds(any(LocalDate.class), any(LocalDate.class), anyList()))
+        when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), anyList()))
             .thenReturn(Map.of(
                 user.userIdComposite(), List.of(),
                 userTwo.userIdComposite(), List.of()

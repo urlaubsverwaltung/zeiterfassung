@@ -967,7 +967,7 @@ class TimeEntryServiceImplTest {
     }
 
     @Test
-    void ensureGetEntriesByUserLocalIds() {
+    void ensureGetEntries() {
 
         final UserId batmanId = new UserId("uuid-1");
         final UserLocalId batmanLocalId = new UserLocalId(1L);
@@ -997,7 +997,7 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("uuid-1", "uuid-2"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
-        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId, robinLocalId));
+        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntries(from, toExclusive, List.of(batmanLocalId, robinLocalId));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
@@ -1034,7 +1034,7 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("batman"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of());
 
-        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(userLocalId));
+        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntries(from, toExclusive, List.of(userLocalId));
 
         assertThat(actual)
             .hasSize(1)

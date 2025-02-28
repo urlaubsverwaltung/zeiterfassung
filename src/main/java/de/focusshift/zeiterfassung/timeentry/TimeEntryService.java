@@ -40,16 +40,6 @@ public interface TimeEntryService {
     List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId);
 
     /**
-     * {@linkplain TimeEntry}s for all users and the given interval.
-     *
-     * @param from first date of interval
-     * @param toExclusive last date (exclusive) of interval
-     *
-     * @return unsorted list of {@linkplain TimeEntry}s grouped by user
-     */
-    Map<UserIdComposite, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive);
-
-    /**
      * {@linkplain TimeEntry}s for all given users and interval.
      *
      * @param from first date of interval
@@ -58,7 +48,17 @@ public interface TimeEntryService {
      *
      * @return unsorted list of {@linkplain TimeEntry}s grouped by user
      */
-    Map<UserIdComposite, List<TimeEntry>> getEntriesByUserLocalIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds);
+    Map<UserIdComposite, List<TimeEntry>> getEntries(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds);
+
+    /**
+     * {@linkplain TimeEntry}s for all users and the given interval.
+     *
+     * @param from first date of interval
+     * @param toExclusive last date (exclusive) of interval
+     *
+     * @return unsorted list of {@linkplain TimeEntry}s grouped by user
+     */
+    Map<UserIdComposite, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive);
 
     /**
      * {@linkplain TimeEntryWeekPage}s for the given user and week of year with sorted {@linkplain TimeEntry}s
