@@ -213,10 +213,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public TimeEntry createTimeEntry(UserId userId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak) {
+    public TimeEntry createTimeEntry(UserLocalId userLocalId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak) {
+
+        final User user = findUser(userLocalId);
 
         final TimeEntryEntity entity = new TimeEntryEntity();
-        entity.setOwner(userId.value());
+        entity.setOwner(user.userIdComposite().id().value());
         entity.setComment(comment.strip());
         entity.setStart(start.toInstant());
         entity.setStartZoneId(start.getZone().getId());
@@ -224,7 +226,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         entity.setEndZoneId(end.getZone().getId());
         entity.setBreak(isBreak);
 
-        return save(entity);
+        return save(entity, user);
     }
 
     @Override
@@ -341,6 +343,11 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private TimeEntry save(TimeEntryEntity entity) {
         entity.setUpdatedAt(Instant.now(clock));
         return toTimeEntry(timeEntryRepository.save(entity));
+    }
+
+    private TimeEntry save(TimeEntryEntity entity, User timeEntryOwner) {
+        entity.setUpdatedAt(Instant.now(clock));
+        return toTimeEntry(timeEntryRepository.save(entity), timeEntryOwner);
     }
 
     private User findUser(UserId userId) {

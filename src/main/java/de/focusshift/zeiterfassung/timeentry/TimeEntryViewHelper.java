@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.security.AuthenticationFacade;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.slf4j.Logger;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
@@ -85,11 +86,11 @@ public class TimeEntryViewHelper {
             return;
         }
 
-        final UserId currentUserId = authenticationFacade.getCurrentUserIdComposite().id();
+        final UserLocalId userLocalId = authenticationFacade.getCurrentUserIdComposite().localId();
         final ZoneId zoneId = userSettingsProvider.zoneId();
 
         if (dto.getId() == null) {
-            createTimeEntry(dto, currentUserId, zoneId);
+            createTimeEntry(dto, userLocalId, zoneId);
         } else {
             throw new IllegalStateException("Expected timeEntry id not to be defined but has value. Did you meant to update the time entry?");
         }
@@ -176,7 +177,7 @@ public class TimeEntryViewHelper {
         redirectAttributes.addFlashAttribute("timeEntryErrorId", timeEntryDto.getId());
     }
 
-    private void createTimeEntry(TimeEntryDTO dto, UserId userId, ZoneId zoneId) {
+    private void createTimeEntry(TimeEntryDTO dto, UserLocalId userLocalId, ZoneId zoneId) {
 
         final ZonedDateTime start;
         final ZonedDateTime end;
@@ -197,7 +198,7 @@ public class TimeEntryViewHelper {
             end = start.plusMinutes(duration.toMinutes());
         }
 
-        timeEntryService.createTimeEntry(userId, dto.getComment(), start, end, dto.isBreak());
+        timeEntryService.createTimeEntry(userLocalId, dto.getComment(), start, end, dto.isBreak());
     }
 
     private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {
