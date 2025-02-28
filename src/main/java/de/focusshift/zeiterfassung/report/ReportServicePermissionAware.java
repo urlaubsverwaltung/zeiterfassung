@@ -29,11 +29,6 @@ class ReportServicePermissionAware implements ReportService {
     }
 
     @Override
-    public ReportWeek getReportWeek(Year year, int week, UserLocalId userLocalId) {
-        return getReportWeek(year, week, List.of(userLocalId));
-    }
-
-    @Override
     public ReportWeek getReportWeek(Year year, int week, List<UserLocalId> userLocalIds) {
 
         final List<UserLocalId> permittedUserLocalIds =
