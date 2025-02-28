@@ -62,7 +62,6 @@ public class CurrentOidcUser implements OidcUser {
      * @throws IllegalStateException when there is no {@link UserLocalId} present
      */
     public UserIdComposite getUserIdComposite() {
-        final UserId userId = getUserId();
         final UserLocalId localId = getUserLocalId().orElseThrow(() -> new IllegalStateException("expected userLocalId to be present for " + userId));
         return new UserIdComposite(userId, localId);
     }
