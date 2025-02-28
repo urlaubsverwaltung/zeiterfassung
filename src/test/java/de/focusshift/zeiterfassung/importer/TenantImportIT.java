@@ -183,7 +183,7 @@ class TenantImportIT extends MultiTenantTestContainersBase {
         final LocalDate from = LocalDate.of(2024, 6, 1);
         final LocalDate toExclusive = LocalDate.of(2024, 6, 4);
 
-        final List<TimeEntry> timeEntries = doWithTenant(() -> timeEntryService.getEntries(from, toExclusive, userIdComposite.id()));
+        final List<TimeEntry> timeEntries = doWithTenant(() -> timeEntryService.getEntries(from, toExclusive, userIdComposite.localId()));
         assertThat(timeEntries).satisfiesExactlyInAnyOrder(
             timeEntry -> {
                 assertThat(timeEntry.start()).isEqualTo(ZonedDateTime.parse("2024-06-01T08:00+02:00[Europe/Berlin]"));
