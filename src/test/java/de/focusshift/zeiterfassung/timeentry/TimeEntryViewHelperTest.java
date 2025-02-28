@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-import de.focusshift.zeiterfassung.security.AuthenticationService;
+import de.focusshift.zeiterfassung.security.AuthenticationFacade;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -47,11 +47,11 @@ class TimeEntryViewHelperTest {
     @Mock
     private UserSettingsProvider userSettingsProvider;
     @Mock
-    private AuthenticationService authenticationService;
+    private AuthenticationFacade authenticationFacade;
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationService);
+        sut = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationFacade);
     }
 
     @Test
@@ -169,7 +169,7 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            when(authenticationService.getCurrentUserIdComposite()).thenReturn(anyUserIdComposite());
+            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(anyUserIdComposite());
 
             assertThatThrownBy(() -> sut.createTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes))
                 .isInstanceOf(IllegalStateException.class)
@@ -180,7 +180,7 @@ class TimeEntryViewHelperTest {
         void ensureCreateTimeEntry() {
 
             final UserId userId = new UserId("user-id");
-            when(authenticationService.getCurrentUserIdComposite()).thenReturn(new UserIdComposite(userId, new UserLocalId(1L)));
+            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(new UserIdComposite(userId, new UserLocalId(1L)));
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
@@ -270,8 +270,8 @@ class TimeEntryViewHelperTest {
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(anyTimeEntry(timeEntryOwnerIdComposite)));
-            when(authenticationService.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
-            when(authenticationService.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)).thenReturn(false);
+            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
+            when(authenticationFacade.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)).thenReturn(false);
 
             assertThatThrownBy(() -> sut.updateTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes))
                 .isInstanceOf(AccessDeniedException.class)
@@ -300,7 +300,7 @@ class TimeEntryViewHelperTest {
             when(bindingResult.hasFieldErrors("duration")).thenReturn(false);
 
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
-            when(authenticationService.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
+            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
 
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
@@ -329,7 +329,7 @@ class TimeEntryViewHelperTest {
             when(bindingResult.hasFieldErrors("duration")).thenReturn(true);
 
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
-            when(authenticationService.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
+            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
 
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
@@ -358,7 +358,7 @@ class TimeEntryViewHelperTest {
             when(bindingResult.hasFieldErrors("duration")).thenReturn(true);
 
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
-            when(authenticationService.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
+            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
 
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
@@ -382,7 +382,7 @@ class TimeEntryViewHelperTest {
             timeEntryDTO.setId(1L);
 
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
-            when(authenticationService.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
+            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
 
             final BindingResult bindingResult = mock(BindingResult.class);
             when(bindingResult.hasErrors()).thenReturn(true);
@@ -415,7 +415,7 @@ class TimeEntryViewHelperTest {
             timeEntryDto.setBreak(false);
 
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
-            when(authenticationService.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
+            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -457,8 +457,8 @@ class TimeEntryViewHelperTest {
             timeEntryDto.setBreak(false);
 
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(anyTimeEntry(timeEntryOwnerIdComposite)));
-            when(authenticationService.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
-            when(authenticationService.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)).thenReturn(true);
+            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
+            when(authenticationFacade.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)).thenReturn(true);
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -491,7 +491,7 @@ class TimeEntryViewHelperTest {
             timeEntryDto.setBreak(false);
 
             when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
-            when(authenticationService.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
+            when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(loggedInUserIdComposite);
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
             when(timeEntryService.updateTimeEntry(any(TimeEntryId.class), anyString(), any(ZonedDateTime.class), any(ZonedDateTime.class), any(Duration.class), anyBoolean()))

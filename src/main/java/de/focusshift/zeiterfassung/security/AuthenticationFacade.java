@@ -15,7 +15,7 @@ import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
-public class AuthenticationService {
+public class AuthenticationFacade {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 

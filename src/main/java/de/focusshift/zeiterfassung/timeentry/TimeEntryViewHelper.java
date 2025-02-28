@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-import de.focusshift.zeiterfassung.security.AuthenticationService;
+import de.focusshift.zeiterfassung.security.AuthenticationFacade;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.slf4j.Logger;
@@ -31,13 +31,13 @@ public class TimeEntryViewHelper {
 
     private final TimeEntryService timeEntryService;
     private final UserSettingsProvider userSettingsProvider;
-    private final AuthenticationService authenticationService;
+    private final AuthenticationFacade authenticationFacade;
 
     public TimeEntryViewHelper(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider,
-                               AuthenticationService authenticationService) {
+                               AuthenticationFacade authenticationFacade) {
         this.timeEntryService = timeEntryService;
         this.userSettingsProvider = userSettingsProvider;
-        this.authenticationService = authenticationService;
+        this.authenticationFacade = authenticationFacade;
     }
 
     public void addTimeEntryToModel(Model model, TimeEntryDTO timeEntryDTO) {
@@ -85,7 +85,7 @@ public class TimeEntryViewHelper {
             return;
         }
 
-        final UserId currentUserId = authenticationService.getCurrentUserIdComposite().id();
+        final UserId currentUserId = authenticationFacade.getCurrentUserIdComposite().id();
         final ZoneId zoneId = userSettingsProvider.zoneId();
 
         if (dto.getId() == null) {
@@ -119,9 +119,9 @@ public class TimeEntryViewHelper {
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(dto.getId())
             .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
-        final UserId currentUserId = authenticationService.getCurrentUserIdComposite().id();
+        final UserId currentUserId = authenticationFacade.getCurrentUserIdComposite().id();
         final boolean idOwner = timeEntry.userIdComposite().id().equals(currentUserId);
-        final boolean allowedToEdit = authenticationService.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
+        final boolean allowedToEdit = authenticationFacade.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
 
         if (!allowedToEdit && !idOwner) {
             throw new AccessDeniedException("Not allowed to edit time entry with %s.".formatted(timeEntryId));

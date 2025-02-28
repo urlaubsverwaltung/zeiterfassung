@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
-import de.focusshift.zeiterfassung.security.AuthenticationService;
+import de.focusshift.zeiterfassung.security.AuthenticationFacade;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -27,31 +27,31 @@ class ReportPermissionServiceTest {
     private ReportPermissionService sut;
 
     @Mock
-    private AuthenticationService authenticationService;
+    private AuthenticationFacade authenticationFacade;
     @Mock
     private UserManagementService userManagementService;
 
     @BeforeEach
     void setUp() {
-        sut = new ReportPermissionService(authenticationService, userManagementService);
+        sut = new ReportPermissionService(authenticationFacade, userManagementService);
     }
 
     @Test
     void ensureCurrentUserHasPermissionForAllUsers() {
-        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
+        when(authenticationFacade.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
         assertThat(sut.currentUserHasPermissionForAllUsers()).isTrue();
     }
 
     @Test
     void ensureCurrentUserHasPermissionForAllUsersIsFalseWhenAuthorityIsNotGiven() {
-        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
+        when(authenticationFacade.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
         assertThat(sut.currentUserHasPermissionForAllUsers()).isFalse();
     }
 
     @Test
     void ensureFilterUserLocalIdsByCurrentUserHasPermissionForReturnsTheListWhenUserHasPermissionForAll() {
 
-        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
+        when(authenticationFacade.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
 
         final List<UserLocalId> userLocalIds = List.of(new UserLocalId(1L), new UserLocalId(2L));
 
@@ -62,12 +62,12 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFilterUserLocalIdsByCurrentUserHasPermissionForReturnsListForCurrentUserOnly() {
 
-        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
+        when(authenticationFacade.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
 
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(2L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        when(authenticationService.getCurrentUserIdComposite()).thenReturn(userIdComposite);
+        when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(userIdComposite);
 
         final List<UserLocalId> actual = sut.filterUserLocalIdsByCurrentUserHasPermissionFor(
             List.of(new UserLocalId(1L), userLocalId, new UserLocalId(3L)));
@@ -78,12 +78,12 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFilterUserLocalIdsByCurrentUserHasPermissionForReturnsEmptyList() {
 
-        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
+        when(authenticationFacade.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
 
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(2L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        when(authenticationService.getCurrentUserIdComposite()).thenReturn(userIdComposite);
+        when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(userIdComposite);
 
         final List<UserLocalId> actual = sut.filterUserLocalIdsByCurrentUserHasPermissionFor(
             List.of(new UserLocalId(1L), new UserLocalId(3L)));
@@ -94,7 +94,7 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFindAllPermittedUserLocalIdsForCurrentUser() {
 
-        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
+        when(authenticationFacade.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
 
         final UserId userId_1 = new UserId("");
         final UserLocalId userLocalId_1 = new UserLocalId(1L);
@@ -122,12 +122,12 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFindAllPermittedUserLocalIdsForCurrentUserReturnsCurrentUserOnly() {
 
-        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
+        when(authenticationFacade.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
 
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        when(authenticationService.getCurrentUserIdComposite()).thenReturn(userIdComposite);
+        when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(userIdComposite);
 
         assertThat(sut.findAllPermittedUserLocalIdsForCurrentUser()).containsOnly(userLocalId);
     }
@@ -135,7 +135,7 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFindAllPermittedUsersForCurrentUser() {
 
-        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
+        when(authenticationFacade.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(true);
 
         final UserId userId_1 = new UserId("");
         final UserLocalId userLocalId_1 = new UserLocalId(1L);
@@ -163,12 +163,12 @@ class ReportPermissionServiceTest {
     @Test
     void ensureFindAllPermittedUsersForCurrentUserReturnsOnlyItself() {
 
-        when(authenticationService.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
+        when(authenticationFacade.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL)).thenReturn(false);
 
         final UserId userId = new UserId("");
         final UserLocalId userLocalId = new UserLocalId(2L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        when(authenticationService.getCurrentUserIdComposite()).thenReturn(userIdComposite);
+        when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(userIdComposite);
 
         final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
         when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));

@@ -3,7 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
-import de.focusshift.zeiterfassung.security.AuthenticationService;
+import de.focusshift.zeiterfassung.security.AuthenticationFacade;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -66,13 +66,13 @@ class TimeEntryControllerTest implements ControllerTest {
 
     private Clock clock = Clock.systemUTC();
 
-    private AuthenticationService authenticationService;
+    private AuthenticationFacade authenticationFacade;
     private TimeEntryViewHelper timeEntryViewHelper;
 
     @BeforeEach
     void setUp() {
-        authenticationService = new AuthenticationService();
-        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationService);
+        authenticationFacade = new AuthenticationFacade();
+        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationFacade);
         sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
     }
 
