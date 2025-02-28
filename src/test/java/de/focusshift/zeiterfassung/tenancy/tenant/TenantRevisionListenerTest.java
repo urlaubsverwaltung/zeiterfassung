@@ -1,26 +1,20 @@
 package de.focusshift.zeiterfassung.tenancy.tenant;
 
-import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.security.AuthenticationFacade;
+import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -33,10 +27,12 @@ class TenantRevisionListenerTest {
 
     @Mock
     private TenantContextHolder tenantContextHolder;
+    @Mock
+    private AuthenticationFacade authenticationFacade;
 
     @BeforeEach
     void setUp() {
-        sut = new TenantRevisionListener(tenantContextHolder);
+        sut = new TenantRevisionListener(tenantContextHolder, authenticationFacade);
     }
 
     @Test
@@ -76,40 +72,23 @@ class TenantRevisionListenerTest {
     void ensureNewRevisionSetsUpdatedBy() {
 
         when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+        when(authenticationFacade.getCurrentUserIdComposite()).thenReturn(new UserIdComposite(new UserId("subject"), new UserLocalId(1L)));
 
-        final DefaultOidcUser oidcUser = new DefaultOidcUser(List.of(), OidcIdToken.withTokenValue("token").subject("subject").build());
-        final CurrentOidcUser currentOidcUser = new CurrentOidcUser(oidcUser, List.of(), List.of(), new UserLocalId(1L));
-        final OAuth2AuthenticationToken token = new OAuth2AuthenticationToken(currentOidcUser, List.of(), "client-id");
+        final TenantAwareRevisionEntity entity = mock(TenantAwareRevisionEntity.class);
+        sut.newRevision(entity);
 
-        final SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(token);
-
-        try (MockedStatic<SecurityContextHolder> securityContextMock = mockStatic(SecurityContextHolder.class)) {
-            securityContextMock.when(SecurityContextHolder::getContext).thenReturn(securityContext);
-
-            final TenantAwareRevisionEntity entity = mock(TenantAwareRevisionEntity.class);
-            sut.newRevision(entity);
-
-            verify(entity).setUpdatedBy("subject");
-        }
+        verify(entity).setUpdatedBy("subject");
     }
 
     @Test
     void ensureNewRevisionDoesNotSetUpdatedBy() {
 
         when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+        when(authenticationFacade.getCurrentUserIdComposite()).thenThrow(new IllegalStateException(""));
 
+        final TenantAwareRevisionEntity entity = mock(TenantAwareRevisionEntity.class);
+        sut.newRevision(entity);
 
-        final SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(null);
-
-        try (MockedStatic<SecurityContextHolder> securityContextMock = mockStatic(SecurityContextHolder.class)) {
-            securityContextMock.when(SecurityContextHolder::getContext).thenReturn(securityContext);
-
-            final TenantAwareRevisionEntity entity = mock(TenantAwareRevisionEntity.class);
-            sut.newRevision(entity);
-
-            verify(entity, times(0)).setUpdatedBy(anyString());
-        }
+        verify(entity, times(0)).setUpdatedBy(anyString());
     }
 }
