@@ -123,9 +123,11 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserId userId) {
+    public List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId) {
 
-        final User user = findUser(userId);
+        final User user = findUser(userLocalId);
+        final UserId userId = user.userIdComposite().id();
+
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
 

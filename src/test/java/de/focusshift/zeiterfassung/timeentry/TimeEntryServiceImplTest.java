@@ -1070,9 +1070,9 @@ class TimeEntryServiceImplTest {
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
 
-        final List<TimeEntry> actualEntries = sut.getEntries(periodFrom, periodToExclusive, userId);
+        final List<TimeEntry> actualEntries = sut.getEntries(periodFrom, periodToExclusive, userLocalId);
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);

@@ -29,10 +29,8 @@ class ReportServicePermissionAware implements ReportService {
     }
 
     @Override
-    public ReportWeek getReportWeek(Year year, int week, UserId userId) {
-
-        // UserId is considered trustworthy since it is created on server side only (without client input, at least for time of writing this...)
-        return reportServiceRaw.getReportWeek(year, week, userId);
+    public ReportWeek getReportWeek(Year year, int week, UserLocalId userLocalId) {
+        return getReportWeek(year, week, List.of(userLocalId));
     }
 
     @Override

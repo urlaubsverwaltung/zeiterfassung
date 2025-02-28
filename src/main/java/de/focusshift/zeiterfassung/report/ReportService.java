@@ -13,7 +13,7 @@ import java.util.List;
  */
 interface ReportService {
 
-    ReportWeek getReportWeek(Year year, int week, UserId userId);
+    ReportWeek getReportWeek(Year year, int week, UserLocalId userLocalId);
 
     ReportWeek getReportWeek(Year year, int week, List<UserLocalId> userLocalIds);
 
