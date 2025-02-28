@@ -30,6 +30,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +40,7 @@ import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -62,13 +64,87 @@ class TimeEntryControllerTest implements ControllerTest {
     @Mock
     private DateFormatter dateFormatter;
 
-    private final Clock clock = Clock.systemUTC();
+    private Clock clock = Clock.systemUTC();
+
+    private AuthenticationService authenticationService;
+    private TimeEntryViewHelper timeEntryViewHelper;
 
     @BeforeEach
     void setUp() {
-        final AuthenticationService authenticationService = new AuthenticationService();
-        final TimeEntryViewHelper viewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationService);
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, viewHelper, clock);
+        authenticationService = new AuthenticationService();
+        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationService);
+        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+    }
+
+    @Test
+    void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
+
+        clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
+        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneOffset.UTC);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final ZonedDateTime expectedStart = ZonedDateTime.parse("2025-02-28T14:30:00.00Z");
+        final ZonedDateTime expectedEnd = ZonedDateTime.parse("2025-02-28T15:00:00.00Z");
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
+
+        final LocalDate timeEntryDate = LocalDate.parse("2025-02-28");
+        final LocalDate firstDateOfWeek = LocalDate.parse("2025-02-24");
+
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(timeEntryDate, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(firstDateOfWeek, PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
+        final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
+        when(timeEntryService.getEntryWeekPage(userId, 2025, 9)).thenReturn(timeEntryWeekPage);
+
+        when(dateFormatter.formatDate(any(LocalDate.class), eq(MonthFormat.STRING), eq(YearFormat.FULL))).thenReturn("formatted-date-year-full");
+        when(dateFormatter.formatDate(any(LocalDate.class), eq(MonthFormat.STRING), eq(YearFormat.NONE))).thenReturn("formatted-date");
+
+        final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
+            .id(1L)
+            .date(timeEntryDate)
+            .start(LocalTime.of(14, 30))
+            .end(LocalTime.of(15, 0))
+            .duration("00:30")
+            .comment("hack the planet")
+            .build();
+
+        final TimeEntryDayDto expectedTimeEntryDayDto = TimeEntryDayDto.builder()
+            .date("formatted-date-year-full")
+            .dayOfWeek(DayOfWeek.FRIDAY)
+            .hoursWorked("00:30")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:30")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(7.0)
+            .timeEntries(List.of(expectedTimeEntryDto))
+            .absenceEntries(List.of())
+            .build();
+
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = TimeEntryWeekDto.builder()
+            .calendarWeek(9)
+            .from("formatted-date")
+            .to("formatted-date-year-full")
+            .hoursWorked("00:30")
+            .hoursWorkedShould("08:00")
+            .hoursDelta("07:30")
+            .hoursDeltaNegative(true)
+            .hoursWorkedRatio(7.0)
+            .days(List.of(expectedTimeEntryDayDto))
+            .build();
+
+        final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(
+            2025, 10, 2025, 8, expectedTimeEntryWeekDto, 1337);
+
+        perform(
+            get("/timeentries")
+                .with(oidcSubject(userIdComposite))
+        )
+            .andExpect(view().name("timeentries/index"))
+            .andExpect(model().attribute("timeEntryWeeksPage", is(expectedPage)));
     }
 
     @Test
