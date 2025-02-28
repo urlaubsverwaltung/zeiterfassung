@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static org.hamcrest.Matchers.contains;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -114,12 +115,16 @@ class PermissionsControllerTest implements ControllerTest {
         final PermissionsDto permissionsPermissionDto = new PermissionsDto();
         permissionsPermissionDto.setPermissionsEditAll(true);
 
+        final PermissionsDto editTimeEntryPermissionDto = new PermissionsDto();
+        editTimeEntryPermissionDto.setTimeEntryEditAll(true);
+
         return Stream.of(
             Arguments.of(SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL, reportPermissionDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, workingTimeAllPermissionDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL, workingTimeGlobalPermissionDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, overtimePermissionDto),
-            Arguments.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, permissionsPermissionDto)
+            Arguments.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, permissionsPermissionDto),
+            Arguments.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL, editTimeEntryPermissionDto)
         );
     }
 
