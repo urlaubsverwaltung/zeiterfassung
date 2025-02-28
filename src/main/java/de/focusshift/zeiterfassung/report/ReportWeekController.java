@@ -157,7 +157,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         }
 
         // preserve scroll position after editing a timeEntry
-        redirectAttributes.addFlashAttribute(TURBO_REFRESH_SCROLL_ATTRIBUTE, PRESERVE);
+        redirectAttributes.addFlashAttribute(TURBO_REFRESH_SCROLL_ATTRIBUTE, PRESERVE.getValue());
 
         final String url = createWeeklyUserReportUrl(year, week, allUsersSelectedParam, userIdsParam, null);
         return new ModelAndView("redirect:%s".formatted(url));
