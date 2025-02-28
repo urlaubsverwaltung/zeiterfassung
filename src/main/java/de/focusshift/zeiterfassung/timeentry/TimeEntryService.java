@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.annotation.Nullable;
@@ -33,13 +32,12 @@ public interface TimeEntryService {
     /**
      * {@linkplain TimeEntry}s for the given criteria sorted by {@linkplain TimeEntry#start()}, newest is the first item.
      *
-     * @param from first date of interval
-     * @param toExclusive last date (exclusive) of interval
-     * @param userId to get {@linkplain TimeEntry}s for
-     *
+     * @param from         first date of interval
+     * @param toExclusive  last date (exclusive) of interval
+     * @param userLocalId to get {@linkplain TimeEntry}s for
      * @return sorted list of {@linkplain TimeEntry}s
      */
-    List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserId userId);
+    List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId);
 
     /**
      * {@linkplain TimeEntry}s for all users and the given interval.
