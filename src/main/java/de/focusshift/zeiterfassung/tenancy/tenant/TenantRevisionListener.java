@@ -1,12 +1,9 @@
 package de.focusshift.zeiterfassung.tenancy.tenant;
 
+import de.focusshift.zeiterfassung.security.AuthenticationFacade;
+import de.focusshift.zeiterfassung.user.UserId;
 import org.hibernate.envers.RevisionListener;
 import org.slf4j.Logger;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import static java.lang.invoke.MethodHandles.lookup;
@@ -18,9 +15,11 @@ class TenantRevisionListener implements RevisionListener {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final TenantContextHolder tenantContextHolder;
+    private final AuthenticationFacade authenticationFacade;
 
-    TenantRevisionListener(TenantContextHolder tenantContextHolder) {
+    TenantRevisionListener(TenantContextHolder tenantContextHolder, AuthenticationFacade authenticationFacade) {
         this.tenantContextHolder = tenantContextHolder;
+        this.authenticationFacade = authenticationFacade;
     }
 
     @Override
@@ -41,20 +40,11 @@ class TenantRevisionListener implements RevisionListener {
     }
 
     private void setUpdatedBy(TenantAwareRevisionEntity entity) {
-
-        // TODO use AuthenticationService to get userId?
-        final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth instanceof OAuth2AuthenticationToken token) {
-            final OAuth2User principal = token.getPrincipal();
-            if (principal instanceof OidcUser oidcUser) {
-                final String userIdValue = oidcUser.getSubject();
-                entity.setUpdatedBy(userIdValue);
-            } else {
-                LOG.info("Skip setting updated_by information on audited entity. Unexpected principal class {}", principal.getClass());
-            }
-        } else {
-            LOG.info("Skip setting updated_by information on audited entity. Unexpected authentication: {}", auth);
+        try {
+            final UserId userId = authenticationFacade.getCurrentUserIdComposite().id();
+            entity.setUpdatedBy(userId.value());
+        } catch (Exception exception) {
+            LOG.info("Skip setting updated_by information on audited entity. UserId could not be recognised in current Authentication", exception);
         }
     }
 }
