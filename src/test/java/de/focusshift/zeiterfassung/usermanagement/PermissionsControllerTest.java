@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.security.SessionService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
@@ -29,10 +30,10 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static org.hamcrest.Matchers.contains;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -42,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
-class PermissionsControllerTest {
+class PermissionsControllerTest implements ControllerTest {
 
     private PermissionsController sut;
 
@@ -81,7 +82,7 @@ class PermissionsControllerTest {
 
         perform(
             get("/users/1337/permissions")
-                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .with(oidcSubject("batman").authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -114,12 +115,16 @@ class PermissionsControllerTest {
         final PermissionsDto permissionsPermissionDto = new PermissionsDto();
         permissionsPermissionDto.setPermissionsEditAll(true);
 
+        final PermissionsDto editTimeEntryPermissionDto = new PermissionsDto();
+        editTimeEntryPermissionDto.setTimeEntryEditAll(true);
+
         return Stream.of(
             Arguments.of(SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL, reportPermissionDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, workingTimeAllPermissionDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL, workingTimeGlobalPermissionDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, overtimePermissionDto),
-            Arguments.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, permissionsPermissionDto)
+            Arguments.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, permissionsPermissionDto),
+            Arguments.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL, editTimeEntryPermissionDto)
         );
     }
 
@@ -136,7 +141,7 @@ class PermissionsControllerTest {
 
         perform(
             get("/users/1337/permissions")
-                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .with(oidcSubject("batman").authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
         )
             .andExpect(status().isOk())
             .andExpect(model().attribute("permissions", permissionsDto));
@@ -164,7 +169,7 @@ class PermissionsControllerTest {
 
         perform(
             get("/users/1337/permissions")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority(authority)))
+                .with(oidcSubject("batman").authorities(new SimpleGrantedAuthority(authority)))
         )
             .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTimeAll))
             .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount))
@@ -196,7 +201,7 @@ class PermissionsControllerTest {
 
         perform(
             get("/users/1337/permissions")
-                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .with(oidcSubject("batman").authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
                 .header("Turbo-Frame", "person-frame")
         )
             .andExpect(status().isOk())
@@ -225,7 +230,7 @@ class PermissionsControllerTest {
 
         perform(
             get("/users/1337/permissions")
-                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .with(oidcSubject("batman").authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
                 .param("query", "awesome-query")
         )
             .andExpect(status().isOk())
@@ -245,7 +250,7 @@ class PermissionsControllerTest {
 
         perform(
             get("/users/1337/permissions")
-                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .with(oidcSubject("batman").authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
                 .param("query", "awesome-query")
                 .header("Turbo-Frame", "person-list-frame")
         )
@@ -274,7 +279,7 @@ class PermissionsControllerTest {
 
         perform(
             get("/users/1337/permissions")
-                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .with(oidcSubject("batman").authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
                 .param("query", "super")
         )
             .andExpect(status().isOk())
@@ -306,7 +311,7 @@ class PermissionsControllerTest {
 
         perform(
             post("/users/1337/permissions")
-                .with(oidcLogin().authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .with(oidcSubject("batman").authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
                 .param("viewReportAll", String.valueOf(viewReportAll))
                 .param("workingTimeEditAll", String.valueOf(workingTimeEditAll))
                 .param("overtimeEditAll", String.valueOf(overtimeEditAll))

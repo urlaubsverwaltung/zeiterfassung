@@ -1,9 +1,9 @@
 package de.focusshift.zeiterfassung.tenancy.tenant;
 
+import de.focusshift.zeiterfassung.security.AuthenticationFacade;
+import de.focusshift.zeiterfassung.user.UserId;
 import org.hibernate.envers.RevisionListener;
 import org.slf4j.Logger;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import static java.lang.invoke.MethodHandles.lookup;
@@ -15,9 +15,11 @@ class TenantRevisionListener implements RevisionListener {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final TenantContextHolder tenantContextHolder;
+    private final AuthenticationFacade authenticationFacade;
 
-    TenantRevisionListener(TenantContextHolder tenantContextHolder) {
+    TenantRevisionListener(TenantContextHolder tenantContextHolder, AuthenticationFacade authenticationFacade) {
         this.tenantContextHolder = tenantContextHolder;
+        this.authenticationFacade = authenticationFacade;
     }
 
     @Override
@@ -38,13 +40,11 @@ class TenantRevisionListener implements RevisionListener {
     }
 
     private void setUpdatedBy(TenantAwareRevisionEntity entity) {
-
-        final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) {
-            LOG.info("No authentication found. Skip setting updated_by information on audited entity");
-        } else {
-            final String name = auth.getName();
-            entity.setUpdatedBy(name);
+        try {
+            final UserId userId = authenticationFacade.getCurrentUserIdComposite().id();
+            entity.setUpdatedBy(userId.value());
+        } catch (Exception exception) {
+            LOG.info("Skip setting updated_by information on audited entity. UserId could not be recognised in current Authentication", exception);
         }
     }
 }

@@ -1,6 +1,9 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.ControllerTest;
+import de.focusshift.zeiterfassung.security.AuthenticationFacade;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
@@ -16,15 +19,20 @@ import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
-import org.springframework.security.web.context.SecurityContextPersistenceFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -42,15 +50,20 @@ import static java.util.Locale.GERMAN;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
-class ReportMonthControllerTest {
+class ReportMonthControllerTest implements ControllerTest {
 
     private ReportMonthController sut;
 
@@ -65,18 +78,26 @@ class ReportMonthControllerTest {
     @Mock
     private UserManagementService userManagementService;
     @Mock
+    private AuthenticationFacade authenticationFacade;
+    @Mock
     private MessageSource messageSource;
+
+    private DateFormatterImpl dateFormatter;
+    private DateRangeFormatter dateRangeFormatter;
+    private ReportViewHelper reportViewHelper;
+    private TimeEntryViewHelper timeEntryViewHelper;
+    private TimeEntryDialogHelper timeEntryDialogHelper;
 
     private final Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
-        final DateFormatterImpl dateFormatter = new DateFormatterImpl();
-        final DateRangeFormatter dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
-        final ReportViewHelper helper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
-        final TimeEntryViewHelper timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
-        final TimeEntryDialogHelper timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
-        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, helper, timeEntryDialogHelper, clock);
+        dateFormatter = new DateFormatterImpl();
+        dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
+        reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
+        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationFacade);
+        timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper, timeEntryDialogHelper, clock);
     }
 
     @Test
@@ -94,7 +115,7 @@ class ReportMonthControllerTest {
 
         when(messageSource.getMessage(anyString(), any(), any(Locale.class))).thenAnswer(returnsFirstArg());
 
-        final UserId userId = new UserId("user-id");
+        final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
@@ -132,7 +153,7 @@ class ReportMonthControllerTest {
             )
         );
 
-        when(reportService.getReportMonth(YearMonth.of(2023, 2), new UserId("batman")))
+        when(reportService.getReportMonth(YearMonth.of(2023, 2), userId))
             .thenReturn(reportMonth);
 
         final GraphMonthDto graphMonthDto = new GraphMonthDto(
@@ -244,7 +265,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2023/month/2")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject(userIdComposite))
                 .locale(GERMAN)
         )
             .andExpect(model().attribute("monthReport", graphMonthDto));
@@ -258,7 +279,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(model().attribute("userReportPreviousSectionUrl", "/report/year/2021/month/12"))
             .andExpect(model().attribute("userReportTodaySectionUrl", "/report/month"))
@@ -273,7 +294,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("everyone", "")
         )
             .andExpect(model().attribute("userReportPreviousSectionUrl", "/report/year/2021/month/12?everyone="))
@@ -289,7 +310,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("user", "1", "2", "42")
         )
             .andExpect(model().attribute("userReportPreviousSectionUrl", "/report/year/2021/month/12?user=1&user=2&user=42"))
@@ -305,7 +326,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
         )
             .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/month/1?csv"));
     }
@@ -318,7 +339,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("everyone", "")
         )
             .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/month/1?everyone=&csv"));
@@ -332,7 +353,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("user", "1", "2", "42")
         )
             .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/month/1?user=1&user=2&user=42&csv"));
@@ -350,7 +371,7 @@ class ReportMonthControllerTest {
         when(reportService.getReportMonth(YearMonth.of(2022, 1), userId))
             .thenReturn(anyReportMonth());
 
-        perform(get("/report/year/2022/month/1").with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))))
+        perform(get("/report/year/2022/month/1").with(oidcSubject("batman")))
             .andExpect(model().attributeDoesNotExist("users", "selectedUserIds", "allUsersSelected", "userReportFilterUrl"));
     }
 
@@ -378,7 +399,7 @@ class ReportMonthControllerTest {
         when(reportService.getReportMonth(YearMonth.of(2022, 1), new UserId("batman")))
             .thenReturn(anyReportMonth());
 
-        perform(get("/report/year/2022/month/1").with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman"))))
+        perform(get("/report/year/2022/month/1").with(oidcSubject("batman")))
             .andExpect(model().attribute("users", List.of(
                 new SelectableUserDto(1L, "Bruce Wayne", false),
                 new SelectableUserDto(3L, "Dick Grayson", false),
@@ -415,7 +436,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("everyone", "")
         )
             .andExpect(model().attribute("users", List.of(
@@ -454,7 +475,7 @@ class ReportMonthControllerTest {
 
         perform(
             get("/report/year/2022/month/1")
-                .with(oidcLogin().userInfoToken(userInfo -> userInfo.subject("batman")))
+                .with(oidcSubject("batman"))
                 .param("user", "2", "3")
         )
             .andExpect(model().attribute("users", List.of(
@@ -465,6 +486,69 @@ class ReportMonthControllerTest {
             .andExpect(model().attribute("selectedUserIds", List.of(2L, 3L)))
             .andExpect(model().attribute("allUsersSelected", false))
             .andExpect(model().attribute("userReportFilterUrl", "/report/year/2022/month/1"));
+    }
+
+    @Nested
+    class EditTimeEntry {
+
+        @BeforeEach
+        void setUp() {
+            timeEntryDialogHelper = mock(TimeEntryDialogHelper.class);
+            sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper, timeEntryDialogHelper, clock);
+        }
+
+        @Test
+        void ensureEditTimeEntryWithValidationConstraints() throws Exception {
+
+            perform(post("/report/year/2025/month/2")
+                .param("id", "1")
+            )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("http://localhost/report/year/2025/month/2?timeEntryId=1"));
+
+            // must be called even with initial constraint violations
+            // since the helper adds further stuff to the model
+            verify(timeEntryDialogHelper).saveTimeEntry(any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+        }
+
+        @Test
+        void ensureEditTimeEntry() throws Exception {
+
+            perform(post("/report/year/2025/month/2")
+                .param("date", "2025-02-28")
+                .param("start", "14:30")
+                .param("end", "15:00")
+            )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("http://localhost/report/year/2025/month/2"))
+                .andExpect(flash().attribute("turboRefreshScroll", "preserve"));
+
+            verify(timeEntryDialogHelper).saveTimeEntry(any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+        }
+
+        @Test
+        void ensureEditTimeEntryWithParameterEveryone() throws Exception {
+
+            perform(post("/report/year/2025/month/2")
+                .param("everyone", "true")
+                .param("date", "2025-02-28")
+                .param("start", "14:30")
+                .param("end", "15:00")
+            )
+                .andExpect(redirectedUrl("http://localhost/report/year/2025/month/2?everyone=true"));
+        }
+
+        @Test
+        void ensureEditTimeEntryWithParameterUser() throws Exception {
+
+            perform(post("/report/year/2025/month/2")
+                .param("user", "1", "2")
+                .param("date", "2025-02-28")
+                .param("start", "14:30")
+                .param("end", "15:00")
+            )
+                .andExpect(redirectedUrl("http://localhost/report/year/2025/month/2?user=1&user=2"));
+        }
     }
 
     private static ReportMonth anyReportMonth() {
@@ -518,7 +602,7 @@ class ReportMonthControllerTest {
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
         return standaloneSetup(sut)
-            .addFilters(new SecurityContextPersistenceFilter())
+            .addFilters(new SecurityContextHolderFilter(new HttpSessionSecurityContextRepository()))
             .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
             .build()
             .perform(builder);

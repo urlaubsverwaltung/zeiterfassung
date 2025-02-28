@@ -1,10 +1,10 @@
 package de.focusshift.zeiterfassung.feedback;
 
+import de.focusshift.zeiterfassung.security.CurrentUser;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,9 +24,9 @@ class FeedbackViewController {
     }
 
     @PostMapping
-    public String feedback(FeedbackDto feedbackDto, @AuthenticationPrincipal OidcUser principal, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+    public String feedback(FeedbackDto feedbackDto, @CurrentUser CurrentOidcUser currentUser, HttpServletRequest request, RedirectAttributes redirectAttributes) {
 
-        feedbackService.sendFeedback(new EMailAddress(principal.getEmail()), feedbackDto.body());
+        feedbackService.sendFeedback(new EMailAddress(currentUser.getEmail()), feedbackDto.body());
 
         redirectAttributes.addFlashAttribute(FLASH_FEEDBACK_GIVEN, true);
 
