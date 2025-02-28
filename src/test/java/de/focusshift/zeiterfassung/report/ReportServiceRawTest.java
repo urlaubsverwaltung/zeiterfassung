@@ -69,12 +69,12 @@ class ReportServiceRawTest {
     void ensureReportWeekFirstDateOfWeekIsMonday() {
 
         final User user = anyUser();
-        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
+        when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
 
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userId());
+        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userLocalId());
         assertThat(actualReportWeek.firstDateOfWeek().getDayOfWeek()).isEqualTo(MONDAY);
     }
 
@@ -82,15 +82,15 @@ class ReportServiceRawTest {
     void ensureReportWeekWithoutTimeEntriesFirstWeekOfYear() {
 
         final User user = anyUser();
-        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
+        when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
 
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), new UserId("batman")))
+        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
             .thenReturn(List.of());
 
-        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userId());
+        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userLocalId());
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
@@ -103,7 +103,7 @@ class ReportServiceRawTest {
     void ensureReportWeekWithOneTimeEntryADay() {
 
         final User user = anyUser();
-        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
+        when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
 
         final ZonedDateTime firstFrom = dateTime(2021, 1, 4, 10, 0);
         final ZonedDateTime firstTo = dateTime(2021, 1, 4, 11, 0);
@@ -116,12 +116,10 @@ class ReportServiceRawTest {
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userId()))
+        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
             .thenReturn(List.of(firstTimeEntry, secondTimeEntry));
 
-        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
-
-        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userId());
+        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userLocalId());
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
@@ -138,7 +136,7 @@ class ReportServiceRawTest {
     void ensureReportWeekWithMultipleTimeEntriesADay() {
 
         final User user = anyUser();
-        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
+        when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
 
         final ZonedDateTime morningFrom = dateTime(2021, 1, 5, 10, 0);
         final ZonedDateTime morningTo = dateTime(2021, 1, 5, 11, 0);
@@ -151,12 +149,10 @@ class ReportServiceRawTest {
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userId()))
+        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
             .thenReturn(List.of(morningTimeEntry, noonTimeEntry));
 
-        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
-
-        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, new UserId("batman"));
+        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userLocalId());
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
@@ -173,7 +169,7 @@ class ReportServiceRawTest {
     void ensureReportWeekWithTimeEntryTouchingNextDayIsReportedForStartingDate() {
 
         final User user = anyUser();
-        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
+        when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
 
         final ZonedDateTime from = dateTime(2021, 1, 4, 22, 0);
         final ZonedDateTime to = dateTime(2021, 1, 5, 3, 0);
@@ -182,12 +178,10 @@ class ReportServiceRawTest {
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userId()))
+        when(timeEntryService.getEntries(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
             .thenReturn(List.of(timeEntry));
 
-        when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
-
-        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userId());
+        final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userLocalId());
 
         assertThat(actualReportWeek.reportDays()).hasSize(7);
 
