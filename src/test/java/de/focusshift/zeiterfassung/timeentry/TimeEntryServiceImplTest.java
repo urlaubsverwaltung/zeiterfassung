@@ -1121,7 +1121,7 @@ class TimeEntryServiceImplTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(batman));
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(batman));
 
         when(workingTimeCalendarService.getWorkingTimeCalender(firstDayOfWeek, firstDayOfWeek.plusWeeks(1), userLocalId))
             .thenReturn(new WorkingTimeCalendar(Map.of(
@@ -1134,7 +1134,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2022, 1, 9), PlannedWorkingHours.ZERO  // sunday
             ), Map.of()));
 
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userId, 2022, 1);
+        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2022, 1);
 
         assertThat(actual).isEqualTo(
             new TimeEntryWeekPage(
@@ -1232,7 +1232,7 @@ class TimeEntryServiceImplTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(batman));
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(batman));
 
         when(workingTimeCalendarService.getWorkingTimeCalender(firstDateOfWeek, firstDateOfWeek.plusWeeks(1), userLocalId))
             .thenReturn(new WorkingTimeCalendar(Map.of(
@@ -1245,7 +1245,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2023, 2, 5), PlannedWorkingHours.ZERO
             ), Map.of()));
 
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userId, 2023, 5);
+        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2023, 5);
 
         assertThat(actual).isEqualTo(
             new TimeEntryWeekPage(
@@ -1335,7 +1335,7 @@ class TimeEntryServiceImplTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(batman));
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(batman));
 
         when(workingTimeCalendarService.getWorkingTimeCalender(firstDateOfWeek, firstDateOfWeek.plusWeeks(1), userLocalId))
             .thenReturn(new WorkingTimeCalendar(Map.of(
@@ -1348,7 +1348,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2023, 6, 18), PlannedWorkingHours.ZERO
             ), Map.of()));
 
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userId, 2023, 24);
+        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2023, 24);
 
         assertThat(actual).isEqualTo(
             new TimeEntryWeekPage(
