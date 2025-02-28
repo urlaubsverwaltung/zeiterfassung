@@ -252,10 +252,6 @@ class TimeEntryDialogHelperTest {
         return anyUser(anyUserIdComposite("batman"));
     }
 
-    private static CurrentOidcUser anyCurrentOidcUser() {
-        return anyCurrentOidcUser(anyUserIdComposite("batman"));
-    }
-
     private static CurrentOidcUser anyCurrentOidcUser(UserIdComposite userIdComposite) {
         return anyCurrentOidcUser(userIdComposite, List.of());
     }
