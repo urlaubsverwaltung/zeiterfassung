@@ -72,7 +72,7 @@ class ReportServiceRaw {
 
         return createReportWeek(year, week,
             users,
-            period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), userLocalIds),
+            period -> timeEntryService.getEntries(period.from(), period.toExclusive(), userLocalIds),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds));
     }
 
@@ -93,7 +93,7 @@ class ReportServiceRaw {
 
         return createReportMonth(yearMonth,
             List.of(user),
-            period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), List.of(user.userLocalId())),
+            period -> timeEntryService.getEntries(period.from(), period.toExclusive(), List.of(user.userLocalId())),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
@@ -103,7 +103,7 @@ class ReportServiceRaw {
 
         return createReportMonth(yearMonth,
             users,
-            period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), userLocalIds),
+            period -> timeEntryService.getEntries(period.from(), period.toExclusive(), userLocalIds),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds));
     }
 
