@@ -18,6 +18,7 @@ import de.focusshift.zeiterfassung.timeclock.TimeClock;
 import de.focusshift.zeiterfassung.timeclock.TimeClockService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccountService;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
@@ -122,11 +123,12 @@ class TenantImporterComponent {
 
         final UserLocalId userLocalId = new UserLocalId(createdUser.localId());
         final UserId externalUserId = new UserId(user.externalId());
+        final UserIdComposite externalUserIdComposite = new UserIdComposite(externalUserId, userLocalId);
 
         overtime(userToImport, tenantId, userLocalId);
         workingTime(userToImport, tenantId, userLocalId);
         timeClocks(tenantId, externalUserId, userToImport.timeClocks());
-        timeEntries(externalUserId, tenantId, userToImport.timeEntries());
+        timeEntries(externalUserIdComposite, tenantId, userToImport.timeEntries());
         LOG.info("imported user={} of tenantId={}", user.externalId(), tenantId.tenantId());
     }
 
@@ -141,10 +143,14 @@ class TenantImporterComponent {
         LOG.info("created timeClocks of user={} of tenantId={}", externalUserId.value(), tenantId.tenantId());
     }
 
-    private void timeEntries(UserId externalUserId, TenantId tenantId, List<TimeEntryDTO> timeEntryDTOS) {
-        LOG.info("creating {} timeEntries of user={} of tenantId={}", timeEntryDTOS.size(), externalUserId.value(), tenantId.tenantId());
-        timeEntryDTOS.forEach(timeEntry -> timeEntryService.createTimeEntry(externalUserId, timeEntry.comment(), adjustWithDefaultTimeZone(timeEntry.start()), adjustWithDefaultTimeZone(timeEntry.end()), timeEntry.isBreak()));
-        LOG.info("created timeEntries of user={} of tenantId={}", externalUserId.value(), tenantId.tenantId());
+    private void timeEntries(UserIdComposite userIdComposite, TenantId tenantId, List<TimeEntryDTO> timeEntryDTOS) {
+
+        final UserId userId = userIdComposite.id();
+        final UserLocalId userLocalId = userIdComposite.localId();
+
+        LOG.info("creating {} timeEntries of user={} of tenantId={}", timeEntryDTOS.size(), userId.value(), tenantId.tenantId());
+        timeEntryDTOS.forEach(timeEntry -> timeEntryService.createTimeEntry(userLocalId, timeEntry.comment(), adjustWithDefaultTimeZone(timeEntry.start()), adjustWithDefaultTimeZone(timeEntry.end()), timeEntry.isBreak()));
+        LOG.info("created timeEntries of user={} of tenantId={}", userId.value(), tenantId.tenantId());
     }
 
     private void overtime(UserExport userToImport, TenantId tenantId, UserLocalId userLocalId) {
