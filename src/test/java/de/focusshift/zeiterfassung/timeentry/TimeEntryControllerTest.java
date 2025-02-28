@@ -1020,10 +1020,6 @@ class TimeEntryControllerTest implements ControllerTest {
         verify(timeEntryService).deleteTimeEntry(1);
     }
 
-    private UserIdComposite anyUserIdComposite() {
-        return anyUserIdComposite(new UserId("any-user-id"));
-    }
-
     private UserIdComposite anyUserIdComposite(UserId userId) {
         return new UserIdComposite(userId, new UserLocalId(1L));
     }
