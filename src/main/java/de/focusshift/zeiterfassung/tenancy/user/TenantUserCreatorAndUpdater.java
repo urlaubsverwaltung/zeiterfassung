@@ -1,14 +1,16 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.InteractiveAuthenticationSuccessEvent;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
@@ -38,15 +40,16 @@ class TenantUserCreatorAndUpdater {
             if (!tenantId.valid()) {
                 LOG.warn("Ignoring InteractiveAuthenticationSuccessEvent for invalid tenantId={}", tenantId.tenantId());
             } else {
-                tenantContextHolder.runInTenantIdContext(tenantId, passedTenantId -> createOrUpdateTenantUser(oauthToken.getPrincipal(), passedTenantId));
+                tenantContextHolder.runInTenantIdContext(tenantId, passedTenantId -> createOrUpdateTenantUser(oauthToken, passedTenantId));
             }
         } else {
             LOG.warn("Ignoring InteractiveAuthenticationSuccessEvent for unexpected authentication token type={}", event.getAuthentication().getClass());
         }
     }
 
-    private void createOrUpdateTenantUser(OAuth2User oauth2User, String tenantId) {
-        if (oauth2User instanceof final DefaultOidcUser oidcUser) {
+    private void createOrUpdateTenantUser(OAuth2AuthenticationToken oauthToken, String tenantId) {
+        final OAuth2User oauth2User = oauthToken.getPrincipal();
+        if (oauth2User instanceof final CurrentOidcUser oidcUser) {
             final EMailAddress eMailAddress = new EMailAddress(oidcUser.getEmail());
             final UserId userId = new UserId(oidcUser.getSubject());
 
@@ -59,8 +62,19 @@ class TenantUserCreatorAndUpdater {
                 tenantUserService.updateUser(tenantUser);
             }, () -> {
                 LOG.info("creating new user={} for tenantId={} with data from oidc token", userId.value(), tenantId);
-                tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, Set.of(ZEITERFASSUNG_USER));
+                final TenantUser newUser = tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, Set.of(ZEITERFASSUNG_USER));
+
+                final UserLocalId userLocalId = new UserLocalId(newUser.localId());
+
+                // update current Authentication to have access to UserLocalId and UserIdComposite.
+                // otherwise only UserId would exist in the Authentication object because user did not exist until now.
+                LOG.info("update current Authentication with recently created userLocalId={} for userId={}", userLocalId.value(), userId.value());
+                final CurrentOidcUser updated = new CurrentOidcUser(oidcUser, oidcUser.getApplicationAuthorities(), oidcUser.getAuthorities(), userLocalId);
+                final OAuth2AuthenticationToken updatedAuth = new OAuth2AuthenticationToken(updated, updated.getAuthorities(), oauthToken.getAuthorizedClientRegistrationId());
+                SecurityContextHolder.getContext().setAuthentication(updatedAuth);
             });
+        } else {
+            LOG.error("Ignoring InteractiveAuthenticationSuccessEvent since principal type={} is unknown.", oauth2User.getClass());
         }
     }
 
