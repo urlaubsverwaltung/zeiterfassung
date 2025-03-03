@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.timeclock;
 
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.springframework.stereotype.Service;
 
@@ -71,8 +72,8 @@ public class TimeClockService {
         return toTimeClock(timeClockRepository.save(timeClockEntity));
     }
 
-    void stopTimeClock(UserId userId) {
-        timeClockRepository.findByOwnerAndStoppedAtIsNull(userId.value())
+    void stopTimeClock(UserIdComposite userIdComposite) {
+        timeClockRepository.findByOwnerAndStoppedAtIsNull(userIdComposite.id().value())
             .map(entity -> timeClockEntityWithStoppedAt(entity, ZonedDateTime.now(userSettingsProvider.zoneId())))
             .map(timeClockRepository::save)
             .map(TimeClockService::toTimeClock)
@@ -82,7 +83,7 @@ public class TimeClockService {
                 final ZonedDateTime end = timeClock.stoppedAt()
                     .orElseThrow(() -> new IllegalStateException("expected stoppedAt to contain a value."));
 
-                timeEntryService.createTimeEntry(userId, timeClock.comment(), start, end, timeClock.isBreak());
+                timeEntryService.createTimeEntry(userIdComposite.localId(), timeClock.comment(), start, end, timeClock.isBreak());
             });
     }
 

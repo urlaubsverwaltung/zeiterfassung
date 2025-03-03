@@ -123,9 +123,11 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserId userId) {
+    public List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId) {
 
-        final User user = findUser(userId);
+        final User user = findUser(userLocalId);
+        final UserId userId = user.userIdComposite().id();
+
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
 
@@ -157,7 +159,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public Map<UserIdComposite, List<TimeEntry>> getEntriesByUserLocalIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
+    public Map<UserIdComposite, List<TimeEntry>> getEntries(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
 
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
@@ -185,9 +187,11 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public TimeEntryWeekPage getEntryWeekPage(UserId userId, int year, int weekOfYear) {
+    public TimeEntryWeekPage getEntryWeekPage(UserLocalId userLocalId, int year, int weekOfYear) {
 
-        final User user = findUser(userId);
+        final User user = findUser(userLocalId);
+        final UserId userId = user.userIdComposite().id();
+
         final ZoneId userZoneId = userSettingsProvider.zoneId();
         final ZonedDateTime fromDateTime = userDateService.firstDayOfWeek(Year.of(year), weekOfYear).atStartOfDay(userZoneId);
         final ZonedDateTime toDateTimeExclusive = fromDateTime.plusWeeks(1);
@@ -201,9 +205,6 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .sorted(comparing(TimeEntryEntity::getStart).thenComparing(TimeEntryEntity::getUpdatedAt).reversed())
             .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, user))
             .collect(groupingBy(entry -> LocalDate.ofInstant(entry.start().toInstant(), userZoneId)));
-
-        // TODO refactor getEntryWeekPage to accept UserLocalId to replace userManagementService call
-        final UserLocalId userLocalId = user.userLocalId();
 
         final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarService
             .getWorkingTimeCalender(fromLocalDate, toLocalDateExclusive, userLocalId);
@@ -220,10 +221,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public TimeEntry createTimeEntry(UserId userId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak) {
+    public TimeEntry createTimeEntry(UserLocalId userLocalId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak) {
+
+        final User user = findUser(userLocalId);
 
         final TimeEntryEntity entity = new TimeEntryEntity();
-        entity.setOwner(userId.value());
+        entity.setOwner(user.userIdComposite().id().value());
         entity.setComment(comment.strip());
         entity.setStart(start.toInstant());
         entity.setStartZoneId(start.getZone().getId());
@@ -231,7 +234,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         entity.setEndZoneId(end.getZone().getId());
         entity.setBreak(isBreak);
 
-        return save(entity);
+        return save(entity, user);
     }
 
     @Override
@@ -349,9 +352,19 @@ class TimeEntryServiceImpl implements TimeEntryService {
         return toTimeEntry(timeEntryRepository.save(entity));
     }
 
+    private TimeEntry save(TimeEntryEntity entity, User timeEntryOwner) {
+        entity.setUpdatedAt(Instant.now(clock));
+        return toTimeEntry(timeEntryRepository.save(entity), timeEntryOwner);
+    }
+
     private User findUser(UserId userId) {
         return userManagementService.findUserById(userId)
-            .orElseThrow(() -> new IllegalStateException("expected user=%s to exist but got nothing.".formatted(userId)));
+            .orElseThrow(() -> new IllegalStateException("expected user id=%s to exist but got nothing.".formatted(userId)));
+    }
+
+    private User findUser(UserLocalId userLocalId) {
+        return userManagementService.findUserByLocalId(userLocalId)
+            .orElseThrow(() -> new IllegalStateException("expected user localId=%s to exist but got nothing.".formatted(userLocalId)));
     }
 
     private TimeEntry toTimeEntry(TimeEntryEntity entity) {

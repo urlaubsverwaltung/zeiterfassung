@@ -239,10 +239,10 @@ class TimeEntryServiceImplTest {
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
 
         final TimeEntry actual = sut.createTimeEntry(
-            userId,
+            userLocalId,
             "hard work",
             ZonedDateTime.of(entryStart, ZONE_ID_UTC),
             ZonedDateTime.of(entryEnd, ZONE_ID_UTC),
@@ -967,7 +967,7 @@ class TimeEntryServiceImplTest {
     }
 
     @Test
-    void ensureGetEntriesByUserLocalIds() {
+    void ensureGetEntries() {
 
         final UserId batmanId = new UserId("uuid-1");
         final UserLocalId batmanLocalId = new UserLocalId(1L);
@@ -997,7 +997,7 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of("uuid-1", "uuid-2"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
-        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId, robinLocalId));
+        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntries(from, toExclusive, List.of(batmanLocalId, robinLocalId));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
@@ -1034,7 +1034,7 @@ class TimeEntryServiceImplTest {
         when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of("batman"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of());
 
-        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(userLocalId));
+        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntries(from, toExclusive, List.of(userLocalId));
 
         assertThat(actual)
             .hasSize(1)
@@ -1070,9 +1070,9 @@ class TimeEntryServiceImplTest {
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
 
-        final List<TimeEntry> actualEntries = sut.getEntries(periodFrom, periodToExclusive, userId);
+        final List<TimeEntry> actualEntries = sut.getEntries(periodFrom, periodToExclusive, userLocalId);
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
@@ -1121,7 +1121,7 @@ class TimeEntryServiceImplTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(batman));
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(batman));
 
         when(workingTimeCalendarService.getWorkingTimeCalender(firstDayOfWeek, firstDayOfWeek.plusWeeks(1), userLocalId))
             .thenReturn(new WorkingTimeCalendar(Map.of(
@@ -1134,7 +1134,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2022, 1, 9), PlannedWorkingHours.ZERO  // sunday
             ), Map.of()));
 
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userId, 2022, 1);
+        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2022, 1);
 
         assertThat(actual).isEqualTo(
             new TimeEntryWeekPage(
@@ -1232,7 +1232,7 @@ class TimeEntryServiceImplTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(batman));
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(batman));
 
         when(workingTimeCalendarService.getWorkingTimeCalender(firstDateOfWeek, firstDateOfWeek.plusWeeks(1), userLocalId))
             .thenReturn(new WorkingTimeCalendar(Map.of(
@@ -1245,7 +1245,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2023, 2, 5), PlannedWorkingHours.ZERO
             ), Map.of()));
 
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userId, 2023, 5);
+        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2023, 5);
 
         assertThat(actual).isEqualTo(
             new TimeEntryWeekPage(
@@ -1335,7 +1335,7 @@ class TimeEntryServiceImplTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(batman));
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(batman));
 
         when(workingTimeCalendarService.getWorkingTimeCalender(firstDateOfWeek, firstDateOfWeek.plusWeeks(1), userLocalId))
             .thenReturn(new WorkingTimeCalendar(Map.of(
@@ -1348,7 +1348,7 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2023, 6, 18), PlannedWorkingHours.ZERO
             ), Map.of()));
 
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userId, 2023, 24);
+        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2023, 24);
 
         assertThat(actual).isEqualTo(
             new TimeEntryWeekPage(
