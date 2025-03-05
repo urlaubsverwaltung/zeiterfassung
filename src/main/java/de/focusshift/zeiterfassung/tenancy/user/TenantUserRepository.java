@@ -12,14 +12,14 @@ interface TenantUserRepository extends CrudRepository<TenantUserEntity, Long> {
     Optional<TenantUserEntity> findByUuid(String uuid);
 
     @NonNull
-    List<TenantUserEntity> findAll();
+    List<TenantUserEntity> findAllByOrderByGivenNameAscFamilyNameAsc();
 
     @NonNull
-    List<TenantUserEntity> findAllByUuidIsIn(Collection<String> ids);
+    List<TenantUserEntity> findAllByUuidIsInOrderByGivenNameAscFamilyNameAsc(Collection<String> ids);
 
     @NonNull
-    List<TenantUserEntity> findAllByIdIsIn(Collection<Long> localIds);
+    List<TenantUserEntity> findAllByIdIsInOrderByGivenNameAscFamilyNameAsc(Collection<Long> localIds);
 
     @NonNull
-    List<TenantUserEntity> findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase(String givenNameQuery, String familyNameQuery);
+    List<TenantUserEntity> findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc(String givenNameQuery, String familyNameQuery);
 }

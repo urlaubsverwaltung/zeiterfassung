@@ -71,24 +71,24 @@ class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     public List<TenantUser> findAllUsers() {
-        return mapToTenantUser(tenantUserRepository.findAll());
+        return mapToTenantUser(tenantUserRepository.findAllByOrderByGivenNameAscFamilyNameAsc());
     }
 
     @Override
     public List<TenantUser> findAllUsers(String query) {
-        return mapToTenantUser(tenantUserRepository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase(query, query));
+        return mapToTenantUser(tenantUserRepository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc(query, query));
     }
 
     @Override
     public List<TenantUser> findAllUsersById(Collection<UserId> userIds) {
         final List<String> idValues = userIds.stream().map(UserId::value).toList();
-        return mapToTenantUser(tenantUserRepository.findAllByUuidIsIn(idValues));
+        return mapToTenantUser(tenantUserRepository.findAllByUuidIsInOrderByGivenNameAscFamilyNameAsc(idValues));
     }
 
     @Override
     public List<TenantUser> findAllUsersByLocalId(Collection<UserLocalId> userLocalIds) {
         final List<Long> idValues = userLocalIds.stream().map(UserLocalId::value).toList();
-        return mapToTenantUser(tenantUserRepository.findAllByIdIsIn(idValues));
+        return mapToTenantUser(tenantUserRepository.findAllByIdIsInOrderByGivenNameAscFamilyNameAsc(idValues));
     }
 
     @Override

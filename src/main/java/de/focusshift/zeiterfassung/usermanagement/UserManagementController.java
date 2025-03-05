@@ -40,7 +40,7 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
                  @RequestParam(value = "query", required = false, defaultValue = "") String query,
                  @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
 
-        List<UserDto> users = userManagementService.findAllUsers(query)
+        final List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()
             .map(UserManagementController::userToDto)
             .toList();
