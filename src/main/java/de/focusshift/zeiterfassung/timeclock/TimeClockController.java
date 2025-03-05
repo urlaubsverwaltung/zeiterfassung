@@ -1,11 +1,11 @@
 package de.focusshift.zeiterfassung.timeclock;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
+import de.focusshift.zeiterfassung.security.CurrentUser;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.user.UserId;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -37,9 +37,9 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping
-    public String editTimeClockView(@AuthenticationPrincipal DefaultOidcUser principal, Model model) {
+    public String editTimeClockView(@CurrentUser CurrentOidcUser currentUser, Model model) {
 
-        final UserId userId = principalToUserId(principal);
+        final UserId userId = currentUser.getUserIdComposite().id();
 
         timeClockService.getCurrentTimeClock(userId)
             .map(TimeClockMapper::timeClockToTimeClockDto)
@@ -50,7 +50,7 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
 
     @PostMapping
     public ModelAndView editTimeClock(@Valid @ModelAttribute("timeClockUpdate") TimeClockDto timeClockUpdateDto, BindingResult errors,
-                                @AuthenticationPrincipal DefaultOidcUser principal, HttpServletRequest request,
+                                @CurrentUser CurrentOidcUser currentUser, HttpServletRequest request,
                                 @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
 
         if (errors.hasErrors()) {
@@ -61,7 +61,7 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
             }
         }
 
-        final UserId userId = principalToUserId(principal);
+        final UserId userId = currentUser.getUserIdComposite().id();
         final TimeClockUpdate timeClockUpdate = toTimeClockUpdate(userId, timeClockUpdateDto);
 
         try {
@@ -74,9 +74,9 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping("/start")
-    public String startTimeClock(@AuthenticationPrincipal DefaultOidcUser principal, HttpServletRequest request) {
+    public String startTimeClock(@CurrentUser CurrentOidcUser currentUser, HttpServletRequest request) {
 
-        final UserId userId = principalToUserId(principal);
+        final UserId userId = currentUser.getUserIdComposite().id();
 
         // TODO should we do this in the service?
         final Optional<TimeClock> maybeCurrentTimeClock = timeClockService.getCurrentTimeClock(userId);
@@ -90,9 +90,9 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping("/stop")
-    public String stopTimeClock(@AuthenticationPrincipal DefaultOidcUser principal, HttpServletRequest request) {
+    public String stopTimeClock(@CurrentUser CurrentOidcUser currentUser, HttpServletRequest request) {
 
-        final UserId userId = principalToUserId(principal);
+        final UserId userId = currentUser.getUserIdComposite().id();
 
         timeClockService.stopTimeClock(userId);
 
@@ -112,9 +112,5 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
         final ZonedDateTime startedAt = ZonedDateTime.of(timeClockDto.getDate(), timeClockDto.getTime(), timeClockDto.getZoneId());
 
         return new TimeClockUpdate(userId, startedAt, timeClockDto.getComment(), timeClockDto.isBreak());
-    }
-
-    private static UserId principalToUserId(DefaultOidcUser principal) {
-        return new UserId(principal.getUserInfo().getSubject());
     }
 }

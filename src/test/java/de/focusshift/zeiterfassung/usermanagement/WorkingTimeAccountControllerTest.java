@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.settings.FederalStateSettings;
 import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
@@ -45,7 +46,6 @@ import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,7 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
-class WorkingTimeAccountControllerTest {
+class WorkingTimeAccountControllerTest implements ControllerTest {
 
     private WorkingTimeAccountController sut;
 
@@ -126,7 +126,7 @@ class WorkingTimeAccountControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -166,7 +166,7 @@ class WorkingTimeAccountControllerTest {
 
         final ResultActions result = perform(
             get("/users/1337/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         );
 
         final List<WorkingTimeListEntryDto> workingTimes = getModelAttribute("workingTimes", result);
@@ -204,7 +204,7 @@ class WorkingTimeAccountControllerTest {
 
         final ResultActions result = perform(
             get("/users/1337/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         );
 
         final List<WorkingTimeListEntryDto> workingTimes = getModelAttribute("workingTimes", result);
@@ -233,7 +233,7 @@ class WorkingTimeAccountControllerTest {
 
         final ResultActions result = perform(
             get("/users/1337/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         );
 
         final List<WorkingTimeListEntryDto> workingTimes = getModelAttribute("workingTimes", result);
@@ -272,7 +272,7 @@ class WorkingTimeAccountControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority(authority)))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority(authority)))
         )
             .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTime))
             .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount))
@@ -333,7 +333,7 @@ class WorkingTimeAccountControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
         )
             .andExpect(status().isOk())
@@ -397,7 +397,7 @@ class WorkingTimeAccountControllerTest {
 
         perform(
             get("/users/1/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -416,7 +416,7 @@ class WorkingTimeAccountControllerTest {
 
         when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
-        final UserId userId = new UserId("uuid-2");
+        final UserId userId = new UserId("uuid");
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         final User user = new User(userIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
@@ -459,7 +459,7 @@ class WorkingTimeAccountControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("query", "super")
         )
             .andExpect(status().isOk())
@@ -481,7 +481,7 @@ class WorkingTimeAccountControllerTest {
 
         when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
-        final UserId userId = new UserId("uuid-2");
+        final UserId userId = new UserId("uuid");
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         final User user = new User(userIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
@@ -524,7 +524,7 @@ class WorkingTimeAccountControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("query", "super")
         )
@@ -597,7 +597,7 @@ class WorkingTimeAccountControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("query", "bat")
         )
             .andExpect(status().isOk())
@@ -669,7 +669,7 @@ class WorkingTimeAccountControllerTest {
 
         perform(
             get("/users/42/working-time")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("query", "bat")
         )

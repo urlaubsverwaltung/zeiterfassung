@@ -32,7 +32,7 @@
                   <div class="mt-4 flex flex-col items-center">
                     <div class="text-blue-200">
                       <svg
-                        th:replace="~{/fragments/avatar::avatar-bordered(fullName=${timeEntryDialog.owner},width=54,height=54)}"
+                        th:replace="~{/fragments/avatar::avatar-bordered(fullName=${timeEntryDialog.owner},tooltip=false,width=54,height=54)}"
                       ></svg>
                     </div>
                     <div
@@ -68,9 +68,34 @@
                 </form>
               </div>
               <div class="mt-4 p-4">
-                <div
-                  th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new', disabled=true)}"
-                ></div>
+                <th:block th:if="${timeEntryDialog.allowedToEdit}">
+                  <form
+                    is="z-time-entry-slot-form"
+                    action="#"
+                    th:action="@{${timeEntryDialog.editTimeEntryFormAction}}"
+                    method="post"
+                    data-turbo-frame="_top"
+                    data-turbo-action="replace"
+                  >
+                    <div
+                      th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new')}"
+                    ></div>
+                    <div class="mt-8 flex justify-end">
+                      <button
+                        type="submit"
+                        class="button-primary"
+                        th:text="#{time-entry.dialog.edit.save.button.text}"
+                      >
+                        Speichern
+                      </button>
+                    </div>
+                  </form>
+                </th:block>
+                <th:block th:if="${not timeEntryDialog.allowedToEdit}">
+                  <div
+                    th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new', disabled=true)}"
+                  ></div>
+                </th:block>
                 <div class="mt-8">
                   <div
                     class="bg-gradient-to-r from-blue-200 to-blue-100 p-4 rounded-t-3xl"
@@ -126,7 +151,7 @@
                             </span>
                             <span class="text-blue-200">
                               <svg
-                                th:replace="~{/fragments/avatar::avatar(fullName=${historyItem.username},width=24,height=24,tooltip=false, className='inline-block')}"
+                                th:replace="~{/fragments/avatar::avatar(fullName=${historyItem.username},width=24,height=24,tooltip=false,className='inline-block')}"
                               ></svg>
                             </span>
                             <span th:text="${historyItem.username}">
@@ -138,7 +163,7 @@
                             class="time-entry-history-list__element__content"
                           >
                             <div
-                              th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form(formAction='#', timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form-existing', disabled=true)}"
+                              th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form-existing', disabled=true, showErrors=false)}"
                             ></div>
                           </div>
                         </details>

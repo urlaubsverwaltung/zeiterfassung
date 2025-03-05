@@ -1,41 +1,30 @@
 package de.focusshift.zeiterfassung.report;
 
-import de.focusshift.zeiterfassung.user.CurrentUserProvider;
+import de.focusshift.zeiterfassung.security.AuthenticationFacade;
+import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
-import org.slf4j.Logger;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL;
-import static java.lang.invoke.MethodHandles.lookup;
-import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
 class ReportPermissionService {
 
-    private static final Logger LOG = getLogger(lookup().lookupClass());
-
-    private final CurrentUserProvider currentUserProvider;
+    private final AuthenticationFacade authenticationFacade;
     private final UserManagementService userManagementService;
 
-    ReportPermissionService(CurrentUserProvider currentUserProvider, UserManagementService userManagementService) {
-        this.currentUserProvider = currentUserProvider;
+    ReportPermissionService(AuthenticationFacade authenticationFacade,
+                            UserManagementService userManagementService) {
+        this.authenticationFacade = authenticationFacade;
         this.userManagementService = userManagementService;
     }
 
     boolean currentUserHasPermissionForAllUsers() {
-        final Authentication authentication = currentUserProvider.getCurrentAuthentication();
-        final boolean contains = authentication.getAuthorities().contains(ZEITERFASSUNG_VIEW_REPORT_ALL.authority());
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("user={} has permission={} for all users", authentication.getName(), contains);
-        }
-
-        return contains;
+        return authenticationFacade.hasSecurityRole(ZEITERFASSUNG_VIEW_REPORT_ALL);
     }
 
     List<UserLocalId> filterUserLocalIdsByCurrentUserHasPermissionFor(List<UserLocalId> userLocalIds) {
@@ -43,7 +32,7 @@ class ReportPermissionService {
             return userLocalIds;
         }
 
-        final UserLocalId currentUserLocaleId = currentUserProvider.getCurrentUser().userLocalId();
+        final UserLocalId currentUserLocaleId = authenticationFacade.getCurrentUserIdComposite().localId();
         if (userLocalIds.contains(currentUserLocaleId)) {
             return List.of(currentUserLocaleId);
         }
@@ -56,7 +45,7 @@ class ReportPermissionService {
             return userManagementService.findAllUsers().stream().map(User::userLocalId).toList();
         }
 
-        final UserLocalId currentUserLocaleId = currentUserProvider.getCurrentUser().userLocalId();
+        final UserLocalId currentUserLocaleId = authenticationFacade.getCurrentUserIdComposite().localId();
         return List.of(currentUserLocaleId);
     }
 
@@ -71,7 +60,11 @@ class ReportPermissionService {
             return userManagementService.findAllUsers();
         }
 
-        final User currentUser = currentUserProvider.getCurrentUser();
-        return List.of(currentUser);
+        final UserId userId = authenticationFacade.getCurrentUserIdComposite().id();
+
+        final User user = userManagementService.findUserById(userId)
+            .orElseThrow(() -> new IllegalStateException("could not find user for currently logged in user " + userId));
+
+        return List.of(user);
     }
 }

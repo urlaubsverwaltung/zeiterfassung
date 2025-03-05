@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
+import de.focusshift.zeiterfassung.security.CurrentUser;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
@@ -9,8 +11,6 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.YearFormat;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -59,7 +59,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping("/timeentries")
-    public String items(Model model, Locale locale, @AuthenticationPrincipal OidcUser principal) {
+    public String items(Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
 
         final LocalDate now = LocalDate.now(clock);
         final ZonedDateTime userStartOfDay = now.atStartOfDay(userSettingsProvider.zoneId());
@@ -67,28 +67,28 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final int year = userStartOfDay.getYear();
         final int weekOfYear = userStartOfDay.get(WEEK_OF_WEEK_BASED_YEAR);
 
-        return prepareTimeEntriesView(year, weekOfYear, model, principal, locale);
+        return prepareTimeEntriesView(year, weekOfYear, model, currentUser, locale);
     }
 
     @GetMapping("/timeentries/{year}/{weekOfYear}")
     public String timeEntriesForYearAndWeekOfYear(@PathVariable("year") int year,
                                                   @PathVariable("weekOfYear") int weekOfYear,
-                                                  @AuthenticationPrincipal OidcUser principal,
+                                                  @CurrentUser CurrentOidcUser currentUser,
                                                   @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
                                                   Model model, Locale locale) {
 
         if (hasText(turboFrame)) {
-            prepareTimeEntriesView(year, weekOfYear, model, principal, locale);
+            prepareTimeEntriesView(year, weekOfYear, model, currentUser, locale);
             model.addAttribute("turboStreamsEnabled", true);
             return "timeentries/index::#frame-time-entry-weeks";
         } else {
-            return prepareTimeEntriesView(year, weekOfYear, model, principal, locale);
+            return prepareTimeEntriesView(year, weekOfYear, model, currentUser, locale);
         }
     }
 
-    private String prepareTimeEntriesView(int year, int weekOfYear, Model model, OidcUser principal, Locale locale) {
+    private String prepareTimeEntriesView(int year, int weekOfYear, Model model, CurrentOidcUser currentUser, Locale locale) {
         viewHelper.addTimeEntryToModel(model, new TimeEntryDTO());
-        addTimeEntriesToModel(year, weekOfYear, model, principal, locale);
+        addTimeEntriesToModel(year, weekOfYear, model, currentUser, locale);
 
         return "timeentries/index";
     }
@@ -99,7 +99,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         BindingResult bindingResult,
         Model model, Locale locale,
         RedirectAttributes redirectAttributes,
-        @AuthenticationPrincipal OidcUser principal,
+        @CurrentUser CurrentOidcUser currentUser,
         HttpServletRequest request
     ) throws InvalidTimeEntryException {
 
@@ -114,10 +114,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             throw new InvalidTimeEntryException("invalid time entry. date must be set.");
         }
 
-        viewHelper.saveTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes, principal);
+        viewHelper.createTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes);
 
         if (bindingResult.hasErrors()) {
-            addTimeEntriesToModel(year, weekOfYear, model, principal, locale);
+            addTimeEntriesToModel(year, weekOfYear, model, currentUser, locale);
             return "timeentries/index";
         }
 
@@ -129,7 +129,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         @PathVariable("id") Long id,
         @Valid @ModelAttribute(name = TIME_ENTRY_MODEL_NAME) TimeEntryDTO timeEntryDTO,
         BindingResult bindingResult,
-        @AuthenticationPrincipal OidcUser principal,
+        @CurrentUser CurrentOidcUser currentUser,
         @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
         Model model, Locale locale,
         RedirectAttributes redirectAttributes,
@@ -147,7 +147,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             throw new InvalidTimeEntryException("invalid time entry. date must be set.");
         }
 
-        viewHelper.saveTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes, principal);
+        viewHelper.updateTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes);
 
         final String viewName;
         if (bindingResult.hasErrors()) {
@@ -156,7 +156,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             viewName = "redirect:" + request.getHeader("referer");
         }
 
-        final UserId userId = new UserId(principal.getUserInfo().getSubject());
+        final UserId userId = new UserId(currentUser.getSubject());
 
         if (hasText(turboFrame)) {
             if (bindingResult.hasErrors()) {
@@ -182,7 +182,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             return new ModelAndView("timeentries/index::#frame-time-entry");
         } else {
             if (bindingResult.hasErrors()) {
-                addTimeEntriesToModel(year, weekOfYear, model, principal, locale);
+                addTimeEntriesToModel(year, weekOfYear, model, currentUser, locale);
             }
             return new ModelAndView(viewName);
         }
@@ -191,7 +191,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     @PostMapping(value = "/timeentries/{id}", params = "delete")
     public String delete(@PathVariable("id") Long id, Model model,
                          @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                         @AuthenticationPrincipal OidcUser principal, Locale locale) {
+                         @CurrentUser CurrentOidcUser currentUser, Locale locale) {
 
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(id)
             .orElseThrow(() -> new IllegalStateException("could not find time entry with id=%s".formatted(id)));
@@ -205,7 +205,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             return "redirect:/timeentries/%s/%s".formatted(year, weekOfYear);
         }
 
-        final UserId userId = new UserId(principal.getUserInfo().getSubject());
+        final UserId userId = currentUser.getUserIdComposite().id();
         final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
 
         final Optional<TimeEntryDay> timeEntryDay = entryWeekPage.timeEntryWeek().days()
@@ -215,7 +215,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
         final TimeEntryWeek timeEntryWeek = entryWeekPage.timeEntryWeek();
 
-        addTimeEntriesToModel(year, weekOfYear, model, principal, locale);
+        addTimeEntriesToModel(year, weekOfYear, model, currentUser, locale);
 
         model.addAttribute("turboEditedWeek", toTimeEntryWeekDto(timeEntryWeek, locale));
         model.addAttribute("turboEditedDay", timeEntryDay.map(entry -> toTimeEntryDayDto(entry, locale)).orElse(null));
@@ -224,9 +224,9 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         return "timeentries/index::#" + turboFrame;
     }
 
-    private void addTimeEntriesToModel(int year, int weekOfYear, Model model, OidcUser principal, Locale locale) {
+    private void addTimeEntriesToModel(int year, int weekOfYear, Model model, CurrentOidcUser currentUser, Locale locale) {
 
-        final UserId userId = new UserId(principal.getUserInfo().getSubject());
+        final UserId userId = currentUser.getUserIdComposite().id();
 
         final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
         final TimeEntryWeekDto timeEntryWeekDto = toTimeEntryWeekDto(entryWeekPage.timeEntryWeek(), locale);

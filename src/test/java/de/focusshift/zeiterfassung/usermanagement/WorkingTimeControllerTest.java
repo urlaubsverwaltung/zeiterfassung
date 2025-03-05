@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.settings.FederalStateSettings;
 import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
@@ -54,7 +55,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -64,7 +64,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
-class WorkingTimeControllerTest {
+class WorkingTimeControllerTest implements ControllerTest {
 
     private WorkingTimeController sut;
 
@@ -97,7 +97,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time/new")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -125,7 +125,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time/new")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(model().attribute("globalWorksOnPublicHoliday", expectedValue));
     }
@@ -156,7 +156,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/new")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("userId", "42")
         )
             .andExpect(status().isOk())
@@ -192,7 +192,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/new")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "person-frame")
                 .param("userId", "42")
         )
@@ -208,7 +208,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/new")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("userId", "42")
                 .param("validFrom", "2024-04-01")
                 .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
@@ -254,7 +254,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -289,7 +289,7 @@ class WorkingTimeControllerTest {
 
         perform(
             get("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
         )
             .andExpect(model().attribute("globalWorksOnPublicHoliday", expectedValue));
     }
@@ -301,7 +301,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("id", workingTimeId.value())
                 .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
                 .param("worksOnPublicHoliday", "true")
@@ -337,7 +337,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("id", workingTimeId.value())
                 .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
@@ -402,7 +402,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("batman").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .param("id", workingTimeId.value())
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
                 .param("workingTime", "48")
@@ -460,7 +460,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/" + UUID.randomUUID())
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority(authority)))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority(authority)))
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
                 .param("workingTime", "48")
         )
@@ -504,7 +504,7 @@ class WorkingTimeControllerTest {
 
         perform(
             post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
                 .header("Turbo-Frame", "awesome-frame")
                 .param("id", workingTimeId.value())
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
@@ -536,7 +536,7 @@ class WorkingTimeControllerTest {
         perform(
             post("/users/42/working-time/%s/delete".formatted(workingTimeId.value()))
                 .with(
-                    oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL"))
+                    oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL"))
                 )
         )
             .andExpect(status().isBadRequest())
@@ -553,7 +553,7 @@ class WorkingTimeControllerTest {
         perform(
             post("/users/42/working-time/%s/delete".formatted(workingTimeId.value()))
                 .with(
-                    oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL"))
+                    oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL"))
                 )
         )
             .andExpect(status().is3xxRedirection())

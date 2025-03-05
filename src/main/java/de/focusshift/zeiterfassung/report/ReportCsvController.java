@@ -1,13 +1,13 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.security.CurrentUser;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,7 +47,7 @@ class ReportCsvController {
         @PathVariable("year") Integer year,
         @PathVariable("week") Integer week,
         @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
-        @AuthenticationPrincipal DefaultOidcUser principal,
+        @CurrentUser CurrentOidcUser currentUser,
         Locale locale,
         HttpServletResponse response
     ) {
@@ -55,7 +55,7 @@ class ReportCsvController {
         final YearWeek reportYearWeek = getYearWeek(year, week)
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Invalid week."));
 
-        final UserId userId = principalToUserId(principal);
+        final UserId userId = currentUser.getUserIdComposite().id();
         final List<UserLocalId> userLocalIds = userIdsParam.stream().map(UserLocalId::new).toList();
         final String fileName = messageSource.getMessage("report.weekly.csv.filename", new Object[]{year, week}, locale);
 
@@ -71,7 +71,7 @@ class ReportCsvController {
         @PathVariable("year") Integer year,
         @PathVariable("month") Integer month,
         @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
-        @AuthenticationPrincipal DefaultOidcUser principal,
+        @CurrentUser CurrentOidcUser currentUser,
         Locale locale,
         HttpServletResponse response
     ) {
@@ -79,7 +79,7 @@ class ReportCsvController {
         final YearMonth yearMonth = yearMonth(year, month)
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Invalid month."));
 
-        final UserId userId = principalToUserId(principal);
+        final UserId userId = currentUser.getUserIdComposite().id();
         final List<UserLocalId> userIds = userIdsParam.stream().map(UserLocalId::new).toList();
         final String fileName = messageSource.getMessage("report.monthly.csv.filename", new Object[]{year, month}, locale);
 
@@ -119,9 +119,5 @@ class ReportCsvController {
             LOG.error("could not create YearMonth with year={} month={}", year, month, exception);
             return Optional.empty();
         }
-    }
-
-    private static UserId principalToUserId(DefaultOidcUser principal) {
-        return new UserId(principal.getUserInfo().getSubject());
     }
 }
