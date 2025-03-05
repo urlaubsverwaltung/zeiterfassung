@@ -78,6 +78,7 @@ public class TimeEntryDialogHelper {
 
         final TimeEntryDialogDto timeEntryDialogDto = new TimeEntryDialogDto(
             timeEntryUser.fullName(),
+            timeEntryUser.initials(),
             historyItems,
             cancelFormAction
         );

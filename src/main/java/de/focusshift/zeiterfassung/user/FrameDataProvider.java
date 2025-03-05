@@ -30,6 +30,16 @@ class FrameDataProvider {
     private static SignedInUserDto oidcUserToSignedInUserDto(OidcUser oidcUser) {
         final String fullName = oidcUser.getUserInfo().getFullName();
 
-        return new SignedInUserDto(fullName);
+        return new SignedInUserDto(fullName, getInitials(fullName));
+    }
+
+    private static String getInitials(String fullName) {
+
+        final int idxLastWhitespace = fullName.lastIndexOf(' ');
+        if (idxLastWhitespace == -1) {
+            return fullName.substring(0, 1).toUpperCase();
+        }
+
+        return (fullName.charAt(0) + fullName.substring(idxLastWhitespace + 1, idxLastWhitespace + 2)).toUpperCase();
     }
 }

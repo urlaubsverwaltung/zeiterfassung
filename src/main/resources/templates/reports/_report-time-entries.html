@@ -101,7 +101,7 @@
                     >
                       <img
                         alt=""
-                        th:replace="~{fragments/avatar::avatar(${dayEntry.username},42,42)}"
+                        th:replace="~{fragments/avatar::avatar(fullName=${dayEntry.fullName},${dayEntry.username},42,42)}"
                       />
                     </span>
                     <span class="sr-only" th:text="${dayEntry.username}">

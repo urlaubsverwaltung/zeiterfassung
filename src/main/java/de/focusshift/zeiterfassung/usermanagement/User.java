@@ -19,6 +19,18 @@ public record User(
         return givenName + " " + familyName;
     }
 
+    public String initials() {
+
+        final String niceName = fullName();
+
+        final int idxLastWhitespace = niceName.lastIndexOf(' ');
+        if (idxLastWhitespace == -1) {
+            return niceName.substring(0, 1).toUpperCase();
+        }
+
+        return (niceName.charAt(0) + niceName.substring(idxLastWhitespace + 1, idxLastWhitespace + 2)).toUpperCase();
+    }
+
     @Override
     public String toString() {
         return "User{" +
