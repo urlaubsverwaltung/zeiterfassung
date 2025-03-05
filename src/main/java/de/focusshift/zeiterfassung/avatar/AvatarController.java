@@ -21,7 +21,7 @@ public class AvatarController {
     }
 
     @GetMapping(value = "/avatar", produces = "image/svg+xml")
-    public ResponseEntity<String> avatar(@RequestParam("name") String name, Locale locale) {
+    public ResponseEntity<String> avatar(@RequestParam(value = "name", defaultValue = "?") String name, Locale locale) {
 
         final Map<String, Object> model = Map.of("initials", getInitials(name));
         final String svg = svgService.createSvg("svg/avatar", locale, model);
