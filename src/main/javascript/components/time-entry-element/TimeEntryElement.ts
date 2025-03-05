@@ -48,10 +48,10 @@ export class TimeEntryElement extends HTMLDivElement {
       if (originalFormData.get(name) === nextFormData.get(name)) {
         element.classList.remove("edited");
         if (!isFormChanged()) {
-          form.classList.remove("edited");
+          form.querySelector("div").classList.remove("edited");
         }
       } else {
-        form.classList.add("edited");
+        form.querySelector("div").classList.add("edited");
         element.classList.add("edited");
       }
     }
