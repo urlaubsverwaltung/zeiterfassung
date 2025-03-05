@@ -208,7 +208,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         if (allUsersSelected) {
             reportWeek = reportService.getReportWeekForAllUsers(reportYear, reportYearWeek.getWeek());
         } else if (userLocalIds.isEmpty()) {
-            reportWeek = reportService.getReportWeek(reportYear, reportYearWeek.getWeek(), currentUser.getUserIdComposite().id());
+            reportWeek = reportService.getReportWeek(reportYear, reportYearWeek.getWeek(), currentUser.getUserIdComposite().localId());
         } else {
             reportWeek = reportService.getReportWeek(reportYear, reportYearWeek.getWeek(), userLocalIds);
         }

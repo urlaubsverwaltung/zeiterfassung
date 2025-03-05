@@ -13,7 +13,9 @@ import java.util.List;
  */
 interface ReportService {
 
-    ReportWeek getReportWeek(Year year, int week, UserId userId);
+    default ReportWeek getReportWeek(Year year, int week, UserLocalId userLocalId) {
+        return getReportWeek(year, week, List.of(userLocalId));
+    }
 
     ReportWeek getReportWeek(Year year, int week, List<UserLocalId> userLocalIds);
 
