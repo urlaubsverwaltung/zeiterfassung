@@ -129,11 +129,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
 
-        final List<TimeEntryEntity> result = timeEntryRepository
-            .findAllByOwnerAndStartGreaterThanEqualAndStartLessThan(userId.value(), fromInstant, toInstant);
-
-        return result
-            .stream()
+        return timeEntryRepository
+            .findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(userId.value(), fromInstant, toInstant).stream()
             .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, user))
             .sorted(comparing(TimeEntry::start).reversed())
             .toList();
@@ -149,8 +146,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .stream()
             .collect(toMap(User::userId, identity()));
 
-        return timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(fromInstant, toInstant)
-            .stream()
+        return timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThanOrderByStartDesc(fromInstant, toInstant).stream()
             .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, userByUserId))
             .filter(Objects::nonNull)
             .collect(groupingBy(TimeEntry::userIdComposite));
@@ -172,8 +168,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         }
 
         final Map<UserIdComposite, List<TimeEntry>> result = timeEntryRepository
-            .findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(userIdValues, fromInstant, toInstant)
-            .stream()
+            .findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(userIdValues, fromInstant, toInstant).stream()
             .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, userByUserId))
             .filter(Objects::nonNull)
             .collect(groupingBy(TimeEntry::userIdComposite));
@@ -196,9 +191,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final Instant from = Instant.from(fromDateTime);
         final Instant toExclusive = Instant.from(toDateTimeExclusive);
 
-        final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan(userId.value(), from, toExclusive)
+        final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(userId.value(), from, toExclusive)
             .stream()
-            .sorted(comparing(TimeEntryEntity::getStart).thenComparing(TimeEntryEntity::getUpdatedAt).reversed())
             .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, user))
             .collect(groupingBy(entry -> LocalDate.ofInstant(entry.start().toInstant(), userZoneId)));
 
@@ -326,6 +320,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         entity.setStart(start.toInstant());
         entity.setStartZoneId(start.getZone().getId());
     }
+
     private static void setEnd(TimeEntryEntity entity, ZonedDateTime end) {
         entity.setEnd(end.toInstant());
         entity.setEndZoneId(end.getZone().getId());

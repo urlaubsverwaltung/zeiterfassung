@@ -929,7 +929,7 @@ class TimeEntryServiceImplTest {
         final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
         final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "pinguin", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
 
-        when(timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThan(from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+        when(timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThanOrderByStartDesc(from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
         final UserId batmanId = new UserId("batman");
@@ -994,7 +994,7 @@ class TimeEntryServiceImplTest {
         final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
         final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "uuid-2", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
 
-        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of("uuid-1", "uuid-2"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("uuid-1", "uuid-2"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
         final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(batmanLocalId, robinLocalId));
@@ -1031,7 +1031,7 @@ class TimeEntryServiceImplTest {
         final LocalDate from = LocalDate.of(2023, 1, 1);
         final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
 
-        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List.of("batman"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("batman"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of());
 
         final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntriesByUserLocalIds(from, toExclusive, List.of(userLocalId));
@@ -1063,7 +1063,7 @@ class TimeEntryServiceImplTest {
 
         final Instant periodStartInstant = periodFrom.atStartOfDay(UTC).toInstant();
         final Instant periodEndInstant = periodToExclusive.atStartOfDay(UTC).toInstant();
-        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan("batman", periodStartInstant, periodEndInstant))
+        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc("batman", periodStartInstant, periodEndInstant))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity, timeEntryEntity2));
 
         final UserId userId = new UserId("batman");
@@ -1111,7 +1111,7 @@ class TimeEntryServiceImplTest {
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
-        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan("batman", from, to))
+        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc("batman", from, to))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
         when(timeEntryRepository.countAllByOwner("batman")).thenReturn(3L);
@@ -1182,8 +1182,8 @@ class TimeEntryServiceImplTest {
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(
-                                new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true),
-                                new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", timeEntryStart, timeEntryEnd, false)
+                                new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", timeEntryStart, timeEntryEnd, false),
+                                new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true)
                             ),
                             List.of()
                         ),
@@ -1222,7 +1222,7 @@ class TimeEntryServiceImplTest {
         final Instant from = Instant.from(fromDateTime);
         final Instant to = Instant.from(fromDateTime.plusWeeks(1));
 
-        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan("batman", from, to))
+        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc("batman", from, to))
             .thenReturn(List.of(lastDayOfWeekTimeEntry, firstDayOfWeekTimeEntry));
 
         when(timeEntryRepository.countAllByOwner("batman")).thenReturn(6L);
@@ -1325,7 +1325,7 @@ class TimeEntryServiceImplTest {
 
         final Instant from = Instant.from(firstDateOfWeek.atStartOfDay().atZone(userZoneId));
         final Instant to = Instant.from(toDateExclusive.atStartOfDay().atZone(userZoneId));
-        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan("batman", from, to))
+        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc("batman", from, to))
             .thenReturn(List.of());
 
         when(timeEntryRepository.countAllByOwner("batman")).thenReturn(6L);
