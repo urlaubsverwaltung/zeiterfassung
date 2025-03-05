@@ -562,7 +562,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     private static ViewedUserDto toViewedUserDto(User user) {
         return new ViewedUserDto(user.userLocalId().value(), user.givenName(), user.familyName(),
-            user.fullName(), user.email().value());
+            user.fullName(), user.initials(), user.email().value());
     }
 
     private int lastWeekOfYear(int year) {
