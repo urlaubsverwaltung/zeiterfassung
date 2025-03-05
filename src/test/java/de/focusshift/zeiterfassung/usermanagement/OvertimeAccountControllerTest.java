@@ -71,7 +71,7 @@ class OvertimeAccountControllerTest {
         final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
         when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
-        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org");
 
         perform(
             get("/users/1337/overtime-account")
@@ -83,8 +83,8 @@ class OvertimeAccountControllerTest {
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("personSearchFormAction", "/users/1337/overtime-account"))
@@ -141,7 +141,7 @@ class OvertimeAccountControllerTest {
         final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
         when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
-        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org");
 
         perform(
             get("/users/1337/overtime-account")
@@ -154,8 +154,8 @@ class OvertimeAccountControllerTest {
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("personSearchFormAction", "/users/1337/overtime-account"))
@@ -227,7 +227,7 @@ class OvertimeAccountControllerTest {
         final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
         when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
-        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org");
 
         perform(
             get("/users/1337/overtime-account")
@@ -239,7 +239,7 @@ class OvertimeAccountControllerTest {
             .andExpect(model().attribute("query", "super"))
             .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser));
     }
@@ -263,7 +263,7 @@ class OvertimeAccountControllerTest {
         final OvertimeAccount overtimeAccount = new OvertimeAccount(batmanIdComposite, true, Duration.ofHours(10).plusMinutes(30));
         when(overtimeAccountService.getOvertimeAccount(batmanLocalId)).thenReturn(overtimeAccount);
 
-        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org");
 
         perform(
             get("/users/1337/overtime-account")
@@ -276,7 +276,7 @@ class OvertimeAccountControllerTest {
             .andExpect(model().attribute("query", "super"))
             .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser));
     }
@@ -329,7 +329,7 @@ class OvertimeAccountControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org");
 
         perform(
             post("/users/1337/overtime-account")
@@ -343,8 +343,8 @@ class OvertimeAccountControllerTest {
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("personSearchFormAction", "/users/1337/overtime-account"))
@@ -394,7 +394,7 @@ class OvertimeAccountControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW","batman@example.org");
 
         perform(
             post("/users/1337/overtime-account")
@@ -409,8 +409,8 @@ class OvertimeAccountControllerTest {
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "overtime-account"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("personSearchFormAction", "/users/1337/overtime-account"))
