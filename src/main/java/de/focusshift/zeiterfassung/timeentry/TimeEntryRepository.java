@@ -12,9 +12,9 @@ interface TimeEntryRepository extends CrudRepository<TimeEntryEntity, Long>, Rev
 
     long countAllByOwner(String owner);
 
-    List<TimeEntryEntity> findAllByStartGreaterThanEqualAndStartLessThan(Instant start, Instant endExclusive);
+    List<TimeEntryEntity> findAllByStartGreaterThanEqualAndStartLessThanOrderByStart(Instant start, Instant endExclusive);
 
-    List<TimeEntryEntity> findAllByOwnerAndStartGreaterThanEqualAndStartLessThan(String owner, Instant start, Instant endExclusive);
+    List<TimeEntryEntity> findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStart(String owner, Instant start, Instant endExclusive);
 
-    List<TimeEntryEntity> findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThan(List<String> owners, Instant start, Instant endExclusive);
+    List<TimeEntryEntity> findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStart(List<String> owners, Instant start, Instant endExclusive);
 }
