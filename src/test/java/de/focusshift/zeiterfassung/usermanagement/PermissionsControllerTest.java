@@ -75,7 +75,7 @@ class PermissionsControllerTest implements ControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org");
 
         final PermissionsDto expectedPermissionsDto = new PermissionsDto();
         expectedPermissionsDto.setViewReportAll(false);
@@ -93,8 +93,8 @@ class PermissionsControllerTest implements ControllerTest {
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "permissions"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("personSearchFormAction", "/users/1337/permissions"))
@@ -195,7 +195,7 @@ class PermissionsControllerTest implements ControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org");
 
         final PermissionsDto expectedPermissionsDto = new PermissionsDto();
         expectedPermissionsDto.setViewReportAll(false);
@@ -214,8 +214,8 @@ class PermissionsControllerTest implements ControllerTest {
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "permissions"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("personSearchFormAction", "/users/1337/permissions"))
@@ -279,7 +279,7 @@ class PermissionsControllerTest implements ControllerTest {
         when(userManagementService.findAllUsers("super")).thenReturn(List.of(superman));
         when(userManagementService.findUserByLocalId(batmanLocalId)).thenReturn(Optional.of(batman));
 
-        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org");
 
         perform(
             get("/users/1337/permissions")
@@ -291,7 +291,7 @@ class PermissionsControllerTest implements ControllerTest {
             .andExpect(model().attribute("query", "super"))
             .andExpect(model().attribute("slug", "permissions"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser));
     }

@@ -32,7 +32,7 @@
                   <div class="mt-4 flex flex-col items-center">
                     <div class="text-blue-200">
                       <svg
-                        th:replace="~{/fragments/avatar::avatar-bordered(fullName=${timeEntryDialog.owner},tooltip=false,width=54,height=54)}"
+                        th:replace="~{/fragments/avatar::avatar-bordered(initials=${timeEntryDialog.ownerInitials},fullName=${timeEntryDialog.owner},tooltip=false,width=54,height=54)}"
                       ></svg>
                     </div>
                     <div
@@ -151,7 +151,7 @@
                             </span>
                             <span class="text-blue-200">
                               <svg
-                                th:replace="~{/fragments/avatar::avatar(fullName=${historyItem.username},width=24,height=24,tooltip=false,className='inline-block')}"
+                                th:replace="~{/fragments/avatar::avatar(initials=${historyItem.initials},fullName=${historyItem.username},width=24,height=24,tooltip=false,className='inline-block')}"
                               ></svg>
                             </span>
                             <span th:text="${historyItem.username}">

@@ -105,7 +105,7 @@
                       <span class="shrink-0 text-blue-300">
                         <img
                           alt=""
-                          th:replace="~{fragments/avatar::avatar(${user.fullName},48,48)}"
+                          th:replace="~{fragments/avatar::avatar(${user.initials},${user.fullName},48,48)}"
                         />
                       </span>
                       <a
@@ -218,7 +218,7 @@
                         <span class="text-blue-300">
                           <img
                             alt=""
-                            th:replace="~{fragments/avatar::avatar(${selectedUser.fullName},64, 64)}"
+                            th:replace="~{fragments/avatar::avatar(${selectedUser.initials},${selectedUser.fullName},64, 64)}"
                           />
                         </span>
                         <span class="flex flex-col">

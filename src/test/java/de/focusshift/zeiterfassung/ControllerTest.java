@@ -71,7 +71,8 @@ public interface ControllerTest {
             .claim("sub", userIdComposite.id().value());
 
         final OidcUserInfo.Builder userInfoBuilder = OidcUserInfo.builder()
-            .subject(userIdComposite.id().value());
+            .subject(userIdComposite.id().value())
+            .name("Some Name");
 
         final DefaultOidcUser defaultOidcUser = new DefaultOidcUser(authorities, tokenBuilder.build(), userInfoBuilder.build());
         final CurrentOidcUser currentUser = new CurrentOidcUser(defaultOidcUser, List.of(), authorities, userIdComposite.localId());

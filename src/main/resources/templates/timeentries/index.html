@@ -57,7 +57,7 @@
               >
                 <span class="inline-flex text-blue-200">
                   <span
-                    th:replace="~{fragments/avatar::avatar-bordered(${viewedUser.fullName()},52,52)}"
+                    th:replace="~{fragments/avatar::avatar-bordered(${viewedUser.initials()},${viewedUser.fullName()},52,52)}"
                   ></span>
                 </span>
                 <h1

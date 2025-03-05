@@ -122,7 +122,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             0d
         );
 
-        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org");
 
         perform(
             get("/users/42/working-time")
@@ -133,8 +133,8 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
@@ -330,7 +330,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             0d
         );
 
-        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org");
 
         perform(
             get("/users/42/working-time")
@@ -342,8 +342,8 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
@@ -394,7 +394,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             0d
         );
 
-        final UserDto expectedSelectedUser = new UserDto(1, "Alfred", "Pennyworth", "Alfred Pennyworth", "alfred@example.org");
+        final UserDto expectedSelectedUser = new UserDto(1, "Alfred", "Pennyworth", "Alfred Pennyworth", "AP", "alfred@example.org");
 
         perform(
             get("/users/1/working-time")
@@ -456,7 +456,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             0d
         );
 
-        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org");
 
         perform(
             get("/users/42/working-time")
@@ -468,7 +468,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             .andExpect(model().attribute("query", "super"))
             .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
@@ -521,7 +521,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             0d
         );
 
-        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org");
 
         perform(
             get("/users/42/working-time")
@@ -534,7 +534,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             .andExpect(model().attribute("query", "super"))
             .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
@@ -594,7 +594,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             0d
         );
 
-        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org");
 
         perform(
             get("/users/42/working-time")
@@ -606,7 +606,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             .andExpect(model().attribute("query", "bat"))
             .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
@@ -666,7 +666,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             0d
         );
 
-        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org");
+        final UserDto expectedSelectedUser = new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org");
 
         perform(
             get("/users/42/working-time")
@@ -679,7 +679,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             .andExpect(model().attribute("query", "bat"))
             .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))

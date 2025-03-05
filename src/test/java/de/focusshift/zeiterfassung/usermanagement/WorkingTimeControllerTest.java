@@ -411,10 +411,10 @@ class WorkingTimeControllerTest implements ControllerTest {
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
-            .andExpect(model().attribute("selectedUser", new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")))
+            .andExpect(model().attribute("selectedUser", new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")))
             .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
             .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
             .andExpect(model().attribute("personSearchFormAction", is("/users/42")));
@@ -514,10 +514,10 @@ class WorkingTimeControllerTest implements ControllerTest {
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "working-time"))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
-            .andExpect(model().attribute("selectedUser", new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")))
+            .andExpect(model().attribute("selectedUser", new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")))
             .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
             .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BAYERN"))
             .andExpect(model().attribute("personSearchFormAction", is("/users/42")));

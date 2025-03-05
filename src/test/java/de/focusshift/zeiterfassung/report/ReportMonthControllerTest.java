@@ -368,7 +368,7 @@ class ReportMonthControllerTest implements ControllerTest {
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
-            .thenReturn(List.of(new User(userIdComposite, "", "", new EMailAddress(""), Set.of())));
+            .thenReturn(List.of(new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of())));
 
         when(reportService.getReportMonth(YearMonth.of(2022, 1), userId))
             .thenReturn(anyReportMonth());
@@ -403,9 +403,9 @@ class ReportMonthControllerTest implements ControllerTest {
 
         perform(get("/report/year/2022/month/1").with(oidcSubject("batman")))
             .andExpect(model().attribute("users", List.of(
-                new SelectableUserDto(1L, "Bruce Wayne", false),
-                new SelectableUserDto(3L, "Dick Grayson", false),
-                new SelectableUserDto(2L, "Jack Napier", false))
+                new SelectableUserDto(1L, "Bruce Wayne", "BW", false),
+                new SelectableUserDto(3L, "Dick Grayson", "DG", false),
+                new SelectableUserDto(2L, "Jack Napier", "JN", false))
             ))
             .andExpect(model().attribute("selectedUserIds", List.of()))
             .andExpect(model().attribute("allUsersSelected", false))
@@ -442,9 +442,9 @@ class ReportMonthControllerTest implements ControllerTest {
                 .param("everyone", "")
         )
             .andExpect(model().attribute("users", List.of(
-                new SelectableUserDto(1L, "Bruce Wayne", false),
-                new SelectableUserDto(3L, "Dick Grayson", false),
-                new SelectableUserDto(2L, "Jack Napier", false)
+                new SelectableUserDto(1L, "Bruce Wayne", "BW", false),
+                new SelectableUserDto(3L, "Dick Grayson", "DG", false),
+                new SelectableUserDto(2L, "Jack Napier", "JN", false)
             )))
             .andExpect(model().attribute("selectedUserIds", List.of()))
             .andExpect(model().attribute("allUsersSelected", true))
@@ -481,9 +481,9 @@ class ReportMonthControllerTest implements ControllerTest {
                 .param("user", "2", "3")
         )
             .andExpect(model().attribute("users", List.of(
-                new SelectableUserDto(1L, "Bruce Wayne", false),
-                new SelectableUserDto(3L, "Dick Grayson", true),
-                new SelectableUserDto(2L, "Jack Napier", true)
+                new SelectableUserDto(1L, "Bruce Wayne", "BW", false),
+                new SelectableUserDto(3L, "Dick Grayson", "DG", true),
+                new SelectableUserDto(2L, "Jack Napier", "JN", true)
             )))
             .andExpect(model().attribute("selectedUserIds", List.of(2L, 3L)))
             .andExpect(model().attribute("allUsersSelected", false))
