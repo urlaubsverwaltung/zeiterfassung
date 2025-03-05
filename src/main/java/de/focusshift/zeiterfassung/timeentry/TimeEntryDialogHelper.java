@@ -97,6 +97,7 @@ public class TimeEntryDialogHelper {
         final TimeEntryDialogDto timeEntryDialogDto = new TimeEntryDialogDto(
             allowedToEdit,
             timeEntryUser.fullName(),
+            timeEntryUser.initials(),
             historyItems,
             editFormAction,
             cancelFormAction
@@ -136,9 +137,10 @@ public class TimeEntryDialogHelper {
         final EntityRevisionMetadata metadata = historyItem.metadata();
 
         final String username = metadata.modifiedBy().map(userSupplier).map(User::fullName).orElse("");
+        final String initials = metadata.modifiedBy().map(userSupplier).map(User::initials).orElse("??");
         final LocalDateTime date = LocalDateTime.ofInstant(metadata.modifiedAt(), zoneId);
         final TimeEntryDTO timeEntryDto = timeEntryViewHelper.toTimeEntryDto(historyItem.timeEntry());
 
-        return new TimeEntryHistoryItemDto(username, metadata.entityRevisionType(), date, timeEntryDto);
+        return new TimeEntryHistoryItemDto(username, initials, metadata.entityRevisionType(), date, timeEntryDto);
     }
 }

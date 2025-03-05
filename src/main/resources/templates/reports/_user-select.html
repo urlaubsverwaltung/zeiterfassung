@@ -80,7 +80,7 @@
                   <span class="text-blue-300">
                     <img
                       alt=""
-                      th:replace="~{fragments/avatar::avatar(${user.fullName},26,26)}"
+                      th:replace="~{fragments/avatar::avatar(${user.initials},${user.fullName},26,26)}"
                     />
                   </span>
                   <span th:text="${user.fullName}"></span>
@@ -112,7 +112,7 @@
               <img
                 alt=""
                 src=""
-                th:replace="~{fragments/avatar::avatar(${user.fullName},38,38)}"
+                th:replace="~{fragments/avatar::avatar(${user.initials},${user.fullName},38,38)}"
               />
             </div>
           </th:block>
