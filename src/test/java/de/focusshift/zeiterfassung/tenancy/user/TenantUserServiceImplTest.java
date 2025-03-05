@@ -46,7 +46,7 @@ class TenantUserServiceImplTest {
     @Test
     void ensureFindAllUsersWithQueryReturnsEmpty() {
 
-        when(repository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase("batman", "batman"))
+        when(repository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc("batman", "batman"))
             .thenReturn(List.of());
 
         final List<TenantUser> actual = sut.findAllUsers("batman");
@@ -60,7 +60,7 @@ class TenantUserServiceImplTest {
         final TenantUserEntity entity = activeUserEntityOne(now);
         final TenantUser tenantUser = activeTenantUserOne(now);
 
-        when(repository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase("batman", "batman"))
+        when(repository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc("batman", "batman"))
             .thenReturn(List.of(entity));
 
         final List<TenantUser> actual = sut.findAllUsers("batman");
@@ -70,7 +70,7 @@ class TenantUserServiceImplTest {
     @Test
     void ensureFindAllUsersByIdReturnsEmpty() {
 
-        when(repository.findAllByUuidIsIn(List.of("uuid"))).thenReturn(List.of());
+        when(repository.findAllByUuidIsInOrderByGivenNameAscFamilyNameAsc(List.of("uuid"))).thenReturn(List.of());
 
         final List<TenantUser> actual = sut.findAllUsersById(List.of(new UserId("uuid")));
         assertThat(actual).isEmpty();
@@ -88,7 +88,7 @@ class TenantUserServiceImplTest {
 
         final String idOne = tenantUserOne.id();
         final String idTwo = tenantUserTwo.id();
-        when(repository.findAllByUuidIsIn(List.of(idOne, idTwo))).thenReturn(List.of(entityOne, entityTwo));
+        when(repository.findAllByUuidIsInOrderByGivenNameAscFamilyNameAsc(List.of(idOne, idTwo))).thenReturn(List.of(entityOne, entityTwo));
 
         final List<TenantUser> actual = sut.findAllUsersById(List.of(new UserId(idOne), new UserId(idTwo)));
         assertThat(actual).containsExactly(tenantUserOne, tenantUserTwo);
@@ -97,7 +97,7 @@ class TenantUserServiceImplTest {
     @Test
     void ensureFindAllUsersByLocalIdReturnsEmpty() {
 
-        when(repository.findAllByIdIsIn(List.of(42L))).thenReturn(List.of());
+        when(repository.findAllByIdIsInOrderByGivenNameAscFamilyNameAsc(List.of(42L))).thenReturn(List.of());
 
         final List<TenantUser> actual = sut.findAllUsersByLocalId(List.of(new UserLocalId(42L)));
         assertThat(actual).isEmpty();
@@ -115,7 +115,7 @@ class TenantUserServiceImplTest {
 
         final Long localIdOne = tenantUserOne.localId();
         final Long localIdTwo = tenantUserTwo.localId();
-        when(repository.findAllByIdIsIn(List.of(localIdOne, localIdTwo))).thenReturn(List.of(entityOne, entityTwo));
+        when(repository.findAllByIdIsInOrderByGivenNameAscFamilyNameAsc(List.of(localIdOne, localIdTwo))).thenReturn(List.of(entityOne, entityTwo));
 
         final List<TenantUser> actual = sut.findAllUsersByLocalId(List.of(new UserLocalId(localIdOne), new UserLocalId(localIdTwo)));
         assertThat(actual).containsExactly(tenantUserOne, tenantUserTwo);
