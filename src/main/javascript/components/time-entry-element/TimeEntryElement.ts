@@ -39,20 +39,27 @@ export class TimeEntryElement extends HTMLDivElement {
       }
     });
 
+    form.addEventListener("reset", () => {
+      for (const element of form.querySelectorAll(".edited")) {
+        element.classList.remove("edited");
+      }
+    });
+
     function handleValueChanged(
-      name: string,
+      fieldName: string,
       newValue: string | boolean,
-      element: HTMLElement,
+      inputElement: HTMLElement,
     ) {
       const nextFormData = new FormData(form);
-      if (originalFormData.get(name) === nextFormData.get(name)) {
-        element.classList.remove("edited");
+      const timeslot = form.querySelector(".timeslot-form-existing");
+      if (originalFormData.get(fieldName) === nextFormData.get(fieldName)) {
+        inputElement.classList.remove("edited");
         if (!isFormChanged()) {
-          form.classList.remove("edited");
+          timeslot.classList.remove("edited");
         }
       } else {
-        form.classList.add("edited");
-        element.classList.add("edited");
+        timeslot.classList.add("edited");
+        inputElement.classList.add("edited");
       }
     }
 

@@ -203,7 +203,8 @@
   border-radius: 27px;
 }
 
-.timeslot-form-existing.edited button[type="submit"] {
+/* highlight save button for edited timeslot. not the delete button. */
+.timeslot-form-existing.edited button[type="submit"]:not([name]) {
   color: theme("colors.gray.700");
   background-color: theme("colors.blue.100");
   padding: 0.25rem 0.5rem;
