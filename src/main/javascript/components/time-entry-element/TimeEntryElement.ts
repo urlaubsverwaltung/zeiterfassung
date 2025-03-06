@@ -45,13 +45,14 @@ export class TimeEntryElement extends HTMLDivElement {
       element: HTMLElement,
     ) {
       const nextFormData = new FormData(form);
+      const timeslot = form.querySelector(".timeslot-form-existing");
       if (originalFormData.get(name) === nextFormData.get(name)) {
         element.classList.remove("edited");
         if (!isFormChanged()) {
-          form.querySelector("div").classList.remove("edited");
+          timeslot.classList.remove("edited");
         }
       } else {
-        form.querySelector("div").classList.add("edited");
+        timeslot.classList.add("edited");
         element.classList.add("edited");
       }
     }
