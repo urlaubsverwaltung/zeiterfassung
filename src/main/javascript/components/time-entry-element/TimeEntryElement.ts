@@ -40,20 +40,20 @@ export class TimeEntryElement extends HTMLDivElement {
     });
 
     function handleValueChanged(
-      name: string,
+      fieldName: string,
       newValue: string | boolean,
-      element: HTMLElement,
+      inputElement: HTMLElement,
     ) {
       const nextFormData = new FormData(form);
       const timeslot = form.querySelector(".timeslot-form-existing");
-      if (originalFormData.get(name) === nextFormData.get(name)) {
-        element.classList.remove("edited");
+      if (originalFormData.get(fieldName) === nextFormData.get(fieldName)) {
+        inputElement.classList.remove("edited");
         if (!isFormChanged()) {
           timeslot.classList.remove("edited");
         }
       } else {
         timeslot.classList.add("edited");
-        element.classList.add("edited");
+        inputElement.classList.add("edited");
       }
     }
 
