@@ -39,6 +39,12 @@ export class TimeEntryElement extends HTMLDivElement {
       }
     });
 
+    form.addEventListener("reset", () => {
+      for (const element of form.querySelectorAll(".edited")) {
+        element.classList.remove("edited");
+      }
+    });
+
     function handleValueChanged(
       fieldName: string,
       newValue: string | boolean,
