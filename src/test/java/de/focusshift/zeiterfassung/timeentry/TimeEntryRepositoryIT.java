@@ -68,7 +68,7 @@ class TimeEntryRepositoryIT extends SingleTenantTestContainersBase {
     }
 
     @Test
-    void countAllEnsureFindAllByOwnerAndStartGreaterThanEqualAndStartLessThan() {
+    void countAllEnsureFindAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc() {
 
         final TenantUser batman = tenantUserService.createNewUser("1a432ba3-cb93-463b-813b-8e065c1e0a24", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         final TenantUser superman = tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
@@ -98,13 +98,13 @@ class TimeEntryRepositoryIT extends SingleTenantTestContainersBase {
         final Instant periodFromStartOfDayInstant = periodFrom.atStartOfDay(ZoneOffset.UTC).toInstant();
         final Instant periodToStartOfDayInstant = periodToExclusive.atStartOfDay(ZoneOffset.UTC).toInstant();
 
-        final List<TimeEntryEntity> actualEntries = sut.findAllByOwnerAndStartGreaterThanEqualAndStartLessThan(batman.id(), periodFromStartOfDayInstant, periodToStartOfDayInstant);
+        final List<TimeEntryEntity> actualEntries = sut.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(batman.id(), periodFromStartOfDayInstant, periodToStartOfDayInstant);
 
         assertThat(actualEntries).hasSize(2);
         assertThat(actualEntries.get(0).getOwner()).isEqualTo(batman.id());
-        assertThat(actualEntries.get(0).getComment()).isEqualTo("hard work period start");
+        assertThat(actualEntries.get(0).getComment()).isEqualTo("hard work in between");
         assertThat(actualEntries.get(1).getOwner()).isEqualTo(batman.id());
-        assertThat(actualEntries.get(1).getComment()).isEqualTo("hard work in between");
+        assertThat(actualEntries.get(1).getComment()).isEqualTo("hard work period start");
     }
 
     private static TimeEntryEntity createTimeEntryEntity(String owner, String comment, LocalDateTime start, LocalDateTime end) {
