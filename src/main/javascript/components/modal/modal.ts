@@ -12,8 +12,21 @@ const MODAL_TURBO_FRAME = "#frame-modal";
  */
 export function enhanceModal() {
   globalThis.addEventListener("popstate", () => {
-    // modal has been opened, and user navigates back with browser-back-button
-    // --> keep scroll position
+    // given use case:
+    // - user is on the default report page with url=/report
+    // - user opens a timeEntry modal
+    //   - only modal-frame is updated because of custom turbo:before-frame-render implementation below
+    //   - url is advanced to /report/year/{}/week/{}?timeEntryId={}
+    //     - to know what to render after constraint-validation-errors (which is a redirect to this advanced url)
+    //     - to know which 'close-modal' form action to use (week or month report)
+    // - user clicks save
+    //   - redirected to /report/year/{}/week/{}
+    //   - html <meta name=turbo-refresh-scroll content=preserve> keeps the scroll position due to rendering "a different" page
+    // - user opens another timeEntry modal
+    //   - turbo only renders the modal-frame
+    // - user goes back with browser-back-button (or closes the modal, same behavior)
+    //   - turbo renders the redirected page but has lost scroll-preserve context
+    //   - therefore this hack to keep the scroll position
     if (document.querySelector("dialog[open]")) {
       preserveScrollOnce();
     }
