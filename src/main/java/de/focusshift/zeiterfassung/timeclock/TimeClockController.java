@@ -92,9 +92,7 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
     @PostMapping("/stop")
     public String stopTimeClock(@CurrentUser CurrentOidcUser currentUser, HttpServletRequest request) {
 
-        final UserId userId = currentUser.getUserIdComposite().id();
-
-        timeClockService.stopTimeClock(userId);
+        timeClockService.stopTimeClock(currentUser.getUserIdComposite());
 
         return redirectToPreviousPage(request);
     }
