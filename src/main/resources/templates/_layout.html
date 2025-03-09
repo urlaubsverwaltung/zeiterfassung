@@ -44,7 +44,6 @@
     <script>
       injectStyle("[data-js-hidden] { display: none; }");
     </script>
-    <script src="#" th:src="@{/assets/turbo.js}"></script>
     <th:block th:replace="${scripts}"></th:block>
 
     <link
@@ -90,6 +89,7 @@
       th:src="@{/assets/custom-elements-polyfill.js}"
       type="module"
     ></script>
+    <script src="#" th:src="@{/assets/turbo.js}" type="module"></script>
     <script src="#" th:src="@{/assets/user-common.js}" type="module"></script>
     <th:block th:replace="${scriptsDefer}"></th:block>
     <th:block th:replace="${prefetchOrPrerender}"></th:block>
