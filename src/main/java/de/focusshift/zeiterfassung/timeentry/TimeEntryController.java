@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -33,11 +34,14 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.time.Month.DECEMBER;
 import static java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
 import static java.time.temporal.TemporalAdjusters.previousOrSame;
+import static java.util.Objects.requireNonNullElseGet;
 import static org.springframework.util.StringUtils.hasText;
 
 @Controller
@@ -59,23 +63,16 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping("/timeentries")
-    public String items(Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
+    public String items(@RequestParam(value = "year", required = false) Integer year,
+                        @RequestParam(value = "week", required = false) Integer weekOfYear,
+                        @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
+                        Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
 
         final LocalDate now = LocalDate.now(clock);
-        final ZonedDateTime userStartOfDay = now.atStartOfDay(userSettingsProvider.zoneId());
+        final Supplier<ZonedDateTime> userStartOfDay = () -> now.atStartOfDay(userSettingsProvider.zoneId());
 
-        final int year = userStartOfDay.getYear();
-        final int weekOfYear = userStartOfDay.get(WEEK_OF_WEEK_BASED_YEAR);
-
-        return prepareTimeEntriesView(year, weekOfYear, model, currentUser, locale);
-    }
-
-    @GetMapping("/timeentries/{year}/{weekOfYear}")
-    public String timeEntriesForYearAndWeekOfYear(@PathVariable("year") int year,
-                                                  @PathVariable("weekOfYear") int weekOfYear,
-                                                  @CurrentUser CurrentOidcUser currentUser,
-                                                  @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                                                  Model model, Locale locale) {
+        year = requireNonNullElseGet(year, () -> userStartOfDay.get().getYear());
+        weekOfYear = requireNonNullElseGet(weekOfYear, () -> userStartOfDay.get().get(WEEK_OF_WEEK_BASED_YEAR));
 
         if (hasText(turboFrame)) {
             prepareTimeEntriesView(year, weekOfYear, model, currentUser, locale);
@@ -202,7 +199,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final int weekOfYear = timeEntry.start().get(WEEK_OF_WEEK_BASED_YEAR);
 
         if (!hasText(turboFrame)) {
-            return "redirect:/timeentries/%s/%s".formatted(year, weekOfYear);
+            return "redirect:/timeentries?year=%d&week=%d".formatted(year, weekOfYear);
         }
 
         final UserLocalId userLocalId = currentUser.getUserIdComposite().localId();

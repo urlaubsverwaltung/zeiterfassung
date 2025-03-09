@@ -374,7 +374,7 @@
                 <li>
                   <a
                     href="#"
-                    th:href="@{/timeentries/{year}/{week} (year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})}"
+                    th:href="@{/timeentries (year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})}"
                     class="text-lg font-bold mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
                     th:text="#{time-entry.pagination.past}"
                   >
@@ -394,7 +394,7 @@
                 <li>
                   <a
                     href="#"
-                    th:href="@{/timeentries/{year}/{week} (year=${timeEntryWeeksPage.futureYear}, week=${timeEntryWeeksPage.futureWeekOfYear})}"
+                    th:href="@{/timeentries (year=${timeEntryWeeksPage.futureYear}, week=${timeEntryWeeksPage.futureWeekOfYear})}"
                     class="text-lg font-bold mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
                     th:text="#{time-entry.pagination.future}"
                   >
@@ -407,7 +407,7 @@
               <a
                 id="load-more-button"
                 href="#"
-                th:href="@{/timeentries/{year}/{week} (year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})}"
+                th:href="@{/timeentries (year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})}"
                 class="ajax-loader text-lg font-medium mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
                 data-turbo-frame="frame-time-entry-weeks"
                 th:text="#{time-entry.pagination.load-more}"

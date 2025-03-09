@@ -233,7 +233,7 @@ class TimeEntryControllerTest implements ControllerTest {
             2025, 2, 2024, 52, expectedTimeEntryWeekDto, 1337);
 
         perform(
-            get("/timeentries/2025/1")
+            get("/timeentries").queryParam("year", "2025").queryParam("week", "1")
                 .with(oidcSubject(userIdComposite))
         )
             .andExpect(view().name("timeentries/index"))
@@ -302,7 +302,7 @@ class TimeEntryControllerTest implements ControllerTest {
             2025, 2, 2024, 52, expectedTimeEntryWeekDto, 42);
 
         perform(
-            get("/timeentries/2025/01")
+            get("/timeentries").queryParam("year", "2025").queryParam("week", "01")
                 .header("Turbo-Frame", "any-value")
                 .with(oidcSubject(userIdComposite))
         )
@@ -339,7 +339,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2023, 1, 2022, 51, expectedTimeEntryWeekDto, 0);
 
         perform(
-            get("/timeentries/2022/52")
+            get("/timeentries").queryParam("year", "2022").queryParam("week", "52")
                 .with(oidcSubject(userIdComposite))
         )
             .andExpect(view().name("timeentries/index"))
@@ -375,7 +375,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 2, 2021, 52, expectedTimeEntryWeekDto, 0);
 
         perform(
-            get("/timeentries/2022/1")
+            get("/timeentries").queryParam("year", "2022").queryParam("week", "1")
                 .with(oidcSubject(userIdComposite))
         )
             .andExpect(view().name("timeentries/index"))
@@ -411,7 +411,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2021, 2, 2020, 53, expectedTimeEntryWeekDto, 0);
 
         perform(
-            get("/timeentries/2021/1")
+            get("/timeentries").queryParam("year", "2021").queryParam("week", "1")
                 .with(oidcSubject(userIdComposite))
         )
             .andExpect(view().name("timeentries/index"))
@@ -906,7 +906,7 @@ class TimeEntryControllerTest implements ControllerTest {
                 .param("delete", "")
         )
             .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/timeentries/2022/39"));
+            .andExpect(redirectedUrl("/timeentries?year=2022&week=39"));
 
         verify(timeEntryService).deleteTimeEntry(1337);
     }
