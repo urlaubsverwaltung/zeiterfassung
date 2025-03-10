@@ -1,7 +1,7 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
 
   <include relativeToChangelogFile="true" file="changelog-0.11.1-add-tenant.xml"/>
   <include relativeToChangelogFile="true" file="changelog-0.11.1-add-oidc-registration.xml"/>
@@ -31,5 +31,6 @@
   <include relativeToChangelogFile="true" file="changelog-2.6.4-enable-row-level-security-on-absence.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.14.0-remove-leading-trailing-whitespaces-username.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.16.0-add-time-entry-versioning.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-2.18.0-add-missing-indices.xml"/>
 
 </databaseChangeLog>
