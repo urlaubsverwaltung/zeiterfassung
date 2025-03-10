@@ -1,4 +1,4 @@
-# Zeiterfassung [![Build](https://github.com/urlaubsverwaltung/zeiterfassung/actions/workflows/build.yml/badge.svg)](https://github.com/urlaubsverwaltung/zeiterfassung/actions/workflows/build.yml)
+# Zeiterfassung [![Build](https://github.com/urlaubsverwaltung/zeiterfassung/actions/workflows/build.yml/badge.svg)](https://github.com/urlaubsverwaltung/zeiterfassung/actions/workflows/build.yml) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=urlaubsverwaltung_zeiterfassung&metric=coverage)](https://sonarcloud.io/summary/new_code?id=urlaubsverwaltung_zeiterfassung)
 
 Ist bei euch die Zeiterfassung auch gerade ein großes Thema? Das trifft sich gut!
 
