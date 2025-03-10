@@ -76,7 +76,7 @@ class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     public List<TenantUser> findAllUsers(String query) {
-        return mapToTenantUser(tenantUserRepository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc(query, query));
+        return mapToTenantUser(tenantUserRepository.findAllByNiceNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc(query));
     }
 
     @Override

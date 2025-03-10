@@ -86,29 +86,44 @@ class TenantUserRepositoryIT extends SingleTenantTestContainersBase {
     }
 
     @Test
-    void ensureFindAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCaseReturnsEmpty() {
+    void ensureFindAllByNiceNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAscReturnsEmpty() {
 
         tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         tenantUserService.createNewUser("2256a744-31f9-4f87-8189-fe0d471e6537", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
 
-        final List<TenantUserEntity> actual = sut.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc("xxx", "xxx");
+        final List<TenantUserEntity> actual = sut.findAllByNiceNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc("xxx");
         assertThat(actual).isEmpty();
     }
 
     @Test
-    void ensureFindAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCase() {
+    void ensureFindAllByNiceNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc() {
 
         tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
         tenantUserService.createNewUser("2256a744-31f9-4f87-8189-fe0d471e6537", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
         tenantUserService.createNewUser("1a432ba3-cb93-463b-813b-8e065c1e0a24", "Clark", "Kent", new EMailAddress("Kent@example.org"), Set.of());
 
-        final List<TenantUserEntity> actual = sut.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc("cla", "cla");
+        final List<TenantUserEntity> actual = sut.findAllByNiceNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc("cla");
         assertThat(actual).hasSize(2);
         assertThat(actual.get(0)).satisfies(entity -> {
             assertThat(entity.getGivenName()).isEqualTo("Clark");
             assertThat(entity.getFamilyName()).isEqualTo("Kent");
         });
         assertThat(actual.get(1)).satisfies(entity -> {
+            assertThat(entity.getGivenName()).isEqualTo("Kent");
+            assertThat(entity.getFamilyName()).isEqualTo("Clark");
+        });
+    }
+
+    @Test
+    void ensureFindAllByNiceNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAscWithNiceNameOverlapping() {
+
+        tenantUserService.createNewUser("8b913da0-2711-4da8-9216-9904e11944ac", "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        tenantUserService.createNewUser("2256a744-31f9-4f87-8189-fe0d471e6537", "Kent", "Clark", new EMailAddress("Clark@example.org"), Set.of());
+        tenantUserService.createNewUser("1a432ba3-cb93-463b-813b-8e065c1e0a24", "Clark", "Kent", new EMailAddress("Kent@example.org"), Set.of());
+
+        final List<TenantUserEntity> actual = sut.findAllByNiceNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc("nt cl");
+        assertThat(actual).hasSize(1);
+        assertThat(actual.get(0)).satisfies(entity -> {
             assertThat(entity.getGivenName()).isEqualTo("Kent");
             assertThat(entity.getFamilyName()).isEqualTo("Clark");
         });
