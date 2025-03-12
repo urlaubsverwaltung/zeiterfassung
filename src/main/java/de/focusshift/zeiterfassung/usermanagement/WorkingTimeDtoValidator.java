@@ -96,9 +96,9 @@ class WorkingTimeDtoValidator implements Validator {
         }
 
         final Map<String, Supplier<Double>> getter = getHoursSupplierByDayMap(dto);
-        for (String day : getter.keySet()) {
-            if (validator.test(getter.get(day).get())) {
-                reject.accept("workingTime" + capitalize(day));
+        for (Map.Entry<String, Supplier<Double>> entry : getter.entrySet()) {
+            if (validator.test(entry.getValue().get())) {
+                reject.accept("workingTime" + capitalize(entry.getKey()));
             }
         }
     }
