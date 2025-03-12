@@ -97,7 +97,7 @@ class WorkingTimeDtoValidatorTest {
     }
 
     @Test
-    void invalidWhenWorkdayIsNotSelected() {
+    void ensureThatWorkdayCanBeEmpty() {
 
         final WorkingTimeDto dto = new WorkingTimeDto();
         dto.setWorkday(List.of());
@@ -106,8 +106,7 @@ class WorkingTimeDtoValidatorTest {
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
 
-        assertThat(bindingResult.getFieldError("workday")).isNotNull();
-        assertThat(bindingResult.getFieldError("workday").getCode()).isEqualTo("usermanagement.working-time.validation.workday.not-empty");
+        assertThat(bindingResult.getFieldError("workday")).isNull();
     }
 
     @ParameterizedTest

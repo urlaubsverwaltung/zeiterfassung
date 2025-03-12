@@ -41,12 +41,6 @@ class WorkingTimeDtoValidator implements Validator {
             field -> errors.rejectValue(field, "usermanagement.working-time.validation.max")
         );
 
-        // No working day selected
-        if (dto.getWorkday().isEmpty()) {
-            errors.rejectValue("workday", "usermanagement.working-time.validation.workday.not-empty");
-            return;
-        }
-
         // individual day hours given but day is not selected as working day
         final List<String> daysWithHoursButNotSelected = getDaysWithHoursButNotSelected(dto);
         if (!daysWithHoursButNotSelected.isEmpty()) {
