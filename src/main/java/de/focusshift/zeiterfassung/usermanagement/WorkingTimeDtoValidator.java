@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -19,12 +20,12 @@ class WorkingTimeDtoValidator implements Validator {
     private static final BigDecimal MAX_HOURS = BigDecimal.valueOf(24);
 
     @Override
-    public boolean supports(Class<?> clazz) {
+    public boolean supports(@NonNull Class<?> clazz) {
         return WorkingTimeDto.class.equals(clazz);
     }
 
     @Override
-    public void validate(Object target, Errors errors) {
+    public void validate(@NonNull Object target, @NonNull Errors errors) {
 
         final WorkingTimeDto dto = (WorkingTimeDto) target;
 
