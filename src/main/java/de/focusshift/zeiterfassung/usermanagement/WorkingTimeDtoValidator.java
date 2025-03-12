@@ -41,36 +41,16 @@ class WorkingTimeDtoValidator implements Validator {
             field -> errors.rejectValue(field, "usermanagement.working-time.validation.max")
         );
 
-        if (noInput(dto)) {
-            errors.rejectValue("empty", "usermanagement.working-time.validation.not-empty");
-            return;
-        }
-
         // No working day selected
         if (dto.getWorkday().isEmpty()) {
             errors.rejectValue("workday", "usermanagement.working-time.validation.workday.not-empty");
             return;
         }
 
-        // no working hours
-        if (zeroOrNull(dto.getWorkingTime())) {
-            final List<String> selectedDaysWithoutHours = getSelectedDaysWithoutHours(dto);
-            if (selectedDaysWithoutHours.size() == dto.getWorkday().size()) {
-                // and nothing else is given
-                errors.rejectValue("workingTime", "usermanagement.working-time.validation.working-time.not-empty");
-            } else {
-                // and at least one selected day has no hours
-                for (String day : selectedDaysWithoutHours) {
-                    final String field = "workDay" + capitalize(day);
-                    errors.rejectValue(field, "usermanagement.working-time.validation.day.%s.no-hours".formatted(day));
-                }
-            }
-        }
-
         // individual day hours given but day is not selected as working day
         final List<String> daysWithHoursButNotSelected = getDaysWithHoursButNotSelected(dto);
         if (!daysWithHoursButNotSelected.isEmpty()) {
-            for (String day : daysWithHoursButNotSelected) {
+            for (final String day : daysWithHoursButNotSelected) {
                 final String field = "workingTime" + capitalize(day);
                 errors.rejectValue(field, "usermanagement.working-time.validation.hours.%s.no-workday".formatted(day));
             }
@@ -113,16 +93,6 @@ class WorkingTimeDtoValidator implements Validator {
             .toList();
     }
 
-    private static List<String> getSelectedDaysWithoutHours(WorkingTimeDto dto) {
-        final List<String> workday = dto.getWorkday();
-        final Map<String, Supplier<Double>> hoursByDay = getHoursSupplierByDayMap(dto);
-
-        return hoursByDay.keySet()
-            .stream()
-            .filter(day -> workday.contains(day) && zeroOrNull(hoursByDay.get(day).get()))
-            .toList();
-    }
-
     private static Map<String, Supplier<Double>> getHoursSupplierByDayMap(WorkingTimeDto dto) {
         return Map.of(
             "monday", dto::getWorkingTimeMonday,
@@ -133,18 +103,6 @@ class WorkingTimeDtoValidator implements Validator {
             "saturday", dto::getWorkingTimeSaturday,
             "sunday", dto::getWorkingTimeSunday
         );
-    }
-
-    private static boolean noInput(WorkingTimeDto dto) {
-        return dto.getWorkday().isEmpty()
-            && zeroOrNull(dto.getWorkingTime())
-            && zeroOrNull(dto.getWorkingTimeMonday())
-            && zeroOrNull(dto.getWorkingTimeTuesday())
-            && zeroOrNull(dto.getWorkingTimeWednesday())
-            && zeroOrNull(dto.getWorkingTimeThursday())
-            && zeroOrNull(dto.getWorkingTimeFriday())
-            && zeroOrNull(dto.getWorkingTimeSaturday())
-            && zeroOrNull(dto.getWorkingTimeSunday());
     }
 
     private static boolean zeroOrNull(Double doubleValue) {

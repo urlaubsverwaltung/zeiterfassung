@@ -68,18 +68,6 @@ class WorkingTimeDtoValidatorTest {
     }
 
     @Test
-    void invalidWhenNothingIsSet() {
-
-        final WorkingTimeDto dto = new WorkingTimeDto();
-
-        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
-        sut.validate(dto, bindingResult);
-
-        assertThat(bindingResult.getFieldError("empty")).isNotNull();
-        assertThat(bindingResult.getFieldError("empty").getCode()).isEqualTo("usermanagement.working-time.validation.not-empty");
-    }
-
-    @Test
     void invalidWhenValidFromIsNotSetAndIdIsNull() {
 
         final WorkingTimeDto dto = new WorkingTimeDto();
@@ -124,7 +112,7 @@ class WorkingTimeDtoValidatorTest {
 
     @ParameterizedTest
     @EnumSource(DayOfWeek.class)
-    void invalidWhenWorkingTimeIsNull(DayOfWeek dayOfWeek) {
+    void ensureThatWorkingTimeCanBeNull(DayOfWeek dayOfWeek) {
 
         final WorkingTimeDto dto = new WorkingTimeDto();
         dto.setWorkday(List.of(dayOfWeek.name().toLowerCase()));
@@ -133,13 +121,12 @@ class WorkingTimeDtoValidatorTest {
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
 
-        assertThat(bindingResult.getFieldError("workingTime")).isNotNull();
-        assertThat(bindingResult.getFieldError("workingTime").getCode()).isEqualTo("usermanagement.working-time.validation.working-time.not-empty");
+        assertThat(bindingResult.getFieldError("workingTime")).isNull();
     }
 
     @ParameterizedTest
     @EnumSource(DayOfWeek.class)
-    void invalidWhenWorkingTimeIsZero(DayOfWeek dayOfWeek) {
+    void ensureThatWorkingTimeCanBeZero(DayOfWeek dayOfWeek) {
 
         final WorkingTimeDto dto = new WorkingTimeDto();
         dto.setWorkday(List.of(dayOfWeek.name().toLowerCase()));
@@ -148,8 +135,7 @@ class WorkingTimeDtoValidatorTest {
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
 
-        assertThat(bindingResult.getFieldError("workingTime")).isNotNull();
-        assertThat(bindingResult.getFieldError("workingTime").getCode()).isEqualTo("usermanagement.working-time.validation.working-time.not-empty");
+        assertThat(bindingResult.getFieldError("workingTime")).isNull();
     }
 
     @Test
