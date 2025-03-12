@@ -66,11 +66,12 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     private final WorkingTimeDtoValidator validator;
     private final FederalStateSettingsService federalStateSettingsService;
 
-    WorkingTimeController(UserManagementService userManagementService,
-                          WorkingTimeService workingTimeService,
-                          WorkingTimeDtoValidator validator,
-                          FederalStateSettingsService federalStateSettingsService) {
-
+    WorkingTimeController(
+        UserManagementService userManagementService,
+        WorkingTimeService workingTimeService,
+        WorkingTimeDtoValidator validator,
+        FederalStateSettingsService federalStateSettingsService
+    ) {
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
         this.validator = validator;
@@ -78,9 +79,11 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping("/new")
-    String newWorkingTime(@PathVariable("userId") Long userId, Model model,
-                          @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                          @CurrentSecurityContext SecurityContext securityContext) {
+    String newWorkingTime(
+        @PathVariable("userId") Long userId, Model model,
+        @RequestParam(value = "query", required = false, defaultValue = "") String query,
+        @CurrentSecurityContext SecurityContext securityContext
+    ) {
 
         final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
         workingTimeDto.setFederalState(FederalState.GLOBAL);
@@ -93,11 +96,13 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping("/{workingTimeId}")
-    String getWorkingTime(@PathVariable("userId") Long userId, Model model,
-                          @PathVariable("workingTimeId") String workingTimeId,
-                          @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                          @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                          @CurrentSecurityContext SecurityContext securityContext) {
+    String getWorkingTime(
+        @PathVariable("userId") Long userId, Model model,
+        @PathVariable("workingTimeId") String workingTimeId,
+        @RequestParam(value = "query", required = false, defaultValue = "") String query,
+        @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+        @CurrentSecurityContext SecurityContext securityContext
+    ) {
 
         final WorkingTime workingTime = workingTimeService.getWorkingTimeById(WorkingTimeId.fromString(workingTimeId))
             .orElseThrow(() -> new IllegalStateException("could not find working time with id=" + workingTimeId));
@@ -115,12 +120,14 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping("/new")
-    ModelAndView createNewWorkingTime(@PathVariable("userId") Long userId, Model model,
-                                      @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
-                                      @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                                      @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                                      @CurrentSecurityContext SecurityContext securityContext,
-                                      @RequestParam Map<String, Object> requestParameters) {
+    ModelAndView createNewWorkingTime(
+        @PathVariable("userId") Long userId, Model model,
+        @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
+        @RequestParam(value = "query", required = false, defaultValue = "") String query,
+        @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+        @CurrentSecurityContext SecurityContext securityContext,
+        @RequestParam Map<String, Object> requestParameters
+    ) {
 
         final Object select = requestParameters.get("select");
         if (select instanceof String selectValue) {
@@ -159,12 +166,14 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping("/{workingTimeId}")
-    ModelAndView updateWorkingTime(@PathVariable("userId") Long userId, Model model,
-                                   @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
-                                   @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                                   @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                                   @CurrentSecurityContext SecurityContext securityContext,
-                                   @RequestParam Map<String, Object> requestParameters) {
+    ModelAndView updateWorkingTime(
+        @PathVariable("userId") Long userId, Model model,
+        @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
+        @RequestParam(value = "query", required = false, defaultValue = "") String query,
+        @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+        @CurrentSecurityContext SecurityContext securityContext,
+        @RequestParam Map<String, Object> requestParameters
+    ) {
 
         final Object select = requestParameters.get("select");
         if (select instanceof String selectValue) {
@@ -250,10 +259,12 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         ));
     }
 
-    private void prepareGetWorkingTimesModel(Model model, String query, Long userId,
-                                             List<WorkingTimeListEntryDto> workingTimeDtos,
-                                             SecurityContext securityContext,
-                                             FederalStateSettings federalStateSettings) {
+    private void prepareGetWorkingTimesModel(
+        Model model, String query, Long userId,
+        List<WorkingTimeListEntryDto> workingTimeDtos,
+        SecurityContext securityContext,
+        FederalStateSettings federalStateSettings
+    ) {
 
         final List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()
