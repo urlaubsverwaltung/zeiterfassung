@@ -1,0 +1,67 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <changeSet author="schneider" id="add-missing-indices">
+    <preConditions>
+      <not>
+        <indexExists tableName="time_entry" indexName="time_entry_owner"/>
+        <indexExists tableName="time_entry" indexName="time_entry_tenant_id"/>
+        <indexExists tableName="time_entry_aud" indexName="time_entry_aud_owner"/>
+        <indexExists tableName="time_entry_aud" indexName="time_entry_aud_rev"/>
+        <indexExists tableName="revinfo" indexName="revinfo_updated_by"/>
+        <indexExists tableName="working_time" indexName="working_time_user_id"/>
+        <indexExists tableName="tenant_user_authorities" indexName="tenant_user_authorities_tenant_user_id"/>
+        <indexExists tableName="tenant_user" indexName="tenant_user_tenant_id"/>
+        <indexExists tableName="overtime_account" indexName="overtime_account_tenant_id"/>
+        <indexExists tableName="time_clock" indexName="time_clock_owner"/>
+        <indexExists tableName="time_clock" indexName="time_clock_tenant_id"/>
+      </not>
+    </preConditions>
+
+    <createIndex tableName="time_entry" indexName="time_entry_owner">
+      <column name="owner"/>
+    </createIndex>
+
+    <createIndex tableName="time_entry" indexName="time_entry_tenant_id">
+      <column name="tenant_id"/>
+    </createIndex>
+
+    <createIndex tableName="time_entry_aud" indexName="time_entry_aud_owner">
+      <column name="owner"/>
+    </createIndex>
+
+    <createIndex tableName="time_entry_aud" indexName="time_entry_aud_rev">
+      <column name="rev"/>
+    </createIndex>
+
+    <createIndex tableName="revinfo" indexName="revinfo_updated_by">
+      <column name="updated_by"/>
+    </createIndex>
+
+    <createIndex tableName="working_time" indexName="working_time_user_id">
+      <column name="user_id"/>
+    </createIndex>
+
+    <createIndex tableName="tenant_user_authorities" indexName="tenant_user_authorities_tenant_user_id">
+      <column name="tenant_user_id"/>
+    </createIndex>
+
+    <createIndex tableName="tenant_user" indexName="tenant_user_tenant_id">
+      <column name="tenant_id"/>
+    </createIndex>
+
+    <createIndex tableName="overtime_account" indexName="overtime_account_tenant_id">
+      <column name="tenant_id"/>
+    </createIndex>
+
+    <createIndex tableName="time_clock" indexName="time_clock_owner">
+      <column name="owner"/>
+    </createIndex>
+
+    <createIndex tableName="time_clock" indexName="time_clock_tenant_id">
+      <column name="tenant_id"/>
+    </createIndex>
+  </changeSet>
+</databaseChangeLog>
