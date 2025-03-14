@@ -46,7 +46,7 @@ class TenantUserServiceImplTest {
     @Test
     void ensureFindAllUsersWithQueryReturnsEmpty() {
 
-        when(repository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc("batman", "batman"))
+        when(repository.findAllByNiceNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc("batman"))
             .thenReturn(List.of());
 
         final List<TenantUser> actual = sut.findAllUsers("batman");
@@ -60,7 +60,7 @@ class TenantUserServiceImplTest {
         final TenantUserEntity entity = activeUserEntityOne(now);
         final TenantUser tenantUser = activeTenantUserOne(now);
 
-        when(repository.findAllByGivenNameContainingIgnoreCaseOrFamilyNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc("batman", "batman"))
+        when(repository.findAllByNiceNameContainingIgnoreCaseOrderByGivenNameAscFamilyNameAsc("batman"))
             .thenReturn(List.of(entity));
 
         final List<TenantUser> actual = sut.findAllUsers("batman");
