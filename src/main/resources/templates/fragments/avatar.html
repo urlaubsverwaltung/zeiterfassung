@@ -30,5 +30,16 @@
         th:replace="~{::avatar(${fullName},${width},${height})}"
       />
     </span>
+
+    <a
+      th:fragment="avatar-with-link(fullName,width,height,userLocalId)"
+      th:href="@{/timeentries/users/{id} (id=${userLocalId})}"
+    >
+      <img
+        src="#"
+        alt=""
+        th:replace="~{::avatar(${fullName},${width},${height})}"
+      />
+    </a>
   </body>
 </html>

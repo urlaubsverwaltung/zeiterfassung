@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.ControllerTest;
-import de.focusshift.zeiterfassung.security.AuthenticationFacade;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
@@ -50,6 +50,7 @@ import static java.util.Locale.GERMAN;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -78,8 +79,6 @@ class ReportMonthControllerTest implements ControllerTest {
     @Mock
     private UserManagementService userManagementService;
     @Mock
-    private AuthenticationFacade authenticationFacade;
-    @Mock
     private MessageSource messageSource;
 
     private DateFormatterImpl dateFormatter;
@@ -95,7 +94,7 @@ class ReportMonthControllerTest implements ControllerTest {
         dateFormatter = new DateFormatterImpl();
         dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
         reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
-        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationFacade);
+        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
         timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
         sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper, timeEntryDialogHelper, clock);
     }
@@ -508,13 +507,15 @@ class ReportMonthControllerTest implements ControllerTest {
 
             // must be called even with initial constraint violations
             // since the helper adds further stuff to the model
-            verify(timeEntryDialogHelper).saveTimeEntry(any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+            verify(timeEntryDialogHelper).saveTimeEntry(nullable(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
         }
 
         @Test
         void ensureEditTimeEntry() throws Exception {
 
             perform(post("/report/year/2025/month/2")
+                .param("id", "1")
+                .param("userLocalId", "1")
                 .param("date", "2025-02-28")
                 .param("start", "14:30")
                 .param("end", "15:00")
@@ -523,7 +524,7 @@ class ReportMonthControllerTest implements ControllerTest {
                 .andExpect(redirectedUrl("http://localhost/report/year/2025/month/2"))
                 .andExpect(flash().attribute("turboRefreshScroll", "preserve"));
 
-            verify(timeEntryDialogHelper).saveTimeEntry(any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+            verify(timeEntryDialogHelper).saveTimeEntry(nullable(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
         }
 
         @Test

@@ -235,16 +235,19 @@ class TimeEntryDialogHelperTest {
         @Test
         void ensureSaveTimeEntryDelegates() {
 
+            final UserIdComposite userIdComposite = anyUserIdComposite("batman");
+
             final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
             timeEntryDto.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(userIdComposite);
             final Model model = mock(Model.class);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.saveTimeEntry(timeEntryDto, bindingResult, model, redirectAttributes);
+            sut.saveTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
-            verify(timeEntryViewHelper).updateTimeEntry(timeEntryDto, bindingResult, model, redirectAttributes);
+            verify(timeEntryViewHelper).updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
         }
     }
 

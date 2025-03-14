@@ -229,7 +229,10 @@ class TimeEntryServiceImpl implements TimeEntryService {
         entity.setEndZoneId(end.getZone().getId());
         entity.setBreak(isBreak);
 
-        return save(entity, user);
+        final TimeEntry saved = save(entity, user);
+        LOG.info("Created timeEntry {} of user {}.", saved.id(), saved.userIdComposite().localId());
+
+        return saved;
     }
 
     @Override
@@ -244,12 +247,16 @@ class TimeEntryServiceImpl implements TimeEntryService {
         entity.setComment(requireNonNullElse(comment, "").strip());
         entity.setBreak(isBreak);
 
-        return save(entity);
+        final TimeEntry saved = save(entity);
+        LOG.info("Updated timeEntry {} of user {}.", saved.id(), saved.userIdComposite().localId());
+
+        return saved;
     }
 
     @Override
     public void deleteTimeEntry(TimeEntryId id) {
         timeEntryRepository.deleteById(id.value());
+        LOG.info("Deleted timeEntry {}", id);
     }
 
     private static List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,

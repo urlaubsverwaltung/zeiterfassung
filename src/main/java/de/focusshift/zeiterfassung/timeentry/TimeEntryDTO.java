@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -31,6 +33,10 @@ public class TimeEntryDTO {
 
     private Long id;
 
+    @NotNull
+    @Positive
+    private Long userLocalId;
+
     @DateTimeFormat(iso = DATE)
     private LocalDate date;
 
@@ -52,8 +58,9 @@ public class TimeEntryDTO {
         date = LocalDate.now();
     }
 
-    private TimeEntryDTO(Long id, LocalDate date, LocalTime start, LocalTime end, String duration, String comment, boolean isBreak) {
+    private TimeEntryDTO(Long id, Long userLocalId, LocalDate date, LocalTime start, LocalTime end, String duration, String comment, boolean isBreak) {
         this.id = id;
+        this.userLocalId = userLocalId;
         this.date = date;
         this.start = start;
         this.end = end;
@@ -69,6 +76,14 @@ public class TimeEntryDTO {
     public TimeEntryDTO setId(Long id) {
         this.id = id;
         return this;
+    }
+
+    public Long getUserLocalId() {
+        return userLocalId;
+    }
+
+    public void setUserLocalId(Long userLocalId) {
+        this.userLocalId = userLocalId;
     }
 
     public LocalDate getDate() {
@@ -132,7 +147,8 @@ public class TimeEntryDTO {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TimeEntryDTO that = (TimeEntryDTO) o;
-        return Objects.equals(date, that.date)
+        return Objects.equals(userLocalId, that.userLocalId)
+            && Objects.equals(date, that.date)
             && Objects.equals(start, that.start)
             && Objects.equals(end, that.end)
             && Objects.equals(duration, that.duration)
@@ -142,13 +158,14 @@ public class TimeEntryDTO {
 
     @Override
     public int hashCode() {
-        return Objects.hash(date, start, end, duration, comment, isBreak);
+        return Objects.hash(userLocalId, date, start, end, duration, comment, isBreak);
     }
 
     @Override
     public String toString() {
         return "TimeEntryDTO{" +
             "id=" + id +
+            ", userLocalId=" + userLocalId +
             ", date=" + date +
             ", start=" + start +
             ", end=" + end +
@@ -160,6 +177,7 @@ public class TimeEntryDTO {
 
     public static class Builder {
         private Long id;
+        private Long userLocalId;
         private LocalDate date;
         private LocalTime start;
         private LocalTime end;
@@ -172,6 +190,11 @@ public class TimeEntryDTO {
 
         public Builder id(Long id) {
             this.id = id;
+            return this;
+        }
+
+        public Builder userLocalId(Long userLocalId) {
+            this.userLocalId = userLocalId;
             return this;
         }
 
@@ -206,7 +229,7 @@ public class TimeEntryDTO {
         }
 
         public TimeEntryDTO build() {
-            return new TimeEntryDTO(id, date, start, end, duration, comment, isBreak);
+            return new TimeEntryDTO(id, userLocalId, date, start, end, duration, comment, isBreak);
         }
     }
 }

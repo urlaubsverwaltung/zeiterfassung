@@ -65,8 +65,8 @@ public class TimeEntryDialogHelper {
         addTimeEntryDialog(model, currentUser, timeEntry, editFormAction, cancelFormAction);
     }
 
-    public void saveTimeEntry(TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
-        timeEntryViewHelper.updateTimeEntry(timeEntryDTO, errors, model, redirectAttributes);
+    public void saveTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
+        timeEntryViewHelper.updateTimeEntry(currentUser, timeEntryDTO, errors, model, redirectAttributes);
     }
 
     private void addTimeEntry(Model model, TimeEntry timeEntry) {

@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
@@ -52,6 +53,7 @@ import static java.util.Locale.GERMAN;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -224,6 +226,7 @@ class ReportWeekControllerTest implements ControllerTest {
                     List.of(
                         new DetailDayAbsenceDto(
                             "Bruce Wayne",
+                            1L,
                             "FULL",
                             "absence-full-de",
                             "ORANGE"
@@ -483,13 +486,15 @@ class ReportWeekControllerTest implements ControllerTest {
 
             // must be called even with initial constraint violations
             // since the helper adds further stuff to the model
-            verify(timeEntryDialogHelper).saveTimeEntry(any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+            verify(timeEntryDialogHelper).saveTimeEntry(nullable(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
         }
 
         @Test
         void ensureEditTimeEntry() throws Exception {
 
             perform(post("/report/year/2025/week/9")
+                .param("id", "1")
+                .param("userLocalId", "1")
                 .param("date", "2025-02-28")
                 .param("start", "14:30")
                 .param("end", "15:00")
@@ -498,7 +503,7 @@ class ReportWeekControllerTest implements ControllerTest {
                 .andExpect(redirectedUrl("http://localhost/report/year/2025/week/9"))
                 .andExpect(flash().attribute("turboRefreshScroll", "preserve"));
 
-            verify(timeEntryDialogHelper).saveTimeEntry(any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+            verify(timeEntryDialogHelper).saveTimeEntry(nullable(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
         }
 
         @Test

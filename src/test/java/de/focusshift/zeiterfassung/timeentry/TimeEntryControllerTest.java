@@ -3,20 +3,24 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
-import de.focusshift.zeiterfassung.security.AuthenticationFacade;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.YearFormat;
+import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
+import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
@@ -34,9 +38,12 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.YELLOW;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,29 +67,29 @@ class TimeEntryControllerTest implements ControllerTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
+    private UserManagementService userManagementService;
+    @Mock
     private UserSettingsProvider userSettingsProvider;
     @Mock
     private DateFormatter dateFormatter;
 
     private Clock clock = Clock.systemUTC();
 
-    private AuthenticationFacade authenticationFacade;
     private TimeEntryViewHelper timeEntryViewHelper;
 
     @BeforeEach
     void setUp() {
-        authenticationFacade = new AuthenticationFacade();
-        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationFacade);
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
     }
 
     @Test
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
 
-        when(userSettingsProvider.zoneId()).thenReturn(ZoneOffset.UTC);
+        mockUserSettings(ZoneOffset.UTC);
 
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
@@ -105,6 +112,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
+            .userLocalId(userLocalId.value())
             .date(timeEntryDate)
             .start(LocalTime.of(14, 30))
             .end(LocalTime.of(15, 0))
@@ -185,6 +193,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
+            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2024, 12, 31))
             .start(LocalTime.of(14, 30))
             .end(LocalTime.of(15, 0))
@@ -267,6 +276,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
+            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2024, 12, 31))
             .start(LocalTime.of(14, 30))
             .end(LocalTime.of(15, 0))
@@ -420,6 +430,62 @@ class TimeEntryControllerTest implements ControllerTest {
     }
 
     @Test
+    void ensureTimeEntriesForOtherUserIsForbidden() {
+
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserId userId = new UserId("joker");
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        assertThatThrownBy(() -> perform(get("/timeentries/users/1337").with(oidcSubject(userIdComposite))))
+            .isInstanceOf(ServletException.class)
+            .hasCauseInstanceOf(AccessDeniedException.class)
+            .hasRootCauseMessage("You are not allowed to access timeentries of user 1337");
+    }
+
+    @Test
+    void ensureTimeEntriesForOtherUser() throws Exception {
+
+        clock = Clock.fixed(Instant.parse("2025-03-18T10:04:00.00Z"), ZoneOffset.UTC);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+
+        final int year = 2025;
+        final int weekOfYear = 12;
+
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserId userId = new UserId("batman");
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final UserLocalId ownerLocalId = new UserLocalId(2L);
+        final UserId ownerId = new UserId("joker");
+        final UserIdComposite ownerIdComposite = new UserIdComposite(ownerId, ownerLocalId);
+
+        mockUserSettings(ZoneOffset.UTC);
+
+        final User owner = anyUser(ownerIdComposite);
+        when(userManagementService.findUserByLocalId(ownerLocalId)).thenReturn(Optional.of(owner));
+
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.parse("2025-03-17"), PlannedWorkingHours.ZERO, List.of());
+        final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
+        when(timeEntryService.getEntryWeekPage(ownerLocalId, year, weekOfYear)).thenReturn(timeEntryWeekPage);
+
+        final ImpressionUserDto expectedImpression = new ImpressionUserDto(ownerLocalId.value(), owner.givenName(), owner.familyName(), owner.fullName(), owner.email().value());
+        final TimeEntryDTO expectedTimeEntry = new TimeEntryDTO();
+        expectedTimeEntry.setUserLocalId(ownerLocalId.value());
+
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(weekOfYear, null, null,"00:00","00:00","00:00", false, 0.0, List.of());
+        final TimeEntryWeeksPageDto expetectedWeeksPageDto = new TimeEntryWeeksPageDto(year, weekOfYear + 1, year, weekOfYear - 1, expectedTimeEntryWeekDto, 0);
+
+        perform(get("/timeentries/users/2")
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
+        )
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("impression", expectedImpression))
+            .andExpect(model().attribute("timeEntry", expectedTimeEntry))
+            .andExpect(model().attribute("timeEntryWeeksPage", expetectedWeeksPageDto))
+            .andExpect(view().name("timeentries/index"));
+    }
+
+    @Test
     void ensureTimeEntryCreation() throws Exception {
 
         final UserId userId = new UserId("batman");
@@ -434,6 +500,7 @@ class TimeEntryControllerTest implements ControllerTest {
                 .header("Referer", "/timeentries")
                 .with(oidcSubject(userIdComposite)
             )
+                .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-01-02")
                 .param("start", "14:30:00.000+01:00")
                 .param("end", "15:00:00.000+01:00")
@@ -462,6 +529,7 @@ class TimeEntryControllerTest implements ControllerTest {
                 .header("Referer", "/timeentries")
                 .with(oidcSubject(userIdComposite)
             )
+                .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-01-02")
                 .param("start", "14:30:00.000+01:00")
                 .param("end", "15:00:00.000+01:00")
@@ -491,6 +559,7 @@ class TimeEntryControllerTest implements ControllerTest {
                 .header("Referer", "/timeentries")
                 .with(oidcSubject(userIdComposite)
             )
+                .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-01-02")
                 .param("start", "22:30:00.000+01:00")
                 .param("end", "01:15:00.000+01:00")
@@ -505,7 +574,7 @@ class TimeEntryControllerTest implements ControllerTest {
     }
 
     @Test
-    void ensureTimeEntryCreationError() throws Exception {
+    void ensureTimeEntryCreationErrorBecauseOfMissingStartEnd() throws Exception {
 
         mockUserSettings(DayOfWeek.MONDAY);
 
@@ -538,8 +607,10 @@ class TimeEntryControllerTest implements ControllerTest {
             post("/timeentries")
                 .with(oidcSubject(userIdComposite)
             )
+                .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-01-02")
                 .param("comment", "hard work")
+                .param("duration", "08:00")
                  // missing start/end/value
         )
             .andExpect(view().name("timeentries/index"))
@@ -547,20 +618,67 @@ class TimeEntryControllerTest implements ControllerTest {
     }
 
     @Test
+    void ensureTimeEntryCreationForOtherUserIsForbidden() {
+
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserId userId = new UserId("joker");
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        assertThatThrownBy(() -> perform(post("/timeentries/users/1337").with(oidcSubject(userIdComposite))))
+            .isInstanceOf(ServletException.class)
+            .hasCauseInstanceOf(AccessDeniedException.class)
+            .hasRootCauseMessage("You are not allowed to access timeentries of user 1337");
+    }
+
+    @Test
+    void ensureTimeEntryCreationForOtherUser() throws Exception {
+
+        mockUserSettings(ZoneOffset.UTC, DayOfWeek.MONDAY);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final UserLocalId ownerLocalId = new UserLocalId(2L);
+
+        perform(
+            post("/timeentries/users/2")
+                .header("Referer", "/timeentries/users/2")
+                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL))
+            )
+                .param("userLocalId", ownerLocalId.value().toString())
+                .param("date", "2025-03-17")
+                .param("start", "14:30:00.000+02:00")
+                .param("end", "15:00:00.000+02:00")
+                .param("comment", "hard work")
+        )
+            .andExpect(redirectedUrl("http://localhost/timeentries/users/2"));
+
+        final ZonedDateTime expectedStart = ZonedDateTime.parse("2025-03-17T14:30Z");
+        final ZonedDateTime expectedEnd = ZonedDateTime.parse("2025-03-17T15:00Z");
+
+        verify(timeEntryService).createTimeEntry(ownerLocalId, "hard work", expectedStart, expectedEnd, false);
+    }
+
+    @Test
     void ensureTimeEntryEditStartGivenAndEndGivenAndDurationNull() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserIdComposite userIdComposite = anyUserIdComposite(userId);
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
         when(timeEntryService.findTimeEntry(new TimeEntryId(1337L)))
-            .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
+            .thenReturn(Optional.of(anyTimeEntry(userId)));
 
         perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("id", "1337")
+                .param("userLocalId", userIdComposite.localId().value().toString())
                 .param("date", "2022-09-28")
                 .param("start", "20:30:00.000+01:00")
                 .param("end", "21:15:00.000+01:00")
@@ -577,18 +695,22 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntryEditStartNullAndEndGivenAndDurationGiven() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserIdComposite userIdComposite = anyUserIdComposite(userId);
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
         when(timeEntryService.findTimeEntry(new TimeEntryId(1337L)))
-            .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
+            .thenReturn(Optional.of(anyTimeEntry(userId)));
 
         perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("id", "1337")
+                .param("userLocalId", userIdComposite.localId().value().toString())
                 .param("date", "2022-09-28")
                 .param("start", "")
                 .param("end", "21:15:00.000+01:00")
@@ -605,18 +727,22 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntryEditStartGivenAndEndNullAndDurationGiven() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserIdComposite userIdComposite = anyUserIdComposite(userId);
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
         when(timeEntryService.findTimeEntry(new TimeEntryId(1337L)))
-            .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
+            .thenReturn(Optional.of(anyTimeEntry(userId)));
 
         perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("id", "1337")
+                .param("userLocalId", userIdComposite.localId().value().toString())
                 .param("date", "2022-09-28")
                 .param("start", "21:15:00.000+01:00")
                 .param("end", "")
@@ -633,25 +759,28 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntryBreakEdit() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserIdComposite userIdComposite = anyUserIdComposite(userId);
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
-        final UserId userId = new UserId("batman");
         when(timeEntryService.findTimeEntry(new TimeEntryId(1337L))).thenReturn(Optional.of(anyTimeEntry(userId)));
 
         perform(
             post("/timeentries/1337")
-                .header("Referer", "/timeentries/2022/39")
-                .with(oidcSubject("batman")
+                .header("Referer", "/timeentries?year=2022&week=39")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("id", "1337")
+                .param("userLocalId", userIdComposite.localId().value().toString())
                 .param("date", "2022-09-28")
                 .param("start", "20:30:00.000+01:00")
                 .param("end", "21:15:00.000+01:00")
                 .param("comment", "hard work extended")
                 .param("break", "true")
         )
-            .andExpect(redirectedUrl("/timeentries/2022/39"));
+            .andExpect(redirectedUrl("/timeentries?year=2022&week=39"));
 
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
@@ -715,6 +844,7 @@ class TimeEntryControllerTest implements ControllerTest {
                 .with(oidcSubject(userIdComposite)
             )
                 .param("id", "1337")
+                .param("userLocalId", userIdComposite.localId().value().toString())
                 .param("date", "2022-09-28")
                 .param("start", "20:30:00.000+01:00")
                 .param("end", "21:15:00.000+01:00")
@@ -723,6 +853,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedUpdatedTimeEntryDto = TimeEntryDTO.builder()
             .id(1337L)
+            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2022, 9, 28))
             .start(LocalTime.of(20, 30))
             .end(LocalTime.of(21, 15))
@@ -732,6 +863,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO otherTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
+            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2022, 9, 29))
             .start(LocalTime.of(14, 30))
             .end(LocalTime.of(15, 0))
@@ -814,6 +946,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
+            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2022, 9, 22))
             .start(LocalTime.of(14, 30))
             .end(LocalTime.of(15, 0))
@@ -851,6 +984,8 @@ class TimeEntryControllerTest implements ControllerTest {
             post("/timeentries/1337")
                 .with(oidcSubject(userIdComposite)
             )
+                .param("id", "1337")
+                .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-01-02")
                 .param("comment", "hard work")
             // missing start/end/value
@@ -862,17 +997,22 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntryEditWithValidationErrorWithAjax() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         mockUserSettings(DayOfWeek.MONDAY);
 
         when(timeEntryService.findTimeEntry(new TimeEntryId(1337L)))
-            .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
+            .thenReturn(Optional.of(anyTimeEntry(userId)));
 
         perform(
             post("/timeentries/1337")
                 .header("Turbo-Frame", "any-value")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("id", "1337")
+                .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-09-28")
                 .param("start", "")
                 .param("end", "")
@@ -882,6 +1022,54 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(view().name("timeentries/index::#frame-time-entry"));
 
         verifyNoMoreInteractions(timeEntryService);
+    }
+
+    @Test
+    void ensureTimeEntryEditForOtherUserIsForbidden() {
+
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserId userId = new UserId("joker");
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        assertThatThrownBy(() -> perform(post("/timeentries/users/2/timeentry/42").with(oidcSubject(userIdComposite))))
+            .isInstanceOf(ServletException.class)
+            .hasCauseInstanceOf(AccessDeniedException.class)
+            .hasRootCauseMessage("You are not allowed to access timeentries of user 2");
+    }
+
+    @Test
+    void ensureTimeEntryEditForOtherUser() throws Exception {
+
+        mockUserSettings(ZoneOffset.UTC, DayOfWeek.MONDAY);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final UserId ownerId = new UserId("joker");
+        final UserLocalId ownerLocalId = new UserLocalId(2L);
+
+        when(timeEntryService.findTimeEntry(new TimeEntryId(42L)))
+            .thenReturn(Optional.of(anyTimeEntry(ownerId)));
+
+        perform(
+            post("/timeentries/users/2/timeentry/42")
+                .header("Referer", "/timeentries/users/2")
+                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL))
+            )
+                .param("id", "42")
+                .param("userLocalId", ownerLocalId.value().toString())
+                .param("date", "2025-03-17")
+                .param("start", "20:30:00.000+02:00")
+                .param("end", "21:15:00.000+02:00")
+                .param("comment", "hard work extended")
+        )
+            .andExpect(redirectedUrl("/timeentries/users/2"));
+
+        final ZonedDateTime expectedStart = ZonedDateTime.parse("2025-03-17T20:30Z");
+        final ZonedDateTime expectedEnd = ZonedDateTime.parse("2025-03-17T21:15Z");
+
+        verify(timeEntryService).updateTimeEntry(new TimeEntryId(42L), "hard work extended", expectedStart, expectedEnd, Duration.ZERO, false);
     }
 
     @Test
@@ -901,7 +1089,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         perform(
             post("/timeentries/1337")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("delete", "")
         )
@@ -939,6 +1127,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedDeletedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
+            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2022, 9, 28))
             .start(LocalTime.of(20, 30))
             .end(LocalTime.of(21, 15))
@@ -957,6 +1146,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .timeEntries(List.of(
                 TimeEntryDTO.builder()
                     .id(2L)
+                    .userLocalId(userLocalId.value())
                     .date(LocalDate.of(2022, 9, 28))
                     .start(LocalTime.of(16, 30))
                     .end(LocalTime.of(17, 30))
@@ -1017,6 +1207,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedDeletedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
+            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2022, 9, 28))
             .start(LocalTime.of(20, 30))
             .end(LocalTime.of(21, 15))
@@ -1051,8 +1242,63 @@ class TimeEntryControllerTest implements ControllerTest {
         verify(timeEntryService).deleteTimeEntry(new TimeEntryId(1L));
     }
 
+    @Test
+    void ensureDeleteForOtherUserIsForbidden() {
+
+        final UserId ownerUserId = new UserId("batman");
+        final UserLocalId ownerUserLocalId = new UserLocalId(1337L);
+        final UserIdComposite ownerUserIdComposite = new UserIdComposite(ownerUserId, ownerUserLocalId);
+
+        final TimeEntryId timeEntryId = new TimeEntryId(1L);
+        final TimeEntry timeEntry = anyTimeEntry(timeEntryId, ownerUserIdComposite);
+        when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(timeEntry));
+
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserId userId = new UserId("joker");
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        assertThatThrownBy(() -> perform(post("/timeentries/users/1337/timeentry/1").with(oidcSubject(userIdComposite)).param("delete", "")))
+            .isInstanceOf(ServletException.class)
+            .hasCauseInstanceOf(AccessDeniedException.class)
+            .hasRootCauseMessage("You are not allowed to access timeentries of user 1337");
+    }
+
+    @Test
+    void ensureDeleteForOtherUser() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final UserId ownerId = new UserId("joker");
+        final UserLocalId ownerLocalId = new UserLocalId(2L);
+        final UserIdComposite ownerIdComposite = new UserIdComposite(ownerId, ownerLocalId);
+
+        final TimeEntryId timeEntryId = new TimeEntryId(42L);
+        final ZonedDateTime start = ZonedDateTime.parse("2025-03-17T09:00:00Z");
+        final ZonedDateTime end = ZonedDateTime.parse("2025-03-17T17:00:00Z");
+        final TimeEntry timeEntry = new TimeEntry(timeEntryId, ownerIdComposite, "", start, end, false);
+
+        when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(timeEntry));
+
+        perform(
+            post("/timeentries/users/2/timeentry/42")
+                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL))
+            )
+                .param("delete", "")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("http://localhost/timeentries/users/2?year=2025&week=12"));
+
+        verify(timeEntryService).deleteTimeEntry(timeEntryId);
+    }
+
     private UserIdComposite anyUserIdComposite(UserId userId) {
         return new UserIdComposite(userId, new UserLocalId(1L));
+    }
+
+    private User anyUser(UserIdComposite userIdComposite) {
+        return new User(userIdComposite, "given name", "family name", new EMailAddress("email@example.org"), Set.of());
     }
 
     private TimeEntry anyTimeEntry(UserId userId) {
@@ -1060,8 +1306,11 @@ class TimeEntryControllerTest implements ControllerTest {
     }
 
     private TimeEntry anyTimeEntry(TimeEntryId id, UserId userId) {
+        return anyTimeEntry(id, anyUserIdComposite(userId));
+    }
 
-        final UserIdComposite userIdComposite = anyUserIdComposite(userId);
+    private TimeEntry anyTimeEntry(TimeEntryId id, UserIdComposite userIdComposite) {
+
         final ZonedDateTime start = ZonedDateTime.now(clock).minusHours(1);
         final ZonedDateTime end = ZonedDateTime.now(clock);
 

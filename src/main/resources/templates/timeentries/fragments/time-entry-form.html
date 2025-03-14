@@ -20,6 +20,7 @@
         th:object="${timeEntry}"
       >
         <input type="hidden" name="id" th:value="*{id}" />
+        <input type="hidden" name="userLocalId" th:value="*{userLocalId}" />
         <h4
           class="sr-only"
           th:text="${#temporals.format(timeEntry.date, 'dd. MMMM yyyy')}"
