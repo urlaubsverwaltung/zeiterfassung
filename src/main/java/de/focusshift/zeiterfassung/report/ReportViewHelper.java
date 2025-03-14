@@ -221,21 +221,26 @@ class ReportViewHelper {
         final Duration deltaDuration = workDuration.duration().minus(shouldWorkingHours.duration());
         final String deltaHours = durationToTimeString(deltaDuration);
 
-        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, workedWorkingHoursString, shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), dayEntryDtos, detailDayAbsenceDto);
+        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, workedWorkingHoursString,
+            shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), dayEntryDtos, detailDayAbsenceDto);
     }
 
     private DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry, TimeEntryIdLinkBuilder urlBuilder) {
 
         final String dialogUrl = urlBuilder.getTimeEntryIdUrl(reportDayEntry.timeEntryId());
+        final User user = reportDayEntry.user();
 
-        return new DetailDayEntryDto(reportDayEntry.timeEntryId().value(), reportDayEntry.user().fullName(),
+        return new DetailDayEntryDto(reportDayEntry.timeEntryId().value(), user.fullName(), user.userLocalId().value(),
             reportDayEntry.comment(), reportDayEntry.isBreak(), reportDayEntry.start().toLocalTime(),
             reportDayEntry.end().toLocalTime(), dialogUrl);
     }
 
     private DetailDayAbsenceDto toDetailDayAbsenceDto(ReportDayAbsence reportDayAbsence, Locale locale) {
+
         final User user = reportDayAbsence.user();
         final Absence absence = reportDayAbsence.absence();
-        return new DetailDayAbsenceDto(user.fullName(), absence.dayLength().name(), absence.label(locale), absence.color().name());
+
+        return new DetailDayAbsenceDto(user.fullName(), user.userLocalId().value(), absence.dayLength().name(),
+            absence.label(locale), absence.color().name());
     }
 }

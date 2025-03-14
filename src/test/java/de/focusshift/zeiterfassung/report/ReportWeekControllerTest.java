@@ -224,6 +224,7 @@ class ReportWeekControllerTest implements ControllerTest {
                     List.of(
                         new DetailDayAbsenceDto(
                             "Bruce Wayne",
+                            1L,
                             "FULL",
                             "absence-full-de",
                             "ORANGE"

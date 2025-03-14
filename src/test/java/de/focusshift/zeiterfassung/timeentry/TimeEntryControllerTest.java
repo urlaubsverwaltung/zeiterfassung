@@ -11,6 +11,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.YearFormat;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,8 @@ class TimeEntryControllerTest implements ControllerTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
+    private UserManagementService userManagementService;
+    @Mock
     private UserSettingsProvider userSettingsProvider;
     @Mock
     private DateFormatter dateFormatter;
@@ -73,14 +76,14 @@ class TimeEntryControllerTest implements ControllerTest {
     void setUp() {
         authenticationFacade = new AuthenticationFacade();
         timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationFacade);
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
     }
 
     @Test
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneOffset.UTC);
 

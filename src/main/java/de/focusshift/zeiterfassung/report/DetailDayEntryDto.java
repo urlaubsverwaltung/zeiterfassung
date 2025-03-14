@@ -10,6 +10,7 @@ import static org.springframework.format.annotation.DateTimeFormat.ISO.TIME;
 record DetailDayEntryDto(
     Long timeEntryId,
     String username,
+    Long userLocalId,
     String comment,
     boolean isBreak,
     @DateTimeFormat(iso = TIME) LocalTime start,

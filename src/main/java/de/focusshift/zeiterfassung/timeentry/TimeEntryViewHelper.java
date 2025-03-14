@@ -59,6 +59,7 @@ public class TimeEntryViewHelper {
 
         return TimeEntryDTO.builder()
             .id(timeEntry.id().value())
+            .userLocalId(timeEntry.userIdComposite().localId().value())
             .date(date)
             .start(startTime)
             .end(endTime)
@@ -81,16 +82,22 @@ public class TimeEntryViewHelper {
      */
     public void createTimeEntry(TimeEntryDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 
+        final UserLocalId currentUserLocalId = authenticationFacade.getCurrentUserIdComposite().localId();
+        final UserLocalId timeEntryUserLocalId = new UserLocalId(dto.getUserLocalId());
+
+        final boolean isOwner = timeEntryUserLocalId.equals(currentUserLocalId);
+        final boolean allowedToEdit = authenticationFacade.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
+        if (!allowedToEdit && !isOwner) {
+            throw new AccessDeniedException("Not allowed to create time entry for user localId=%s".formatted(timeEntryUserLocalId));
+        }
+
         if (bindingResult.hasErrors()) {
             handleCrudTimeEntryErrors(dto, bindingResult, model, redirectAttributes);
             return;
         }
 
-        final UserLocalId userLocalId = authenticationFacade.getCurrentUserIdComposite().localId();
-        final ZoneId zoneId = userSettingsProvider.zoneId();
-
         if (dto.getId() == null) {
-            createTimeEntry(dto, userLocalId, zoneId);
+            createTimeEntry(dto);
         } else {
             throw new IllegalStateException("Expected timeEntry id not to be defined but has value. Did you meant to update the time entry?");
         }
@@ -121,10 +128,10 @@ public class TimeEntryViewHelper {
             .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
         final UserId currentUserId = authenticationFacade.getCurrentUserIdComposite().id();
-        final boolean idOwner = timeEntry.userIdComposite().id().equals(currentUserId);
-        final boolean allowedToEdit = authenticationFacade.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
 
-        if (!allowedToEdit && !idOwner) {
+        final boolean isOwner = timeEntry.userIdComposite().id().equals(currentUserId);
+        final boolean allowedToEdit = authenticationFacade.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
+        if (!allowedToEdit && !isOwner) {
             throw new AccessDeniedException("Not allowed to edit time entry with %s.".formatted(timeEntryId));
         }
 
@@ -177,12 +184,13 @@ public class TimeEntryViewHelper {
         redirectAttributes.addFlashAttribute("timeEntryErrorId", timeEntryDto.getId());
     }
 
-    private void createTimeEntry(TimeEntryDTO dto, UserLocalId userLocalId, ZoneId zoneId) {
+    private void createTimeEntry(TimeEntryDTO dto) {
 
         final ZonedDateTime start;
         final ZonedDateTime end;
-
         final Duration duration = toDuration(dto.getDuration());
+
+        final ZoneId zoneId = userSettingsProvider.zoneId();
 
         if (duration.equals(Duration.ZERO)) {
             // start and end should be given
@@ -198,6 +206,7 @@ public class TimeEntryViewHelper {
             end = start.plusMinutes(duration.toMinutes());
         }
 
+        final UserLocalId userLocalId = new UserLocalId(dto.getUserLocalId());
         timeEntryService.createTimeEntry(userLocalId, dto.getComment(), start, end, dto.isBreak());
     }
 
