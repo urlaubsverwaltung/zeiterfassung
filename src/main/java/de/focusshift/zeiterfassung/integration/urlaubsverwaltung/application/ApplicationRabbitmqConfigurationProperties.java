@@ -19,10 +19,10 @@ class ApplicationRabbitmqConfigurationProperties {
     private String routingKeyAllowed = "allowed";
 
     @NotEmpty
-    private String routingKeyCancelled = "cancelled";
+    private String routingKeyUpdated = "updated";
 
     @NotEmpty
-    private String routingKeyDeleted = "deleted";
+    private String routingKeyCancelled = "cancelled";
 
     @NotEmpty
     private String routingKeyCreatedFromSicknote = "created_from_sicknote";
@@ -59,20 +59,20 @@ class ApplicationRabbitmqConfigurationProperties {
         this.routingKeyAllowed = routingKeyAllowed;
     }
 
+    public String getRoutingKeyUpdated() {
+        return routingKeyUpdated;
+    }
+
+    public void setRoutingKeyUpdated(String routingKeyUpdated) {
+        this.routingKeyUpdated = routingKeyUpdated;
+    }
+
     public String getRoutingKeyCancelled() {
         return routingKeyCancelled;
     }
 
     public void setRoutingKeyCancelled(String routingKeyCancelled) {
         this.routingKeyCancelled = routingKeyCancelled;
-    }
-
-    public String getRoutingKeyDeleted() {
-        return routingKeyDeleted;
-    }
-
-    public void setRoutingKeyDeleted(String routingKeyDeleted) {
-        this.routingKeyDeleted = routingKeyDeleted;
     }
 
     public String getRoutingKeyCreatedFromSicknote() {

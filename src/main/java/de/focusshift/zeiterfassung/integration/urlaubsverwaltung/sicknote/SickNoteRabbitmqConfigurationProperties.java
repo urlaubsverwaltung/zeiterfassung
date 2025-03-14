@@ -22,9 +22,6 @@ class SickNoteRabbitmqConfigurationProperties {
     private String routingKeyCreated = "created";
 
     @NotEmpty
-    private String routingKeyDeleted = "deleted";
-
-    @NotEmpty
     private String routingKeyUpdated = "updated";
 
     @NotEmpty
@@ -71,14 +68,6 @@ class SickNoteRabbitmqConfigurationProperties {
 
     public void setRoutingKeyCreated(String routingKeyCreated) {
         this.routingKeyCreated = routingKeyCreated;
-    }
-
-    public String getRoutingKeyDeleted() {
-        return routingKeyDeleted;
-    }
-
-    public void setRoutingKeyDeleted(String routingKeyDeleted) {
-        this.routingKeyDeleted = routingKeyDeleted;
     }
 
     public String getRoutingKeyUpdated() {
