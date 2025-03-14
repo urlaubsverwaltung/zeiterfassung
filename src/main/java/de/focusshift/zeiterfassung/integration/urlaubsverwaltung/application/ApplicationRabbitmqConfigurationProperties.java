@@ -19,6 +19,9 @@ class ApplicationRabbitmqConfigurationProperties {
     private String routingKeyAllowed = "allowed";
 
     @NotEmpty
+    private String routingKeyUpdated = "updated";
+
+    @NotEmpty
     private String routingKeyCancelled = "cancelled";
 
     @NotEmpty
@@ -57,6 +60,14 @@ class ApplicationRabbitmqConfigurationProperties {
 
     public void setRoutingKeyAllowed(String routingKeyAllowed) {
         this.routingKeyAllowed = routingKeyAllowed;
+    }
+
+    public String getRoutingKeyUpdated() {
+        return routingKeyUpdated;
+    }
+
+    public void setRoutingKeyUpdated(String routingKeyUpdated) {
+        this.routingKeyUpdated = routingKeyUpdated;
     }
 
     public String getRoutingKeyCancelled() {

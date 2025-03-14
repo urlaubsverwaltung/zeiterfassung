@@ -5,6 +5,7 @@ import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCan
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCreatedFromSickNoteEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPeriodDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPersonDTO;
+import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationUpdatedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
 
 import java.time.LocalDate;
@@ -30,6 +31,14 @@ class ApplicationEventDtoAdapter {
     }
 
     ApplicationEventDtoAdapter(ApplicationCancelledEventDTO event) {
+        this.sourceId = event.getSourceId();
+        this.person = event.getPerson();
+        this.vacationType = event.getVacationType();
+        this.period = event.getPeriod();
+        this.absentWorkingDays = event.getAbsentWorkingDays();
+    }
+
+    ApplicationEventDtoAdapter(ApplicationUpdatedEventDTO event) {
         this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();

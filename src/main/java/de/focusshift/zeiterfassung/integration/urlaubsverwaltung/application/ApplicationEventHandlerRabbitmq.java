@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationAllowedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCancelledEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationCreatedFromSickNoteEventDTO;
+import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationUpdatedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeCategory;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeSourceId;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE;
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE;
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE;
+import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_UPDATED_QUEUE;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -76,6 +78,18 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
                 .ifPresentOrElse(
                     absenceWriteService::addAbsence,
                     () -> LOG.info("could not map ApplicationAllowedEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), tenantId));
+        });
+    }
+
+    @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_UPDATED_QUEUE})
+    void on(ApplicationUpdatedEventDTO event) {
+        tenantContextHolder.runInTenantIdContext(event.getTenantId(), tenantId -> {
+            LOG.info("Received ApplicationUpdatedEvent id={} for person={} and tenantId={}",
+                event.getId(), event.getPerson(), tenantId);
+            toAbsence(new ApplicationEventDtoAdapter(event))
+                .ifPresentOrElse(
+                    absenceWriteService::updateAbsence,
+                    () -> LOG.info("could not map ApplicationUpdatedEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), tenantId));
         });
     }
 

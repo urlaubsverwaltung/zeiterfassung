@@ -17,8 +17,10 @@ import org.springframework.context.annotation.Configuration;
 class ApplicationRabbitmqConfiguration {
 
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.allowed";
+    static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_UPDATED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.updated";
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.cancelled";
     static final String ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE = "zeiterfassung.queue.urlaubsverwaltung.application.created_from_sicknote";
+
     @Bean
     ApplicationEventHandlerRabbitmq applicationEventHandlerRabbitmq(AbsenceWriteService absenceWriteService, TenantContextHolder tenantContextHolder) {
         return new ApplicationEventHandlerRabbitmq(absenceWriteService, tenantContextHolder);
@@ -50,6 +52,19 @@ class ApplicationRabbitmqConfiguration {
             return BindingBuilder.bind(zeiterfassungUrlaubsverwaltungApplicationAllowedQueue())
                 .to(applicationTopic())
                 .with(routingKeyAllowed);
+        }
+
+        @Bean
+        Queue zeiterfassungUrlaubsverwaltungApplicationUpdatedQueue() {
+            return new Queue(ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_UPDATED_QUEUE, true);
+        }
+
+        @Bean
+        Binding bindZeiterfassungUrlaubsverwaltungApplicationUpdatedQueue() {
+            final String routingKeyUpdated = applicationRabbitmqConfigurationProperties.getRoutingKeyUpdated();
+            return BindingBuilder.bind(zeiterfassungUrlaubsverwaltungApplicationUpdatedQueue())
+                .to(applicationTopic())
+                .with(routingKeyUpdated);
         }
 
         @Bean
