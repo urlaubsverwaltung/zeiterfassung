@@ -11,6 +11,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.YearFormat;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,8 @@ class TimeEntryControllerTest implements ControllerTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
+    private UserManagementService userManagementService;
+    @Mock
     private UserSettingsProvider userSettingsProvider;
     @Mock
     private DateFormatter dateFormatter;
@@ -73,14 +76,14 @@ class TimeEntryControllerTest implements ControllerTest {
     void setUp() {
         authenticationFacade = new AuthenticationFacade();
         timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider, authenticationFacade);
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
     }
 
     @Test
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneOffset.UTC);
 
@@ -98,7 +101,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryDay timeEntryDay = new TimeEntryDay(timeEntryDate, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(firstDateOfWeek, PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
-        when(timeEntryService.getEntryWeekPage(userId, 2025, 9)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(userLocalId, 2025, 9)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(LocalDate.class), eq(MonthFormat.STRING), eq(YearFormat.FULL))).thenReturn("formatted-date-year-full");
         when(dateFormatter.formatDate(any(LocalDate.class), eq(MonthFormat.STRING), eq(YearFormat.NONE))).thenReturn("formatted-date");
@@ -166,14 +169,14 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
         final Instant absenceStart = ZonedDateTime.of(2025, 1, 3, 14, 30, 0, 0, zoneIdBerlin).toInstant();
         final Instant absenceEnd = ZonedDateTime.of(2025, 1, 3, 15, 0, 0, 0, zoneIdBerlin).toInstant();
-        final Absence absence = new Absence(new UserId("batman"), absenceStart, absenceEnd, DayLength.FULL, locale -> "", YELLOW, HOLIDAY);
+        final Absence absence = new Absence(userId, absenceStart, absenceEnd, DayLength.FULL, locale -> "", YELLOW, HOLIDAY);
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2024, 12, 31), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryDay timeEntryDayWithAbsence = new TimeEntryDay(LocalDate.of(2025, 1, 2), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of(absence));
         final TimeEntryDay timeEntryDayWithoutTimeEntriesAndWithoutAbsences = new TimeEntryDay(LocalDate.of(2025, 1, 3), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(timeEntryDay, timeEntryDayWithAbsence, timeEntryDayWithoutTimeEntriesAndWithoutAbsences));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2025, 1)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(userLocalId, 2025, 1)).thenReturn(timeEntryWeekPage);
 
         // week from to
         when(dateFormatter.formatDate(LocalDate.of(2024, 12,30), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-30");
@@ -233,8 +236,8 @@ class TimeEntryControllerTest implements ControllerTest {
             2025, 2, 2024, 52, expectedTimeEntryWeekDto, 1337);
 
         perform(
-            get("/timeentries/2025/1")
-                .with(oidcSubject("batman"))
+            get("/timeentries").queryParam("year", "2025").queryParam("week", "1")
+                .with(oidcSubject(userIdComposite))
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -256,7 +259,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2024, 12, 31), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 42);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2025, 1)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(userLocalId, 2025, 1)).thenReturn(timeEntryWeekPage);
 
         // week from to
         when(dateFormatter.formatDate(LocalDate.of(2024, 12, 30), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-30");
@@ -302,9 +305,9 @@ class TimeEntryControllerTest implements ControllerTest {
             2025, 2, 2024, 52, expectedTimeEntryWeekDto, 42);
 
         perform(
-            get("/timeentries/2025/01")
+            get("/timeentries").queryParam("year", "2025").queryParam("week", "01")
                 .header("Turbo-Frame", "any-value")
-                .with(oidcSubject("batman"))
+                .with(oidcSubject(userIdComposite))
         )
             .andExpect(view().name("timeentries/index::#frame-time-entry-weeks"))
             .andExpect(model().attribute("turboStreamsEnabled", is(true)))
@@ -313,9 +316,14 @@ class TimeEntryControllerTest implements ControllerTest {
 
     @Test
     void ensureTimeEntriesForYearAndWeekOfYearWhenNextYearWouldBeReachedWithLoadMore() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 12, 27), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 52)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(userLocalId, 2022, 52)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -334,8 +342,8 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2023, 1, 2022, 51, expectedTimeEntryWeekDto, 0);
 
         perform(
-            get("/timeentries/2022/52")
-                .with(oidcSubject("batman"))
+            get("/timeentries").queryParam("year", "2022").queryParam("week", "52")
+                .with(oidcSubject(userIdComposite))
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -344,9 +352,14 @@ class TimeEntryControllerTest implements ControllerTest {
 
     @Test
     void ensureTimeEntriesForYearAndWeekOfYearWhenPreviousYearWouldBeReachedWithShowPastWith52() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 1, 3), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 1)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(userLocalId, 2022, 1)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -365,8 +378,8 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 2, 2021, 52, expectedTimeEntryWeekDto, 0);
 
         perform(
-            get("/timeentries/2022/1")
-                .with(oidcSubject("batman"))
+            get("/timeentries").queryParam("year", "2022").queryParam("week", "1")
+                .with(oidcSubject(userIdComposite))
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -375,9 +388,14 @@ class TimeEntryControllerTest implements ControllerTest {
 
     @Test
     void ensureTimeEntriesForYearAndWeekOfYearWhenPreviousYearWouldBeReachedWithShowPastWith53() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2021, 1, 4), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2021, 1)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(userLocalId, 2021, 1)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -396,8 +414,8 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2021, 2, 2020, 53, expectedTimeEntryWeekDto, 0);
 
         perform(
-            get("/timeentries/2021/1")
-                .with(oidcSubject("batman"))
+            get("/timeentries").queryParam("year", "2021").queryParam("week", "1")
+                .with(oidcSubject(userIdComposite))
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -407,13 +425,17 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntryCreation() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
         perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("date", "2022-01-02")
                 .param("start", "14:30:00.000+01:00")
@@ -425,11 +447,15 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 1, 2, 15, 0, 0, 0, zoneIdBerlin);
 
-        verify(timeEntryService).createTimeEntry(new UserId("batman"), "hard work", expectedStart, expectedEnd, false);
+        verify(timeEntryService).createTimeEntry(userLocalId, "hard work", expectedStart, expectedEnd, false);
     }
 
     @Test
     void ensureTimeEntryBreakCreation() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
@@ -437,7 +463,7 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("date", "2022-01-02")
                 .param("start", "14:30:00.000+01:00")
@@ -450,11 +476,15 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 1, 2, 15, 0, 0, 0, zoneIdBerlin);
 
-        verify(timeEntryService).createTimeEntry(new UserId("batman"), "hard work", expectedStart, expectedEnd, true);
+        verify(timeEntryService).createTimeEntry(userLocalId, "hard work", expectedStart, expectedEnd, true);
     }
 
     @Test
     void ensureTimeEntryCreationForDateTouchingNextDay() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
@@ -462,7 +492,7 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(
             post("/timeentries")
                 .header("Referer", "/timeentries")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("date", "2022-01-02")
                 .param("start", "22:30:00.000+01:00")
@@ -474,7 +504,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 1, 2, 22, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 1, 3, 1, 15, 0, 0, zoneIdBerlin);
 
-        verify(timeEntryService).createTimeEntry(new UserId("batman"), "hard work", expectedStart, expectedEnd, false);
+        verify(timeEntryService).createTimeEntry(userLocalId, "hard work", expectedStart, expectedEnd, false);
     }
 
     @Test
@@ -482,9 +512,13 @@ class TimeEntryControllerTest implements ControllerTest {
 
         mockUserSettings(DayOfWeek.MONDAY);
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 99);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2021, 52)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(userLocalId, 2021, 52)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -505,7 +539,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         perform(
             post("/timeentries")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("date", "2022-01-02")
                 .param("comment", "hard work")
@@ -671,7 +705,7 @@ class TimeEntryControllerTest implements ControllerTest {
         );
 
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2022, 39)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(LocalDate.of(2022, 9, 26), MonthFormat.STRING, YearFormat.NONE)).thenReturn("formatted-2022-9-26");
         when(dateFormatter.formatDate(LocalDate.of(2022, 9, 28), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-28");
@@ -681,7 +715,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ResultActions perform = perform(
             post("/timeentries/1337")
                 .header("Turbo-Frame", "any-value")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("id", "1337")
                 .param("date", "2022-09-28")
@@ -777,7 +811,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
-        when(timeEntryService.getEntryWeekPage(new UserId("batman"), 2021, 52)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(userLocalId, 2021, 52)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -818,7 +852,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         perform(
             post("/timeentries/1337")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("date", "2022-01-02")
                 .param("comment", "hard work")
@@ -902,7 +936,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 28), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry2), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(userId, 2022, 39)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -950,7 +984,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         perform(
             post("/timeentries/1")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("delete", "")
                 .header("Turbo-Frame", "awesome-turbo-frame")
@@ -980,7 +1014,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(userId, 2022, 39)).thenReturn(timeEntryWeekPage);
+        when(timeEntryService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -1007,7 +1041,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         perform(
             post("/timeentries/1")
-                .with(oidcSubject("batman")
+                .with(oidcSubject(userIdComposite)
             )
                 .param("delete", "")
                 .header("Turbo-Frame", "awesome-turbo-frame")

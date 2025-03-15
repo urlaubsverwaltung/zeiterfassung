@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.security.AuthenticationFacade;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.slf4j.Logger;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
@@ -58,6 +59,7 @@ public class TimeEntryViewHelper {
 
         return TimeEntryDTO.builder()
             .id(timeEntry.id().value())
+            .userLocalId(timeEntry.userIdComposite().localId().value())
             .date(date)
             .start(startTime)
             .end(endTime)
@@ -80,16 +82,22 @@ public class TimeEntryViewHelper {
      */
     public void createTimeEntry(TimeEntryDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 
+        final UserLocalId currentUserLocalId = authenticationFacade.getCurrentUserIdComposite().localId();
+        final UserLocalId timeEntryUserLocalId = new UserLocalId(dto.getUserLocalId());
+
+        final boolean isOwner = timeEntryUserLocalId.equals(currentUserLocalId);
+        final boolean allowedToEdit = authenticationFacade.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
+        if (!allowedToEdit && !isOwner) {
+            throw new AccessDeniedException("Not allowed to create time entry for user localId=%s".formatted(timeEntryUserLocalId));
+        }
+
         if (bindingResult.hasErrors()) {
             handleCrudTimeEntryErrors(dto, bindingResult, model, redirectAttributes);
             return;
         }
 
-        final UserId currentUserId = authenticationFacade.getCurrentUserIdComposite().id();
-        final ZoneId zoneId = userSettingsProvider.zoneId();
-
         if (dto.getId() == null) {
-            createTimeEntry(dto, currentUserId, zoneId);
+            createTimeEntry(dto);
         } else {
             throw new IllegalStateException("Expected timeEntry id not to be defined but has value. Did you meant to update the time entry?");
         }
@@ -120,10 +128,10 @@ public class TimeEntryViewHelper {
             .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
         final UserId currentUserId = authenticationFacade.getCurrentUserIdComposite().id();
-        final boolean idOwner = timeEntry.userIdComposite().id().equals(currentUserId);
-        final boolean allowedToEdit = authenticationFacade.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
 
-        if (!allowedToEdit && !idOwner) {
+        final boolean isOwner = timeEntry.userIdComposite().id().equals(currentUserId);
+        final boolean allowedToEdit = authenticationFacade.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
+        if (!allowedToEdit && !isOwner) {
             throw new AccessDeniedException("Not allowed to edit time entry with %s.".formatted(timeEntryId));
         }
 
@@ -176,12 +184,13 @@ public class TimeEntryViewHelper {
         redirectAttributes.addFlashAttribute("timeEntryErrorId", timeEntryDto.getId());
     }
 
-    private void createTimeEntry(TimeEntryDTO dto, UserId userId, ZoneId zoneId) {
+    private void createTimeEntry(TimeEntryDTO dto) {
 
         final ZonedDateTime start;
         final ZonedDateTime end;
-
         final Duration duration = toDuration(dto.getDuration());
+
+        final ZoneId zoneId = userSettingsProvider.zoneId();
 
         if (duration.equals(Duration.ZERO)) {
             // start and end should be given
@@ -197,7 +206,8 @@ public class TimeEntryViewHelper {
             end = start.plusMinutes(duration.toMinutes());
         }
 
-        timeEntryService.createTimeEntry(userId, dto.getComment(), start, end, dto.isBreak());
+        final UserLocalId userLocalId = new UserLocalId(dto.getUserLocalId());
+        timeEntryService.createTimeEntry(userLocalId, dto.getComment(), start, end, dto.isBreak());
     }
 
     private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {

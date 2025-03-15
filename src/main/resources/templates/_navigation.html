@@ -40,7 +40,7 @@
                       href="#"
                       th:href="@{/timeentries}"
                       class="flex items-center main-nav-link"
-                      th:aria-current="${currentRequestURI.startsWith('/timeentries') ? 'page' : 'false'}"
+                      th:aria-current="${currentRequestURI.startsWith('/timeentries') || currentRequestURI.matches('^/person/\d+/timeentries.*') ? 'page' : 'false'}"
                     >
                       <svg th:replace="~{icons/bookmark::svg}"></svg>
                       <th:block

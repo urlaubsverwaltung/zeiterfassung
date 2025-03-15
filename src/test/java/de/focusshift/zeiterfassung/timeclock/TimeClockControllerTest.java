@@ -2,6 +2,8 @@ package de.focusshift.zeiterfassung.timeclock;
 
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -88,15 +90,19 @@ class TimeClockControllerTest implements ControllerTest {
     @Test
     void ensureStopTimeClock() throws Exception {
 
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         perform(
             post("/timeclock/stop")
-                .with(oidcSubject("batman"))
+                .with(oidcSubject(userIdComposite))
                 .header("Referer", "referer-url")
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("referer-url"));
 
-        verify(timeClockService).stopTimeClock(new UserId("batman"));
+        verify(timeClockService).stopTimeClock(userIdComposite);
         verifyNoMoreInteractions(timeClockService);
     }
 
