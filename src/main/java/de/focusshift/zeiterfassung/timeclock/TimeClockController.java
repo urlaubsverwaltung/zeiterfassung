@@ -20,6 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
@@ -51,7 +52,7 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
     @PostMapping
     public ModelAndView editTimeClock(@Valid @ModelAttribute("timeClockUpdate") TimeClockDto timeClockUpdateDto, BindingResult errors,
                                 @CurrentUser CurrentOidcUser currentUser, HttpServletRequest request,
-                                @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
+                                @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame) {
 
         if (errors.hasErrors()) {
             if (hasText(turboFrame)) {

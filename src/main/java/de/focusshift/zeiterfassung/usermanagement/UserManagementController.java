@@ -22,6 +22,7 @@ import java.util.List;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Controller
@@ -38,7 +39,7 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
     @GetMapping
     String users(Model model,
                  @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                 @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame) {
+                 @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame) {
 
         final List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()

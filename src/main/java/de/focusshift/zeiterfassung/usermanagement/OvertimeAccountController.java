@@ -25,6 +25,7 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OV
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.math.BigDecimal.ONE;
 import static java.math.RoundingMode.DOWN;
 import static java.math.RoundingMode.HALF_EVEN;
@@ -47,7 +48,7 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
     @GetMapping
     String get(@PathVariable("userId") Long userId, Model model,
                @RequestParam(value = "query", required = false, defaultValue = "") String query,
-               @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+               @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
                @CurrentSecurityContext SecurityContext securityContext) {
 
         final UserLocalId userLocalId = new UserLocalId(userId);
@@ -67,7 +68,7 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
     ModelAndView post(@PathVariable("userId") Long userId, Model model,
                       @ModelAttribute("overtimeAccount") OvertimeAccountDto overtimeAccountDto, BindingResult result,
                       @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                      @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                      @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
                       @CurrentSecurityContext SecurityContext securityContext) {
 
         if (result.hasErrors()) {

@@ -30,6 +30,7 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TI
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.userToDto;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 
 @Controller
 @RequestMapping("/users/{userId}/permissions")
@@ -47,7 +48,7 @@ class PermissionsController implements HasLaunchpad, HasTimeClock {
     @GetMapping
     String get(@PathVariable("userId") Long userId, Model model,
                @RequestParam(value = "query", required = false, defaultValue = "") String query,
-               @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+               @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
                @CurrentSecurityContext SecurityContext securityContext) {
 
         prepareGetRequestModel(model, query, userId, this::userToPermissionsDto, securityContext);

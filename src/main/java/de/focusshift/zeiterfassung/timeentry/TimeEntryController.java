@@ -216,7 +216,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         @Valid @ModelAttribute(name = TIME_ENTRY_MODEL_NAME) TimeEntryDTO timeEntryDTO,
         BindingResult bindingResult,
         @CurrentUser CurrentOidcUser currentUser,
-        @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+        @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
         Model model, Locale locale,
         RedirectAttributes redirectAttributes,
         HttpServletRequest request
@@ -236,7 +236,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         @Valid @ModelAttribute(name = TIME_ENTRY_MODEL_NAME) TimeEntryDTO timeEntryDTO,
         BindingResult bindingResult,
         @CurrentUser CurrentOidcUser currentUser,
-        @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+        @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
         Model model, Locale locale,
         RedirectAttributes redirectAttributes,
         HttpServletRequest request

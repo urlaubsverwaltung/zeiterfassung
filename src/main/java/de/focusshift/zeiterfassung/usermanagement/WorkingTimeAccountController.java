@@ -28,6 +28,7 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PE
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateMessageKey;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.time.ZoneOffset.UTC;
 import static org.springframework.util.StringUtils.hasText;
 
@@ -58,7 +59,7 @@ class WorkingTimeAccountController implements HasTimeClock, HasLaunchpad {
     @GetMapping
     String get(@PathVariable("userId") Long userId, Model model,
                @RequestParam(value = "query", required = false, defaultValue = "") String query,
-               @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+               @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
                @CurrentSecurityContext SecurityContext securityContext) {
 
         final List<WorkingTime> workingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(userId));
