@@ -380,8 +380,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final UserId userId = new UserId(timeEntryEntity.getOwner());
         final User user = userByUserId.get(userId);
         if (user == null) {
-            LOG.info("cannot map TimeEntryEntity with user={} because user does not exist anymore.", userId);
-            LOG.info("ignoring {}", timeEntryEntity);
+            LOG.info("Cannot map TimeEntryEntity {} because user={} does not exist anymore. Ignoring it.", timeEntryEntity.id, userId);
             return null;
         }
         return toTimeEntry(timeEntryEntity, user);
