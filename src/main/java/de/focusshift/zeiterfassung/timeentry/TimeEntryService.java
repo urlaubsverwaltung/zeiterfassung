@@ -75,18 +75,20 @@ public interface TimeEntryService {
      * Creates a new {@linkplain TimeEntry}.
      *
      * @param userLocalId id of the linked user
+     * @param comment     optional comment
      * @param start       start of the time entry.
      * @param end         end of the time entry.
      * @param isBreak     whether it is a break or not.
      * @return the created {@linkplain TimeEntry} with an id.
      * @throws IllegalArgumentException when given timeEntry already has an id.
      */
-    TimeEntry createTimeEntry(UserLocalId userLocalId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak);
+    TimeEntry createTimeEntry(UserLocalId userLocalId, @Nullable String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak);
 
     /**
      * Updates the existing {@linkplain TimeEntry}
      *
      * @param id of the {@linkplain TimeEntry} to update
+     * @param comment optional comment. not that {@code null} overrides the existing comment.
      * @param start new start. may be {@code null} when end and duration is given.
      * @param end new end. may be {@code null} when start and duration is given.
      * @param duration new value. may be {@code null} when start and end is given.
@@ -96,7 +98,7 @@ public interface TimeEntryService {
      * @throws IllegalStateException when there is no {@linkplain TimeEntry} with the given id.
      * @throws TimeEntryUpdateNotPlausibleException when {@code start}, {@code end} and {@code duration} has been changed. only a selection of two is possible.
      */
-    TimeEntry updateTimeEntry(TimeEntryId id, String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end, @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateNotPlausibleException;
+    TimeEntry updateTimeEntry(TimeEntryId id, @Nullable String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end, @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateNotPlausibleException;
 
     /**
      * Deletes the {@link TimeEntry} with the given id.

@@ -42,6 +42,7 @@ import static java.time.ZoneOffset.UTC;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Comparator.comparing;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
@@ -221,7 +222,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         final TimeEntryEntity entity = new TimeEntryEntity();
         entity.setOwner(user.userIdComposite().id().value());
-        entity.setComment(comment.strip());
+        entity.setComment(requireNonNullElse(comment, "").strip());
         entity.setStart(start.toInstant());
         entity.setStartZoneId(start.getZone().getId());
         entity.setEnd(end.toInstant());
@@ -240,7 +241,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         updateEntityTimeSpan(entity, start, end, duration);
 
-        entity.setComment(comment.strip());
+        entity.setComment(requireNonNullElse(comment, "").strip());
         entity.setBreak(isBreak);
 
         return save(entity);
