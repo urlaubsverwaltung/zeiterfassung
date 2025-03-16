@@ -68,7 +68,7 @@ class TimeEntryDialogHelperTest {
             final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(userIdComposite);
 
             final TimeEntry timeEntry = anyTimeEntry(userIdComposite);
-            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntry));
 
 
             final User user = anyUser(userIdComposite);
@@ -89,7 +89,7 @@ class TimeEntryDialogHelperTest {
             final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(userIdComposite);
 
             final TimeEntry timeEntry = anyTimeEntry(userIdComposite);
-            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntry));
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
             when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(timeEntryDTO);
@@ -110,7 +110,7 @@ class TimeEntryDialogHelperTest {
             final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(userIdComposite);
 
             final TimeEntry timeEntry = anyTimeEntry(userIdComposite);
-            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntry));
 
             final User user = anyUser(userIdComposite);
             when(userManagementService.findUserById(userIdComposite.id())).thenReturn(Optional.of(user));
@@ -134,7 +134,7 @@ class TimeEntryDialogHelperTest {
             final CurrentOidcUser privilgegedOidcUser = anyCurrentOidcUser(privilegeduserIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
 
             final TimeEntry timeEntry = anyTimeEntry();
-            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntry));
 
             final User user = anyUser();
             when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
@@ -158,7 +158,7 @@ class TimeEntryDialogHelperTest {
             final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(anyUserIdComposite);
 
             final TimeEntry timeEntry = anyTimeEntry();
-            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntry));
 
             final User user = anyUser();
             when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
@@ -186,7 +186,7 @@ class TimeEntryDialogHelperTest {
 
             final TimeEntry createdTimeEntry = anyTimeEntry(batmanIdComposite, "workshop");
             final TimeEntry modifiedTimeEntry = anyTimeEntry(batmanIdComposite, "Kickoff Workshop");
-            when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(modifiedTimeEntry));
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(modifiedTimeEntry));
 
             when(userManagementService.findUserById(createdTimeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
             when(userSettingsProvider.zoneId()).thenReturn(ZoneOffset.UTC);

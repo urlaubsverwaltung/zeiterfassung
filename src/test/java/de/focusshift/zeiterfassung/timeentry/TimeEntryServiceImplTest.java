@@ -204,7 +204,7 @@ class TimeEntryServiceImplTest {
         final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
         when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
 
-        final Optional<TimeEntry> actual = sut.findTimeEntry(42L);
+        final Optional<TimeEntry> actual = sut.findTimeEntry(new TimeEntryId(42L));
         assertThat(actual).isPresent();
         assertThat(actual.get()).satisfies(timeEntry -> {
             assertThat(timeEntry.id()).isEqualTo(new TimeEntryId(42L));
@@ -220,7 +220,7 @@ class TimeEntryServiceImplTest {
     @Test
     void ensureFindTimeEntryReturnsEmptyOptional() {
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.empty());
-        assertThat(sut.findTimeEntry(42L)).isEmpty();
+        assertThat(sut.findTimeEntry(new TimeEntryId(42L))).isEmpty();
     }
 
     @Test

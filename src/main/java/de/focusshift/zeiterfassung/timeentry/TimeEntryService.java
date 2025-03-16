@@ -19,15 +19,15 @@ public interface TimeEntryService {
      * @param id of the time entry
      * @return the {@linkplain TimeEntry} or empty optional.
      */
-    Optional<TimeEntry> findTimeEntry(long id);
+    Optional<TimeEntry> findTimeEntry(TimeEntryId id);
 
     /**
      * Find the {@linkplain TimeEntryHistory} for the given time entry.
      *
-     * @param timeEntryId id of the time entry
+     * @param id id of the time entry
      * @return the {@linkplain TimeEntryHistory} or empty optional when the time entry is unknown
      */
-    Optional<TimeEntryHistory> findTimeEntryHistory(TimeEntryId timeEntryId);
+    Optional<TimeEntryHistory> findTimeEntryHistory(TimeEntryId id);
 
     /**
      * {@linkplain TimeEntry}s for the given criteria sorted by {@linkplain TimeEntry#start()}, newest is the first item.
@@ -98,5 +98,10 @@ public interface TimeEntryService {
      */
     TimeEntry updateTimeEntry(TimeEntryId id, String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end, @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateNotPlausibleException;
 
-    void deleteTimeEntry(long timeEntryId);
+    /**
+     * Deletes the {@link TimeEntry} with the given id.
+     *
+     * @param id {@link TimeEntry} id to delete
+     */
+    void deleteTimeEntry(TimeEntryId id);
 }

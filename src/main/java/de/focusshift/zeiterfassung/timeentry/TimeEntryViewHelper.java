@@ -117,7 +117,7 @@ public class TimeEntryViewHelper {
 
         final TimeEntryId timeEntryId = new TimeEntryId(dto.getId());
 
-        final TimeEntry timeEntry = timeEntryService.findTimeEntry(dto.getId())
+        final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
             .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
         final UserId currentUserId = authenticationFacade.getCurrentUserIdComposite().id();

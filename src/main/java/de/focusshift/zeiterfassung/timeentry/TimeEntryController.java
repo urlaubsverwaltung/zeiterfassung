@@ -190,10 +190,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
                          @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
                          @CurrentUser CurrentOidcUser currentUser, Locale locale) {
 
-        final TimeEntry timeEntry = timeEntryService.findTimeEntry(id)
+        final TimeEntry timeEntry = timeEntryService.findTimeEntry(new TimeEntryId(id))
             .orElseThrow(() -> new IllegalStateException("could not find time entry with id=%s".formatted(id)));
 
-        timeEntryService.deleteTimeEntry(id);
+        timeEntryService.deleteTimeEntry(new TimeEntryId(id));
 
         final int year = timeEntry.start().getYear();
         final int weekOfYear = timeEntry.start().get(WEEK_OF_WEEK_BASED_YEAR);

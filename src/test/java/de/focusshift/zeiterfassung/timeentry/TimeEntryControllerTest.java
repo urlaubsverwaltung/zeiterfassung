@@ -552,7 +552,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
-        when(timeEntryService.findTimeEntry(1337))
+        when(timeEntryService.findTimeEntry(new TimeEntryId(1337L)))
             .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
 
         perform(
@@ -580,7 +580,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
-        when(timeEntryService.findTimeEntry(1337))
+        when(timeEntryService.findTimeEntry(new TimeEntryId(1337L)))
             .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
 
         perform(
@@ -608,7 +608,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
-        when(timeEntryService.findTimeEntry(1337))
+        when(timeEntryService.findTimeEntry(new TimeEntryId(1337L)))
             .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
 
         perform(
@@ -637,7 +637,7 @@ class TimeEntryControllerTest implements ControllerTest {
         mockUserSettings(zoneIdBerlin, DayOfWeek.MONDAY);
 
         final UserId userId = new UserId("batman");
-        when(timeEntryService.findTimeEntry(1337L)).thenReturn(Optional.of(anyTimeEntry(userId)));
+        when(timeEntryService.findTimeEntry(new TimeEntryId(1337L))).thenReturn(Optional.of(anyTimeEntry(userId)));
 
         perform(
             post("/timeentries/1337")
@@ -674,7 +674,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryId timeEntryId = new TimeEntryId(1337L);
         final TimeEntry timeEntryToEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work extended", start, end, false);
 
-        when(timeEntryService.findTimeEntry(1337L)).thenReturn(Optional.of(timeEntryToEdit));
+        when(timeEntryService.findTimeEntry(new TimeEntryId(1337L))).thenReturn(Optional.of(timeEntryToEdit));
 
         final ZonedDateTime startOtherDay = ZonedDateTime.of(2022, 9, 29, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime endOtherDay = ZonedDateTime.of(2022, 9, 29, 15, 0, 0, 0, zoneIdBerlin);
@@ -803,7 +803,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryId timeEntryId = new TimeEntryId(1337L);
         final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
 
-        when(timeEntryService.findTimeEntry(1337)).thenReturn(Optional.of(timeEntry));
+        when(timeEntryService.findTimeEntry(new TimeEntryId(1337L))).thenReturn(Optional.of(timeEntry));
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
@@ -864,7 +864,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         mockUserSettings(DayOfWeek.MONDAY);
 
-        when(timeEntryService.findTimeEntry(1337))
+        when(timeEntryService.findTimeEntry(new TimeEntryId(1337L)))
             .thenReturn(Optional.of(anyTimeEntry(new UserId("batman"))));
 
         perform(
@@ -897,7 +897,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1337L), userIdComposite, "hard work extended", start, end, false);
 
-        when(timeEntryService.findTimeEntry(1337)).thenReturn(Optional.of(timeEntry));
+        when(timeEntryService.findTimeEntry(new TimeEntryId(1337L))).thenReturn(Optional.of(timeEntry));
 
         perform(
             post("/timeentries/1337")
@@ -908,7 +908,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/timeentries?year=2022&week=39"));
 
-        verify(timeEntryService).deleteTimeEntry(1337);
+        verify(timeEntryService).deleteTimeEntry(new TimeEntryId(1337L));
     }
 
     @Test
@@ -928,7 +928,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime end2 = ZonedDateTime.of(2022, 9, 28, 17, 30, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet", start2, end2, false);
 
-        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+        when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntry));
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(LocalDate.of(2022, 9, 28), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry2), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
@@ -991,7 +991,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(model().attribute("turboEditedDay", expectedDayDto))
             .andExpect(model().attribute("turboDeletedTimeEntry", expectedDeletedTimeEntryDto));
 
-        verify(timeEntryService).deleteTimeEntry(1);
+        verify(timeEntryService).deleteTimeEntry(new TimeEntryId(1L));
     }
 
     @Test
@@ -1007,7 +1007,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", start, end, false);
 
-        when(timeEntryService.findTimeEntry(1L)).thenReturn(Optional.of(timeEntry));
+        when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntry));
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
@@ -1048,7 +1048,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(model().attribute("turboEditedDay", nullValue()))
             .andExpect(model().attribute("turboDeletedTimeEntry", expectedDeletedTimeEntryDto));
 
-        verify(timeEntryService).deleteTimeEntry(1);
+        verify(timeEntryService).deleteTimeEntry(new TimeEntryId(1L));
     }
 
     private UserIdComposite anyUserIdComposite(UserId userId) {

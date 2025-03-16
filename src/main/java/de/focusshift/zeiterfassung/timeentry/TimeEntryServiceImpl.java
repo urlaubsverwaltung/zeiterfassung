@@ -75,16 +75,16 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public Optional<TimeEntry> findTimeEntry(long id) {
-        return timeEntryRepository.findById(id).map(this::toTimeEntry);
+    public Optional<TimeEntry> findTimeEntry(TimeEntryId id) {
+        return timeEntryRepository.findById(id.value()).map(this::toTimeEntry);
     }
 
     @Override
-    public Optional<TimeEntryHistory> findTimeEntryHistory(TimeEntryId timeEntryId) {
+    public Optional<TimeEntryHistory> findTimeEntryHistory(TimeEntryId id) {
 
-        final Revisions<Long, TimeEntryEntity> revisions = timeEntryRepository.findRevisions(timeEntryId.value());
+        final Revisions<Long, TimeEntryEntity> revisions = timeEntryRepository.findRevisions(id.value());
         if (revisions.isEmpty()) {
-            LOG.warn("Could not find any revision for {}. A valid TimeEntry should have at least one revision of type INSERT.", timeEntryId);
+            LOG.warn("Could not find any revision for {}. A valid TimeEntry should have at least one revision of type INSERT.", id);
             return Optional.empty();
         }
 
@@ -119,7 +119,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             previousTimeEntry = timeEntry;
         }
 
-        return Optional.of(new TimeEntryHistory(timeEntryId, historyItems));
+        return Optional.of(new TimeEntryHistory(id, historyItems));
     }
 
     @Override
@@ -338,8 +338,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public void deleteTimeEntry(long timeEntryId) {
-        timeEntryRepository.deleteById(timeEntryId);
+    public void deleteTimeEntry(TimeEntryId id) {
+        timeEntryRepository.deleteById(id.value());
     }
 
     private TimeEntry save(TimeEntryEntity entity) {
