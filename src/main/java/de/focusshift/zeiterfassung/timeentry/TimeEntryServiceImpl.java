@@ -246,6 +246,11 @@ class TimeEntryServiceImpl implements TimeEntryService {
         return save(entity);
     }
 
+    @Override
+    public void deleteTimeEntry(TimeEntryId id) {
+        timeEntryRepository.deleteById(id.value());
+    }
+
     private static List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,
                                                           Map<LocalDate, List<TimeEntry>> timeEntriesByDate,
                                                           WorkingTimeCalendar workingTimeCalendar) {
@@ -335,11 +340,6 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     private static boolean notEquals(ZonedDateTime one, ZonedDateTime two) {
         return !one.toInstant().atZone(UTC).equals(two.toInstant().atZone(UTC));
-    }
-
-    @Override
-    public void deleteTimeEntry(TimeEntryId id) {
-        timeEntryRepository.deleteById(id.value());
     }
 
     private TimeEntry save(TimeEntryEntity entity) {
