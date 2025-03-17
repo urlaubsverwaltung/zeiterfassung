@@ -468,7 +468,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
         when(timeEntryService.getEntryWeekPage(ownerLocalId, year, weekOfYear)).thenReturn(timeEntryWeekPage);
 
-        final ImpressionUserDto expectedImpression = new ImpressionUserDto(ownerLocalId.value(), owner.givenName(), owner.familyName(), owner.fullName(), owner.email().value());
+        final ViewedUserDto expectedViewedUserDto = new ViewedUserDto(ownerLocalId.value(), owner.givenName(), owner.familyName(), owner.fullName(), owner.email().value());
         final TimeEntryDTO expectedTimeEntry = new TimeEntryDTO();
         expectedTimeEntry.setUserLocalId(ownerLocalId.value());
 
@@ -479,7 +479,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
         )
             .andExpect(status().isOk())
-            .andExpect(model().attribute("impression", expectedImpression))
+            .andExpect(model().attribute("viewedUser", expectedViewedUserDto))
             .andExpect(model().attribute("timeEntry", expectedTimeEntry))
             .andExpect(model().attribute("timeEntryWeeksPage", expetectedWeeksPageDto))
             .andExpect(view().name("timeentries/index"));

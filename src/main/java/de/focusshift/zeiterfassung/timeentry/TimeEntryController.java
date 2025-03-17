@@ -44,7 +44,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
-import static de.focusshift.zeiterfassung.timeentry.ImpressionUserMapper.toImpressionUserDto;
 import static de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -103,7 +102,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
         final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
         final UserLocalId ownerUserLocalId = new UserLocalId(ownerLocalIdValue);
-        prepareUserImpression(model, ownerUserLocalId);
+        prepareViewedUser(model, ownerUserLocalId);
 
         return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerUserLocalId, model, locale, turboFrame);
     }
@@ -370,7 +369,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         if (hasText(turboFrame)) {
             LOG.info("User {} deleted timeEntry {} of user {}. Rendering turboFrame section.", currentUserLocalId, timeEntryId, ownerLocalId);
             final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
-            prepareUserImpression(model, ownerLocalId);
+            prepareViewedUser(model, ownerLocalId);
             prepareTimeEntryDeletedModel(model, locale, timeEntry, yearAndWeek);
             return new ModelAndView("timeentries/index::#" + turboFrame);
         }
@@ -383,9 +382,9 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         return new ModelAndView(new RedirectView(userTimeEntriesUri));
     }
 
-    private void prepareUserImpression(Model model, UserLocalId userImpressionLocalId) {
-        final User userImpression = findUser(userImpressionLocalId);
-        model.addAttribute("impression", toImpressionUserDto(userImpression));
+    private void prepareViewedUser(Model model, UserLocalId userLocalId) {
+        final User viewedUser = findUser(userLocalId);
+        model.addAttribute("viewedUser", toViewedUserDto(viewedUser));
     }
 
     private void prepareTimeEntryDeletedModel(Model model, Locale locale, TimeEntry timeEntry, YearAndWeek yearAndWeek) {
@@ -537,6 +536,11 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             .timeEntries(dayTimeEntryDtos)
             .absenceEntries(absenceEntryDtos)
             .build();
+    }
+
+    private static ViewedUserDto toViewedUserDto(User user) {
+        return new ViewedUserDto(user.userLocalId().value(), user.givenName(), user.familyName(),
+            user.fullName(), user.email().value());
     }
 
     private int lastWeekOfYear(int year) {

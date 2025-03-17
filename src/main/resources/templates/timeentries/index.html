@@ -34,24 +34,24 @@
           <div class="px-4">
             <div class="flex">
               <h1
-                th:if="${impression == null}"
+                th:if="${viewedUser == null}"
                 class="flex-1 text-2xl text-blue-700 text-center mb-4"
                 th:text="#{time-entry.create.title}"
               >
                 Neuen Zeitslot erfassen
               </h1>
               <div
-                th:if="${impression != null}"
+                th:if="${viewedUser != null}"
                 class="flex-1 flex items-center justify-center gap-4 mb-4"
               >
                 <span class="inline-flex text-blue-200">
                   <span
-                    th:replace="~{fragments/avatar::avatar-bordered(${impression.fullName()},52,52)}"
+                    th:replace="~{fragments/avatar::avatar-bordered(${viewedUser.fullName()},52,52)}"
                   ></span>
                 </span>
                 <h1
                   class="text-2xl text-blue-700"
-                  th:text="#{time-entry.create.title.other-user(${impression.fullName()})}"
+                  th:text="#{time-entry.create.title.other-user(${viewedUser.fullName()})}"
                 >
                   Neuen Zeitslot erfassen für Max Mustermann
                 </h1>
@@ -59,7 +59,7 @@
               <div class="time-entry-box__controls"></div>
             </div>
             <th:block
-              th:if="${impression == null}"
+              th:if="${viewedUser == null}"
               th:object="${timeEntry}"
               th:with="action=@{/timeentries}"
             >
@@ -68,9 +68,9 @@
               ></th:block>
             </th:block>
             <th:block
-              th:if="${impression != null}"
+              th:if="${viewedUser != null}"
               th:object="${timeEntry}"
-              th:with="action=@{/timeentries/users/{id} (id=${impression.localId()})}"
+              th:with="action=@{/timeentries/users/{id} (id=${viewedUser.localId()})}"
             >
               <th:block
                 th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
@@ -382,8 +382,8 @@
                           th:fragment="time-entry-element(timeEntry)"
                           th:with="
                             timeEntryId=${timeEntry.id},
-                            myself=@{/timeentries/{timeEntryId}(timeEntryId=${timeEntryId})}, other=@{/timeentries/users/{id}/timeentry/{timeEntryId}(id=${impression==null ?-1 : impression.localId()},timeEntryId=${timeEntryId})},
-                            action=${impression == null ? myself : other}
+                            myself=@{/timeentries/{timeEntryId}(timeEntryId=${timeEntryId})}, other=@{/timeentries/users/{id}/timeentry/{timeEntryId}(id=${viewedUser==null ?-1 : viewedUser.localId()},timeEntryId=${timeEntryId})},
+                            action=${viewedUser == null ? myself : other}
                           "
                           th:id="${'time-entry-' + timeEntry.id}"
                           th:data-date="${#temporals.format(timeEntry.date, 'EEEE, dd. MMMM')}"
@@ -410,8 +410,8 @@
                     href="#"
                     th:with="
                       myself=@{/timeentries (year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})},
-                      other=@{/timeentries/users/{id} (id=${impression==null ? -1 : impression.localId()}, year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})},
-                      href=${impression == null ? myself : other}
+                      other=@{/timeentries/users/{id} (id=${viewedUser==null ? -1 : viewedUser.localId()}, year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})},
+                      href=${viewedUser == null ? myself : other}
                     "
                     th:href="${href}"
                     class="text-lg font-bold mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
@@ -425,9 +425,9 @@
                     href="#"
                     th:with="
                       myself=@{/timeentries},
-                      other=@{/timeentries/users/{id} (id=${impression==null ? -1 : impression.localId()})}
+                      other=@{/timeentries/users/{id} (id=${viewedUser==null ? -1 : viewedUser.localId()})}
                     "
-                    th:href="${impression == null ? myself : other}"
+                    th:href="${viewedUser == null ? myself : other}"
                     class="text-lg font-bold mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
                     th:text="#{time-entry.pagination.today}"
                   >
@@ -439,9 +439,9 @@
                     href="#"
                     th:with="
                       myself=@{/timeentries (year=${timeEntryWeeksPage.futureYear}, week=${timeEntryWeeksPage.futureWeekOfYear})},
-                      other=@{/timeentries/users/{id} (id=${impression==null ? -1 : impression.localId()}, year=${timeEntryWeeksPage.futureYear}, week=${timeEntryWeeksPage.futureWeekOfYear})}
+                      other=@{/timeentries/users/{id} (id=${viewedUser==null ? -1 : viewedUser.localId()}, year=${timeEntryWeeksPage.futureYear}, week=${timeEntryWeeksPage.futureWeekOfYear})}
                     "
-                    th:href="${impression == null ? myself : other}"
+                    th:href="${viewedUser == null ? myself : other}"
                     class="text-lg font-bold mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
                     th:text="#{time-entry.pagination.future}"
                   >
@@ -456,9 +456,9 @@
                 href="#"
                 th:with="
                   myself=@{/timeentries (year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})},
-                  other=@{/timeentries/users/{id} (id=${impression==null ? -1 : impression.localId()}, year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})}
+                  other=@{/timeentries/users/{id} (id=${viewedUser==null ? -1 : viewedUser.localId()}, year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})}
                 "
-                th:href="${impression == null ? myself : other}"
+                th:href="${viewedUser == null ? myself : other}"
                 class="ajax-loader text-lg font-medium mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
                 data-turbo-frame="frame-time-entry-weeks"
                 th:text="#{time-entry.pagination.load-more}"
