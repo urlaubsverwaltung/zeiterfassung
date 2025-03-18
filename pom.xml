@@ -103,7 +103,7 @@
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-client</artifactId>
       <!-- resteasy-client 7.x does not include jandex dependency -->
-      <version>7.0.0.Alpha4</version>
+      <version>7.0.0.Beta1</version>
       <scope>test</scope>
     </dependency>
 
