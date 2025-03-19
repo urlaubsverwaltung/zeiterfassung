@@ -3,7 +3,18 @@
   <head
     th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scripts=~{::scripts}, scriptsDefer=~{::scriptsDefer})}"
   >
-    <title>Zeiterfassung</title>
+    <title
+      th:if="${viewedUser == null}"
+      th:text="#{timeentries.page.meta.title}"
+    >
+      Zeiterfassung
+    </title>
+    <title
+      th:if="${viewedUser != null}"
+      th:text="#{timeentries.page.meta.title.person(${viewedUser.fullName})}"
+    >
+      Zeiterfassung von XXX
+    </title>
     <th:block th:fragment="styles">
       <link rel="stylesheet" type="text/css" th:href="@{/time-entries.css}" />
     </th:block>
