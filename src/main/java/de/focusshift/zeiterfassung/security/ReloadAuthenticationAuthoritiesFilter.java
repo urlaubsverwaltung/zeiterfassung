@@ -96,7 +96,7 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
         if (principal instanceof OidcUser oidcUser) {
             return oidcUser.getSubject();
         }
-        return authentication.getName();
+        throw new IllegalStateException("unexpected authentication token: " + authentication.getPrincipal());
     }
 
     private static Set<GrantedAuthority> mergeAuthorities(OAuth2AuthenticationToken token, User user) {
