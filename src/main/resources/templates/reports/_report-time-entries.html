@@ -99,10 +99,19 @@
                       class="text-blue-100 transition-colors group-hover:text-blue-200"
                       aria-hidden="true"
                     >
-                      <a
-                        href="#"
-                        th:replace="~{fragments/avatar::avatar-with-link(${dayEntry.username},42,42,${dayEntry.userLocalId})}"
-                      ></a>
+                      <th:block th:if="${isAllowedToEditTimeEntries}">
+                        <a
+                          href="#"
+                          th:replace="~{fragments/avatar::avatar-with-link(${dayEntry.username},42,42,${dayEntry.userLocalId})}"
+                        ></a>
+                      </th:block>
+                      <th:block th:if="${not isAllowedToEditTimeEntries}">
+                        <img
+                          alt=""
+                          src=""
+                          th:replace="~{fragments/avatar::avatar(${dayEntry.username},42,42)}"
+                        />
+                      </th:block>
                     </span>
                     <span class="sr-only" th:text="${dayEntry.username}">
                       Bruce Wayne
@@ -197,10 +206,19 @@
                       class="text-blue-100 transition-colors group-hover:text-blue-200"
                       aria-hidden="true"
                     >
-                      <a
-                        href="#"
-                        th:replace="~{fragments/avatar::avatar-with-link(${absence.username},42,42,${absence.userLocalId})}"
-                      ></a>
+                      <th:block th:if="${isAllowedToEditTimeEntries}">
+                        <a
+                          href="#"
+                          th:replace="~{fragments/avatar::avatar-with-link(${dayEntry.username},42,42,${dayEntry.userLocalId})}"
+                        ></a>
+                      </th:block>
+                      <th:block th:if="${not isAllowedToEditTimeEntries}">
+                        <img
+                          alt=""
+                          src=""
+                          th:replace="~{fragments/avatar::avatar(${dayEntry.username},42,42)}"
+                        />
+                      </th:block>
                     </span>
                     <span class="sr-only" th:text="${absence.username}">
                       Bruce Wayne

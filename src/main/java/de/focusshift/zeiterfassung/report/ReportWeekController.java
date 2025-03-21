@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.ScrollPreservation.PRESERVE;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_REFRESH_SCROLL_ATTRIBUTE;
 import static java.lang.String.format;
@@ -135,6 +136,8 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
         reportViewHelper.addUserFilterModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, format(REPORT_YEAR_WEEK_URL_TEMPLATE, year, week));
         reportViewHelper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, reportWeek);
+
+        model.addAttribute("isAllowedToEditTimeEntries", currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
 
         return new ModelAndView("reports/user-report");
     }
