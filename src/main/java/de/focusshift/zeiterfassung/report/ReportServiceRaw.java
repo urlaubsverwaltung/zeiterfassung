@@ -55,14 +55,14 @@ class ReportServiceRaw {
         this.workingTimeCalendarService = workingTimeCalendarService;
     }
 
-    ReportWeek getReportWeek(Year year, int week, UserId userId) {
+    ReportWeek getReportWeek(Year year, int week, UserLocalId userLocalId) {
 
-        final User user = userManagementService.findUserById(userId)
-            .orElseThrow(() -> new IllegalStateException("could not find user id=%s".formatted(userId)));
+        final User user = userManagementService.findUserByLocalId(userLocalId)
+            .orElseThrow(() -> new IllegalStateException("could not find user=%s".formatted(userLocalId)));
 
         return createReportWeek(year, week,
             List.of(user),
-            period -> Map.of(user.userIdComposite(), timeEntryService.getEntries(period.from(), period.toExclusive(), userId)),
+            period -> Map.of(user.userIdComposite(), timeEntryService.getEntries(period.from(), period.toExclusive(), userLocalId)),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
@@ -72,7 +72,7 @@ class ReportServiceRaw {
 
         return createReportWeek(year, week,
             users,
-            period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), userLocalIds),
+            period -> timeEntryService.getEntries(period.from(), period.toExclusive(), userLocalIds),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds));
     }
 
@@ -93,7 +93,7 @@ class ReportServiceRaw {
 
         return createReportMonth(yearMonth,
             List.of(user),
-            period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), List.of(user.userLocalId())),
+            period -> timeEntryService.getEntries(period.from(), period.toExclusive(), List.of(user.userLocalId())),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
@@ -103,7 +103,7 @@ class ReportServiceRaw {
 
         return createReportMonth(yearMonth,
             users,
-            period -> timeEntryService.getEntriesByUserLocalIds(period.from(), period.toExclusive(), userLocalIds),
+            period -> timeEntryService.getEntries(period.from(), period.toExclusive(), userLocalIds),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds));
     }
 

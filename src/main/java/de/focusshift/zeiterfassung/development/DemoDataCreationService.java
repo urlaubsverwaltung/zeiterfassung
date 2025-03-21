@@ -3,7 +3,7 @@ package de.focusshift.zeiterfassung.development;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
-import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -70,12 +70,12 @@ class DemoDataCreationService {
 
             while (endTime.isBefore(END_OF_WORK_DAY)) {
 
-                final UserId userId = new UserId(user.id());
+                final UserLocalId userLocalId = new UserLocalId(user.localId());
                 final ZoneId zoneId = ZoneId.of("Europe/Berlin");
                 final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(actualDate, startTime), zoneId);
                 final ZonedDateTime end = ZonedDateTime.of(LocalDateTime.of(actualDate, endTime), zoneId);
 
-                timeEntryService.createTimeEntry(userId, getRandomComment(), start, end, false);
+                timeEntryService.createTimeEntry(userLocalId, getRandomComment(), start, end, false);
 
                 startTime = endTime;
                 endTime = randomTimeBetween(startTime, END_OF_WORK_DAY).plusMinutes(30);

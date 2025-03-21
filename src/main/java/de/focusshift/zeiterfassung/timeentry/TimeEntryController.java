@@ -6,11 +6,17 @@ import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
-import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.YearFormat;
+import de.focusshift.zeiterfassung.usermanagement.User;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.web.NotFoundException;
+import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,8 +25,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -33,25 +41,38 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Supplier;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
+import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.Month.DECEMBER;
 import static java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
 import static java.time.temporal.TemporalAdjusters.previousOrSame;
+import static java.util.Objects.requireNonNullElseGet;
+import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.util.StringUtils.hasText;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.fromMethodCall;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 @Controller
 class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
+    private static final Logger LOG = getLogger(lookup().lookupClass());
+
     private final TimeEntryService timeEntryService;
+    private final UserManagementService userManagementService;
     private final UserSettingsProvider userSettingsProvider;
     private final DateFormatter dateFormatter;
     private final TimeEntryViewHelper viewHelper;
     private final Clock clock;
 
-    public TimeEntryController(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider,
-                               DateFormatter dateFormatter, TimeEntryViewHelper viewHelper, Clock clock) {
+    public TimeEntryController(TimeEntryService timeEntryService, UserManagementService userManagementService,
+                               UserSettingsProvider userSettingsProvider, DateFormatter dateFormatter,
+                               TimeEntryViewHelper viewHelper, Clock clock) {
         this.timeEntryService = timeEntryService;
+        this.userManagementService = userManagementService;
         this.userSettingsProvider = userSettingsProvider;
         this.dateFormatter = dateFormatter;
         this.viewHelper = viewHelper;
@@ -59,42 +80,56 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping("/timeentries")
-    public String items(Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
+    public ModelAndView timeEntries(@RequestParam(value = "year", required = false) Integer year,
+                              @RequestParam(value = "week", required = false) Integer weekOfYear,
+                              @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
+                              Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
 
-        final LocalDate now = LocalDate.now(clock);
-        final ZonedDateTime userStartOfDay = now.atStartOfDay(userSettingsProvider.zoneId());
+        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
+        final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
 
-        final int year = userStartOfDay.getYear();
-        final int weekOfYear = userStartOfDay.get(WEEK_OF_WEEK_BASED_YEAR);
-
-        return prepareTimeEntriesView(year, weekOfYear, model, currentUser, locale);
+        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, currentUserLocalId, model, locale, turboFrame);
     }
 
-    @GetMapping("/timeentries/{year}/{weekOfYear}")
-    public String timeEntriesForYearAndWeekOfYear(@PathVariable("year") int year,
-                                                  @PathVariable("weekOfYear") int weekOfYear,
-                                                  @CurrentUser CurrentOidcUser currentUser,
-                                                  @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                                                  Model model, Locale locale) {
+    @GetMapping("/timeentries/users/{ownerLocalIdValue}")
+    public ModelAndView userTimeEntries(@PathVariable Long ownerLocalIdValue,
+                                       @RequestParam(value = "year", required = false) Integer year,
+                                       @RequestParam(value = "week", required = false) Integer weekOfYear,
+                                       @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
+                                       Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
 
+        assertTimeEntryAccess(currentUser, ownerLocalIdValue);
+
+        final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
+        final UserLocalId ownerUserLocalId = new UserLocalId(ownerLocalIdValue);
+        prepareViewedUser(model, ownerUserLocalId);
+
+        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerUserLocalId, model, locale, turboFrame);
+    }
+
+    private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, Model model, Locale locale, String turboFrame) {
         if (hasText(turboFrame)) {
-            prepareTimeEntriesView(year, weekOfYear, model, currentUser, locale);
+            prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, model, locale);
             model.addAttribute("turboStreamsEnabled", true);
-            return "timeentries/index::#frame-time-entry-weeks";
+            return new ModelAndView("timeentries/index::#frame-time-entry-weeks");
         } else {
-            return prepareTimeEntriesView(year, weekOfYear, model, currentUser, locale);
+            return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, model, locale);
         }
     }
 
-    private String prepareTimeEntriesView(int year, int weekOfYear, Model model, CurrentOidcUser currentUser, Locale locale) {
-        viewHelper.addTimeEntryToModel(model, new TimeEntryDTO());
-        addTimeEntriesToModel(year, weekOfYear, model, currentUser, locale);
+    private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, Model model, Locale locale) {
 
-        return "timeentries/index";
+        final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+        timeEntryDTO.setUserLocalId(ownerLocalId.value());
+
+        viewHelper.addTimeEntryToModel(model, timeEntryDTO);
+        addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale);
+
+        return new ModelAndView("timeentries/index");
     }
 
     @PostMapping("/timeentries")
-    public String save(
+    public String createTimeEntry(
         @Valid @ModelAttribute(name = TIME_ENTRY_MODEL_NAME) TimeEntryDTO timeEntryDTO,
         BindingResult bindingResult,
         Model model, Locale locale,
@@ -103,38 +138,121 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         HttpServletRequest request
     ) throws InvalidTimeEntryException {
 
-        final int year;
-        final int weekOfYear;
+        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
+        LOG.info("User {} wants to create a new timeEntry.", currentUserLocalId);
 
-        try {
-            final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDTO.getDate());
-            year = firstDateOfWeek.getYear();
-            weekOfYear = firstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR);
-        } catch(NullPointerException exception) {
-            throw new InvalidTimeEntryException("invalid time entry. date must be set.");
-        }
-
-        viewHelper.createTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes);
+        handleCreateTimeEntry(timeEntryDTO, bindingResult, model, locale, redirectAttributes);
 
         if (bindingResult.hasErrors()) {
-            addTimeEntriesToModel(year, weekOfYear, model, currentUser, locale);
+            LOG.info("Could not create timeEntry due to constraint violation errors. Rendering timeentries page.");
             return "timeentries/index";
         }
 
-        return "redirect:" + request.getHeader("referer");
+        final String url = request.getHeader("referer");
+        LOG.info("Created new timeEntry. Redirecting to {}", url);
+        return "redirect:" + url;
     }
 
-    @PostMapping(value = "/timeentries/{id}")
-    public ModelAndView update(
-        @PathVariable("id") Long id,
+    @PostMapping("/timeentries/users/{ownerLocalIdValue}")
+    public String userCreateTimeEntry(@PathVariable Long ownerLocalIdValue,
+                                      @Valid @ModelAttribute(TIME_ENTRY_MODEL_NAME) TimeEntryDTO timeEntryDTO, BindingResult bindingResult,
+                                      @CurrentUser CurrentOidcUser currentUser,
+                                      RedirectAttributes redirectAttributes,
+                                      Model model, Locale locale) {
+
+        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
+        final UserLocalId ownerLocalId = new UserLocalId(ownerLocalIdValue);
+        LOG.info("User {} wants to create a new timeEntry for user {}", currentUserLocalId, ownerLocalId);
+
+        assertTimeEntryAccess(currentUser, ownerLocalIdValue);
+        handleCreateTimeEntry(timeEntryDTO, bindingResult, model, locale, redirectAttributes);
+
+        if (bindingResult.hasErrors()) {
+            LOG.info("Could not create timeEntry for user {} due to constraint violation errors. Rendering timeentries page.", ownerLocalId);
+            return "timeentries/index";
+        }
+
+        final String userTimeEntriesUri = fromMethodCall(on(TimeEntryController.class)
+            .userTimeEntries(ownerLocalIdValue, null, null, null, model, locale, currentUser))
+            .build().toUriString();
+
+        LOG.info("User {} created new timeEntry for user {}. Redirecting to {}.", currentUserLocalId, ownerLocalId, userTimeEntriesUri);
+        return "redirect:" + userTimeEntriesUri;
+    }
+
+    private void handleCreateTimeEntry(TimeEntryDTO timeEntryDto, BindingResult bindingResult,
+                                       Model model, Locale locale, RedirectAttributes redirectAttributes) {
+
+        final int year;
+        final int weekOfYear;
+
+        try {
+            final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDto.getDate());
+            year = firstDateOfWeek.getYear();
+            weekOfYear = firstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR);
+        } catch (NullPointerException exception) {
+            throw new InvalidTimeEntryException("Invalid timeEntry. Expected date to be set.");
+        }
+
+        if (bindingResult.hasErrors()) {
+            final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
+            final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
+            addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale);
+            viewHelper.handleCrudTimeEntryErrors(timeEntryDto, bindingResult, model, redirectAttributes);
+            return;
+        }
+
+        if (timeEntryDto.getId() == null) {
+            viewHelper.createTimeEntry(timeEntryDto);
+        } else {
+            throw new IllegalStateException("Expected timeEntry id not to be defined but has value. Did you meant to update the time entry?");
+        }
+    }
+
+    @PostMapping(value = "/timeentries/{timeEntryIdValue}")
+    public ModelAndView updateTimeEntry(
+        @PathVariable Long timeEntryIdValue,
         @Valid @ModelAttribute(name = TIME_ENTRY_MODEL_NAME) TimeEntryDTO timeEntryDTO,
         BindingResult bindingResult,
         @CurrentUser CurrentOidcUser currentUser,
-        @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+        @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
         Model model, Locale locale,
         RedirectAttributes redirectAttributes,
         HttpServletRequest request
     ) throws InvalidTimeEntryException {
+
+        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
+        LOG.info("User {} wants to update timeEntry {}.", currentUserLocalId, timeEntryIdValue);
+
+        return updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, locale, redirectAttributes,
+            turboFrame, request);
+    }
+
+    @PostMapping(value = "/timeentries/users/{ownerLocalIdValue}/timeentry/{timeEntryIdValue}")
+    public ModelAndView userUpdateTimeEntry(
+        @PathVariable Long timeEntryIdValue,
+        @PathVariable Long ownerLocalIdValue,
+        @Valid @ModelAttribute(name = TIME_ENTRY_MODEL_NAME) TimeEntryDTO timeEntryDTO,
+        BindingResult bindingResult,
+        @CurrentUser CurrentOidcUser currentUser,
+        @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
+        Model model, Locale locale,
+        RedirectAttributes redirectAttributes,
+        HttpServletRequest request
+    ) throws InvalidTimeEntryException {
+
+        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
+        final UserLocalId ownerLocalId = new UserLocalId(ownerLocalIdValue);
+        LOG.info("User {} wants to update timeEntry {} of user {}.", currentUserLocalId, timeEntryIdValue, ownerLocalId);
+
+        assertTimeEntryAccess(currentUser, ownerLocalIdValue);
+
+        return updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, locale, redirectAttributes, turboFrame, request);
+    }
+
+    private ModelAndView updateTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO timeEntryDTO, BindingResult bindingResult,
+                                         Model model, Locale locale, RedirectAttributes redirectAttributes,
+                                         String turboFrame, HttpServletRequest request) {
 
         final int year;
         final int weekOfYear;
@@ -147,22 +265,18 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             throw new InvalidTimeEntryException("invalid time entry. date must be set.");
         }
 
-        viewHelper.updateTimeEntry(timeEntryDTO, bindingResult, model, redirectAttributes);
+        final Long timeEntryId = timeEntryDTO.getId();
+        final UserLocalId ownerLocalId = new UserLocalId(timeEntryDTO.getUserLocalId());
 
-        final String viewName;
-        if (bindingResult.hasErrors()) {
-            viewName = "timeentries/index";
-        } else {
-            viewName = "redirect:" + request.getHeader("referer");
-        }
-
-        final UserId userId = new UserId(currentUser.getSubject());
+        viewHelper.updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
         if (hasText(turboFrame)) {
             if (bindingResult.hasErrors()) {
+                LOG.info("Could not update timeEntry {} due to constraint violation errors. Rendering turbo frame.", timeEntryId);
                 model.addAttribute("turboEditedTimeEntry", timeEntryDTO);
             } else {
-                final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
+                LOG.info("Updated timeEntry {}. Rendering turbo frame.", timeEntryId);
+                final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(ownerLocalId, year, weekOfYear);
                 final TimeEntryDay timeEntryDay = entryWeekPage.timeEntryWeek().days()
                     .stream()
                     .filter(day -> day.date().equals(timeEntryDTO.getDate()))
@@ -171,9 +285,9 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
                 final TimeEntryWeek timeEntryWeek = entryWeekPage.timeEntryWeek();
                 final TimeEntry editedTimeEntry = timeEntryDay.timeEntries().stream()
-                    .filter(entry -> entry.id().value().equals(timeEntryDTO.getId()))
+                    .filter(entry -> entry.id().value().equals(timeEntryId))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("could not find edited timeEntry=%s".formatted(timeEntryDTO.getId())));
+                    .orElseThrow(() -> new IllegalStateException("could not find edited timeEntry=%s".formatted(timeEntryId)));
 
                 model.addAttribute("turboEditedWeek", toTimeEntryWeekDto(timeEntryWeek, locale));
                 model.addAttribute("turboEditedDay", toTimeEntryDayDto(timeEntryDay, locale));
@@ -182,31 +296,104 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             return new ModelAndView("timeentries/index::#frame-time-entry");
         } else {
             if (bindingResult.hasErrors()) {
-                addTimeEntriesToModel(year, weekOfYear, model, currentUser, locale);
+                final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
+                addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale);
+                LOG.info("Could not update timeEntry {} due to constraint violoation errors. Rendering timeentries page.", timeEntryId);
+                return new ModelAndView("timeentries/index");
+            } else {
+                final String url = request.getHeader("referer");
+                LOG.info("Updated timeEntry {}. Redirecting to {}", timeEntryId, url);
+                return new ModelAndView("redirect:" + url);
             }
-            return new ModelAndView(viewName);
         }
     }
 
-    @PostMapping(value = "/timeentries/{id}", params = "delete")
-    public String delete(@PathVariable("id") Long id, Model model,
-                         @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
-                         @CurrentUser CurrentOidcUser currentUser, Locale locale) {
+    @PostMapping(value = "/timeentries/{timeEntryIdValue}", params = "delete")
+    public String deleteTimeEntry(@PathVariable Long timeEntryIdValue,
+                                  @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
+                                  Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
 
-        final TimeEntry timeEntry = timeEntryService.findTimeEntry(id)
-            .orElseThrow(() -> new IllegalStateException("could not find time entry with id=%s".formatted(id)));
+        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
+        LOG.info("User {} wants to delete timeEntry {}", currentUserLocalId, timeEntryIdValue);
 
-        timeEntryService.deleteTimeEntry(id);
+        final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
+        final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
+            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry %s.".formatted(timeEntryIdValue)));
+
+        final UserLocalId ownerLocalId = timeEntry.userIdComposite().localId();
+        final boolean isOwner = ownerLocalId.equals(currentUserLocalId);
+        final boolean allowedToEdit = currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
+        if (!allowedToEdit && !isOwner) {
+            throw new AccessDeniedException("You are not allowed to delete timeEntry %s.".formatted(timeEntryIdValue));
+        }
+
+        timeEntryService.deleteTimeEntry(timeEntryId);
 
         final int year = timeEntry.start().getYear();
         final int weekOfYear = timeEntry.start().get(WEEK_OF_WEEK_BASED_YEAR);
 
-        if (!hasText(turboFrame)) {
-            return "redirect:/timeentries/%s/%s".formatted(year, weekOfYear);
+        if (hasText(turboFrame)) {
+            LOG.info("Successfully deleted timeEntry {}. Rendering turboFrame section.", timeEntryId);
+            final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
+            prepareTimeEntryDeletedModel(model, locale, timeEntry, yearAndWeek);
+            return "timeentries/index::#" + turboFrame;
+        } else {
+            final String url = "/timeentries?year=%d&week=%d".formatted(year, weekOfYear);
+            LOG.info("Successfully deleted timeEntry {}. Redirecting to {}.", timeEntryId, url);
+            return "redirect:" + url;
+        }
+    }
+
+    @PostMapping(value = "/timeentries/users/{ownerLocalIdValue}/timeentry/{timeEntryIdValue}", params = "delete")
+    public ModelAndView userDeleteTimeEntry(@PathVariable Long ownerLocalIdValue,
+                                            @PathVariable Long timeEntryIdValue,
+                                            @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
+                                            Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
+
+        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
+        LOG.info("User {} wants to delete timeEntry {} of user {}", currentUserLocalId, timeEntryIdValue, ownerLocalIdValue);
+
+        final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
+        final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
+            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry %s.".formatted(timeEntryIdValue)));
+
+        assertTimeEntryAccess(currentUser, timeEntry);
+
+        final UserLocalId ownerLocalId = timeEntry.userIdComposite().localId();
+
+        timeEntryService.deleteTimeEntry(timeEntryId);
+
+        final int year = timeEntry.start().getYear();
+        final int weekOfYear = timeEntry.start().get(WEEK_OF_WEEK_BASED_YEAR);
+
+        if (hasText(turboFrame)) {
+            LOG.info("User {} deleted timeEntry {} of user {}. Rendering turboFrame section.", currentUserLocalId, timeEntryId, ownerLocalId);
+            final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
+            prepareViewedUser(model, ownerLocalId);
+            prepareTimeEntryDeletedModel(model, locale, timeEntry, yearAndWeek);
+            return new ModelAndView("timeentries/index::#" + turboFrame);
         }
 
-        final UserId userId = currentUser.getUserIdComposite().id();
-        final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
+        final String userTimeEntriesUri = fromMethodCall(on(TimeEntryController.class)
+            .userTimeEntries(ownerLocalIdValue, year, weekOfYear, null, model, locale, currentUser))
+            .build().toUriString();
+
+        LOG.info("User {} deleted timeEntry {} of user {}. Redirecting to {}.", currentUserLocalId, timeEntryId, ownerLocalId, userTimeEntriesUri);
+        return new ModelAndView(new RedirectView(userTimeEntriesUri));
+    }
+
+    private void prepareViewedUser(Model model, UserLocalId userLocalId) {
+        final User viewedUser = findUser(userLocalId);
+        model.addAttribute("viewedUser", toViewedUserDto(viewedUser));
+    }
+
+    private void prepareTimeEntryDeletedModel(Model model, Locale locale, TimeEntry timeEntry, YearAndWeek yearAndWeek) {
+
+        final Integer year = yearAndWeek.year();
+        final Integer weekOfYear = yearAndWeek.week();
+
+        final UserLocalId ownerLocalId = timeEntry.userIdComposite().localId();
+        final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(ownerLocalId, year, weekOfYear);
 
         final Optional<TimeEntryDay> timeEntryDay = entryWeekPage.timeEntryWeek().days()
             .stream()
@@ -215,20 +402,44 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
         final TimeEntryWeek timeEntryWeek = entryWeekPage.timeEntryWeek();
 
-        addTimeEntriesToModel(year, weekOfYear, model, currentUser, locale);
+        addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale);
 
         model.addAttribute("turboEditedWeek", toTimeEntryWeekDto(timeEntryWeek, locale));
         model.addAttribute("turboEditedDay", timeEntryDay.map(entry -> toTimeEntryDayDto(entry, locale)).orElse(null));
         model.addAttribute("turboDeletedTimeEntry", viewHelper.toTimeEntryDto(timeEntry));
-
-        return "timeentries/index::#" + turboFrame;
     }
 
-    private void addTimeEntriesToModel(int year, int weekOfYear, Model model, CurrentOidcUser currentUser, Locale locale) {
+    private void assertTimeEntryAccess(CurrentOidcUser currentUser, TimeEntry timeEntry) {
 
-        final UserId userId = currentUser.getUserIdComposite().id();
+        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
+        final UserLocalId ownerUserLocalId = timeEntry.userIdComposite().localId();
 
-        final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(userId, year, weekOfYear);
+        final boolean isOwner = ownerUserLocalId.equals(currentUserLocalId);
+        final boolean allowedToEdit = currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
+
+        if (!isOwner && !allowedToEdit) {
+            throw new AccessDeniedException("You are not allowed to access timeentries of user %d".formatted(ownerUserLocalId.value()));
+        }
+    }
+
+    private void assertTimeEntryAccess(CurrentOidcUser currentUser, Long ownerLocalIdValue) {
+        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
+        if (!ownerLocalIdValue.equals(currentUserLocalId.value()) && !currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)) {
+            throw new AccessDeniedException("You are not allowed to access timeentries of user " + ownerLocalIdValue);
+        }
+    }
+
+    private User findUser(UserLocalId userLocalId) {
+        return userManagementService.findUserByLocalId(userLocalId)
+            .orElseThrow(() -> new NotFoundException("could not find user " + userLocalId));
+    }
+
+    private void addTimeEntryWeeksPageToModel(YearAndWeek yearAndWeek, Model model, UserLocalId ownerLocalId, Locale locale) {
+
+        final Integer year = yearAndWeek.year();
+        final Integer weekOfYear = yearAndWeek.week();
+
+        final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(ownerLocalId, year, weekOfYear);
         final TimeEntryWeekDto timeEntryWeekDto = toTimeEntryWeekDto(entryWeekPage.timeEntryWeek(), locale);
 
         final int futureYear = lastWeekOfYear(year) == weekOfYear ? year + 1 : year;
@@ -248,6 +459,19 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
         model.addAttribute("timeEntryWeeksPage", paginationDto);
     }
+
+    private YearAndWeek yearAndWeek(@Nullable Integer year, @Nullable Integer weekOfYear) {
+
+        final LocalDate now = LocalDate.now(clock);
+        final Supplier<ZonedDateTime> userStartOfDay = () -> now.atStartOfDay(userSettingsProvider.zoneId());
+
+        year = requireNonNullElseGet(year, () -> userStartOfDay.get().getYear());
+        weekOfYear = requireNonNullElseGet(weekOfYear, () -> userStartOfDay.get().get(WEEK_OF_WEEK_BASED_YEAR));
+
+        return new YearAndWeek(year, weekOfYear);
+    }
+
+    private record YearAndWeek(Integer year, Integer week) {}
 
     private TimeEntryWeekDto toTimeEntryWeekDto(TimeEntryWeek timeEntryWeek, Locale locale) {
 
@@ -312,6 +536,11 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             .timeEntries(dayTimeEntryDtos)
             .absenceEntries(absenceEntryDtos)
             .build();
+    }
+
+    private static ViewedUserDto toViewedUserDto(User user) {
+        return new ViewedUserDto(user.userLocalId().value(), user.givenName(), user.familyName(),
+            user.fullName(), user.email().value());
     }
 
     private int lastWeekOfYear(int year) {

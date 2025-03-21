@@ -55,12 +55,12 @@ class ReportCsvController {
         final YearWeek reportYearWeek = getYearWeek(year, week)
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Invalid week."));
 
-        final UserId userId = currentUser.getUserIdComposite().id();
+        final UserLocalId userLocalId = currentUser.getUserIdComposite().localId();
         final List<UserLocalId> userLocalIds = userIdsParam.stream().map(UserLocalId::new).toList();
         final String fileName = messageSource.getMessage("report.weekly.csv.filename", new Object[]{year, week}, locale);
 
         final Consumer<PrintWriter> csvWriteConsumer = userLocalIds.isEmpty()
-            ? writer -> reportCsvService.writeWeekReportCsv(Year.of(reportYearWeek.getYear()), reportYearWeek.getWeek(), locale, userId, writer)
+            ? writer -> reportCsvService.writeWeekReportCsv(Year.of(reportYearWeek.getYear()), reportYearWeek.getWeek(), locale, userLocalId, writer)
             : writer -> reportCsvService.writeWeekReportCsvForUserLocalIds(Year.of(reportYearWeek.getYear()), reportYearWeek.getWeek(), locale, userLocalIds, writer);
 
         writeCsv(fileName, response, csvWriteConsumer);

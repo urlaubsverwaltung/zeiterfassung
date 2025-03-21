@@ -29,9 +29,8 @@ class ReportCsvService {
         this.messageSource = messageSource;
     }
 
-    void writeWeekReportCsv(Year year, int week, Locale locale, UserId userId, PrintWriter writer) {
-        final ReportWeek reportWeek = reportService.getReportWeek(year, week, userId);
-        writeWeekCsv(reportWeek, locale, writer);
+    void writeWeekReportCsv(Year year, int week, Locale locale, UserLocalId userLocalId, PrintWriter writer) {
+        writeWeekReportCsvForUserLocalIds(year, week, locale, List.of(userLocalId), writer);
     }
 
     void writeWeekReportCsvForUserLocalIds(Year year, int week, Locale locale, List<UserLocalId> userLocalIds, PrintWriter writer) {

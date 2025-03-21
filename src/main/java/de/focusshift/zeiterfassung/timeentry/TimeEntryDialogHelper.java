@@ -55,17 +55,18 @@ public class TimeEntryDialogHelper {
         this.userManagementService = userManagementService;
     }
 
-    public void addTimeEntryEditToModel(Model model, CurrentOidcUser currentUser, Long timeEntryId, String editFormAction, String cancelFormAction) {
+    public void addTimeEntryEditToModel(Model model, CurrentOidcUser currentUser, Long timeEntryIdValue, String editFormAction, String cancelFormAction) {
 
+        final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
-            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry with id=%d".formatted(timeEntryId)));
+            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry %d".formatted(timeEntryIdValue)));
 
         addTimeEntry(model, timeEntry);
         addTimeEntryDialog(model, currentUser, timeEntry, editFormAction, cancelFormAction);
     }
 
-    public void saveTimeEntry(TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
-        timeEntryViewHelper.updateTimeEntry(timeEntryDTO, errors, model, redirectAttributes);
+    public void saveTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
+        timeEntryViewHelper.updateTimeEntry(currentUser, timeEntryDTO, errors, model, redirectAttributes);
     }
 
     private void addTimeEntry(Model model, TimeEntry timeEntry) {

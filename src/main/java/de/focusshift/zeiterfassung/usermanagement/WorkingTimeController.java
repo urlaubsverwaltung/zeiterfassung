@@ -40,6 +40,7 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WO
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateMessageKey;
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static de.focusshift.zeiterfassung.workingtime.WorkingTime.hoursToDuration;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
@@ -96,7 +97,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     String getWorkingTime(@PathVariable("userId") Long userId, Model model,
                           @PathVariable("workingTimeId") String workingTimeId,
                           @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                          @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                          @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
                           @CurrentSecurityContext SecurityContext securityContext) {
 
         final WorkingTime workingTime = workingTimeService.getWorkingTimeById(WorkingTimeId.fromString(workingTimeId))
@@ -118,7 +119,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     ModelAndView createNewWorkingTime(@PathVariable("userId") Long userId, Model model,
                                       @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
                                       @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                                      @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                                      @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
                                       @CurrentSecurityContext SecurityContext securityContext,
                                       @RequestParam Map<String, Object> requestParameters) {
 
@@ -162,7 +163,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     ModelAndView updateWorkingTime(@PathVariable("userId") Long userId, Model model,
                                    @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
                                    @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                                   @RequestHeader(name = "Turbo-Frame", required = false) String turboFrame,
+                                   @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
                                    @CurrentSecurityContext SecurityContext securityContext,
                                    @RequestParam Map<String, Object> requestParameters) {
 

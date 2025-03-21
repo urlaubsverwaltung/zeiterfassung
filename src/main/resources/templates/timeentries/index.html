@@ -3,7 +3,18 @@
   <head
     th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scripts=~{::scripts}, scriptsDefer=~{::scriptsDefer})}"
   >
-    <title>Zeiterfassung</title>
+    <title
+      th:if="${viewedUser == null}"
+      th:text="#{timeentries.page.meta.title}"
+    >
+      Zeiterfassung
+    </title>
+    <title
+      th:if="${viewedUser != null}"
+      th:text="#{timeentries.page.meta.title.person(${viewedUser.fullName})}"
+    >
+      Zeiterfassung von XXX
+    </title>
     <th:block th:fragment="styles">
       <link rel="stylesheet" type="text/css" th:href="@{/time-entries.css}" />
     </th:block>
@@ -34,16 +45,46 @@
           <div class="px-4">
             <div class="flex">
               <h1
+                th:if="${viewedUser == null}"
                 class="flex-1 text-2xl text-blue-700 text-center mb-4"
                 th:text="#{time-entry.create.title}"
               >
                 Neuen Zeitslot erfassen
               </h1>
+              <div
+                th:if="${viewedUser != null}"
+                class="flex-1 flex items-center justify-center gap-4 mb-4"
+              >
+                <span class="inline-flex text-blue-200">
+                  <span
+                    th:replace="~{fragments/avatar::avatar-bordered(${viewedUser.fullName()},52,52)}"
+                  ></span>
+                </span>
+                <h1
+                  class="text-2xl text-blue-700"
+                  th:text="#{time-entry.create.title.other-user(${viewedUser.fullName()})}"
+                >
+                  Neuen Zeitslot erfassen für Max Mustermann
+                </h1>
+              </div>
               <div class="time-entry-box__controls"></div>
             </div>
-            <th:block th:object="${timeEntry}">
+            <th:block
+              th:if="${viewedUser == null}"
+              th:object="${timeEntry}"
+              th:with="action=@{/timeentries}"
+            >
               <th:block
-                th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=@{/timeentries}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
+                th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
+              ></th:block>
+            </th:block>
+            <th:block
+              th:if="${viewedUser != null}"
+              th:object="${timeEntry}"
+              th:with="action=@{/timeentries/users/{id} (id=${viewedUser.localId()})}"
+            >
+              <th:block
+                th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
               ></th:block>
             </th:block>
           </div>
@@ -350,7 +391,11 @@
                         <div
                           is="z-time-entry-element"
                           th:fragment="time-entry-element(timeEntry)"
-                          th:with="formAction=@{/timeentries/{id} (id=${timeEntry.id})}"
+                          th:with="
+                            timeEntryId=${timeEntry.id},
+                            myself=@{/timeentries/{timeEntryId}(timeEntryId=${timeEntryId})}, other=@{/timeentries/users/{id}/timeentry/{timeEntryId}(id=${viewedUser==null ?-1 : viewedUser.localId()},timeEntryId=${timeEntryId})},
+                            action=${viewedUser == null ? myself : other}
+                          "
                           th:id="${'time-entry-' + timeEntry.id}"
                           th:data-date="${#temporals.format(timeEntry.date, 'EEEE, dd. MMMM')}"
                           th:data-duration="${timeEntry.duration}"
@@ -358,7 +403,7 @@
                           data-turbo="true"
                         >
                           <th:block
-                            th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${formAction}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')}"
+                            th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')}"
                           ></th:block>
                         </div>
                       </th:block>
@@ -374,7 +419,12 @@
                 <li>
                   <a
                     href="#"
-                    th:href="@{/timeentries/{year}/{week} (year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})}"
+                    th:with="
+                      myself=@{/timeentries (year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})},
+                      other=@{/timeentries/users/{id} (id=${viewedUser==null ? -1 : viewedUser.localId()}, year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})},
+                      href=${viewedUser == null ? myself : other}
+                    "
+                    th:href="${href}"
                     class="text-lg font-bold mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
                     th:text="#{time-entry.pagination.past}"
                   >
@@ -384,7 +434,11 @@
                 <li>
                   <a
                     href="#"
-                    th:href="@{/timeentries}"
+                    th:with="
+                      myself=@{/timeentries},
+                      other=@{/timeentries/users/{id} (id=${viewedUser==null ? -1 : viewedUser.localId()})}
+                    "
+                    th:href="${viewedUser == null ? myself : other}"
                     class="text-lg font-bold mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
                     th:text="#{time-entry.pagination.today}"
                   >
@@ -394,7 +448,11 @@
                 <li>
                   <a
                     href="#"
-                    th:href="@{/timeentries/{year}/{week} (year=${timeEntryWeeksPage.futureYear}, week=${timeEntryWeeksPage.futureWeekOfYear})}"
+                    th:with="
+                      myself=@{/timeentries (year=${timeEntryWeeksPage.futureYear}, week=${timeEntryWeeksPage.futureWeekOfYear})},
+                      other=@{/timeentries/users/{id} (id=${viewedUser==null ? -1 : viewedUser.localId()}, year=${timeEntryWeeksPage.futureYear}, week=${timeEntryWeeksPage.futureWeekOfYear})}
+                    "
+                    th:href="${viewedUser == null ? myself : other}"
                     class="text-lg font-bold mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
                     th:text="#{time-entry.pagination.future}"
                   >
@@ -407,7 +465,11 @@
               <a
                 id="load-more-button"
                 href="#"
-                th:href="@{/timeentries/{year}/{week} (year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})}"
+                th:with="
+                  myself=@{/timeentries (year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})},
+                  other=@{/timeentries/users/{id} (id=${viewedUser==null ? -1 : viewedUser.localId()}, year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})}
+                "
+                th:href="${viewedUser == null ? myself : other}"
                 class="ajax-loader text-lg font-medium mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
                 data-turbo-frame="frame-time-entry-weeks"
                 th:text="#{time-entry.pagination.load-more}"

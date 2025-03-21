@@ -98,6 +98,7 @@ class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     public Optional<TenantUser> findByLocalId(UserLocalId localId) {
+        LOG.debug("search user by {}", localId);
         return mapToTenantUser(tenantUserRepository.findById(localId.value()));
     }
 

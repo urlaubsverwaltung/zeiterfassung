@@ -67,13 +67,15 @@ class ReportCsvServiceTest {
     @Test
     void ensureWeekReportCsvWithEmptyReport() {
 
-        when(reportService.getReportWeek(Year.of(2021), 1, new UserId("batman")))
+        final UserLocalId userLocalId = new UserLocalId(1L);
+
+        when(reportService.getReportWeek(Year.of(2021), 1, List.of(userLocalId)))
             .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of()));
 
         final StringWriter stringWriter = new StringWriter();
         final PrintWriter printWriter = new PrintWriter(stringWriter);
 
-        sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, new UserId("batman"), printWriter);
+        sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, userLocalId, printWriter);
 
         assertThat(stringWriter).hasToString("""
             report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
@@ -102,13 +104,13 @@ class ReportCsvServiceTest {
         final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, false);
         final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
 
-        when(reportService.getReportWeek(Year.of(2021), 1, batmanId))
+        when(reportService.getReportWeek(Year.of(2021), 1, List.of(batmanLocalId)))
             .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDay)));
 
         final StringWriter stringWriter = new StringWriter();
         final PrintWriter printWriter = new PrintWriter(stringWriter);
 
-        sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, batmanId, printWriter);
+        sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, batmanLocalId, printWriter);
 
         assertThat(stringWriter).hasToString("""
             report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
@@ -151,14 +153,13 @@ class ReportCsvServiceTest {
         final ReportDayEntry dayTwoReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayTwoFrom, dayTwoTo, false);
         final ReportDay reportDayTwo = new ReportDay(LocalDate.of(2021, 1, 5), workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(dayTwoReportDayEntry)), Map.of());
 
-
-        when(reportService.getReportWeek(Year.of(2021), 1, batmanId))
+        when(reportService.getReportWeek(Year.of(2021), 1, List.of(batmanLocalId)))
             .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDayOne, reportDayTwo)));
 
         final StringWriter stringWriter = new StringWriter();
         final PrintWriter printWriter = new PrintWriter(stringWriter);
 
-        sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, batmanId, printWriter);
+        sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, batmanLocalId, printWriter);
 
         assertThat(stringWriter).hasToString("""
             report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break

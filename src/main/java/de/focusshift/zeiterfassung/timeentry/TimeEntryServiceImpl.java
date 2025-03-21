@@ -42,6 +42,7 @@ import static java.time.ZoneOffset.UTC;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Comparator.comparing;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
@@ -75,16 +76,16 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public Optional<TimeEntry> findTimeEntry(long id) {
-        return timeEntryRepository.findById(id).map(this::toTimeEntry);
+    public Optional<TimeEntry> findTimeEntry(TimeEntryId id) {
+        return timeEntryRepository.findById(id.value()).map(this::toTimeEntry);
     }
 
     @Override
-    public Optional<TimeEntryHistory> findTimeEntryHistory(TimeEntryId timeEntryId) {
+    public Optional<TimeEntryHistory> findTimeEntryHistory(TimeEntryId id) {
 
-        final Revisions<Long, TimeEntryEntity> revisions = timeEntryRepository.findRevisions(timeEntryId.value());
+        final Revisions<Long, TimeEntryEntity> revisions = timeEntryRepository.findRevisions(id.value());
         if (revisions.isEmpty()) {
-            LOG.warn("Could not find any revision for {}. A valid TimeEntry should have at least one revision of type INSERT.", timeEntryId);
+            LOG.warn("Could not find any revision for {}. A valid TimeEntry should have at least one revision of type INSERT.", id);
             return Optional.empty();
         }
 
@@ -119,13 +120,15 @@ class TimeEntryServiceImpl implements TimeEntryService {
             previousTimeEntry = timeEntry;
         }
 
-        return Optional.of(new TimeEntryHistory(timeEntryId, historyItems));
+        return Optional.of(new TimeEntryHistory(id, historyItems));
     }
 
     @Override
-    public List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserId userId) {
+    public List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId) {
 
-        final User user = findUser(userId);
+        final User user = findUser(userLocalId);
+        final UserId userId = user.userIdComposite().id();
+
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
 
@@ -153,7 +156,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public Map<UserIdComposite, List<TimeEntry>> getEntriesByUserLocalIds(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
+    public Map<UserIdComposite, List<TimeEntry>> getEntries(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
 
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
@@ -180,9 +183,11 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public TimeEntryWeekPage getEntryWeekPage(UserId userId, int year, int weekOfYear) {
+    public TimeEntryWeekPage getEntryWeekPage(UserLocalId userLocalId, int year, int weekOfYear) {
 
-        final User user = findUser(userId);
+        final User user = findUser(userLocalId);
+        final UserId userId = user.userIdComposite().id();
+
         final ZoneId userZoneId = userSettingsProvider.zoneId();
         final ZonedDateTime fromDateTime = userDateService.firstDayOfWeek(Year.of(year), weekOfYear).atStartOfDay(userZoneId);
         final ZonedDateTime toDateTimeExclusive = fromDateTime.plusWeeks(1);
@@ -195,9 +200,6 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .stream()
             .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, user))
             .collect(groupingBy(entry -> LocalDate.ofInstant(entry.start().toInstant(), userZoneId)));
-
-        // TODO refactor getEntryWeekPage to accept UserLocalId to replace userManagementService call
-        final UserLocalId userLocalId = user.userLocalId();
 
         final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarService
             .getWorkingTimeCalender(fromLocalDate, toLocalDateExclusive, userLocalId);
@@ -214,18 +216,23 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    public TimeEntry createTimeEntry(UserId userId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak) {
+    public TimeEntry createTimeEntry(UserLocalId userLocalId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak) {
+
+        final User user = findUser(userLocalId);
 
         final TimeEntryEntity entity = new TimeEntryEntity();
-        entity.setOwner(userId.value());
-        entity.setComment(comment.strip());
+        entity.setOwner(user.userIdComposite().id().value());
+        entity.setComment(requireNonNullElse(comment, "").strip());
         entity.setStart(start.toInstant());
         entity.setStartZoneId(start.getZone().getId());
         entity.setEnd(end.toInstant());
         entity.setEndZoneId(end.getZone().getId());
         entity.setBreak(isBreak);
 
-        return save(entity);
+        final TimeEntry saved = save(entity, user);
+        LOG.info("Created timeEntry {} of user {}.", saved.id(), saved.userIdComposite().localId());
+
+        return saved;
     }
 
     @Override
@@ -237,10 +244,19 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         updateEntityTimeSpan(entity, start, end, duration);
 
-        entity.setComment(comment.strip());
+        entity.setComment(requireNonNullElse(comment, "").strip());
         entity.setBreak(isBreak);
 
-        return save(entity);
+        final TimeEntry saved = save(entity);
+        LOG.info("Updated timeEntry {} of user {}.", saved.id(), saved.userIdComposite().localId());
+
+        return saved;
+    }
+
+    @Override
+    public void deleteTimeEntry(TimeEntryId id) {
+        timeEntryRepository.deleteById(id.value());
+        LOG.info("Deleted timeEntry {}", id);
     }
 
     private static List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,
@@ -334,19 +350,24 @@ class TimeEntryServiceImpl implements TimeEntryService {
         return !one.toInstant().atZone(UTC).equals(two.toInstant().atZone(UTC));
     }
 
-    @Override
-    public void deleteTimeEntry(long timeEntryId) {
-        timeEntryRepository.deleteById(timeEntryId);
-    }
-
     private TimeEntry save(TimeEntryEntity entity) {
         entity.setUpdatedAt(Instant.now(clock));
         return toTimeEntry(timeEntryRepository.save(entity));
     }
 
+    private TimeEntry save(TimeEntryEntity entity, User timeEntryOwner) {
+        entity.setUpdatedAt(Instant.now(clock));
+        return toTimeEntry(timeEntryRepository.save(entity), timeEntryOwner);
+    }
+
     private User findUser(UserId userId) {
         return userManagementService.findUserById(userId)
-            .orElseThrow(() -> new IllegalStateException("expected user=%s to exist but got nothing.".formatted(userId)));
+            .orElseThrow(() -> new IllegalStateException("expected user id=%s to exist but got nothing.".formatted(userId)));
+    }
+
+    private User findUser(UserLocalId userLocalId) {
+        return userManagementService.findUserByLocalId(userLocalId)
+            .orElseThrow(() -> new IllegalStateException("expected user localId=%s to exist but got nothing.".formatted(userLocalId)));
     }
 
     private TimeEntry toTimeEntry(TimeEntryEntity entity) {
@@ -359,8 +380,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final UserId userId = new UserId(timeEntryEntity.getOwner());
         final User user = userByUserId.get(userId);
         if (user == null) {
-            LOG.info("cannot map TimeEntryEntity with user={} because user does not exist anymore.", userId);
-            LOG.info("ignoring {}", timeEntryEntity);
+            LOG.info("Cannot map TimeEntryEntity {} because user={} does not exist anymore. Ignoring it.", timeEntryEntity.id, userId);
             return null;
         }
         return toTimeEntry(timeEntryEntity, user);

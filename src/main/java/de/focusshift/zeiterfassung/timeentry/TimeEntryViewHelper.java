@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-import de.focusshift.zeiterfassung.security.AuthenticationFacade;
-import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.slf4j.Logger;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
@@ -31,13 +31,10 @@ public class TimeEntryViewHelper {
 
     private final TimeEntryService timeEntryService;
     private final UserSettingsProvider userSettingsProvider;
-    private final AuthenticationFacade authenticationFacade;
 
-    public TimeEntryViewHelper(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider,
-                               AuthenticationFacade authenticationFacade) {
+    public TimeEntryViewHelper(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider) {
         this.timeEntryService = timeEntryService;
         this.userSettingsProvider = userSettingsProvider;
-        this.authenticationFacade = authenticationFacade;
     }
 
     public void addTimeEntryToModel(Model model, TimeEntryDTO timeEntryDTO) {
@@ -58,6 +55,7 @@ public class TimeEntryViewHelper {
 
         return TimeEntryDTO.builder()
             .id(timeEntry.id().value())
+            .userLocalId(timeEntry.userIdComposite().localId().value())
             .date(date)
             .start(startTime)
             .end(endTime)
@@ -68,39 +66,12 @@ public class TimeEntryViewHelper {
     }
 
     /**
-     * Handles view related actions to create a {@link TimeEntry}.
-     *
-     * <p>
-     * Creating a {@link TimeEntry} is only possible on the TimeEntry page.
-     *
-     * @param dto time entry information
-     * @param bindingResult {@link BindingResult} containing constraint violations
-     * @param model view model
-     * @param redirectAttributes {@link RedirectAttributes}
-     */
-    public void createTimeEntry(TimeEntryDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
-
-        if (bindingResult.hasErrors()) {
-            handleCrudTimeEntryErrors(dto, bindingResult, model, redirectAttributes);
-            return;
-        }
-
-        final UserId currentUserId = authenticationFacade.getCurrentUserIdComposite().id();
-        final ZoneId zoneId = userSettingsProvider.zoneId();
-
-        if (dto.getId() == null) {
-            createTimeEntry(dto, currentUserId, zoneId);
-        } else {
-            throw new IllegalStateException("Expected timeEntry id not to be defined but has value. Did you meant to update the time entry?");
-        }
-    }
-
-    /**
      * Handles view related actions to update a {@link TimeEntry}.
      *
      * <p>
      * Editing {@link TimeEntry} is possible on the TimeEntry page or with the TimeEntryDialog.
      *
+     * @param currentUser currently logged-in user updating the time entry
      * @param dto time entry information
      * @param bindingResult {@link BindingResult} containing constraint violations
      * @param model view model
@@ -108,7 +79,7 @@ public class TimeEntryViewHelper {
      * @throws TimeEntryNotFoundException when time entry does not exist
      * @throws AccessDeniedException when current user is not allowed to edit the time entry
      */
-    public void updateTimeEntry(TimeEntryDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+    public void updateTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 
         if (dto.getId() == null) {
             throw new IllegalStateException("Expected timeEntry id to have value. Did you meant to create a time entry?");
@@ -116,15 +87,14 @@ public class TimeEntryViewHelper {
 
         final TimeEntryId timeEntryId = new TimeEntryId(dto.getId());
 
-        final TimeEntry timeEntry = timeEntryService.findTimeEntry(dto.getId())
+        final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
             .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
-        final UserId currentUserId = authenticationFacade.getCurrentUserIdComposite().id();
-        final boolean idOwner = timeEntry.userIdComposite().id().equals(currentUserId);
-        final boolean allowedToEdit = authenticationFacade.hasSecurityRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
-
-        if (!allowedToEdit && !idOwner) {
-            throw new AccessDeniedException("Not allowed to edit time entry with %s.".formatted(timeEntryId));
+        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
+        final boolean isOwner = timeEntry.userIdComposite().localId().equals(currentUserLocalId);
+        final boolean allowedToEdit = currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
+        if (!allowedToEdit && !isOwner) {
+            throw new AccessDeniedException("Not allowed to edit timeEntry %s.".formatted(timeEntryId));
         }
 
         if (bindingResult.hasErrors()) {
@@ -140,7 +110,7 @@ public class TimeEntryViewHelper {
         try {
             timeEntryService.updateTimeEntry(timeEntryId, dto.getComment(), start, end, duration, dto.isBreak());
         } catch (TimeEntryUpdateNotPlausibleException e) {
-            LOG.debug("could not update time-entry", e);
+            LOG.debug("Could not update timeEntry.", e);
 
             bindingResult.reject("time-entry.validation.plausible");
             bindingResult.rejectValue("start", "");
@@ -151,7 +121,15 @@ public class TimeEntryViewHelper {
         }
     }
 
-    private void handleCrudTimeEntryErrors(TimeEntryDTO timeEntryDto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+    /**
+     * Adds error handling related information to the view model.
+     *
+     * @param timeEntryDto user input for the time entry
+     * @param bindingResult constraint validation errors
+     * @param model view model
+     * @param redirectAttributes to set flash attributes for the redirect
+     */
+    void handleCrudTimeEntryErrors(TimeEntryDTO timeEntryDto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 
         model.addAttribute("timeEntryErrorId", timeEntryDto.getId());
 
@@ -176,28 +154,35 @@ public class TimeEntryViewHelper {
         redirectAttributes.addFlashAttribute("timeEntryErrorId", timeEntryDto.getId());
     }
 
-    private void createTimeEntry(TimeEntryDTO dto, UserId userId, ZoneId zoneId) {
+    /**
+     * Creates the {@link TimeEntry}, nothing more. Please ensure authorization yourself, upfront!
+     *
+     * @param timeEntryDto user input for the time entry
+     */
+    void createTimeEntry(TimeEntryDTO timeEntryDto) {
 
         final ZonedDateTime start;
         final ZonedDateTime end;
+        final Duration duration = toDuration(timeEntryDto.getDuration());
 
-        final Duration duration = toDuration(dto.getDuration());
+        final ZoneId zoneId = userSettingsProvider.zoneId();
 
         if (duration.equals(Duration.ZERO)) {
-            // start and end should be given
-            start = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
-            end = getEndDate(dto, zoneId);
-        } else if (dto.getStart() == null) {
-            // end and value should be given
-            end = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getEnd()), zoneId);
+            LOG.info("No duration is set by user. Read start and end.");
+            start = ZonedDateTime.of(LocalDateTime.of(timeEntryDto.getDate(), timeEntryDto.getStart()), zoneId);
+            end = getEndDate(timeEntryDto, zoneId);
+        } else if (timeEntryDto.getStart() == null) {
+            LOG.info("No start is set by user. Read end and calculate start with given duration.");
+            end = ZonedDateTime.of(LocalDateTime.of(timeEntryDto.getDate(), timeEntryDto.getEnd()), zoneId);
             start = end.minusMinutes(duration.toMinutes());
         } else {
-            // start and value should be given
-            start = ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
+            LOG.info("No end is set by user. Read start and calculate end with given duration.");
+            start = ZonedDateTime.of(LocalDateTime.of(timeEntryDto.getDate(), timeEntryDto.getStart()), zoneId);
             end = start.plusMinutes(duration.toMinutes());
         }
 
-        timeEntryService.createTimeEntry(userId, dto.getComment(), start, end, dto.isBreak());
+        final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
+        timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak());
     }
 
     private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {

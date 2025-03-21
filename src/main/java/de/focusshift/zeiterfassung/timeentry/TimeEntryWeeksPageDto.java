@@ -1,5 +1,5 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-record TimeEntryWeeksPageDto(int futureYear, long futureWeekOfYear, int pastYear, long pastWeekOfYear,
+record TimeEntryWeeksPageDto(int futureYear, int futureWeekOfYear, int pastYear, int pastWeekOfYear,
                              TimeEntryWeekDto timeEntryWeek, long totalTimeEntryElements) {
 }

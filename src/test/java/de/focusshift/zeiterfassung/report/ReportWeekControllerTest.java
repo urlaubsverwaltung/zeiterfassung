@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
@@ -52,6 +53,7 @@ import static java.util.Locale.GERMAN;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -145,7 +147,7 @@ class ReportWeekControllerTest implements ControllerTest {
             )
         ));
 
-        when(reportService.getReportWeek(Year.of(2023), 5, new UserId("batman")))
+        when(reportService.getReportWeek(Year.of(2023), 5, userLocalId))
             .thenReturn(reportWeek);
 
         final GraphWeekDto graphWeekDto = new GraphWeekDto(
@@ -170,7 +172,7 @@ class ReportWeekControllerTest implements ControllerTest {
 
         perform(
             get("/report/year/2023/week/5")
-                .with(oidcSubject("batman"))
+                .with(oidcSubject(userIdComposite))
                 .locale(GERMAN)
         )
             .andExpect(model().attribute("weekReport", graphWeekDto));
@@ -212,7 +214,7 @@ class ReportWeekControllerTest implements ControllerTest {
             )
         ));
 
-        when(reportService.getReportWeek(Year.of(2023), 5, new UserId("batman")))
+        when(reportService.getReportWeek(Year.of(2023), 5, userLocalId))
             .thenReturn(reportWeek);
 
         final DetailWeekDto detailWeekDto = new DetailWeekDto(
@@ -224,6 +226,7 @@ class ReportWeekControllerTest implements ControllerTest {
                     List.of(
                         new DetailDayAbsenceDto(
                             "Bruce Wayne",
+                            1L,
                             "FULL",
                             "absence-full-de",
                             "ORANGE"
@@ -235,7 +238,7 @@ class ReportWeekControllerTest implements ControllerTest {
 
         perform(
             get("/report/year/2023/week/5")
-                .with(oidcSubject("batman"))
+                .with(oidcSubject(userIdComposite))
                 .locale(GERMAN)
         )
             .andExpect(model().attribute("weekReportDetail", detailWeekDto));
@@ -244,12 +247,16 @@ class ReportWeekControllerTest implements ControllerTest {
     @Test
     void ensureWeekReportSectionUrls() throws Exception {
 
-        when(reportService.getReportWeek(Year.of(2022), 1, new UserId("batman")))
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        when(reportService.getReportWeek(Year.of(2022), 1, userLocalId))
             .thenReturn(anyReportWeek());
 
         perform(
             get("/report/year/2022/week/1")
-                .with(oidcSubject("batman"))
+                .with(oidcSubject(userIdComposite))
         )
             .andExpect(model().attribute("userReportPreviousSectionUrl", "/report/year/2021/week/52"))
             .andExpect(model().attribute("userReportTodaySectionUrl", "/report/week"))
@@ -291,12 +298,16 @@ class ReportWeekControllerTest implements ControllerTest {
     @Test
     void ensureWeekReportCsvDownloadUrl() throws Exception {
 
-        when(reportService.getReportWeek(Year.of(2022), 1, new UserId("batman")))
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        when(reportService.getReportWeek(Year.of(2022), 1, userLocalId))
             .thenReturn(anyReportWeek());
 
         perform(
             get("/report/year/2022/week/1")
-                .with(oidcSubject("batman"))
+                .with(oidcSubject(userIdComposite))
         )
             .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/week/1?csv"));
     }
@@ -335,10 +346,10 @@ class ReportWeekControllerTest implements ControllerTest {
         final User user = anyUser();
         when(reportPermissionService.findAllPermittedUsersForCurrentUser()).thenReturn(List.of(user));
 
-        when(reportService.getReportWeek(Year.of(2022), 1, user.userId()))
+        when(reportService.getReportWeek(Year.of(2022), 1, user.userLocalId()))
             .thenReturn(anyReportWeek());
 
-        perform(get("/report/year/2022/week/1").with(oidcSubject("batman")))
+        perform(get("/report/year/2022/week/1").with(oidcSubject(user.userIdComposite())))
             .andExpect(model().attributeDoesNotExist("users", "selectedUserIds", "allUsersSelected", "userReportFilterUrl"));
     }
 
@@ -363,10 +374,10 @@ class ReportWeekControllerTest implements ControllerTest {
         when(reportPermissionService.findAllPermittedUsersForCurrentUser())
             .thenReturn(List.of(user1, user2, user3));
 
-        when(reportService.getReportWeek(Year.of(2022), 1, userId1))
+        when(reportService.getReportWeek(Year.of(2022), 1, userLocalId1))
             .thenReturn(anyReportWeek());
 
-        perform(get("/report/year/2022/week/1").with(oidcSubject("batman")))
+        perform(get("/report/year/2022/week/1").with(oidcSubject(userIdComposite1)))
             .andExpect(model().attribute("users", List.of(
                 new SelectableUserDto(1L, "Bruce Wayne", false),
                 new SelectableUserDto(3L, "Dick Grayson", false),
@@ -475,13 +486,15 @@ class ReportWeekControllerTest implements ControllerTest {
 
             // must be called even with initial constraint violations
             // since the helper adds further stuff to the model
-            verify(timeEntryDialogHelper).saveTimeEntry(any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+            verify(timeEntryDialogHelper).saveTimeEntry(nullable(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
         }
 
         @Test
         void ensureEditTimeEntry() throws Exception {
 
             perform(post("/report/year/2025/week/9")
+                .param("id", "1")
+                .param("userLocalId", "1")
                 .param("date", "2025-02-28")
                 .param("start", "14:30")
                 .param("end", "15:00")
@@ -490,7 +503,7 @@ class ReportWeekControllerTest implements ControllerTest {
                 .andExpect(redirectedUrl("http://localhost/report/year/2025/week/9"))
                 .andExpect(flash().attribute("turboRefreshScroll", "preserve"));
 
-            verify(timeEntryDialogHelper).saveTimeEntry(any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+            verify(timeEntryDialogHelper).saveTimeEntry(nullable(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
         }
 
         @Test

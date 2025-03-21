@@ -40,7 +40,8 @@
                       href="#"
                       th:href="@{/timeentries}"
                       class="flex items-center main-nav-link"
-                      th:aria-current="${currentRequestURI.startsWith('/timeentries') ? 'page' : 'false'}"
+                      th:classappend="${currentRequestURI.startsWith('/timeentries') ? 'current' : ''}"
+                      th:aria-current="${currentRequestURI.startsWith('/timeentries') && !currentRequestURI.startsWith('/timeentries/users')  ? 'page' : 'false'}"
                     >
                       <svg th:replace="~{icons/bookmark::svg}"></svg>
                       <th:block
@@ -67,7 +68,7 @@
                       href="#"
                       th:href="@{/users}"
                       class="flex items-center main-nav-link"
-                      th:classappend="${currentRequestURI.startsWith('/users') ? 'current' : ''}"
+                      th:classappend="${currentRequestURI.startsWith('/users') || currentRequestURI.startsWith('/timeentries/users') ? 'current' : ''}"
                       th:aria-current="${currentRequestURI.equals('/users') ? 'page' : 'false'}"
                       data-testid="navigation-link-users"
                     >

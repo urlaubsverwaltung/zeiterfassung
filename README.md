@@ -126,13 +126,16 @@ Zeiterfassung is using user permissions from oidc claim `groups` for mapping pos
 * `ZEITERFASSUNG_USER`: General access to the application and time tracking features
 * `ZEITERFASSUNG_VIEW_REPORT_ALL`: Access to reports of other users
 * `ZEITERFASSUNG_WORKING_TIME_EDIT_ALL`: Allowed to edit working time of all users
+* `ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL`: Allowed to edit global (company-wide default) working time
 * `ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL`: Allowed to edit overtime account of all users
 * `ZEITERFASSUNG_PERMISSIONS_EDIT_ALL`: Allowed to edit permissions of all users
-* `ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL`: Allowed to edit global (company-wide default) working time
 * `ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL`: Allowed to create/update/delete time entries of all users
 
 If you're using Keycloak, this can be configured via a predefined OIDC client mapper with name `groups`.
 Create both permissions as `Realm roles` and assign user to those roles.
+
+See [SecurityRole](https://github.com/urlaubsverwaltung/zeiterfassung/blob/main/src/main/java/de/focusshift/zeiterfassung/security/SecurityRole.java)
+enum for all permissions.
 
 #### Logging
 
