@@ -17,6 +17,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -74,7 +75,8 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
         final OAuth2User oAuth2User = oAuth2Auth.getPrincipal();
 
         tenantContextHolder.runInTenantIdContext(oAuth2Auth.getAuthorizedClientRegistrationId(), tenantId -> {
-            final User user = userManagementService.findUserById(new UserId(oAuth2User.getName()))
+            final String authSubject = getSubject(authentication);
+            final User user = userManagementService.findUserById(new UserId(authSubject))
                 .orElseThrow(() -> new IllegalStateException("no user found with userId=" + authentication.getName()));
 
             final Set<GrantedAuthority> updatedAuthorities = mergeAuthorities(oAuth2Auth, user);
@@ -87,6 +89,14 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
         });
 
         chain.doFilter(request, response);
+    }
+
+    private String getSubject(Authentication authentication) {
+        final Object principal = authentication.getPrincipal();
+        if (principal instanceof OidcUser oidcUser) {
+            return oidcUser.getSubject();
+        }
+        throw new IllegalStateException("unexpected authentication token: " + authentication.getPrincipal());
     }
 
     private static Set<GrantedAuthority> mergeAuthorities(OAuth2AuthenticationToken token, User user) {
