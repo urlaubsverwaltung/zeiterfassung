@@ -8,13 +8,11 @@ export class Avatar extends HTMLImageElement {
     if (this.complete) {
       doGet(this.src).then((response) => {
         if (!response.ok || (response.status >= 400 && response.status < 500)) {
-          this.#useFallback().finally(() => this.addTooltip(altText));
+          this.#useFallback();
         }
       });
     } else {
-      this.addEventListener("error", () =>
-        this.#useFallback().finally(() => this.addTooltip(altText)),
-      );
+      this.addEventListener("error", () => this.#useFallback());
     }
 
     // add tooltip for the img element.
