@@ -34,6 +34,7 @@
     <a
       th:fragment="avatar-with-link(fullName,width,height,userLocalId)"
       th:href="@{/timeentries/users/{id} (id=${userLocalId})}"
+      class="cursor-pointer"
     >
       <img
         src="#"
