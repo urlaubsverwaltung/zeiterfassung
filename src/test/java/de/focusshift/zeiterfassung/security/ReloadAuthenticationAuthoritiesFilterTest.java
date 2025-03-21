@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -118,8 +119,10 @@ class ReloadAuthenticationAuthoritiesFilterTest {
             OidcIdToken.withTokenValue("token-value").claim("claim", "not-empty").subject(subject).build()
         );
 
+        final CurrentOidcUser currentOidcUser = new CurrentOidcUser(oidcUser, List.of(), List.of(), new UserLocalId(1L));
+
         final OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
-        when(authentication.getPrincipal()).thenReturn(oidcUser);
+        when(authentication.getPrincipal()).thenReturn(currentOidcUser);
         when(authentication.getAuthorizedClientRegistrationId()).thenReturn("authorizedClientRegistrationId");
 
         return authentication;

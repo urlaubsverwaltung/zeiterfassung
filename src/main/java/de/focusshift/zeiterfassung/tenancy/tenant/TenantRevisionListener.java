@@ -44,7 +44,8 @@ class TenantRevisionListener implements RevisionListener {
             final UserId userId = authenticationFacade.getCurrentUserIdComposite().id();
             entity.setUpdatedBy(userId.value());
         } catch (Exception exception) {
-            LOG.info("Skip setting updated_by information on audited entity. UserId could not be recognised in current Authentication", exception);
+            LOG.warn("Skip setting updated_by information on audited entity. UserId could not be recognised in current Authentication. This is critical in production. More information in debug log.");
+            LOG.debug(exception.getMessage(), exception);
         }
     }
 }

@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -17,18 +18,19 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import static de.focusshift.zeiterfassung.security.SessionServiceImpl.RELOAD_AUTHORITIES;
 import static java.lang.Boolean.TRUE;
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Stream.concat;
 import static org.slf4j.LoggerFactory.getLogger;
 
 class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
@@ -40,11 +42,12 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
     private final DelegatingSecurityContextRepository securityContextRepository;
     private final TenantContextHolder tenantContextHolder;
 
-    ReloadAuthenticationAuthoritiesFilter(UserManagementService userManagementService,
-                                          SessionService sessionService,
-                                          DelegatingSecurityContextRepository securityContextRepository,
-                                          TenantContextHolder tenantContextHolder) {
-
+    ReloadAuthenticationAuthoritiesFilter(
+        UserManagementService userManagementService,
+        SessionService sessionService,
+        DelegatingSecurityContextRepository securityContextRepository,
+        TenantContextHolder tenantContextHolder
+    ) {
         this.userManagementService = userManagementService;
         this.sessionService = sessionService;
         this.securityContextRepository = securityContextRepository;
@@ -72,40 +75,33 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
         final Authentication authentication = context.getAuthentication();
 
         final OAuth2AuthenticationToken oAuth2Auth = (OAuth2AuthenticationToken) authentication;
-        final OAuth2User oAuth2User = oAuth2Auth.getPrincipal();
+        final CurrentOidcUser currentOidcUser = (CurrentOidcUser) oAuth2Auth.getPrincipal();
 
         tenantContextHolder.runInTenantIdContext(oAuth2Auth.getAuthorizedClientRegistrationId(), tenantId -> {
-            final String authSubject = getSubject(authentication);
-            final User user = userManagementService.findUserById(new UserId(authSubject))
-                .orElseThrow(() -> new IllegalStateException("no user found with userId=" + authentication.getName()));
+            final User user = getUserFromUserManagement(currentOidcUser);
 
-            final Set<GrantedAuthority> updatedAuthorities = mergeAuthorities(oAuth2Auth, user);
-            final Authentication updatedAuthentication = new OAuth2AuthenticationToken(oAuth2User, updatedAuthorities, tenantId);
+            final List<SimpleGrantedAuthority> applicationAuthoritiesNew = getUserAuthorities(user);
+            final Collection<? extends GrantedAuthority> oidcAuthorities = currentOidcUser.getOidcAuthorities();
+            final Set<GrantedAuthority> updatedMergedAuthorities = concat(oidcAuthorities.stream(), applicationAuthoritiesNew.stream()).collect(toSet());
+
+            final CurrentOidcUser updatedCurrentOidcUser = new CurrentOidcUser(currentOidcUser.getOidcUser(), applicationAuthoritiesNew, oidcAuthorities, currentOidcUser.getUserLocalId().orElseThrow());
+            final OAuth2AuthenticationToken updatedAuthentication = new OAuth2AuthenticationToken(updatedCurrentOidcUser, updatedMergedAuthorities, tenantId);
 
             context.setAuthentication(updatedAuthentication);
             securityContextRepository.saveContext(context, request, response);
-            LOG.info("Updated authorities of person with the id {} from {} to {}", user.userIdComposite(), authentication.getAuthorities(), updatedAuthorities);
-
+            LOG.info("Updated authorities of person with the id {} from {} to {}", user.userIdComposite(), authentication.getAuthorities(), updatedMergedAuthorities);
         });
 
         chain.doFilter(request, response);
     }
 
-    private String getSubject(Authentication authentication) {
-        final Object principal = authentication.getPrincipal();
-        if (principal instanceof OidcUser oidcUser) {
-            return oidcUser.getSubject();
-        }
-        throw new IllegalStateException("unexpected authentication token: " + authentication.getPrincipal());
+    private User getUserFromUserManagement(CurrentOidcUser currentOidcUser) {
+        final String userId = currentOidcUser.getSubject();
+        return userManagementService.findUserById(new UserId(userId))
+            .orElseThrow(() -> new IllegalStateException("no user found with userId=" + userId));
     }
 
-    private static Set<GrantedAuthority> mergeAuthorities(OAuth2AuthenticationToken token, User user) {
-
-        // token.principal.authorities contains the original authorities coming from oidc provider
-        // while token.authorities is a list already modified by us
-        final HashSet<GrantedAuthority> updatedAuthorities = new HashSet<>(token.getPrincipal().getAuthorities());
-        updatedAuthorities.addAll(user.authorities().stream().map(role -> new SimpleGrantedAuthority(role.name())).toList());
-
-        return updatedAuthorities;
+    private static List<SimpleGrantedAuthority> getUserAuthorities(User user) {
+        return user.authorities().stream().map(role -> new SimpleGrantedAuthority(role.name())).toList();
     }
 }
