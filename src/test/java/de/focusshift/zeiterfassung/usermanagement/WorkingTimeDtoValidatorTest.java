@@ -139,7 +139,7 @@ class WorkingTimeDtoValidatorTest {
 
     @ParameterizedTest
     @EnumSource(DayOfWeek.class)
-    void invalidWhenWorkingTimeIsZero(DayOfWeek dayOfWeek) {
+    void validWhenWorkingTimeIsZero(DayOfWeek dayOfWeek) {
 
         final WorkingTimeDto dto = new WorkingTimeDto();
         dto.setWorkday(List.of(dayOfWeek.name().toLowerCase()));
@@ -148,8 +148,7 @@ class WorkingTimeDtoValidatorTest {
         final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
         sut.validate(dto, bindingResult);
 
-        assertThat(bindingResult.getFieldError("workingTime")).isNotNull();
-        assertThat(bindingResult.getFieldError("workingTime").getCode()).isEqualTo("usermanagement.working-time.validation.working-time.not-empty");
+        assertThat(bindingResult.getFieldError("workingTime")).isNull();
     }
 
     @Test

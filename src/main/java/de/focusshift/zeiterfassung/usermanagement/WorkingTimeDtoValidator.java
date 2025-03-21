@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import static java.util.Objects.isNull;
 import static org.springframework.util.StringUtils.capitalize;
 
 @Component
@@ -53,7 +54,7 @@ class WorkingTimeDtoValidator implements Validator {
         }
 
         // no working hours
-        if (zeroOrNull(dto.getWorkingTime())) {
+        if (isNull(dto.getWorkingTime())) {
             final List<String> selectedDaysWithoutHours = getSelectedDaysWithoutHours(dto);
             if (selectedDaysWithoutHours.size() == dto.getWorkday().size()) {
                 // and nothing else is given
@@ -109,7 +110,7 @@ class WorkingTimeDtoValidator implements Validator {
 
         return hoursByDay.keySet()
             .stream()
-            .filter(day -> !zeroOrNull(hoursByDay.get(day).get()) && !workday.contains(day))
+            .filter(day -> !isNullOrZero(hoursByDay.get(day).get()) && !workday.contains(day))
             .toList();
     }
 
@@ -119,7 +120,7 @@ class WorkingTimeDtoValidator implements Validator {
 
         return hoursByDay.keySet()
             .stream()
-            .filter(day -> workday.contains(day) && zeroOrNull(hoursByDay.get(day).get()))
+            .filter(day -> workday.contains(day) && isNull(hoursByDay.get(day).get()))
             .toList();
     }
 
@@ -137,17 +138,17 @@ class WorkingTimeDtoValidator implements Validator {
 
     private static boolean noInput(WorkingTimeDto dto) {
         return dto.getWorkday().isEmpty()
-            && zeroOrNull(dto.getWorkingTime())
-            && zeroOrNull(dto.getWorkingTimeMonday())
-            && zeroOrNull(dto.getWorkingTimeTuesday())
-            && zeroOrNull(dto.getWorkingTimeWednesday())
-            && zeroOrNull(dto.getWorkingTimeThursday())
-            && zeroOrNull(dto.getWorkingTimeFriday())
-            && zeroOrNull(dto.getWorkingTimeSaturday())
-            && zeroOrNull(dto.getWorkingTimeSunday());
+            && isNull(dto.getWorkingTime())
+            && isNull(dto.getWorkingTimeMonday())
+            && isNull(dto.getWorkingTimeTuesday())
+            && isNull(dto.getWorkingTimeWednesday())
+            && isNull(dto.getWorkingTimeThursday())
+            && isNull(dto.getWorkingTimeFriday())
+            && isNull(dto.getWorkingTimeSaturday())
+            && isNull(dto.getWorkingTimeSunday());
     }
 
-    private static boolean zeroOrNull(Double doubleValue) {
+    private static boolean isNullOrZero(Double doubleValue) {
         return doubleValue == null || doubleValue == 0;
     }
 }
