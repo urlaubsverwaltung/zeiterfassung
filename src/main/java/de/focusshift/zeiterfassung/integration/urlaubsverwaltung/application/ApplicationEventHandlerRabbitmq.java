@@ -16,8 +16,6 @@ import de.focusshift.zeiterfassung.user.UserId;
 import org.slf4j.Logger;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
-import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.integration.urlaubsverwaltung.application.ApplicationRabbitmqConfiguration.ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE;
@@ -41,12 +39,11 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
 
     private static Optional<AbsenceWrite> toAbsence(ApplicationEventDtoAdapter event) {
 
-        final List<LocalDate> absentWorkingDays = event.getAbsentWorkingDays().stream().sorted().toList();
         final Optional<DayLength> maybeDayLength = toDayLength(event.getPeriod().getDayLength());
         final Optional<AbsenceTypeCategory> maybeAbsenceTypeCategory = toAbsenceType(event.getVacationType());
         final AbsenceTypeSourceId absenceTypeSourceId = new AbsenceTypeSourceId(event.getVacationType().getSourceId());
 
-        if (absentWorkingDays.isEmpty() || maybeDayLength.isEmpty() || maybeAbsenceTypeCategory.isEmpty()) {
+        if (maybeDayLength.isEmpty() || maybeAbsenceTypeCategory.isEmpty()) {
             return Optional.empty();
         }
 

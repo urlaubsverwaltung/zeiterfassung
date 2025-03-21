@@ -31,7 +31,6 @@ import java.util.UUID;
 
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationEventHandlerRabbitmqTest {
@@ -176,30 +175,6 @@ class ApplicationEventHandlerRabbitmqTest {
             new AbsenceTypeSourceId(1000L)
         );
         verify(absenceWriteService).updateAbsence(absence);
-
-        final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
-        inOrder.verify(tenantContextHolder).setTenantId(tenantId);
-        inOrder.verify(tenantContextHolder).clear();
-    }
-
-    @Test
-    void onApplicationWithAbsentWorkingDays() {
-        final TenantId tenantId = new TenantId("tenantId");
-
-        final ApplicationAllowedEventDTO event = ApplicationAllowedEventDTO.builder()
-                .id(UUID.randomUUID())
-                .tenantId(tenantId.tenantId())
-                .sourceId(1L)
-                .person(ApplicationPersonDTO.builder().personId(2L).username("userId").build())
-                .period(ApplicationPeriodDTO.builder().startDate(Instant.ofEpochMilli(0L)).endDate(Instant.ofEpochMilli(1L)).dayLength(de.focus_shift.urlaubsverwaltung.extension.api.application.DayLength.FULL).build())
-                .vacationType(VacationTypeDTO.builder().category("HOLIDAY").sourceId(1000L).color("CYAN").build())
-                .createdAt(Instant.ofEpochMilli(0L))
-                .status("status")
-                .absentWorkingDays(Set.of())
-                .build();
-        sut.on(event);
-
-        verifyNoInteractions(absenceWriteService);
 
         final InOrder inOrder = Mockito.inOrder(tenantContextHolder);
         inOrder.verify(tenantContextHolder).setTenantId(tenantId);
