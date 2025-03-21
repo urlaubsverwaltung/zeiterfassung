@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.ScrollPreservation.PRESERVE;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_REFRESH_SCROLL_ATTRIBUTE;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -140,6 +141,8 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
 
         viewHelper.addUserFilterModelAttributes(model, allUsersSelected, users, userLocalIds, String.format("/report/year/%d/month/%d", year, month));
         viewHelper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, userLocalIds, reportMonth);
+
+        model.addAttribute("isAllowedToEditTimeEntries", currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
 
         return new ModelAndView("reports/user-report");
     }
