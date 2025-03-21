@@ -208,7 +208,6 @@ public final class WorkingTime implements HasUserIdComposite {
     public boolean hasDifferentWorkingHours() {
         return Stream.of(getMonday(), getTuesday(), getWednesday(), getThursday(), getFriday(), getSaturday(), getSunday())
             .map(PlannedWorkingHours::duration)
-            .filter(not(Duration.ZERO::equals))
             .collect(toSet())
             .size() > 1;
     }

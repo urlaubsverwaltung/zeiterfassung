@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -11,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import static java.util.Objects.isNull;
 import static org.springframework.util.StringUtils.capitalize;
 
 @Component
@@ -19,12 +21,12 @@ class WorkingTimeDtoValidator implements Validator {
     private static final BigDecimal MAX_HOURS = BigDecimal.valueOf(24);
 
     @Override
-    public boolean supports(Class<?> clazz) {
+    public boolean supports(@NonNull Class<?> clazz) {
         return WorkingTimeDto.class.equals(clazz);
     }
 
     @Override
-    public void validate(Object target, Errors errors) {
+    public void validate(@NonNull Object target, @NonNull Errors errors) {
 
         final WorkingTimeDto dto = (WorkingTimeDto) target;
 
@@ -52,7 +54,7 @@ class WorkingTimeDtoValidator implements Validator {
         }
 
         // no working hours
-        if (zeroOrNull(dto.getWorkingTime())) {
+        if (isNull(dto.getWorkingTime())) {
             final List<String> selectedDaysWithoutHours = getSelectedDaysWithoutHours(dto);
             if (selectedDaysWithoutHours.size() == dto.getWorkday().size()) {
                 // and nothing else is given
@@ -95,9 +97,9 @@ class WorkingTimeDtoValidator implements Validator {
         }
 
         final Map<String, Supplier<Double>> getter = getHoursSupplierByDayMap(dto);
-        for (String day : getter.keySet()) {
-            if (validator.test(getter.get(day).get())) {
-                reject.accept("workingTime" + capitalize(day));
+        for (Map.Entry<String, Supplier<Double>> entry : getter.entrySet()) {
+            if (validator.test(entry.getValue().get())) {
+                reject.accept("workingTime" + capitalize(entry.getKey()));
             }
         }
     }
@@ -108,7 +110,7 @@ class WorkingTimeDtoValidator implements Validator {
 
         return hoursByDay.keySet()
             .stream()
-            .filter(day -> !zeroOrNull(hoursByDay.get(day).get()) && !workday.contains(day))
+            .filter(day -> !isNullOrZero(hoursByDay.get(day).get()) && !workday.contains(day))
             .toList();
     }
 
@@ -118,7 +120,7 @@ class WorkingTimeDtoValidator implements Validator {
 
         return hoursByDay.keySet()
             .stream()
-            .filter(day -> workday.contains(day) && zeroOrNull(hoursByDay.get(day).get()))
+            .filter(day -> workday.contains(day) && isNull(hoursByDay.get(day).get()))
             .toList();
     }
 
@@ -136,17 +138,17 @@ class WorkingTimeDtoValidator implements Validator {
 
     private static boolean noInput(WorkingTimeDto dto) {
         return dto.getWorkday().isEmpty()
-            && zeroOrNull(dto.getWorkingTime())
-            && zeroOrNull(dto.getWorkingTimeMonday())
-            && zeroOrNull(dto.getWorkingTimeTuesday())
-            && zeroOrNull(dto.getWorkingTimeWednesday())
-            && zeroOrNull(dto.getWorkingTimeThursday())
-            && zeroOrNull(dto.getWorkingTimeFriday())
-            && zeroOrNull(dto.getWorkingTimeSaturday())
-            && zeroOrNull(dto.getWorkingTimeSunday());
+            && isNull(dto.getWorkingTime())
+            && isNull(dto.getWorkingTimeMonday())
+            && isNull(dto.getWorkingTimeTuesday())
+            && isNull(dto.getWorkingTimeWednesday())
+            && isNull(dto.getWorkingTimeThursday())
+            && isNull(dto.getWorkingTimeFriday())
+            && isNull(dto.getWorkingTimeSaturday())
+            && isNull(dto.getWorkingTimeSunday());
     }
 
-    private static boolean zeroOrNull(Double doubleValue) {
+    private static boolean isNullOrZero(Double doubleValue) {
         return doubleValue == null || doubleValue == 0;
     }
 }

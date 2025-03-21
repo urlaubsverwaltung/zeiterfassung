@@ -116,13 +116,13 @@ class WorkingTimeTest {
     @Test
     void ensureHasDifferentWorkingHours() {
 
-        final WorkingTimeId id_1 = new WorkingTimeId(UUID.randomUUID());
-        final WorkingTime differentWorkingHours = WorkingTime.builder(anyUserIdComposite(), id_1).monday(1).tuesday(2).build();
+        final WorkingTimeId workingTimeIdOne = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime differentWorkingHours = WorkingTime.builder(anyUserIdComposite(), workingTimeIdOne).monday(1).tuesday(2).build();
         assertThat(differentWorkingHours.hasDifferentWorkingHours()).isTrue();
 
-        final WorkingTimeId id_2 = new WorkingTimeId(UUID.randomUUID());
-        final WorkingTime notDifferentWorkingHours = WorkingTime.builder(anyUserIdComposite(), id_2).monday(1).build();
-        assertThat(notDifferentWorkingHours.hasDifferentWorkingHours()).isFalse();
+        final WorkingTimeId workingTimeIdTwo = new WorkingTimeId(UUID.randomUUID());
+        final WorkingTime notDifferentWorkingHours = WorkingTime.builder(anyUserIdComposite(), workingTimeIdTwo).monday(1).build();
+        assertThat(notDifferentWorkingHours.hasDifferentWorkingHours()).isTrue();
     }
 
     private static UserIdComposite anyUserIdComposite() {
