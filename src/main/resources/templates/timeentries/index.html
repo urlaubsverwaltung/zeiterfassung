@@ -180,6 +180,9 @@
             <turbo-stream action="replace" target="load-more-button">
               <template th:insert="~{::#load-more-button}"></template>
             </turbo-stream>
+            <th:block
+              th:replace="~{timeclock/timeclock-edit-form::navigation-box}"
+            ></th:block>
           </th:block>
         </turbo-frame>
         <div
