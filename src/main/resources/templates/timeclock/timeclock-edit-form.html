@@ -10,6 +10,7 @@
       th:fragment="navigation-box"
       th:object="${timeClock}"
       th:with="timeClock=${timeClock}"
+      th:if="${timeClock != null}"
     >
       <turbo-frame id="frame-nav-time-clock-edit">
         <turbo-stream target="time-clock-summary" action="replace">
