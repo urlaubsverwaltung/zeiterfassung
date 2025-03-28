@@ -27,3 +27,9 @@ updates:
     labels:
       - "type: dependencies"
       - "github_actions"
+
+  - package-ecosystem: "docker-compose"
+    directories:
+      - "/.examples/docker-compose"
+    schedule:
+      interval: "weekly"
