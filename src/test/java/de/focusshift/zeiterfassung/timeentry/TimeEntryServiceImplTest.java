@@ -152,6 +152,7 @@ class TimeEntryServiceImplTest {
             assertThat(timeEntry.start()).isEqualTo(ZonedDateTime.of(entryStart, ZONE_ID_UTC));
             assertThat(timeEntry.end()).isEqualTo(ZonedDateTime.of(entryEnd, ZONE_ID_UTC));
             assertThat(timeEntry.isBreak()).isFalse();
+            assertThat(timeEntry.isFreezed()).isFalse();
             assertThat(timeEntry.workDuration().duration()).isEqualTo(Duration.ofHours(2));
         });
     }
@@ -571,6 +572,7 @@ class TimeEntryServiceImplTest {
         assertThat(actualUpdatedTimeEntry.end()).isEqualTo(newEnd);
         assertThat(actualUpdatedTimeEntry.isBreak()).isFalse();
         assertThat(actualUpdatedTimeEntry.workDuration().duration()).isEqualTo(newDuration);
+        assertThat(actualUpdatedTimeEntry.isFreezed()).isFalse();
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -586,6 +588,7 @@ class TimeEntryServiceImplTest {
         assertThat(actualPersisted.getEndZoneId()).isEqualTo(newEnd.getZone().getId());
         assertThat(actualPersisted.getUpdatedAt()).isEqualTo(Instant.now(clockFixed));
         assertThat(actualPersisted.isBreak()).isFalse();
+        assertThat(actualPersisted.isFreezed()).isFalse();
     }
 
     @ParameterizedTest

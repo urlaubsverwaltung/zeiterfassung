@@ -74,7 +74,7 @@ class FilesystemBasedImportInputProviderTest {
         assertThat(userExport.timeEntries()).containsOnly(
             new TimeEntryDTO("dies", parse("2024-06-01T06:00:00.123Z"), parse("2024-06-01T10:00:00.123Z"), false, false),
             new TimeEntryDTO("das", parse("2024-06-01T10:00:00.124Z"), parse("2024-06-01T11:00:00.125Z"), false, false),
-            new TimeEntryDTO("ananas", parse("2024-06-01T11:00:00.126Z"), parse("2024-06-01T15:00:00.127Z"), false, false)
+            new TimeEntryDTO("ananas", parse("2024-06-01T11:00:00.126Z"), parse("2024-06-01T15:00:00.127Z"), false, true)
         );
     }
 
