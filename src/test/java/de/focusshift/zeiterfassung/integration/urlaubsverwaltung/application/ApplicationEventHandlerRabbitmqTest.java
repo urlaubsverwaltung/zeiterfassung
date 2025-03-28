@@ -25,8 +25,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.util.Set;
 import java.util.UUID;
 
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
@@ -61,7 +59,6 @@ class ApplicationEventHandlerRabbitmqTest {
                 .vacationType(VacationTypeDTO.builder().category("HOLIDAY").sourceId(1000L).color("CYAN").build())
                 .createdAt(Instant.ofEpochMilli(0L))
                 .status("status")
-                .absentWorkingDays(Set.of(LocalDate.now()))
                 .build();
 
         sut.on(event);
@@ -95,7 +92,6 @@ class ApplicationEventHandlerRabbitmqTest {
                 .vacationType(VacationTypeDTO.builder().category("HOLIDAY").sourceId(1000L).color("CYAN").build())
                 .createdAt(Instant.ofEpochMilli(0L))
                 .status("status")
-                .absentWorkingDays(Set.of(LocalDate.now()))
                 .build();
         sut.on(event);
 
@@ -128,7 +124,6 @@ class ApplicationEventHandlerRabbitmqTest {
                 .vacationType(VacationTypeDTO.builder().category("HOLIDAY").sourceId(1000L).color("CYAN").build())
                 .createdAt(Instant.ofEpochMilli(0L))
                 .status("status")
-                .absentWorkingDays(Set.of(LocalDate.now()))
                 .build();
         sut.on(event);
 
@@ -161,7 +156,6 @@ class ApplicationEventHandlerRabbitmqTest {
             .vacationType(VacationTypeDTO.builder().category("HOLIDAY").sourceId(1000L).color("CYAN").build())
             .createdAt(Instant.ofEpochMilli(0L))
             .status("status")
-            .absentWorkingDays(Set.of(LocalDate.now()))
             .build();
         sut.on(event);
 

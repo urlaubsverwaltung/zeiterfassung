@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -123,7 +122,6 @@ class AbsenceIT extends SingleTenantTestContainersBase {
             .allowedBy(ApplicationPersonDTO.builder().username("boss").personId(1L).build())
             .person(ApplicationPersonDTO.builder().username("boss").personId(1L).build())
             .period(ApplicationPeriodDTO.builder().startDate(startOfDay).endDate(startOfDay).dayLength(FULL).build())
-            .absentWorkingDays(Set.of(now))
             .build()
         );
 
