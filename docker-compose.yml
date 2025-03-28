@@ -1,4 +1,5 @@
 services:
+
   postgres:
     image: postgres:16.1
     environment:
@@ -10,17 +11,19 @@ services:
     ports:
       - '5432:5432'
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
       interval: 3s
       timeout: 1s
       retries: 5
     volumes:
-        - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh:ro
+      - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh:ro
+
   mailhog:
     image: mailhog/mailhog:v1.0.1
     ports:
-        - '1025:1025'
-        - '8025:8025'
+      - '1025:1025'
+      - '8025:8025'
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.6
     command: ["start-dev", "--import-realm"]
@@ -35,4 +38,3 @@ services:
       - '8090:8090'
     volumes:
       - ./docker/keycloak/export:/opt/keycloak/data/import
-

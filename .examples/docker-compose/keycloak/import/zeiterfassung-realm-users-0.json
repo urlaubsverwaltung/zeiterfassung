@@ -24,7 +24,7 @@
       "account" : [ "view-profile", "manage-account" ]
     },
     "notBefore" : 0,
-    "groups" : [ "/ZEITERFASSUNG_ACCESS", "/ZEITERFASSUNG_PRIVILEGED" ]
+    "groups" : [ "/zeiterfassung_user", "/zeiterfassung_privileged" ]
   }, {
     "id" : "58400ef7-1cc9-48cb-93a8-f45c7af186ad",
     "createdTimestamp" : 1608289715282,
@@ -49,7 +49,7 @@
       "account" : [ "view-profile", "manage-account" ]
     },
     "notBefore" : 0,
-    "groups" : [ "/ZEITERFASSUNG_ACCESS", "/ZEITERFASSUNG_PRIVILEGED" ]
+    "groups" : [ "/zeiterfassung_user", "/zeiterfassung_privileged" ]
   }, {
     "id" : "3d07ae0d-90a1-4dfd-9393-172c0c9e7c10",
     "createdTimestamp" : 1608289984833,
@@ -74,6 +74,6 @@
       "account" : [ "view-profile", "manage-account" ]
     },
     "notBefore" : 0,
-    "groups" : [ "/ZEITERFASSUNG_ACCESS" ]
+    "groups" : [ "/zeiterfassung_user" ]
   } ]
 }
