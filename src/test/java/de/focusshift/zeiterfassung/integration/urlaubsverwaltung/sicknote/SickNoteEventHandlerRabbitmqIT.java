@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -113,7 +112,6 @@ class SickNoteEventHandlerRabbitmqIT extends SingleTenantTestContainersBase {
             .type("SICK_NOTE")
             .status("ACTIVE")
             .period(SickNotePeriodDTO.builder().dayLength(DayLength.FULL).startDate(startOfDay).endDate(startOfDay).build())
-            .absentWorkingDays(Set.of(now))
             .build());
 
         final UserId userId = new UserId("boss");
@@ -142,7 +140,6 @@ class SickNoteEventHandlerRabbitmqIT extends SingleTenantTestContainersBase {
             .type("SICK_NOTE")
             .status("ACTIVE")
             .period(SickNotePeriodDTO.builder().dayLength(DayLength.FULL).startDate(startOfDay).endDate(startOfNextDay).build())
-            .absentWorkingDays(Set.of(now, now.plusDays(1)))
             .build());
 
         await().untilAsserted(() -> {
@@ -168,7 +165,6 @@ class SickNoteEventHandlerRabbitmqIT extends SingleTenantTestContainersBase {
             .type("SICK_NOTE")
             .status("CANCELLED")
             .period(SickNotePeriodDTO.builder().dayLength(DayLength.FULL).startDate(startOfDay).endDate(startOfNextDay).build())
-            .absentWorkingDays(Set.of(now, now.plusDays(1)))
             .build());
 
         await().untilAsserted(() -> {
@@ -211,7 +207,6 @@ class SickNoteEventHandlerRabbitmqIT extends SingleTenantTestContainersBase {
             .type("SICK_NOTE")
             .status("CONVERTED_TO_VACATION")
             .period(SickNotePeriodDTO.builder().dayLength(DayLength.FULL).startDate(startOfDay).endDate(startOfNextDay).build())
-            .absentWorkingDays(Set.of(now))
             .build());
 
         await().untilAsserted(() -> {
