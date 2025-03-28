@@ -209,14 +209,14 @@
                       <th:block th:if="${isAllowedToEditTimeEntries}">
                         <a
                           href="#"
-                          th:replace="~{fragments/avatar::avatar-with-link(${dayEntry.username},42,42,${dayEntry.userLocalId})}"
+                          th:replace="~{fragments/avatar::avatar-with-link(${absence.username},42,42,${absence.userLocalId})}"
                         ></a>
                       </th:block>
                       <th:block th:if="${not isAllowedToEditTimeEntries}">
                         <img
                           alt=""
                           src=""
-                          th:replace="~{fragments/avatar::avatar(${dayEntry.username},42,42)}"
+                          th:replace="~{fragments/avatar::avatar(${absence.username},42,42)}"
                         />
                       </th:block>
                     </span>
