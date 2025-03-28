@@ -20,7 +20,7 @@ class TimeEntryTest {
 
         final ZonedDateTime from = dateTime(2021, 1, 4, 1, 0);
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "hard work", from, to, true);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "hard work", from, to, true, false);
 
         assertThat(timeEntry.workDuration().duration()).isEqualTo(Duration.ZERO);
     }
@@ -30,7 +30,7 @@ class TimeEntryTest {
 
         final ZonedDateTime from = dateTime(2021, 1, 4, 1, 0);
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "hard work", from, to, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "hard work", from, to, false, false);
 
         assertThat(timeEntry.workDuration().duration()).isEqualTo(Duration.ofHours(1));
     }

@@ -108,7 +108,7 @@ class TimeEntryRepositoryIT extends SingleTenantTestContainersBase {
     }
 
     private static TimeEntryEntity createTimeEntryEntity(String owner, String comment, LocalDateTime start, LocalDateTime end) {
-        return new TimeEntryEntity(null, owner, comment, start.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), end.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), Instant.now(), false);
+        return new TimeEntryEntity(null, owner, comment, start.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), end.toInstant(ZoneOffset.UTC), ZoneId.of("UTC"), Instant.now(), false, false);
     }
 
     private static void prepareSecurityContextWithTenantId(final String tenantId) {

@@ -59,9 +59,8 @@ import static org.springframework.data.history.RevisionMetadata.RevisionType.UPD
 class TimeEntryServiceImplTest {
 
     private static final ZoneId ZONE_ID_UTC = ZoneId.of("UTC");
-
+    private static final Clock clockFixed = Clock.fixed(Instant.now(), UTC);
     private TimeEntryServiceImpl sut;
-
     @Mock
     private TimeEntryRepository timeEntryRepository;
     @Mock
@@ -75,109 +74,47 @@ class TimeEntryServiceImplTest {
     @Mock
     private EntityRevisionMapper entityRevisionMapper;
 
-    private static final Clock clockFixed = Clock.fixed(Instant.now(), UTC);
+    static Stream<Duration> emptyDuration() {
+        return Stream.of(null, Duration.ZERO);
+    }
+
+    private static TimeEntryEntity anyTimeEntryEntity() {
+
+        final Instant start = Instant.parse("2025-03-03T21:00:00.00Z");
+        final Instant end = Instant.parse("2025-03-03T21:30:00.00Z");
+
+        final TimeEntryEntity entity = new TimeEntryEntity();
+
+        entity.setId(42L);
+        entity.setOwner("");
+        entity.setStart(start);
+        entity.setStartZoneId("UTC");
+        entity.setEnd(end);
+        entity.setEndZoneId("UTC");
+        entity.setComment("Kickoff");
+
+        return entity;
+    }
+
+    private static User anyUser() {
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        return createUser(userIdComposite, "Bruce", "Wayne");
+    }
+
+    private static User createUser(UserIdComposite userIdComposite, String givenName, String familyName) {
+        return new User(userIdComposite, givenName, familyName, new EMailAddress(""), Set.of());
+    }
+
+    private static EntityRevisionMetadata anyEntityRevisionMetadata() {
+        return new EntityRevisionMetadata(1L, EntityRevisionType.CREATED, Instant.now(), Optional.empty());
+    }
 
     @BeforeEach
     void setUp() {
         sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeCalendarService,
             userDateService, userSettingsProvider, entityRevisionMapper, clockFixed);
-    }
-
-    @Nested
-    class FindTimeEntryHistory {
-
-        @Test
-        void ensureFindTimeEntryHistoryEmptyWhenThereAreNoRevisions() {
-
-            when(timeEntryRepository.findRevisions(1L)).thenReturn(Revisions.none());
-
-            final Optional<TimeEntryHistory> actual = sut.findTimeEntryHistory(new TimeEntryId(1L));
-            assertThat(actual).isEmpty();
-        }
-
-        @Test
-        void ensureFindTimeEntryHistory() {
-
-            final UserId userId = new UserId("batman");
-            final UserLocalId userLocalId = new UserLocalId(1L);
-            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-            final User user = createUser(userIdComposite, "Bruce", "Wayne");
-
-            final Instant revisionTimestamp = Instant.now(clockFixed);
-            final Instant start = Instant.parse("2025-03-03T21:00:00.00Z");
-            final Instant end = Instant.parse("2025-03-03T21:30:00.00Z");
-
-            final TenantAwareRevisionEntity revisionEntity = new TenantAwareRevisionEntity();
-            revisionEntity.setId(1L);
-            revisionEntity.setTimestamp(revisionTimestamp.toEpochMilli());
-            revisionEntity.setUpdatedBy(userId.value());
-
-            final TimeEntryEntity entityCreated = new TimeEntryEntity();
-            entityCreated.setId(42L);
-            entityCreated.setOwner(userId.value());
-            entityCreated.setStart(start);
-            entityCreated.setStartZoneId("UTC");
-            entityCreated.setEnd(end);
-            entityCreated.setEndZoneId("UTC");
-            entityCreated.setComment("Kickoff");
-
-            final Revision<Long, TimeEntryEntity> revision = Revision.of(new TenantAwareRevisionMetadata(revisionEntity, INSERT), entityCreated);
-
-            when(timeEntryRepository.findRevisions(1L)).thenReturn(Revisions.of(List.of(revision)));
-
-            when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
-
-            final EntityRevisionMetadata metadata = anyEntityRevisionMetadata();
-            when(entityRevisionMapper.toEntityRevisionMetadata(revision)).thenReturn(metadata);
-
-            final Optional<TimeEntryHistory> actual = sut.findTimeEntryHistory(new TimeEntryId(1L));
-            assertThat(actual).hasValueSatisfying(history -> {
-
-                assertThat(history.timeEntryId()).isEqualTo(new TimeEntryId(1L));
-                assertThat(history.revisions()).hasSize(1);
-
-                final TimeEntryId timeEntryId = new TimeEntryId(42L);
-                final ZonedDateTime startDateTime = ZonedDateTime.ofInstant(start, ZONE_ID_UTC);
-                final ZonedDateTime endDateTime = ZonedDateTime.ofInstant(end, ZONE_ID_UTC);
-
-                final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "Kickoff", startDateTime, endDateTime, false);
-                final TimeEntryHistoryItem historyItem = new TimeEntryHistoryItem(metadata, timeEntry, true, true, true, true);
-
-                assertThat(history.revisions().getFirst()).isEqualTo(historyItem);
-                assertThat(history.revisions().getFirst().metadata()).isSameAs(metadata);
-            });
-        }
-
-        @Test
-        void ensureFindTimeEntryHistoryWithOrderedHistoryItems() {
-
-            final TenantAwareRevisionEntity revisionEntityInsert = new TenantAwareRevisionEntity();
-            revisionEntityInsert.setId(1L);
-            final TenantAwareRevisionEntity revisionEntityUpdate = new TenantAwareRevisionEntity();
-            revisionEntityUpdate.setId(2L);
-
-            final TimeEntryEntity entityCreated = anyTimeEntryEntity();
-            final TimeEntryEntity entityModified = anyTimeEntryEntity();
-
-            final Revision<Long, TimeEntryEntity> revisionInsert = Revision.of(new TenantAwareRevisionMetadata(revisionEntityInsert, INSERT), entityCreated);
-            final Revision<Long, TimeEntryEntity> revisionUpdate = Revision.of(new TenantAwareRevisionMetadata(revisionEntityUpdate, UPDATE), entityModified);
-
-            when(timeEntryRepository.findRevisions(1L)).thenReturn(Revisions.of(List.of(revisionInsert, revisionUpdate)));
-
-            when(userManagementService.findUserById(any())).thenReturn(Optional.of(anyUser()));
-
-            final EntityRevisionMetadata metadataCreated = anyEntityRevisionMetadata();
-            final EntityRevisionMetadata metadataModified = anyEntityRevisionMetadata();
-            when(entityRevisionMapper.toEntityRevisionMetadata(revisionInsert)).thenReturn(metadataCreated);
-            when(entityRevisionMapper.toEntityRevisionMetadata(revisionUpdate)).thenReturn(metadataModified);
-
-            final Optional<TimeEntryHistory> actual = sut.findTimeEntryHistory(new TimeEntryId(1L));
-            assertThat(actual).hasValueSatisfying(history -> {
-                assertThat(history.revisions()).hasSize(2);
-                assertThat(history.revisions().get(0).metadata()).isSameAs(metadataCreated);
-                assertThat(history.revisions().get(1).metadata()).isSameAs(metadataModified);
-            });
-        }
     }
 
     @Test
@@ -195,6 +132,7 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
+            false,
             false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
@@ -250,7 +188,7 @@ class TimeEntryServiceImplTest {
             false
         );
 
-        assertThat(actual).isEqualTo(new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", ZonedDateTime.of(entryStart, ZONE_ID_UTC), ZonedDateTime.of(entryEnd, ZONE_ID_UTC), false));
+        assertThat(actual).isEqualTo(new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", ZonedDateTime.of(entryStart, ZONE_ID_UTC), ZonedDateTime.of(entryEnd, ZONE_ID_UTC), false, false));
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -295,7 +233,7 @@ class TimeEntryServiceImplTest {
             false
         );
 
-        assertThat(actual).isEqualTo(new TimeEntry(new TimeEntryId(1L), userIdComposite, "", ZonedDateTime.of(entryStart, ZONE_ID_UTC), ZonedDateTime.of(entryEnd, ZONE_ID_UTC), false));
+        assertThat(actual).isEqualTo(new TimeEntry(new TimeEntryId(1L), userIdComposite, "", ZonedDateTime.of(entryStart, ZONE_ID_UTC), ZonedDateTime.of(entryEnd, ZONE_ID_UTC), false, false));
 
         final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
         verify(timeEntryRepository).save(captor.capture());
@@ -333,6 +271,7 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
+            false,
             false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
@@ -366,7 +305,9 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            isBreak);
+            isBreak,
+            false
+        );
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
@@ -425,7 +366,8 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            isBreak);
+            isBreak,
+            false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
@@ -484,7 +426,8 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            isBreak);
+            isBreak,
+            false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
@@ -543,7 +486,8 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            isBreak);
+            isBreak,
+            false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
@@ -602,7 +546,8 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            isBreak);
+            isBreak,
+            false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
@@ -661,7 +606,8 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
-            isBreak);
+            isBreak,
+            false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
         when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
@@ -718,6 +664,7 @@ class TimeEntryServiceImplTest {
             previousEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
+            false,
             false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
@@ -775,6 +722,7 @@ class TimeEntryServiceImplTest {
             previousEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
+            false,
             false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
@@ -819,6 +767,7 @@ class TimeEntryServiceImplTest {
             previousEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
+            false,
             false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
@@ -847,10 +796,6 @@ class TimeEntryServiceImplTest {
         assertThat(actualPersisted.getEndZoneId()).isEqualTo(expectedEnd.getZone().getId());
     }
 
-    static Stream<Duration> emptyDuration() {
-        return Stream.of(null, Duration.ZERO);
-    }
-
     @ParameterizedTest
     @MethodSource("emptyDuration")
     void ensureUpdateTimeEntryStartAndEndWithoutDuration(Duration givenDuration) throws Exception {
@@ -868,6 +813,7 @@ class TimeEntryServiceImplTest {
             previousEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
+            false,
             false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(entity));
@@ -914,6 +860,7 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
+            false,
             false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
@@ -958,6 +905,7 @@ class TimeEntryServiceImplTest {
             entryEnd.toInstant(UTC),
             ZONE_ID_UTC,
             Instant.now(),
+            false,
             false);
 
         when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
@@ -1008,11 +956,11 @@ class TimeEntryServiceImplTest {
 
         final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
         final LocalDateTime entryEnd = LocalDateTime.of(toExclusive, LocalTime.of(12, 0, 0));
-        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "batman", "hard work", entryStart.toInstant(UTC), ZONE_ID_UTC, entryEnd.toInstant(UTC), ZONE_ID_UTC, now, false);
+        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "batman", "hard work", entryStart.toInstant(UTC), ZONE_ID_UTC, entryEnd.toInstant(UTC), ZONE_ID_UTC, now, false, false);
 
         final LocalDateTime entryBreakStart = LocalDateTime.of(from, LocalTime.of(12, 0, 0));
         final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
-        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "pinguin", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
+        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "pinguin", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true, false);
 
         when(timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThanOrderByStartDesc(from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
@@ -1041,12 +989,12 @@ class TimeEntryServiceImplTest {
             .hasSize(2)
             .hasEntrySatisfying(batmanIdComposite, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(1L), batmanIdComposite, "hard work", expectedStart, expectedEnd, false)
+                    new TimeEntry(new TimeEntryId(1L), batmanIdComposite, "hard work", expectedStart, expectedEnd, false, false)
                 );
             })
             .hasEntrySatisfying(pinguinIdComposite, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(2L), pinguinIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true)
+                    new TimeEntry(new TimeEntryId(2L), pinguinIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true, false)
                 );
             });
     }
@@ -1073,11 +1021,11 @@ class TimeEntryServiceImplTest {
 
         final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
         final LocalDateTime entryEnd = LocalDateTime.of(toExclusive, LocalTime.of(12, 0, 0));
-        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "uuid-1", "hard work", entryStart.toInstant(UTC), ZONE_ID_UTC, entryEnd.toInstant(UTC), ZONE_ID_UTC, now, false);
+        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "uuid-1", "hard work", entryStart.toInstant(UTC), ZONE_ID_UTC, entryEnd.toInstant(UTC), ZONE_ID_UTC, now, false, false);
 
         final LocalDateTime entryBreakStart = LocalDateTime.of(from, LocalTime.of(12, 0, 0));
         final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
-        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "uuid-2", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
+        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "uuid-2", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true, false);
 
         when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("uuid-1", "uuid-2"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
@@ -1094,12 +1042,12 @@ class TimeEntryServiceImplTest {
             .hasSize(2)
             .hasEntrySatisfying(batmanIdComposite, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(1L), batmanIdComposite, "hard work", expectedStart, expectedEnd, false)
+                    new TimeEntry(new TimeEntryId(1L), batmanIdComposite, "hard work", expectedStart, expectedEnd, false, false)
                 );
             })
             .hasEntrySatisfying(robinIdComposite, timeEntries -> {
                 assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(2L), robinIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true)
+                    new TimeEntry(new TimeEntryId(2L), robinIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true, false)
                 );
             });
     }
@@ -1136,15 +1084,15 @@ class TimeEntryServiceImplTest {
 
         final LocalDateTime entryStart = LocalDateTime.of(periodFrom, LocalTime.of(10, 0, 0));
         final LocalDateTime entryEnd = LocalDateTime.of(periodToExclusive, LocalTime.of(12, 0, 0));
-        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "batman", "hard work", entryStart.toInstant(UTC), ZoneId.of("UTC"), entryEnd.toInstant(UTC), ZoneId.of("UTC"), Instant.now(), false);
+        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "batman", "hard work", entryStart.toInstant(UTC), ZoneId.of("UTC"), entryEnd.toInstant(UTC), ZoneId.of("UTC"), Instant.now(), false, false);
 
         final LocalDateTime entryBreakStart = LocalDateTime.of(periodFrom, LocalTime.of(12, 0, 0));
         final LocalDateTime entryBreakEnd = LocalDateTime.of(periodToExclusive, LocalTime.of(13, 0, 0));
-        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "batman", "deserved break", entryBreakStart.toInstant(UTC), ZoneId.of("UTC"), entryBreakEnd.toInstant(UTC), ZoneId.of("UTC"), Instant.now(), true);
+        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "batman", "deserved break", entryBreakStart.toInstant(UTC), ZoneId.of("UTC"), entryBreakEnd.toInstant(UTC), ZoneId.of("UTC"), Instant.now(), true, false);
 
         final LocalDateTime entryStart2 = LocalDateTime.of(periodFrom, LocalTime.of(8, 0, 0));
         final LocalDateTime entryEnd2 = LocalDateTime.of(periodToExclusive, LocalTime.of(8, 30, 0));
-        final TimeEntryEntity timeEntryEntity2 = new TimeEntryEntity(3L, "batman", "waking up *zzzz", entryStart2.toInstant(UTC), ZoneId.of("UTC"), entryEnd2.toInstant(UTC), ZoneId.of("UTC"), Instant.now(), false);
+        final TimeEntryEntity timeEntryEntity2 = new TimeEntryEntity(3L, "batman", "waking up *zzzz", entryStart2.toInstant(UTC), ZoneId.of("UTC"), entryEnd2.toInstant(UTC), ZoneId.of("UTC"), Instant.now(), false, false);
 
         final Instant periodStartInstant = periodFrom.atStartOfDay(UTC).toInstant();
         final Instant periodEndInstant = periodToExclusive.atStartOfDay(UTC).toInstant();
@@ -1169,9 +1117,9 @@ class TimeEntryServiceImplTest {
         final ZonedDateTime expectedEnd2 = ZonedDateTime.of(entryEnd2, ZONE_ID_UTC);
 
         assertThat(actualEntries).containsExactly(
-            new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true),
-            new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", expectedStart, expectedEnd, false),
-            new TimeEntry(new TimeEntryId(3L), userIdComposite, "waking up *zzzz", expectedStart2, expectedEnd2, false)
+            new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true, false),
+            new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", expectedStart, expectedEnd, false, false),
+            new TimeEntry(new TimeEntryId(3L), userIdComposite, "waking up *zzzz", expectedStart2, expectedEnd2, false, false)
         );
     }
 
@@ -1186,11 +1134,11 @@ class TimeEntryServiceImplTest {
 
         final ZonedDateTime timeEntryStart = ZonedDateTime.of(2022, 1, 4, 9, 0, 0, 0, userZoneId);
         final ZonedDateTime timeEntryEnd = ZonedDateTime.of(2022, 1, 4, 12, 0, 0, 0, userZoneId);
-        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", timeEntryStart.toInstant(), userZoneId, timeEntryEnd.toInstant(), userZoneId, Instant.now(), false);
+        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", timeEntryStart.toInstant(), userZoneId, timeEntryEnd.toInstant(), userZoneId, Instant.now(), false, false);
 
         final ZonedDateTime timeEntryBreakStart = ZonedDateTime.of(2022, 1, 4, 12, 0, 0, 0, userZoneId);
         final ZonedDateTime timeEntryBreakEnd = ZonedDateTime.of(2022, 1, 4, 13, 0, 0, 0, userZoneId);
-        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "batman", "deserved break", timeEntryBreakStart.toInstant(), userZoneId, timeEntryBreakEnd.toInstant(), userZoneId, Instant.now(), true);
+        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "batman", "deserved break", timeEntryBreakStart.toInstant(), userZoneId, timeEntryBreakEnd.toInstant(), userZoneId, Instant.now(), true, false);
 
         final ZonedDateTime fromDateTime = firstDayOfWeek.atStartOfDay(userZoneId);
         final Instant from = Instant.from(fromDateTime);
@@ -1267,8 +1215,8 @@ class TimeEntryServiceImplTest {
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(
-                                new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", timeEntryStart, timeEntryEnd, false),
-                                new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true)
+                                new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", timeEntryStart, timeEntryEnd, false, false),
+                                new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true, false)
                             ),
                             List.of()
                         ),
@@ -1297,11 +1245,11 @@ class TimeEntryServiceImplTest {
 
         final ZonedDateTime firstDayOfWeekTimeEntryStart = ZonedDateTime.of(2023, 1, 30, 9, 0, 0, 0, userZoneId);
         final ZonedDateTime firstDayOfWeekTimeEntryEnd = ZonedDateTime.of(2023, 1, 30, 12, 0, 0, 0, userZoneId);
-        final TimeEntryEntity firstDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", firstDayOfWeekTimeEntryStart.toInstant(), userZoneId, firstDayOfWeekTimeEntryEnd.toInstant(), userZoneId, Instant.now(), false);
+        final TimeEntryEntity firstDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", firstDayOfWeekTimeEntryStart.toInstant(), userZoneId, firstDayOfWeekTimeEntryEnd.toInstant(), userZoneId, Instant.now(), false, false);
 
         final ZonedDateTime lastDayOfWeekTimeEntryStart = ZonedDateTime.of(2023, 2, 5, 9, 0, 0, 0, userZoneId);
         final ZonedDateTime lastDayOfWeekTimeEntryEnd = ZonedDateTime.of(2023, 2, 5, 12, 0, 0, 0, userZoneId);
-        final TimeEntryEntity lastDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 2L, "batman", "hack the planet, second time!", lastDayOfWeekTimeEntryStart.toInstant(), userZoneId, lastDayOfWeekTimeEntryEnd.toInstant(), userZoneId, Instant.now(), false);
+        final TimeEntryEntity lastDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 2L, "batman", "hack the planet, second time!", lastDayOfWeekTimeEntryStart.toInstant(), userZoneId, lastDayOfWeekTimeEntryEnd.toInstant(), userZoneId, Instant.now(), false, false);
 
         final ZonedDateTime fromDateTime = firstDateOfWeek.atStartOfDay(userZoneId);
         final Instant from = Instant.from(fromDateTime);
@@ -1343,7 +1291,7 @@ class TimeEntryServiceImplTest {
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(
-                                new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
+                                new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false, false)
                             ),
                             List.of()
                         ),
@@ -1387,7 +1335,7 @@ class TimeEntryServiceImplTest {
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(
-                                new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
+                                new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false, false)
                             ),
                             List.of()
                         )
@@ -1497,36 +1445,100 @@ class TimeEntryServiceImplTest {
         );
     }
 
-    private static TimeEntryEntity anyTimeEntryEntity() {
+    @Nested
+    class FindTimeEntryHistory {
 
-        final Instant start = Instant.parse("2025-03-03T21:00:00.00Z");
-        final Instant end = Instant.parse("2025-03-03T21:30:00.00Z");
+        @Test
+        void ensureFindTimeEntryHistoryEmptyWhenThereAreNoRevisions() {
 
-        final TimeEntryEntity entity = new TimeEntryEntity();
+            when(timeEntryRepository.findRevisions(1L)).thenReturn(Revisions.none());
 
-        entity.setId(42L);
-        entity.setOwner("");
-        entity.setStart(start);
-        entity.setStartZoneId("UTC");
-        entity.setEnd(end);
-        entity.setEndZoneId("UTC");
-        entity.setComment("Kickoff");
+            final Optional<TimeEntryHistory> actual = sut.findTimeEntryHistory(new TimeEntryId(1L));
+            assertThat(actual).isEmpty();
+        }
 
-        return entity;
-    }
+        @Test
+        void ensureFindTimeEntryHistory() {
 
-    private static User anyUser() {
-        final UserId userId = new UserId("batman");
-        final UserLocalId userLocalId = new UserLocalId(1L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        return createUser(userIdComposite, "Bruce", "Wayne");
-    }
+            final UserId userId = new UserId("batman");
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = createUser(userIdComposite, "Bruce", "Wayne");
 
-    private static User createUser(UserIdComposite userIdComposite, String givenName, String familyName) {
-        return new User(userIdComposite, givenName, familyName, new EMailAddress(""), Set.of());
-    }
+            final Instant revisionTimestamp = Instant.now(clockFixed);
+            final Instant start = Instant.parse("2025-03-03T21:00:00.00Z");
+            final Instant end = Instant.parse("2025-03-03T21:30:00.00Z");
 
-    private static EntityRevisionMetadata anyEntityRevisionMetadata() {
-        return new EntityRevisionMetadata(1L, EntityRevisionType.CREATED, Instant.now(), Optional.empty());
+            final TenantAwareRevisionEntity revisionEntity = new TenantAwareRevisionEntity();
+            revisionEntity.setId(1L);
+            revisionEntity.setTimestamp(revisionTimestamp.toEpochMilli());
+            revisionEntity.setUpdatedBy(userId.value());
+
+            final TimeEntryEntity entityCreated = new TimeEntryEntity();
+            entityCreated.setId(42L);
+            entityCreated.setOwner(userId.value());
+            entityCreated.setStart(start);
+            entityCreated.setStartZoneId("UTC");
+            entityCreated.setEnd(end);
+            entityCreated.setEndZoneId("UTC");
+            entityCreated.setComment("Kickoff");
+
+            final Revision<Long, TimeEntryEntity> revision = Revision.of(new TenantAwareRevisionMetadata(revisionEntity, INSERT), entityCreated);
+
+            when(timeEntryRepository.findRevisions(1L)).thenReturn(Revisions.of(List.of(revision)));
+
+            when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
+            final EntityRevisionMetadata metadata = anyEntityRevisionMetadata();
+            when(entityRevisionMapper.toEntityRevisionMetadata(revision)).thenReturn(metadata);
+
+            final Optional<TimeEntryHistory> actual = sut.findTimeEntryHistory(new TimeEntryId(1L));
+            assertThat(actual).hasValueSatisfying(history -> {
+
+                assertThat(history.timeEntryId()).isEqualTo(new TimeEntryId(1L));
+                assertThat(history.revisions()).hasSize(1);
+
+                final TimeEntryId timeEntryId = new TimeEntryId(42L);
+                final ZonedDateTime startDateTime = ZonedDateTime.ofInstant(start, ZONE_ID_UTC);
+                final ZonedDateTime endDateTime = ZonedDateTime.ofInstant(end, ZONE_ID_UTC);
+
+                final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "Kickoff", startDateTime, endDateTime, false, false);
+                final TimeEntryHistoryItem historyItem = new TimeEntryHistoryItem(metadata, timeEntry, true, true, true, true, true);
+
+                assertThat(history.revisions().getFirst()).isEqualTo(historyItem);
+                assertThat(history.revisions().getFirst().metadata()).isSameAs(metadata);
+            });
+        }
+
+        @Test
+        void ensureFindTimeEntryHistoryWithOrderedHistoryItems() {
+
+            final TenantAwareRevisionEntity revisionEntityInsert = new TenantAwareRevisionEntity();
+            revisionEntityInsert.setId(1L);
+            final TenantAwareRevisionEntity revisionEntityUpdate = new TenantAwareRevisionEntity();
+            revisionEntityUpdate.setId(2L);
+
+            final TimeEntryEntity entityCreated = anyTimeEntryEntity();
+            final TimeEntryEntity entityModified = anyTimeEntryEntity();
+
+            final Revision<Long, TimeEntryEntity> revisionInsert = Revision.of(new TenantAwareRevisionMetadata(revisionEntityInsert, INSERT), entityCreated);
+            final Revision<Long, TimeEntryEntity> revisionUpdate = Revision.of(new TenantAwareRevisionMetadata(revisionEntityUpdate, UPDATE), entityModified);
+
+            when(timeEntryRepository.findRevisions(1L)).thenReturn(Revisions.of(List.of(revisionInsert, revisionUpdate)));
+
+            when(userManagementService.findUserById(any())).thenReturn(Optional.of(anyUser()));
+
+            final EntityRevisionMetadata metadataCreated = anyEntityRevisionMetadata();
+            final EntityRevisionMetadata metadataModified = anyEntityRevisionMetadata();
+            when(entityRevisionMapper.toEntityRevisionMetadata(revisionInsert)).thenReturn(metadataCreated);
+            when(entityRevisionMapper.toEntityRevisionMetadata(revisionUpdate)).thenReturn(metadataModified);
+
+            final Optional<TimeEntryHistory> actual = sut.findTimeEntryHistory(new TimeEntryId(1L));
+            assertThat(actual).hasValueSatisfying(history -> {
+                assertThat(history.revisions()).hasSize(2);
+                assertThat(history.revisions().get(0).metadata()).isSameAs(metadataCreated);
+                assertThat(history.revisions().get(1).metadata()).isSameAs(metadataModified);
+            });
+        }
     }
 }

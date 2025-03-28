@@ -104,7 +104,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             TimeEntryHistoryItem historyItem;
 
             if (previousTimeEntry == null) {
-                historyItem = new TimeEntryHistoryItem(entityRevisionMetadata, timeEntry, true, true, true, true);
+                historyItem = new TimeEntryHistoryItem(entityRevisionMetadata, timeEntry, true, true, true, true, true);
             } else {
                 historyItem = new TimeEntryHistoryItem(
                     entityRevisionMetadata,
@@ -112,7 +112,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
                     hasBeenModified(previousTimeEntry::comment, timeEntry::comment),
                     hasBeenModified(previousTimeEntry::start, timeEntry::start),
                     hasBeenModified(previousTimeEntry::end, timeEntry::end),
-                    hasBeenModified(previousTimeEntry::isBreak, timeEntry::isBreak)
+                    hasBeenModified(previousTimeEntry::isBreak, timeEntry::isBreak),
+                    hasBeenModified(previousTimeEntry::isFreezed, timeEntry::isFreezed)
                 );
             }
 
@@ -402,7 +403,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         final UserIdComposite userIdComposite = user.userIdComposite();
 
-        return new TimeEntry(new TimeEntryId(entity.getId()), userIdComposite, entity.getComment(), startDateTime, endDateTime, entity.isBreak());
+        return new TimeEntry(new TimeEntryId(entity.getId()), userIdComposite, entity.getComment(), startDateTime, endDateTime, entity.isBreak(), entity.isFreezed());
     }
 
     private static Instant toInstant(LocalDate localDate) {

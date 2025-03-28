@@ -32,11 +32,11 @@ class TimeEntryWeekTest {
 
         final ZonedDateTime firstStart = ZonedDateTime.of(LocalDateTime.of(2022, 1, 4, 9, 0, 0), ZONE_ID_BERLIN);
         final ZonedDateTime firstEnd = ZonedDateTime.of(LocalDateTime.of(2022, 1, 4, 11, 30, 0), ZONE_ID_BERLIN);
-        final TimeEntry firstTimeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work first day", firstStart, firstEnd, false);
+        final TimeEntry firstTimeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work first day", firstStart, firstEnd, false, false);
 
         final ZonedDateTime secondStart = ZonedDateTime.of(LocalDateTime.of(2022, 1, 5, 17, 15, 0), ZONE_ID_BERLIN);
         final ZonedDateTime secondEnd = ZonedDateTime.of(LocalDateTime.of(2022, 1, 5, 17, 30, 0), ZONE_ID_BERLIN);
-        final TimeEntry secondTimeEntry = new TimeEntry(new TimeEntryId(2L), userIdComposite, "hard work second day", secondStart, secondEnd, false);
+        final TimeEntry secondTimeEntry = new TimeEntry(new TimeEntryId(2L), userIdComposite, "hard work second day", secondStart, secondEnd, false, false);
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(startOfWeek, PlannedWorkingHours.EIGHT, List.of(new TimeEntryDay(startOfWeek, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(firstTimeEntry, secondTimeEntry), List.of())));
 
@@ -56,7 +56,7 @@ class TimeEntryWeekTest {
         final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(2022, 1, 9, 23, 0, 0), ZONE_ID_BERLIN);
         final ZonedDateTime end = ZonedDateTime.of(LocalDateTime.of(2022, 1, 10, 2, 0, 0), ZONE_ID_BERLIN);
 
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work in the night", start, end, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work in the night", start, end, false, false);
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(startOfWeek, PlannedWorkingHours.EIGHT, List.of(new TimeEntryDay(startOfWeek, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of())));
 

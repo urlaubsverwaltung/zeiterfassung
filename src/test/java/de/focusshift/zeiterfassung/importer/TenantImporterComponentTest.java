@@ -100,7 +100,7 @@ class TenantImporterComponentTest {
                 new TimeClockDTO(ZonedDateTime.parse("2024-06-01T06:00:33.123Z"), "my comment", false, Optional.of(ZonedDateTime.parse("2024-06-01T10:00:00.123Z")))
             ),
             List.of(
-                new TimeEntryDTO("lala", ZonedDateTime.parse("2024-06-01T06:00:00.123Z"), ZonedDateTime.parse("2024-06-01T10:00:00.123Z"), false)
+                new TimeEntryDTO("lala", ZonedDateTime.parse("2024-06-01T06:00:00.123Z"), ZonedDateTime.parse("2024-06-01T10:00:00.123Z"), false, false)
             )
         );
         return new TenantExport("tenantId", Instant.now(), List.of(userExport));
