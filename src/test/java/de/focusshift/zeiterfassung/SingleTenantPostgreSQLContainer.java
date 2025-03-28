@@ -2,6 +2,9 @@ package de.focusshift.zeiterfassung;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+
+import java.time.Duration;
 
 /**
  * Extend this class for zeiterfassung single tenant based integration tests.
@@ -14,6 +17,7 @@ public class SingleTenantPostgreSQLContainer extends PostgreSQLContainer<SingleT
         super(IMAGE + ":" + VERSION);
         this.withDatabaseName("zeiterfassung");
         this.withCommand("--max_connections=1000", "--shared_buffers=240MB");
+        this.setWaitStrategy(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(10)));
     }
 
     /**

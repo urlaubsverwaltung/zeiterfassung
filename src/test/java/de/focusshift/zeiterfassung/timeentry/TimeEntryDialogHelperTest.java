@@ -193,11 +193,11 @@ class TimeEntryDialogHelperTest {
 
             final Instant createdInstant = Instant.now();
             final EntityRevisionMetadata createdMetadata = new EntityRevisionMetadata(1, CREATED, createdInstant, Optional.of(user.userId()));
-            final TimeEntryHistoryItem createdHistoryItem = new TimeEntryHistoryItem(createdMetadata, createdTimeEntry, true, true, true, true);
+            final TimeEntryHistoryItem createdHistoryItem = new TimeEntryHistoryItem(createdMetadata, createdTimeEntry, true, true, true, true, true);
 
             final Instant modifiedInstant = Instant.now();
             final EntityRevisionMetadata modifiedMetadata = new EntityRevisionMetadata(2, UPDATED, modifiedInstant, Optional.of(otherUser.userId()));
-            final TimeEntryHistoryItem modifiedHistoryItem = new TimeEntryHistoryItem(modifiedMetadata, modifiedTimeEntry, true, false, false, false);
+            final TimeEntryHistoryItem modifiedHistoryItem = new TimeEntryHistoryItem(modifiedMetadata, modifiedTimeEntry, true, false, false, false, false);
 
             final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(createdTimeEntry.id(), List.of(createdHistoryItem, modifiedHistoryItem));
             when(timeEntryService.findTimeEntryHistory(createdTimeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
@@ -287,7 +287,7 @@ class TimeEntryDialogHelperTest {
     private TimeEntry anyTimeEntry() {
         final TimeEntryId id = new TimeEntryId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(new UserId("abcdefg"), new UserLocalId(42L));
-        return new TimeEntry(id, userIdComposite, "hack the planet", ZonedDateTime.now(), ZonedDateTime.now(), false);
+        return new TimeEntry(id, userIdComposite, "hack the planet", ZonedDateTime.now(), ZonedDateTime.now(), false, false);
     }
 
     private TimeEntry anyTimeEntry(UserIdComposite userIdComposite) {
@@ -296,6 +296,6 @@ class TimeEntryDialogHelperTest {
 
     private TimeEntry anyTimeEntry(UserIdComposite userIdComposite, String comment) {
         final TimeEntryId id = new TimeEntryId(1L);
-        return new TimeEntry(id, userIdComposite, comment, ZonedDateTime.now(), ZonedDateTime.now(), false);
+        return new TimeEntry(id, userIdComposite, comment, ZonedDateTime.now(), ZonedDateTime.now(), false, false);
     }
 }

@@ -8,6 +8,7 @@ public record TimeEntryHistoryItem(
     boolean commentModified,
     boolean startModified,
     boolean endModified,
-    boolean isBreakModified
+    boolean isBreakModified,
+    boolean isFreezedModified
 ) {
 }

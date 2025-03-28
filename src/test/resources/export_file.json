@@ -73,19 +73,22 @@
           "comment": "dies",
           "start": "2024-06-01T08:00:00.123+02:00",
           "end": "2024-06-01T12:00:00.123+02:00",
-          "isBreak": false
+          "isBreak": false,
+          "isFreezed": false
         },
         {
           "comment": "das",
           "start": "2024-06-01T12:00:00.124+02:00",
           "end": "2024-06-01T13:00:00.125+02:00",
-          "isBreak": false
+          "isBreak": false,
+          "isFreezed": false
         },
         {
           "comment": "ananas",
           "start": "2024-06-01T13:00:00.126+02:00",
           "end": "2024-06-01T17:00:00.127+02:00",
-          "isBreak": false
+          "isBreak": false,
+          "isFreezed": true
         }
       ]
     }

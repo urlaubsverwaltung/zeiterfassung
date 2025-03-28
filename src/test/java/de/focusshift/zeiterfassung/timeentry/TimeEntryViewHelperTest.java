@@ -70,7 +70,7 @@ class TimeEntryViewHelperTest {
         final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
         final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
 
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "comment", start, end, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "comment", start, end, false, false);
 
         final TimeEntryDTO actual = sut.toTimeEntryDto(timeEntry);
 
@@ -566,6 +566,6 @@ class TimeEntryViewHelperTest {
         final TimeEntryId timeEntryId = new TimeEntryId(1L);
         final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
         final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
-        return new TimeEntry(timeEntryId, userIdComposite, "comment", start, end, false);
+        return new TimeEntry(timeEntryId, userIdComposite, "comment", start, end, false, false);
     }
 }

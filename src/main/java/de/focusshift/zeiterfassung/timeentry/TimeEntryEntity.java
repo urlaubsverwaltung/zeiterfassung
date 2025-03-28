@@ -61,7 +61,10 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
     @Column(name = "is_break", nullable = false)
     private boolean isBreak;
 
-    protected TimeEntryEntity(String tenantId, Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt, boolean isBreak) {
+    @Column(name = "is_freezed", nullable = false)
+    private boolean isFreezed;
+
+    protected TimeEntryEntity(String tenantId, Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt, boolean isBreak, boolean isFreezed) {
         super(tenantId);
         this.id = id;
         this.owner = owner;
@@ -72,10 +75,11 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
         this.endZoneId = endZoneId.toString();
         this.updatedAt = updatedAt;
         this.isBreak = isBreak;
+        this.isFreezed = isFreezed;
     }
 
-    protected TimeEntryEntity(Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt, boolean isBreak) {
-        this(null, id, owner, comment, start, startZoneId, end, endZoneId, updatedAt, isBreak);
+    protected TimeEntryEntity(Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt, boolean isBreak, boolean isFreezed) {
+        this(null, id, owner, comment, start, startZoneId, end, endZoneId, updatedAt, isBreak, isFreezed);
     }
 
     protected TimeEntryEntity() {
@@ -152,6 +156,14 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
 
     public void setBreak(boolean aBreak) {
         isBreak = aBreak;
+    }
+
+    public boolean isFreezed() {
+        return isFreezed;
+    }
+
+    public void setFreezed(boolean freezed) {
+        isFreezed = freezed;
     }
 
     @Override
