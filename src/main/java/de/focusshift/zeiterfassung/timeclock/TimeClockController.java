@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -30,6 +31,8 @@ import static org.springframework.util.StringUtils.hasText;
 @Controller
 @RequestMapping("timeclock")
 class TimeClockController implements HasTimeClock, HasLaunchpad {
+
+    private static final String IS_REDIRECTED = "isRedirected";
 
     private final TimeClockService timeClockService;
 
@@ -50,10 +53,12 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping
-    public ModelAndView editTimeClock(@Valid @ModelAttribute("timeClockUpdate") TimeClockDto timeClockUpdateDto, BindingResult errors,
-                                @CurrentUser CurrentOidcUser currentUser, HttpServletRequest request,
-                                @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame) {
-
+    public ModelAndView editTimeClock(
+        @Valid @ModelAttribute("timeClockUpdate") TimeClockDto timeClockUpdateDto, BindingResult errors,
+        @CurrentUser CurrentOidcUser currentUser, HttpServletRequest request,
+        @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
+        RedirectAttributes redirectAttributes
+    ) {
         if (errors.hasErrors()) {
             if (hasText(turboFrame)) {
                 return new ModelAndView("timeclock/timeclock-edit-form::navigation-box-update", UNPROCESSABLE_ENTITY);
@@ -70,6 +75,8 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
         } catch (TimeClockNotStartedException e) {
             throw new ResponseStatusException(PRECONDITION_REQUIRED, "Time clock has not been started yet.");
         }
+
+        redirectAttributes.addFlashAttribute(IS_REDIRECTED, true);
 
         return new ModelAndView(redirectToPreviousPage(request));
     }
