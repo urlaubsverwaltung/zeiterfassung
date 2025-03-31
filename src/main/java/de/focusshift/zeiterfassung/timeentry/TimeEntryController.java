@@ -59,6 +59,8 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 @Controller
 class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
+    private  static final String IS_REDIRECTED = "isRedirected";
+
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final TimeEntryService timeEntryService;
@@ -108,7 +110,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     }
 
     private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, Model model, Locale locale, String turboFrame) {
-        if (hasText(turboFrame)) {
+        if (!model.containsAttribute(IS_REDIRECTED) && hasText(turboFrame)) {
             prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, model, locale);
             model.addAttribute("turboStreamsEnabled", true);
             return new ModelAndView("timeentries/index::#frame-time-entry-weeks");
