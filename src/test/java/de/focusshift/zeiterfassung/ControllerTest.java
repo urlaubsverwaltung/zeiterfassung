@@ -7,6 +7,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.OidcLoginRequestPostProcessor;
 
@@ -66,7 +67,13 @@ public interface ControllerTest {
 
         final List<GrantedAuthority> authorities =roles.stream().map(SecurityRole::authority).toList();
 
-        final DefaultOidcUser defaultOidcUser = new DefaultOidcUser(authorities, OidcIdToken.withTokenValue("token-value").claim("sub", userIdComposite.id().value()).build());
+        final OidcIdToken.Builder tokenBuilder = OidcIdToken.withTokenValue("token-value")
+            .claim("sub", userIdComposite.id().value());
+
+        final OidcUserInfo.Builder userInfoBuilder = OidcUserInfo.builder()
+            .subject(userIdComposite.id().value());
+
+        final DefaultOidcUser defaultOidcUser = new DefaultOidcUser(authorities, tokenBuilder.build(), userInfoBuilder.build());
         final CurrentOidcUser currentUser = new CurrentOidcUser(defaultOidcUser, List.of(), authorities, userIdComposite.localId());
 
         return oidcLogin().oidcUser(currentUser);
