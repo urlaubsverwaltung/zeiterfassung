@@ -143,10 +143,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
         LOG.info("User {} wants to create a new timeEntry.", currentUserLocalId);
 
-        handleCreateTimeEntry(timeEntryDTO, bindingResult, model, locale, redirectAttributes);
+        handleCreateTimeEntry(timeEntryDTO, bindingResult, currentUser, model, locale, redirectAttributes);
 
         if (bindingResult.hasErrors()) {
-            LOG.info("Could not create timeEntry due to constraint violation errors. Rendering timeentries page.");
+            LOG.info("Could not create timeEntry due to errors. Rendering timeentries page.");
             return "timeentries/index";
         }
 
@@ -167,10 +167,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         LOG.info("User {} wants to create a new timeEntry for user {}", currentUserLocalId, ownerLocalId);
 
         assertTimeEntryAccess(currentUser, ownerLocalIdValue);
-        handleCreateTimeEntry(timeEntryDTO, bindingResult, model, locale, redirectAttributes);
+        handleCreateTimeEntry(timeEntryDTO, bindingResult, currentUser, model, locale, redirectAttributes);
 
         if (bindingResult.hasErrors()) {
-            LOG.info("Could not create timeEntry for user {} due to constraint violation errors. Rendering timeentries page.", ownerLocalId);
+            LOG.info("Could not create timeEntry for user {} due to errors. Rendering timeentries page.", ownerLocalId);
             return "timeentries/index";
         }
 
@@ -183,6 +183,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     }
 
     private void handleCreateTimeEntry(TimeEntryDTO timeEntryDto, BindingResult bindingResult,
+                                       CurrentOidcUser currentUser,
                                        Model model, Locale locale, RedirectAttributes redirectAttributes) {
 
         final int year;
@@ -205,7 +206,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         }
 
         if (timeEntryDto.getId() == null) {
-            viewHelper.createTimeEntry(timeEntryDto);
+            viewHelper.createTimeEntry(timeEntryDto, bindingResult, currentUser);
         } else {
             throw new IllegalStateException("Expected timeEntry id not to be defined but has value. Did you meant to update the time entry?");
         }

@@ -30,10 +30,12 @@ public class TimeEntryViewHelper {
     public static final String TIME_ENTRY_MODEL_NAME = "timeEntry";
 
     private final TimeEntryService timeEntryService;
+    private final TimeEntryLockService timeEntryLockService;
     private final UserSettingsProvider userSettingsProvider;
 
-    public TimeEntryViewHelper(TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider) {
+    public TimeEntryViewHelper(TimeEntryService timeEntryService, TimeEntryLockService timeEntryLockService, UserSettingsProvider userSettingsProvider) {
         this.timeEntryService = timeEntryService;
+        this.timeEntryLockService = timeEntryLockService;
         this.userSettingsProvider = userSettingsProvider;
     }
 
@@ -97,15 +99,21 @@ public class TimeEntryViewHelper {
             throw new AccessDeniedException("Not allowed to edit timeEntry %s.".formatted(timeEntryId));
         }
 
-        if (bindingResult.hasErrors()) {
-            handleCrudTimeEntryErrors(dto, bindingResult, model, redirectAttributes);
-            return;
-        }
-
         final ZoneId zoneId = userSettingsProvider.zoneId();
         final Duration duration = toDuration(dto.getDuration());
         final ZonedDateTime start = dto.getStart() == null ? null : ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
         final ZonedDateTime end = getEndDate(dto, zoneId);
+
+        final boolean timespanLocked = timeEntryLockService.isTimespanLocked(start, end);
+        if (timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
+            LOG.info("Updating TimeEntry is not allowed since currentUser is not privileged to bypass timespan lock.");
+            bindingResult.reject("time-entry.validation.timespan.locked");
+        }
+
+        if (bindingResult.hasErrors()) {
+            handleCrudTimeEntryErrors(dto, bindingResult, model, redirectAttributes);
+            return;
+        }
 
         try {
             timeEntryService.updateTimeEntry(timeEntryId, dto.getComment(), start, end, duration, dto.isBreak());
@@ -159,7 +167,7 @@ public class TimeEntryViewHelper {
      *
      * @param timeEntryDto user input for the time entry
      */
-    void createTimeEntry(TimeEntryDTO timeEntryDto) {
+    void createTimeEntry(TimeEntryDTO timeEntryDto, BindingResult bindingResult, CurrentOidcUser currentUser) {
 
         final ZonedDateTime start;
         final ZonedDateTime end;
@@ -181,8 +189,14 @@ public class TimeEntryViewHelper {
             end = start.plusMinutes(duration.toMinutes());
         }
 
-        final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
-        timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak());
+        final boolean timespanLocked = timeEntryLockService.isTimespanLocked(start, end);
+        if (timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
+            LOG.info("Creating TimeEntry is not allowed since currentUser is not privileged to bypass timespan lock.");
+            bindingResult.reject("time-entry.validation.timespan.locked");
+        } else {
+            final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
+            timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak());
+        }
     }
 
     private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {
