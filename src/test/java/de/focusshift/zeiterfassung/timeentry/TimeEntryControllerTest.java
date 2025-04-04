@@ -67,6 +67,8 @@ class TimeEntryControllerTest implements ControllerTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
+    private TimeEntryLockService timeEntryLockService;
+    @Mock
     private UserManagementService userManagementService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
@@ -79,7 +81,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
     @BeforeEach
     void setUp() {
-        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
+        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
         sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
     }
 
