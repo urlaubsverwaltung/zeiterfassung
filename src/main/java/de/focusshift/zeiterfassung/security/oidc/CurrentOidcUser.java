@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,6 +50,14 @@ public class CurrentOidcUser implements OidcUser {
 
     public OidcUser getOidcUser() {
         return oidcUser;
+    }
+
+    public List<SecurityRole> getRoles() {
+        return getAuthorities().stream()
+            .map(SecurityRole::fromAuthority)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .toList();
     }
 
     public boolean hasRole(SecurityRole role) {

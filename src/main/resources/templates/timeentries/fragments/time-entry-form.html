@@ -225,7 +225,9 @@
           data-error-container
           xtra:strip-whitespace="deep"
         >
-          <ul th:if="${showErrors && #fields.hasGlobalErrors()}">
+          <ul
+            th:if="${showErrors && timeEntry.id eq timeEntryErrorId && #fields.hasGlobalErrors()}"
+          >
             <li th:each="err : ${#fields.globalErrors()}" th:text="${err}">
               Etwas stimmt nicht, Jim.
             </li>

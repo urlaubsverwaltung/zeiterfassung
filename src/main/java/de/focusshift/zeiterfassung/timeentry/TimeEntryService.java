@@ -74,6 +74,10 @@ public interface TimeEntryService {
     /**
      * Creates a new {@linkplain TimeEntry}.
      *
+     * <p>
+     * Note that this method does not check if it is allowed to create a new {@link TimeEntry} for the given timespan.
+     * You have to check yourself whether these days are locked or not!
+     *
      * @param userLocalId id of the linked user
      * @param comment     optional comment
      * @param start       start of the time entry.
@@ -86,6 +90,10 @@ public interface TimeEntryService {
 
     /**
      * Updates the existing {@linkplain TimeEntry}
+     *
+     * <p>
+     * Note that this method does not check if it is allowed to update the {@link TimeEntry}.
+     * You have to check yourself whether the {@link TimeEntry#start()} is locked or not!
      *
      * @param id of the {@linkplain TimeEntry} to update
      * @param comment optional comment. not that {@code null} overrides the existing comment.
