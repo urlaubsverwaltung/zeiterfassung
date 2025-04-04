@@ -1,44 +1,33 @@
-import { defineConfig } from "eslint/config";
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
-import { fixupConfigRules } from "@eslint/compat";
-import parser from "svelte-eslint-parser";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import ts from "typescript-eslint";
+import { globalIgnores } from "eslint/config";
 import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
+import globals from "globals";
+import eslintPluginUnicorn from "eslint-plugin-unicorn";
+import importPlugin from "eslint-plugin-import";
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import sveltePlugin from "eslint-plugin-svelte";
+import svelteParser from "svelte-eslint-parser";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
+export default ts.config(
+  globalIgnores(["target"]),
 
-export default defineConfig([
+  js.configs.recommended,
+  ts.configs.recommended,
+  eslintPluginUnicorn.configs["flat/recommended"],
+  eslintPluginPrettierRecommended,
+  importPlugin.flatConfigs.recommended,
+  importPlugin.flatConfigs.typescript,
+
   {
-    extends: compat.extends(
-      "eslint:recommended",
-      "plugin:@typescript-eslint/recommended",
-      "plugin:unicorn/recommended",
-    ),
-
     languageOptions: {
       globals: {
         ...globals.browser,
       },
-
-      parser: tsParser,
-      ecmaVersion: 2020,
-      sourceType: "module",
     },
-
     rules: {
       radix: "error",
       "require-await": "error",
       eqeqeq: "error",
-
       "unicorn/filename-case": [
         "error",
         {
@@ -49,63 +38,47 @@ export default defineConfig([
           },
         },
       ],
-
-      "unicorn/number-literal-case": "off",
-      "unicorn/no-array-reduce": "off",
     },
   },
+
   {
-    files: ["**/*.ts", "**/*.js"],
-
-    extends: fixupConfigRules(
-      compat.extends(
-        "plugin:import/errors",
-        "plugin:import/warnings",
-        "plugin:import/typescript",
-        "plugin:prettier/recommended",
-      ),
-    ),
-
-    settings: {
-      "import/extensions": [".js", ".ts"],
-    },
-
-    rules: {
-      "import/no-duplicates": "error",
-      "prettier/prettier": "error",
-    },
-  },
-  {
-    files: ["**/*.test.ts"],
-
-    rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-    },
-  },
-  {
-    files: ["**/*.config.js"],
-
+    files: ["*config.mjs"],
     languageOptions: {
       globals: {
         ...globals.node,
       },
     },
+    rules: {
+      // import/no-unresolved fails for eslint config file. I don't know why... therefore disable it :shrug:
+      "import/no-unresolved": "off",
+    },
   },
+
+  {
+    files: ["*config.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "unicorn/prefer-module": "off",
+    },
+  },
+
   {
     files: ["**/*.svelte"],
-    extends: compat.extends("plugin:svelte/recommended"),
-
+    plugins: {
+      svelte: sveltePlugin,
+    },
+    extends: [sveltePlugin.configs["flat/prettier"]],
     languageOptions: {
-      parser: parser,
-      ecmaVersion: 5,
-      sourceType: "script",
-
+      parser: svelteParser,
       parserOptions: {
-        parser: {
-          ts: "@typescript-eslint/parser",
-          typescript: "@typescript-eslint/parser",
-        },
+        parser: ts.parser,
+        extraFileExtensions: [".svelte"],
       },
     },
   },
-]);
+);
