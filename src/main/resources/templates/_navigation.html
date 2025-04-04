@@ -216,6 +216,18 @@
                     <div class="nav-popup-menu-inner__content">
                       <ul class="list-none m-0 p-0">
                         <li>
+                          <a
+                            href="#"
+                            th:replace="~{::nav-popup-menu-link-external(href=${menuHelpUrl}, icon=~{::menu-help-icon}, text=#{navigation.avatar-menu.help})}"
+                          >
+                            <svg
+                              th:ref="menu-help-icon"
+                              th:replace="~{icons/help-circle::svg(className='w-6 h-6')}"
+                            ></svg>
+                          </a>
+                        </li>
+                        <li class="mt-4 xs:mt-1" role="separator"></li>
+                        <li>
                           <form
                             action="#"
                             th:action="@{/logout}"
@@ -257,5 +269,24 @@
         </div>
       </div>
     </th:block>
+
+    <a
+      th:fragment="nav-popup-menu-link-external(href, icon, text)"
+      th:href="${href}"
+      class="nav-popup-menu_link"
+      target="_blank"
+      rel="noopener"
+      th:data-test-id="${dataTestId}"
+    >
+      <span class="px-2 py-1 rounded flex items-center ml-2.5">
+        <svg th:replace="${icon}"></svg>
+      </span>
+      <span
+        class="ml-4 whitespace-nowrap text-ellipsis overflow-hidden"
+        style="min-width: 0"
+        th:text="${text}"
+      ></span>
+      <svg th:replace="~{icons/external-link::svg(className='ml-1.5 h-4 w-4')}"></svg>
+    </a>
   </body>
 </html>
