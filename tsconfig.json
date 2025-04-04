@@ -4,7 +4,7 @@
     "target": "ES2015",
     "lib": ["ESNext", "dom", "dom.iterable"],
     "moduleResolution": "Node",
-    "types": ["svelte"]
+    "types": ["node", "svelte"]
   },
   "include": ["src/main/javascript/**/*"],
   "exclude": [
