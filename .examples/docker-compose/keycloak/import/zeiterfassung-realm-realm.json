@@ -109,6 +109,14 @@
       "containerId" : "zeiterfassung-realm",
       "attributes" : { }
     }, {
+      "id" : "5ff04ece-718e-4c73-959e-96656c6c4789",
+      "name" : "zeiterfassung_settings_global",
+      "description" : "",
+      "composite" : false,
+      "clientRole" : false,
+      "containerId" : "zeiterfassung-realm",
+      "attributes" : { }
+    }, {
       "id" : "d0fcc3dd-7e1e-46fa-89ce-f7727e1a46f3",
       "name" : "zeiterfassung_overtime_account_edit_all",
       "description" : "",
@@ -409,6 +417,7 @@
       "zeiterfassung_view_report_all",
       "zeiterfassung_working_time_edit_all",
       "zeiterfassung_working_time_edit_global",
+      "zeiterfassung_settings_global",
       "zeiterfassung_overtime_account_edit_all",
       "zeiterfassung_permissions_edit_all",
       "zeiterfassung_time_entry_edit_all"
