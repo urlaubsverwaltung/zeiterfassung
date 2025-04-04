@@ -34,50 +34,48 @@
                 Lorem ipsum...
               </p>
               <div class="mt-4">
-                <div class="flex flex-col gap-8">
-                  <div class="flex items-center gap-4">
-                    <div class="flex items-center">
-                      <label
-                        for="federal-state-select"
-                        class="sr-only"
-                        th:text="#{usermanagement.working-time.federalstate.select.label}"
-                      >
-                        Bundesland
-                      </label>
-                      <select
-                        id="federal-state-select"
-                        name="federalState"
-                        th:replace="~{fragments/select::one(id='federal-state-select', name='federalState', options=~{::federal-state-select-options}, testId='federal-state-select')}"
-                      >
-                        <th:block th:ref="federal-state-select-options">
-                          <optgroup
-                            th:each="optgroup : ${federalStateSelect.optgroups}"
-                            th:label="${#messages.msg(optgroup.labelMessageKey)}"
-                          >
-                            <option
-                              th:each="option : ${optgroup.options}"
-                              th:value="${option.value}"
-                              th:text="${#messages.msg(option.textMessageKey)}"
-                              th:selected="${option.selected}"
-                            ></option>
-                          </optgroup>
-                        </th:block>
-                      </select>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="works-on-public-holiday-checkbox"
-                        data-testid="works-on-public-holiday-checkbox"
-                        th:field="*{worksOnPublicHoliday}"
-                      />
-                      <label
-                        for="works-on-public-holiday-checkbox"
-                        th:text="#{settings.federal-state.works-on-public-holiday.label}"
-                      >
-                        arbeitet an Feiertagen
-                      </label>
-                    </div>
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center">
+                    <label
+                      for="federal-state-select"
+                      class="sr-only"
+                      th:text="#{usermanagement.working-time.federalstate.select.label}"
+                    >
+                      Bundesland
+                    </label>
+                    <select
+                      id="federal-state-select"
+                      name="federalState"
+                      th:replace="~{fragments/select::one(id='federal-state-select', name='federalState', options=~{::federal-state-select-options}, testId='federal-state-select')}"
+                    >
+                      <th:block th:ref="federal-state-select-options">
+                        <optgroup
+                          th:each="optgroup : ${federalStateSelect.optgroups}"
+                          th:label="${#messages.msg(optgroup.labelMessageKey)}"
+                        >
+                          <option
+                            th:each="option : ${optgroup.options}"
+                            th:value="${option.value}"
+                            th:text="${#messages.msg(option.textMessageKey)}"
+                            th:selected="${option.selected}"
+                          ></option>
+                        </optgroup>
+                      </th:block>
+                    </select>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="works-on-public-holiday-checkbox"
+                      data-testid="works-on-public-holiday-checkbox"
+                      th:field="*{worksOnPublicHoliday}"
+                    />
+                    <label
+                      for="works-on-public-holiday-checkbox"
+                      th:text="#{settings.federal-state.works-on-public-holiday.label}"
+                    >
+                      arbeitet an Feiertagen
+                    </label>
                   </div>
                 </div>
               </div>
