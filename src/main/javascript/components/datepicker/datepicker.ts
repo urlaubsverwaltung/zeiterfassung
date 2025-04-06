@@ -30,5 +30,9 @@ export function createDatepicker(selector: string): HTMLDuetDatePickerElement {
   duetDateElement.setAttribute("value", dateElement.dataset.isoValue || "");
   duetDateElement.setAttribute("identifier", dateElement.getAttribute("id"));
 
+  if (dateElement.hasAttribute("min")) {
+    duetDateElement.setAttribute("min", dateElement.getAttribute("min"));
+  }
+
   return duetDateElement;
 }

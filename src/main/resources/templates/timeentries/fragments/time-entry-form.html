@@ -40,6 +40,7 @@
                 class="text-black"
                 value="2021-11-27"
                 th:value="${#temporals.format(timeEntry.date, 'yyyy-MM-dd')}"
+                th:min="${minValidTimeEntryDate eq null ? null : #temporals.format(minValidTimeEntryDate, 'yyyy-MM-dd')}"
                 data-iso-value="2021-11-27"
                 th:data-iso-value="${#temporals.format(timeEntry.date, 'yyyy-MM-dd')}"
                 data-js-hidden
