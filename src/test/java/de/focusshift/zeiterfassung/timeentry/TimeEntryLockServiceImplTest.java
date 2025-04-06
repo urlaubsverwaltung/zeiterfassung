@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettingsService;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,13 +31,15 @@ class TimeEntryLockServiceImplTest {
 
     @Mock
     private LockTimeEntriesSettingsService lockTimeEntriesSettingsService;
+    @Mock
+    private UserSettingsProvider userSettingsProvider;
 
     private static final Clock clockFixed = Clock.fixed(Clock.systemUTC().instant(), UTC);
     private static final ZoneId ZONE_TOKYO = ZoneId.of("Asia/Tokyo");
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clockFixed);
+        sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, userSettingsProvider, clockFixed);
     }
 
     @Nested
