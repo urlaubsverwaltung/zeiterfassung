@@ -3,13 +3,17 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettingsService;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.Collection;
+import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -22,10 +26,12 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final LockTimeEntriesSettingsService lockTimeEntriesSettingsService;
+    private final UserSettingsProvider userSettingsProvider;
     private final Clock clock;
 
-    TimeEntryLockServiceImpl(LockTimeEntriesSettingsService lockTimeEntriesSettingsService, Clock clock) {
+    TimeEntryLockServiceImpl(LockTimeEntriesSettingsService lockTimeEntriesSettingsService, UserSettingsProvider userSettingsProvider, Clock clock) {
         this.lockTimeEntriesSettingsService = lockTimeEntriesSettingsService;
+        this.userSettingsProvider = userSettingsProvider;
         this.clock = clock;
     }
 
@@ -52,6 +58,23 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
     @Override
     public boolean isUserAllowedToBypassLock(Collection<SecurityRole> roles) {
         return roles.contains(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
+    }
+
+    @Override
+    public Optional<LocalDate> getMinValidTimeEntryDate() {
+
+        final LockTimeEntriesSettings settings = lockTimeEntriesSettingsService.getLockTimeEntriesSettings();
+
+        final LocalDate minimumValidDate;
+        if (settings.lockingIsActive()) {
+            final int daysInPast = settings.lockTimeEntriesDaysInPast();
+            final ZoneId userZoneId = userSettingsProvider.zoneId();
+            minimumValidDate = LocalDate.ofInstant(clock.instant(), userZoneId).minusDays(daysInPast);
+        } else {
+            minimumValidDate = null;
+        }
+
+        return Optional.ofNullable(minimumValidDate);
     }
 
     private boolean isDateLocked(Temporal date, int daysInPastAllowed) {

@@ -64,16 +64,18 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final TimeEntryService timeEntryService;
+    private final TimeEntryLockService timeEntryLockService;
     private final UserManagementService userManagementService;
     private final UserSettingsProvider userSettingsProvider;
     private final DateFormatter dateFormatter;
     private final TimeEntryViewHelper viewHelper;
     private final Clock clock;
 
-    public TimeEntryController(TimeEntryService timeEntryService, UserManagementService userManagementService,
-                               UserSettingsProvider userSettingsProvider, DateFormatter dateFormatter,
-                               TimeEntryViewHelper viewHelper, Clock clock) {
+    public TimeEntryController(TimeEntryService timeEntryService, TimeEntryLockService timeEntryLockService,
+                               UserManagementService userManagementService, UserSettingsProvider userSettingsProvider,
+                               DateFormatter dateFormatter, TimeEntryViewHelper viewHelper, Clock clock) {
         this.timeEntryService = timeEntryService;
+        this.timeEntryLockService = timeEntryLockService;
         this.userManagementService = userManagementService;
         this.userSettingsProvider = userSettingsProvider;
         this.dateFormatter = dateFormatter;
@@ -90,7 +92,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
         final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
 
-        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, currentUserLocalId, model, locale, turboFrame);
+        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, currentUserLocalId, currentUser, model, locale, turboFrame);
     }
 
     @GetMapping("/timeentries/users/{ownerLocalIdValue}")
@@ -106,26 +108,33 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final UserLocalId ownerUserLocalId = new UserLocalId(ownerLocalIdValue);
         prepareViewedUser(model, ownerUserLocalId);
 
-        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerUserLocalId, model, locale, turboFrame);
+        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerUserLocalId, currentUser, model, locale, turboFrame);
     }
 
-    private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, Model model, Locale locale, String turboFrame) {
+    private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, CurrentOidcUser currentUser, Model model, Locale locale, String turboFrame) {
         if (!model.containsAttribute(IS_REDIRECTED) && hasText(turboFrame)) {
-            prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, model, locale);
+            prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, currentUser, model, locale);
             model.addAttribute("turboStreamsEnabled", true);
             return new ModelAndView("timeentries/index::#frame-time-entry-weeks");
         } else {
-            return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, model, locale);
+            return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, currentUser, model, locale);
         }
     }
 
-    private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, Model model, Locale locale) {
+    private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, CurrentOidcUser currentUser, Model model, Locale locale) {
 
         final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
         timeEntryDTO.setUserLocalId(ownerLocalId.value());
 
         viewHelper.addTimeEntryToModel(model, timeEntryDTO);
         addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale);
+
+        if (!timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
+            timeEntryLockService.getMinValidTimeEntryDate().ifPresent(date -> {
+                model.addAttribute("minValidTimeEntryDate", date);
+            });
+        }
+
 
         return new ModelAndView("timeentries/index");
     }
