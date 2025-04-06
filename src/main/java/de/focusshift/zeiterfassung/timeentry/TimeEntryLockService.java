@@ -2,8 +2,10 @@ package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.security.SecurityRole;
 
+import java.time.LocalDate;
 import java.time.temporal.Temporal;
 import java.util.Collection;
+import java.util.Optional;
 
 public interface TimeEntryLockService {
 
@@ -24,4 +26,11 @@ public interface TimeEntryLockService {
      * @return {@code true} when the user is allowed to bypass the lock, {@link false} otherwise
      */
     boolean isUserAllowedToBypassLock(Collection<SecurityRole> roles);
+
+    /**
+     * Returns the minimum valid date in the past a {@link TimeEntry} can be created for, if there is one.
+     *
+     * @return Optional#empty when locking {@link TimeEntry} is disabled, the min valid date otherwise.
+     */
+    Optional<LocalDate> getMinValidTimeEntryDate();
 }
