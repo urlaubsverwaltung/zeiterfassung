@@ -5,7 +5,7 @@
   </head>
   <body>
     <form
-      th:fragment="timeentry-slot-form(formAction, timeEntry, actions, class)"
+      th:fragment="timeentry-slot-form(formAction, timeEntry, actions, disabled, class)"
       is="z-time-entry-slot-form"
       action="#"
       th:action="${formAction}"
@@ -49,7 +49,8 @@
               <label
                 for="input-entry-date"
                 th:for="|${rnd}-input-entry-date|"
-                class="w-full flex cursor-pointer"
+                class="w-full flex"
+                th:classappend="${disabled ? '' : 'cursor-pointer'}"
               >
                 <span
                   data-day
@@ -218,7 +219,11 @@
             </div>
           </div>
           <th:block th:if="${actions}">
-            <div class="time-entry-box__controls" th:insert="${actions}"></div>
+            <div class="time-entry-box__controls">
+              <th:block th:if="${!disabled}">
+                <div th:replace="${actions}"></div>
+              </th:block>
+            </div>
           </th:block>
         </div>
         <div

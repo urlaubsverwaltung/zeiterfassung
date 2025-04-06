@@ -55,6 +55,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
     public static final BigDecimal ONE_MINUTE_IN_SECONDS = BigDecimal.valueOf(60);
 
     private final TimeEntryRepository timeEntryRepository;
+    private final TimeEntryLockService timeEntryLockService;
     private final UserManagementService userManagementService;
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final UserDateService userDateService;
@@ -62,11 +63,13 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private final EntityRevisionMapper entityRevisionMapper;
     private final Clock clock;
 
-    TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, UserManagementService userManagementService,
-                         WorkingTimeCalendarService workingTimeCalendarService, UserDateService userDateService,
-                         UserSettingsProvider userSettingsProvider, EntityRevisionMapper entityRevisionMapper, Clock clock) {
+    TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, TimeEntryLockService timeEntryLockService,
+                         UserManagementService userManagementService, WorkingTimeCalendarService workingTimeCalendarService,
+                         UserDateService userDateService, UserSettingsProvider userSettingsProvider,
+                         EntityRevisionMapper entityRevisionMapper, Clock clock) {
 
         this.timeEntryRepository = timeEntryRepository;
+        this.timeEntryLockService = timeEntryLockService;
         this.userManagementService = userManagementService;
         this.workingTimeCalendarService = workingTimeCalendarService;
         this.userDateService = userDateService;
@@ -259,9 +262,11 @@ class TimeEntryServiceImpl implements TimeEntryService {
         LOG.info("Deleted timeEntry {}", id);
     }
 
-    private static List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,
-                                                          Map<LocalDate, List<TimeEntry>> timeEntriesByDate,
-                                                          WorkingTimeCalendar workingTimeCalendar) {
+    private List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,
+                                                   Map<LocalDate, List<TimeEntry>> timeEntriesByDate,
+                                                   WorkingTimeCalendar workingTimeCalendar) {
+
+        final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate();
 
         final List<TimeEntryDay> timeEntryDays = new ArrayList<>();
 
@@ -273,15 +278,21 @@ class TimeEntryServiceImpl implements TimeEntryService {
             final PlannedWorkingHours plannedWorkingHours = workingTimeCalendar.plannedWorkingHours(date)
                 .orElseThrow(() -> new IllegalStateException("expected plannedWorkingHours to exist in calendar."));
 
+            final boolean locked = isDateLocked(date, minValidTimeEntryDate);
+
             final List<TimeEntry> timeEntries = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = workingTimeCalendar.absence(date).orElse(List.of());
             final ShouldWorkingHours shouldWorkingHours = workingTimeCalendar.shouldWorkingHours(date).orElse(ShouldWorkingHours.ZERO);
-            timeEntryDays.add(new TimeEntryDay(date, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
+            timeEntryDays.add(new TimeEntryDay(locked, date, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
 
             date = date.minusDays(1);
         }
 
         return timeEntryDays;
+    }
+
+    private static boolean isDateLocked(LocalDate date, Optional<LocalDate> minValidTimeEntryDate) {
+        return minValidTimeEntryDate.map(date::isBefore).orElse(false);
     }
 
     private void updateEntityTimeSpan(TimeEntryEntity entity, ZonedDateTime start, ZonedDateTime end, Duration duration)

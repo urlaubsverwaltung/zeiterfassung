@@ -112,16 +112,21 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     }
 
     private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, CurrentOidcUser currentUser, Model model, Locale locale, String turboFrame) {
+
+        getMinValidTimeEntryDate(currentUser).ifPresent(date ->
+            model.addAttribute("minValidTimeEntryDate", date)
+        );
+
         if (!model.containsAttribute(IS_REDIRECTED) && hasText(turboFrame)) {
-            prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, currentUser, model, locale);
+            prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, model, locale);
             model.addAttribute("turboStreamsEnabled", true);
             return new ModelAndView("timeentries/index::#frame-time-entry-weeks");
         } else {
-            return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, currentUser, model, locale);
+            return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, model, locale);
         }
     }
 
-    private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, CurrentOidcUser currentUser, Model model, Locale locale) {
+    private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, Model model, Locale locale) {
 
         final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
         timeEntryDTO.setUserLocalId(ownerLocalId.value());
@@ -129,14 +134,15 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         viewHelper.addTimeEntryToModel(model, timeEntryDTO);
         addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale);
 
-        if (!timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
-            timeEntryLockService.getMinValidTimeEntryDate().ifPresent(date -> {
-                model.addAttribute("minValidTimeEntryDate", date);
-            });
-        }
-
-
         return new ModelAndView("timeentries/index");
+    }
+
+    private Optional<LocalDate> getMinValidTimeEntryDate(CurrentOidcUser currentUser) {
+        if (timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
+            return Optional.empty();
+        } else {
+            return timeEntryLockService.getMinValidTimeEntryDate();
+        }
     }
 
     @PostMapping("/timeentries")
@@ -537,6 +543,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             .toList();
 
         return TimeEntryDayDto.builder()
+            .isLocked(timeEntryDay.locked())
             .date(dateString)
             .dayOfWeek(timeEntryDay.date().getDayOfWeek())
             .hoursWorked(workedHours)

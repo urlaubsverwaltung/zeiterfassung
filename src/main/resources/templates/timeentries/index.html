@@ -75,7 +75,7 @@
               th:with="action=@{/timeentries}"
             >
               <th:block
-                th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
+                th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, disabled=false, class='timeslot-form-new')}"
               ></th:block>
             </th:block>
             <th:block
@@ -84,7 +84,7 @@
               th:with="action=@{/timeentries/users/{id} (id=${viewedUser.localId()})}"
             >
               <th:block
-                th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, class='timeslot-form-new')}"
+                th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, disabled=false, class='timeslot-form-new')}"
               ></th:block>
             </th:block>
           </div>
@@ -295,7 +295,17 @@
                           <div
                             class="relative flex justify-between gap-x-2 flex-wrap text-green-900 text-sm"
                           >
-                            <h4 class="font-medium" th:text="${day.date}"></h4>
+                            <h4 class="font-medium flex gap-1">
+                              <span th:if="${day.locked}">
+                                <svg
+                                  th:replace="~{icons/lock-keyhole::svg(className='w-4 h-4')}"
+                                />
+                                <span class="sr-only" th:text="#{date.locked}"
+                                  >Gesperrt</span
+                                >
+                              </span>
+                              <span th:text="${day.date}"></span>
+                            </h4>
                             <p
                               class="tabular-nums text-sm text-gray-800 font-medium sm:flex-1 sm:absolute sm:left-0 sm:right-0 sm:text-center"
                             >
@@ -403,7 +413,7 @@
                           data-turbo="true"
                         >
                           <th:block
-                            th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, class='timeslot-form-existing')}"
+                            th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, disabled=${day.locked}, class='timeslot-form-existing')}"
                           ></th:block>
                         </div>
                       </th:block>
