@@ -116,9 +116,9 @@ public class TimeEntryDialogHelper {
             .map(history -> {
 
                 final ZoneId zoneId = userSettingsProvider.zoneId();
-                final List<TimeEntryUpdatedHistoryItem> revisions = history.revisions();
+                final List<TimeEntryHistoryItem> revisions = history.revisions();
 
-                final List<UserId> userIds = revisions.stream().map(TimeEntryUpdatedHistoryItem::metadata)
+                final List<UserId> userIds = revisions.stream().map(TimeEntryHistoryItem::metadata)
                     .map(EntityRevisionMetadata::modifiedBy)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
@@ -137,7 +137,7 @@ public class TimeEntryDialogHelper {
             });
     }
 
-    private TimeEntryHistoryItemDto timeEntryHistoryItemDto(TimeEntryUpdatedHistoryItem historyItem, Function<UserId, User> userSupplier, ZoneId zoneId) {
+    private TimeEntryHistoryItemDto timeEntryHistoryItemDto(TimeEntryHistoryItem historyItem, Function<UserId, User> userSupplier, ZoneId zoneId) {
 
         final EntityRevisionMetadata metadata = historyItem.metadata();
 
