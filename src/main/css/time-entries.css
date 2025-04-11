@@ -158,33 +158,21 @@
 }
 
 .timeslot-form-new {
-  --timeslot-form-color: theme("colors.blue.700");
   --timeslot-form-datepicker-background-color: theme("colors.blue.700");
   --timeslot-form-day-color: theme("colors.white");
-  --timeslot-form-day-background-color: theme("colors.blue.50");
   --timeslot-form-border-color: theme("colors.blue.700");
-  --timeslot-form-input-color: theme("colors.gray.900");
-  --timeslot-form-label-color: theme("colors.blue.700");
 }
 
 .timeslot-form-existing {
-  --timeslot-form-color: theme("colors.gray.700");
   --timeslot-form-datepicker-background-color: theme("colors.gray.200");
   --timeslot-form-day-color: theme("colors.black");
-  --timeslot-form-day-background-color: theme("colors.white");
   --timeslot-form-border-color: theme("colors.gray.200");
-  --timeslot-form-input-color: theme("colors.gray.900");
-  --timeslot-form-label-color: theme("colors.gray.500");
 }
 
 .time-entry-slot-form--disabled {
-  --timeslot-form-color: theme("colors.gray.50");
   --timeslot-form-datepicker-background-color: theme("colors.gray.100");
   --timeslot-form-day-color: theme("colors.gray.500");
-  --timeslot-form-day-background-color: theme("colors.gray.50");
   --timeslot-form-border-color: theme("colors.gray.200");
-  --timeslot-form-input-color: theme("colors.gray.50");
-  --timeslot-form-label-color: theme("colors.gray.50");
 }
 
 .timeslot-form-existing input.edited {
