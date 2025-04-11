@@ -20,7 +20,7 @@
     "@duetds/date-picker": "1.4.0",
     "@eslint/compat": "1.2.8",
     "@eslint/eslintrc": "3.3.1",
-    "@eslint/js": "9.23.0",
+    "@eslint/js": "9.24.0",
     "@hotwired/turbo": "8.0.13",
     "@popperjs/core": "2.11.8",
     "@rollup/plugin-commonjs": "28.0.3",
