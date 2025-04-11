@@ -95,7 +95,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final UserId userId = new UserId(revisions.iterator().next().getEntity().getOwner());
         final User user = findUser(userId);
 
-        final List<TimeEntryUpdatedHistoryItem> historyItems = new ArrayList<>();
+        final List<TimeEntryHistoryItem> historyItems = new ArrayList<>();
         TimeEntry previousTimeEntry = null;
 
         for (Revision<Long, TimeEntryEntity> revision : revisions.getContent()) {

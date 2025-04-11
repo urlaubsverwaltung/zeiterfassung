@@ -9,5 +9,5 @@ public record TimeEntryUpdatedHistoryItem(
     boolean startModified,
     boolean endModified,
     boolean isBreakModified
-) {
+) implements TimeEntryHistoryItem {
 }
