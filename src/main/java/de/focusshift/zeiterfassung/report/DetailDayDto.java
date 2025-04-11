@@ -7,6 +7,7 @@ record DetailDayDto(
     String dayOfWeek,
     String dayOfWeekFull,
     String date,
+    boolean locked,
     String workedWorkingHours,
     String shouldWorkingHours,
     String hoursDelta,
