@@ -11,10 +11,10 @@ import static java.util.Collections.unmodifiableList;
  * @param revisions sorted revisions. first element is the initially created instance.
  *                  while the last element is the last/current modification.
  */
-public record TimeEntryHistory(TimeEntryId timeEntryId, List<TimeEntryHistoryItem> revisions) {
+public record TimeEntryHistory(TimeEntryId timeEntryId, List<TimeEntryUpdatedHistoryItem> revisions) {
 
     @Override
-    public List<TimeEntryHistoryItem> revisions() {
+    public List<TimeEntryUpdatedHistoryItem> revisions() {
         return unmodifiableList(revisions);
     }
 }

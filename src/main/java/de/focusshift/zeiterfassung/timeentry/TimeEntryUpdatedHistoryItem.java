@@ -2,7 +2,7 @@ package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
 
-public record TimeEntryHistoryItem(
+public record TimeEntryUpdatedHistoryItem(
     EntityRevisionMetadata metadata,
     TimeEntry timeEntry,
     boolean commentModified,

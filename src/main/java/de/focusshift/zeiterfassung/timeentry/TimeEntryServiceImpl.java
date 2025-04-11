@@ -95,7 +95,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final UserId userId = new UserId(revisions.iterator().next().getEntity().getOwner());
         final User user = findUser(userId);
 
-        final List<TimeEntryHistoryItem> historyItems = new ArrayList<>();
+        final List<TimeEntryUpdatedHistoryItem> historyItems = new ArrayList<>();
         TimeEntry previousTimeEntry = null;
 
         for (Revision<Long, TimeEntryEntity> revision : revisions.getContent()) {
@@ -104,12 +104,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
             final TimeEntry timeEntry = toTimeEntry(entity, user);
             final EntityRevisionMetadata entityRevisionMetadata = entityRevisionMapper.toEntityRevisionMetadata(revision);
 
-            TimeEntryHistoryItem historyItem;
+            TimeEntryUpdatedHistoryItem historyItem;
 
             if (previousTimeEntry == null) {
-                historyItem = new TimeEntryHistoryItem(entityRevisionMetadata, timeEntry, true, true, true, true);
+                historyItem = new TimeEntryUpdatedHistoryItem(entityRevisionMetadata, timeEntry, true, true, true, true);
             } else {
-                historyItem = new TimeEntryHistoryItem(
+                historyItem = new TimeEntryUpdatedHistoryItem(
                     entityRevisionMetadata,
                     timeEntry,
                     hasBeenModified(previousTimeEntry::comment, timeEntry::comment),
