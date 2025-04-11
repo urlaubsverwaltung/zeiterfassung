@@ -36,7 +36,7 @@
     "cssnano": "7.0.6",
     "date-fns": "3.6.0",
     "esbuild": "0.25.2",
-    "eslint": "9.23.0",
+    "eslint": "9.24.0",
     "eslint-config-prettier": "10.1.2",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-prettier": "5.2.6",
