@@ -82,14 +82,14 @@ class TimeEntryControllerTest implements ControllerTest {
     @BeforeEach
     void setUp() {
         timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
-        sut = new TimeEntryController(timeEntryService, timeEntryLockService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
     }
 
     @Test
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryLockService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
 
         mockUserSettings(ZoneOffset.UTC);
 
@@ -448,7 +448,7 @@ class TimeEntryControllerTest implements ControllerTest {
     void ensureTimeEntriesForOtherUser() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-03-18T10:04:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryLockService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
 
         final int year = 2025;
         final int weekOfYear = 12;

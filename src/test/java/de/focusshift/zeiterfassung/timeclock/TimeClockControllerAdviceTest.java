@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.timeclock;
 
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,6 +30,9 @@ class TimeClockControllerAdviceTest {
     @Mock
     private TimeClockService timeClockService;
 
+    @Mock
+    private TimeEntryLockService timeEntryLockService;
+
     static Stream<Arguments> timeClockArguments() {
         return Stream.of(
             Arguments.of(0, 0, 16, "00:00:16"),
@@ -48,7 +53,7 @@ class TimeClockControllerAdviceTest {
         final TimeClockControllerAdvice sut = createSut();
 
         final Model model = new BindingAwareModelMap();
-        final DefaultOidcUser principal = mock(DefaultOidcUser.class);
+        final CurrentOidcUser principal = mock(CurrentOidcUser.class);
 
         final OidcUserInfo oidcUserInfo = new OidcUserInfo(Map.of("sub", "batman"));
         when(principal.getUserInfo()).thenReturn(oidcUserInfo);
@@ -76,6 +81,6 @@ class TimeClockControllerAdviceTest {
     }
 
     private TimeClockControllerAdvice createSut() {
-        return new TimeClockControllerAdvice(timeClockService);
+        return new TimeClockControllerAdvice(timeClockService, timeEntryLockService);
     }
 }
