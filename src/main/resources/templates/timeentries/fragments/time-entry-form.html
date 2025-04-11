@@ -16,7 +16,7 @@
         th:fragment="timeentry-slot-form-content(timeEntry, actions, class)"
         th:with="rnd=${#strings.randomAlphanumeric(6)}, disabled=${disabled ?: false}, showErrors=${showErrors ?: true}"
         class="flex flex-col-reverse md:flex-col"
-        th:classappend="${class}"
+        th:classappend="${class} + ' ' + ${disabled ? 'time-entry-slot-form--disabled' : ''}"
         th:object="${timeEntry}"
       >
         <input type="hidden" name="id" th:value="*{id}" />

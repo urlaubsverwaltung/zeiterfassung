@@ -21,6 +21,10 @@
   @apply bg-zinc-200 !important;
 }
 
+.checkbox-switch input[type="checkbox"]:disabled {
+  background-color: white !important;
+}
+
 .checkbox-switch input:checked[type="checkbox"] {
   @apply bg-blue-500 !important;
   background-position: right center;
