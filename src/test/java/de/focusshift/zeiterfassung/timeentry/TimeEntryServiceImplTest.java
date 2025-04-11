@@ -143,7 +143,7 @@ class TimeEntryServiceImplTest {
                 final ZonedDateTime endDateTime = ZonedDateTime.ofInstant(end, ZONE_ID_UTC);
 
                 final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "Kickoff", startDateTime, endDateTime, false);
-                final TimeEntryHistoryItem historyItem = new TimeEntryHistoryItem(metadata, timeEntry, true, true, true, true);
+                final TimeEntryUpdatedHistoryItem historyItem = new TimeEntryUpdatedHistoryItem(metadata, timeEntry, true, true, true, true);
 
                 assertThat(history.revisions().getFirst()).isEqualTo(historyItem);
                 assertThat(history.revisions().getFirst().metadata()).isSameAs(metadata);
