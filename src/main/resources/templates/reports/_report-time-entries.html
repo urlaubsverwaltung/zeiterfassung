@@ -35,6 +35,14 @@
             style="top: calc(var(--navigation-header-height) + 1rem)"
             th:attrappend="aria-hidden=${hasEntries ? 'true' : null}"
           >
+            <span class="content-center" th:if="${day.locked}">
+              <svg
+                th:replace="~{icons/lock-keyhole::svg(className='w-4 h-4')}"
+              />
+              <span class="sr-only" th:text="#{date.locked}"
+              >Gesperrt</span
+              >
+            </span>
             <span
               th:id="${listLabelId}"
               class="flex-1 font-medium"

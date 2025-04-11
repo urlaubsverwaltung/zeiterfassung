@@ -221,7 +221,7 @@ class ReportViewHelper {
         final Duration deltaDuration = workDuration.duration().minus(shouldWorkingHours.duration());
         final String deltaHours = durationToTimeString(deltaDuration);
 
-        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, workedWorkingHoursString,
+        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, reportDay.locked(), workedWorkingHoursString,
             shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), dayEntryDtos, detailDayAbsenceDto);
     }
 
