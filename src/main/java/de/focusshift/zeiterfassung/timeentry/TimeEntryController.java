@@ -64,18 +64,16 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final TimeEntryService timeEntryService;
-    private final TimeEntryLockService timeEntryLockService;
     private final UserManagementService userManagementService;
     private final UserSettingsProvider userSettingsProvider;
     private final DateFormatter dateFormatter;
     private final TimeEntryViewHelper viewHelper;
     private final Clock clock;
 
-    public TimeEntryController(TimeEntryService timeEntryService, TimeEntryLockService timeEntryLockService,
+    public TimeEntryController(TimeEntryService timeEntryService,
                                UserManagementService userManagementService, UserSettingsProvider userSettingsProvider,
                                DateFormatter dateFormatter, TimeEntryViewHelper viewHelper, Clock clock) {
         this.timeEntryService = timeEntryService;
-        this.timeEntryLockService = timeEntryLockService;
         this.userManagementService = userManagementService;
         this.userSettingsProvider = userSettingsProvider;
         this.dateFormatter = dateFormatter;
@@ -113,10 +111,6 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, CurrentOidcUser currentUser, Model model, Locale locale, String turboFrame) {
 
-        getMinValidTimeEntryDate(currentUser).ifPresent(date ->
-            model.addAttribute("minValidTimeEntryDate", date)
-        );
-
         if (!model.containsAttribute(IS_REDIRECTED) && hasText(turboFrame)) {
             prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, model, locale);
             model.addAttribute("turboStreamsEnabled", true);
@@ -135,14 +129,6 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale);
 
         return new ModelAndView("timeentries/index");
-    }
-
-    private Optional<LocalDate> getMinValidTimeEntryDate(CurrentOidcUser currentUser) {
-        if (timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
-            return Optional.empty();
-        } else {
-            return timeEntryLockService.getMinValidTimeEntryDate();
-        }
     }
 
     @PostMapping("/timeentries")
