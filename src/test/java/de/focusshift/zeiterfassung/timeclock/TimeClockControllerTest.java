@@ -1,9 +1,11 @@
 package de.focusshift.zeiterfassung.timeclock;
 
 import de.focusshift.zeiterfassung.ControllerTest;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import org.apache.james.mime4j.dom.datetime.DateTime;
 import org.junit.jupiter.api.BeforeEach;
 import de.focusshift.zeiterfassung.web.MenuProperties;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,7 @@ import static org.hamcrest.core.AllOf.allOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -52,9 +55,12 @@ class TimeClockControllerTest implements ControllerTest {
     @Mock
     private TimeClockService timeClockService;
 
+    @Mock
+    private TimeEntryLockService timeEntryLockService;
+
     @BeforeEach
     void setUp() {
-        sut = new TimeClockController(timeClockService);
+        sut = new TimeClockController(timeClockService, timeEntryLockService);
     }
 
     @Test
@@ -245,6 +251,25 @@ class TimeClockControllerTest implements ControllerTest {
             .andExpect(status().isOk())
             .andExpect(model().attributeHasFieldErrors("timeClockUpdate", "comment"))
             .andExpect(view().name("timeclock/timeclock-edit"));
+    }
+
+    @Test
+    void ensureValidationErrorForLockedDateInEditTimeClock() throws Exception {
+        when(timeEntryLockService.getMinValidTimeEntryDate()).thenReturn(Optional.of(LocalDate.of(2023, 1, 12)));
+
+        perform(
+            post("/timeclock")
+                .with(oidcSubject("batman"))
+                .header("Referer", "referer-url")
+                .param("zoneId", "Europe/Berlin")
+                .param("comment", "awesome comment")
+                .param("break", "on")
+                .param("date", "2023-01-11")
+                .param("time", "13:37")
+        )
+            .andExpect(status().isOk());
+
+        verifyNoInteractions(timeClockService);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {

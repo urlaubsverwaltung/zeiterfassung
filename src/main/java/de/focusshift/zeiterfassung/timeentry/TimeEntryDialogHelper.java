@@ -43,13 +43,20 @@ public class TimeEntryDialogHelper {
     private static final String TIME_ENTRY_DIALOG_MODEL_NAME = "timeEntryDialog";
 
     private final TimeEntryService timeEntryService;
+    private final TimeEntryLockService timeEntryLockService;
     private final TimeEntryViewHelper timeEntryViewHelper;
     private final UserSettingsProvider userSettingsProvider;
     private final UserManagementService userManagementService;
 
-    public TimeEntryDialogHelper(TimeEntryService timeEntryService, TimeEntryViewHelper timeEntryViewHelper,
-                                 UserSettingsProvider userSettingsProvider, UserManagementService userManagementService) {
+    public TimeEntryDialogHelper(
+        TimeEntryService timeEntryService,
+        TimeEntryLockService timeEntryLockService,
+        TimeEntryViewHelper timeEntryViewHelper,
+        UserSettingsProvider userSettingsProvider,
+        UserManagementService userManagementService
+    ) {
         this.timeEntryService = timeEntryService;
+        this.timeEntryLockService = timeEntryLockService;
         this.timeEntryViewHelper = timeEntryViewHelper;
         this.userSettingsProvider = userSettingsProvider;
         this.userManagementService = userManagementService;
@@ -83,9 +90,15 @@ public class TimeEntryDialogHelper {
         final User timeEntryUser = userManagementService.findUserById(timeEntry.userIdComposite().id())
             .orElseThrow(() -> new IllegalStateException("Could not find user with id=%d".formatted(timeEntry.id().value())));
 
+        final ZoneId zoneId = userSettingsProvider.zoneId();
+
         final List<TimeEntryHistoryItemDto> historyItems = getHistory(timeEntry.id());
         final boolean isOwner = timeEntryUser.userIdComposite().equals(currentUser.getUserIdComposite());
-        final boolean allowedToEdit = currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL) || isOwner;
+        final boolean isLocked = timeEntryLockService.getMinValidTimeEntryDate()
+            .map(date -> timeEntry.start().isBefore(date.atStartOfDay(zoneId)))
+            .orElse(false);
+
+        final boolean allowedToEdit = currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL) || (isOwner && !isLocked);
 
         final TimeEntryDialogDto timeEntryDialogDto = new TimeEntryDialogDto(
             allowedToEdit,

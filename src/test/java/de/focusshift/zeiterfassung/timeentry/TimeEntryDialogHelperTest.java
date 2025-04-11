@@ -47,6 +47,8 @@ class TimeEntryDialogHelperTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
+    private TimeEntryLockService timeEntryLockService;
+    @Mock
     private TimeEntryViewHelper timeEntryViewHelper;
     @Mock
     private UserSettingsProvider userSettingsProvider;
@@ -55,7 +57,7 @@ class TimeEntryDialogHelperTest {
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService);
     }
 
     @Nested
@@ -193,11 +195,11 @@ class TimeEntryDialogHelperTest {
 
             final Instant createdInstant = Instant.now();
             final EntityRevisionMetadata createdMetadata = new EntityRevisionMetadata(1, CREATED, createdInstant, Optional.of(user.userId()));
-            final TimeEntryHistoryItem createdHistoryItem = new TimeEntryHistoryItem(createdMetadata, createdTimeEntry, true, true, true, true);
+            final TimeEntryUpdatedHistoryItem createdHistoryItem = new TimeEntryUpdatedHistoryItem(createdMetadata, createdTimeEntry, true, true, true, true);
 
             final Instant modifiedInstant = Instant.now();
             final EntityRevisionMetadata modifiedMetadata = new EntityRevisionMetadata(2, UPDATED, modifiedInstant, Optional.of(otherUser.userId()));
-            final TimeEntryHistoryItem modifiedHistoryItem = new TimeEntryHistoryItem(modifiedMetadata, modifiedTimeEntry, true, false, false, false);
+            final TimeEntryUpdatedHistoryItem modifiedHistoryItem = new TimeEntryUpdatedHistoryItem(modifiedMetadata, modifiedTimeEntry, true, false, false, false);
 
             final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(createdTimeEntry.id(), List.of(createdHistoryItem, modifiedHistoryItem));
             when(timeEntryService.findTimeEntryHistory(createdTimeEntry.id())).thenReturn(Optional.of(timeEntryHistory));

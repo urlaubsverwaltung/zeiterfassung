@@ -53,11 +53,13 @@ class TimeEntryViewHelperTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
+    private TimeEntryLockService timeEntryLockService;
+    @Mock
     private UserSettingsProvider userSettingsProvider;
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
+        sut = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
     }
 
     @Test
@@ -169,6 +171,8 @@ class TimeEntryViewHelperTest {
             final UserLocalId userLocalId = new UserLocalId(1L);
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
+            final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
+
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
             timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setId(null);
@@ -178,7 +182,9 @@ class TimeEntryViewHelperTest {
             timeEntryDTO.setComment("comment");
             timeEntryDTO.setBreak(false);
 
-            sut.createTimeEntry(timeEntryDTO);
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
@@ -192,6 +198,8 @@ class TimeEntryViewHelperTest {
             final UserLocalId userLocalId = new UserLocalId(1L);
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
+            final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
+
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
             timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setId(null);
@@ -200,7 +208,9 @@ class TimeEntryViewHelperTest {
             timeEntryDTO.setDuration(duration);
             timeEntryDTO.setBreak(false);
 
-            sut.createTimeEntry(timeEntryDTO);
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
@@ -214,6 +224,8 @@ class TimeEntryViewHelperTest {
             final UserLocalId userLocalId = new UserLocalId(1L);
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
+            final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
+
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
             timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setId(null);
@@ -222,7 +234,9 @@ class TimeEntryViewHelperTest {
             timeEntryDTO.setDuration(duration);
             timeEntryDTO.setBreak(false);
 
-            sut.createTimeEntry(timeEntryDTO);
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");

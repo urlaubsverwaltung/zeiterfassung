@@ -23,12 +23,14 @@ import static java.util.stream.Collectors.toMap;
  * All byUser Maps contains values for the same keys. (Please ensure this on constructing this object.)
  *
  * @param date
+ * @param locked                    true if date is locked for adding/editing time entries
  * @param workingTimeCalendarByUser {@linkplain WorkingTimeCalendar} for all relevant users
- * @param reportDayEntriesByUser {@linkplain ReportDayEntry entries} for all relevant users
- * @param detailDayAbsencesByUser {@linkplain ReportDayAbsence absences} for all relevant users
+ * @param reportDayEntriesByUser    {@linkplain ReportDayEntry entries} for all relevant users
+ * @param detailDayAbsencesByUser   {@linkplain ReportDayAbsence absences} for all relevant users
  */
 record ReportDay(
     LocalDate date,
+    boolean locked,
     Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser,
     Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser,
     Map<UserIdComposite, List<ReportDayAbsence>> detailDayAbsencesByUser

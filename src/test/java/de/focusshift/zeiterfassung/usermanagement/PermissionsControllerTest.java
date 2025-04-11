@@ -106,8 +106,8 @@ class PermissionsControllerTest implements ControllerTest {
         final PermissionsDto workingTimeAllPermissionDto = new PermissionsDto();
         workingTimeAllPermissionDto.setWorkingTimeEditAll(true);
 
-        final PermissionsDto workingTimeGlobalPermissionDto = new PermissionsDto();
-        workingTimeGlobalPermissionDto.setWorkingTimeEditGlobal(true);
+        final PermissionsDto settingsGlobalPermissionsDto = new PermissionsDto();
+        settingsGlobalPermissionsDto.setGlobalSettings(true);
 
         final PermissionsDto overtimePermissionDto = new PermissionsDto();
         overtimePermissionDto.setOvertimeEditAll(true);
@@ -121,7 +121,8 @@ class PermissionsControllerTest implements ControllerTest {
         return Stream.of(
             Arguments.of(SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL, reportPermissionDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, workingTimeAllPermissionDto),
-            Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL, workingTimeGlobalPermissionDto),
+            Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL, settingsGlobalPermissionsDto),
+            Arguments.of(SecurityRole.ZEITERFASSUNG_SETTINGS_GLOBAL, settingsGlobalPermissionsDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, overtimePermissionDto),
             Arguments.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, permissionsPermissionDto),
             Arguments.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL, editTimeEntryPermissionDto)
@@ -294,12 +295,13 @@ class PermissionsControllerTest implements ControllerTest {
 
     @ParameterizedTest
     @CsvSource({
-        "ZEITERFASSUNG_VIEW_REPORT_ALL,true,false,false,false",
-        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,false,true,false,false",
-        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,false,true,false",
-        "ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,false,false,false,true"
+        "ZEITERFASSUNG_VIEW_REPORT_ALL,true,false,false,false,false",
+        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,false,true,false,false,false",
+        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,false,true,false,false",
+        "ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,false,false,false,true,false",
+        "ZEITERFASSUNG_SETTINGS_GLOBAL,false,false,false,false,true",
     })
-    void ensurePost(String roleName, boolean viewReportAll, boolean workingTimeEditAll, boolean overtimeEditAll, boolean permissionsEditAll) throws Exception {
+    void ensurePost(String roleName, boolean viewReportAll, boolean workingTimeEditAll, boolean overtimeEditAll, boolean permissionsEditAll, boolean globalSettings) throws Exception {
 
         final SecurityRole securityRole = SecurityRole.valueOf(roleName);
 
@@ -316,6 +318,7 @@ class PermissionsControllerTest implements ControllerTest {
                 .param("workingTimeEditAll", String.valueOf(workingTimeEditAll))
                 .param("overtimeEditAll", String.valueOf(overtimeEditAll))
                 .param("permissionsEditAll", String.valueOf(permissionsEditAll))
+                .param("globalSettings", String.valueOf(globalSettings))
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/1337/permissions"));

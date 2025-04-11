@@ -32,5 +32,6 @@
   <include relativeToChangelogFile="true" file="changelog-2.14.0-remove-leading-trailing-whitespaces-username.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.16.0-add-time-entry-versioning.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.18.0-add-missing-indices.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-2.20.0-add-setting-for-locking-time-entries.xml"/>
 
 </databaseChangeLog>

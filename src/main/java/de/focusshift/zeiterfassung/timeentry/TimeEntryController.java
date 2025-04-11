@@ -70,9 +70,9 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private final TimeEntryViewHelper viewHelper;
     private final Clock clock;
 
-    public TimeEntryController(TimeEntryService timeEntryService, UserManagementService userManagementService,
-                               UserSettingsProvider userSettingsProvider, DateFormatter dateFormatter,
-                               TimeEntryViewHelper viewHelper, Clock clock) {
+    public TimeEntryController(TimeEntryService timeEntryService,
+                               UserManagementService userManagementService, UserSettingsProvider userSettingsProvider,
+                               DateFormatter dateFormatter, TimeEntryViewHelper viewHelper, Clock clock) {
         this.timeEntryService = timeEntryService;
         this.userManagementService = userManagementService;
         this.userSettingsProvider = userSettingsProvider;
@@ -90,7 +90,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
         final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
 
-        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, currentUserLocalId, model, locale, turboFrame);
+        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, currentUserLocalId, currentUser, model, locale, turboFrame);
     }
 
     @GetMapping("/timeentries/users/{ownerLocalIdValue}")
@@ -106,10 +106,11 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final UserLocalId ownerUserLocalId = new UserLocalId(ownerLocalIdValue);
         prepareViewedUser(model, ownerUserLocalId);
 
-        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerUserLocalId, model, locale, turboFrame);
+        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerUserLocalId, currentUser, model, locale, turboFrame);
     }
 
-    private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, Model model, Locale locale, String turboFrame) {
+    private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, CurrentOidcUser currentUser, Model model, Locale locale, String turboFrame) {
+
         if (!model.containsAttribute(IS_REDIRECTED) && hasText(turboFrame)) {
             prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, model, locale);
             model.addAttribute("turboStreamsEnabled", true);
@@ -143,10 +144,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
         LOG.info("User {} wants to create a new timeEntry.", currentUserLocalId);
 
-        handleCreateTimeEntry(timeEntryDTO, bindingResult, model, locale, redirectAttributes);
+        handleCreateTimeEntry(timeEntryDTO, bindingResult, currentUser, model, locale, redirectAttributes);
 
         if (bindingResult.hasErrors()) {
-            LOG.info("Could not create timeEntry due to constraint violation errors. Rendering timeentries page.");
+            LOG.info("Could not create timeEntry due to errors. Rendering timeentries page.");
             return "timeentries/index";
         }
 
@@ -167,10 +168,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         LOG.info("User {} wants to create a new timeEntry for user {}", currentUserLocalId, ownerLocalId);
 
         assertTimeEntryAccess(currentUser, ownerLocalIdValue);
-        handleCreateTimeEntry(timeEntryDTO, bindingResult, model, locale, redirectAttributes);
+        handleCreateTimeEntry(timeEntryDTO, bindingResult, currentUser, model, locale, redirectAttributes);
 
         if (bindingResult.hasErrors()) {
-            LOG.info("Could not create timeEntry for user {} due to constraint violation errors. Rendering timeentries page.", ownerLocalId);
+            LOG.info("Could not create timeEntry for user {} due to errors. Rendering timeentries page.", ownerLocalId);
             return "timeentries/index";
         }
 
@@ -183,7 +184,12 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     }
 
     private void handleCreateTimeEntry(TimeEntryDTO timeEntryDto, BindingResult bindingResult,
+                                       CurrentOidcUser currentUser,
                                        Model model, Locale locale, RedirectAttributes redirectAttributes) {
+
+        if (timeEntryDto.getId() != null) {
+            throw new IllegalStateException("Expected timeEntry id not to be defined but has value. Did you meant to update the time entry?");
+        }
 
         final int year;
         final int weekOfYear;
@@ -196,18 +202,13 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             throw new InvalidTimeEntryException("Invalid timeEntry. Expected date to be set.");
         }
 
+        viewHelper.createTimeEntry(timeEntryDto, bindingResult, currentUser);
+
         if (bindingResult.hasErrors()) {
             final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
             final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
             addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale);
             viewHelper.handleCrudTimeEntryErrors(timeEntryDto, bindingResult, model, redirectAttributes);
-            return;
-        }
-
-        if (timeEntryDto.getId() == null) {
-            viewHelper.createTimeEntry(timeEntryDto);
-        } else {
-            throw new IllegalStateException("Expected timeEntry id not to be defined but has value. Did you meant to update the time entry?");
         }
     }
 
@@ -528,6 +529,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             .toList();
 
         return TimeEntryDayDto.builder()
+            .isLocked(timeEntryDay.locked())
             .date(dateString)
             .dayOfWeek(timeEntryDay.date().getDayOfWeek())
             .hoursWorked(workedHours)

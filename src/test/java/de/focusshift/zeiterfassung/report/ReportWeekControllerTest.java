@@ -135,13 +135,13 @@ class ReportWeekControllerTest implements ControllerTest {
             eightHoursDay(LocalDate.of(2023, 2, 3), user, workingTimeCalendar),
             new ReportDay(
                 LocalDate.of(2023, 2, 4),
-                Map.of(userIdComposite, workingTimeCalendar),
+                false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
                 Map.of(userIdComposite, List.of())
             ),
             new ReportDay(
                 LocalDate.of(2023, 2, 5),
-                Map.of(userIdComposite, workingTimeCalendar),
+                false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
                 Map.of(userIdComposite, List.of())
             )
@@ -206,7 +206,7 @@ class ReportWeekControllerTest implements ControllerTest {
         final ReportWeek reportWeek = new ReportWeek(LocalDate.of(2023, 1, 30), List.of(
             new ReportDay(
                 absenceDate,
-                Map.of(userIdComposite, workingTimeCalendar),
+                false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
                 Map.of(userIdComposite, List.of(
                     new ReportDayAbsence(user, absence)
@@ -222,7 +222,7 @@ class ReportWeekControllerTest implements ControllerTest {
             Date.from(ZonedDateTime.of(LocalDate.of(2023, 2,5), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
             5,
             List.of(
-                new DetailDayDto(true, "F", "Freitag", "03.02.2023", "00:00", "00:00", "00:00", false, List.of(),
+                new DetailDayDto(true, "F", "Freitag", "03.02.2023", false, "00:00", "00:00", "00:00", false, List.of(),
                     List.of(
                         new DetailDayAbsenceDto(
                             "Bruce Wayne",
@@ -547,7 +547,7 @@ class ReportWeekControllerTest implements ControllerTest {
     private ReportDay eightHoursDay(LocalDate date, User user, WorkingTimeCalendar workingTimeCalendar) {
         return new ReportDay(
             date,
-            Map.of(user.userIdComposite(), workingTimeCalendar),
+            false, Map.of(user.userIdComposite(), workingTimeCalendar),
             Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
             Map.of(user.userIdComposite(), List.of())
         );

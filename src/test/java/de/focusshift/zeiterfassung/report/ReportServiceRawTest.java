@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -56,9 +57,12 @@ class ReportServiceRawTest {
     @Mock
     private WorkingTimeCalendarService workingTimeCalendarService;
 
+    @Mock
+    private TimeEntryLockService timeEntryLockService;
+
     @BeforeEach
     void setUp() {
-        sut = new ReportServiceRaw(timeEntryService, userManagementService, userDateService, workingTimeCalendarService);
+        sut = new ReportServiceRaw(timeEntryService, userManagementService, userDateService, workingTimeCalendarService, timeEntryLockService);
     }
 
     // ------------------------------------------------------------
