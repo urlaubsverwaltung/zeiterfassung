@@ -86,9 +86,16 @@ class TimeEntryServiceImpl implements TimeEntryService {
     @Override
     public Optional<TimeEntryHistory> findTimeEntryHistory(TimeEntryId id) {
 
+        final ZoneId zoneId = userSettingsProvider.zoneId();
+        final Optional<ZonedDateTime> datePivot = timeEntryLockService.getMinValidTimeEntryDate()
+            .map(date -> date.plusDays(1).atStartOfDay(zoneId));
+
         final Revisions<Long, TimeEntryEntity> revisions = timeEntryRepository.findRevisions(id.value());
         if (revisions.isEmpty()) {
             LOG.warn("Could not find any revision for {}. A valid TimeEntry should have at least one revision of type INSERT.", id);
+
+            // TODO this time entry could be locked meanwhile. add a history item.
+
             return Optional.empty();
         }
 
@@ -97,12 +104,22 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         final List<TimeEntryHistoryItem> historyItems = new ArrayList<>();
         TimeEntry previousTimeEntry = null;
+        boolean lockedEntryAdded = false;
 
         for (Revision<Long, TimeEntryEntity> revision : revisions.getContent()) {
 
             final TimeEntryEntity entity = revision.getEntity();
             final TimeEntry timeEntry = toTimeEntry(entity, user);
             final EntityRevisionMetadata entityRevisionMetadata = entityRevisionMapper.toEntityRevisionMetadata(revision);
+
+            if (!lockedEntryAdded) {
+                final ZonedDateTime modifiedAt = ZonedDateTime.ofInstant(entityRevisionMetadata.modifiedAt(), zoneId);
+                if (datePivot.map(modifiedAt::isAfter).orElse(false)) {
+                    // TODO add time entry locked entry
+                    lockedEntryAdded = true;
+                }
+                // TODO this has to be done after iterating
+            }
 
             TimeEntryUpdatedHistoryItem historyItem;
 
@@ -121,6 +138,15 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
             historyItems.add(historyItem);
             previousTimeEntry = timeEntry;
+        }
+
+        if (!lockedEntryAdded) {
+            final ZonedDateTime modifiedAt = ZonedDateTime.ofInstant(entityRevisionMetadata.modifiedAt(), zoneId);
+            if (datePivot.map(modifiedAt::isAfter).orElse(false)) {
+                // TODO add time entry locked entry
+                lockedEntryAdded = true;
+            }
+            // TODO this has to be done after iterating
         }
 
         return Optional.of(new TimeEntryHistory(id, historyItems));
