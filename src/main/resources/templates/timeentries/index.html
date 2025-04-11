@@ -296,7 +296,7 @@
                             class="relative flex justify-between gap-x-2 flex-wrap text-green-900 text-sm"
                           >
                             <h4 class="font-medium flex gap-1">
-                              <span th:if="${day.locked}">
+                              <span class="content-center" th:if="${day.locked}">
                                 <svg
                                   th:replace="~{icons/lock-keyhole::svg(className='w-4 h-4')}"
                                 />
