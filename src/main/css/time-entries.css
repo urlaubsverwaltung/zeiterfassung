@@ -216,6 +216,10 @@
   margin-top: 0.5rem;
 }
 
+.time-entry-slot-form--disabled label {
+  cursor: default;
+}
+
 .time-entry-box,
 .time-entry-box-absence {
   display: flex;
