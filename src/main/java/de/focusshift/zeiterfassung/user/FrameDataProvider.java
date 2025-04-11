@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.user;
 
+import de.focusshift.zeiterfassung.web.MenuProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,10 +15,18 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 @ControllerAdvice
 class FrameDataProvider {
 
+    private final MenuProperties menuProperties;
+
+    FrameDataProvider(MenuProperties menuProperties) {
+        this.menuProperties = menuProperties;
+    }
+
     @ModelAttribute
     public void addLocale(Model model, @AuthenticationPrincipal OidcUser oidcUser, HttpServletRequest httpServletRequest) {
 
         model.addAttribute("lang", LocaleContextHolder.getLocale().toLanguageTag());
+
+        model.addAttribute("menuHelpUrl", menuProperties.getHelp().getUrl());
 
         model.addAttribute("currentRequestURI", httpServletRequest.getRequestURI());
         model.addAttribute("header_referer", httpServletRequest.getHeader("Referer"));
