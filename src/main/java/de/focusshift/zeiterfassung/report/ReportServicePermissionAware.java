@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -11,6 +12,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static java.time.temporal.ChronoUnit.MONTHS;
@@ -21,11 +23,13 @@ class ReportServicePermissionAware implements ReportService {
     private final ReportPermissionService reportPermissionService;
     private final ReportServiceRaw reportServiceRaw;
     private final UserDateService userDateService;
+    private final TimeEntryLockService timeEntryLockService;
 
-    ReportServicePermissionAware(ReportPermissionService reportPermissionService, ReportServiceRaw reportServiceRaw, UserDateService userDateService) {
+    ReportServicePermissionAware(ReportPermissionService reportPermissionService, ReportServiceRaw reportServiceRaw, UserDateService userDateService, TimeEntryLockService timeEntryLockService) {
         this.reportPermissionService = reportPermissionService;
         this.reportServiceRaw = reportServiceRaw;
         this.userDateService = userDateService;
+        this.timeEntryLockService = timeEntryLockService;
     }
 
     @Override
@@ -103,8 +107,14 @@ class ReportServicePermissionAware implements ReportService {
     }
 
     private ReportWeek emptyReportWeek(LocalDate startOfWeekDate) {
+        Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate();
+
         final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
-            .mapToObj(daysToAdd -> new ReportDay(startOfWeekDate.plusDays(daysToAdd), Map.of(), Map.of(), Map.of()))
+            .mapToObj(daysToAdd -> {
+                LocalDate date = startOfWeekDate.plusDays(daysToAdd);
+                boolean locked = isDateLocked(date, minValidTimeEntryDate);
+                return new ReportDay(date, locked, Map.of(), Map.of(), Map.of());
+            })
             .toList();
 
         return new ReportWeek(startOfWeekDate, reportDays);
@@ -136,5 +146,9 @@ class ReportServicePermissionAware implements ReportService {
 
     private static boolean isPreviousMonth(LocalDate possiblePreviousMonthDate, YearMonth yearMonth) {
         return YearMonth.from(possiblePreviousMonthDate).until(yearMonth, MONTHS) == 1;
+    }
+
+    private static boolean isDateLocked(LocalDate date, Optional<LocalDate> minValidTimeEntryDate) {
+        return minValidTimeEntryDate.map(date::isBefore).orElse(false);
     }
 }
