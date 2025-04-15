@@ -19,7 +19,7 @@ jobs:
           java-version: 21
           cache: 'maven'
       - name: Build with Maven
-        run: ./mvnw clean package
+        run: ./mvnw package
       - name: Extract release tag
         id: vars
         run: echo "version=${GITHUB_REF#refs/*/zeiterfassung-}" >> $GITHUB_OUTPUT
