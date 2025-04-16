@@ -43,6 +43,28 @@ class TimeEntryLockServiceImplTest {
     }
 
     @Nested
+    class IsLocked {
+
+        @Test
+        void ensureIsLockedForLocalDate() {
+
+            mockSettings(new LockTimeEntriesSettings(true, 1));
+
+            final boolean actual = sut.isLocked(LocalDate.now(clockFixed).minusDays(5));
+            assertThat(actual).isTrue();
+        }
+
+        @Test
+        void ensureIsLockedForZonedDateTime() {
+
+            mockSettings(new LockTimeEntriesSettings(true, 1));
+
+            final boolean actual = sut.isLocked(ZonedDateTime.now(clockFixed).minusDays(5));
+            assertThat(actual).isTrue();
+        }
+    }
+
+    @Nested
     class IsTimespanLocked {
 
         @Test
