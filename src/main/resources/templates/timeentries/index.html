@@ -413,7 +413,7 @@
                           data-turbo="true"
                         >
                           <th:block
-                            th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, disabled=${day.locked}, class='timeslot-form-existing')}"
+                            th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, disabled=${!day.allowedToEdit}, class='timeslot-form-existing')}"
                           ></th:block>
                         </div>
                       </th:block>

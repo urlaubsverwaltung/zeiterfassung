@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -90,15 +89,10 @@ public class TimeEntryDialogHelper {
         final User timeEntryUser = userManagementService.findUserById(timeEntry.userIdComposite().id())
             .orElseThrow(() -> new IllegalStateException("Could not find user with id=%d".formatted(timeEntry.id().value())));
 
-        final ZoneId zoneId = userSettingsProvider.zoneId();
-
         final List<TimeEntryHistoryItemDto> historyItems = getHistory(timeEntry.id());
         final boolean isOwner = timeEntryUser.userIdComposite().equals(currentUser.getUserIdComposite());
-        final boolean isLocked = timeEntryLockService.getMinValidTimeEntryDate()
-            .map(date -> timeEntry.start().isBefore(date.atStartOfDay(zoneId)))
-            .orElse(false);
-
-        final boolean allowedToEdit = currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL) || (isOwner && !isLocked);
+        final boolean isLocked = timeEntryLockService.isLocked(timeEntry.start());
+        final boolean allowedToEdit = (isOwner && !isLocked) || timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles());
 
         final TimeEntryDialogDto timeEntryDialogDto = new TimeEntryDialogDto(
             allowedToEdit,

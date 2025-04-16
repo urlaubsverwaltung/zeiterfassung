@@ -82,14 +82,14 @@ class TimeEntryControllerTest implements ControllerTest {
     @BeforeEach
     void setUp() {
         timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
-        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
     }
 
     @Test
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
 
         mockUserSettings(ZoneOffset.UTC);
 
@@ -123,6 +123,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .build();
 
         final TimeEntryDayDto expectedTimeEntryDayDto = TimeEntryDayDto.builder()
+            .isAllowedToEdit(true)
             .date("formatted-date-year-full")
             .dayOfWeek(DayOfWeek.FRIDAY)
             .hoursWorked("00:30")
@@ -204,6 +205,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .build();
 
         final TimeEntryDayDto expectedTimeEntryDayDtoTUESDAY = TimeEntryDayDto.builder()
+            .isAllowedToEdit(true)
             .date("formatted-2024-12-31")
             .dayOfWeek(DayOfWeek.TUESDAY)
             .hoursWorked("00:30")
@@ -217,6 +219,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final AbsenceEntryDto absenceDto = new AbsenceEntryDto(LocalDate.of(2025,1,2), "", YELLOW);
         final TimeEntryDayDto expectedTimeEntryDayDtoTHURSDAY = TimeEntryDayDto.builder()
+            .isAllowedToEdit(true)
             .date("formatted-2025-01-02")
             .dayOfWeek(DayOfWeek.THURSDAY)
             .hoursWorked("00:00")
@@ -287,6 +290,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .build();
 
         final TimeEntryDayDto expectedTimeEntryDayDto = TimeEntryDayDto.builder()
+            .isAllowedToEdit(true)
             .date("formatted-2024-12-31")
             .dayOfWeek(DayOfWeek.TUESDAY)
             .hoursWorked("00:30")
@@ -448,7 +452,7 @@ class TimeEntryControllerTest implements ControllerTest {
     void ensureTimeEntriesForOtherUser() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-03-18T10:04:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
 
         final int year = 2025;
         final int weekOfYear = 12;
@@ -840,6 +844,7 @@ class TimeEntryControllerTest implements ControllerTest {
         when(dateFormatter.formatDate(LocalDate.of(2022, 9, 29), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-9-29");
         when(dateFormatter.formatDate(LocalDate.of(2022, 10, 2), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2022-10-2");
 
+
         final ResultActions perform = perform(
             post("/timeentries/1337")
                 .header("Turbo-Frame", "any-value")
@@ -874,6 +879,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .build();
 
         final TimeEntryDayDto expectedDayDto = TimeEntryDayDto.builder()
+            .isAllowedToEdit(true)
             .date("formatted-2022-9-28")
             .dayOfWeek(DayOfWeek.WEDNESDAY)
             .hoursWorked("00:45")
@@ -886,6 +892,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .build();
 
         final TimeEntryDayDto otherDayDto = TimeEntryDayDto.builder()
+            .isAllowedToEdit(true)
             .date("formatted-2022-9-29")
             .dayOfWeek(DayOfWeek.THURSDAY)
             .hoursWorked("00:30")
@@ -957,6 +964,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .build();
 
         final TimeEntryDayDto timeEntryDayDto = TimeEntryDayDto.builder()
+            .isAllowedToEdit(true)
             .date("formatted-date")
             .dayOfWeek(DayOfWeek.MONDAY)
             .hoursWorked("00:30")
@@ -1138,6 +1146,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .build();
 
         final TimeEntryDayDto expectedDayDto = TimeEntryDayDto.builder()
+            .isAllowedToEdit(true)
             .date("formatted-date")
             .dayOfWeek(DayOfWeek.WEDNESDAY)
             .hoursWorked("01:00")

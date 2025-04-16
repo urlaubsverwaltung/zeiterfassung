@@ -5,6 +5,7 @@ import java.util.List;
 
 record TimeEntryDayDto(
     boolean isLocked,
+    boolean isAllowedToEdit,
     String date,
     DayOfWeek dayOfWeek,
     String hoursWorked,
@@ -22,6 +23,7 @@ record TimeEntryDayDto(
 
     static class Builder {
         private boolean isLocked;
+        private boolean isAllowedToEdit;
         private String date;
         private DayOfWeek dayOfWeek;
         private String hoursWorked;
@@ -34,6 +36,11 @@ record TimeEntryDayDto(
 
         public Builder isLocked(boolean isLocked) {
             this.isLocked = isLocked;
+            return this;
+        }
+
+        public Builder isAllowedToEdit(boolean isAllowedToEdit) {
+            this.isAllowedToEdit = isAllowedToEdit;
             return this;
         }
 
@@ -83,7 +90,7 @@ record TimeEntryDayDto(
         }
 
         public TimeEntryDayDto build() {
-            return new TimeEntryDayDto(isLocked, date, dayOfWeek, hoursWorked, hoursWorkedShould, hoursDelta,
+            return new TimeEntryDayDto(isLocked, isAllowedToEdit, date, dayOfWeek, hoursWorked, hoursWorkedShould, hoursDelta,
                 hoursDeltaNegative, hoursWorkedRatio, timeEntries, absenceEntries);
         }
     }

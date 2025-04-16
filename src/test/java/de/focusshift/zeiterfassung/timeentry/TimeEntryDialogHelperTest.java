@@ -120,6 +120,8 @@ class TimeEntryDialogHelperTest {
             final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
             when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
 
+            when(timeEntryLockService.isLocked(timeEntry.start())).thenReturn(false);
+
             final ConcurrentModel model = new ConcurrentModel();
             model.addAttribute("timeEntry", -1);
 
@@ -130,7 +132,7 @@ class TimeEntryDialogHelperTest {
         }
 
         @Test
-        void ensureTimeEntryIsEditableForPrivilegedUser() {
+        void ensureTimeEntryIsEditableForPrivilegedUserEvenIfLocked() {
 
             final UserIdComposite privilegeduserIdComposite = anyUserIdComposite("office");
             final CurrentOidcUser privilgegedOidcUser = anyCurrentOidcUser(privilegeduserIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
@@ -144,6 +146,10 @@ class TimeEntryDialogHelperTest {
             final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
             when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
 
+            // locked but privileged user
+            when(timeEntryLockService.isLocked(timeEntry.start())).thenReturn(true);
+            when(timeEntryLockService.isUserAllowedToBypassLock(privilgegedOidcUser.getRoles())).thenReturn(true);
+
             final ConcurrentModel model = new ConcurrentModel();
             model.addAttribute("timeEntry", -1);
 
@@ -154,7 +160,7 @@ class TimeEntryDialogHelperTest {
         }
 
         @Test
-        void ensureTimeEntryNotEditableForNotPrivilegedUser() {
+        void ensureTimeEntryNotEditableBecauseLocked() {
 
             final UserIdComposite anyUserIdComposite = anyUserIdComposite("joker");
             final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(anyUserIdComposite);
@@ -167,6 +173,10 @@ class TimeEntryDialogHelperTest {
 
             final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
             when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
+
+            // locked and not privileged user
+            when(timeEntryLockService.isLocked(timeEntry.start())).thenReturn(true);
+            when(timeEntryLockService.isUserAllowedToBypassLock(currentOidcUser.getRoles())).thenReturn(false);
 
             final ConcurrentModel model = new ConcurrentModel();
             model.addAttribute("timeEntry", -1);
