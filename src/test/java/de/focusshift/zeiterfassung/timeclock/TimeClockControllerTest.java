@@ -23,9 +23,13 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static java.util.stream.Collectors.joining;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
@@ -254,8 +258,9 @@ class TimeClockControllerTest implements ControllerTest {
     }
 
     @Test
-    void ensureValidationErrorForLockedDateInEditTimeClock() throws Exception {
-        when(timeEntryLockService.getMinValidTimeEntryDate()).thenReturn(Optional.of(LocalDate.of(2023, 1, 12)));
+    void ensureValidationErrorForLockedDateInEditTimeClockAndUserIsNotAllowedToBypassLock() throws Exception {
+        when(timeEntryLockService.isLocked(LocalDate.of(2023, 1, 11))).thenReturn(true);
+        when(timeEntryLockService.isUserAllowedToBypassLock(any())).thenReturn(false);
 
         perform(
             post("/timeclock")
@@ -270,6 +275,27 @@ class TimeClockControllerTest implements ControllerTest {
             .andExpect(status().isOk());
 
         verifyNoInteractions(timeClockService);
+    }
+
+    @Test
+    void ensureNoValidationErrorForLockedDateInEditTimeClockAndUserIsAllowedToBypassLock() throws Exception {
+        when(timeEntryLockService.isLocked(LocalDate.of(2023, 1, 11))).thenReturn(true);
+        when(timeEntryLockService.isUserAllowedToBypassLock(any())).thenReturn(true);
+
+        perform(
+            post("/timeclock")
+                .with(oidcSubject("batman"))
+                .header("Referer", "referer-url")
+                .param("zoneId", "Europe/Berlin")
+                .param("comment", "awesome comment")
+                .param("break", "on")
+                .param("date", "2023-01-11")
+                .param("time", "13:37")
+        )
+            .andExpect(status().is3xxRedirection());
+
+        final UserId expectedUserId = new UserId("batman");
+        verify(timeClockService).updateTimeClock(eq(expectedUserId), any(TimeClockUpdate.class));
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
