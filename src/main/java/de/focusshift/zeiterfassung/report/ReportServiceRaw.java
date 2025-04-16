@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
@@ -38,14 +39,20 @@ import static java.util.stream.Collectors.toMap;
 class ReportServiceRaw {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
+
     private final TimeEntryService timeEntryService;
     private final UserManagementService userManagementService;
     private final UserDateService userDateService;
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final TimeEntryLockService timeEntryLockService;
 
-    ReportServiceRaw(TimeEntryService timeEntryService, UserManagementService userManagementService,
-                     UserDateService userDateService, WorkingTimeCalendarService workingTimeCalendarService, TimeEntryLockService timeEntryLockService) {
+    ReportServiceRaw(
+        TimeEntryService timeEntryService,
+        UserManagementService userManagementService,
+        UserDateService userDateService,
+        WorkingTimeCalendarService workingTimeCalendarService,
+        TimeEntryLockService timeEntryLockService
+    ) {
 
         this.timeEntryService = timeEntryService;
         this.userManagementService = userManagementService;
@@ -180,13 +187,13 @@ class ReportServiceRaw {
         final Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> resolveReportDayEntries =
             (LocalDate date) -> reportEntriesByDate.getOrDefault(date, new HashMap<>());
 
-        final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate();
+        final LockTimeEntriesSettings settings = timeEntryLockService.getLockTimeEntriesSettings();
 
         final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
             .mapToObj(daysToAdd ->
             {
                 LocalDate date = startOfWeekDate.plusDays(daysToAdd);
-                boolean locked = isDateLocked(date, minValidTimeEntryDate);
+                boolean locked = timeEntryLockService.isLocked(date, settings);
                 return toReportDay(
                     date,
                     userById,
@@ -266,9 +273,5 @@ class ReportServiceRaw {
 
     private static boolean isPreviousMonth(LocalDate possiblePreviousMonthDate, YearMonth yearMonth) {
         return YearMonth.from(possiblePreviousMonthDate).until(yearMonth, MONTHS) == 1;
-    }
-
-    private static boolean isDateLocked(LocalDate date, Optional<LocalDate> minValidTimeEntryDate) {
-        return minValidTimeEntryDate.map(date::isBefore).orElse(false);
     }
 }

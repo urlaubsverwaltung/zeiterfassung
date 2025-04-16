@@ -36,9 +36,30 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
     }
 
     @Override
+    public LockTimeEntriesSettings getLockTimeEntriesSettings() {
+        return lockTimeEntriesSettingsService.getLockTimeEntriesSettings();
+    }
+
+    @Override
+    public boolean isLocked(Temporal temporal, LockTimeEntriesSettings lockTimeEntriesSettings) {
+
+        if (!lockTimeEntriesSettings.lockingIsActive()) {
+            LOG.debug("temporal is not locked. Feature is disabled in settings.");
+            return false;
+        }
+
+        final int daysInPastAllowed = lockTimeEntriesSettings.lockTimeEntriesDaysInPast();
+        boolean isLocked = isDateLocked(temporal, daysInPastAllowed);
+
+        LOG.debug("temporal {} locked={}", temporal, isLocked);
+
+        return isLocked;
+    }
+
+    @Override
     public boolean isTimespanLocked(Temporal start, Temporal end) {
 
-        final LockTimeEntriesSettings settings = lockTimeEntriesSettingsService.getLockTimeEntriesSettings();
+        final LockTimeEntriesSettings settings = getLockTimeEntriesSettings();
         if (!settings.lockingIsActive()) {
             LOG.debug("Timespan is not locked. Feature is disabled in settings.");
             return false;
@@ -50,7 +71,7 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
         final boolean endLocked = isDateLocked(end, daysInPastAllowed);
         final boolean isLocked = startLocked || endLocked;
 
-        LOG.debug("{} locked={}", start, isLocked);
+        LOG.debug("start={} locked={}, end={} locked={}", start, startLocked, end, endLocked);
 
         return isLocked;
     }
@@ -63,7 +84,7 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
     @Override
     public Optional<LocalDate> getMinValidTimeEntryDate() {
 
-        final LockTimeEntriesSettings settings = lockTimeEntriesSettingsService.getLockTimeEntriesSettings();
+        final LockTimeEntriesSettings settings = getLockTimeEntriesSettings();
 
         final LocalDate minimumValidDate;
         if (settings.lockingIsActive()) {
