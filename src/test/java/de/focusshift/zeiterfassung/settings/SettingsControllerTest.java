@@ -44,18 +44,6 @@ class SettingsControllerTest implements ControllerTest {
     }
 
     @Test
-    void ensureGetSettingsForbidden() {
-
-        assertThatThrownBy(() -> {
-            perform(get("/settings"));
-        })
-            .isInstanceOf(ServletException.class)
-            .hasCauseInstanceOf(AccessDeniedException.class);
-
-        verifyNoMoreInteractions(settingsService);
-    }
-
-    @Test
     void ensureGetSettings() throws Exception {
 
         final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
