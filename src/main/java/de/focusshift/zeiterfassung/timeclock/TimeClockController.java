@@ -5,8 +5,6 @@ import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.user.UserId;
-import de.focusshift.zeiterfassung.user.UserSettingsProvider;
-import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -22,9 +20,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
@@ -71,12 +66,10 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
         @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
         RedirectAttributes redirectAttributes
     ) {
-        timeEntryLockService.getMinValidTimeEntryDate().ifPresent(date -> {
-         if (timeClockUpdateDto.getDate().isBefore(date) || !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
-                LOG.info("Editing TimeClock is not allowed since currentUser is not privileged to bypass timespan lock.");
-                errors.reject("time-entry.validation.timespan.locked");
-            }
-        });
+        if (timeEntryLockService.isLocked(timeClockUpdateDto.getDate()) && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
+            LOG.info("Editing TimeClock is not allowed since currentUser is not privileged to bypass timespan lock.");
+            errors.reject("time-entry.validation.timespan.locked");
+        }
 
         if (errors.hasErrors()) {
             if (hasText(turboFrame)) {
