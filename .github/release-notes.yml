@@ -1,6 +1,4 @@
 changelog:
-  repository: urlaubsverwaltung/zeiterfassung
-  milestone-reference: id
   sections:
     - title: "⚠️ Security Issues"
       labels: ["type: security"]
