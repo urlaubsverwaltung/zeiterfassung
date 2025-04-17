@@ -47,6 +47,8 @@ class TimeEntryDialogHelperTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
+    private TimeEntryLockService timeEntryLockService;
+    @Mock
     private TimeEntryViewHelper timeEntryViewHelper;
     @Mock
     private UserSettingsProvider userSettingsProvider;
@@ -55,7 +57,7 @@ class TimeEntryDialogHelperTest {
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService);
     }
 
     @Nested

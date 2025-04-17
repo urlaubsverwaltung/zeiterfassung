@@ -1,7 +1,9 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -38,21 +40,25 @@ class ReportServiceRaw {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
-    record Period(LocalDate from, LocalDate toExclusive) {
-    }
-
     private final TimeEntryService timeEntryService;
     private final UserManagementService userManagementService;
     private final UserDateService userDateService;
     private final WorkingTimeCalendarService workingTimeCalendarService;
+    private final TimeEntryLockService timeEntryLockService;
 
-    ReportServiceRaw(TimeEntryService timeEntryService, UserManagementService userManagementService,
-                     UserDateService userDateService, WorkingTimeCalendarService workingTimeCalendarService) {
+    ReportServiceRaw(
+        TimeEntryService timeEntryService,
+        UserManagementService userManagementService,
+        UserDateService userDateService,
+        WorkingTimeCalendarService workingTimeCalendarService,
+        TimeEntryLockService timeEntryLockService
+    ) {
 
         this.timeEntryService = timeEntryService;
         this.userManagementService = userManagementService;
         this.userDateService = userDateService;
         this.workingTimeCalendarService = workingTimeCalendarService;
+        this.timeEntryLockService = timeEntryLockService;
     }
 
     ReportWeek getReportWeek(Year year, int week, UserLocalId userLocalId) {
@@ -181,14 +187,21 @@ class ReportServiceRaw {
         final Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> resolveReportDayEntries =
             (LocalDate date) -> reportEntriesByDate.getOrDefault(date, new HashMap<>());
 
+        final LockTimeEntriesSettings settings = timeEntryLockService.getLockTimeEntriesSettings();
+
         final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
             .mapToObj(daysToAdd ->
-                toReportDay(
-                    startOfWeekDate.plusDays(daysToAdd),
+            {
+                LocalDate date = startOfWeekDate.plusDays(daysToAdd);
+                boolean locked = timeEntryLockService.isLocked(date, settings);
+                return toReportDay(
+                    date,
                     userById,
                     workingTimeCalendars,
-                    resolveReportDayEntries
-                ))
+                    resolveReportDayEntries,
+                    locked
+                );
+            })
             .toList();
 
         return new ReportWeek(startOfWeekDate, reportDays);
@@ -206,6 +219,9 @@ class ReportServiceRaw {
         }
 
         return startOfWeekDates;
+    }
+
+    record Period(LocalDate from, LocalDate toExclusive) {
     }
 
     private static Optional<ReportDayEntry> timeEntryToReportDayEntry(TimeEntry timeEntry, Function<UserIdComposite, User> userProvider) {
@@ -228,7 +244,8 @@ class ReportServiceRaw {
     private static ReportDay toReportDay(LocalDate date,
                                          Map<UserIdComposite, User> userById,
                                          Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars,
-                                         Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportDayEntriesForDate) {
+                                         Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportDayEntriesForDate,
+                                         boolean dateIsLocked) {
 
         final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser = reportDayEntriesForDate.apply(date);
         final Map<UserIdComposite, List<ReportDayAbsence>> reportDayAbsencesByUser = new HashMap<>();
@@ -251,7 +268,7 @@ class ReportServiceRaw {
             }
         }
 
-        return new ReportDay(date, workingTimeCalendars, reportDayEntriesByUser, reportDayAbsencesByUser);
+        return new ReportDay(date, dateIsLocked, workingTimeCalendars, reportDayEntriesByUser, reportDayAbsencesByUser);
     }
 
     private static boolean isPreviousMonth(LocalDate possiblePreviousMonthDate, YearMonth yearMonth) {

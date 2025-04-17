@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
@@ -75,6 +76,8 @@ class ReportMonthControllerTest implements ControllerTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
+    private TimeEntryLockService timeEntryLockService;
+    @Mock
     private UserSettingsProvider userSettingsProvider;
     @Mock
     private UserManagementService userManagementService;
@@ -94,8 +97,8 @@ class ReportMonthControllerTest implements ControllerTest {
         dateFormatter = new DateFormatterImpl();
         dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
         reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
-        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
-        timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
+        timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService);
         sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper, timeEntryDialogHelper, clock);
     }
 
@@ -565,13 +568,13 @@ class ReportMonthControllerTest implements ControllerTest {
             eightHoursDay(firstDateOfWeek.plusDays(4), user),
             new ReportDay(
                 firstDateOfWeek.plusDays(5),
-                Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(5), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(5), List.of()))),
+                false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(5), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(5), List.of()))),
                 Map.of(user.userIdComposite(), List.of()),
                 Map.of(user.userIdComposite(), List.of())
             ),
             new ReportDay(
                 firstDateOfWeek.plusDays(6),
-                Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(6), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(6), List.of()))),
+                false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(6), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(6), List.of()))),
                 Map.of(user.userIdComposite(), List.of()),
                 Map.of(user.userIdComposite(), List.of())
             ))
@@ -581,7 +584,7 @@ class ReportMonthControllerTest implements ControllerTest {
     private ReportDay eightHoursDay(LocalDate date, User user) {
         return new ReportDay(
             date,
-            Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.EIGHT), Map.of(date, List.of()))),
+            false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.EIGHT), Map.of(date, List.of()))),
             Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
             Map.of(user.userIdComposite(), List.of())
         );
@@ -590,7 +593,7 @@ class ReportMonthControllerTest implements ControllerTest {
     private ReportDay zeroHoursDay(LocalDate date, User user) {
         return new ReportDay(
             date,
-            Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.ZERO), Map.of(date, List.of()))),
+            false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.ZERO), Map.of(date, List.of()))),
             Map.of(user.userIdComposite(), List.of()),
             Map.of(user.userIdComposite(), List.of())
         );

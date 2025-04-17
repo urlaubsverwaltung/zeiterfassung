@@ -17,25 +17,24 @@
               Lorem ipsum...
             </p>
           </div>
-          <div class="mt-8 lg:mt-12">
-            <h2 class="font-bold" th:text="#{settings.federal-state.heading}">
-              Feiertagsregelung
-            </h2>
-            <p
-              class="mt-2 text-gray-600"
-              th:text="#{settings.federal-state.teaser-text}"
-            >
-              Lorem ipsum...
-            </p>
-            <form
-              action="#"
-              th:action="@{/settings/federal-state}"
-              method="post"
-              th:object="${federalStateSettings}"
-              class="mt-4"
-            >
-              <div class="flex flex-col gap-8">
-                <div class="flex items-center gap-4">
+          <form
+            action="#"
+            th:action="@{/settings}"
+            method="post"
+            th:object="${settings}"
+          >
+            <div class="mt-8 lg:mt-12">
+              <h2 class="font-bold" th:text="#{settings.federal-state.heading}">
+                Feiertagsregelung
+              </h2>
+              <p
+                class="mt-2 text-gray-600"
+                th:text="#{settings.federal-state.teaser-text}"
+              >
+                Lorem ipsum...
+              </p>
+              <div class="mt-4">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
                   <div class="flex items-center">
                     <label
                       for="federal-state-select"
@@ -79,32 +78,90 @@
                     </label>
                   </div>
                 </div>
+              </div>
+            </div>
+            <div class="mt-8 lg:mt-12">
+              <h2
+                class="font-bold"
+                th:text="#{settings.lock-timeentries.heading}"
+              >
+                Festschreiben von Zeitslots
+              </h2>
+              <p
+                class="mt-2 text-gray-600"
+                th:text="#{settings.lock-timeentries.teaser-text}"
+              >
+                Lege fest wie weit in die Vergangenheit Zeitslots durch die Person selbst angepasst oder hinzugefügt werden können.
+              </p>
+              <div class="mt-4">
+                <div class="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="locking-timeentries-is-active-checkbox"
+                    data-testid="locking-timeentries-is-active-checkbox"
+                    th:field="*{lockingIsActive}"
+                  />
+                  <label
+                    for="locking-timeentries-is-active-checkbox"
+                    th:text="#{settings.lock-timeentries-is-active.label}"
+                  >
+                    Festschreibung aktivieren
+                  </label>
+                </div>
                 <div
-                  class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center"
+                  class="mt-2"
+                  th:with="fieldName=${'lockTimeEntriesDaysInPast'}, hasError=${#fields.hasErrors(fieldName)}"
                 >
-                  <button
-                    type="submit"
-                    class="button-primary button-primary-icon"
-                    data-testid="settings-submit-button"
+                  <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <label
+                      for="lock-timeentries-days-in-past"
+                      th:text="#{settings.lock-timeentries-days-in-past.label}"
+                    >
+                      Anzahl der Tage vor Festschreibung
+                    </label>
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="lock-timeentries-days-in-past"
+                      data-testid="lock-timeentries-days-in-past"
+                      class="w-full border border-gray-300 px-2 py-1 sm:w-14"
+                      th:classappend="${hasError ? 'invalid' : ''}"
+                      th:aria-invalid="${hasError}"
+                      th:aria-message="${hasError ? fieldName + '-error-message' : ''}"
+                      th:field="*{lockTimeEntriesDaysInPast}"
+                    />
+                  </div>
+                  <p
+                    th:id="${fieldName + '-error-message'}"
+                    th:text="${#fields.errors(fieldName)[0]}"
+                    th:if="${hasError}"
+                    class="invalid"
                   >
-                    <svg
-                      th:replace="~{icons/save::svg(className='w-5 h-5')}"
-                    ></svg>
-                    <th:block th:text="#{settings.save}"> Speichern </th:block>
-                  </button>
-                  <a
-                    id="settings-reset-button"
-                    href="#"
-                    th:href="@{/settings}"
-                    class="button-secondary"
-                    th:text="#{settings.reset}"
-                  >
-                    Zurücksetzen
-                  </a>
+                    Fehlernachricht
+                  </p>
                 </div>
               </div>
-            </form>
-          </div>
+            </div>
+            <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <button
+                type="submit"
+                class="button-primary button-primary-icon"
+                data-testid="settings-submit-button"
+              >
+                <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
+                <th:block th:text="#{settings.save}"> Speichern </th:block>
+              </button>
+              <a
+                id="settings-reset-button"
+                href="#"
+                th:href="@{/settings}"
+                class="button-secondary"
+                th:text="#{settings.reset}"
+              >
+                Zurücksetzen
+              </a>
+            </div>
+          </form>
         </div>
       </main>
     </th:block>

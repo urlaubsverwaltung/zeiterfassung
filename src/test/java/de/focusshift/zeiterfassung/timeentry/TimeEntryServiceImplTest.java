@@ -65,6 +65,8 @@ class TimeEntryServiceImplTest {
     @Mock
     private TimeEntryRepository timeEntryRepository;
     @Mock
+    private TimeEntryLockService timeEntryLockService;
+    @Mock
     private UserDateService userDateService;
     @Mock
     private WorkingTimeCalendarService workingTimeCalendarService;
@@ -79,8 +81,8 @@ class TimeEntryServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryServiceImpl(timeEntryRepository, userManagementService, workingTimeCalendarService,
-            userDateService, userSettingsProvider, entityRevisionMapper, clockFixed);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, timeEntryLockService, userManagementService,
+            workingTimeCalendarService, userDateService, userSettingsProvider, entityRevisionMapper, clockFixed);
     }
 
     @Nested
@@ -1228,41 +1230,42 @@ class TimeEntryServiceImplTest {
                     new PlannedWorkingHours(Duration.ofHours(40)),
                     List.of(
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2022, 1, 9),
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2022, 1, 8),
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2022, 1, 7),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2022, 1, 6),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2022, 1, 5),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2022, 1, 4),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
@@ -1270,15 +1273,14 @@ class TimeEntryServiceImplTest {
                                 new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", timeEntryStart, timeEntryEnd, false),
                                 new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true)
                             ),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             firstDayOfWeek,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        )
+                            List.of())
                     )
                 ),
                 3
@@ -1339,58 +1341,58 @@ class TimeEntryServiceImplTest {
                     new PlannedWorkingHours(Duration.ofHours(40)),
                     List.of(
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 2, 5),
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(
                                 new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
                             ),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 2, 4),
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 2, 3),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 2, 2),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 2, 1),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 1, 31),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             firstDateOfWeek,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(
                                 new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
                             ),
-                            List.of()
-                        )
+                            List.of())
                     )
                 ),
                 6
@@ -1442,54 +1444,54 @@ class TimeEntryServiceImplTest {
                     new PlannedWorkingHours(Duration.ofHours(40)),
                     List.of(
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 6, 18),
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 6, 17),
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 6, 16),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 6, 15),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 6, 14),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 6, 13),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        ),
+                            List.of()),
                         new TimeEntryDay(
+                            false,
                             LocalDate.of(2023, 6, 12),
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
-                            List.of()
-                        )
+                            List.of())
                     )
                 ),
                 6
