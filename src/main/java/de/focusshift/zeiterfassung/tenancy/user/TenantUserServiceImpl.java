@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -39,7 +40,7 @@ class TenantUserServiceImpl implements TenantUserService {
         final Instant now = clock.instant();
 
         final TenantUserEntity tenantUserEntity =
-            new TenantUserEntity(null, uuid, now, now, givenName.strip(), familyName.strip(), eMailAddress.value(), distinct(authorities), now, now, null, null, UserStatus.ACTIVE);
+            new TenantUserEntity(null, uuid, now, now, givenName.strip(), familyName.strip(), eMailAddress.value(), prepareAuthorities(authorities), now, now, null, null, UserStatus.ACTIVE);
 
         final TenantUserEntity persisted = tenantUserRepository.save(tenantUserEntity);
 
@@ -47,6 +48,11 @@ class TenantUserServiceImpl implements TenantUserService {
 
         applicationEventPublisher.publishEvent(new TenantUserCreatedEvent(tenantUser));
         return tenantUser;
+    }
+
+    @Override
+    public long countUsers() {
+        return tenantUserRepository.count();
     }
 
     @Override
@@ -59,10 +65,10 @@ class TenantUserServiceImpl implements TenantUserService {
         final String givenName = user.givenName().strip();
         final String familyName = user.familyName().strip();
         final String email = user.eMail().value();
-        final Set<SecurityRole> authorities = distinct(user.authorities());
+        final Set<SecurityRole> preparedAuthorities = prepareAuthorities(user.authorities());
 
         final TenantUserEntity next =
-            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), now, givenName, familyName, email, authorities, current.getCreatedAt(), now, current.getDeactivatedAt(), current.getDeletedAt(), current.getStatus());
+            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), now, givenName, familyName, email, preparedAuthorities, current.getCreatedAt(), now, current.getDeactivatedAt(), current.getDeletedAt(), current.getStatus());
 
         final TenantUserEntity persisted = tenantUserRepository.save(next);
 
@@ -174,6 +180,13 @@ class TenantUserServiceImpl implements TenantUserService {
         final UserStatus status = tenantUserEntity.getStatus();
 
         return new TenantUser(uuid, id, givenName, familyName, eMail, firstLoginAt, authorities, createdAt, updatedAt, deactivatedAt, deletedAt, status);
+    }
+
+    private static Set<SecurityRole> prepareAuthorities(Collection<SecurityRole> authorities) {
+        // ensure that the user has the ZEITERFASSUNG_USER permission
+        // because this is the default permission for all users and is not
+        // maintainable in the UI
+        return distinct(Stream.concat(authorities.stream(), SecurityRole.DEFAULT_USER_ROLES.stream()).toList());
     }
 
     private static <T> Set<T> distinct(Collection<T> collection) {

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.DEFAULT_USER_ROLES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -451,18 +452,18 @@ class TenantUserServiceImplTest {
     }
 
     private static TenantUser activeTenantUserOne(Instant now) {
-        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), now, DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
     }
 
     private static TenantUserEntity activeUserEntityOne(Instant now) {
-        return new TenantUserEntity(1L, "my-external-id-1", now, now, "batman", "batman", "batman@batman.com", Set.of(), now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUserEntity(1L, "my-external-id-1", now, now, "batman", "batman", "batman@batman.com", DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
     }
 
     private static TenantUser activeTenantUserTwo(Instant now) {
-        return new TenantUser("my-external-id-2", 2L, "petra", "panter", new EMailAddress("petra@panter.com"), now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUser("my-external-id-2", 2L, "petra", "panter", new EMailAddress("petra@panter.com"), now, DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
     }
 
     private static TenantUserEntity activeUserEntityTwo(Instant now) {
-        return new TenantUserEntity(2L, "my-external-id-2", now, now, "petra", "panter", "petra@panter.com", Set.of(), now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUserEntity(2L, "my-external-id-2", now, now, "petra", "panter", "petra@panter.com", DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
     }
 }

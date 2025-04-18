@@ -120,6 +120,11 @@ class SecurityBeanConfigurationTest {
         public void deactivateUser(Long id) {
 
         }
+
+        @Override
+        public long countUsers() {
+            return 0;
+        }
     }
 }
 
