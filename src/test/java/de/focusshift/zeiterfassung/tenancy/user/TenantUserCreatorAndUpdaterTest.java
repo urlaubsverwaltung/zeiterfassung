@@ -30,7 +30,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
+import static de.focusshift.zeiterfassung.security.SecurityRole.DEFAULT_USER_ROLES;
+import static de.focusshift.zeiterfassung.security.SecurityRole.INITIAL_USER_ROLES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -83,7 +84,7 @@ class TenantUserCreatorAndUpdaterTest {
 
 
     @Test
-    void ensureToCreateNewTenantUserIfTenantUserWithSubjectDoesNotExist() {
+    void ensureToCreateNewInitalTenantUserIfNoUserExistsForTenant() {
 
         final Map<String, Object> sub = Map.of(
             "sub", "uniqueIdentifier",
@@ -105,9 +106,56 @@ class TenantUserCreatorAndUpdaterTest {
 
         // and will be created
         final TenantUser createdTenantUser = new TenantUser("uniqueIdentifier", 1L, "Samuel", "Jackson",
-            new EMailAddress("s.jackson@example.org"), Instant.now(), Set.of(ZEITERFASSUNG_USER),
+            new EMailAddress("s.jackson@example.org"), Instant.now(), INITIAL_USER_ROLES,
             Instant.now(), Instant.now(), Instant.now(), Instant.now(), UserStatus.ACTIVE);
-        when(tenantUserService.createNewUser("uniqueIdentifier", "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), Set.of(ZEITERFASSUNG_USER)))
+        when(tenantUserService.createNewUser("uniqueIdentifier", "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), INITIAL_USER_ROLES))
+            .thenReturn(createdTenantUser);
+
+        sut.handle(event);
+
+        final InOrder tenantContextInOrder = Mockito.inOrder(tenantContextHolder);
+        tenantContextInOrder.verify(tenantContextHolder).setTenantId(new TenantId("myRegistrationId"));
+        tenantContextInOrder.verify(tenantContextHolder).clear();
+
+        final Authentication updatedAuthentication = SecurityContextHolder.getContext().getAuthentication();
+        assertThat(updatedAuthentication.getPrincipal()).isInstanceOf(CurrentOidcUser.class);
+        assertThat(updatedAuthentication.getPrincipal()).satisfies(principal -> {
+            final CurrentOidcUser actualCurrentOidcUser = (CurrentOidcUser) principal;
+            assertThat(actualCurrentOidcUser.getUserId()).isEqualTo(new UserId("uniqueIdentifier"));
+            assertThat(actualCurrentOidcUser.getUserLocalId()).hasValue(new UserLocalId(1L));
+            assertThat(actualCurrentOidcUser.getOidcUser()).isSameAs(currentOidcUser);
+        });
+    }
+
+
+    @Test
+    void ensureToCreateNewTenantUserIfTenantUserWithSubjectDoesNotExist() {
+
+        final Map<String, Object> sub = Map.of(
+            "sub", "uniqueIdentifier",
+            "given_name", "Samuel",
+            "family_name", "Jackson",
+            "email", "s.jackson@example.org"
+        );
+        final OidcIdToken idToken = new OidcIdToken("tokenValue", Instant.now(), Instant.MAX, sub);
+
+        final List<GrantedAuthority> grantedAuthorities = List.of();
+        final DefaultOidcUser oidcUser = new DefaultOidcUser(grantedAuthorities, idToken);
+        final CurrentOidcUser currentOidcUser = new CurrentOidcUser(oidcUser, List.of(), grantedAuthorities);
+
+        final Authentication authentication = new OAuth2AuthenticationToken(currentOidcUser, grantedAuthorities, "myRegistrationId");
+        final InteractiveAuthenticationSuccessEvent event = new InteractiveAuthenticationSuccessEvent(authentication, this.getClass());
+
+        // user does not exist yet
+        when(tenantUserService.findById(new UserId("uniqueIdentifier"))).thenReturn(Optional.empty());
+        // ensure user will be created with default user roles instead of initial user roles
+        when(tenantUserService.countUsers()).thenReturn(1L);
+
+        // and will be created
+        final TenantUser createdTenantUser = new TenantUser("uniqueIdentifier", 1L, "Samuel", "Jackson",
+            new EMailAddress("s.jackson@example.org"), Instant.now(), DEFAULT_USER_ROLES,
+            Instant.now(), Instant.now(), Instant.now(), Instant.now(), UserStatus.ACTIVE);
+        when(tenantUserService.createNewUser("uniqueIdentifier", "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), DEFAULT_USER_ROLES))
             .thenReturn(createdTenantUser);
 
         sut.handle(event);

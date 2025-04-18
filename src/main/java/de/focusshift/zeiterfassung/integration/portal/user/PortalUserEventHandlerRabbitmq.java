@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.integration.portal.user;
 
+import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantService;
@@ -18,7 +19,6 @@ import static de.focusshift.zeiterfassung.integration.portal.user.PortalUserRabb
 import static de.focusshift.zeiterfassung.integration.portal.user.PortalUserRabbitmqConfiguration.ZEITERFASSUNG_PORTAL_USER_DEACTIVATED_QUEUE;
 import static de.focusshift.zeiterfassung.integration.portal.user.PortalUserRabbitmqConfiguration.ZEITERFASSUNG_PORTAL_USER_DELETED_QUEUE;
 import static de.focusshift.zeiterfassung.integration.portal.user.PortalUserRabbitmqConfiguration.ZEITERFASSUNG_PORTAL_USER_UPDATED_QUEUE;
-import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -52,7 +52,8 @@ public class PortalUserEventHandlerRabbitmq {
             }
 
             LOG.info("Creating new user with userId={} of tenantId={}", event.uuid(), tenantId);
-            tenantUserService.createNewUser(event.uuid(), event.firstName(), event.lastName(), new EMailAddress(event.email()), Set.of(ZEITERFASSUNG_USER));
+            Set<SecurityRole> userRoles = decideUserRoles(tenantId, event.uuid());
+            tenantUserService.createNewUser(event.uuid(), event.firstName(), event.lastName(), new EMailAddress(event.email()), userRoles);
         });
     }
 
@@ -77,7 +78,8 @@ public class PortalUserEventHandlerRabbitmq {
                 }
             }, () -> {
                 LOG.info("No user found for userId={} of tenantId={} - going to create user ...", event.uuid(), tenantId);
-                tenantUserService.createNewUser(event.uuid(), event.lastName(), event.firstName(), new EMailAddress(event.email()), Set.of(ZEITERFASSUNG_USER));
+                Set<SecurityRole> userRoles = decideUserRoles(tenantId, event.uuid());
+                tenantUserService.createNewUser(event.uuid(), event.lastName(), event.firstName(), new EMailAddress(event.email()), userRoles);
             }));
     }
 
@@ -129,5 +131,13 @@ public class PortalUserEventHandlerRabbitmq {
             }, () -> LOG.info("No user found for userId={} of tenantId={} - skipping deactivation ...", event.uuid(), tenantId)));
     }
 
+    private Set<SecurityRole> decideUserRoles(String tenantId, String externalUserId) {
+        if (tenantUserService.countUsers() == 0) {
+            LOG.info("initial user doesn't exists, adding initial user roles to new user={} for tenantId={}", externalUserId, tenantId);
+            return SecurityRole.INITIAL_USER_ROLES;
+        } else {
+            return SecurityRole.DEFAULT_USER_ROLES;
+        }
+    }
 
 }

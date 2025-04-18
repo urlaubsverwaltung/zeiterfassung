@@ -1,8 +1,10 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
 import de.focusshift.zeiterfassung.security.SecurityRole;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 
 public record TenantUser(
@@ -35,6 +37,13 @@ public record TenantUser(
      */
     public boolean isActive() {
         return status == UserStatus.ACTIVE || status == UserStatus.UNKNOWN;
+    }
+
+
+    public List<GrantedAuthority> grantedAuthorities() {
+        return authorities.stream()
+            .map(SecurityRole::authority)
+            .toList();
     }
 
 }

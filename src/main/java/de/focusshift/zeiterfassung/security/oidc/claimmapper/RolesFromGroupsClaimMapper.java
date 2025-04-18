@@ -45,12 +45,12 @@ public class RolesFromGroupsClaimMapper implements RolesFromClaimMapper {
         final GroupClaimMapperProperties groupClaim = properties.getGroupClaim();
 
         final String neededResourceAccessRole = ZEITERFASSUNG_USER.name().toLowerCase();
-        if (!claims.containsKey(groupClaim.getClaimName())) {
+        if (properties.isAuthorityCheckEnabled() && !claims.containsKey(groupClaim.getClaimName())) {
             throw new MissingClaimAuthorityException(format("User has not required permission '%s' to access zeiterfassung! The claim '%s' is missing!", neededResourceAccessRole, groupClaim.getClaimName()));
         }
 
         final List<String> groups = extractRolesFromClaimName(claims, groupClaim.getClaimName());
-        if (groups.stream().noneMatch(neededResourceAccessRole::equals)) {
+        if (properties.isAuthorityCheckEnabled() && groups.stream().noneMatch(neededResourceAccessRole::equals)) {
             throw new MissingClaimAuthorityException(format("User has not required permission '%s' to access zeiterfassung!", neededResourceAccessRole));
         }
 

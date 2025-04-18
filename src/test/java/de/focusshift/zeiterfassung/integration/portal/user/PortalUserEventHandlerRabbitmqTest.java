@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.integration.portal.user;
 
 
+import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.tenancy.tenant.Tenant;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
@@ -25,7 +26,6 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 
-import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -101,12 +101,29 @@ class PortalUserEventHandlerRabbitmqTest {
             PortalUserCreatedEvent event = portalUserCreatedEvent();
             when(tenantService.getTenantByTenantId(any())).thenReturn(Optional.of(myTenant()));
             when(tenantUserService.findById(any())).thenReturn(Optional.empty());
+            when(tenantUserService.countUsers()).thenReturn(1L);
 
             portalUserEventHandlerRabbitmq.on(event);
 
             verify(tenantService).getTenantByTenantId(event.tenantId());
             verify(tenantUserService).findById(new UserId(event.uuid()));
-            verify(tenantUserService).createNewUser(event.uuid(), event.firstName(), event.lastName(), new EMailAddress(event.email()), Set.of(ZEITERFASSUNG_USER));
+            verify(tenantUserService).createNewUser(event.uuid(), event.firstName(), event.lastName(), new EMailAddress(event.email()), SecurityRole.DEFAULT_USER_ROLES);
+            InOrder inOrder = Mockito.inOrder(tenantContextHolder);
+            inOrder.verify(tenantContextHolder).setTenantId(new TenantId(event.tenantId()));
+            inOrder.verify(tenantContextHolder).clear();
+        }
+
+        @Test
+        void whenInitialUserDoesntExists_UserIsCreated() {
+            PortalUserCreatedEvent event = portalUserCreatedEvent();
+            when(tenantService.getTenantByTenantId(any())).thenReturn(Optional.of(myTenant()));
+            when(tenantUserService.findById(any())).thenReturn(Optional.empty());
+
+            portalUserEventHandlerRabbitmq.on(event);
+
+            verify(tenantService).getTenantByTenantId(event.tenantId());
+            verify(tenantUserService).findById(new UserId(event.uuid()));
+            verify(tenantUserService).createNewUser(event.uuid(), event.firstName(), event.lastName(), new EMailAddress(event.email()), SecurityRole.INITIAL_USER_ROLES);
             InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(new TenantId(event.tenantId()));
             inOrder.verify(tenantContextHolder).clear();
@@ -137,12 +154,13 @@ class PortalUserEventHandlerRabbitmqTest {
             PortalUserUpdatedEvent event = portalUserUpdatedEvent();
             when(tenantService.getTenantByTenantId(any())).thenReturn(Optional.of(myTenant()));
             when(tenantUserService.findById(any())).thenReturn(Optional.empty());
+            when(tenantUserService.countUsers()).thenReturn(1L);
 
             portalUserEventHandlerRabbitmq.on(event);
 
             verify(tenantService).getTenantByTenantId(event.tenantId());
             verify(tenantUserService).findById(new UserId(event.uuid()));
-            verify(tenantUserService).createNewUser(event.uuid(), event.lastName(), event.firstName(), new EMailAddress(event.email()), Set.of(ZEITERFASSUNG_USER));
+            verify(tenantUserService).createNewUser(event.uuid(), event.lastName(), event.firstName(), new EMailAddress(event.email()), SecurityRole.DEFAULT_USER_ROLES);
             InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(new TenantId(event.tenantId()));
             inOrder.verify(tenantContextHolder).clear();
