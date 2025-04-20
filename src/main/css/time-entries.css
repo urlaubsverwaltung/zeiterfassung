@@ -11,12 +11,11 @@
 .time-entry-cell {
   display: flex;
   flex-direction: column-reverse;
-}
 
-.time-entry-cell {
   > *:not(label) {
     flex: 1 0 0;
   }
+
   input {
     /* text-sm applies line-height */
     /* which we must not change on inputs (see components#input for more detail) */
@@ -26,6 +25,12 @@
       text-align: left;
     }
   }
+
+  label {
+    @apply text-sm;
+    @apply cursor-pointer;
+  }
+
   .checkbox-switch {
     display: inline-flex;
     align-items: center;
@@ -33,11 +38,6 @@
       margin: 0;
     }
   }
-}
-
-.time-entry-cell label {
-  @apply text-sm;
-  @apply cursor-pointer;
 }
 
 .time-entry-cell-container {
