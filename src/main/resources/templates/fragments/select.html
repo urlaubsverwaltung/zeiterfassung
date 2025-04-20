@@ -14,7 +14,7 @@
       <select
         th:id="${id}"
         th:name="${name}"
-        class="appearance-none py-1 px-2 pr-8 border border-gray-300 rounded"
+        class="appearance-none py-1 px-2 pr-8 border border-gray-300 rounded w-full"
         th:attrappend="data-auto-submit=${autosubmit}, data-testid=${testId}, is=${is}"
       >
         <option th:replace="${options}"></option>
