@@ -13,11 +13,23 @@
   flex-direction: column-reverse;
 }
 
-.time-entry-cell input {
-  width: 100%;
-  padding: 0.25rem 0.5rem;
-  background-color: transparent;
-  @apply text-sm;
+.time-entry-cell {
+  > *:not(label) {
+    flex: 1 0 0;
+  }
+  input {
+    /* text-sm applies line-height */
+    /* which we must not change on inputs (see components#input for more detail) */
+    font-size: theme("fontSize.sm");
+    background-color: transparent;
+  }
+  .checkbox-switch {
+    display: inline-flex;
+    align-items: center;
+    input {
+      margin: 0;
+    }
+  }
 }
 
 .time-entry-cell label {

@@ -92,3 +92,29 @@ details.details-unstyled {
   @apply pl-3;
   @apply pr-4;
 }
+
+input {
+  --input-line-height: 1.5;
+
+  display: block;
+  width: 100%;
+  line-height: var(--input-line-height);
+  padding: 0.25rem 0.5rem;
+  appearance: none;
+
+  &::-webkit-datetime-edit {
+    display: block;
+    padding: 0;
+    height: calc(var(--input-line-height) * 1em);
+  }
+
+  &::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+  }
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+  appearance: auto;
+}
