@@ -103,6 +103,13 @@ input {
   appearance: none;
   background-color: white;
 
+  /* kudos @bootstrap, https://github.com/twbs/bootstrap/blob/ed36faae9dcd03f1fbf5bbbf859c706e63ae24c9/scss/forms/_form-control.scss */
+  &::-webkit-date-and-time-value {
+    min-width: 85px;
+    height: calc(var(--input-line-height) * 1em);
+    margin: 0;
+  }
+
   &::-webkit-datetime-edit {
     display: block;
     padding: 0;
