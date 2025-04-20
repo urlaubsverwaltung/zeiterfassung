@@ -101,6 +101,7 @@ input {
   line-height: var(--input-line-height);
   padding: 0.25rem 0.5rem;
   appearance: none;
+  background-color: white;
 
   &::-webkit-datetime-edit {
     display: block;
@@ -117,4 +118,12 @@ input[type="checkbox"],
 input[type="radio"] {
   width: auto;
   appearance: auto;
+}
+
+select {
+  background-color: white;
+}
+
+textarea {
+  background-color: white;
 }
