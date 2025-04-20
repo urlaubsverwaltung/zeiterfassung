@@ -21,7 +21,6 @@
     /* text-sm applies line-height */
     /* which we must not change on inputs (see components#input for more detail) */
     font-size: theme("fontSize.sm");
-    background-color: transparent;
   }
   .checkbox-switch {
     display: inline-flex;
