@@ -11,18 +11,33 @@
 .time-entry-cell {
   display: flex;
   flex-direction: column-reverse;
-}
 
-.time-entry-cell input {
-  width: 100%;
-  padding: 0.25rem 0.5rem;
-  background-color: transparent;
-  @apply text-sm;
-}
+  > *:not(label) {
+    flex: 1 0 0;
+  }
 
-.time-entry-cell label {
-  @apply text-sm;
-  @apply cursor-pointer;
+  input {
+    /* text-sm applies line-height */
+    /* which we must not change on inputs (see components#input for more detail) */
+    font-size: theme("fontSize.sm");
+
+    &::-webkit-date-and-time-value {
+      text-align: left;
+    }
+  }
+
+  label {
+    @apply text-sm;
+    @apply cursor-pointer;
+  }
+
+  .checkbox-switch {
+    display: inline-flex;
+    align-items: center;
+    input {
+      margin: 0;
+    }
+  }
 }
 
 .time-entry-cell-container {

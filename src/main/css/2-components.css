@@ -92,3 +92,45 @@ details.details-unstyled {
   @apply pl-3;
   @apply pr-4;
 }
+
+input {
+  --input-line-height: 1.5;
+
+  display: block;
+  width: 100%;
+  line-height: var(--input-line-height);
+  padding: 0.25rem 0.5rem;
+  appearance: none;
+  background-color: white;
+
+  /* kudos @bootstrap, https://github.com/twbs/bootstrap/blob/ed36faae9dcd03f1fbf5bbbf859c706e63ae24c9/scss/forms/_form-control.scss */
+  &::-webkit-date-and-time-value {
+    min-width: 85px;
+    height: calc(var(--input-line-height) * 1em);
+    margin: 0;
+  }
+
+  &::-webkit-datetime-edit {
+    display: block;
+    padding: 0;
+    height: calc(var(--input-line-height) * 1em);
+  }
+
+  &::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+  }
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+  appearance: auto;
+}
+
+select {
+  background-color: white;
+}
+
+textarea {
+  background-color: white;
+}
