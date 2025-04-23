@@ -2,11 +2,9 @@ package de.focusshift.zeiterfassung.settings;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
-import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -25,9 +23,11 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
     private static final String ATTRIBUTE_NAME_SETTINGS = "settings";
 
     private final SettingsService settingsService;
+    private final SettingsDtoValidator settingsDtoValidator;
 
-    SettingsController(SettingsService settingsService) {
+    SettingsController(SettingsService settingsService, SettingsDtoValidator settingsDtoValidator) {
         this.settingsService = settingsService;
+        this.settingsDtoValidator = settingsDtoValidator;
     }
 
     @GetMapping
@@ -46,19 +46,9 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
     }
 
     @PostMapping
-    ModelAndView saveSettings(@Valid @ModelAttribute(ATTRIBUTE_NAME_SETTINGS) SettingsDto settingsDto, BindingResult bindingResult, Model model) {
+    ModelAndView saveSettings(@ModelAttribute(ATTRIBUTE_NAME_SETTINGS) SettingsDto settingsDto, BindingResult bindingResult, Model model) {
 
-        if (bindingResult.getTarget() == null) {
-            // entering a string for lockTimeEntriesDaysInPast results in a TypeMismatchException which skips
-            // spring bean validation and therefore there is no binding yet.
-            bindingResult = new BeanPropertyBindingResult(settingsDto, ATTRIBUTE_NAME_SETTINGS);
-        }
-
-        final int lockTimeEntriesDaysInPast = requireNonNullElse(settingsDto.lockTimeEntriesDaysInPast(), -1);
-        if (settingsDto.lockingIsActive() && lockTimeEntriesDaysInPast < 0)  {
-            bindingResult.rejectValue( "lockTimeEntriesDaysInPast", "settings.lock-timeentries-days-in-past.validation.positiveOrZero");
-        }
-
+        settingsDtoValidator.validate(settingsDto, bindingResult);
         if (bindingResult.hasErrors()) {
             prepareModel(model, settingsDto);
             model.addAttribute(BindingResult.MODEL_KEY_PREFIX + ATTRIBUTE_NAME_SETTINGS, bindingResult);
@@ -66,7 +56,7 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
         }
 
         settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
-        settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), lockTimeEntriesDaysInPast);
+        settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1));
 
         return new ModelAndView("redirect:/settings");
     }
@@ -84,7 +74,7 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
             federalStateSettings.federalState(),
             federalStateSettings.worksOnPublicHoliday(),
             lockTimeEntriesSettings.lockingIsActive(),
-            lockTimeEntriesDaysInPast >= 0 ? lockTimeEntriesDaysInPast : null
+            lockTimeEntriesDaysInPast >= 0 ? String.valueOf(lockTimeEntriesDaysInPast) : null
         );
     }
 }
