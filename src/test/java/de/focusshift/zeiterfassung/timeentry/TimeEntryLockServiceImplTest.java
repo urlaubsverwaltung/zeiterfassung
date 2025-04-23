@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static java.time.ZoneOffset.UTC;
@@ -43,7 +44,41 @@ class TimeEntryLockServiceImplTest {
     }
 
     @Nested
+    class GetMinValidTimeEntryDate {
+
+        @Test
+        void ensureGetMinValidTimeEntryDateReturnsEmptyWhenNotEnabled() {
+
+            mockSettings(new LockTimeEntriesSettings(false, 1));
+
+            final Optional<LocalDate> actual = sut.getMinValidTimeEntryDate();
+            assertThat(actual).isEmpty();
+        }
+
+        @Test
+        void ensureGetMinValidTimeEntryDate() {
+
+            when(userSettingsProvider.zoneId()).thenReturn(ZONE_TOKYO);
+            mockSettings(new LockTimeEntriesSettings(true, 1));
+
+            final LocalDate today = LocalDate.now(clockFixed.withZone(ZONE_TOKYO));
+
+            final Optional<LocalDate> actual = sut.getMinValidTimeEntryDate();
+            assertThat(actual).hasValue(today.minusDays(1));
+        }
+    }
+
+    @Nested
     class IsLocked {
+
+        @Test
+        void ensureIsLockedReturnsFalseWhenFeatureIsDisabled() {
+
+            mockSettings(new LockTimeEntriesSettings(false, 1));
+
+            final boolean actual = sut.isLocked(LocalDate.now(clockFixed).minusDays(5));
+            assertThat(actual).isFalse();
+        }
 
         @Test
         void ensureIsLockedForLocalDate() {
