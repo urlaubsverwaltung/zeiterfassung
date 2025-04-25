@@ -83,7 +83,7 @@ class SettingsControllerTest implements ControllerTest {
         final SettingsDto dto = new SettingsDto(FederalState.NONE, false, true, "-1");
 
         doAnswer(invocationOnMock -> {
-            final BindingResult  errors = invocationOnMock.getArgument(1, BindingResult.class);
+            final BindingResult errors = invocationOnMock.getArgument(1, BindingResult.class);
             errors.reject("something.is.fishy");
             return null;
         }).when(settingsDtoValidator).validate(eq(dto), any(BindingResult.class));
@@ -118,7 +118,7 @@ class SettingsControllerTest implements ControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = { "0", "1" })
+    @ValueSource(strings = {"0", "1"})
     void ensureUpdateLockTimeSettingsWithDisabledLockingAndZeroOrPositiveDaysInPast(String daysInPast) throws Exception {
 
         perform(post("/settings")

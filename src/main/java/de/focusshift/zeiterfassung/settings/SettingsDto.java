@@ -24,7 +24,7 @@ record SettingsDto(
 
         try {
             return Integer.parseInt(lockTimeEntriesDaysInPast);
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             // ignore it, has to be covered by bean validation if necessary
             return null;
         }

@@ -193,12 +193,12 @@ class TimeEntryControllerTest implements ControllerTest {
         when(timeEntryService.getEntryWeekPage(userLocalId, 2025, 1)).thenReturn(timeEntryWeekPage);
 
         // week from to
-        when(dateFormatter.formatDate(LocalDate.of(2024, 12,30), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-30");
-        when(dateFormatter.formatDate(LocalDate.of(2025, 1,5), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2025-01-05");
+        when(dateFormatter.formatDate(LocalDate.of(2024, 12, 30), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-30");
+        when(dateFormatter.formatDate(LocalDate.of(2025, 1, 5), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2025-01-05");
 
         // time entry
-        when(dateFormatter.formatDate(LocalDate.of(2024, 12,31) , MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-31");
-        when(dateFormatter.formatDate(LocalDate.of(2025, 1,2) , MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2025-01-02");
+        when(dateFormatter.formatDate(LocalDate.of(2024, 12, 31), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-31");
+        when(dateFormatter.formatDate(LocalDate.of(2025, 1, 2), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2025-01-02");
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
@@ -223,7 +223,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .absenceEntries(List.of())
             .build();
 
-        final AbsenceEntryDto absenceDto = new AbsenceEntryDto(LocalDate.of(2025,1,2), "", YELLOW);
+        final AbsenceEntryDto absenceDto = new AbsenceEntryDto(LocalDate.of(2025, 1, 2), "", YELLOW);
         final TimeEntryDayDto expectedTimeEntryDayDtoTHURSDAY = TimeEntryDayDto.builder()
             .isAllowedToEdit(true)
             .date("formatted-2025-01-02")
@@ -492,7 +492,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO();
         expectedTimeEntryDto.setUserLocalId(ownerLocalId.value());
 
-        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(weekOfYear, null, null,"00:00","00:00","00:00", false, 0.0, List.of());
+        final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(weekOfYear, null, null, "00:00", "00:00", "00:00", false, 0.0, List.of());
         final TimeEntryWeeksPageDto expetectedWeeksPageDto = new TimeEntryWeeksPageDto(year, weekOfYear + 1, year, weekOfYear - 1, expectedTimeEntryWeekDto, 0);
 
         perform(get("/timeentries/users/2")
@@ -519,7 +519,7 @@ class TimeEntryControllerTest implements ControllerTest {
             post("/timeentries")
                 .header("Referer", "/timeentries")
                 .with(oidcSubject(userIdComposite)
-            )
+                )
                 .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-01-02")
                 .param("start", "14:30:00.000+01:00")
@@ -551,7 +551,7 @@ class TimeEntryControllerTest implements ControllerTest {
             post("/timeentries")
                 .header("Referer", "/timeentries")
                 .with(oidcSubject(userIdComposite)
-            )
+                )
                 .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-01-02")
                 .param("start", "14:30:00.000+01:00")
@@ -586,7 +586,7 @@ class TimeEntryControllerTest implements ControllerTest {
             post("/timeentries")
                 .header("Referer", "/timeentries")
                 .with(oidcSubject(userIdComposite)
-            )
+                )
                 .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-01-02")
                 .param("start", "22:30:00.000+01:00")
@@ -639,12 +639,12 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(
             post("/timeentries")
                 .with(oidcSubject(userIdComposite)
-            )
+                )
                 .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-01-02")
                 .param("comment", "hard work")
                 .param("duration", "08:00")
-                 // missing start/end/value
+            // missing start/end/value
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attribute("timeEntryWeeksPage", expectedPage));
@@ -678,7 +678,7 @@ class TimeEntryControllerTest implements ControllerTest {
             post("/timeentries/users/2")
                 .header("Referer", "/timeentries/users/2")
                 .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL))
-            )
+                )
                 .param("userLocalId", ownerLocalId.value().toString())
                 .param("date", "2025-03-17")
                 .param("start", "14:30:00.000+02:00")
@@ -703,13 +703,13 @@ class TimeEntryControllerTest implements ControllerTest {
         final UserId userId = new UserId("batman");
         final UserIdComposite userIdComposite = anyUserIdComposite(userId);
 
-        mockUserSettings( DayOfWeek.MONDAY);
+        mockUserSettings(DayOfWeek.MONDAY);
 
         perform(
             post("/timeentries/1337")
                 .header("Referer", "/timeentries/2022/39")
                 .with(oidcSubject(userIdComposite)
-            )
+                )
                 .param("id", "1337")
                 .param("userLocalId", userIdComposite.localId().value().toString())
                 .param("date", "2022-09-28")
@@ -778,7 +778,7 @@ class TimeEntryControllerTest implements ControllerTest {
             post("/timeentries/1337")
                 .header("Turbo-Frame", "any-value")
                 .with(oidcSubject(userIdComposite)
-            )
+                )
                 .param("id", "1337")
                 .param("userLocalId", userIdComposite.localId().value().toString())
                 .param("date", "2022-09-28")
@@ -865,7 +865,7 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(
             post("/timeentries/1337")
                 .with(oidcSubject(userIdComposite)
-            )
+                )
                 .param("id", "1337")
                 .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-01-02")
@@ -900,7 +900,7 @@ class TimeEntryControllerTest implements ControllerTest {
             post("/timeentries/1337")
                 .header("Turbo-Frame", "any-value")
                 .with(oidcSubject(userIdComposite)
-            )
+                )
                 .param("id", "1337")
                 .param("userLocalId", userLocalId.value().toString())
                 .param("date", "2022-09-28")
@@ -938,9 +938,9 @@ class TimeEntryControllerTest implements ControllerTest {
             post("/timeentries/users/2/timeentry/42")
                 .header("Referer", "/timeentries/users/2")
                 .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL))
-            )
+                )
                 .param("id", "42")
-                .param("userLocalId","2")
+                .param("userLocalId", "2")
                 .param("date", "2025-03-17")
                 .param("start", "20:30:00.000+02:00")
                 .param("end", "21:15:00.000+02:00")
@@ -977,7 +977,7 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(
             post("/timeentries/1337")
                 .with(oidcSubject(userIdComposite)
-            )
+                )
                 .param("delete", "")
         )
             .andExpect(status().is3xxRedirection())
@@ -1063,7 +1063,7 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(
             post("/timeentries/1")
                 .with(oidcSubject(userIdComposite)
-            )
+                )
                 .param("delete", "")
                 .header("Turbo-Frame", "awesome-turbo-frame")
         )
@@ -1123,7 +1123,7 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(
             post("/timeentries/1")
                 .with(oidcSubject(userIdComposite)
-            )
+                )
                 .param("delete", "")
                 .header("Turbo-Frame", "awesome-turbo-frame")
         )
@@ -1177,7 +1177,7 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(
             post("/timeentries/users/2/timeentry/42")
                 .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL))
-            )
+                )
                 .param("delete", "")
         )
             .andExpect(status().is3xxRedirection())

@@ -59,7 +59,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 @Controller
 class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
-    private  static final String IS_REDIRECTED = "isRedirected";
+    private static final String IS_REDIRECTED = "isRedirected";
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
@@ -91,9 +91,9 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     @GetMapping("/timeentries")
     public ModelAndView timeEntries(@RequestParam(value = "year", required = false) Integer year,
-                              @RequestParam(value = "week", required = false) Integer weekOfYear,
-                              @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
-                              Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
+                                    @RequestParam(value = "week", required = false) Integer weekOfYear,
+                                    @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
+                                    Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
 
         final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
         final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
@@ -103,10 +103,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     @GetMapping("/timeentries/users/{ownerLocalIdValue}")
     public ModelAndView userTimeEntries(@PathVariable Long ownerLocalIdValue,
-                                       @RequestParam(value = "year", required = false) Integer year,
-                                       @RequestParam(value = "week", required = false) Integer weekOfYear,
-                                       @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
-                                       Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
+                                        @RequestParam(value = "year", required = false) Integer year,
+                                        @RequestParam(value = "week", required = false) Integer weekOfYear,
+                                        @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
+                                        Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
 
         assertTimeEntryAccess(currentUser, ownerLocalIdValue);
 
@@ -272,7 +272,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
             final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDTO.getDate());
             year = firstDateOfWeek.getYear();
             weekOfYear = firstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR);
-        } catch(NullPointerException exception) {
+        } catch (NullPointerException exception) {
             throw new InvalidTimeEntryException("invalid time entry. date must be set.");
         }
 
@@ -487,7 +487,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         return new YearAndWeek(year, weekOfYear);
     }
 
-    private record YearAndWeek(Integer year, Integer week) {}
+    private record YearAndWeek(Integer year, Integer week) {
+    }
 
     private TimeEntryWeekDto toTimeEntryWeekDto(TimeEntryWeek timeEntryWeek, Locale locale, CurrentOidcUser currentUser) {
 

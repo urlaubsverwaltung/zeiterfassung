@@ -39,7 +39,7 @@ public interface TimeEntryLockService {
      * Note that this does not consider whether the current AuthenticationPrincipal is privileged to bypass the lock
      * or not. Use {@link #isUserAllowedToBypassLock(Collection)} if required.
      *
-     * @param temporal temporal to check
+     * @param temporal                temporal to check
      * @param lockTimeEntriesSettings current user settings
      * @return {@code true} when the temporal is locked, {@code false} otherwise
      */
@@ -54,7 +54,7 @@ public interface TimeEntryLockService {
      * or not. Use {@link #isUserAllowedToBypassLock(Collection)} if required.
      *
      * @param start start date of the timespan
-     * @param end end date of the timespan
+     * @param end   end date of the timespan
      * @return {@code true} when the timespan is locked, {@code false} otherwise
      */
     boolean isTimespanLocked(Temporal start, Temporal end);

@@ -26,7 +26,6 @@ record TimeEntryDay(
 ) implements HasWorkedHoursRatio {
 
     /**
-     *
      * @return overtime {@linkplain Duration}. can be negative.
      */
     public Duration overtime() {

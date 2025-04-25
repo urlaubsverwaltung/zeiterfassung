@@ -77,13 +77,13 @@ public class TimeEntryViewHelper {
      * This method validates whether the desired timespan is locked or not. Updating the timeEntry is rejected
      * via bindingResult if timespan is locked and current user is not allowed to bypass it.
      *
-     * @param currentUser currently logged-in user updating the time entry
-     * @param dto time entry information
-     * @param bindingResult {@link BindingResult} containing constraint violations
-     * @param model view model
+     * @param currentUser        currently logged-in user updating the time entry
+     * @param dto                time entry information
+     * @param bindingResult      {@link BindingResult} containing constraint violations
+     * @param model              view model
      * @param redirectAttributes {@link RedirectAttributes}
      * @throws TimeEntryNotFoundException when time entry does not exist
-     * @throws AccessDeniedException when current user is not allowed to edit the time entry
+     * @throws AccessDeniedException      when current user is not allowed to edit the time entry
      */
     public void updateTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 
@@ -136,9 +136,9 @@ public class TimeEntryViewHelper {
     /**
      * Adds error handling related information to the view model.
      *
-     * @param timeEntryDto user input for the time entry
-     * @param bindingResult constraint validation errors
-     * @param model view model
+     * @param timeEntryDto       user input for the time entry
+     * @param bindingResult      constraint validation errors
+     * @param model              view model
      * @param redirectAttributes to set flash attributes for the redirect
      */
     void handleCrudTimeEntryErrors(TimeEntryDTO timeEntryDto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
@@ -160,7 +160,7 @@ public class TimeEntryViewHelper {
         setTimeEntryErrorRedirectAttributes(redirectAttributes, timeEntryDto, bindingResult);
     }
 
-    private void setTimeEntryErrorRedirectAttributes(RedirectAttributes redirectAttributes, TimeEntryDTO timeEntryDto, BindingResult  bindingResult) {
+    private void setTimeEntryErrorRedirectAttributes(RedirectAttributes redirectAttributes, TimeEntryDTO timeEntryDto, BindingResult bindingResult) {
         redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + TIME_ENTRY_MODEL_NAME, bindingResult);
         redirectAttributes.addFlashAttribute(TIME_ENTRY_MODEL_NAME, timeEntryDto);
         redirectAttributes.addFlashAttribute("timeEntryErrorId", timeEntryDto.getId());

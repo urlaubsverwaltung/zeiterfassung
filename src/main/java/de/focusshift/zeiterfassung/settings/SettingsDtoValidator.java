@@ -29,7 +29,7 @@ class SettingsDtoValidator implements Validator {
         if (settingsDto.lockingIsActive()) {
             final Integer lockTimeEntriesDaysInPast = settingsDto.lockTimeEntriesDaysInPastAsNumber();
             if (lockTimeEntriesDaysInPast == null || lockTimeEntriesDaysInPast < 0) {
-                errors.rejectValue( "lockTimeEntriesDaysInPast", "settings.lock-timeentries-days-in-past.validation.positiveOrZero");
+                errors.rejectValue("lockTimeEntriesDaysInPast", "settings.lock-timeentries-days-in-past.validation.positiveOrZero");
             }
         }
     }

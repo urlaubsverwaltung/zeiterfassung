@@ -45,9 +45,8 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
     /**
      * Updates {@link FederalStateSettings}.
      *
-     * @param federalState {@link FederalState} used for every person if not overridden
+     * @param federalState         {@link FederalState} used for every person if not overridden
      * @param worksOnPublicHoliday whether persons have to work or not on public holidays
-     *
      * @return the updated {@link FederalStateSettings}
      */
     FederalStateSettings updateFederalStateSettings(FederalState federalState, boolean worksOnPublicHoliday) {
@@ -78,9 +77,8 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
     /**
      * Update {@link LockTimeEntriesSettings}.
      *
-     * @param lockingIsActive whether locking is active or not
+     * @param lockingIsActive           whether locking is active or not
      * @param lockTimeEntriesDaysInPast number of days time entries in past get locked
-     *
      * @return the updated {@link LockTimeEntriesSettings}
      */
     LockTimeEntriesSettings updateLockTimeEntriesSettings(boolean lockingIsActive, int lockTimeEntriesDaysInPast) {

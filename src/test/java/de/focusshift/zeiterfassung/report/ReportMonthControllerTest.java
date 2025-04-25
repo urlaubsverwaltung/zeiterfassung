@@ -162,7 +162,7 @@ class ReportMonthControllerTest implements ControllerTest {
             "Februar 2023",
             List.of(
                 new GraphWeekDto(
-        5,
+                    5,
                     "date-range",
                     List.of(
                         new GraphDayDto(true, "M", "Montag", "30.01.2023", 0d, 0d),
@@ -181,7 +181,7 @@ class ReportMonthControllerTest implements ControllerTest {
                     100d
                 ),
                 new GraphWeekDto(
-        6,
+                    6,
                     "date-range",
                     List.of(
                         new GraphDayDto(false, "M", "Montag", "06.02.2023", 8d, 8d),
@@ -200,7 +200,7 @@ class ReportMonthControllerTest implements ControllerTest {
                     100d
                 ),
                 new GraphWeekDto(
-        7,
+                    7,
                     "date-range",
                     List.of(
                         new GraphDayDto(false, "M", "Montag", "13.02.2023", 8d, 8d),
@@ -219,7 +219,7 @@ class ReportMonthControllerTest implements ControllerTest {
                     100d
                 ),
                 new GraphWeekDto(
-        8,
+                    8,
                     "date-range",
                     List.of(
                         new GraphDayDto(false, "M", "Montag", "20.02.2023", 8d, 8d),
@@ -238,7 +238,7 @@ class ReportMonthControllerTest implements ControllerTest {
                     100d
                 ),
                 new GraphWeekDto(
-        9,
+                    9,
                     "date-range",
                     List.of(
                         new GraphDayDto(false, "M", "Montag", "27.02.2023", 8d, 8d),
@@ -442,9 +442,9 @@ class ReportMonthControllerTest implements ControllerTest {
                 .param("everyone", "")
         )
             .andExpect(model().attribute("users", List.of(
-                    new SelectableUserDto(1L, "Bruce Wayne", false),
-                    new SelectableUserDto(3L, "Dick Grayson", false),
-                    new SelectableUserDto(2L, "Jack Napier", false)
+                new SelectableUserDto(1L, "Bruce Wayne", false),
+                new SelectableUserDto(3L, "Dick Grayson", false),
+                new SelectableUserDto(2L, "Jack Napier", false)
             )))
             .andExpect(model().attribute("selectedUserIds", List.of()))
             .andExpect(model().attribute("allUsersSelected", true))

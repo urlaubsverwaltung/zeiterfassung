@@ -56,7 +56,7 @@ public enum SecurityRole {
     public static Optional<SecurityRole> fromAuthority(GrantedAuthority authority) {
         try {
             return Optional.of(SecurityRole.valueOf(authority.getAuthority()));
-        } catch(IllegalArgumentException exception) {
+        } catch (IllegalArgumentException exception) {
             return Optional.empty();
         }
     }

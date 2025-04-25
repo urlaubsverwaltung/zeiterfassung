@@ -34,7 +34,7 @@ public interface ControllerTest {
     /**
      * Oidc Login using the given userId values.
      *
-     * @param userId idToken / userInfoToken subject
+     * @param userId      idToken / userInfoToken subject
      * @param userLocalId user local application id
      * @return {@link OidcLoginRequestPostProcessor} configured with idToken and userInfoToken
      */
@@ -53,19 +53,19 @@ public interface ControllerTest {
      * @return {@link OidcLoginRequestPostProcessor} configured with idToken and userInfoToken
      */
     default OidcLoginRequestPostProcessor oidcSubject(UserIdComposite userIdComposite) {
-       return oidcSubject(userIdComposite, List.of());
+        return oidcSubject(userIdComposite, List.of());
     }
 
     /**
      * Oidc Login using the given subject and authorities.
      *
      * @param userIdComposite {@link UserIdComposite} of the current logged-in user
-     * @param roles roles mapped to GrantedAuthority
+     * @param roles           roles mapped to GrantedAuthority
      * @return {@link OidcLoginRequestPostProcessor} configured with idToken and userInfoToken
      */
     default OidcLoginRequestPostProcessor oidcSubject(UserIdComposite userIdComposite, List<SecurityRole> roles) {
 
-        final List<GrantedAuthority> authorities =roles.stream().map(SecurityRole::authority).toList();
+        final List<GrantedAuthority> authorities = roles.stream().map(SecurityRole::authority).toList();
 
         final OidcIdToken.Builder tokenBuilder = OidcIdToken.withTokenValue("token-value")
             .claim("sub", userIdComposite.id().value());

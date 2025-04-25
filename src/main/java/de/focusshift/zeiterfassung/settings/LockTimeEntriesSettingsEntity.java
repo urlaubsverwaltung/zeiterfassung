@@ -1,18 +1,14 @@
 package de.focusshift.zeiterfassung.settings;
 
-import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 
 import java.util.Objects;
-
-import static jakarta.persistence.EnumType.STRING;
 
 @Entity(name = "settings_locking_time_entries")
 public class LockTimeEntriesSettingsEntity extends AbstractTenantAwareEntity {

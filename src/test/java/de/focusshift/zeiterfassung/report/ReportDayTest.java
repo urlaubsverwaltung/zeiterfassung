@@ -68,9 +68,9 @@ class ReportDayTest {
         final ReportDay sut = new ReportDay(
             reportDate,
             false, Map.of(
-                batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
-                robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of())
-            ),
+            batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
+            robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of())
+        ),
             Map.of(),
             Map.of());
 
@@ -89,12 +89,12 @@ class ReportDayTest {
         final ReportDay sut = new ReportDay(
             reportDate,
             false, Map.of(
-                batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
-                robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of()),
-                // enforce empty optional value while calculating planned working hours
-                // which then use the fallback value of ZERO
-                jokerIdComposite, new WorkingTimeCalendar(Map.of(reportDate.plusDays(1), PlannedWorkingHours.EIGHT), Map.of())
-            ),
+            batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
+            robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of()),
+            // enforce empty optional value while calculating planned working hours
+            // which then use the fallback value of ZERO
+            jokerIdComposite, new WorkingTimeCalendar(Map.of(reportDate.plusDays(1), PlannedWorkingHours.EIGHT), Map.of())
+        ),
             Map.of(),
             Map.of());
 
