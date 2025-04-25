@@ -25,7 +25,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -164,6 +166,74 @@ class TimeEntryViewHelperTest {
 
     @Nested
     class CreateTimeEntry {
+
+        @Test
+        void ensureCreateValidationErrorWhenTimespanIsLocked() {
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            final ZoneOffset userZoneId = UTC;
+            when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
+
+            final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
+
+            final LocalDate date = LocalDate.parse("2025-02-16");
+            final LocalTime startTime = LocalTime.parse("09:00");
+            final LocalTime endTime = LocalTime.parse("17:00");
+
+            final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+            timeEntryDTO.setUserLocalId(userLocalId.value());
+            timeEntryDTO.setDate(date);
+            timeEntryDTO.setStart(startTime);
+            timeEntryDTO.setEnd(endTime);
+            timeEntryDTO.setComment("comment");
+
+            final LocalDateTime start = LocalDateTime.of(date, startTime);
+            final LocalDateTime end = LocalDateTime.of(date, endTime);
+            when(timeEntryLockService.isTimespanLocked(ZonedDateTime.of(start, userZoneId), ZonedDateTime.of(end, userZoneId)))
+                .thenReturn(true);
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
+
+            verify(bindingResult).reject("time-entry.validation.timespan.locked");
+        }
+
+        @Test
+        void ensureCreateAllowedForPrivilegedPersonDespiteTimespanIsLocked() {
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            final ZoneOffset userZoneId = UTC;
+            when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
+
+            final CurrentOidcUser privilegedUser = anyCurrentOidcUser(userLocalId, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL.authority()));
+
+            final LocalDate date = LocalDate.parse("2025-02-16");
+            final LocalTime startTime = LocalTime.parse("09:00");
+            final LocalTime endTime = LocalTime.parse("17:00");
+
+            final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+            timeEntryDTO.setUserLocalId(userLocalId.value());
+            timeEntryDTO.setDate(date);
+            timeEntryDTO.setStart(startTime);
+            timeEntryDTO.setEnd(endTime);
+            timeEntryDTO.setComment("comment");
+
+            final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(date, startTime), userZoneId);
+            final ZonedDateTime end = ZonedDateTime.of(LocalDateTime.of(date, endTime), userZoneId);
+
+            when(timeEntryLockService.isTimespanLocked(start, end)).thenReturn(true);
+            when(timeEntryLockService.isUserAllowedToBypassLock(List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL))).thenReturn(true);
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(timeEntryDTO, bindingResult, privilegedUser);
+
+            verify(bindingResult).hasErrors();
+            verifyNoMoreInteractions(bindingResult);
+
+            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false);
+        }
 
         @Test
         void ensureCreateTimeEntryWithStartAndEnd() {
@@ -560,6 +630,86 @@ class TimeEntryViewHelperTest {
             verify(redirectAttributes).addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + "timeEntry", bindingResult);
             verify(redirectAttributes).addFlashAttribute("timeEntry", timeEntryDto);
             verify(redirectAttributes).addFlashAttribute("timeEntryErrorId", 1L);
+        }
+
+        @Test
+        void ensureUpdateValidationErrorWhenTimespanIsLocked() {
+
+            final UserId loggedInUserId = new UserId("user-id");
+            final UserLocalId loggedInUserLocalId = new UserLocalId(42L);
+            final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
+            final ZoneOffset userZoneId = UTC;
+
+            final LocalDate date = LocalDate.parse("2025-02-14");
+            final LocalTime startTime = LocalTime.parse("12:15");
+            final LocalTime endTime = LocalTime.parse("18:30");
+
+            final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
+            timeEntryDto.setId(1L);
+            timeEntryDto.setDate(date);
+            timeEntryDto.setStart(startTime);
+            timeEntryDto.setEnd(endTime);
+            timeEntryDto.setComment("comment-new");
+            timeEntryDto.setBreak(false);
+
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
+            when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
+
+            final LocalDateTime start = LocalDateTime.of(date, startTime);
+            final LocalDateTime end = LocalDateTime.of(date, endTime);
+            when(timeEntryLockService.isTimespanLocked(ZonedDateTime.of(start, userZoneId), ZonedDateTime.of(end, userZoneId)))
+                .thenReturn(true);
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(loggedInUserLocalId);
+            final Model model = mock(Model.class);
+            final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
+
+            sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+
+            verify(bindingResult).reject("time-entry.validation.timespan.locked");
+        }
+
+        @Test
+        void ensureUpdateAllowedForPrivilegedPersonDespiteTimespanIsLocked() throws Exception {
+
+            final UserId loggedInUserId = new UserId("user-id");
+            final UserLocalId loggedInUserLocalId = new UserLocalId(42L);
+            final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
+            final ZoneOffset userZoneId = UTC;
+
+            final LocalDate date = LocalDate.parse("2025-02-14");
+            final LocalTime startTime = LocalTime.parse("13:00");
+            final LocalTime endTime = LocalTime.parse("17:00");
+
+            final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
+            timeEntryDto.setId(1L);
+            timeEntryDto.setDate(date);
+            timeEntryDto.setStart(startTime);
+            timeEntryDto.setEnd(endTime);
+            timeEntryDto.setComment("comment-new");
+            timeEntryDto.setBreak(false);
+
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
+            when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
+
+            final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(date, startTime), userZoneId);
+            final ZonedDateTime end = ZonedDateTime.of(LocalDateTime.of(date, endTime), userZoneId);
+            when(timeEntryLockService.isTimespanLocked(start, end)).thenReturn(true);
+            when(timeEntryLockService.isUserAllowedToBypassLock(List.of())).thenReturn(true);
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+            when(bindingResult.hasErrors()).thenReturn(false);
+
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(loggedInUserLocalId);
+            final Model model = mock(Model.class);
+            final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
+
+            sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+
+            verifyNoMoreInteractions(bindingResult);
+            verify(timeEntryService).updateTimeEntry(new TimeEntryId(1L), "comment-new", start, end, Duration.ZERO, false);
         }
     }
 
