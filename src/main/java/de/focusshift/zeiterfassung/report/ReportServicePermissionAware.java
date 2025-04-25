@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -21,11 +23,18 @@ class ReportServicePermissionAware implements ReportService {
     private final ReportPermissionService reportPermissionService;
     private final ReportServiceRaw reportServiceRaw;
     private final UserDateService userDateService;
+    private final TimeEntryLockService timeEntryLockService;
 
-    ReportServicePermissionAware(ReportPermissionService reportPermissionService, ReportServiceRaw reportServiceRaw, UserDateService userDateService) {
+    ReportServicePermissionAware(
+        ReportPermissionService reportPermissionService,
+        ReportServiceRaw reportServiceRaw,
+        UserDateService userDateService,
+        TimeEntryLockService timeEntryLockService
+    ) {
         this.reportPermissionService = reportPermissionService;
         this.reportServiceRaw = reportServiceRaw;
         this.userDateService = userDateService;
+        this.timeEntryLockService = timeEntryLockService;
     }
 
     @Override
@@ -103,8 +112,15 @@ class ReportServicePermissionAware implements ReportService {
     }
 
     private ReportWeek emptyReportWeek(LocalDate startOfWeekDate) {
+
+        final LockTimeEntriesSettings settings = timeEntryLockService.getLockTimeEntriesSettings();
+
         final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
-            .mapToObj(daysToAdd -> new ReportDay(startOfWeekDate.plusDays(daysToAdd), Map.of(), Map.of(), Map.of()))
+            .mapToObj(daysToAdd -> {
+                LocalDate date = startOfWeekDate.plusDays(daysToAdd);
+                boolean locked = timeEntryLockService.isLocked(date, settings);
+                return new ReportDay(date, locked, Map.of(), Map.of(), Map.of());
+            })
             .toList();
 
         return new ReportWeek(startOfWeekDate, reportDays);

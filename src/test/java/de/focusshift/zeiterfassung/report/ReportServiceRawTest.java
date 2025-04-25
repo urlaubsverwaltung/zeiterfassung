@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -56,9 +57,12 @@ class ReportServiceRawTest {
     @Mock
     private WorkingTimeCalendarService workingTimeCalendarService;
 
+    @Mock
+    private TimeEntryLockService timeEntryLockService;
+
     @BeforeEach
     void setUp() {
-        sut = new ReportServiceRaw(timeEntryService, userManagementService, userDateService, workingTimeCalendarService);
+        sut = new ReportServiceRaw(timeEntryService, userManagementService, userDateService, workingTimeCalendarService, timeEntryLockService);
     }
 
     // ------------------------------------------------------------
@@ -201,7 +205,7 @@ class ReportServiceRawTest {
         LocalDate endExclusive = LocalDate.of(2024, 1, 8);
 
         when(userDateService.firstDayOfWeek(Year.of(2024), 1))
-                .thenReturn(start);
+            .thenReturn(start);
 
         sut.getReportWeek(Year.of(2024), 1, List.of(user.userLocalId()));
 
@@ -249,7 +253,7 @@ class ReportServiceRawTest {
         final LocalDate endExclusive = LocalDate.of(2024, 1, 8);
 
         when(userDateService.firstDayOfWeek(Year.of(2024), 1))
-                .thenReturn(start);
+            .thenReturn(start);
 
         sut.getReportWeekForAllUsers(Year.of(2024), 1);
 
@@ -404,7 +408,7 @@ class ReportServiceRawTest {
         final LocalDate endExclusive = yearMonth.atEndOfMonth().plusDays(1);
 
         when(userDateService.localDateToFirstDateOfWeek(start))
-                .thenReturn(start);
+            .thenReturn(start);
 
         sut.getReportMonth(yearMonth, List.of(user.userLocalId()));
 
@@ -456,7 +460,7 @@ class ReportServiceRawTest {
         LocalDate endExclusive = month.atEndOfMonth().plusDays(1);
 
         when(userDateService.localDateToFirstDateOfWeek(start))
-                .thenReturn(start);
+            .thenReturn(start);
 
         sut.getReportMonthForAllUsers(month);
 

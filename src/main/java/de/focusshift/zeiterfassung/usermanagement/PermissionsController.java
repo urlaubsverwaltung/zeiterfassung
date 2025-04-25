@@ -124,7 +124,8 @@ class PermissionsController implements HasLaunchpad, HasTimeClock {
             switch (role) {
                 case ZEITERFASSUNG_VIEW_REPORT_ALL -> permissionsDto.setViewReportAll(true);
                 case ZEITERFASSUNG_WORKING_TIME_EDIT_ALL -> permissionsDto.setWorkingTimeEditAll(true);
-                case ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL -> permissionsDto.setWorkingTimeEditGlobal(true);
+                case ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL, ZEITERFASSUNG_SETTINGS_GLOBAL ->
+                    permissionsDto.setGlobalSettings(true);
                 case ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL -> permissionsDto.setOvertimeEditAll(true);
                 case ZEITERFASSUNG_PERMISSIONS_EDIT_ALL -> permissionsDto.setPermissionsEditAll(true);
                 case ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL -> permissionsDto.setTimeEntryEditAll(true);
@@ -144,11 +145,12 @@ class PermissionsController implements HasLaunchpad, HasTimeClock {
             }
         };
 
-        for(SecurityRole role : SecurityRole.values()) {
+        for (SecurityRole role : SecurityRole.values()) {
             switch (role) {
                 case ZEITERFASSUNG_VIEW_REPORT_ALL -> adder.accept(permissionsDto::isViewReportAll, role);
                 case ZEITERFASSUNG_WORKING_TIME_EDIT_ALL -> adder.accept(permissionsDto::isWorkingTimeEditAll, role);
-                case ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL -> adder.accept(permissionsDto::isWorkingTimeEditGlobal, role);
+                case ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL, ZEITERFASSUNG_SETTINGS_GLOBAL ->
+                    adder.accept(permissionsDto::isGlobalSettings, role);
                 case ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL -> adder.accept(permissionsDto::isOvertimeEditAll, role);
                 case ZEITERFASSUNG_PERMISSIONS_EDIT_ALL -> adder.accept(permissionsDto::isPermissionsEditAll, role);
                 case ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL -> adder.accept(permissionsDto::isTimeEntryEditAll, role);

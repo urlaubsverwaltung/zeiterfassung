@@ -1,0 +1,57 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <changeSet author="honnel" id="add-setting-for-locking-time-entries">
+    <preConditions>
+      <not>
+        <tableExists tableName="settings_locking_time_entries"/>
+      </not>
+    </preConditions>
+
+    <createSequence sequenceName="settings_locking_time_entries_seq" incrementBy="50"/>
+
+    <createTable tableName="settings_locking_time_entries">
+      <column name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_SETTINGS_LOCKING_TIME_ENTRIES"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="locking_is_active" type="BOOLEAN" defaultValue="false">
+        <constraints nullable="false"/>
+      </column>
+      <column name="lock_time_entries_days_in_past" type="INT" defaultValue="2">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint
+      constraintName="FK_SETTINGS_LOCKING_TIME_ENTRIES_TENANT_ID__TENANT_ID"
+      baseColumnNames="tenant_id"
+      baseTableName="settings_locking_time_entries"
+      referencedColumnNames="tenant_id"
+      referencedTableName="tenant"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+    />
+
+    <createIndex tableName="settings_locking_time_entries" indexName="IDX_SETTINGS_LOCKING_TIME_ENTRIES_TENANT_ID">
+      <column name="tenant_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="honnel" id="enable-row-level-security-on-settings_locking_time_entries">
+    <sql dbms="postgresql">
+      ALTER TABLE settings_locking_time_entries ENABLE ROW LEVEL SECURITY;
+      DROP
+      POLICY IF EXISTS settings_locking_time_entries_tenant_isolation_policy ON settings_locking_time_entries;
+            CREATE
+      POLICY settings_locking_time_entries_tenant_isolation_policy ON settings_locking_time_entries
+                USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+    </sql>
+  </changeSet>
+</databaseChangeLog>

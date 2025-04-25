@@ -82,12 +82,12 @@ class ReportViewHelper {
                 final UserIdComposite userIdComposite = user.userIdComposite();
                 final DeltaWorkingHours delta = deltaByUser.get(userIdComposite);
                 final ReportSelectedUserDurationAggregationDto dto = new ReportSelectedUserDurationAggregationDto(
-                        userIdComposite.localId().value(),
-                        user.fullName(),
-                        durationToTimeString(delta.durationInMinutes()),
-                        delta.isNegative(),
-                        durationToTimeString(workedByUser.get(userIdComposite).durationInMinutes()),
-                        durationToTimeString(shouldByUser.get(userIdComposite).durationInMinutes())
+                    userIdComposite.localId().value(),
+                    user.fullName(),
+                    durationToTimeString(delta.durationInMinutes()),
+                    delta.isNegative(),
+                    durationToTimeString(workedByUser.get(userIdComposite).durationInMinutes()),
+                    durationToTimeString(shouldByUser.get(userIdComposite).durationInMinutes())
                 );
                 dtos.add(dto);
             }
@@ -221,7 +221,7 @@ class ReportViewHelper {
         final Duration deltaDuration = workDuration.duration().minus(shouldWorkingHours.duration());
         final String deltaHours = durationToTimeString(deltaDuration);
 
-        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, workedWorkingHoursString,
+        return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, reportDay.locked(), workedWorkingHoursString,
             shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), dayEntryDtos, detailDayAbsenceDto);
     }
 

@@ -22,6 +22,14 @@ public class SettingsPage {
         return page.getByTestId("federal-state-select");
     }
 
+    public Locator lockTimeEntriesCheckbox() {
+        return page.getByTestId("locking-timeentries-is-active-checkbox");
+    }
+
+    public Locator lockTimEntriesDaysInPastInput() {
+        return page.getByTestId("lock-timeentries-days-in-past");
+    }
+
     public void submit() {
         final Locator submitButton = page.getByTestId("settings-submit-button");
         page.waitForResponse(Response::ok, submitButton::click);

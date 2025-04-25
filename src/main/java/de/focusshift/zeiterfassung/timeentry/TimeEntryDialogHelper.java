@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -43,13 +42,20 @@ public class TimeEntryDialogHelper {
     private static final String TIME_ENTRY_DIALOG_MODEL_NAME = "timeEntryDialog";
 
     private final TimeEntryService timeEntryService;
+    private final TimeEntryLockService timeEntryLockService;
     private final TimeEntryViewHelper timeEntryViewHelper;
     private final UserSettingsProvider userSettingsProvider;
     private final UserManagementService userManagementService;
 
-    public TimeEntryDialogHelper(TimeEntryService timeEntryService, TimeEntryViewHelper timeEntryViewHelper,
-                                 UserSettingsProvider userSettingsProvider, UserManagementService userManagementService) {
+    public TimeEntryDialogHelper(
+        TimeEntryService timeEntryService,
+        TimeEntryLockService timeEntryLockService,
+        TimeEntryViewHelper timeEntryViewHelper,
+        UserSettingsProvider userSettingsProvider,
+        UserManagementService userManagementService
+    ) {
         this.timeEntryService = timeEntryService;
+        this.timeEntryLockService = timeEntryLockService;
         this.timeEntryViewHelper = timeEntryViewHelper;
         this.userSettingsProvider = userSettingsProvider;
         this.userManagementService = userManagementService;
@@ -85,7 +91,8 @@ public class TimeEntryDialogHelper {
 
         final List<TimeEntryHistoryItemDto> historyItems = getHistory(timeEntry.id());
         final boolean isOwner = timeEntryUser.userIdComposite().equals(currentUser.getUserIdComposite());
-        final boolean allowedToEdit = currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL) || isOwner;
+        final boolean isLocked = timeEntryLockService.isLocked(timeEntry.start());
+        final boolean allowedToEdit = (isOwner && !isLocked) || timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles());
 
         final TimeEntryDialogDto timeEntryDialogDto = new TimeEntryDialogDto(
             allowedToEdit,

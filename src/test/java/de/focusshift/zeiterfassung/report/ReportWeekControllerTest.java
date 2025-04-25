@@ -135,13 +135,13 @@ class ReportWeekControllerTest implements ControllerTest {
             eightHoursDay(LocalDate.of(2023, 2, 3), user, workingTimeCalendar),
             new ReportDay(
                 LocalDate.of(2023, 2, 4),
-                Map.of(userIdComposite, workingTimeCalendar),
+                false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
                 Map.of(userIdComposite, List.of())
             ),
             new ReportDay(
                 LocalDate.of(2023, 2, 5),
-                Map.of(userIdComposite, workingTimeCalendar),
+                false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
                 Map.of(userIdComposite, List.of())
             )
@@ -151,7 +151,7 @@ class ReportWeekControllerTest implements ControllerTest {
             .thenReturn(reportWeek);
 
         final GraphWeekDto graphWeekDto = new GraphWeekDto(
-5,
+            5,
             "date-range",
             List.of(
                 new GraphDayDto(false, "M", "Montag", "30.01.2023", 8d, 8d),
@@ -188,13 +188,13 @@ class ReportWeekControllerTest implements ControllerTest {
 
         final LocalDate absenceDate = LocalDate.of(2023, 2, 3);
         Absence absence = new Absence(
-                user.userId(),
-                absenceDate.atStartOfDay(UTC).toInstant(),
-                absenceDate.atStartOfDay(UTC).toInstant(),
-                DayLength.FULL,
-                locale -> "absence-full-de",
-                ORANGE,
-                HOLIDAY
+            user.userId(),
+            absenceDate.atStartOfDay(UTC).toInstant(),
+            absenceDate.atStartOfDay(UTC).toInstant(),
+            DayLength.FULL,
+            locale -> "absence-full-de",
+            ORANGE,
+            HOLIDAY
         );
 
         final WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(
@@ -206,7 +206,7 @@ class ReportWeekControllerTest implements ControllerTest {
         final ReportWeek reportWeek = new ReportWeek(LocalDate.of(2023, 1, 30), List.of(
             new ReportDay(
                 absenceDate,
-                Map.of(userIdComposite, workingTimeCalendar),
+                false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
                 Map.of(userIdComposite, List.of(
                     new ReportDayAbsence(user, absence)
@@ -218,11 +218,11 @@ class ReportWeekControllerTest implements ControllerTest {
             .thenReturn(reportWeek);
 
         final DetailWeekDto detailWeekDto = new DetailWeekDto(
-            Date.from(ZonedDateTime.of(LocalDate.of(2023, 1,30), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
-            Date.from(ZonedDateTime.of(LocalDate.of(2023, 2,5), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
+            Date.from(ZonedDateTime.of(LocalDate.of(2023, 1, 30), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
+            Date.from(ZonedDateTime.of(LocalDate.of(2023, 2, 5), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
             5,
             List.of(
-                new DetailDayDto(true, "F", "Freitag", "03.02.2023", "00:00", "00:00", "00:00", false, List.of(),
+                new DetailDayDto(true, "F", "Freitag", "03.02.2023", false, "00:00", "00:00", "00:00", false, List.of(),
                     List.of(
                         new DetailDayAbsenceDto(
                             "Bruce Wayne",
@@ -547,7 +547,7 @@ class ReportWeekControllerTest implements ControllerTest {
     private ReportDay eightHoursDay(LocalDate date, User user, WorkingTimeCalendar workingTimeCalendar) {
         return new ReportDay(
             date,
-            Map.of(user.userIdComposite(), workingTimeCalendar),
+            false, Map.of(user.userIdComposite(), workingTimeCalendar),
             Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
             Map.of(user.userIdComposite(), List.of())
         );

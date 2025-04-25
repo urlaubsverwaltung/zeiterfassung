@@ -69,6 +69,7 @@
               id="input-clock-start-date"
               class="border border-gray-300 px-2 py-1 text-sm tabular-nums"
               name="date"
+              th:min="${minValidTimeEntryDate eq null ? null : #temporals.format(minValidTimeEntryDate, 'yyyy-MM-dd')}"
               th:value="${timeClock.date}"
               th:classappend="${hasDateError ? 'border-red-300' : ''}"
               th:aria-invalid="${hasDateError ?: 'true'}"

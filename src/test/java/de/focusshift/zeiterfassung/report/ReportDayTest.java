@@ -45,7 +45,7 @@ class ReportDayTest {
         final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, true);
 
         final LocalDate reportDate = LocalDate.of(2024, 11, 13);
-        final ReportDay sut = new ReportDay(reportDate, Map.of(), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
+        final ReportDay sut = new ReportDay(reportDate, false, Map.of(), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
 
         final List<ReportDayEntry> reportDayEntries = sut.reportDayEntries();
         assertThat(reportDayEntries)
@@ -67,10 +67,10 @@ class ReportDayTest {
 
         final ReportDay sut = new ReportDay(
             reportDate,
-            Map.of(
-                batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
-                robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of())
-            ),
+            false, Map.of(
+            batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
+            robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of())
+        ),
             Map.of(),
             Map.of());
 
@@ -88,13 +88,13 @@ class ReportDayTest {
 
         final ReportDay sut = new ReportDay(
             reportDate,
-            Map.of(
-                batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
-                robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of()),
-                // enforce empty optional value while calculating planned working hours
-                // which then use the fallback value of ZERO
-                jokerIdComposite, new WorkingTimeCalendar(Map.of(reportDate.plusDays(1), PlannedWorkingHours.EIGHT), Map.of())
-            ),
+            false, Map.of(
+            batmanIdComposite, new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of()),
+            robinIdComposite, new WorkingTimeCalendar(Map.of(reportDate, new PlannedWorkingHours(Duration.ofHours(4))), Map.of()),
+            // enforce empty optional value while calculating planned working hours
+            // which then use the fallback value of ZERO
+            jokerIdComposite, new WorkingTimeCalendar(Map.of(reportDate.plusDays(1), PlannedWorkingHours.EIGHT), Map.of())
+        ),
             Map.of(),
             Map.of());
 
@@ -120,7 +120,7 @@ class ReportDayTest {
         final LocalDate reportDate = LocalDate.of(2021, 1, 4);
         final WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of());
 
-        final ReportDay sut = new ReportDay(reportDate, Map.of(batmanIdComposite, workingTimeCalendar), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
+        final ReportDay sut = new ReportDay(reportDate, false, Map.of(batmanIdComposite, workingTimeCalendar), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
         assertThat(sut.workDuration().duration()).isEqualTo(Duration.ZERO);
     }
 
@@ -139,7 +139,7 @@ class ReportDayTest {
         final LocalDate reportDate = LocalDate.of(2021, 1, 4);
         final WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of(reportDate, List.of(absence)));
 
-        final ReportDay sut = new ReportDay(reportDate, Map.of(batmanIdComposite, workingTimeCalendar), Map.of(batmanIdComposite, List.of()), Map.of(batmanIdComposite, List.of(new ReportDayAbsence(batman, absence))));
+        final ReportDay sut = new ReportDay(reportDate, false, Map.of(batmanIdComposite, workingTimeCalendar), Map.of(batmanIdComposite, List.of()), Map.of(batmanIdComposite, List.of(new ReportDayAbsence(batman, absence))));
         assertThat(sut.shouldWorkingHours()).isEqualTo(new ShouldWorkingHours(Duration.ZERO));
     }
 
@@ -159,7 +159,7 @@ class ReportDayTest {
         final LocalDate reportDate = LocalDate.of(2021, 1, 4);
         final WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of(reportDate, List.of(absence)));
 
-        final ReportDay sut = new ReportDay(LocalDate.of(2021, 1, 4), Map.of(batmanIdComposite, workingTimeCalendar), Map.of(batmanIdComposite, List.of()), Map.of(batmanIdComposite, List.of(new ReportDayAbsence(batman, absence))));
+        final ReportDay sut = new ReportDay(LocalDate.of(2021, 1, 4), false, Map.of(batmanIdComposite, workingTimeCalendar), Map.of(batmanIdComposite, List.of()), Map.of(batmanIdComposite, List.of(new ReportDayAbsence(batman, absence))));
         assertThat(sut.shouldWorkingHours()).isEqualTo(new ShouldWorkingHours(Duration.ofHours(4)));
     }
 
@@ -192,7 +192,7 @@ class ReportDayTest {
                 Map.of(reportDate, List.of()))
         );
 
-        final ReportDay sut = new ReportDay(reportDate, plannedWorkingHoursByUser, entriesByUser, absencesByUser);
+        final ReportDay sut = new ReportDay(reportDate, false, plannedWorkingHoursByUser, entriesByUser, absencesByUser);
         assertThat(sut.shouldWorkingHours()).isEqualTo(new ShouldWorkingHours(Duration.ofHours(4L)));
     }
 
@@ -225,7 +225,7 @@ class ReportDayTest {
                 Map.of(reportDate, List.of()))
         );
 
-        final ReportDay sut = new ReportDay(reportDate, plannedWorkingHoursByUser, entriesByUser, absencesByUser);
+        final ReportDay sut = new ReportDay(reportDate, false, plannedWorkingHoursByUser, entriesByUser, absencesByUser);
         assertThat(sut.shouldWorkingHours()).isEqualTo(new ShouldWorkingHours(Duration.ofHours(8L)));
     }
 

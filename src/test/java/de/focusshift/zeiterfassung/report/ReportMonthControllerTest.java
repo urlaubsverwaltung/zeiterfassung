@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
@@ -75,6 +76,8 @@ class ReportMonthControllerTest implements ControllerTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
+    private TimeEntryLockService timeEntryLockService;
+    @Mock
     private UserSettingsProvider userSettingsProvider;
     @Mock
     private UserManagementService userManagementService;
@@ -94,8 +97,8 @@ class ReportMonthControllerTest implements ControllerTest {
         dateFormatter = new DateFormatterImpl();
         dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
         reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
-        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, userSettingsProvider);
-        timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
+        timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService);
         sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper, timeEntryDialogHelper, clock);
     }
 
@@ -159,7 +162,7 @@ class ReportMonthControllerTest implements ControllerTest {
             "Februar 2023",
             List.of(
                 new GraphWeekDto(
-        5,
+                    5,
                     "date-range",
                     List.of(
                         new GraphDayDto(true, "M", "Montag", "30.01.2023", 0d, 0d),
@@ -178,7 +181,7 @@ class ReportMonthControllerTest implements ControllerTest {
                     100d
                 ),
                 new GraphWeekDto(
-        6,
+                    6,
                     "date-range",
                     List.of(
                         new GraphDayDto(false, "M", "Montag", "06.02.2023", 8d, 8d),
@@ -197,7 +200,7 @@ class ReportMonthControllerTest implements ControllerTest {
                     100d
                 ),
                 new GraphWeekDto(
-        7,
+                    7,
                     "date-range",
                     List.of(
                         new GraphDayDto(false, "M", "Montag", "13.02.2023", 8d, 8d),
@@ -216,7 +219,7 @@ class ReportMonthControllerTest implements ControllerTest {
                     100d
                 ),
                 new GraphWeekDto(
-        8,
+                    8,
                     "date-range",
                     List.of(
                         new GraphDayDto(false, "M", "Montag", "20.02.2023", 8d, 8d),
@@ -235,7 +238,7 @@ class ReportMonthControllerTest implements ControllerTest {
                     100d
                 ),
                 new GraphWeekDto(
-        9,
+                    9,
                     "date-range",
                     List.of(
                         new GraphDayDto(false, "M", "Montag", "27.02.2023", 8d, 8d),
@@ -439,9 +442,9 @@ class ReportMonthControllerTest implements ControllerTest {
                 .param("everyone", "")
         )
             .andExpect(model().attribute("users", List.of(
-                    new SelectableUserDto(1L, "Bruce Wayne", false),
-                    new SelectableUserDto(3L, "Dick Grayson", false),
-                    new SelectableUserDto(2L, "Jack Napier", false)
+                new SelectableUserDto(1L, "Bruce Wayne", false),
+                new SelectableUserDto(3L, "Dick Grayson", false),
+                new SelectableUserDto(2L, "Jack Napier", false)
             )))
             .andExpect(model().attribute("selectedUserIds", List.of()))
             .andExpect(model().attribute("allUsersSelected", true))
@@ -565,13 +568,13 @@ class ReportMonthControllerTest implements ControllerTest {
             eightHoursDay(firstDateOfWeek.plusDays(4), user),
             new ReportDay(
                 firstDateOfWeek.plusDays(5),
-                Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(5), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(5), List.of()))),
+                false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(5), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(5), List.of()))),
                 Map.of(user.userIdComposite(), List.of()),
                 Map.of(user.userIdComposite(), List.of())
             ),
             new ReportDay(
                 firstDateOfWeek.plusDays(6),
-                Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(6), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(6), List.of()))),
+                false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(6), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(6), List.of()))),
                 Map.of(user.userIdComposite(), List.of()),
                 Map.of(user.userIdComposite(), List.of())
             ))
@@ -581,7 +584,7 @@ class ReportMonthControllerTest implements ControllerTest {
     private ReportDay eightHoursDay(LocalDate date, User user) {
         return new ReportDay(
             date,
-            Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.EIGHT), Map.of(date, List.of()))),
+            false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.EIGHT), Map.of(date, List.of()))),
             Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
             Map.of(user.userIdComposite(), List.of())
         );
@@ -590,7 +593,7 @@ class ReportMonthControllerTest implements ControllerTest {
     private ReportDay zeroHoursDay(LocalDate date, User user) {
         return new ReportDay(
             date,
-            Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.ZERO), Map.of(date, List.of()))),
+            false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.ZERO), Map.of(date, List.of()))),
             Map.of(user.userIdComposite(), List.of()),
             Map.of(user.userIdComposite(), List.of())
         );

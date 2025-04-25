@@ -8,14 +8,16 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- *
- * @param date of the time entry day
+ * @param locked              whether this day is locked or not.
+ *                            Note that this does not include whether it can be bypassed or not by a privileged person!
+ * @param date                of the time entry day
  * @param plannedWorkingHours planned working hours
- * @param shouldWorkingHours should working hours
- * @param timeEntries list of time entries
- * @param absences list of absences. could be one FULL absence or two absences MORNING and NOON
+ * @param shouldWorkingHours  should working hours
+ * @param timeEntries         list of time entries
+ * @param absences            list of absences. could be one FULL absence or two absences MORNING and NOON
  */
 record TimeEntryDay(
+    boolean locked,
     LocalDate date,
     PlannedWorkingHours plannedWorkingHours,
     ShouldWorkingHours shouldWorkingHours,
@@ -24,7 +26,6 @@ record TimeEntryDay(
 ) implements HasWorkedHoursRatio {
 
     /**
-     *
      * @return overtime {@linkplain Duration}. can be negative.
      */
     public Duration overtime() {

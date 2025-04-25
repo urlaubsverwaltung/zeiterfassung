@@ -30,7 +30,10 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_SETTINGS_GLOBAL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL;
 import static org.hamcrest.Matchers.contains;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -106,8 +109,8 @@ class PermissionsControllerTest implements ControllerTest {
         final PermissionsDto workingTimeAllPermissionDto = new PermissionsDto();
         workingTimeAllPermissionDto.setWorkingTimeEditAll(true);
 
-        final PermissionsDto workingTimeGlobalPermissionDto = new PermissionsDto();
-        workingTimeGlobalPermissionDto.setWorkingTimeEditGlobal(true);
+        final PermissionsDto settingsGlobalPermissionsDto = new PermissionsDto();
+        settingsGlobalPermissionsDto.setGlobalSettings(true);
 
         final PermissionsDto overtimePermissionDto = new PermissionsDto();
         overtimePermissionDto.setOvertimeEditAll(true);
@@ -120,8 +123,9 @@ class PermissionsControllerTest implements ControllerTest {
 
         return Stream.of(
             Arguments.of(SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL, reportPermissionDto),
-            Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, workingTimeAllPermissionDto),
-            Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL, workingTimeGlobalPermissionDto),
+            Arguments.of(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, workingTimeAllPermissionDto),
+            Arguments.of(SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL, settingsGlobalPermissionsDto),
+            Arguments.of(ZEITERFASSUNG_SETTINGS_GLOBAL, settingsGlobalPermissionsDto),
             Arguments.of(SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, overtimePermissionDto),
             Arguments.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, permissionsPermissionDto),
             Arguments.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL, editTimeEntryPermissionDto)
@@ -294,12 +298,11 @@ class PermissionsControllerTest implements ControllerTest {
 
     @ParameterizedTest
     @CsvSource({
-        "ZEITERFASSUNG_VIEW_REPORT_ALL,true,false,false,false",
-        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,false,true,false,false",
-        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,false,true,false",
-        "ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,false,false,false,true"
+        "ZEITERFASSUNG_VIEW_REPORT_ALL,true,false,false,false,false",
+        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,false,true,false,false",
+        "ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,false,false,false,true,false",
     })
-    void ensurePost(String roleName, boolean viewReportAll, boolean workingTimeEditAll, boolean overtimeEditAll, boolean permissionsEditAll) throws Exception {
+    void ensureUpdatePermission(String roleName, boolean viewReportAll, boolean workingTimeEditAll, boolean overtimeEditAll, boolean permissionsEditAll, boolean globalSettings) throws Exception {
 
         final SecurityRole securityRole = SecurityRole.valueOf(roleName);
 
@@ -316,11 +319,37 @@ class PermissionsControllerTest implements ControllerTest {
                 .param("workingTimeEditAll", String.valueOf(workingTimeEditAll))
                 .param("overtimeEditAll", String.valueOf(overtimeEditAll))
                 .param("permissionsEditAll", String.valueOf(permissionsEditAll))
+                .param("globalSettings", String.valueOf(globalSettings))
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/1337/permissions"));
 
         verify(userManagementService).updateUserPermissions(new UserLocalId(1337L), Set.of(securityRole));
+        verify(sessionService).markSessionToReloadAuthorities(new UserLocalId(1337L));
+    }
+
+    @Test
+    void ensureUpdateGlobalSettingsPermission() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1337L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
+
+        perform(
+            post("/users/1337/permissions")
+                .with(oidcSubject("batman").authorities(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL.authority()))
+                .param("viewReportAll", "false")
+                .param("workingTimeEditAll", "false")
+                .param("overtimeEditAll", "false")
+                .param("permissionsEditAll", "false")
+                .param("globalSettings", "true")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/users/1337/permissions"));
+
+        verify(userManagementService).updateUserPermissions(new UserLocalId(1337L), Set.of(ZEITERFASSUNG_SETTINGS_GLOBAL, ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL));
         verify(sessionService).markSessionToReloadAuthorities(new UserLocalId(1337L));
     }
 

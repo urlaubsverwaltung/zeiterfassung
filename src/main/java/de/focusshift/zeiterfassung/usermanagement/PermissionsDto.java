@@ -1,15 +1,13 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
-import java.util.Objects;
-
 class PermissionsDto {
 
     private boolean viewReportAll;
     private boolean workingTimeEditAll;
-    private boolean workingTimeEditGlobal;
     private boolean overtimeEditAll;
     private boolean permissionsEditAll;
     private boolean timeEntryEditAll;
+    private boolean globalSettings;
 
     public boolean isViewReportAll() {
         return viewReportAll;
@@ -25,14 +23,6 @@ class PermissionsDto {
 
     public void setWorkingTimeEditAll(boolean workingTimeEditAll) {
         this.workingTimeEditAll = workingTimeEditAll;
-    }
-
-    public boolean isWorkingTimeEditGlobal() {
-        return workingTimeEditGlobal;
-    }
-
-    public void setWorkingTimeEditGlobal(boolean workingTimeEditGlobal) {
-        this.workingTimeEditGlobal = workingTimeEditGlobal;
     }
 
     public boolean isOvertimeEditAll() {
@@ -59,21 +49,36 @@ class PermissionsDto {
         return timeEntryEditAll;
     }
 
+    public boolean isGlobalSettings() {
+        return globalSettings;
+    }
+
+    public void setGlobalSettings(boolean globalSettings) {
+        this.globalSettings = globalSettings;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         PermissionsDto that = (PermissionsDto) o;
         return viewReportAll == that.viewReportAll
             && workingTimeEditAll == that.workingTimeEditAll
             && overtimeEditAll == that.overtimeEditAll
             && permissionsEditAll == that.permissionsEditAll
-            && timeEntryEditAll == that.timeEntryEditAll;
+            && timeEntryEditAll == that.timeEntryEditAll
+            && globalSettings == that.globalSettings;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(viewReportAll, workingTimeEditAll, overtimeEditAll, permissionsEditAll, timeEntryEditAll);
+        int result = Boolean.hashCode(viewReportAll);
+        result = 31 * result + Boolean.hashCode(workingTimeEditAll);
+        result = 31 * result + Boolean.hashCode(overtimeEditAll);
+        result = 31 * result + Boolean.hashCode(permissionsEditAll);
+        result = 31 * result + Boolean.hashCode(timeEntryEditAll);
+        result = 31 * result + Boolean.hashCode(globalSettings);
+        return result;
     }
 
     @Override
@@ -84,6 +89,7 @@ class PermissionsDto {
             ", overtimeEditAll=" + overtimeEditAll +
             ", permissionsEditAll=" + permissionsEditAll +
             ", timeEntryEditAll=" + timeEntryEditAll +
+            ", globalSettings=" + globalSettings +
             '}';
     }
 }

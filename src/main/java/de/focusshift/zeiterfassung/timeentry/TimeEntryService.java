@@ -32,8 +32,8 @@ public interface TimeEntryService {
     /**
      * {@linkplain TimeEntry}s for the given criteria sorted by {@linkplain TimeEntry#start()}, newest is the first item.
      *
-     * @param from         first date of interval
-     * @param toExclusive  last date (exclusive) of interval
+     * @param from        first date of interval
+     * @param toExclusive last date (exclusive) of interval
      * @param userLocalId to get {@linkplain TimeEntry}s for
      * @return sorted list of {@linkplain TimeEntry}s
      */
@@ -42,10 +42,9 @@ public interface TimeEntryService {
     /**
      * {@linkplain TimeEntry}s for all given users and interval.
      *
-     * @param from first date of interval
-     * @param toExclusive last date (exclusive) of interval
+     * @param from         first date of interval
+     * @param toExclusive  last date (exclusive) of interval
      * @param userLocalIds {@linkplain UserLocalId}s of desired users
-     *
      * @return unsorted list of {@linkplain TimeEntry}s grouped by user
      */
     Map<UserIdComposite, List<TimeEntry>> getEntries(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds);
@@ -53,9 +52,8 @@ public interface TimeEntryService {
     /**
      * {@linkplain TimeEntry}s for all users and the given interval.
      *
-     * @param from first date of interval
+     * @param from        first date of interval
      * @param toExclusive last date (exclusive) of interval
-     *
      * @return unsorted list of {@linkplain TimeEntry}s grouped by user
      */
     Map<UserIdComposite, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive);
@@ -74,6 +72,10 @@ public interface TimeEntryService {
     /**
      * Creates a new {@linkplain TimeEntry}.
      *
+     * <p>
+     * Note that this method does not check if it is allowed to create a new {@link TimeEntry} for the given timespan.
+     * You have to check yourself whether these days are locked or not!
+     *
      * @param userLocalId id of the linked user
      * @param comment     optional comment
      * @param start       start of the time entry.
@@ -87,15 +89,18 @@ public interface TimeEntryService {
     /**
      * Updates the existing {@linkplain TimeEntry}
      *
-     * @param id of the {@linkplain TimeEntry} to update
-     * @param comment optional comment. not that {@code null} overrides the existing comment.
-     * @param start new start. may be {@code null} when end and duration is given.
-     * @param end new end. may be {@code null} when start and duration is given.
-     * @param duration new value. may be {@code null} when start and end is given.
-     * @param isBreak new isBreak
-     * @return the updated {@linkplain TimeEntry}.
+     * <p>
+     * Note that this method does not check if it is allowed to update the {@link TimeEntry}.
+     * You have to check yourself whether the {@link TimeEntry#start()} is locked or not!
      *
-     * @throws IllegalStateException when there is no {@linkplain TimeEntry} with the given id.
+     * @param id       of the {@linkplain TimeEntry} to update
+     * @param comment  optional comment. not that {@code null} overrides the existing comment.
+     * @param start    new start. may be {@code null} when end and duration is given.
+     * @param end      new end. may be {@code null} when start and duration is given.
+     * @param duration new value. may be {@code null} when start and end is given.
+     * @param isBreak  new isBreak
+     * @return the updated {@linkplain TimeEntry}.
+     * @throws IllegalStateException                when there is no {@linkplain TimeEntry} with the given id.
      * @throws TimeEntryUpdateNotPlausibleException when {@code start}, {@code end} and {@code duration} has been changed. only a selection of two is possible.
      */
     TimeEntry updateTimeEntry(TimeEntryId id, @Nullable String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end, @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateNotPlausibleException;

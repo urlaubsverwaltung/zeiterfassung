@@ -7,6 +7,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.OidcLoginRequestPostProcessor;
 
@@ -33,7 +34,7 @@ public interface ControllerTest {
     /**
      * Oidc Login using the given userId values.
      *
-     * @param userId idToken / userInfoToken subject
+     * @param userId      idToken / userInfoToken subject
      * @param userLocalId user local application id
      * @return {@link OidcLoginRequestPostProcessor} configured with idToken and userInfoToken
      */
@@ -52,21 +53,27 @@ public interface ControllerTest {
      * @return {@link OidcLoginRequestPostProcessor} configured with idToken and userInfoToken
      */
     default OidcLoginRequestPostProcessor oidcSubject(UserIdComposite userIdComposite) {
-       return oidcSubject(userIdComposite, List.of());
+        return oidcSubject(userIdComposite, List.of());
     }
 
     /**
      * Oidc Login using the given subject and authorities.
      *
      * @param userIdComposite {@link UserIdComposite} of the current logged-in user
-     * @param roles roles mapped to GrantedAuthority
+     * @param roles           roles mapped to GrantedAuthority
      * @return {@link OidcLoginRequestPostProcessor} configured with idToken and userInfoToken
      */
     default OidcLoginRequestPostProcessor oidcSubject(UserIdComposite userIdComposite, List<SecurityRole> roles) {
 
-        final List<GrantedAuthority> authorities =roles.stream().map(SecurityRole::authority).toList();
+        final List<GrantedAuthority> authorities = roles.stream().map(SecurityRole::authority).toList();
 
-        final DefaultOidcUser defaultOidcUser = new DefaultOidcUser(authorities, OidcIdToken.withTokenValue("token-value").claim("sub", userIdComposite.id().value()).build());
+        final OidcIdToken.Builder tokenBuilder = OidcIdToken.withTokenValue("token-value")
+            .claim("sub", userIdComposite.id().value());
+
+        final OidcUserInfo.Builder userInfoBuilder = OidcUserInfo.builder()
+            .subject(userIdComposite.id().value());
+
+        final DefaultOidcUser defaultOidcUser = new DefaultOidcUser(authorities, tokenBuilder.build(), userInfoBuilder.build());
         final CurrentOidcUser currentUser = new CurrentOidcUser(defaultOidcUser, List.of(), authorities, userIdComposite.localId());
 
         return oidcLogin().oidcUser(currentUser);

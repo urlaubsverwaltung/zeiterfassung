@@ -12,6 +12,11 @@ class TimeEntryDatePicker extends HTMLDivElement {
 
   #initDatepicker() {
     const originalDateInput = this.querySelector("input[type=date]");
+
+    if (originalDateInput.hasAttribute("disabled")) {
+      return;
+    }
+
     const originalDateInputId = originalDateInput.getAttribute("id");
     const label = document.querySelector(`[for='${originalDateInputId}']`);
 

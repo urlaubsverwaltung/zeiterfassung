@@ -47,6 +47,8 @@ class TimeEntryDialogHelperTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
+    private TimeEntryLockService timeEntryLockService;
+    @Mock
     private TimeEntryViewHelper timeEntryViewHelper;
     @Mock
     private UserSettingsProvider userSettingsProvider;
@@ -55,7 +57,7 @@ class TimeEntryDialogHelperTest {
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService);
     }
 
     @Nested
@@ -118,17 +120,19 @@ class TimeEntryDialogHelperTest {
             final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
             when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
 
+            when(timeEntryLockService.isLocked(timeEntry.start())).thenReturn(false);
+
             final ConcurrentModel model = new ConcurrentModel();
             model.addAttribute("timeEntry", -1);
 
-            sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "edit-form-action",  "close-form-action");
+            sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "edit-form-action", "close-form-action");
 
             final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
             assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
         }
 
         @Test
-        void ensureTimeEntryIsEditableForPrivilegedUser() {
+        void ensureTimeEntryIsEditableForPrivilegedUserEvenIfLocked() {
 
             final UserIdComposite privilegeduserIdComposite = anyUserIdComposite("office");
             final CurrentOidcUser privilgegedOidcUser = anyCurrentOidcUser(privilegeduserIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
@@ -142,17 +146,21 @@ class TimeEntryDialogHelperTest {
             final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
             when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
 
+            // locked but privileged user
+            when(timeEntryLockService.isLocked(timeEntry.start())).thenReturn(true);
+            when(timeEntryLockService.isUserAllowedToBypassLock(privilgegedOidcUser.getRoles())).thenReturn(true);
+
             final ConcurrentModel model = new ConcurrentModel();
             model.addAttribute("timeEntry", -1);
 
-            sut.addTimeEntryEditToModel(model, privilgegedOidcUser, 1L, "edit-form-action",  "close-form-action");
+            sut.addTimeEntryEditToModel(model, privilgegedOidcUser, 1L, "edit-form-action", "close-form-action");
 
             final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
             assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
         }
 
         @Test
-        void ensureTimeEntryNotEditableForNotPrivilegedUser() {
+        void ensureTimeEntryNotEditableBecauseLocked() {
 
             final UserIdComposite anyUserIdComposite = anyUserIdComposite("joker");
             final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(anyUserIdComposite);
@@ -166,10 +174,14 @@ class TimeEntryDialogHelperTest {
             final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
             when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
 
+            // locked and not privileged user
+            when(timeEntryLockService.isLocked(timeEntry.start())).thenReturn(true);
+            when(timeEntryLockService.isUserAllowedToBypassLock(currentOidcUser.getRoles())).thenReturn(false);
+
             final ConcurrentModel model = new ConcurrentModel();
             model.addAttribute("timeEntry", -1);
 
-            sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "edit-form-action",  "close-form-action");
+            sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "edit-form-action", "close-form-action");
 
             final TimeEntryDialogDto expected = new TimeEntryDialogDto(false, user.fullName(), List.of(), "edit-form-action", "close-form-action");
             assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
