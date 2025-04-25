@@ -71,9 +71,15 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private final TimeEntryViewHelper viewHelper;
     private final Clock clock;
 
-    public TimeEntryController(TimeEntryService timeEntryService,
-                               UserManagementService userManagementService, UserSettingsProvider userSettingsProvider, TimeEntryLockService timeEntryLockService,
-                               DateFormatter dateFormatter, TimeEntryViewHelper viewHelper, Clock clock) {
+    TimeEntryController(
+        TimeEntryService timeEntryService,
+        UserManagementService userManagementService,
+        UserSettingsProvider userSettingsProvider,
+        TimeEntryLockService timeEntryLockService,
+        DateFormatter dateFormatter,
+        TimeEntryViewHelper viewHelper,
+        Clock clock
+    ) {
         this.timeEntryService = timeEntryService;
         this.userManagementService = userManagementService;
         this.userSettingsProvider = userSettingsProvider;
