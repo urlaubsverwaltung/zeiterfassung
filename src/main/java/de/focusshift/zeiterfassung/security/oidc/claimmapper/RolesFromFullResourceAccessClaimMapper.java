@@ -77,7 +77,7 @@ class RolesFromFullResourceAccessClaimMapper implements RolesFromClaimMapper {
                 .map(role -> (GrantedAuthority) new SimpleGrantedAuthority(role)).toList();
         }).flatMap(Collection::stream).toList();
 
-        if (grantedAuthorities.stream().noneMatch(NEEDED_RESOURCE_ACCESS_ROLE::equals)) {
+        if (properties.isAuthorityCheckEnabled() && grantedAuthorities.stream().noneMatch(NEEDED_RESOURCE_ACCESS_ROLE::equals)) {
             final String requiredRole = NEEDED_RESOURCE_ACCESS_ROLE.toString().toLowerCase();
             throw new MissingClaimAuthorityException(format("User has not required permission '%s' to access zeiterfassung!", requiredRole));
         }

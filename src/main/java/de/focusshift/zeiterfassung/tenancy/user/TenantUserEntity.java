@@ -33,9 +33,8 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
     @GeneratedValue(strategy = SEQUENCE, generator = "tenant_user_seq")
     protected Long id;
 
-    @Column(name = "uuid", length = 36, nullable = false)
+    @Column(name = "uuid", nullable = false)
     @NotNull
-    @Size(max = 36)
     private String uuid;
 
     @Column(name = "first_login_at")

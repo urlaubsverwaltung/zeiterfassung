@@ -20,6 +20,8 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
+
 @Configuration
 @EnableMethodSecurity
 public class SecurityWebConfiguration {
@@ -56,6 +58,7 @@ public class SecurityWebConfiguration {
                 .requestMatchers("/favicons/**").permitAll()
                 .requestMatchers("/browserconfig.xml").permitAll()
                 .requestMatchers("/site.webmanifest").permitAll()
+                .requestMatchers("/", "/**").hasAuthority(ZEITERFASSUNG_USER.name())
                 .anyRequest().authenticated()
             );
 

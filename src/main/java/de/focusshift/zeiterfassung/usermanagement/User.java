@@ -4,7 +4,9 @@ import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.HasUserIdComposite;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import org.springframework.security.core.GrantedAuthority;
 
+import java.util.List;
 import java.util.Set;
 
 public record User(
@@ -28,5 +30,11 @@ public record User(
         return "User{" +
             "userIdComposite=" + userIdComposite +
             '}';
+    }
+
+    public List<GrantedAuthority> grantedAuthorities() {
+        return authorities.stream()
+            .map(SecurityRole::authority)
+            .toList();
     }
 }

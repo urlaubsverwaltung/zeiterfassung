@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.tenancy.user;
 
+import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
-import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static java.lang.invoke.MethodHandles.lookup;
 
 @Component
@@ -62,19 +62,31 @@ class TenantUserCreatorAndUpdater {
                 tenantUserService.updateUser(tenantUser);
             }, () -> {
                 LOG.info("creating new user={} for tenantId={} with data from oidc token", userId.value(), tenantId);
-                final TenantUser newUser = tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, Set.of(ZEITERFASSUNG_USER));
+
+                final Set<SecurityRole> userRoles = decideUserRoles(tenantId, userId);
+
+                final TenantUser newUser = tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, userRoles);
 
                 final UserLocalId userLocalId = new UserLocalId(newUser.localId());
 
                 // update current Authentication to have access to UserLocalId and UserIdComposite.
                 // otherwise only UserId would exist in the Authentication object because user did not exist until now.
                 LOG.info("update current Authentication with recently created userLocalId={} for userId={}", userLocalId.value(), userId.value());
-                final CurrentOidcUser updated = new CurrentOidcUser(oidcUser, oidcUser.getApplicationAuthorities(), oidcUser.getAuthorities(), userLocalId);
+                final CurrentOidcUser updated = new CurrentOidcUser(oidcUser, oidcUser.getOidcAuthorities(), newUser.grantedAuthorities(), userLocalId);
                 final OAuth2AuthenticationToken updatedAuth = new OAuth2AuthenticationToken(updated, updated.getAuthorities(), oauthToken.getAuthorizedClientRegistrationId());
                 SecurityContextHolder.getContext().setAuthentication(updatedAuth);
             });
         } else {
             LOG.error("Ignoring InteractiveAuthenticationSuccessEvent since principal type={} is unknown.", oauth2User.getClass());
+        }
+    }
+
+    private Set<SecurityRole> decideUserRoles(String tenantId, UserId userId) {
+        if (tenantUserService.countUsers() == 0) {
+            LOG.info("initial user doesn't exists, adding initial user roles to new user={} for tenantId={}", userId.value(), tenantId);
+            return SecurityRole.INITIAL_USER_ROLES;
+        } else {
+            return SecurityRole.DEFAULT_USER_ROLES;
         }
     }
 
