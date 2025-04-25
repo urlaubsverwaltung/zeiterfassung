@@ -8,6 +8,7 @@ import de.focusshift.zeiterfassung.ui.extension.UiTest;
 import de.focusshift.zeiterfassung.ui.pages.LoginPage;
 import de.focusshift.zeiterfassung.ui.pages.NavigationPage;
 import de.focusshift.zeiterfassung.ui.pages.ReportPage;
+import de.focusshift.zeiterfassung.ui.pages.SettingsPage;
 import de.focusshift.zeiterfassung.ui.pages.TimeEntryDialogPage;
 import de.focusshift.zeiterfassung.ui.pages.TimeEntryPage;
 import org.junit.jupiter.api.Test;
@@ -18,8 +19,11 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -39,6 +43,40 @@ class TimeEntryUIIT {
     static void containerProperties(DynamicPropertyRegistry registry) {
         postgre.configureSpringDataSource(registry);
         keycloak.configureSpringDataSource(registry);
+    }
+
+    @Test
+    void ensureTimeEntryCreationNotAllowedForLockedDate(Page page) {
+
+        final NavigationPage navigationPage = new NavigationPage(page);
+        final SettingsPage settingsPage = new SettingsPage(page);
+        final TimeEntryPage timeEntryPage = new TimeEntryPage(page);
+
+        login("office", "secret", page);
+
+        navigationPage.goToSettingsPage();
+
+        final Locator lockTimeEntriesCheckbox = settingsPage.lockTimeEntriesCheckbox();
+        final Locator lockTimeEntriesDaysInPastInput = settingsPage.lockTimEntriesDaysInPastInput();
+
+        assertThat(lockTimeEntriesCheckbox).not().isChecked();
+
+        lockTimeEntriesCheckbox.click();
+        lockTimeEntriesDaysInPastInput.fill("0");
+        settingsPage.submit();
+
+        assertThat(lockTimeEntriesCheckbox).isChecked();
+        assertThat(lockTimeEntriesDaysInPastInput).hasValue("0");
+
+        navigationPage.logout();
+
+        login("user", "secret", page);
+
+        final LocalDate yesterday = LocalDate.now().minusDays(1);
+        timeEntryPage.fillNewTimeEntry(yesterday, LocalTime.parse("08:00"), LocalTime.parse("17:00"), "");
+        timeEntryPage.submitNewTimeEntryButton().click();
+
+        assertThat(page.getByText("Für den Zeitraum kann kein Zeitslot mehr erfasst werden. Bitte wende dich an eine berechtigte Person.")).isVisible();
     }
 
     @Test
