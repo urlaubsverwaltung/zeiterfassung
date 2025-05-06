@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'liberica'
-          java-version: 21
+          java-version-file: ".tool-versions"
           cache: 'maven'
       - name: Build with Maven
         run: ./mvnw package
@@ -42,7 +42,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'liberica'
-          java-version: '21'
+          java-version-file: ".tool-versions"
           cache: 'maven'
       - name: Publish docker image to Docker Hub zeiterfassung
         run: >
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'liberica'
-          java-version: '21'
+          java-version-file: ".tool-versions"
           cache: 'maven'
       - name: Publish docker image to GitHub Container Registry
         run: >
