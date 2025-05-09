@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.report;
+package de.focusshift.zeiterfassung.overtime;
 
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
@@ -14,27 +14,27 @@ import java.time.Duration;
  *
  * @param duration duration value of the delta
  */
-public record DeltaWorkingHours(Duration duration) implements ZeitDuration {
+public record OvertimeHours(Duration duration) implements ZeitDuration {
 
-    public static final DeltaWorkingHours ZERO = new DeltaWorkingHours(Duration.ZERO);
-    public static final DeltaWorkingHours EIGHT_POSITIVE = new DeltaWorkingHours(Duration.ofHours(8));
-    public static final DeltaWorkingHours EIGHT_NEGATIVE = new DeltaWorkingHours(Duration.ofHours(8).negated());
+    public static final OvertimeHours ZERO = new OvertimeHours(Duration.ZERO);
+    public static final OvertimeHours EIGHT_POSITIVE = new OvertimeHours(Duration.ofHours(8));
+    public static final OvertimeHours EIGHT_NEGATIVE = new OvertimeHours(Duration.ofHours(8).negated());
 
     public boolean isNegative() {
         return duration.isNegative();
     }
 
     /**
-     * Returns a {@linkplain DeltaWorkingHours} whose value is {@code (this + augend)}.
+     * Returns a {@linkplain OvertimeHours} whose value is {@code (this + augend)}.
      *
      * <p>
      * This instance is immutable and unaffected by this method call.
      *
      * @param augend value to add, not null
-     * @return a {@linkplain DeltaWorkingHours} whose value is {@code (this + augend)}
+     * @return a {@linkplain OvertimeHours} whose value is {@code (this + augend)}
      * @throws ArithmeticException if numeric overflow occurs
      */
-    public DeltaWorkingHours plus(DeltaWorkingHours augend) {
-        return new DeltaWorkingHours(duration().plus(augend.duration()));
+    public OvertimeHours plus(OvertimeHours augend) {
+        return new OvertimeHours(duration().plus(augend.duration()));
     }
 }
