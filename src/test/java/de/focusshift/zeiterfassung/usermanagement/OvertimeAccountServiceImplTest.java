@@ -95,7 +95,7 @@ class OvertimeAccountServiceImplTest {
         when(repository.findById(userLocalId.value())).thenReturn(Optional.of(existingEntity));
         when(repository.save(any())).thenAnswer(returnsFirstArg());
 
-        final OvertimeAccount actualUpdatedOvertimeAccount = sut.updateOvertimeAccount(userLocalId, false, Duration.ofHours(10));
+        final OvertimeAccount actualUpdatedOvertimeAccount = sut.updateOvertimeAccount(userLocalId, false);
 
         assertThat(actualUpdatedOvertimeAccount.userIdComposite()).isEqualTo(userIdComposite);
 
@@ -106,33 +106,7 @@ class OvertimeAccountServiceImplTest {
         assertThat(actualPersisted).isNotNull();
         assertThat(actualPersisted.getUserId()).isEqualTo(1L);
         assertThat(actualPersisted.isAllowed()).isFalse();
-        assertThat(actualPersisted.getMaxAllowedOvertime()).isEqualTo("PT10H");
-    }
-
-    @Test
-    void ensureUpdateOvertimeAccountWithoutMaxAllowedOvertime() {
-
-        final UserId userId = new UserId("uuid-1");
-        final UserLocalId userLocalId = new UserLocalId(1L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        final User user_1 = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user_1));
-
-        final OvertimeAccountEntity existingEntity = new OvertimeAccountEntity();
-        existingEntity.setMaxAllowedOvertime("PT1337H");
-
-        when(repository.findById(userLocalId.value())).thenReturn(Optional.of(existingEntity));
-        when(repository.save(any())).thenAnswer(returnsFirstArg());
-
-        final OvertimeAccount actualUpdatedOvertimeAccount = sut.updateOvertimeAccount(userLocalId, false, null);
-
-        assertThat(actualUpdatedOvertimeAccount.userIdComposite()).isEqualTo(userIdComposite);
-
-        final ArgumentCaptor<OvertimeAccountEntity> captor = ArgumentCaptor.forClass(OvertimeAccountEntity.class);
-        verify(repository).save(captor.capture());
-
-        final OvertimeAccountEntity actualPersisted = captor.getValue();
-        assertThat(actualPersisted.getMaxAllowedOvertime()).isNull();
+        assertThat(actualPersisted.getMaxAllowedOvertime()).isEqualTo("PT1337H");
     }
 
     @Test
@@ -147,7 +121,7 @@ class OvertimeAccountServiceImplTest {
         when(repository.findById(userLocalId.value())).thenReturn(Optional.empty());
         when(repository.save(any())).thenAnswer(returnsFirstArg());
 
-        final OvertimeAccount actualUpdatedOvertime = sut.updateOvertimeAccount(userLocalId, false, Duration.ofHours(10));
+        final OvertimeAccount actualUpdatedOvertime = sut.updateOvertimeAccount(userLocalId, false);
 
         assertThat(actualUpdatedOvertime.userIdComposite()).isEqualTo(userIdComposite);
 
@@ -158,6 +132,6 @@ class OvertimeAccountServiceImplTest {
         assertThat(actualPersisted).isNotNull();
         assertThat(actualPersisted.getUserId()).isEqualTo(1L);
         assertThat(actualPersisted.isAllowed()).isFalse();
-        assertThat(actualPersisted.getMaxAllowedOvertime()).isEqualTo("PT10H");
+        assertThat(actualPersisted.getMaxAllowedOvertime()).isNull();
     }
 }

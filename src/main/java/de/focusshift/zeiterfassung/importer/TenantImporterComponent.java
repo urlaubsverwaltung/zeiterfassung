@@ -155,7 +155,7 @@ class TenantImporterComponent {
 
     private void overtime(UserExport userToImport, TenantId tenantId, UserLocalId userLocalId) {
         LOG.info("updating overtimeAccount for user={} of tenantId={}", userToImport.user().externalId(), tenantId.tenantId());
-        overtimeAccountService.updateOvertimeAccount(userLocalId, userToImport.overtimeAccount().allowed(), userToImport.overtimeAccount().maxAllowedOvertime());
+        overtimeAccountService.updateOvertimeAccount(userLocalId, userToImport.overtimeAccount().allowed());
     }
 
     private void workingTime(UserExport userToImport, TenantId tenantId, UserLocalId userLocalId) {

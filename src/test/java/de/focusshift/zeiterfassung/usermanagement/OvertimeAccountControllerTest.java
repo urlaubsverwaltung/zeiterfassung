@@ -27,7 +27,6 @@ import java.util.Set;
 
 import static org.hamcrest.Matchers.contains;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -88,7 +87,7 @@ class OvertimeAccountControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("personSearchFormAction", "/users/1337/overtime-account"))
-            .andExpect(model().attribute("overtimeAccount", new OvertimeAccountDto(true, 10.5)));
+            .andExpect(model().attribute("overtimeAccount", new OvertimeAccountDto(true)));
     }
 
     @ParameterizedTest
@@ -159,7 +158,7 @@ class OvertimeAccountControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", expectedSelectedUser))
             .andExpect(model().attribute("personSearchFormAction", "/users/1337/overtime-account"))
-            .andExpect(model().attribute("overtimeAccount", new OvertimeAccountDto(true, 10.5)));
+            .andExpect(model().attribute("overtimeAccount", new OvertimeAccountDto(true)));
     }
 
     @Test
@@ -282,141 +281,18 @@ class OvertimeAccountControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {",", "."})
-    void ensurePost(String separator) throws Exception {
+    @ValueSource(booleans = {true, false})
+    void ensurePost(Boolean allowed) throws Exception {
 
         perform(
             post("/users/1337/overtime-account")
                 .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
-                .param("allowed", "true")
-                .param("maxAllowedOvertime", "5%s25".formatted(separator))
+                .param("allowed", String.valueOf(allowed))
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/1337/overtime-account"));
 
-        verify(overtimeAccountService).updateOvertimeAccount(new UserLocalId(1337L), true, Duration.ofHours(5).plusMinutes(15));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {",", "."})
-    void ensurePostWithJavaScript(String separator) throws Exception {
-
-        perform(
-            post("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
-                .header("Turbo-Frame", "awesome-turbo-frame")
-                .param("allowed", "true")
-                .param("maxAllowedOvertime", "5%s25".formatted(separator))
-        )
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/users/1337/overtime-account"));
-
-        verify(overtimeAccountService).updateOvertimeAccount(new UserLocalId(1337L), true, Duration.ofHours(5).plusMinutes(15));
-    }
-
-    @Test
-    void ensurePostWithValidationError() throws Exception {
-
-        final UserId batmanId = new UserId("batman");
-        final UserLocalId batmanLocalId = new UserLocalId(1337L);
-        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
-
-        final UserId supermanId = new UserId("superman");
-        final UserLocalId supermanLocalId = new UserLocalId(42L);
-        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
-
-        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
-        when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
-
-        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
-
-        perform(
-            post("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
-                .param("allowed", "true")
-                .param("maxAllowedOvertime", "must-be-a-number")
-        )
-            .andExpect(status().isOk())
-            .andExpect(view().name("usermanagement/users"))
-            .andExpect(model().attribute("section", "overtime"))
-            .andExpect(model().attribute("query", ""))
-            .andExpect(model().attribute("slug", "overtime-account"))
-            .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
-            )))
-            .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("personSearchFormAction", "/users/1337/overtime-account"))
-            .andExpect(model().attribute("overtimeAccount", new OvertimeAccountDto(true, null)));
-
-        verifyNoInteractions(overtimeAccountService);
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-        "ZEITERFASSUNG_WORKING_TIME_EDIT_ALL,true,false,false",
-        "ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL,false,true,false",
-        "ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,false,false,true"
-    })
-    void ensurePostWithValidationErrorAllowedToEditX(String authority, boolean editWorkingTime, boolean editOvertimeAccount, boolean editPermissions) throws Exception {
-
-        final UserId batmanId = new UserId("batman");
-        final UserLocalId batmanLocalId = new UserLocalId(1337L);
-        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
-
-        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findAllUsers("")).thenReturn(List.of(batman));
-
-        perform(
-            post("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority(authority)))
-                .param("allowed", "true")
-                .param("maxAllowedOvertime", "must-be-a-number")
-        )
-            .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTime))
-            .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount))
-            .andExpect(model().attribute("allowedToEditPermissions", editPermissions));
-    }
-
-    @Test
-    void ensurePostWithValidationErrorWithJavaScript() throws Exception {
-
-        final UserId batmanId = new UserId("batman");
-        final UserLocalId batmanLocalId = new UserLocalId(1337L);
-        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
-
-        final UserId supermanId = new UserId("superman");
-        final UserLocalId supermanLocalId = new UserLocalId(42L);
-        final UserIdComposite supermanIdComposite = new UserIdComposite(supermanId, supermanLocalId);
-
-        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
-        when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
-
-        final UserDto expectedSelectedUser = new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org");
-
-        perform(
-            post("/users/1337/overtime-account")
-                .with(oidcLogin().authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL")))
-                .header("Turbo-Frame", "awesome-turbo-frame")
-                .param("allowed", "true")
-                .param("maxAllowedOvertime", "must-be-a-number")
-        )
-            .andExpect(status().isUnprocessableEntity())
-            .andExpect(view().name("usermanagement/users::#awesome-turbo-frame"))
-            .andExpect(model().attribute("section", "overtime"))
-            .andExpect(model().attribute("query", ""))
-            .andExpect(model().attribute("slug", "overtime-account"))
-            .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
-            )))
-            .andExpect(model().attribute("selectedUser", expectedSelectedUser))
-            .andExpect(model().attribute("personSearchFormAction", "/users/1337/overtime-account"))
-            .andExpect(model().attribute("overtimeAccount", new OvertimeAccountDto(true, null)));
-
-        verifyNoInteractions(overtimeAccountService);
+        verify(overtimeAccountService).updateOvertimeAccount(new UserLocalId(1337L), allowed);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
