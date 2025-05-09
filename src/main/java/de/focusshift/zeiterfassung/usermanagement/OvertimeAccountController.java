@@ -7,7 +7,6 @@ import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,7 +23,6 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PE
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.util.StringUtils.hasText;
 
 @Controller
@@ -61,19 +59,8 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
 
     @PostMapping
     ModelAndView post(@PathVariable("userId") Long userId, Model model,
-                      @ModelAttribute("overtimeAccount") OvertimeAccountDto overtimeAccountDto, BindingResult result,
-                      @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                      @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
-                      @CurrentSecurityContext SecurityContext securityContext) {
-
-        if (result.hasErrors()) {
-            prepareGetRequestModel(model, query, userId, overtimeAccountDto, securityContext);
-            if (hasText(turboFrame)) {
-                return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
-            } else {
-                return new ModelAndView("usermanagement/users");
-            }
-        }
+                      @ModelAttribute("overtimeAccount") OvertimeAccountDto overtimeAccountDto,
+                      @RequestParam(value = "query", required = false, defaultValue = "") String query) {
 
         final UserLocalId userLocalId = new UserLocalId(userId);
         final boolean allowed = overtimeAccountDto.isAllowed();
