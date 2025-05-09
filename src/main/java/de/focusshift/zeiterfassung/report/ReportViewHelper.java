@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.overtime.OvertimeHours;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
@@ -70,9 +71,9 @@ class ReportViewHelper {
 
         final Map<UserIdComposite, WorkDuration> workedByUser = report.workDurationByUser();
         final Map<UserIdComposite, ShouldWorkingHours> shouldByUser = report.shouldWorkingHoursByUser();
-        final Map<UserIdComposite, DeltaWorkingHours> deltaByUser = report.deltaDurationByUser();
+        final Map<UserIdComposite, OvertimeHours> overtimeByUser = report.overtimeByUser();
 
-        final boolean showAggregatedInformation = report.deltaDurationByUser().size() > 1;
+        final boolean showAggregatedInformation = report.overtimeByUser().size() > 1;
 
         if (showAggregatedInformation) {
 
@@ -80,7 +81,7 @@ class ReportViewHelper {
 
             for (User user : usersToShowInTable) {
                 final UserIdComposite userIdComposite = user.userIdComposite();
-                final DeltaWorkingHours delta = deltaByUser.get(userIdComposite);
+                final OvertimeHours delta = overtimeByUser.get(userIdComposite);
                 final ReportSelectedUserDurationAggregationDto dto = new ReportSelectedUserDurationAggregationDto(
                     userIdComposite.localId().value(),
                     user.fullName(),
