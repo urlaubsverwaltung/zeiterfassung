@@ -7,7 +7,6 @@ import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.List;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
@@ -26,10 +23,6 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PE
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
-import static java.math.BigDecimal.ONE;
-import static java.math.RoundingMode.DOWN;
-import static java.math.RoundingMode.HALF_EVEN;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.util.StringUtils.hasText;
 
 @Controller
@@ -66,25 +59,13 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
 
     @PostMapping
     ModelAndView post(@PathVariable("userId") Long userId, Model model,
-                      @ModelAttribute("overtimeAccount") OvertimeAccountDto overtimeAccountDto, BindingResult result,
-                      @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                      @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
-                      @CurrentSecurityContext SecurityContext securityContext) {
-
-        if (result.hasErrors()) {
-            prepareGetRequestModel(model, query, userId, overtimeAccountDto, securityContext);
-            if (hasText(turboFrame)) {
-                return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
-            } else {
-                return new ModelAndView("usermanagement/users");
-            }
-        }
+                      @ModelAttribute("overtimeAccount") OvertimeAccountDto overtimeAccountDto,
+                      @RequestParam(value = "query", required = false, defaultValue = "") String query) {
 
         final UserLocalId userLocalId = new UserLocalId(userId);
         final boolean allowed = overtimeAccountDto.isAllowed();
-        final Duration maxAllowedOvertime = hoursToDuration(overtimeAccountDto.getMaxAllowedOvertime());
 
-        overtimeAccountService.updateOvertimeAccount(userLocalId, allowed, maxAllowedOvertime);
+        overtimeAccountService.updateOvertimeAccount(userLocalId, allowed);
 
         return new ModelAndView("redirect:/users/%s/overtime-account".formatted(userId));
     }
@@ -121,17 +102,6 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
     private static OvertimeAccountDto toOvertimeAccountDto(OvertimeAccount overtimeAccount) {
         final OvertimeAccountDto dto = new OvertimeAccountDto();
         dto.setAllowed(overtimeAccount.isAllowed());
-        dto.setMaxAllowedOvertime(overtimeAccount.getMaxAllowedOvertimeHours().map(BigDecimal::doubleValue).orElse(null));
         return dto;
-    }
-
-    private static Duration hoursToDuration(Double hours) {
-        if (hours == null) {
-            return null;
-        }
-        final BigDecimal bigDecimal = BigDecimal.valueOf(hours);
-        final int hoursPart = bigDecimal.setScale(0, DOWN).abs().intValue();
-        final int minutesPart = bigDecimal.remainder(ONE).multiply(BigDecimal.valueOf(60)).setScale(0, HALF_EVEN).abs().intValueExact();
-        return Duration.ofHours(hoursPart).plusMinutes(minutesPart);
     }
 }

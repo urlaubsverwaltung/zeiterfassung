@@ -5,15 +5,13 @@ import java.util.Objects;
 class OvertimeAccountDto {
 
     private boolean allowed;
-    private Double maxAllowedOvertime;
 
     OvertimeAccountDto() {
-        this(true, null);
+        this(true);
     }
 
-    OvertimeAccountDto(boolean allowed, Double maxAllowedOvertime) {
+    OvertimeAccountDto(boolean allowed) {
         this.allowed = allowed;
-        this.maxAllowedOvertime = maxAllowedOvertime;
     }
 
     public boolean isAllowed() {
@@ -24,32 +22,23 @@ class OvertimeAccountDto {
         this.allowed = allowed;
     }
 
-    public Double getMaxAllowedOvertime() {
-        return maxAllowedOvertime;
-    }
-
-    public void setMaxAllowedOvertime(Double maxAllowedOvertime) {
-        this.maxAllowedOvertime = maxAllowedOvertime;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OvertimeAccountDto that = (OvertimeAccountDto) o;
-        return allowed == that.allowed && Objects.equals(maxAllowedOvertime, that.maxAllowedOvertime);
+        return allowed == that.allowed;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(allowed, maxAllowedOvertime);
+        return Objects.hash(allowed);
     }
 
     @Override
     public String toString() {
         return "OvertimeAccountDto{" +
             "allowed=" + allowed +
-            ", maxAllowedOvertime=" + maxAllowedOvertime +
             '}';
     }
 }

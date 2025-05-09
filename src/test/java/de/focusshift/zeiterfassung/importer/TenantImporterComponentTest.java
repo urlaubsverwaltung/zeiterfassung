@@ -139,7 +139,7 @@ class TenantImporterComponentTest {
             Set.of(SecurityRole.ZEITERFASSUNG_USER)
         );
 
-        verify(overtimeAccountService).updateOvertimeAccount(new UserLocalId(1L), true, Duration.ofHours(8));
+        verify(overtimeAccountService).updateOvertimeAccount(new UserLocalId(1L), true);
 
         // verify workintime
         EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
