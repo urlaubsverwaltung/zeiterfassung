@@ -28,7 +28,7 @@ import static java.util.stream.Collectors.toMap;
  * @param reportDayEntriesByUser    {@linkplain ReportDayEntry entries} for all relevant users
  * @param detailDayAbsencesByUser   {@linkplain ReportDayAbsence absences} for all relevant users
  */
-record ReportDay(
+public record ReportDay(
     LocalDate date,
     boolean locked,
     Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser,

@@ -35,4 +35,5 @@
   <include relativeToChangelogFile="true" file="changelog-2.20.0-add-setting-for-locking-time-entries.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.22.0-update-tenant-user-uuid-length.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.22.0-add-absence-overtime-hours.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-2.22.0-add-shedlock.xml"/>
 </databaseChangeLog>
