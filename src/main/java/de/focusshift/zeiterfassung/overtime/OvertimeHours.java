@@ -10,7 +10,7 @@ import java.time.Duration;
  * Describes the difference between {@linkplain WorkDuration} and {@linkplain ShouldWorkingHours}.
  *
  * <p>
- * Example: {@code WorkDuration(7h) - ShouldWorkingHours(8h) = DeltaWorkingHours(-1h)}
+ * Example: {@code WorkDuration(7h) - ShouldWorkingHours(8h) = OvertimeHours(-1h)}
  *
  * @param duration duration value of the delta
  */

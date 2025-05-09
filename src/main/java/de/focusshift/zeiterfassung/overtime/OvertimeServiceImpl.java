@@ -24,7 +24,7 @@ class OvertimeServiceImpl implements OvertimeService {
 
         final ReportDay reportDay = reportServiceRaw.getReportDayForAllUsers(date);
 
-        return reportDay.deltaDurationByUser().entrySet().stream().collect(
+        return reportDay.overtimeByUser().entrySet().stream().collect(
             toMap(
                 Map.Entry::getKey,
                 entry -> new OvertimeHours(entry.getValue().duration())
