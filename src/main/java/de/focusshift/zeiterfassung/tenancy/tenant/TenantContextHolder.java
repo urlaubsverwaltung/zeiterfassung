@@ -29,4 +29,13 @@ public interface TenantContextHolder {
             clear();
         }
     }
+
+    default void runInTenantIdContext(TenantId tenantId, Runnable function) {
+        try {
+            setTenantId(tenantId);
+            function.run();
+        } finally {
+            clear();
+        }
+    }
 }

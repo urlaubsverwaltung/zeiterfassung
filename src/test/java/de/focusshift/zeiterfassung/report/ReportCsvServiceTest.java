@@ -57,7 +57,7 @@ class ReportCsvServiceTest {
         when(messageSource.getMessage(any(), any(), any()))
             .thenAnswer((Answer<String>) invocationOnMock -> invocationOnMock.getArgument(0));
 
-        sut = new ReportCsvService(reportService, dateFormatter, messageSource);
+        sut = new ReportCsvService(reportServicePermissionAware, dateFormatter, messageSource);
     }
 
     // ------------------------------------------------------------
@@ -69,7 +69,7 @@ class ReportCsvServiceTest {
 
         final UserLocalId userLocalId = new UserLocalId(1L);
 
-        when(reportService.getReportWeek(Year.of(2021), 1, List.of(userLocalId)))
+        when(reportServicePermissionAware.getReportWeek(Year.of(2021), 1, List.of(userLocalId)))
             .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of()));
 
         final StringWriter stringWriter = new StringWriter();
@@ -104,7 +104,7 @@ class ReportCsvServiceTest {
         final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, false);
         final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
 
-        when(reportService.getReportWeek(Year.of(2021), 1, List.of(batmanLocalId)))
+        when(reportServicePermissionAware.getReportWeek(Year.of(2021), 1, List.of(batmanLocalId)))
             .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDay)));
 
         final StringWriter stringWriter = new StringWriter();
@@ -153,7 +153,7 @@ class ReportCsvServiceTest {
         final ReportDayEntry dayTwoReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayTwoFrom, dayTwoTo, false);
         final ReportDay reportDayTwo = new ReportDay(LocalDate.of(2021, 1, 5), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(dayTwoReportDayEntry)), Map.of());
 
-        when(reportService.getReportWeek(Year.of(2021), 1, List.of(batmanLocalId)))
+        when(reportServicePermissionAware.getReportWeek(Year.of(2021), 1, List.of(batmanLocalId)))
             .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDayOne, reportDayTwo)));
 
         final StringWriter stringWriter = new StringWriter();
@@ -176,7 +176,7 @@ class ReportCsvServiceTest {
     @Test
     void ensureMonthReportCsvWithEmptyReport() {
 
-        when(reportService.getReportMonth(YearMonth.of(2021, 1), new UserId("batman")))
+        when(reportServicePermissionAware.getReportMonth(YearMonth.of(2021, 1), new UserId("batman")))
             .thenReturn(new ReportMonth(YearMonth.of(2021, 1), List.of()));
 
         final StringWriter stringWriter = new StringWriter();
@@ -217,7 +217,7 @@ class ReportCsvServiceTest {
         final ReportWeek fourthWeek = new ReportWeek(LocalDate.of(2021, 1, 18), List.of());
         final ReportWeek fifthWeek = new ReportWeek(LocalDate.of(2021, 1, 25), List.of());
 
-        when(reportService.getReportMonth(YearMonth.of(2021, 1), batmanId))
+        when(reportServicePermissionAware.getReportMonth(YearMonth.of(2021, 1), batmanId))
             .thenReturn(new ReportMonth(YearMonth.of(2021, 1), List.of(firstWeek, secondWeek, thirdWeek, fourthWeek, fifthWeek)));
 
         final StringWriter stringWriter = new StringWriter();
@@ -272,7 +272,7 @@ class ReportCsvServiceTest {
         final ReportWeek fourthWeek = new ReportWeek(LocalDate.of(2021, 1, 18), List.of());
         final ReportWeek fifthWeek = new ReportWeek(LocalDate.of(2021, 1, 25), List.of());
 
-        when(reportService.getReportMonth(YearMonth.of(2021, 1), batmanId))
+        when(reportServicePermissionAware.getReportMonth(YearMonth.of(2021, 1), batmanId))
             .thenReturn(new ReportMonth(YearMonth.of(2021, 1), List.of(firstWeek, secondWeek, thirdWeek, fourthWeek, fifthWeek)));
 
         final StringWriter stringWriter = new StringWriter();
