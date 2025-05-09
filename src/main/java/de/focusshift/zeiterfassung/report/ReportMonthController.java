@@ -59,7 +59,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
     private final ReportPermissionService reportPermissionService;
     private final Clock clock;
 
-    ReportMonthController(ReportService reportService, ReportPermissionService reportPermissionService,
+    ReportMonthController(ReportServicePermissionAware reportService, ReportPermissionService reportPermissionService,
                           DateFormatter dateFormatter, ReportViewHelper viewHelper,
                           TimeEntryDialogHelper timeEntryDialogHelper, Clock clock) {
         this.reportService = reportService;

@@ -14,7 +14,7 @@ import java.time.Duration;
  *
  * @param duration duration value of the delta
  */
-record DeltaWorkingHours(Duration duration) implements ZeitDuration {
+public record DeltaWorkingHours(Duration duration) implements ZeitDuration {
 
     public static final DeltaWorkingHours ZERO = new DeltaWorkingHours(Duration.ZERO);
     public static final DeltaWorkingHours EIGHT_POSITIVE = new DeltaWorkingHours(Duration.ofHours(8));
