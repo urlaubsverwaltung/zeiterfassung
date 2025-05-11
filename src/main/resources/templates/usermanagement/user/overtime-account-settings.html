@@ -39,62 +39,7 @@
               </div>
             </div>
           </fieldset>
-          <fieldset class="border-t border-gray-100">
-            <legend
-              class="text-sm font-medium text-gray-400"
-              th:text="#{usermanagement.overtime-account.overtime-account.title}"
-            >
-              Überstundenkonto
-            </legend>
-            <div
-              class="mt-2 sm:mt-4"
-              th:with="fieldName=${'maxAllowedOvertime'}, hasError=${#fields.hasErrors(fieldName)}"
-            >
-              <div
-                class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2"
-              >
-                <span
-                  th:text="#{usermanagement.overtime-account.overtime-account.max.pre}"
-                >
-                  Maximal
-                </span>
-                <span>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    id="overtime-account-max-allowed-input"
-                    class="border border-gray-300 px-2 py-1 w-14"
-                    th:field="*{maxAllowedOvertime}"
-                    th:classappend="${hasError ? 'invalid' : ''}"
-                    th:aria-invalid="${hasError}"
-                    th:aria-message="${hasError ? fieldName + '-error-message' : ''}"
-                  />
-                </span>
-                <label
-                  for="overtime-account-max-allowed-input"
-                  th:text="#{usermanagement.overtime-account.overtime-account.max.label}"
-                >
-                  Überstunden dürfen angesammelt werden.
-                </label>
-              </div>
-              <p
-                th:id="${fieldName + '-error-message'}"
-                th:text="${#fields.errors(fieldName)[0]}"
-                th:if="${hasError}"
-                class="invalid"
-              >
-                Max Überstunden Fehlernachricht
-              </p>
-              <p
-                class="mt-4 max-w-prose"
-                th:text="#{usermanagement.overtime-account.overtime-account.info-text(${user.fullName})}"
-              >
-                Stunden darüber hinaus werden Max Mustermann nicht als
-                Überstunden angezeigt. Kann leer gelassen werden, wenn beliebig
-                viele möglich sind.
-              </p>
-            </div>
-          </fieldset>
+          <input type="hidden" th:field="*{maxAllowedOvertime}" />
           <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
             <button
               type="submit"
