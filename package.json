@@ -41,7 +41,7 @@
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-prettier": "5.4.0",
     "eslint-plugin-svelte": "3.6.0",
-    "eslint-plugin-unicorn": "56.0.1",
+    "eslint-plugin-unicorn": "59.0.1",
     "fast-glob": "3.3.3",
     "globals": "16.1.0",
     "jsdom": "26.1.0",
