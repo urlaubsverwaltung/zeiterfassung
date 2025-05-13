@@ -8,7 +8,7 @@ import java.time.Duration;
 
 /**
  * Describes the difference between {@linkplain WorkDuration} and {@linkplain ShouldWorkingHours}.
- *
+ * Positive and negative values are possible.
  * <p>
  * Example: {@code WorkDuration(7h) - ShouldWorkingHours(8h) = OvertimeHours(-1h)}
  *
