@@ -39,7 +39,7 @@
     "eslint": "9.25.1",
     "eslint-config-prettier": "10.1.2",
     "eslint-plugin-import": "2.31.0",
-    "eslint-plugin-prettier": "5.2.6",
+    "eslint-plugin-prettier": "5.4.0",
     "eslint-plugin-svelte": "3.5.1",
     "eslint-plugin-unicorn": "56.0.1",
     "fast-glob": "3.3.3",
