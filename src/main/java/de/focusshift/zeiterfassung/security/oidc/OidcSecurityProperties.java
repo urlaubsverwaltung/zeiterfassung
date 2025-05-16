@@ -20,6 +20,11 @@ public class OidcSecurityProperties {
     @NotEmpty
     private String loginFormUrl;
 
+    /**
+     * Whether to force retrieve user info from the OIDC provider.
+     */
+    private boolean retrieveUserInfo;
+
     public String getPostLogoutRedirectUri() {
         return postLogoutRedirectUri;
     }
@@ -34,5 +39,13 @@ public class OidcSecurityProperties {
 
     public void setLoginFormUrl(String loginFormUrl) {
         this.loginFormUrl = loginFormUrl;
+    }
+
+    public void setRetrieveUserInfo(boolean retrieveUserInfo) {
+        this.retrieveUserInfo = retrieveUserInfo;
+    }
+
+    public boolean retrieveUserInfo() {
+        return retrieveUserInfo;
     }
 }

@@ -120,7 +120,7 @@ zeiterfassung:
 ```
 
 **Attention**: For OpenID Connect providers other than Keycloak, use `scope: openid,profile,email`.
-
+**Attention**: For Google configure `zeiterfassung.security.oidc.retrieve-user-info: true`
 
 ##### Permissions
 
