@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -59,6 +58,14 @@ class AbsenceServiceImpl implements AbsenceService {
         this.userSettingsProvider = userSettingsProvider;
         this.userManagementService = userManagementService;
         this.messageSource = messageSource;
+    }
+
+    private static void doFromUntil(LocalDate from, LocalDate toExclusive, Consumer<LocalDate> consumer) {
+        LocalDate pivot = from;
+        while (pivot.isBefore(toExclusive)) {
+            consumer.accept(pivot);
+            pivot = pivot.plusDays(1);
+        }
     }
 
     /* TODO is this method ever used?*/
@@ -149,14 +156,6 @@ class AbsenceServiceImpl implements AbsenceService {
         return toAbsences(absenceEntities).toList();
     }
 
-    private static void doFromUntil(LocalDate from, LocalDate toExclusive, Consumer<LocalDate> consumer) {
-        LocalDate pivot = from;
-        while (pivot.isBefore(toExclusive)) {
-            consumer.accept(pivot);
-            pivot = pivot.plusDays(1);
-        }
-    }
-
     private Stream<Absence> toAbsences(List<AbsenceWriteEntity> absenceEntities) {
 
         final Map<Long, AbsenceType> absenceTypeBySourceId = findAbsenceTypes(absenceEntities).stream()
@@ -191,8 +190,8 @@ class AbsenceServiceImpl implements AbsenceService {
         final DayLength dayLength = entity.getDayLength();
         final Function<Locale, String> label = getAbsenceTypeLabelWithDayLength(dayLength, absenceType);
 
-        if (entity.getOvertimeHours().isPresent()) {
-            return Optional.of(new Absence(
+        final Absence absence = entity.getOvertimeHours()
+            .map(overtimeHours -> new Absence(
                 new UserId(entity.getUserId()),
                 entity.getStartDate(),
                 entity.getEndDate(),
@@ -200,10 +199,8 @@ class AbsenceServiceImpl implements AbsenceService {
                 label,
                 absenceType.color(),
                 absenceType.category(),
-                entity.getOvertimeHours().get()
-            ));
-        } else {
-            return Optional.of(new Absence(
+                overtimeHours
+            )).orElseGet(() -> new Absence(
                 new UserId(entity.getUserId()),
                 entity.getStartDate(),
                 entity.getEndDate(),
@@ -212,7 +209,8 @@ class AbsenceServiceImpl implements AbsenceService {
                 absenceType.color(),
                 absenceType.category()
             ));
-        }
+
+        return Optional.of(absence);
     }
 
     private Function<Locale, String> getAbsenceTypeLabelWithDayLength(DayLength dayLength, AbsenceType absenceType) {
@@ -242,8 +240,6 @@ class AbsenceServiceImpl implements AbsenceService {
         return absenceTypeService.findAllByAbsenceTypeSourceIds(absenceTypeSourceIds);
     }
 
-    private record InstantPeriod(ZoneId zoneId, Instant from, Instant toExclusive) {}
-
     private InstantPeriod getInstantPeriod(LocalDate from, LocalDate toExclusive) {
 
         final ZoneId zoneId = userSettingsProvider.zoneId();
@@ -251,5 +247,8 @@ class AbsenceServiceImpl implements AbsenceService {
         final Instant toExclusiveStartOfDay = Instant.from(toExclusive.atStartOfDay().atZone(zoneId));
 
         return new InstantPeriod(zoneId, fromStartOfDay, toExclusiveStartOfDay);
+    }
+
+    private record InstantPeriod(ZoneId zoneId, Instant from, Instant toExclusive) {
     }
 }
