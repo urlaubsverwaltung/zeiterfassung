@@ -45,7 +45,7 @@ class OvertimePublisher {
             // this will change in the future to know from $date to $date and maybe more granular stuff.
             // for the moment: publish hasMadeOvertime? yes or no.
             final OvertimeAccount overtimeAccount = overtimeAccountByUserId.get(userIdComposite);
-            if (overtimeAccount.isAllowed()) {
+            if (overtimeAccount.isAllowed() && !overtimeHours.durationInMinutes().isZero()) {
                 final UserHasMadeOvertimeEvent overtimeEvent = new UserHasMadeOvertimeEvent(userIdComposite, event.date(), overtimeHours);
                 LOG.debug("publish {}", overtimeEvent);
                 applicationEventPublisher.publishEvent(overtimeEvent);
