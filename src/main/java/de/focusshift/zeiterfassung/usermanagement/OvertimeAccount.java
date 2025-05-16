@@ -20,7 +20,7 @@ public final class OvertimeAccount implements HasUserIdComposite {
     private final boolean allowed;
     private final Duration maxAllowedOvertime;
 
-    OvertimeAccount(UserIdComposite userIdComposite, boolean allowed) {
+    public OvertimeAccount(UserIdComposite userIdComposite, boolean allowed) {
         this(userIdComposite, allowed, null);
     }
 

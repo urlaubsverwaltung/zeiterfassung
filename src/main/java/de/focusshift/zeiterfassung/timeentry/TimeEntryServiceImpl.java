@@ -16,6 +16,7 @@ import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.history.Revision;
 import org.springframework.data.history.Revisions;
 import org.springframework.stereotype.Service;
@@ -61,12 +62,20 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private final UserDateService userDateService;
     private final UserSettingsProvider userSettingsProvider;
     private final EntityRevisionMapper entityRevisionMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final Clock clock;
 
-    TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, TimeEntryLockService timeEntryLockService,
-                         UserManagementService userManagementService, WorkingTimeCalendarService workingTimeCalendarService,
-                         UserDateService userDateService, UserSettingsProvider userSettingsProvider,
-                         EntityRevisionMapper entityRevisionMapper, Clock clock) {
+    TimeEntryServiceImpl(
+        TimeEntryRepository timeEntryRepository,
+        TimeEntryLockService timeEntryLockService,
+        UserManagementService userManagementService,
+        WorkingTimeCalendarService workingTimeCalendarService,
+        UserDateService userDateService,
+        UserSettingsProvider userSettingsProvider,
+        EntityRevisionMapper entityRevisionMapper,
+        ApplicationEventPublisher applicationEventPublisher,
+        Clock clock
+    ) {
 
         this.timeEntryRepository = timeEntryRepository;
         this.timeEntryLockService = timeEntryLockService;
@@ -75,6 +84,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         this.userDateService = userDateService;
         this.userSettingsProvider = userSettingsProvider;
         this.entityRevisionMapper = entityRevisionMapper;
+        this.applicationEventPublisher = applicationEventPublisher;
         this.clock = clock;
     }
 
@@ -251,7 +261,10 @@ class TimeEntryServiceImpl implements TimeEntryService {
         entity.setBreak(isBreak);
 
         final TimeEntry saved = save(entity);
-        LOG.info("Updated timeEntry {} of user {}.", saved.id(), saved.userIdComposite().localId());
+
+        LOG.info("Updated timeEntry {} of user {}. Publish TimeEntryUpdated application event.", saved.id(), saved.userIdComposite().localId());
+        final boolean locked = timeEntryLockService.isLocked(saved.start());
+        applicationEventPublisher.publishEvent(new TimeEntryUpdatedEvent(saved.id(), locked, saved.userIdComposite(), saved.start()));
 
         return saved;
     }

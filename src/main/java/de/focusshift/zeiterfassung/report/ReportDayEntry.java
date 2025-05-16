@@ -18,7 +18,7 @@ import java.time.ZonedDateTime;
  * @param end end timestamp of the entry
  * @param isBreak whether the entry is a break or not
  */
-record ReportDayEntry(
+public record ReportDayEntry(
     TimeEntryId timeEntryId,
     User user,
     String comment,
