@@ -22,7 +22,6 @@ import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.OVERTIME;
 import static de.focusshift.zeiterfassung.absence.DayLength.FULL;
 import static de.focusshift.zeiterfassung.absence.DayLength.MORNING;
 import static de.focusshift.zeiterfassung.absence.DayLength.NOON;
-import static java.time.temporal.ChronoUnit.DAYS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class WorkingTimeCalendarTest {
