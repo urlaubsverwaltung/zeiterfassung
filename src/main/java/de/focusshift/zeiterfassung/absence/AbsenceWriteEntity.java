@@ -11,8 +11,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 import static jakarta.persistence.EnumType.STRING;
 
@@ -26,21 +28,24 @@ public class AbsenceWriteEntity extends AbstractTenantAwareEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "absence_seq")
     private Long id;
 
-    @Column(name="source_id", nullable = false)
+    @Column(name = "source_id", nullable = false)
     private Long sourceId;
 
-    @Column(name="user_id", nullable = false)
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(name="start_date", nullable = false)
+    @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
-    @Column(name="end_date", nullable = false)
+    @Column(name = "end_date", nullable = false)
     private Instant endDate;
 
-    @Column(name="day_length", nullable = false)
+    @Column(name = "day_length", nullable = false)
     @Enumerated(STRING)
     private DayLength dayLength;
+
+    @Column(name = "overtime_hours", nullable = true)
+    private Long overtimeHours;
 
     @Embedded
     private AbsenceTypeEntityEmbeddable type;
@@ -103,6 +108,14 @@ public class AbsenceWriteEntity extends AbstractTenantAwareEntity {
 
     public void setType(AbsenceTypeEntityEmbeddable type) {
         this.type = type;
+    }
+
+    public Optional<Duration> getOvertimeHours() {
+        return overtimeHours == null ? Optional.empty() : Optional.of(Duration.ofSeconds(overtimeHours));
+    }
+
+    public void setOvertimeHours(Duration overtimeHours) {
+        this.overtimeHours = overtimeHours == null ? null : overtimeHours.getSeconds();
     }
 
     @Override

@@ -53,6 +53,7 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
             event.getPeriod().getStartDate(),
             event.getPeriod().getEndDate(),
             maybeDayLength.get(),
+            event.getOvertimeHours().orElse(null),
             maybeAbsenceTypeCategory.get(),
             absenceTypeSourceId
         ));

@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -190,8 +191,19 @@ class AbsenceServiceImpl implements AbsenceService {
         final DayLength dayLength = entity.getDayLength();
         final Function<Locale, String> label = getAbsenceTypeLabelWithDayLength(dayLength, absenceType);
 
-        return Optional.of(
-            new Absence(
+        if (entity.getOvertimeHours().isPresent()) {
+            return Optional.of(new Absence(
+                new UserId(entity.getUserId()),
+                entity.getStartDate(),
+                entity.getEndDate(),
+                dayLength,
+                label,
+                absenceType.color(),
+                absenceType.category(),
+                entity.getOvertimeHours().get()
+            ));
+        } else {
+            return Optional.of(new Absence(
                 new UserId(entity.getUserId()),
                 entity.getStartDate(),
                 entity.getEndDate(),
@@ -199,8 +211,8 @@ class AbsenceServiceImpl implements AbsenceService {
                 label,
                 absenceType.color(),
                 absenceType.category()
-            )
-        );
+            ));
+        }
     }
 
     private Function<Locale, String> getAbsenceTypeLabelWithDayLength(DayLength dayLength, AbsenceType absenceType) {

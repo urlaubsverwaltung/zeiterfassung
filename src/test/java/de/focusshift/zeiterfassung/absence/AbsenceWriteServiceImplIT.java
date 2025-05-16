@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -55,6 +56,7 @@ class AbsenceWriteServiceImplIT extends SingleTenantTestContainersBase {
             startDate,
             endDate,
             DayLength.FULL,
+            Duration.ZERO,
             HOLIDAY
         );
 

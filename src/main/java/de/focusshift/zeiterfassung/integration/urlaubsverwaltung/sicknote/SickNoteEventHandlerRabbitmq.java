@@ -107,6 +107,7 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
                 event.getPeriod().getStartDate(),
                 event.getPeriod().getEndDate(),
                 dayLength,
+                null,
                 AbsenceTypeCategory.SICK
             ));
     }

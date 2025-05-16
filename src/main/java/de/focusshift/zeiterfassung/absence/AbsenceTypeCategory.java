@@ -5,6 +5,7 @@ public enum AbsenceTypeCategory {
     HOLIDAY,
     SPECIALLEAVE,
     UNPAIDLEAVE,
+    OVERTIME,
     OTHER,
     SICK,
 }

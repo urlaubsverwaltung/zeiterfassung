@@ -27,6 +27,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -193,7 +194,7 @@ class SickNoteEventHandlerRabbitmqIT extends SingleTenantTestContainersBase {
         final TenantId tenantId = new TenantId(TENANT_ID);
         when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(tenantId));
 
-        final AbsenceWrite absence = new AbsenceWrite(1L, userId, startOfDay, startOfDay, FULL, SICK);
+        final AbsenceWrite absence = new AbsenceWrite(1L, userId, startOfDay, startOfDay, FULL, Duration.ZERO, SICK);
         absenceWriteService.addAbsence(absence);
 
         // CANCEL sick note absence
