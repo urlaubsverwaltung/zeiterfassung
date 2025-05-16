@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.absence;
 
 import de.focusshift.zeiterfassung.user.UserId;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Objects;
@@ -25,8 +26,19 @@ public record Absence(
     DayLength dayLength,
     Function<Locale, String> label,
     AbsenceColor color,
-    AbsenceTypeCategory absenceTypeCategory
+    AbsenceTypeCategory absenceTypeCategory,
+    Duration overtimeHours
 ) {
+
+    public Absence(UserId userId,
+                   Instant startDate,
+                   Instant endDate,
+                   DayLength dayLength,
+                   Function<Locale, String> label,
+                   AbsenceColor color,
+                   AbsenceTypeCategory absenceTypeCategory) {
+        this(userId, startDate, endDate, dayLength, label, color, absenceTypeCategory, null);
+    }
 
     public String label(Locale locale) {
         return label.apply(locale);
@@ -42,11 +54,12 @@ public record Absence(
             && dayLength == absence.dayLength
             && Objects.equals(endDate, absence.endDate)
             && Objects.equals(startDate, absence.startDate)
-            && Objects.equals(absenceTypeCategory, absence.absenceTypeCategory);
+            && Objects.equals(absenceTypeCategory, absence.absenceTypeCategory)
+            && Objects.equals(overtimeHours, absence.overtimeHours);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, startDate, endDate, dayLength, color, absenceTypeCategory);
+        return Objects.hash(userId, startDate, endDate, dayLength, color, absenceTypeCategory, overtimeHours);
     }
 }

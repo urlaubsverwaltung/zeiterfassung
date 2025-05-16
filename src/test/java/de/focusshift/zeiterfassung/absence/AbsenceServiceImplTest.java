@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -33,6 +34,7 @@ import static de.focusshift.zeiterfassung.absence.AbsenceColor.VIOLET;
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.YELLOW;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.OTHER;
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.OVERTIME;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.SICK;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.SPECIALLEAVE;
 import static de.focusshift.zeiterfassung.absence.DayLength.FULL;
@@ -304,6 +306,53 @@ class AbsenceServiceImplTest {
             userIdComposite_2, List.of(
                 new Absence(userId_2, absence_2_1_start.atZone(berlin).toInstant(), absence_2_1_end.atZone(berlin).toInstant(), MORNING, anyLabel, VIOLET, OTHER),
                 new Absence(userId_2, absence_2_2_start.atZone(berlin).toInstant(), absence_2_2_end.atZone(berlin).toInstant(), NOON, anyLabel, CYAN, OTHER)
+            )
+        ));
+    }
+
+    @Test
+    void ensureGetAbsencesWithHours() {
+
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(berlin);
+
+        final LocalDate from = LocalDate.of(2023, 11, 1);
+        final LocalDate toExclusive = LocalDate.of(2023, 11, 30);
+        final Instant fromStartOfDay = Instant.from(from.atStartOfDay().atZone(berlin));
+        final Instant toExclusiveStartOfDay = Instant.from(toExclusive.atStartOfDay().atZone(berlin));
+
+        final UserId userId = new UserId(UUID.randomUUID().toString());
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId))).thenReturn(List.of(
+            new User(userIdComposite, "Bruce", null, null, Set.of())
+        ));
+
+        final Instant absenceStart = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
+        final Instant absenceEnd = Instant.from(from.plusDays(1).atStartOfDay().atZone(berlin));
+        final AbsenceWriteEntity absenceEntity = new AbsenceWriteEntity();
+        absenceEntity.setUserId(userId.value());
+        absenceEntity.setStartDate(absenceStart);
+        absenceEntity.setEndDate(absenceEnd);
+        absenceEntity.setDayLength(FULL);
+        absenceEntity.setType(new AbsenceTypeEntityEmbeddable(OVERTIME, 4242L));
+        absenceEntity.setOvertimeHours(Duration.ofHours(8));
+
+        when(repository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(List.of(userId.value()), toExclusiveStartOfDay, fromStartOfDay))
+            .thenReturn(List.of(absenceEntity));
+
+        final AbsenceType absenceType1 = new AbsenceType(OVERTIME, 4242L, label(GERMAN, "4242-de", ENGLISH, "4242-en"), YELLOW);
+
+        when(absenceTypeService.findAllByAbsenceTypeSourceIds(List.of(4242L)))
+            .thenReturn(List.of(absenceType1));
+
+        final Map<UserIdComposite, List<Absence>> actual = sut.getAbsencesByUserIds(List.of(userLocalId), from, toExclusive);
+
+        final Function<Locale, String> anyLabel = locale -> "";
+        assertThat(actual).containsExactlyInAnyOrderEntriesOf(Map.of(
+            userIdComposite, List.of(
+                new Absence(userId, absenceStart.atZone(berlin).toInstant(), absenceEnd.atZone(berlin).toInstant(), FULL, anyLabel, YELLOW, OVERTIME, Duration.ofHours(8))
             )
         ));
     }
