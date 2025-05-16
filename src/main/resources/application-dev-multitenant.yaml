@@ -2,6 +2,15 @@ zeiterfassung:
   development:
     demodata:
       create: true
+  integration:
+    portal:
+      user:
+        manage-topology: true
+        enabled: true
+    urlaubsverwaltung:
+      overtime:
+        manage-topology: true
+        enabled: true
   security:
     oidc:
       login-form-url: http://localhost:8060/oauth2/authorization/zeiterfassung-realm

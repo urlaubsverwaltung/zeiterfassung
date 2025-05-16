@@ -18,6 +18,9 @@ class OvertimeRabbitmqConfigurationProperties {
     @NotEmpty
     private String routingKeyEntered = "entered";
 
+    @NotEmpty
+    private String routingKeyUpdated = "updated";
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -48,5 +51,13 @@ class OvertimeRabbitmqConfigurationProperties {
 
     public void setRoutingKeyEntered(String routingKeyEntered) {
         this.routingKeyEntered = routingKeyEntered;
+    }
+
+    public String getRoutingKeyUpdated() {
+        return routingKeyUpdated;
+    }
+
+    public void setRoutingKeyUpdated(String routingKeyUpdated) {
+        this.routingKeyUpdated = routingKeyUpdated;
     }
 }

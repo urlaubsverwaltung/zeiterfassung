@@ -109,4 +109,39 @@ class OvertimeServiceImplTest {
             Map.entry(userIdCompositeRobin, OvertimeHours.ZERO)
         );
     }
+
+    @Test
+    void ensureGetOvertimeForDateAndUser() {
+
+        final LocalDate date = LocalDate.parse("2025-05-09");
+
+        final UserId userIdBatman = new UserId("batman");
+        final UserLocalId userLocalIdBatman = new UserLocalId(2L);
+        final UserIdComposite userIdCompositeBatman = new UserIdComposite(userIdBatman, userLocalIdBatman);
+        final User batman = new User(userIdCompositeBatman, "Bruce", "Wayne", new EMailAddress("batman@batman.org"), Set.of());
+
+        final WorkingTimeCalendar workingTimeCalendarBatman = new WorkingTimeCalendar(
+            Map.of(date, PlannedWorkingHours.EIGHT),
+            Map.of()
+        );
+
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars = Map.of(
+            userIdCompositeBatman, workingTimeCalendarBatman
+        );
+
+        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), false);
+        final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntries = Map.of(
+            userIdCompositeBatman, List.of(reportDayBatman)
+        );
+
+        final Map<UserIdComposite, List<ReportDayAbsence>> absences = Map.of(
+            userIdCompositeBatman, List.of()
+        );
+
+        when(reportServiceRaw.getReportDayForAllUsers(date))
+            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, absences));
+
+        final OvertimeHours actual = sut.getOvertimeForDateAndUser(date, userLocalIdBatman);
+        assertThat(actual).isEqualTo(new OvertimeHours(Duration.ofHours(4)));
+    }
 }

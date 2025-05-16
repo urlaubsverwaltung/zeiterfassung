@@ -1,14 +1,17 @@
 package de.focusshift.zeiterfassung.overtime;
 
 import de.focusshift.zeiterfassung.timeentry.DayLockedEvent;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryUpdatedEvent;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccount;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccountService;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 import static java.lang.invoke.MethodHandles.lookup;
@@ -47,9 +50,34 @@ class OvertimePublisher {
             final OvertimeAccount overtimeAccount = overtimeAccountByUserId.get(userIdComposite);
             if (overtimeAccount.isAllowed() && !overtimeHours.durationInMinutes().isZero()) {
                 final UserHasMadeOvertimeEvent overtimeEvent = new UserHasMadeOvertimeEvent(userIdComposite, event.date(), overtimeHours);
-                LOG.debug("publish {}", overtimeEvent);
+                LOG.info("publish UserHasMadeOvertimeEvent date={} user={}", event.date(), userIdComposite);
                 applicationEventPublisher.publishEvent(overtimeEvent);
             }
         });
+    }
+
+    @EventListener
+    public void publishUpdatedOvertime(TimeEntryUpdatedEvent event) {
+
+        if (!event.locked()) {
+            LOG.info("Updated timeEntry is not locked yet. Ignore TimeEntryUpdatedEvent.");
+            return;
+        }
+
+        final UserIdComposite userIdComposite = event.ownerUserIdComposite();
+        final UserLocalId userLocalId = userIdComposite.localId();
+        final OvertimeAccount overtimeAccount = overtimeAccountService.getOvertimeAccount(userLocalId);
+
+        if (!overtimeAccount.isAllowed()) {
+            LOG.info("Ignore TimeEntryUpdatedEvent. User {} overtime not allowed.", userIdComposite);
+            return;
+        }
+
+        final LocalDate date = event.newStartDate().toLocalDate();
+        final OvertimeHours overtimeHours = overtimeService.getOvertimeForDateAndUser(date, userLocalId);
+
+        final UserHasUpdatedOvertimeEvent overtimeUpdatedEvent = new UserHasUpdatedOvertimeEvent(userIdComposite, date, overtimeHours);
+        LOG.info("publish UserHasUpdatedOvertimeEvent date={} user={}", overtimeUpdatedEvent, userIdComposite);
+        applicationEventPublisher.publishEvent(overtimeUpdatedEvent);
     }
 }
