@@ -65,8 +65,5 @@ spring:
         strategy:
           content:
             enabled: false
-
-management:
-  health:
-    rabbit:
-      enabled: false
+  autoconfigure:
+    exclude:

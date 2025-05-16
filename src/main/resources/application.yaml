@@ -50,6 +50,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
 
 info:
   app:
@@ -57,6 +59,9 @@ info:
     version: "@project.version@"
 
 management:
+  health:
+    rabbit:
+      enabled: false
   endpoint:
     prometheus:
       access: none
