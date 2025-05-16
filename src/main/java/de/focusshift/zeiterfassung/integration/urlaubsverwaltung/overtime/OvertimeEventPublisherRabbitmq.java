@@ -38,7 +38,7 @@ class OvertimeEventPublisherRabbitmq {
     public void publishUserHasMadeOvertime(UserHasMadeOvertimeEvent event) {
 
         tenantContextHolder.getCurrentTenantId().ifPresentOrElse(
-            (tenantId) -> publishRabbitOvertime(event, tenantId),
+            tenantId -> publishRabbitOvertime(event, tenantId),
             () -> LOG.error("Cannot publish rabbit event {} without tenantId.", event));
     }
 

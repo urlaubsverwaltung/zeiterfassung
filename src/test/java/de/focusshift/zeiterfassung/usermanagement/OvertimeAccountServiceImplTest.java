@@ -123,7 +123,7 @@ class OvertimeAccountServiceImplTest {
         when(repository.findAll()).thenReturn(List.of(entity1, entity2));
 
         final Map<UserIdComposite, OvertimeAccount> actual = sut.getAllOvertimeAccounts();
-        assertThat(actual.size()).isEqualTo(2);
+        assertThat(actual).hasSize(2);
         assertThat(actual.get(userIdComposite1)).satisfies(overtimeAccount1 -> {
             assertThat(overtimeAccount1).isNotNull();
             assertThat(overtimeAccount1.userIdComposite()).isEqualTo(userIdComposite1);

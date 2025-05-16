@@ -40,7 +40,7 @@ class DayLockedScheduler {
     private void checkLockedAndPublishOvertimeForTenant() {
         LOG.info("Check whether a day has to be locked or not.");
         timeEntryLockService.getMinValidTimeEntryDate().ifPresentOrElse(
-            (date) -> {
+            date -> {
                 final LocalDate lockedDate = date.minusDays(1);
                 LOG.info("Date {} is locked now. Publish application event.", lockedDate);
                 applicationEventPublisher.publishEvent(new DayLockedEvent(lockedDate));
