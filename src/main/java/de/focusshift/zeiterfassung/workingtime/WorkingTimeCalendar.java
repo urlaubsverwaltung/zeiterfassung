@@ -70,6 +70,9 @@ public final class WorkingTimeCalendar {
 
         for (Absence absence : absences) {
             if (absence.absenceTypeCategory() == AbsenceTypeCategory.OVERTIME) {
+                // TODO: That's not correct for application for overtime reduction which are longer than one day
+                // Here we need to some additional implementation to distribute evenly overtimeHours by working day of
+                // ZE user
                 absenceDuration = absenceDuration.plus(absence.overtimeHours());
             } else {
                 // application for leave or sicknote
