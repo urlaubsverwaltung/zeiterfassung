@@ -8,6 +8,9 @@ import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationPer
 import de.focus_shift.urlaubsverwaltung.extension.api.application.ApplicationUpdatedEventDTO;
 import de.focus_shift.urlaubsverwaltung.extension.api.application.VacationTypeDTO;
 
+import java.time.Duration;
+import java.util.Optional;
+
 /**
  * Common interface of urlaubsverwaltung (vacation)application events to provide minimal information required by Zeiterfassung.
  */
@@ -17,12 +20,14 @@ class ApplicationEventDtoAdapter {
     private final ApplicationPersonDTO person;
     private final VacationTypeDTO vacationType;
     private final ApplicationPeriodDTO period;
+    private final Duration overtimeHours;
 
     ApplicationEventDtoAdapter(ApplicationAllowedEventDTO event) {
         this.sourceId = event.getSourceId();
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();
         this.period = event.getPeriod();
+        this.overtimeHours = event.getHours();
     }
 
     ApplicationEventDtoAdapter(ApplicationCancelledEventDTO event) {
@@ -30,6 +35,7 @@ class ApplicationEventDtoAdapter {
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();
         this.period = event.getPeriod();
+        this.overtimeHours = event.getHours();
     }
 
     ApplicationEventDtoAdapter(ApplicationUpdatedEventDTO event) {
@@ -37,6 +43,7 @@ class ApplicationEventDtoAdapter {
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();
         this.period = event.getPeriod();
+        this.overtimeHours = event.getHours();
     }
 
     ApplicationEventDtoAdapter(ApplicationCreatedFromSickNoteEventDTO event) {
@@ -44,6 +51,7 @@ class ApplicationEventDtoAdapter {
         this.person = event.getPerson();
         this.vacationType = event.getVacationType();
         this.period = event.getPeriod();
+        this.overtimeHours = null;
     }
 
     public Long getSourceId() {
@@ -60,5 +68,9 @@ class ApplicationEventDtoAdapter {
 
     public ApplicationPeriodDTO getPeriod() {
         return period;
+    }
+
+    public Optional<Duration> getOvertimeHours() {
+        return Optional.ofNullable(overtimeHours);
     }
 }

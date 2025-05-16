@@ -1,17 +1,18 @@
 package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.absence.Absence;
-import de.focusshift.zeiterfassung.absence.DayLength;
+import de.focusshift.zeiterfassung.absence.AbsenceTypeCategory;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.usermanagement.User;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import static java.lang.Math.min;
+import static org.apache.commons.lang3.compare.ComparableUtils.max;
 
 /**
  * Provides information about {@link PlannedWorkingHours} / {@link ShouldWorkingHours} on a given {@link LocalDate}.
@@ -27,7 +28,7 @@ import static java.lang.Math.min;
  *     <li>2022-12-29 - 8h (thursday)</li>
  *     <li>2022-12-30 - 4h (friday)</li>
  * </ul>
- *
+ * <p>
  * Should be used in combination with a {@link Map} to keep relation to a {@link User} for example.
  */
 public final class WorkingTimeCalendar {
@@ -64,22 +65,27 @@ public final class WorkingTimeCalendar {
         }
 
         final List<Absence> absences = absencesByDate.getOrDefault(date, List.of());
+        Duration absenceDuration = Duration.ZERO;
+        final Duration plannedWorkingHourDuration = plannedWorkingHours.duration();
 
-        // one of:
-        // - 0.0 (no absences)
-        // - 0.5 (one half-day-absence)
-        // - 1.0 (two half-day-absences or one full-day-absence)
-        final double absenceValue = min(absences.stream().map(Absence::dayLength).map(DayLength::getValue).reduce(Double::sum).orElse(0d), 1);
-        if (absenceValue == 0) {
-            // no absence -> should == planned
-            return Optional.of(new ShouldWorkingHours(plannedWorkingHours.duration()));
-        } else if (absenceValue == 0.5) {
-            // half day absence -> should == planned / 2
-            return Optional.of(new ShouldWorkingHours(plannedWorkingHours.duration().dividedBy(2)));
-        } else {
-            // full day absence -> should == ZERO
-            return Optional.of(ShouldWorkingHours.ZERO);
+        for (Absence absence : absences) {
+            if (absence.absenceTypeCategory() == AbsenceTypeCategory.OVERTIME) {
+                absenceDuration = absenceDuration.plus(absence.overtimeHours());
+            } else {
+                // application for leave or sicknote
+                double absenceValue = absence.dayLength().getValue();
+
+                if (absenceValue == 0.5) {
+                    // half day absence -> should == planned / 2
+                    absenceDuration = absenceDuration.plus(plannedWorkingHourDuration.dividedBy(2));
+                } else if (absenceValue == 1.0) {
+                    // full day absence -> should == ZERO
+                    absenceDuration = plannedWorkingHourDuration;
+                }
+            }
         }
+
+        return Optional.of(new ShouldWorkingHours(max(plannedWorkingHours.duration().minus(absenceDuration), Duration.ZERO)));
     }
 
     /**

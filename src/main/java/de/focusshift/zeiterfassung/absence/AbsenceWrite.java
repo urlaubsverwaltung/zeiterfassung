@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.absence;
 import de.focusshift.zeiterfassung.user.UserId;
 import jakarta.annotation.Nullable;
 
+import java.time.Duration;
 import java.time.Instant;
 
 /**
@@ -14,6 +15,7 @@ import java.time.Instant;
  * @param endDate
  * @param dayLength
  * @param absenceTypeCategory
+ * @param overtimeHours
  * @param absenceTypeSourceId absence type source id or {@code null} for {@linkplain AbsenceTypeCategory#SICK}
  */
 public record AbsenceWrite(
@@ -22,6 +24,7 @@ public record AbsenceWrite(
     Instant startDate,
     Instant endDate,
     DayLength dayLength,
+    @Nullable Duration overtimeHours,
     AbsenceTypeCategory absenceTypeCategory,
     @Nullable AbsenceTypeSourceId absenceTypeSourceId
 ) {
@@ -34,9 +37,10 @@ public record AbsenceWrite(
      * @param startDate
      * @param endDate
      * @param dayLength
+     * @param overtimeHours
      * @param absenceTypeCategory
      */
-    public AbsenceWrite(Long sourceId, UserId userId, Instant startDate, Instant endDate, DayLength dayLength, AbsenceTypeCategory absenceTypeCategory) {
-        this(sourceId, userId, startDate, endDate, dayLength, absenceTypeCategory, null);
+    public AbsenceWrite(Long sourceId, UserId userId, Instant startDate, Instant endDate, DayLength dayLength, Duration overtimeHours, AbsenceTypeCategory absenceTypeCategory) {
+        this(sourceId, userId, startDate, endDate, dayLength, overtimeHours, absenceTypeCategory, null);
     }
 }
