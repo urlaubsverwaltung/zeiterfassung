@@ -4,6 +4,8 @@ import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.timeentry.DayLockedEvent;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.usermanagement.OvertimeAccount;
+import de.focusshift.zeiterfassung.usermanagement.OvertimeAccountService;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,8 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
 
     @MockitoBean
     private OvertimeService overtimeService;
+    @MockitoBean
+    private OvertimeAccountService overtimeAccountService;
 
     @Test
     void ensureUserHasMadeOvertimePublished() {
@@ -46,6 +50,11 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
             userId2, OvertimeHours.EIGHT_NEGATIVE
         ));
 
+        when(overtimeAccountService.getAllOvertimeAccounts()).thenReturn(Map.of(
+            userId1, new OvertimeAccount(userId1, true),
+            userId2, new OvertimeAccount(userId2, true)
+        ));
+
         final DayLockedEvent dayLockedEvent = new DayLockedEvent(date);
         applicationEventPublisher.publishEvent(dayLockedEvent);
 
@@ -54,5 +63,27 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
             new UserHasMadeOvertimeEvent(userId1, date, OvertimeHours.EIGHT_POSITIVE),
             new UserHasMadeOvertimeEvent(userId2, date, OvertimeHours.EIGHT_NEGATIVE)
         );
+    }
+
+    @Test
+    void ensureUserHasMadeOvertimeIsNotPublishedWhenIsNotAllowedToMakOvertime() {
+
+        final LocalDate date = LocalDate.now();
+
+        final UserIdComposite userId = new UserIdComposite(new UserId("batman"), new UserLocalId(1L));
+
+        when(overtimeService.getOvertimeForDate(date)).thenReturn(Map.of(
+            userId, OvertimeHours.EIGHT_POSITIVE
+        ));
+
+        when(overtimeAccountService.getAllOvertimeAccounts()).thenReturn(Map.of(
+            userId, new OvertimeAccount(userId, false)
+        ));
+
+        final DayLockedEvent dayLockedEvent = new DayLockedEvent(date);
+        applicationEventPublisher.publishEvent(dayLockedEvent);
+
+        final List<UserHasMadeOvertimeEvent> actualEvents = applicationEvents.stream(UserHasMadeOvertimeEvent.class).toList();
+        assertThat(actualEvents).isEmpty();
     }
 }

@@ -85,7 +85,7 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
         this(null, null, null, null, null, null, null, Set.of(), null, null, null, null, UserStatus.UNKNOWN);
     }
 
-    protected TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRole> authorities, Instant createdAt, Instant updatedAt, Instant deactivatedAt, Instant deletedAt, UserStatus status) {
+    public TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRole> authorities, Instant createdAt, Instant updatedAt, Instant deactivatedAt, Instant deletedAt, UserStatus status) {
         this(id, null, uuid, firstLoginAt, lastLoginAt, givenName, familyName, email, authorities, createdAt, updatedAt, deactivatedAt, deletedAt, status);
     }
 
