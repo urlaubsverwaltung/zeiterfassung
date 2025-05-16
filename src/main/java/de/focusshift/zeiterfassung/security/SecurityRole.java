@@ -4,6 +4,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Optional;
+import java.util.Set;
 
 public enum SecurityRole {
 
@@ -43,6 +44,9 @@ public enum SecurityRole {
      * Allowed to edit permissions of all persons.
      */
     ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
+
+    public static final Set<SecurityRole> DEFAULT_USER_ROLES = Set.of(ZEITERFASSUNG_USER);
+    public static final Set<SecurityRole> INITIAL_USER_ROLES = Set.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_PERMISSIONS_EDIT_ALL);
 
     private GrantedAuthority authority;
 

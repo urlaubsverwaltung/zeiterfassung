@@ -31,4 +31,7 @@ public interface TenantUserService {
     void activateUser(Long id);
 
     void deactivateUser(Long id);
+
+    long countUsers();
+
 }

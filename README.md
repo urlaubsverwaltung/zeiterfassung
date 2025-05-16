@@ -119,6 +119,9 @@ zeiterfassung:
       login-form-url: $OIDC_LOGIN_FORM_URL
 ```
 
+**Attention**: For OpenID Connect providers other than Keycloak, use `scope: openid,profile,email`.
+**Attention**: For Google configure `zeiterfassung.security.oidc.retrieve-user-info: true`
+
 ##### Permissions
 
 Zeiterfassung is using user permissions from oidc claim `groups` for mapping possible permissions:

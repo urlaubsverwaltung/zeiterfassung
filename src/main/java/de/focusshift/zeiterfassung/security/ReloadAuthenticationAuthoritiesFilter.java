@@ -14,7 +14,6 @@ import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -80,7 +79,7 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
         tenantContextHolder.runInTenantIdContext(oAuth2Auth.getAuthorizedClientRegistrationId(), tenantId -> {
             final User user = getUserFromUserManagement(currentOidcUser);
 
-            final List<SimpleGrantedAuthority> applicationAuthoritiesNew = getUserAuthorities(user);
+            final List<GrantedAuthority> applicationAuthoritiesNew = user.grantedAuthorities();
             final Collection<? extends GrantedAuthority> oidcAuthorities = currentOidcUser.getOidcAuthorities();
             final Set<GrantedAuthority> updatedMergedAuthorities = concat(oidcAuthorities.stream(), applicationAuthoritiesNew.stream()).collect(toSet());
 
@@ -101,7 +100,4 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
             .orElseThrow(() -> new IllegalStateException("no user found with userId=" + userId));
     }
 
-    private static List<SimpleGrantedAuthority> getUserAuthorities(User user) {
-        return user.authorities().stream().map(role -> new SimpleGrantedAuthority(role.name())).toList();
-    }
 }
