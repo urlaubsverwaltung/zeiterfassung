@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
 class OvertimeRabbitmqConfiguration {
 
     static final String ZEITERFASSUNG_OVERTIME_ENTERED_QUEUE = "zeiterfassung.queue.overtime.entered";
+    static final String ZEITERFASSUNG_OVERTIME_UPDATED_QUEUE = "zeiterfassung.queue.overtime.updated";
 
     @Bean
     public OvertimeEventPublisherRabbitmq overtimeEventPublisherRabbitmq(
@@ -49,11 +50,24 @@ class OvertimeRabbitmqConfiguration {
         }
 
         @Bean
-        Binding bindZeiterfassungUrlaubsverwaltungApplicationAllowedQueue() {
+        Queue zeiterfassungOvertimeUpdatedQueue() {
+            return new Queue(ZEITERFASSUNG_OVERTIME_UPDATED_QUEUE, true);
+        }
+
+        @Bean
+        Binding bindZeiterfassungOvertimeEnteredQueue() {
             final String routingKeyEntered = overtimeRabbitmqConfigurationProperties.getRoutingKeyEntered();
             return BindingBuilder.bind(zeiterfassungOvertimeEnteredQueue())
                 .to(overtimeTopic())
                 .with(routingKeyEntered);
+        }
+
+        @Bean
+        Binding bindZeiterfassungOvertimeUpdatedQueue() {
+            final String routingKeyUpdated = overtimeRabbitmqConfigurationProperties.getRoutingKeyUpdated();
+            return BindingBuilder.bind(zeiterfassungOvertimeUpdatedQueue())
+                .to(overtimeTopic())
+                .with(routingKeyUpdated);
         }
     }
 }

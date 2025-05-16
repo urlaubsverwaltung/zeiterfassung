@@ -55,6 +55,7 @@ class OvertimeRabbitmqConfigurationTest {
                 "zeiterfassung.integration.overtime.enabled=true",
                 "zeiterfassung.integration.overtime.topic=awesome-topic",
                 "zeiterfassung.integration.overtime.routing-key-entered=awesome-route",
+                "zeiterfassung.integration.overtime.routing-key-updated=awesome-route-updated",
                 "zeiterfassung.integration.overtime.manage-topology=true"
             )
             .withBean(RabbitTemplate.class, () -> mock(RabbitTemplate.class))
@@ -62,14 +63,23 @@ class OvertimeRabbitmqConfigurationTest {
             .run(context -> {
                 assertThat(context).hasSingleBean(OvertimeEventPublisherRabbitmq.class);
                 assertThat(context.getBean(TopicExchange.class).getName()).isEqualTo("awesome-topic");
-                assertThat(context.getBean(Queue.class)).satisfies(queue -> {
+                assertThat(context.getBean("zeiterfassungOvertimeEnteredQueue", Queue.class)).satisfies(queue -> {
                     assertThat(queue.getName()).isEqualTo("zeiterfassung.queue.overtime.entered");
                     assertThat(queue.isDurable()).isTrue();
                 });
-                assertThat(context.getBean(Binding.class)).satisfies(binding -> {
+                assertThat(context.getBean("zeiterfassungOvertimeUpdatedQueue", Queue.class)).satisfies(queue -> {
+                    assertThat(queue.getName()).isEqualTo("zeiterfassung.queue.overtime.updated");
+                    assertThat(queue.isDurable()).isTrue();
+                });
+                assertThat(context.getBean("bindZeiterfassungOvertimeEnteredQueue", Binding.class)).satisfies(binding -> {
                     assertThat(binding.getDestination()).isEqualTo("zeiterfassung.queue.overtime.entered");
                     assertThat(binding.getExchange()).isEqualTo("awesome-topic");
                     assertThat(binding.getRoutingKey()).isEqualTo("awesome-route");
+                });
+                assertThat(context.getBean("bindZeiterfassungOvertimeUpdatedQueue", Binding.class)).satisfies(binding -> {
+                    assertThat(binding.getDestination()).isEqualTo("zeiterfassung.queue.overtime.updated");
+                    assertThat(binding.getExchange()).isEqualTo("awesome-topic");
+                    assertThat(binding.getRoutingKey()).isEqualTo("awesome-route-updated");
                 });
             });
     }

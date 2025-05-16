@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.integration.overtime;
 import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.overtime.OvertimeHours;
 import de.focusshift.zeiterfassung.overtime.UserHasMadeOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.UserHasUpdatedOvertimeEvent;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -81,6 +82,49 @@ class OvertimeEventPublisherRabbitmqIT extends SingleTenantTestContainersBase {
             assertThat(actual.username()).isEqualTo("username");
             assertThat(actual.date()).isEqualTo(LocalDate.parse("2025-05-09"));
             assertThat(actual.duration()).isEqualTo(Duration.ofHours(8));
+        });
+    }
+
+    @Test
+    void ensureOvertimeUpdatedEventIsNotPublishedWhenThereIsNoTenantId() {
+
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.empty());
+
+        final UserId userId = new UserId("username");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final LocalDate date = LocalDate.now();
+
+        final UserHasUpdatedOvertimeEvent event = new UserHasUpdatedOvertimeEvent(userIdComposite, date, OvertimeHours.ZERO);
+        applicationEventPublisher.publishEvent(event);
+
+        verifyNoInteractions(rabbitTemplate);
+    }
+
+    @Test
+    void ensureOvertimeUpdatedEventIsPublishedOnRabbit() {
+
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant-id")));
+
+        final UserId userId = new UserId("username");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final LocalDate date = LocalDate.now();
+
+        final UserHasUpdatedOvertimeEvent event = new UserHasUpdatedOvertimeEvent(userIdComposite, date, OvertimeHours.ZERO);
+        applicationEventPublisher.publishEvent(event);
+
+        final ArgumentCaptor<OvertimeUpdatedEvent> captor = ArgumentCaptor.forClass(OvertimeUpdatedEvent.class);
+        verify(rabbitTemplate).convertAndSend(eq("overtime.topic"), eq("updated"), captor.capture());
+
+        assertThat(captor.getValue()).satisfies(actual -> {
+            assertThat(actual.id()).isNotNull();
+            assertThat(actual.tenantId()).isEqualTo("tenant-id");
+            assertThat(actual.username()).isEqualTo("username");
+            assertThat(actual.date()).isEqualTo(date);
+            assertThat(actual.duration()).isEqualTo(Duration.ZERO);
         });
     }
 }

@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.integration.overtime;
 
 import de.focusshift.zeiterfassung.overtime.OvertimeHours;
 import de.focusshift.zeiterfassung.overtime.UserHasMadeOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.UserHasUpdatedOvertimeEvent;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -42,6 +43,16 @@ class OvertimeEventPublisherRabbitmq {
             () -> LOG.error("Cannot publish rabbit event {} without tenantId.", event));
     }
 
+    @Async
+    @EventListener
+    public void publishUserHasUpdatedOvertime(UserHasUpdatedOvertimeEvent event) {
+
+        tenantContextHolder.getCurrentTenantId().ifPresentOrElse(
+            tenantId -> publishRabbitOvertimeUpdated(event, tenantId),
+            () -> LOG.error("Cannot publish rabbit overtimeUpdated event for date={} user={} without tenantId.", event.date(), event.userIdComposite())
+        );
+    }
+
     private void publishRabbitOvertime(UserHasMadeOvertimeEvent event, TenantId tenantId) {
 
         final UserIdComposite userIdComposite = event.userIdComposite();
@@ -60,5 +71,25 @@ class OvertimeEventPublisherRabbitmq {
 
         LOG.info("publish rabbit OvertimeEvent id={}", overtimeEvent.id());
         rabbitTemplate.convertAndSend(topic, routingKey, overtimeEvent);
+    }
+
+    private void publishRabbitOvertimeUpdated(UserHasUpdatedOvertimeEvent event, TenantId tenantId) {
+
+        final UserIdComposite userIdComposite = event.userIdComposite();
+        final OvertimeHours overtimeHours = event.overtimeHours();
+
+        final OvertimeUpdatedEvent overtimeUpdatedEvent = new OvertimeUpdatedEvent(
+            UUID.randomUUID(),
+            tenantId.tenantId(),
+            userIdComposite.id().value(),
+            event.date(),
+            overtimeHours.durationInMinutes()
+        );
+
+        final String topic = overtimeRabbitmqConfigurationProperties.getTopic();
+        final String routingKey = overtimeRabbitmqConfigurationProperties.getRoutingKeyUpdated();
+
+        LOG.info("publish rabbit OvertimeUpdatedEvent id={}", overtimeUpdatedEvent.id());
+        rabbitTemplate.convertAndSend(topic, routingKey, overtimeUpdatedEvent);
     }
 }

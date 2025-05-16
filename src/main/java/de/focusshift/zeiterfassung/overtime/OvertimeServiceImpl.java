@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.overtime;
 import de.focusshift.zeiterfassung.report.ReportDay;
 import de.focusshift.zeiterfassung.report.ReportServiceRaw;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -30,5 +31,15 @@ class OvertimeServiceImpl implements OvertimeService {
                 entry -> new OvertimeHours(entry.getValue().duration())
             )
         );
+    }
+
+    @Override
+    public OvertimeHours getOvertimeForDateAndUser(LocalDate date, UserLocalId userLocalId) {
+
+        return getOvertimeForDate(date).entrySet().stream()
+            .filter(entry -> entry.getKey().localId().equals(userLocalId))
+            .findFirst()
+            .map(Map.Entry::getValue)
+            .orElseThrow(() -> new IllegalStateException("expected OvertimeHours to exist for %s".formatted(userLocalId)));
     }
 }
