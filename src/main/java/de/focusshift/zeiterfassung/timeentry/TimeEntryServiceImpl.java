@@ -283,8 +283,17 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     public void deleteTimeEntry(TimeEntryId id) {
-        timeEntryRepository.deleteById(id.value());
-        LOG.info("Deleted timeEntry {}", id);
+        findTimeEntry(id).ifPresentOrElse(
+            timeEntry -> {
+                timeEntryRepository.deleteById(timeEntry.id().value());
+                LOG.info("Deleted timeEntry {}. Publish TimeEntryDeleted application event.", id);
+                final boolean locked = timeEntryLockService.isLocked(timeEntry.start());
+                final WorkDuration workDuration = timeEntry.workDuration();
+                final LocalDate date = timeEntry.start().toLocalDate();
+                applicationEventPublisher.publishEvent(new TimeEntryDeletedEvent(id, timeEntry.userIdComposite(), locked, date, workDuration));
+            },
+            () -> LOG.info("Could not delete timeEntry id={} since it does not exist.", id)
+        );
     }
 
     private List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,

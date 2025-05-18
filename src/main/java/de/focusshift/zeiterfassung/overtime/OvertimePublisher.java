@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.overtime;
 
 import de.focusshift.zeiterfassung.timeentry.DayLockedEvent;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDeletedEvent;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryUpdatedEvent.UpdatedValueCandidate;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
@@ -117,6 +118,37 @@ class OvertimePublisher {
                 publishUpdated(userIdComposite, dateCandidate.current());
             }
         }
+    }
+
+    @EventListener
+    public void publishOvertimeUpdated(TimeEntryDeletedEvent event) {
+
+        final boolean locked = event.locked();
+        final LocalDate date = event.date();
+        final WorkDuration workDuration = event.workDuration();
+
+        if (!locked) {
+            LOG.info("Ignore not locked TimeEntryDeleteEvent.");
+            return;
+        }
+
+        final UserIdComposite userIdComposite = event.ownerUserIdComposite();
+        final UserLocalId userLocalId = userIdComposite.localId();
+
+        final OvertimeAccount overtimeAccount = overtimeAccountService.getOvertimeAccount(userLocalId);
+        // currently we do not have time spans for overtime-allowed/not-allowed
+        // otherwise we would have to check the date here!
+        if (!overtimeAccount.isAllowed()) {
+            LOG.info("Ignore TimeEntryDeletedEvent. User {} overtime not allowed.", userIdComposite);
+            return;
+        }
+
+        if (workDuration.durationInMinutes().isZero()) {
+            LOG.info("Ignore TimeEntryDeleted Event. WorkDuration is zero.");
+            return;
+        }
+
+        publishUpdated(userIdComposite, date);
     }
 
     private void publishUpdated(UserIdComposite userIdComposite, LocalDate date) {
