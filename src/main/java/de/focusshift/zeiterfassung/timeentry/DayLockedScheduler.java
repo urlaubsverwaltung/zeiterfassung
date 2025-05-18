@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextRunner;
+import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;

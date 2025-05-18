@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionType;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;

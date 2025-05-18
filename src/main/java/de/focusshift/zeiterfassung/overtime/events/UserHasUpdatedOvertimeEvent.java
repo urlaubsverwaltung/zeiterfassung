@@ -1,5 +1,6 @@
-package de.focusshift.zeiterfassung.overtime;
+package de.focusshift.zeiterfassung.overtime.events;
 
+import de.focusshift.zeiterfassung.overtime.OvertimeHours;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 
 import java.time.LocalDate;

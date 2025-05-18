@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.integration.overtime;
 
 import de.focusshift.zeiterfassung.overtime.OvertimeHours;
-import de.focusshift.zeiterfassung.overtime.UserHasMadeOvertimeEvent;
-import de.focusshift.zeiterfassung.overtime.UserHasUpdatedOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasMadeOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasUpdatedOvertimeEvent;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;

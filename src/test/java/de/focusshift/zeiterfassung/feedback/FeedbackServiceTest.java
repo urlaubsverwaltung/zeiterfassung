@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.feedback;
 
+import de.focusshift.zeiterfassung.feedback.events.FeedbackGivenEvent;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

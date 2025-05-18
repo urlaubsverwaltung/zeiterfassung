@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.timeentry;
+package de.focusshift.zeiterfassung.timeentry.events;
 
 import java.time.LocalDate;
 

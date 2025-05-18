@@ -1,11 +1,13 @@
 package de.focusshift.zeiterfassung.overtime;
 
 import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
-import de.focusshift.zeiterfassung.timeentry.DayLockedEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasMadeOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasUpdatedOvertimeEvent;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryUpdatedEvent;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryUpdatedEvent.UpdatedValueCandidate;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
+import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent.UpdatedValueCandidate;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccount;
