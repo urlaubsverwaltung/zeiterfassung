@@ -19,7 +19,7 @@ class OvertimeRabbitmqConfigurationTest {
     @Test
     void ensureNoBeansWhenOvertimeIsDisabledByDefault() {
         applicationContextRunner.run(context -> {
-            assertThat(context).doesNotHaveBean(OvertimeEventPublisherRabbitmq.class);
+            assertThat(context).doesNotHaveBean(OvertimeRabbitEventPublisher.class);
         });
     }
 
@@ -28,12 +28,12 @@ class OvertimeRabbitmqConfigurationTest {
         applicationContextRunner
             .withPropertyValues("zeiterfassung.integration.overtime.enabled=false")
             .run(context -> {
-                assertThat(context).doesNotHaveBean(OvertimeEventPublisherRabbitmq.class);
+                assertThat(context).doesNotHaveBean(OvertimeRabbitEventPublisher.class);
             });
     }
 
     @Test
-    void ensureOvertimeEventPublisherRabbitmqBean() {
+    void ensureOvertimeRabbitEventPublisherBean() {
         applicationContextRunner
             .withPropertyValues(
                 "zeiterfassung.integration.overtime.enabled=true",
@@ -43,7 +43,7 @@ class OvertimeRabbitmqConfigurationTest {
             .withBean(RabbitTemplate.class, () -> mock(RabbitTemplate.class))
             .withBean(TenantContextHolder.class, () -> mock(TenantContextHolder.class))
             .run(context -> {
-                assertThat(context).hasSingleBean(OvertimeEventPublisherRabbitmq.class);
+                assertThat(context).hasSingleBean(OvertimeRabbitEventPublisher.class);
             });
     }
 
@@ -61,7 +61,7 @@ class OvertimeRabbitmqConfigurationTest {
             .withBean(RabbitTemplate.class, () -> mock(RabbitTemplate.class))
             .withBean(TenantContextHolder.class, () -> mock(TenantContextHolder.class))
             .run(context -> {
-                assertThat(context).hasSingleBean(OvertimeEventPublisherRabbitmq.class);
+                assertThat(context).hasSingleBean(OvertimeRabbitEventPublisher.class);
                 assertThat(context.getBean(TopicExchange.class).getName()).isEqualTo("awesome-topic");
                 assertThat(context.getBean("zeiterfassungOvertimeEnteredQueue", Queue.class)).satisfies(queue -> {
                     assertThat(queue.getName()).isEqualTo("zeiterfassung.queue.overtime.entered");

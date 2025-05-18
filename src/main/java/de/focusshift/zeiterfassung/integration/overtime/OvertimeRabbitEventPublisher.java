@@ -16,7 +16,7 @@ import java.util.UUID;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
-class OvertimeEventPublisherRabbitmq {
+class OvertimeRabbitEventPublisher {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
@@ -24,7 +24,7 @@ class OvertimeEventPublisherRabbitmq {
     private final TenantContextHolder tenantContextHolder;
     private final OvertimeRabbitmqConfigurationProperties overtimeRabbitmqConfigurationProperties;
 
-    OvertimeEventPublisherRabbitmq(
+    OvertimeRabbitEventPublisher(
         RabbitTemplate rabbitTemplate,
         TenantContextHolder tenantContextHolder,
         OvertimeRabbitmqConfigurationProperties overtimeRabbitmqConfigurationProperties
@@ -58,7 +58,7 @@ class OvertimeEventPublisherRabbitmq {
         final UserIdComposite userIdComposite = event.userIdComposite();
         final OvertimeHours overtimeHours = event.overtimeHours();
 
-        final OvertimeEvent overtimeEvent = new OvertimeEvent(
+        final OvertimeRabbitEvent overtimeRabbitEvent = new OvertimeRabbitEvent(
             UUID.randomUUID(),
             tenantId.tenantId(),
             userIdComposite.id().value(),
@@ -69,8 +69,8 @@ class OvertimeEventPublisherRabbitmq {
         final String topic = overtimeRabbitmqConfigurationProperties.getTopic();
         final String routingKey = overtimeRabbitmqConfigurationProperties.getRoutingKeyEntered();
 
-        LOG.info("publish rabbit OvertimeEvent id={}", overtimeEvent.id());
-        rabbitTemplate.convertAndSend(topic, routingKey, overtimeEvent);
+        LOG.info("publish rabbit OvertimeEvent id={}", overtimeRabbitEvent.id());
+        rabbitTemplate.convertAndSend(topic, routingKey, overtimeRabbitEvent);
     }
 
     private void publishRabbitOvertimeUpdated(UserHasUpdatedOvertimeEvent event, TenantId tenantId) {
@@ -78,7 +78,7 @@ class OvertimeEventPublisherRabbitmq {
         final UserIdComposite userIdComposite = event.userIdComposite();
         final OvertimeHours overtimeHours = event.overtimeHours();
 
-        final OvertimeUpdatedEvent overtimeUpdatedEvent = new OvertimeUpdatedEvent(
+        final OvertimeUpdatedRabbitEvent overtimeUpdatedRabbitEvent = new OvertimeUpdatedRabbitEvent(
             UUID.randomUUID(),
             tenantId.tenantId(),
             userIdComposite.id().value(),
@@ -89,7 +89,7 @@ class OvertimeEventPublisherRabbitmq {
         final String topic = overtimeRabbitmqConfigurationProperties.getTopic();
         final String routingKey = overtimeRabbitmqConfigurationProperties.getRoutingKeyUpdated();
 
-        LOG.info("publish rabbit OvertimeUpdatedEvent id={}", overtimeUpdatedEvent.id());
-        rabbitTemplate.convertAndSend(topic, routingKey, overtimeUpdatedEvent);
+        LOG.info("publish rabbit OvertimeUpdatedEvent id={}", overtimeUpdatedRabbitEvent.id());
+        rabbitTemplate.convertAndSend(topic, routingKey, overtimeUpdatedRabbitEvent);
     }
 }

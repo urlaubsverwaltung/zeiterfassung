@@ -5,10 +5,11 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Overtime updated event published on rabbitmq after the fact that overtime has changed for a date.
+ * Overtime event published on rabbitmq after the fact that a person has
+ * worked more or less than the person should work at a given day.
  *
  * <p>
- * Note that the duration value can be ZERO here. This is different to {@link OvertimeEvent}.
+ * Note that the duration value is never ZERO. This is different to {@link OvertimeUpdatedRabbitEvent}.
  *
  * @param id event identifier
  * @param tenantId tenant identifier
@@ -16,7 +17,7 @@ import java.util.UUID;
  * @param date date when the overtime happens
  * @param duration duration of the overtime
  */
-record OvertimeUpdatedEvent(
+record OvertimeRabbitEvent(
     UUID id,
     String tenantId,
     String username,

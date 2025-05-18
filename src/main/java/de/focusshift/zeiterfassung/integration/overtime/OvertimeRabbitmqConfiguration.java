@@ -21,12 +21,12 @@ class OvertimeRabbitmqConfiguration {
     static final String ZEITERFASSUNG_OVERTIME_UPDATED_QUEUE = "zeiterfassung.queue.overtime.updated";
 
     @Bean
-    public OvertimeEventPublisherRabbitmq overtimeEventPublisherRabbitmq(
+    public OvertimeRabbitEventPublisher overtimeRabbitEventPublisher(
         RabbitTemplate rabbitTemplate,
         TenantContextHolder tenantContextHolder,
         OvertimeRabbitmqConfigurationProperties properties
     ) {
-        return new OvertimeEventPublisherRabbitmq(rabbitTemplate, tenantContextHolder, properties);
+        return new OvertimeRabbitEventPublisher(rabbitTemplate, tenantContextHolder, properties);
     }
 
     @Configuration

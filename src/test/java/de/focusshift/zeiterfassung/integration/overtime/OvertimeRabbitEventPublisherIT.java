@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
       "zeiterfassung.integration.overtime.enabled=true"
     }
 )
-class OvertimeEventPublisherRabbitmqIT extends SingleTenantTestContainersBase {
+class OvertimeRabbitEventPublisherIT extends SingleTenantTestContainersBase {
 
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
@@ -73,7 +73,7 @@ class OvertimeEventPublisherRabbitmqIT extends SingleTenantTestContainersBase {
         final UserHasMadeOvertimeEvent userHasMadeOvertimeEvent = new UserHasMadeOvertimeEvent(userIdComposite, LocalDate.parse("2025-05-09"), OvertimeHours.EIGHT_POSITIVE);
         applicationEventPublisher.publishEvent(userHasMadeOvertimeEvent);
 
-        final ArgumentCaptor<OvertimeEvent> captor = ArgumentCaptor.forClass(OvertimeEvent.class);
+        final ArgumentCaptor<OvertimeRabbitEvent> captor = ArgumentCaptor.forClass(OvertimeRabbitEvent.class);
         verify(rabbitTemplate).convertAndSend(eq("overtime.topic"), eq("entered"), captor.capture());
 
         assertThat(captor.getValue()).satisfies(actual -> {
@@ -116,7 +116,7 @@ class OvertimeEventPublisherRabbitmqIT extends SingleTenantTestContainersBase {
         final UserHasUpdatedOvertimeEvent event = new UserHasUpdatedOvertimeEvent(userIdComposite, date, OvertimeHours.ZERO);
         applicationEventPublisher.publishEvent(event);
 
-        final ArgumentCaptor<OvertimeUpdatedEvent> captor = ArgumentCaptor.forClass(OvertimeUpdatedEvent.class);
+        final ArgumentCaptor<OvertimeUpdatedRabbitEvent> captor = ArgumentCaptor.forClass(OvertimeUpdatedRabbitEvent.class);
         verify(rabbitTemplate).convertAndSend(eq("overtime.topic"), eq("updated"), captor.capture());
 
         assertThat(captor.getValue()).satisfies(actual -> {
