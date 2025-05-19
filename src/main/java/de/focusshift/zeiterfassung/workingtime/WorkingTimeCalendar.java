@@ -7,11 +7,18 @@ import de.focusshift.zeiterfassung.usermanagement.User;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static java.time.temporal.ChronoUnit.DAYS;
 import static org.apache.commons.lang3.compare.ComparableUtils.max;
 
 /**
@@ -70,10 +77,12 @@ public final class WorkingTimeCalendar {
 
         for (Absence absence : absences) {
             if (absence.absenceTypeCategory() == AbsenceTypeCategory.OVERTIME) {
-                // TODO: That's not correct for application for overtime reduction which are longer than one day
-                // Here we need to some additional implementation to distribute evenly overtimeHours by working day of
-                // ZE user
-                absenceDuration = absenceDuration.plus(absence.overtimeHours());
+                final LocalDate startDate = absence.startDate().atZone(ZoneId.of("UTC")).toLocalDate();
+                final LocalDate endDate = absence.endDate().atZone(ZoneId.of("UTC")).toLocalDate();
+                final long workingDaysDuringAbsence = startDate.datesUntil(endDate.plusDays(1))
+                    .filter(dayInAbsence -> plannedWorkingHoursByDate.get(dayInAbsence).duration().isPositive())
+                    .count();
+                absenceDuration = absenceDuration.plus(absence.overtimeHours().dividedBy(workingDaysDuringAbsence));
             } else {
                 // application for leave or sicknote
                 double absenceValue = absence.dayLength().getValue();

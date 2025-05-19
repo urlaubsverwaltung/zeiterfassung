@@ -26,19 +26,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class WorkingTimeCalendarTest {
 
-    @Test
-    void ensurePlannedWorkingHoursBetweenDatesIsZeroForEmptyCalendar() {
-        final WorkingTimeCalendar sut = new WorkingTimeCalendar(Map.of(), Map.of());
-        final PlannedWorkingHours actual = sut.plannedWorkingHours(LocalDate.now(), LocalDate.now().plusDays(1));
-        assertThat(actual).isEqualTo(PlannedWorkingHours.ZERO);
-    }
-
     static Stream<Arguments> datesOutOfRange() {
         final LocalDate now = LocalDate.now();
         return Stream.of(
             Arguments.of(now, now.minusDays(7), now.minusDays(6)),
             Arguments.of(now, now.plusDays(1), now.plusDays(2))
         );
+    }
+
+    @Test
+    void ensurePlannedWorkingHoursBetweenDatesIsZeroForEmptyCalendar() {
+        final WorkingTimeCalendar sut = new WorkingTimeCalendar(Map.of(), Map.of());
+        final PlannedWorkingHours actual = sut.plannedWorkingHours(LocalDate.now(), LocalDate.now().plusDays(1));
+        assertThat(actual).isEqualTo(PlannedWorkingHours.ZERO);
     }
 
     @ParameterizedTest
@@ -68,6 +68,42 @@ class WorkingTimeCalendarTest {
     }
 
     @Test
+    void ensureShouldHoursForOvertimeReductionWithMultipleDays() {
+        final LocalDate today = LocalDate.now();
+        final Instant date = today.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+        final Absence applicationOvertimeReduction = new Absence(
+            new UserId("user"),
+            date,
+            date.plus(Duration.ofDays(2)),
+            FULL,
+            locale -> "de",
+            PINK,
+            OVERTIME,
+            Duration.ofHours(6L)
+        );
+
+        final LocalDate tomorrow = today.plusDays(1);
+        final LocalDate dayAfterTomorrow = tomorrow.plusDays(1);
+        final WorkingTimeCalendar sut = new WorkingTimeCalendar(
+            Map.of(
+                today, PlannedWorkingHours.EIGHT,
+                tomorrow, PlannedWorkingHours.ZERO,
+                dayAfterTomorrow, PlannedWorkingHours.EIGHT
+            ),
+            Map.of(
+                today, List.of(applicationOvertimeReduction),
+                tomorrow, List.of(applicationOvertimeReduction),
+                dayAfterTomorrow, List.of(applicationOvertimeReduction)
+            )
+        );
+
+        assertThat(sut.shouldWorkingHours(today)).hasValue(new ShouldWorkingHours(Duration.ofHours(5)));
+        assertThat(sut.shouldWorkingHours(tomorrow)).hasValue(new ShouldWorkingHours(Duration.ZERO));
+        assertThat(sut.shouldWorkingHours(dayAfterTomorrow)).hasValue(new ShouldWorkingHours(Duration.ofHours(5)));
+    }
+
+    @Test
     void ensureShouldHoursForOvertimeReduction() {
         final LocalDate today = LocalDate.now();
         final Instant date = today.atStartOfDay().toInstant(ZoneOffset.UTC);
@@ -88,6 +124,40 @@ class WorkingTimeCalendarTest {
         ), Map.of(today, List.of(applicationOvertimeReduction)));
 
         assertThat(sut.shouldWorkingHours(today)).hasValue(new ShouldWorkingHours(Duration.ofHours(2)));
+    }
+
+    @Test
+    void ensureShouldHoursForOvertimeReductionAtMorningAndOvertimeReductionAtNoon() {
+        final LocalDate today = LocalDate.now();
+        final Instant date = today.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+        final Absence applicationOvertimeReductionMorning = new Absence(
+            new UserId("user"),
+            date,
+            date,
+            MORNING,
+            locale -> "de",
+            PINK,
+            OVERTIME,
+            Duration.ofHours(4L)
+        );
+
+        final Absence applicationOvertimeReductionNoon = new Absence(
+            new UserId("user"),
+            date,
+            date,
+            NOON,
+            locale -> "de",
+            PINK,
+            OVERTIME,
+            Duration.ofHours(4L)
+        );
+
+        final WorkingTimeCalendar sut = new WorkingTimeCalendar(Map.of(
+            today, PlannedWorkingHours.EIGHT
+        ), Map.of(today, List.of(applicationOvertimeReductionMorning, applicationOvertimeReductionNoon)));
+
+        assertThat(sut.shouldWorkingHours(today)).hasValue(ShouldWorkingHours.ZERO);
     }
 
     @Test
