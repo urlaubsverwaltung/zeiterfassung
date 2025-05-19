@@ -7,18 +7,12 @@ import de.focusshift.zeiterfassung.usermanagement.User;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static java.time.temporal.ChronoUnit.DAYS;
 import static org.apache.commons.lang3.compare.ComparableUtils.max;
 
 /**
