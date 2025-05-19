@@ -8,7 +8,9 @@
       <tableExists tableName="absence"/>
     </preConditions>
     <addColumn tableName="absence">
-      <column name="overtime_hours" type="BIGINT"/>
+      <column name="overtime_hours" type="BIGINT">
+        <constraints nullable="true"/>
+      </column>
     </addColumn>
   </changeSet>
 </databaseChangeLog>
