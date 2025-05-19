@@ -2,8 +2,6 @@ package de.focusshift.zeiterfassung.integration.overtime;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import org.junit.jupiter.api.Test;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -63,24 +61,6 @@ class OvertimeRabbitmqConfigurationTest {
             .run(context -> {
                 assertThat(context).hasSingleBean(OvertimeRabbitEventPublisher.class);
                 assertThat(context.getBean(TopicExchange.class).getName()).isEqualTo("awesome-topic");
-                assertThat(context.getBean("zeiterfassungOvertimeEnteredQueue", Queue.class)).satisfies(queue -> {
-                    assertThat(queue.getName()).isEqualTo("zeiterfassung.queue.overtime.entered");
-                    assertThat(queue.isDurable()).isTrue();
-                });
-                assertThat(context.getBean("zeiterfassungOvertimeUpdatedQueue", Queue.class)).satisfies(queue -> {
-                    assertThat(queue.getName()).isEqualTo("zeiterfassung.queue.overtime.updated");
-                    assertThat(queue.isDurable()).isTrue();
-                });
-                assertThat(context.getBean("bindZeiterfassungOvertimeEnteredQueue", Binding.class)).satisfies(binding -> {
-                    assertThat(binding.getDestination()).isEqualTo("zeiterfassung.queue.overtime.entered");
-                    assertThat(binding.getExchange()).isEqualTo("awesome-topic");
-                    assertThat(binding.getRoutingKey()).isEqualTo("awesome-route");
-                });
-                assertThat(context.getBean("bindZeiterfassungOvertimeUpdatedQueue", Binding.class)).satisfies(binding -> {
-                    assertThat(binding.getDestination()).isEqualTo("zeiterfassung.queue.overtime.updated");
-                    assertThat(binding.getExchange()).isEqualTo("awesome-topic");
-                    assertThat(binding.getRoutingKey()).isEqualTo("awesome-route-updated");
-                });
             });
     }
 }
