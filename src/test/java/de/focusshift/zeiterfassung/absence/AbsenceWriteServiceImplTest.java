@@ -8,6 +8,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -45,6 +46,7 @@ class AbsenceWriteServiceImplTest {
             startDate,
             endDate,
             DayLength.FULL,
+            Duration.ZERO,
             SPECIALLEAVE
         );
 
@@ -78,6 +80,7 @@ class AbsenceWriteServiceImplTest {
             startDate,
             endDate,
             DayLength.FULL,
+            Duration.ZERO,
             SPECIALLEAVE
         );
 

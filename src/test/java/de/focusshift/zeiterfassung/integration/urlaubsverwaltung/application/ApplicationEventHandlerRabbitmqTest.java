@@ -24,10 +24,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.OVERTIME;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,9 +58,10 @@ class ApplicationEventHandlerRabbitmqTest {
                 .sourceId(1L)
                 .person(ApplicationPersonDTO.builder().personId(2L).username("userId").build())
                 .period(ApplicationPeriodDTO.builder().startDate(Instant.ofEpochMilli(0L)).endDate(Instant.ofEpochMilli(1L)).dayLength(de.focus_shift.urlaubsverwaltung.extension.api.application.DayLength.FULL).build())
-                .vacationType(VacationTypeDTO.builder().category("HOLIDAY").sourceId(1000L).color("CYAN").build())
+                .vacationType(VacationTypeDTO.builder().category("OVERTIME").sourceId(4242L).color("CYAN").build())
                 .createdAt(Instant.ofEpochMilli(0L))
                 .status("status")
+                .hours(Duration.ofHours(6))
                 .build();
 
         sut.on(event);
@@ -69,8 +72,9 @@ class ApplicationEventHandlerRabbitmqTest {
             Instant.ofEpochMilli(0L),
             Instant.ofEpochMilli(1L),
             DayLength.FULL,
-            HOLIDAY,
-            new AbsenceTypeSourceId(1000L)
+            Duration.ofHours(6),
+            OVERTIME,
+            new AbsenceTypeSourceId(4242L)
         );
         verify(absenceWriteService).addAbsence(absence);
 
@@ -101,6 +105,7 @@ class ApplicationEventHandlerRabbitmqTest {
             Instant.ofEpochMilli(0L),
             Instant.ofEpochMilli(1L),
             DayLength.FULL,
+            null,
             HOLIDAY,
             new AbsenceTypeSourceId(1000L)
         );
@@ -133,6 +138,7 @@ class ApplicationEventHandlerRabbitmqTest {
             Instant.ofEpochMilli(0L),
             Instant.ofEpochMilli(1L),
             DayLength.FULL,
+            null,
             HOLIDAY,
             new AbsenceTypeSourceId(1000L)
         );
@@ -165,6 +171,7 @@ class ApplicationEventHandlerRabbitmqTest {
             Instant.ofEpochMilli(0L),
             Instant.ofEpochMilli(1L),
             DayLength.FULL,
+            null,
             HOLIDAY,
             new AbsenceTypeSourceId(1000L)
         );

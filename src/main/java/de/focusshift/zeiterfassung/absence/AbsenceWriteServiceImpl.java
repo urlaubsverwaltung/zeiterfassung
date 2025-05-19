@@ -86,6 +86,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
         entity.setEndDate(absence.endDate());
         entity.setDayLength(absence.dayLength());
         entity.setType(setTypeEntityFields(absence));
+        entity.setOvertimeHours(absence.overtimeHours());
     }
 
     private static AbsenceTypeEntityEmbeddable setTypeEntityFields(AbsenceWrite absence) {
