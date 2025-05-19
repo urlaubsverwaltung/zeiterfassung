@@ -69,7 +69,7 @@ class OvertimeRabbitEventPublisher {
         final String topic = overtimeRabbitmqConfigurationProperties.getTopic();
         final String routingKey = overtimeRabbitmqConfigurationProperties.getRoutingKeyEntered();
 
-        LOG.info("publish rabbit OvertimeEvent id={}", overtimeRabbitEvent.id());
+        LOG.info("publish rabbit OvertimeEvent id={} tenantId={} user={} date={}", overtimeRabbitEvent.id(), tenantId.tenantId(), event.userIdComposite(), event.date());
         rabbitTemplate.convertAndSend(topic, routingKey, overtimeRabbitEvent);
     }
 
@@ -89,7 +89,7 @@ class OvertimeRabbitEventPublisher {
         final String topic = overtimeRabbitmqConfigurationProperties.getTopic();
         final String routingKey = overtimeRabbitmqConfigurationProperties.getRoutingKeyUpdated();
 
-        LOG.info("publish rabbit OvertimeUpdatedEvent id={}", overtimeUpdatedRabbitEvent.id());
+        LOG.info("publish rabbit OvertimeUpdatedEvent id={} tenantId={} user={} date={}", overtimeUpdatedRabbitEvent.id(), tenantId.tenantId(), event.userIdComposite(), event.date());
         rabbitTemplate.convertAndSend(topic, routingKey, overtimeUpdatedRabbitEvent);
     }
 }
