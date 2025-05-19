@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMapper;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryDeletedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent.UpdatedValueCandidate;
@@ -246,7 +247,15 @@ class TimeEntryServiceImpl implements TimeEntryService {
         entity.setBreak(isBreak);
 
         final TimeEntry saved = save(entity, user);
-        LOG.info("Created timeEntry {} of user {}.", saved.id(), saved.userIdComposite().localId());
+
+        LOG.info("Created timeEntry {} of user {}. Publish TimeEntryCreated application event.", saved.id(), saved.userIdComposite().localId());
+        applicationEventPublisher.publishEvent(new TimeEntryCreatedEvent(
+            saved.id(),
+            saved.userIdComposite(),
+            timeEntryLockService.isLocked(saved.start()),
+            saved.start().toLocalDate(),
+            saved.workDuration()
+        ));
 
         return saved;
     }

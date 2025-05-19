@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.overtime.events.UserHasMadeOvertimeEvent;
 import de.focusshift.zeiterfassung.overtime.events.UserHasUpdatedOvertimeEvent;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryDeletedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent.UpdatedValueCandidate;
@@ -58,6 +59,31 @@ class OvertimePublisher {
                 applicationEventPublisher.publishEvent(overtimeEvent);
             }
         });
+    }
+
+    @EventListener
+    public void publishOvertimeUpdated(TimeEntryCreatedEvent event) {
+
+        if (!event.locked()) {
+            LOG.debug("Ignore not locked TimeEntryCreatedEvent.");
+            return;
+        }
+
+        if (event.workDuration().durationInMinutes().isZero()) {
+            LOG.info("Ignore TimeEntryCreatedEvent. WorkDuration is zero.");
+            return;
+        }
+
+        final UserIdComposite userIdComposite = event.ownerUserIdComposite();
+        final UserLocalId userLocalId = userIdComposite.localId();
+        final OvertimeAccount overtimeAccount = overtimeAccountService.getOvertimeAccount(userLocalId);
+        if (!overtimeAccount.isAllowed()) {
+            LOG.info("Ignore TimeEntryCreatedEvent. User {} overtime not allowed.", userIdComposite);
+            return;
+        }
+
+        LOG.info("TimeEntry created and locked.");
+        publishUpdated(userIdComposite, event.date());
     }
 
     @EventListener

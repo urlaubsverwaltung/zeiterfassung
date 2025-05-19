@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionType;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -308,6 +309,43 @@ class TimeEntryServiceImplTest {
 
         assertThat(captor.getValue()).satisfies(entity -> {
             assertThat(entity.getComment()).isEmpty();
+        });
+    }
+
+    @Test
+    void ensureCreateTimeEntryPublishesEvent() {
+
+        final LocalDateTime entryStart = LocalDateTime.of(2023, 1, 1, 10, 0, 0);
+        final LocalDateTime entryEnd = LocalDateTime.of(2023, 1, 1, 12, 0, 0);
+
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(invocationOnMock -> {
+            final TimeEntryEntity entity = invocationOnMock.getArgument(0);
+            entity.setId(1L);
+            return entity;
+        });
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+        sut.createTimeEntry(
+            userLocalId,
+            "hard work",
+            ZonedDateTime.of(entryStart, ZONE_ID_UTC),
+            ZonedDateTime.of(entryEnd, ZONE_ID_UTC),
+            false
+        );
+
+        final ArgumentCaptor<TimeEntryCreatedEvent> captor = ArgumentCaptor.forClass(TimeEntryCreatedEvent.class);
+        verify(applicationEventPublisher).publishEvent(captor.capture());
+
+        assertThat(captor.getValue()).satisfies(actual -> {
+            assertThat(actual.locked()).isEqualTo(false);
+            assertThat(actual.date()).isEqualTo(entryStart.toLocalDate());
+            assertThat(actual.ownerUserIdComposite()).isEqualTo(userIdComposite);
+            assertThat(actual.timeEntryId()).isEqualTo(new TimeEntryId(1L));
         });
     }
 

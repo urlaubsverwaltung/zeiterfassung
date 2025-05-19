@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.overtime;
 import de.focusshift.zeiterfassung.overtime.events.UserHasUpdatedOvertimeEvent;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent.UpdatedValueCandidate;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -48,7 +49,99 @@ class OvertimePublisherTest {
     }
 
     @Nested
-    class OvertimeUpdateRabbitEvent {
+    class TimeEntryCreated {
+
+        @Test
+        void ensureOvertimeUpdateNotPublishedWhenNotLocked() {
+
+            final TimeEntryId timeEntryId = new TimeEntryId(1L);
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+
+            final TimeEntryCreatedEvent event = new TimeEntryCreatedEvent(
+                timeEntryId,
+                userIdComposite,
+                false,
+                LocalDate.now(),
+                WorkDuration.EIGHT
+            );
+            sut.publishOvertimeUpdated(event);
+
+            verifyNoInteractions(applicationEventPublisher);
+        }
+
+        @Test
+        void ensureOvertimeUpdatedNotPublishedWhenNotAllowed() {
+
+            final TimeEntryId timeEntryId = new TimeEntryId(1L);
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+
+            when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId()))
+                .thenReturn(new OvertimeAccount(userIdComposite, false));
+
+            final TimeEntryCreatedEvent event = new TimeEntryCreatedEvent(
+                timeEntryId,
+                userIdComposite,
+                true,
+                LocalDate.now(),
+                WorkDuration.EIGHT
+            );
+            sut.publishOvertimeUpdated(event);
+
+            verifyNoInteractions(applicationEventPublisher);
+        }
+
+        @Test
+        void ensureOvertimeUpdatedNotPublishedWhenWorkDurationIsZero() {
+
+            final TimeEntryId timeEntryId = new TimeEntryId(1L);
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+
+            final TimeEntryCreatedEvent event = new TimeEntryCreatedEvent(
+                timeEntryId,
+                userIdComposite,
+                true,
+                LocalDate.now(),
+                WorkDuration.ZERO
+            );
+            sut.publishOvertimeUpdated(event);
+
+            verifyNoInteractions(applicationEventPublisher);
+        }
+
+        @Test
+        void ensureOvertimeUpdated() {
+
+            final TimeEntryId timeEntryId = new TimeEntryId(1L);
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final LocalDate date = LocalDate.now();
+
+            when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId()))
+                .thenReturn(new OvertimeAccount(userIdComposite, true));
+
+            when(overtimeService.getOvertimeForDateAndUser(date, userIdComposite.localId()))
+                .thenReturn(OvertimeHours.EIGHT_POSITIVE);
+
+            final TimeEntryCreatedEvent event = new TimeEntryCreatedEvent(
+                timeEntryId,
+                userIdComposite,
+                true,
+                date,
+                WorkDuration.EIGHT
+            );
+            sut.publishOvertimeUpdated(event);
+
+            final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+            verify(applicationEventPublisher).publishEvent(captor.capture());
+
+            final List<Object> publishedEvents = captor.getAllValues();
+            assertThat(publishedEvents).containsExactly(
+                new UserHasUpdatedOvertimeEvent(userIdComposite, date, OvertimeHours.EIGHT_POSITIVE)
+            );
+        }
+    }
+
+    @Nested
+    class TimeEntryUpdated {
 
         @ParameterizedTest
         @CsvSource({
