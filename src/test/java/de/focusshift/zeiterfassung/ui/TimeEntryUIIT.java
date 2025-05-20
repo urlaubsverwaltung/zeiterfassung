@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static com.microsoft.playwright.options.WaitForSelectorState.VISIBLE;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -76,7 +77,9 @@ class TimeEntryUIIT {
         timeEntryPage.fillNewTimeEntry(yesterday, LocalTime.parse("08:00"), LocalTime.parse("17:00"), "");
         timeEntryPage.submitNewTimeEntryButton().click();
 
-        assertThat(page.getByText("Für den Zeitraum kann kein Zeitslot mehr erfasst werden. Bitte wende dich an eine berechtigte Person.")).isVisible();
+        final Locator error = page.getByText("Für den Zeitraum kann kein Zeitslot mehr erfasst werden. Bitte wende dich an eine berechtigte Person.");
+        error.waitFor(new Locator.WaitForOptions().setState(VISIBLE));
+        assertThat(error).isVisible();
     }
 
     @Test
