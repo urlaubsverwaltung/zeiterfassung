@@ -29,6 +29,10 @@ updates:
         patterns:
           - "svelte"
           - "svelte-*"
+      prettier:
+        patterns:
+          - "prettier"
+          - "prettier-*"
 
   - package-ecosystem: "maven"
     directory: "/"
