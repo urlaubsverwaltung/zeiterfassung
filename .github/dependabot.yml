@@ -11,6 +11,24 @@ updates:
       vitest:
         patterns:
           - "*vitest*"
+      rollup:
+        patterns:
+          - "@rollup/*"
+          - "rollup"
+          - "rollup-*"
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+      postcss:
+        patterns:
+          - "postcss"
+          - "postcss-*"
+      svelte:
+        patterns:
+          - "svelte"
+          - "svelte-*"
 
   - package-ecosystem: "maven"
     directory: "/"
