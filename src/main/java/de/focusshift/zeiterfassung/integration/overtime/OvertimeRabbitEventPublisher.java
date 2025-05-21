@@ -9,7 +9,6 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import org.slf4j.Logger;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 
 import java.util.UUID;
 
@@ -34,7 +33,6 @@ class OvertimeRabbitEventPublisher {
         this.overtimeRabbitmqConfigurationProperties = overtimeRabbitmqConfigurationProperties;
     }
 
-    @Async
     @EventListener
     public void publishUserHasWorkedOvertime(UserHasWorkedOvertimeEvent event) {
 
@@ -43,7 +41,6 @@ class OvertimeRabbitEventPublisher {
             () -> LOG.error("Cannot publish rabbit event {} without tenantId.", event));
     }
 
-    @Async
     @EventListener
     public void publishUserHasWorkedOvertimeUpdated(UserHasWorkedOvertimeUpdatedEvent event) {
 
