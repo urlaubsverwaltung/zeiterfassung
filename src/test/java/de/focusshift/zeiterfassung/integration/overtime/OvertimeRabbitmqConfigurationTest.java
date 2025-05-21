@@ -36,7 +36,7 @@ class OvertimeRabbitmqConfigurationTest {
             .withPropertyValues(
                 "zeiterfassung.integration.overtime.enabled=true",
                 "zeiterfassung.integration.overtime.topic=awesome-topic",
-                "zeiterfassung.integration.overtime.routing-key-entered=awesome-route"
+                "zeiterfassung.integration.overtime.routing-key-entered=%s.awesome-route"
             )
             .withBean(RabbitTemplate.class, () -> mock(RabbitTemplate.class))
             .withBean(TenantContextHolder.class, () -> mock(TenantContextHolder.class))
@@ -53,7 +53,7 @@ class OvertimeRabbitmqConfigurationTest {
                 "zeiterfassung.integration.overtime.enabled=true",
                 "zeiterfassung.integration.overtime.topic=awesome-topic",
                 "zeiterfassung.integration.overtime.routing-key-entered=awesome-route",
-                "zeiterfassung.integration.overtime.routing-key-updated=awesome-route-updated",
+                "zeiterfassung.integration.overtime.routing-key-updated=%s.awesome-route-updated",
                 "zeiterfassung.integration.overtime.manage-topology=true"
             )
             .withBean(RabbitTemplate.class, () -> mock(RabbitTemplate.class))

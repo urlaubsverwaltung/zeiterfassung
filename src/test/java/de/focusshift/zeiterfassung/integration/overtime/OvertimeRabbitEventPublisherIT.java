@@ -74,7 +74,7 @@ class OvertimeRabbitEventPublisherIT extends SingleTenantTestContainersBase {
         applicationEventPublisher.publishEvent(userHasWorkedOvertimeEvent);
 
         final ArgumentCaptor<OvertimeRabbitEvent> captor = ArgumentCaptor.forClass(OvertimeRabbitEvent.class);
-        verify(rabbitTemplate).convertAndSend(eq("overtime.topic"), eq("entered"), captor.capture());
+        verify(rabbitTemplate).convertAndSend(eq("overtime.topic"), eq("ZE.EVENT.tenant-id.OVERTIME.ENTERED"), captor.capture());
 
         assertThat(captor.getValue()).satisfies(actual -> {
             assertThat(actual.id()).isNotNull();
@@ -117,7 +117,7 @@ class OvertimeRabbitEventPublisherIT extends SingleTenantTestContainersBase {
         applicationEventPublisher.publishEvent(event);
 
         final ArgumentCaptor<OvertimeUpdatedRabbitEvent> captor = ArgumentCaptor.forClass(OvertimeUpdatedRabbitEvent.class);
-        verify(rabbitTemplate).convertAndSend(eq("overtime.topic"), eq("updated"), captor.capture());
+        verify(rabbitTemplate).convertAndSend(eq("overtime.topic"), eq("ZE.EVENT.tenant-id.OVERTIME.UPDATED"), captor.capture());
 
         assertThat(captor.getValue()).satisfies(actual -> {
             assertThat(actual.id()).isNotNull();
