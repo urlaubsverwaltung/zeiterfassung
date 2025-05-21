@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.overtime;
 
 import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
-import de.focusshift.zeiterfassung.overtime.events.UserHasMadeOvertimeEvent;
-import de.focusshift.zeiterfassung.overtime.events.UserHasUpdatedOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
@@ -47,7 +47,7 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
     private OvertimeAccountService overtimeAccountService;
 
     @Test
-    void ensureUserHasMadeOvertimePublished() {
+    void ensureUserHasWorkedOvertimePublished() {
 
         final LocalDate date = LocalDate.now();
 
@@ -67,15 +67,15 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
         final DayLockedEvent dayLockedEvent = new DayLockedEvent(date);
         applicationEventPublisher.publishEvent(dayLockedEvent);
 
-        final List<UserHasMadeOvertimeEvent> actualEvents = applicationEvents.stream(UserHasMadeOvertimeEvent.class).toList();
+        final List<UserHasWorkedOvertimeEvent> actualEvents = applicationEvents.stream(UserHasWorkedOvertimeEvent.class).toList();
         assertThat(actualEvents).contains(
-            new UserHasMadeOvertimeEvent(userId1, date, OvertimeHours.EIGHT_POSITIVE),
-            new UserHasMadeOvertimeEvent(userId2, date, OvertimeHours.EIGHT_NEGATIVE)
+            new UserHasWorkedOvertimeEvent(userId1, date, OvertimeHours.EIGHT_POSITIVE),
+            new UserHasWorkedOvertimeEvent(userId2, date, OvertimeHours.EIGHT_NEGATIVE)
         );
     }
 
     @Test
-    void ensureUserHasMadeOvertimeIsNotPublishedWhenOvertimeIsZero() {
+    void ensureUserHasWorkedOvertimeIsNotPublishedWhenOvertimeIsZero() {
 
         final LocalDate date = LocalDate.now();
 
@@ -95,14 +95,14 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
         final DayLockedEvent dayLockedEvent = new DayLockedEvent(date);
         applicationEventPublisher.publishEvent(dayLockedEvent);
 
-        final List<UserHasMadeOvertimeEvent> actualEvents = applicationEvents.stream(UserHasMadeOvertimeEvent.class).toList();
+        final List<UserHasWorkedOvertimeEvent> actualEvents = applicationEvents.stream(UserHasWorkedOvertimeEvent.class).toList();
         assertThat(actualEvents).contains(
-            new UserHasMadeOvertimeEvent(userId2, date, new OvertimeHours(Duration.ofSeconds(1)))
+            new UserHasWorkedOvertimeEvent(userId2, date, new OvertimeHours(Duration.ofSeconds(1)))
         );
     }
 
     @Test
-    void ensureUserHasMadeOvertimeIsNotPublishedWhenIsNotAllowedToMakOvertime() {
+    void ensureUserHasWorkedOvertimeIsNotPublishedWhenIsNotAllowedToMakOvertime() {
 
         final LocalDate date = LocalDate.now();
 
@@ -119,12 +119,12 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
         final DayLockedEvent dayLockedEvent = new DayLockedEvent(date);
         applicationEventPublisher.publishEvent(dayLockedEvent);
 
-        final List<UserHasMadeOvertimeEvent> actualEvents = applicationEvents.stream(UserHasMadeOvertimeEvent.class).toList();
+        final List<UserHasWorkedOvertimeEvent> actualEvents = applicationEvents.stream(UserHasWorkedOvertimeEvent.class).toList();
         assertThat(actualEvents).isEmpty();
     }
 
     @Test
-    void ensureUserHasUpdatedOvertimeEvent() {
+    void ensureUserHasWorkedOvertimeUpdatedEvent() {
 
         final UserId userId = new UserId("uuid");
         final UserLocalId userLocalId = new UserLocalId(1L);
@@ -145,9 +145,9 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
         final TimeEntryUpdatedEvent timeEntryUpdatedEvent = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate);
         applicationEventPublisher.publishEvent(timeEntryUpdatedEvent);
 
-        final Stream<UserHasUpdatedOvertimeEvent> actualEvents = applicationEvents.stream(UserHasUpdatedOvertimeEvent.class);
+        final Stream<UserHasWorkedOvertimeUpdatedEvent> actualEvents = applicationEvents.stream(UserHasWorkedOvertimeUpdatedEvent.class);
         assertThat(actualEvents).containsExactly(
-            new UserHasUpdatedOvertimeEvent(userIdComposite, currentDate, OvertimeHours.ZERO)
+            new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, currentDate, OvertimeHours.ZERO)
         );
     }
 }

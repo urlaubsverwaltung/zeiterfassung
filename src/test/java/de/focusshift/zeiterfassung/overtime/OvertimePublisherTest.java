@@ -1,6 +1,6 @@
 package de.focusshift.zeiterfassung.overtime;
 
-import de.focusshift.zeiterfassung.overtime.events.UserHasUpdatedOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
@@ -135,7 +135,7 @@ class OvertimePublisherTest {
 
             final List<Object> publishedEvents = captor.getAllValues();
             assertThat(publishedEvents).containsExactly(
-                new UserHasUpdatedOvertimeEvent(userIdComposite, date, OvertimeHours.EIGHT_POSITIVE)
+                new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, date, OvertimeHours.EIGHT_POSITIVE)
             );
         }
     }
@@ -213,7 +213,7 @@ class OvertimePublisherTest {
 
             final List<Object> publishedEvents = captor.getAllValues();
             assertThat(publishedEvents).containsExactly(
-                new UserHasUpdatedOvertimeEvent(userIdComposite, prevDate, OvertimeHours.EIGHT_POSITIVE)
+                new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, prevDate, OvertimeHours.EIGHT_POSITIVE)
             );
         }
 
@@ -242,8 +242,8 @@ class OvertimePublisherTest {
 
             final List<Object> publishedEvents = captor.getAllValues();
             assertThat(publishedEvents).containsExactly(
-                new UserHasUpdatedOvertimeEvent(userIdComposite, prevDate, OvertimeHours.EIGHT_POSITIVE),
-                new UserHasUpdatedOvertimeEvent(userIdComposite, curDate, OvertimeHours.EIGHT_NEGATIVE)
+                new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, prevDate, OvertimeHours.EIGHT_POSITIVE),
+                new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, curDate, OvertimeHours.EIGHT_NEGATIVE)
             );
         }
 
@@ -272,7 +272,7 @@ class OvertimePublisherTest {
 
             final List<Object> publishedEvents = captor.getAllValues();
             assertThat(publishedEvents).containsExactly(
-                new UserHasUpdatedOvertimeEvent(userIdComposite, curDate, OvertimeHours.EIGHT_POSITIVE)
+                new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, curDate, OvertimeHours.EIGHT_POSITIVE)
             );
         }
 
@@ -299,7 +299,7 @@ class OvertimePublisherTest {
 
             final List<Object> publishedEvents = captor.getAllValues();
             assertThat(publishedEvents).containsExactly(
-                new UserHasUpdatedOvertimeEvent(userIdComposite, date, OvertimeHours.ZERO)
+                new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, date, OvertimeHours.ZERO)
             );
         }
     }

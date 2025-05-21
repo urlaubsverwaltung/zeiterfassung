@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.integration.overtime;
 
 import de.focusshift.zeiterfassung.overtime.OvertimeHours;
-import de.focusshift.zeiterfassung.overtime.events.UserHasMadeOvertimeEvent;
-import de.focusshift.zeiterfassung.overtime.events.UserHasUpdatedOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeUpdatedEvent;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -36,7 +36,7 @@ class OvertimeRabbitEventPublisher {
 
     @Async
     @EventListener
-    public void publishUserHasMadeOvertime(UserHasMadeOvertimeEvent event) {
+    public void publishUserHasWorkedOvertime(UserHasWorkedOvertimeEvent event) {
 
         tenantContextHolder.getCurrentTenantId().ifPresentOrElse(
             tenantId -> publishRabbitOvertime(event, tenantId),
@@ -45,7 +45,7 @@ class OvertimeRabbitEventPublisher {
 
     @Async
     @EventListener
-    public void publishUserHasUpdatedOvertime(UserHasUpdatedOvertimeEvent event) {
+    public void publishUserHasWorkedOvertimeUpdated(UserHasWorkedOvertimeUpdatedEvent event) {
 
         tenantContextHolder.getCurrentTenantId().ifPresentOrElse(
             tenantId -> publishRabbitOvertimeUpdated(event, tenantId),
@@ -53,7 +53,7 @@ class OvertimeRabbitEventPublisher {
         );
     }
 
-    private void publishRabbitOvertime(UserHasMadeOvertimeEvent event, TenantId tenantId) {
+    private void publishRabbitOvertime(UserHasWorkedOvertimeEvent event, TenantId tenantId) {
 
         final UserIdComposite userIdComposite = event.userIdComposite();
         final OvertimeHours overtimeHours = event.overtimeHours();
@@ -73,7 +73,7 @@ class OvertimeRabbitEventPublisher {
         rabbitTemplate.convertAndSend(topic, routingKey, overtimeRabbitEvent);
     }
 
-    private void publishRabbitOvertimeUpdated(UserHasUpdatedOvertimeEvent event, TenantId tenantId) {
+    private void publishRabbitOvertimeUpdated(UserHasWorkedOvertimeUpdatedEvent event, TenantId tenantId) {
 
         final UserIdComposite userIdComposite = event.userIdComposite();
         final OvertimeHours overtimeHours = event.overtimeHours();

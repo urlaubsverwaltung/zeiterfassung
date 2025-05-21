@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.overtime;
 
-import de.focusshift.zeiterfassung.overtime.events.UserHasMadeOvertimeEvent;
-import de.focusshift.zeiterfassung.overtime.events.UserHasUpdatedOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
@@ -54,8 +54,8 @@ class OvertimePublisher {
             // this may change in the future to have a date range for this info or more granular stuff.
             final OvertimeAccount overtimeAccount = overtimeAccountByUserId.get(userIdComposite);
             if (overtimeAccount.isAllowed() && !overtimeHours.durationInMinutes().isZero()) {
-                final UserHasMadeOvertimeEvent overtimeEvent = new UserHasMadeOvertimeEvent(userIdComposite, event.date(), overtimeHours);
-                LOG.info("publish UserHasMadeOvertimeEvent date={} user={}", event.date(), userIdComposite);
+                final UserHasWorkedOvertimeEvent overtimeEvent = new UserHasWorkedOvertimeEvent(userIdComposite, event.date(), overtimeHours);
+                LOG.info("publish UserHasWorkedOvertimeEvent date={} user={}", event.date(), userIdComposite);
                 applicationEventPublisher.publishEvent(overtimeEvent);
             }
         });
@@ -183,8 +183,8 @@ class OvertimePublisher {
 
         final OvertimeHours overtimeHours = overtimeService.getOvertimeForDateAndUser(date, userIdComposite.localId());
 
-        final UserHasUpdatedOvertimeEvent overtimeUpdatedEvent = new UserHasUpdatedOvertimeEvent(userIdComposite, date, overtimeHours);
-        LOG.info("publish UserHasUpdatedOvertimeEvent date={} user={}", overtimeUpdatedEvent, userIdComposite);
+        final UserHasWorkedOvertimeUpdatedEvent overtimeUpdatedEvent = new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, date, overtimeHours);
+        LOG.info("publish UserHasWorkedOvertimeUpdatedEvent date={} user={}", overtimeUpdatedEvent, userIdComposite);
         applicationEventPublisher.publishEvent(overtimeUpdatedEvent);
     }
 }

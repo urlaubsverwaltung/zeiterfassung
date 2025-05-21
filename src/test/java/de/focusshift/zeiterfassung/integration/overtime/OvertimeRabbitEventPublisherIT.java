@@ -2,8 +2,8 @@ package de.focusshift.zeiterfassung.integration.overtime;
 
 import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.overtime.OvertimeHours;
-import de.focusshift.zeiterfassung.overtime.events.UserHasMadeOvertimeEvent;
-import de.focusshift.zeiterfassung.overtime.events.UserHasUpdatedOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
+import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeUpdatedEvent;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -55,8 +55,8 @@ class OvertimeRabbitEventPublisherIT extends SingleTenantTestContainersBase {
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
-        final UserHasMadeOvertimeEvent userHasMadeOvertimeEvent = new UserHasMadeOvertimeEvent(userIdComposite, LocalDate.parse("2025-05-09"), OvertimeHours.EIGHT_POSITIVE);
-        applicationEventPublisher.publishEvent(userHasMadeOvertimeEvent);
+        final UserHasWorkedOvertimeEvent userHasWorkedOvertimeEvent = new UserHasWorkedOvertimeEvent(userIdComposite, LocalDate.parse("2025-05-09"), OvertimeHours.EIGHT_POSITIVE);
+        applicationEventPublisher.publishEvent(userHasWorkedOvertimeEvent);
 
         verifyNoInteractions(rabbitTemplate);
     }
@@ -70,8 +70,8 @@ class OvertimeRabbitEventPublisherIT extends SingleTenantTestContainersBase {
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
-        final UserHasMadeOvertimeEvent userHasMadeOvertimeEvent = new UserHasMadeOvertimeEvent(userIdComposite, LocalDate.parse("2025-05-09"), OvertimeHours.EIGHT_POSITIVE);
-        applicationEventPublisher.publishEvent(userHasMadeOvertimeEvent);
+        final UserHasWorkedOvertimeEvent userHasWorkedOvertimeEvent = new UserHasWorkedOvertimeEvent(userIdComposite, LocalDate.parse("2025-05-09"), OvertimeHours.EIGHT_POSITIVE);
+        applicationEventPublisher.publishEvent(userHasWorkedOvertimeEvent);
 
         final ArgumentCaptor<OvertimeRabbitEvent> captor = ArgumentCaptor.forClass(OvertimeRabbitEvent.class);
         verify(rabbitTemplate).convertAndSend(eq("overtime.topic"), eq("entered"), captor.capture());
@@ -96,7 +96,7 @@ class OvertimeRabbitEventPublisherIT extends SingleTenantTestContainersBase {
 
         final LocalDate date = LocalDate.now();
 
-        final UserHasUpdatedOvertimeEvent event = new UserHasUpdatedOvertimeEvent(userIdComposite, date, OvertimeHours.ZERO);
+        final UserHasWorkedOvertimeUpdatedEvent event = new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, date, OvertimeHours.ZERO);
         applicationEventPublisher.publishEvent(event);
 
         verifyNoInteractions(rabbitTemplate);
@@ -113,7 +113,7 @@ class OvertimeRabbitEventPublisherIT extends SingleTenantTestContainersBase {
 
         final LocalDate date = LocalDate.now();
 
-        final UserHasUpdatedOvertimeEvent event = new UserHasUpdatedOvertimeEvent(userIdComposite, date, OvertimeHours.ZERO);
+        final UserHasWorkedOvertimeUpdatedEvent event = new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, date, OvertimeHours.ZERO);
         applicationEventPublisher.publishEvent(event);
 
         final ArgumentCaptor<OvertimeUpdatedRabbitEvent> captor = ArgumentCaptor.forClass(OvertimeUpdatedRabbitEvent.class);
