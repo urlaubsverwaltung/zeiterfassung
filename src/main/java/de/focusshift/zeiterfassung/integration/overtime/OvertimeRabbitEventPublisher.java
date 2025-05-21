@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.event.EventListener;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import static java.lang.invoke.MethodHandles.lookup;
@@ -35,58 +36,36 @@ class OvertimeRabbitEventPublisher {
 
     @EventListener
     public void publishUserHasWorkedOvertime(UserHasWorkedOvertimeEvent event) {
-
-        tenantContextHolder.getCurrentTenantId().ifPresentOrElse(
-            tenantId -> publishRabbitOvertime(event, tenantId),
-            () -> LOG.error("Cannot publish rabbit event {} without tenantId.", event));
+        publishRabbitEvent(event.userIdComposite(), event.overtimeHours(), event.date());
     }
 
     @EventListener
     public void publishUserHasWorkedOvertimeUpdated(UserHasWorkedOvertimeUpdatedEvent event) {
+        publishRabbitEvent(event.userIdComposite(), event.overtimeHours(), event.date());
+    }
 
+
+    private void publishRabbitEvent(UserIdComposite userIdComposite, OvertimeHours overtimeHours, LocalDate date) {
         tenantContextHolder.getCurrentTenantId().ifPresentOrElse(
-            tenantId -> publishRabbitOvertimeUpdated(event, tenantId),
-            () -> LOG.error("Cannot publish rabbit overtimeUpdated event for date={} user={} without tenantId.", event.date(), event.userIdComposite())
+            tenantId -> publishRabbitOvertime(userIdComposite, overtimeHours, date, tenantId),
+            () -> LOG.error("Cannot publish overtime event for date={} user={} without tenantId.", date, userIdComposite)
         );
     }
 
-    private void publishRabbitOvertime(UserHasWorkedOvertimeEvent event, TenantId tenantId) {
-
-        final UserIdComposite userIdComposite = event.userIdComposite();
-        final OvertimeHours overtimeHours = event.overtimeHours();
+    private void publishRabbitOvertime(UserIdComposite userIdComposite, OvertimeHours overtimeHours, LocalDate date, TenantId tenantId) {
 
         final OvertimeRabbitEvent overtimeRabbitEvent = new OvertimeRabbitEvent(
             UUID.randomUUID(),
             tenantId.tenantId(),
             userIdComposite.id().value(),
-            event.date(),
+            date,
             overtimeHours.durationInMinutes()
         );
 
         final String topic = overtimeRabbitmqConfigurationProperties.getTopic();
         final String routingKey = overtimeRabbitmqConfigurationProperties.getRoutingKeyEntered().formatted(tenantId.tenantId());
 
-        LOG.info("publish rabbit OvertimeEvent id={} tenantId={} user={} date={} to topic={}", overtimeRabbitEvent.id(), tenantId.tenantId(), event.userIdComposite(), event.date(), topic);
+        LOG.info("publish rabbit OvertimeEvent id={} tenantId={} user={} date={} to topic={}", overtimeRabbitEvent.id(), tenantId.tenantId(), userIdComposite, date, topic);
         rabbitTemplate.convertAndSend(topic, routingKey, overtimeRabbitEvent);
-    }
-
-    private void publishRabbitOvertimeUpdated(UserHasWorkedOvertimeUpdatedEvent event, TenantId tenantId) {
-
-        final UserIdComposite userIdComposite = event.userIdComposite();
-        final OvertimeHours overtimeHours = event.overtimeHours();
-
-        final OvertimeUpdatedRabbitEvent overtimeUpdatedRabbitEvent = new OvertimeUpdatedRabbitEvent(
-            UUID.randomUUID(),
-            tenantId.tenantId(),
-            userIdComposite.id().value(),
-            event.date(),
-            overtimeHours.durationInMinutes()
-        );
-
-        final String topic = overtimeRabbitmqConfigurationProperties.getTopic();
-        final String routingKey = overtimeRabbitmqConfigurationProperties.getRoutingKeyUpdated().formatted(tenantId.tenantId());
-
-        LOG.info("publish rabbit OvertimeUpdatedEvent id={} tenantId={} user={} date={} to topic={}", overtimeUpdatedRabbitEvent.id(), tenantId.tenantId(), event.userIdComposite(), event.date(), topic);
-        rabbitTemplate.convertAndSend(topic, routingKey, overtimeUpdatedRabbitEvent);
     }
 }

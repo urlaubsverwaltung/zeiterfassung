@@ -22,13 +22,6 @@ class OvertimeRabbitmqConfigurationProperties {
     @NotEmpty
     private String routingKeyEntered = "ZE.EVENT.%s.OVERTIME.ENTERED";
 
-    /**
-     * routing key template string for updated overtime entries. must contain one {@code %s} which will be replaced with
-     * the current tenant id.
-     */
-    @NotEmpty
-    private String routingKeyUpdated = "ZE.EVENT.%s.OVERTIME.UPDATED";
-
     public boolean isEnabled() {
         return enabled;
     }
@@ -59,13 +52,5 @@ class OvertimeRabbitmqConfigurationProperties {
 
     public void setRoutingKeyEntered(String routingKeyEntered) {
         this.routingKeyEntered = routingKeyEntered;
-    }
-
-    public String getRoutingKeyUpdated() {
-        return routingKeyUpdated;
-    }
-
-    public void setRoutingKeyUpdated(String routingKeyUpdated) {
-        this.routingKeyUpdated = routingKeyUpdated;
     }
 }

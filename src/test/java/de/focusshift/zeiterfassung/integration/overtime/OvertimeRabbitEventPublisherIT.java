@@ -116,8 +116,8 @@ class OvertimeRabbitEventPublisherIT extends SingleTenantTestContainersBase {
         final UserHasWorkedOvertimeUpdatedEvent event = new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, date, OvertimeHours.ZERO);
         applicationEventPublisher.publishEvent(event);
 
-        final ArgumentCaptor<OvertimeUpdatedRabbitEvent> captor = ArgumentCaptor.forClass(OvertimeUpdatedRabbitEvent.class);
-        verify(rabbitTemplate).convertAndSend(eq("overtime.topic"), eq("ZE.EVENT.tenant-id.OVERTIME.UPDATED"), captor.capture());
+        final ArgumentCaptor<OvertimeRabbitEvent> captor = ArgumentCaptor.forClass(OvertimeRabbitEvent.class);
+        verify(rabbitTemplate).convertAndSend(eq("overtime.topic"), eq("ZE.EVENT.tenant-id.OVERTIME.ENTERED"), captor.capture());
 
         assertThat(captor.getValue()).satisfies(actual -> {
             assertThat(actual.id()).isNotNull();
