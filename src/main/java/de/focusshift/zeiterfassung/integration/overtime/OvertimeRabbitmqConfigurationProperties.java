@@ -13,7 +13,7 @@ class OvertimeRabbitmqConfigurationProperties {
     private boolean manageTopology = false;
 
     @NotEmpty
-    private String topic = "overtime.topic";
+    private String topic = "zeiterfassung.topic";
 
     /**
      * routing key template string for new overtime entries. must contain one {@code %s} which will be replaced with
