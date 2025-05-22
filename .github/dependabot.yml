@@ -7,7 +7,7 @@ updates:
     labels:
       - "type: dependencies"
       - "javascript"
-    open-pull-requests-limit: 0
+    open-pull-requests-limit: 10
     groups:
       vitest:
         patterns:
