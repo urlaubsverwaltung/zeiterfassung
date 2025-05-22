@@ -3,6 +3,10 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMapper;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryDeletedEvent;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent.UpdatedValueCandidate;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -16,6 +20,7 @@ import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.history.Revision;
 import org.springframework.data.history.Revisions;
 import org.springframework.stereotype.Service;
@@ -61,12 +66,20 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private final UserDateService userDateService;
     private final UserSettingsProvider userSettingsProvider;
     private final EntityRevisionMapper entityRevisionMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final Clock clock;
 
-    TimeEntryServiceImpl(TimeEntryRepository timeEntryRepository, TimeEntryLockService timeEntryLockService,
-                         UserManagementService userManagementService, WorkingTimeCalendarService workingTimeCalendarService,
-                         UserDateService userDateService, UserSettingsProvider userSettingsProvider,
-                         EntityRevisionMapper entityRevisionMapper, Clock clock) {
+    TimeEntryServiceImpl(
+        TimeEntryRepository timeEntryRepository,
+        TimeEntryLockService timeEntryLockService,
+        UserManagementService userManagementService,
+        WorkingTimeCalendarService workingTimeCalendarService,
+        UserDateService userDateService,
+        UserSettingsProvider userSettingsProvider,
+        EntityRevisionMapper entityRevisionMapper,
+        ApplicationEventPublisher applicationEventPublisher,
+        Clock clock
+    ) {
 
         this.timeEntryRepository = timeEntryRepository;
         this.timeEntryLockService = timeEntryLockService;
@@ -75,6 +88,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         this.userDateService = userDateService;
         this.userSettingsProvider = userSettingsProvider;
         this.entityRevisionMapper = entityRevisionMapper;
+        this.applicationEventPublisher = applicationEventPublisher;
         this.clock = clock;
     }
 
@@ -233,7 +247,15 @@ class TimeEntryServiceImpl implements TimeEntryService {
         entity.setBreak(isBreak);
 
         final TimeEntry saved = save(entity, user);
-        LOG.info("Created timeEntry {} of user {}.", saved.id(), saved.userIdComposite().localId());
+
+        LOG.info("Created timeEntry {} of user {}. Publish TimeEntryCreated application event.", saved.id(), saved.userIdComposite().localId());
+        applicationEventPublisher.publishEvent(new TimeEntryCreatedEvent(
+            saved.id(),
+            saved.userIdComposite(),
+            timeEntryLockService.isLocked(saved.start()),
+            saved.start().toLocalDate(),
+            saved.workDuration()
+        ));
 
         return saved;
     }
@@ -245,21 +267,44 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final TimeEntryEntity entity = timeEntryRepository.findById(id.value())
             .orElseThrow(() -> new IllegalStateException("could not find existing timeEntry id=%s".formatted(id)));
 
+        final TimeEntry previousTimeEntry = toTimeEntry(entity);
+
         updateEntityTimeSpan(entity, start, end, duration);
 
         entity.setComment(requireNonNullElse(comment, "").strip());
         entity.setBreak(isBreak);
 
         final TimeEntry saved = save(entity);
-        LOG.info("Updated timeEntry {} of user {}.", saved.id(), saved.userIdComposite().localId());
+
+        LOG.info("Updated timeEntry {} of user {}. Publish TimeEntryUpdated application event.", saved.id(), saved.userIdComposite().localId());
+        final LocalDate previousDate = previousTimeEntry.start().toLocalDate();
+        final LocalDate currentDate = saved.start().toLocalDate();
+
+        applicationEventPublisher.publishEvent(new TimeEntryUpdatedEvent(
+            saved.id(),
+            saved.userIdComposite(),
+            new UpdatedValueCandidate<>(timeEntryLockService.isLocked(previousDate), timeEntryLockService.isLocked(currentDate)),
+            new UpdatedValueCandidate<>(previousDate, currentDate),
+            new UpdatedValueCandidate<>(previousTimeEntry.workDuration(), saved.workDuration())
+        ));
+
 
         return saved;
     }
 
     @Override
     public void deleteTimeEntry(TimeEntryId id) {
-        timeEntryRepository.deleteById(id.value());
-        LOG.info("Deleted timeEntry {}", id);
+        findTimeEntry(id).ifPresentOrElse(
+            timeEntry -> {
+                timeEntryRepository.deleteById(timeEntry.id().value());
+                LOG.info("Deleted timeEntry {}. Publish TimeEntryDeleted application event.", id);
+                final boolean locked = timeEntryLockService.isLocked(timeEntry.start());
+                final WorkDuration workDuration = timeEntry.workDuration();
+                final LocalDate date = timeEntry.start().toLocalDate();
+                applicationEventPublisher.publishEvent(new TimeEntryDeletedEvent(id, timeEntry.userIdComposite(), locked, date, workDuration));
+            },
+            () -> LOG.info("Could not delete timeEntry id={} since it does not exist.", id)
+        );
     }
 
     private List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,

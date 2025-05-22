@@ -36,7 +36,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 @Service
-class ReportServiceRaw {
+public class ReportServiceRaw {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
@@ -59,6 +59,31 @@ class ReportServiceRaw {
         this.userDateService = userDateService;
         this.workingTimeCalendarService = workingTimeCalendarService;
         this.timeEntryLockService = timeEntryLockService;
+    }
+
+    public ReportDay getReportDayForAllUsers(LocalDate date) {
+
+        final Map<UserIdComposite, User> userById = userManagementService.findAllUsers().stream()
+            .collect(toMap(User::userIdComposite, identity()));
+
+        final Map<UserIdComposite, List<TimeEntry>> timeEntriesByUserId =
+            timeEntryService.getEntriesForAllUsers(date, date.plusDays(1));
+
+        final Map<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportEntriesByDate =
+            mapTimeEntriesToReportDayEntries(timeEntriesByUserId, userById);
+
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUserId =
+            workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(date, date.plusDays(1));
+
+        final boolean locked = timeEntryLockService.isLocked(date);
+
+        return toReportDay(
+            date,
+            userById,
+            workingTimeCalendarByUserId,
+            reportEntriesByDate::get,
+            locked
+        );
     }
 
     ReportWeek getReportWeek(Year year, int week, UserLocalId userLocalId) {
@@ -163,26 +188,8 @@ class ReportServiceRaw {
 
         final Map<UserIdComposite, User> userById = users.stream().collect(toMap(User::userIdComposite, identity()));
 
-        final Map<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportEntriesByDate = new HashMap<>();
-        for (Map.Entry<UserIdComposite, List<TimeEntry>> entry : timeEntriesByUserId.entrySet()) {
-
-            final UserIdComposite userIdComposite = entry.getKey();
-
-            final Map<LocalDate, List<ReportDayEntry>> collect = entry.getValue()
-                .stream()
-                .map(t -> timeEntryToReportDayEntry(t, userById::get))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(groupingBy(report -> report.start().toLocalDate()));
-
-            for (Map.Entry<LocalDate, List<ReportDayEntry>> localDateListEntry : collect.entrySet()) {
-                reportEntriesByDate.compute(localDateListEntry.getKey(), (localDate, userLocalIdListMap) -> {
-                    final Map<UserIdComposite, List<ReportDayEntry>> map = userLocalIdListMap == null ? new HashMap<>() : userLocalIdListMap;
-                    map.put(userIdComposite, collect.get(localDate));
-                    return map;
-                });
-            }
-        }
+        final Map<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportEntriesByDate =
+            mapTimeEntriesToReportDayEntries(timeEntriesByUserId, userById);
 
         final Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> resolveReportDayEntries =
             (LocalDate date) -> reportEntriesByDate.getOrDefault(date, new HashMap<>());
@@ -205,6 +212,36 @@ class ReportServiceRaw {
             .toList();
 
         return new ReportWeek(startOfWeekDate, reportDays);
+    }
+
+    private Map<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> mapTimeEntriesToReportDayEntries(
+        Map<UserIdComposite, List<TimeEntry>> timeEntriesByUserId,
+        Map<UserIdComposite, User> userById
+    ) {
+
+        final Map<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportEntriesByDate = new HashMap<>();
+
+        for (Map.Entry<UserIdComposite, List<TimeEntry>> entry : timeEntriesByUserId.entrySet()) {
+
+            final UserIdComposite userIdComposite = entry.getKey();
+
+            final Map<LocalDate, List<ReportDayEntry>> collect = entry.getValue()
+                .stream()
+                .map(t -> timeEntryToReportDayEntry(t, userById::get))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(groupingBy(reportDayEntry -> reportDayEntry.start().toLocalDate()));
+
+            for (Map.Entry<LocalDate, List<ReportDayEntry>> localDateListEntry : collect.entrySet()) {
+                reportEntriesByDate.compute(localDateListEntry.getKey(), (localDate, userLocalIdListMap) -> {
+                    final Map<UserIdComposite, List<ReportDayEntry>> map = userLocalIdListMap == null ? new HashMap<>() : userLocalIdListMap;
+                    map.put(userIdComposite, collect.get(localDate));
+                    return map;
+                });
+            }
+        }
+
+        return reportEntriesByDate;
     }
 
     private List<LocalDate> getStartOfWeekDatesForMonth(YearMonth yearMonth) {

@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.report;
 
+import de.focusshift.zeiterfassung.overtime.OvertimeHours;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -22,13 +23,13 @@ interface HasWorkDurationByUser {
      *
      * @return Map of delta duration for every user in this week
      */
-    default Map<UserIdComposite, DeltaWorkingHours> deltaDurationByUser() {
+    default Map<UserIdComposite, OvertimeHours> overtimeByUser() {
 
         final Map<UserIdComposite, WorkDuration> workedByUser = workDurationByUser();
 
         return shouldWorkingHoursByUser().entrySet().stream().collect(toMap(
             Map.Entry::getKey,
-            entry -> new DeltaWorkingHours(workedByUser.get(entry.getKey()).duration().minus(entry.getValue().duration()))
+            entry -> new OvertimeHours(workedByUser.get(entry.getKey()).duration().minus(entry.getValue().duration()))
         ));
     }
 }

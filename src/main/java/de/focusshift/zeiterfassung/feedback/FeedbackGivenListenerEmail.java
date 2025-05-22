@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.feedback;
 
 import de.focusshift.zeiterfassung.email.EMailConstants;
 import de.focusshift.zeiterfassung.email.EMailService;
+import de.focusshift.zeiterfassung.feedback.events.FeedbackGivenEvent;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import jakarta.mail.MessagingException;
 import org.slf4j.Logger;

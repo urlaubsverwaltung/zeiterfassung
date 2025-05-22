@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.feedback;
+package de.focusshift.zeiterfassung.feedback.events;
 
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 

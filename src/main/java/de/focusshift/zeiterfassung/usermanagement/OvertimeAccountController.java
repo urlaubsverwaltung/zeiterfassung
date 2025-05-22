@@ -38,9 +38,9 @@ import static org.springframework.util.StringUtils.hasText;
 class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
 
     private final UserManagementService userManagementService;
-    private final OvertimeAccountServiceImpl overtimeAccountService;
+    private final OvertimeAccountService overtimeAccountService;
 
-    OvertimeAccountController(UserManagementService userManagementService, OvertimeAccountServiceImpl overtimeAccountService) {
+    OvertimeAccountController(UserManagementService userManagementService, OvertimeAccountService overtimeAccountService) {
         this.userManagementService = userManagementService;
         this.overtimeAccountService = overtimeAccountService;
     }

@@ -1,8 +1,10 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import jakarta.annotation.Nullable;
 
 import java.time.Duration;
+import java.util.Map;
 
 public interface OvertimeAccountService {
 
@@ -13,6 +15,13 @@ public interface OvertimeAccountService {
      * @return the {@linkplain OvertimeAccount}, never {@code null}.
      */
     OvertimeAccount getOvertimeAccount(UserLocalId userLocalId);
+
+    /**
+     * Get all {@link OvertimeAccount}s.
+     *
+     * @return all {@link OvertimeAccount}s
+     */
+    Map<UserIdComposite, OvertimeAccount> getAllOvertimeAccounts();
 
     /**
      * Update the {@linkplain OvertimeAccount}
