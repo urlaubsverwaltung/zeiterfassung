@@ -76,7 +76,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
     }
 
     private Optional<AbsenceWriteEntity> findEntity(AbsenceWrite absence) {
-        return repository.findBySourceIdAndType_Category(absence.sourceId(), absence.absenceTypeCategory());
+        return repository.findBySourceId(absence.sourceId());
     }
 
     private static void setEntityFields(AbsenceWriteEntity entity, AbsenceWrite absence) {

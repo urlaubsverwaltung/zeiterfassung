@@ -34,6 +34,30 @@ class AbsenceWriteServiceImplIT extends SingleTenantTestContainersBase {
     private TenantContextHolder tenantContextHolder;
 
     @Test
+    void ensureUpdateAbsenceUpdatesChangedAbsenceType() {
+
+        final Instant startDate = Instant.now();
+        final Instant endDate = Instant.now();
+        final UserId userId = new UserId("user-id");
+
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+
+        sut.addAbsence(new AbsenceWrite(42L, userId, startDate, endDate, DayLength.FULL, null, HOLIDAY, new AbsenceTypeSourceId(1L)));
+        sut.updateAbsence(new AbsenceWrite(42L, userId, startDate, endDate, DayLength.FULL, null, AbsenceTypeCategory.OTHER, new AbsenceTypeSourceId(2L)));
+
+        final Optional<AbsenceWriteEntity> actual = repository.findBySourceId(42L);
+        assertThat(actual).hasValueSatisfying(actualAbsence -> {
+            assertThat(actualAbsence.getSourceId()).isEqualTo(42L);
+            assertThat(actualAbsence.getUserId()).isEqualTo("user-id");
+            assertThat(actualAbsence.getDayLength()).isEqualTo(DayLength.FULL);
+            assertThat(actualAbsence.getStartDate()).isEqualTo(startDate);
+            assertThat(actualAbsence.getEndDate()).isEqualTo(endDate);
+            assertThat(actualAbsence.getType().getSourceId()).isEqualTo(2L);
+            assertThat(actualAbsence.getType().getCategory()).isEqualTo(AbsenceTypeCategory.OTHER);
+        });
+    }
+
+    @Test
     void ensureDeleteAbsence() {
 
         final Instant startDate = Instant.now();

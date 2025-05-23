@@ -10,7 +10,7 @@ import java.util.Optional;
 
 interface AbsenceRepository extends CrudRepository<AbsenceWriteEntity, Long> {
 
-    Optional<AbsenceWriteEntity> findBySourceIdAndType_Category(Long sourceId, AbsenceTypeCategory absenceTypeCategory);
+    Optional<AbsenceWriteEntity> findBySourceId(Long sourceId);
 
     /**
      * Finds all absences of userId of set and intersection with interval from and toExclusive-1
