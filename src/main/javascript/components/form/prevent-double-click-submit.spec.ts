@@ -24,7 +24,7 @@ describe("DoubleClickSubmitGuard", () => {
     }
   });
 
-  test("disables submitter on form submit", () => {
+  test("disables submitter on form submit", async () => {
     document.body.innerHTML = `
       <form action="#">
         <button type="submit">Submit</button>
@@ -36,6 +36,10 @@ describe("DoubleClickSubmitGuard", () => {
     expect(button.getAttribute("disabled")).toBeNull();
 
     button.click();
+
+    // attribute is added after end of event loop
+    // to avoid not sending button attributes in form post
+    await new Promise((resolve) => setTimeout(resolve));
 
     expect(button.getAttribute("disabled")).toBe("");
   });
