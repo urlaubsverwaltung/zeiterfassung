@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,15 +24,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.RED;
+import static de.focusshift.zeiterfassung.absence.AbsenceColor.YELLOW;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.OVERTIME;
 import static de.focusshift.zeiterfassung.absence.DayLength.FULL;
 import static de.focusshift.zeiterfassung.absence.DayLength.MORNING;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BAYERN;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.NONE;
 import static java.time.ZoneOffset.UTC;
+import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -68,7 +74,7 @@ class WorkingTimeCalendarServiceImplTest {
             final LocalDate from = LocalDate.of(2023, 2, 13);
             final LocalDate toExclusive = LocalDate.of(2023, 2, 20);
 
-            when(absenceService.getAbsencesByUserIds(any(), any(), any())).thenReturn(Map.of(userIdCompositeOne, List.of(), userIdCompositeTwo, List.of()));
+            when(absenceService.getAbsencesForAllUsers(from, toExclusive)).thenReturn((Map.of(userIdCompositeOne, List.of(), userIdCompositeTwo, List.of())));
             when(workingTimeService.getAllWorkingTimes(from, toExclusive)).thenReturn(Map.of(
                 userIdCompositeOne, List.of(
                     WorkingTime.builder(userIdCompositeOne, new WorkingTimeId(UUID.randomUUID()))
@@ -136,7 +142,7 @@ class WorkingTimeCalendarServiceImplTest {
             final LocalDate from = LocalDate.of(2023, 2, 13);
             final LocalDate toExclusive = LocalDate.of(2023, 2, 20);
 
-            when(absenceService.getAbsencesByUserIds(any(), any(), any())).thenReturn(Map.of(userIdCompositeOne, List.of(), userIdCompositeTwo, List.of()));
+            when(absenceService.getAbsencesForAllUsers(from, toExclusive)).thenReturn((Map.of(userIdCompositeOne, List.of(), userIdCompositeTwo, List.of())));
             when(workingTimeService.getAllWorkingTimes(from, toExclusive)).thenReturn(Map.of(
                 userIdCompositeOne, List.of(
                     WorkingTime.builder(userIdCompositeOne, new WorkingTimeId(UUID.randomUUID()))
@@ -189,6 +195,55 @@ class WorkingTimeCalendarServiceImplTest {
                 ), Map.of()));
         }
 
+        // Tested cases:
+        // 1. min date of absences / max date of absences
+        // 2. min date of requested date-range / max date of absences
+        // 3. min date of absences / max date of requested date-range
+        @ParameterizedTest
+        @CsvSource({
+            "2025-06-03,2025-06-04,2025-06-02,2025-06-04,2025-06-02,2025-06-05",
+            "2025-06-03,2025-06-04,2025-06-04,2025-06-05,2025-06-03,2025-06-06",
+            "2025-06-03,2025-06-06,2025-06-02,2025-06-05,2025-06-02,2025-06-06"
+        })
+        void ensureGetWorkingTimesForAllWithAbsencesAndPublicHolidays(
+            LocalDate from, LocalDate toExclusive,
+            LocalDate absenceStart, LocalDate absenceEnd,
+            LocalDate workingTimeStart, LocalDate workingTimeEndExclusive
+        ) {
+            final UserId userIdOne = new UserId("uuid");
+            final UserLocalId userLocalIdOne = new UserLocalId(1L);
+            final UserIdComposite userIdComposite = new UserIdComposite(userIdOne, userLocalIdOne);
+
+            final Absence absence = new Absence(userIdOne, absenceStart.atStartOfDay().toInstant(UTC), absenceEnd.atStartOfDay().toInstant(UTC), FULL, null, YELLOW, OVERTIME, Duration.ofHours(9 * 8));
+
+            when(absenceService.getAbsencesForAllUsers(from, toExclusive)).thenReturn((Map.of(userIdComposite, List.of(absence))));
+            when(workingTimeService.getAllWorkingTimes(workingTimeStart, workingTimeEndExclusive)).thenReturn(Map.of(
+                userIdComposite, List.of(
+                    WorkingTime.builder(userIdComposite, new WorkingTimeId(UUID.randomUUID()))
+                        .federalState(NONE)
+                        .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
+                        .monday(8)
+                        .tuesday(8)
+                        .wednesday(8)
+                        .thursday(8)
+                        .friday(8)
+                        .saturday(0)
+                        .sunday(0)
+                        .build()
+                ))
+            );
+
+            final Map<UserIdComposite, WorkingTimeCalendar> actual = sut.getWorkingTimeCalendarForAllUsers(from, toExclusive);
+
+            final Map<LocalDate, PlannedWorkingHours> plannedWorkingHoursByDate = workingTimeStart.datesUntil(workingTimeEndExclusive)
+                .collect(toMap(Function.identity(), unused -> new PlannedWorkingHours(Duration.ofHours(8))));
+            final Map<LocalDate, List<Absence>> absencesByDate = absenceStart.datesUntil(absenceEnd.plusDays(1))
+                .collect(toMap(Function.identity(), unused -> List.of(absence)));
+
+            assertThat(actual)
+                .containsEntry(userIdComposite, new WorkingTimeCalendar(plannedWorkingHoursByDate, absencesByDate));
+        }
+
         @Test
         void createsCorrectWorkingTimeCalendarWhenOneWeekTouchesTwoWorkingTimes() {
 
@@ -201,7 +256,7 @@ class WorkingTimeCalendarServiceImplTest {
             final LocalDate friday = LocalDate.of(2023, 12, 8);
             final LocalDate mondayNextWeek = monday.plusWeeks(1);
 
-            when(absenceService.getAbsencesByUserIds(any(), any(), any())).thenReturn(Map.of(userIdComposite, List.of()));
+            when(absenceService.getAbsencesForAllUsers(monday, mondayNextWeek)).thenReturn((Map.of(userIdComposite, List.of())));
             when(workingTimeService.getAllWorkingTimes(monday, mondayNextWeek)).thenReturn(Map.of(
                 userIdComposite, List.of(
                     WorkingTime.builder(userIdComposite, new WorkingTimeId(UUID.randomUUID()))
@@ -253,68 +308,65 @@ class WorkingTimeCalendarServiceImplTest {
 
             Absence absenceUser1 = new Absence(userIdOne, ZonedDateTime.of(from.atTime(0, 0), UTC).toInstant(), ZonedDateTime.of(from.atTime(23, 59), UTC).toInstant(), FULL, foo -> "", RED, HOLIDAY);
             Absence absenceUser2 = new Absence(userIdTwo, ZonedDateTime.of(from.plusDays(1).atTime(0, 0), UTC).toInstant(), ZonedDateTime.of(from.plusDays(2).atTime(23, 59), UTC).toInstant(), MORNING, foo -> "", RED, HOLIDAY);
-            when(absenceService.getAbsencesByUserIds(any(), any(), any())).thenReturn(Map.of(
-                    userIdCompositeOne,
-                    List.of(absenceUser1),
-                    userIdCompositeTwo,
-                    List.of(absenceUser2)
-            ));
+            when(absenceService.getAbsencesForAllUsers(from, toExclusive))
+                .thenReturn((Map.of(userIdCompositeOne, List.of(absenceUser1), userIdCompositeTwo, List.of(absenceUser2))));
+
             when(workingTimeService.getAllWorkingTimes(from, toExclusive)).thenReturn(Map.of(
-                    userIdCompositeOne, List.of(
-                            WorkingTime.builder(userIdCompositeOne, new WorkingTimeId(UUID.randomUUID()))
-                                    .federalState(NONE)
-                                    .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
-                                    .monday(1)
-                                    .tuesday(2)
-                                    .wednesday(3)
-                                    .thursday(4)
-                                    .friday(5)
-                                    .saturday(6)
-                                    .sunday(7)
-                                    .build()
-                    ),
-                    userIdCompositeTwo, List.of(
-                            WorkingTime.builder(userIdCompositeTwo, new WorkingTimeId(UUID.randomUUID()))
-                                    .federalState(NONE)
-                                    .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
-                                    .monday(7)
-                                    .tuesday(6)
-                                    .wednesday(5)
-                                    .thursday(4)
-                                    .friday(3)
-                                    .saturday(2)
-                                    .sunday(1)
-                                    .build()
-                    )
+                userIdCompositeOne, List.of(
+                    WorkingTime.builder(userIdCompositeOne, new WorkingTimeId(UUID.randomUUID()))
+                        .federalState(NONE)
+                        .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
+                        .monday(1)
+                        .tuesday(2)
+                        .wednesday(3)
+                        .thursday(4)
+                        .friday(5)
+                        .saturday(6)
+                        .sunday(7)
+                        .build()
+                ),
+                userIdCompositeTwo, List.of(
+                    WorkingTime.builder(userIdCompositeTwo, new WorkingTimeId(UUID.randomUUID()))
+                        .federalState(NONE)
+                        .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
+                        .monday(7)
+                        .tuesday(6)
+                        .wednesday(5)
+                        .thursday(4)
+                        .friday(3)
+                        .saturday(2)
+                        .sunday(1)
+                        .build()
+                )
             ));
 
             final Map<UserIdComposite, WorkingTimeCalendar> actual = sut.getWorkingTimeCalendarForAllUsers(from, toExclusive);
 
             assertThat(actual)
-                    .hasSize(2)
-                    .containsEntry(userIdCompositeOne, new WorkingTimeCalendar(Map.of(
-                            LocalDate.of(2023, 2, 13), new PlannedWorkingHours(Duration.ofHours(1)),
-                            LocalDate.of(2023, 2, 14), new PlannedWorkingHours(Duration.ofHours(2)),
-                            LocalDate.of(2023, 2, 15), new PlannedWorkingHours(Duration.ofHours(3)),
-                            LocalDate.of(2023, 2, 16), new PlannedWorkingHours(Duration.ofHours(4)),
-                            LocalDate.of(2023, 2, 17), new PlannedWorkingHours(Duration.ofHours(5)),
-                            LocalDate.of(2023, 2, 18), new PlannedWorkingHours(Duration.ofHours(6)),
-                            LocalDate.of(2023, 2, 19), new PlannedWorkingHours(Duration.ofHours(7))
-                    ), Map.of(
-                            LocalDate.of(2023, 2, 13), List.of(absenceUser1)
-                    )))
-                    .containsEntry(userIdCompositeTwo, new WorkingTimeCalendar(Map.of(
-                            LocalDate.of(2023, 2, 13), new PlannedWorkingHours(Duration.ofHours(7)),
-                            LocalDate.of(2023, 2, 14), new PlannedWorkingHours(Duration.ofHours(6)),
-                            LocalDate.of(2023, 2, 15), new PlannedWorkingHours(Duration.ofHours(5)),
-                            LocalDate.of(2023, 2, 16), new PlannedWorkingHours(Duration.ofHours(4)),
-                            LocalDate.of(2023, 2, 17), new PlannedWorkingHours(Duration.ofHours(3)),
-                            LocalDate.of(2023, 2, 18), new PlannedWorkingHours(Duration.ofHours(2)),
-                            LocalDate.of(2023, 2, 19), new PlannedWorkingHours(Duration.ofHours(1))
-                    ), Map.of(
-                            LocalDate.of(2023, 2, 14), List.of(absenceUser2),
-                            LocalDate.of(2023, 2, 15), List.of(absenceUser2)
-                    )));
+                .hasSize(2)
+                .containsEntry(userIdCompositeOne, new WorkingTimeCalendar(Map.of(
+                    LocalDate.of(2023, 2, 13), new PlannedWorkingHours(Duration.ofHours(1)),
+                    LocalDate.of(2023, 2, 14), new PlannedWorkingHours(Duration.ofHours(2)),
+                    LocalDate.of(2023, 2, 15), new PlannedWorkingHours(Duration.ofHours(3)),
+                    LocalDate.of(2023, 2, 16), new PlannedWorkingHours(Duration.ofHours(4)),
+                    LocalDate.of(2023, 2, 17), new PlannedWorkingHours(Duration.ofHours(5)),
+                    LocalDate.of(2023, 2, 18), new PlannedWorkingHours(Duration.ofHours(6)),
+                    LocalDate.of(2023, 2, 19), new PlannedWorkingHours(Duration.ofHours(7))
+                ), Map.of(
+                    LocalDate.of(2023, 2, 13), List.of(absenceUser1)
+                )))
+                .containsEntry(userIdCompositeTwo, new WorkingTimeCalendar(Map.of(
+                    LocalDate.of(2023, 2, 13), new PlannedWorkingHours(Duration.ofHours(7)),
+                    LocalDate.of(2023, 2, 14), new PlannedWorkingHours(Duration.ofHours(6)),
+                    LocalDate.of(2023, 2, 15), new PlannedWorkingHours(Duration.ofHours(5)),
+                    LocalDate.of(2023, 2, 16), new PlannedWorkingHours(Duration.ofHours(4)),
+                    LocalDate.of(2023, 2, 17), new PlannedWorkingHours(Duration.ofHours(3)),
+                    LocalDate.of(2023, 2, 18), new PlannedWorkingHours(Duration.ofHours(2)),
+                    LocalDate.of(2023, 2, 19), new PlannedWorkingHours(Duration.ofHours(1))
+                ), Map.of(
+                    LocalDate.of(2023, 2, 14), List.of(absenceUser2),
+                    LocalDate.of(2023, 2, 15), List.of(absenceUser2)
+                )));
         }
     }
 
