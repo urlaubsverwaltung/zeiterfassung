@@ -18,10 +18,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 
 import static java.time.ZoneOffset.UTC;
 import static java.time.temporal.ChronoUnit.DAYS;
+import static java.util.Collections.max;
+import static java.util.Collections.min;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 @Component
@@ -47,15 +50,30 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
 
     @Override
     public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimeCalendarForAllUsers(LocalDate from, LocalDate toExclusive) {
-        return toWorkingTimeCalendar(from, toExclusive, workingTimeService.getAllWorkingTimes(from, toExclusive));
+        return toWorkingTimeCalendar(from, toExclusive, absenceService.getAbsencesForAllUsers(from, toExclusive), workingTimeService::getAllWorkingTimes);
     }
 
     @Override
     public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimeCalendarForUsers(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
-        return toWorkingTimeCalendar(from, toExclusive, workingTimeService.getWorkingTimesByUsers(from, toExclusive, userLocalIds));
+        return toWorkingTimeCalendar(from, toExclusive, absenceService.getAbsencesByUserIds(userLocalIds.stream().toList(), from, toExclusive), (start, endExclusive) -> workingTimeService.getWorkingTimesByUsers(start, endExclusive, userLocalIds));
     }
 
-    private Map<UserIdComposite, WorkingTimeCalendar> toWorkingTimeCalendar(LocalDate from, LocalDate toExclusive, Map<UserIdComposite, List<WorkingTime>> sortedWorkingTimes) {
+    private Map<UserIdComposite, WorkingTimeCalendar> toWorkingTimeCalendar(LocalDate from, LocalDate toExclusive, Map<UserIdComposite, List<Absence>> absencesByUser, BiFunction<LocalDate, LocalDate, Map<UserIdComposite, List<WorkingTime>>> workingTimesSupplier) {
+
+        LocalDate minDate = absencesByUser.values().stream()
+            .flatMap(List::stream)
+            .map(Absence::startDate)
+            .min(Instant::compareTo)
+            .map((Instant instant) -> LocalDate.ofInstant(instant, UTC))
+            .orElse(from);
+        LocalDate maxDate = absencesByUser.values().stream()
+            .flatMap(List::stream)
+            .map(Absence::endDate)
+            .max(Instant::compareTo)
+            .map(instant -> LocalDate.ofInstant(instant, UTC).atStartOfDay().plusDays(1).toLocalDate())
+            .orElse(toExclusive);
+
+        final Map<UserIdComposite, List<WorkingTime>> sortedWorkingTimes = workingTimesSupplier.apply(minDate, maxDate);
 
         final HashMap<UserIdComposite, WorkingTimeCalendar> result = new HashMap<>();
 
@@ -67,9 +85,6 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
 
         final Map<FederalState, PublicHolidayCalendar> publicHolidayCalendars =
             publicHolidaysService.getPublicHolidays(from, toExclusive, federalStates);
-
-        final List<UserLocalId> userLocalIds = sortedWorkingTimes.keySet().stream().map(UserIdComposite::localId).toList();
-        final Map<UserIdComposite, List<Absence>> absencesByUser = absenceService.getAbsencesByUserIds(userLocalIds, from, toExclusive);
 
         final BiPredicate<LocalDate, FederalState> isPublicHoliday = (localDate, federalState) ->
             publicHolidayCalendars.containsKey(federalState) && publicHolidayCalendars.get(federalState).isPublicHoliday(localDate);
@@ -85,23 +100,22 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
                 }
             }
 
-            final WorkingTimeCalendar workingTimeCalendar = toWorkingTimeCalendar(from, toExclusive, workingTimes, absencesByDate, isPublicHoliday);
+            final WorkingTimeCalendar workingTimeCalendar = toWorkingTimeCalendar(minDate, maxDate, workingTimes, absencesByDate, isPublicHoliday);
             result.put(userIdComposite, workingTimeCalendar);
         });
 
         return result;
     }
 
-    private WorkingTimeCalendar toWorkingTimeCalendar(LocalDate from, LocalDate toExclusive, List<WorkingTime> sortedWorkingTimes,
+    private WorkingTimeCalendar toWorkingTimeCalendar(LocalDate minDate, LocalDate maxDateExclusive, List<WorkingTime> sortedWorkingTimes,
                                                       Map<LocalDate, List<Absence>> absencesByDate, BiPredicate<LocalDate, FederalState> isPublicHoliday) {
 
         final Map<LocalDate, PlannedWorkingHours> plannedWorkingHoursByDate = new HashMap<>();
 
-        LocalDate nextEnd = toExclusive.minusDays(1);
+        LocalDate nextEnd = maxDateExclusive.minusDays(1);
 
         for (WorkingTime workingTime : sortedWorkingTimes) {
-
-            final DateRange workingTimeDateRange = getDateRange(from, workingTime, nextEnd);
+            final DateRange workingTimeDateRange = getDateRange(minDate, workingTime, nextEnd);
 
             for (LocalDate localDate : workingTimeDateRange) {
                 if (workingTime.worksOnPublicHoliday() || !isPublicHoliday.test(localDate, workingTime.federalState())) {
@@ -111,7 +125,7 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
                 }
             }
 
-            if (workingTimeDateRange.startDate().equals(from)) {
+            if (workingTimeDateRange.startDate().equals(minDate)) {
                 break;
             } else {
                 nextEnd = workingTime.validFrom().map(date -> date.minusDays(1))
