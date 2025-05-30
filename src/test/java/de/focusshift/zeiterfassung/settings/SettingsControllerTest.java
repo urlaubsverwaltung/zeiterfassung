@@ -24,10 +24,10 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
@@ -94,9 +94,13 @@ class SettingsControllerTest implements ControllerTest {
             .param("lockingIsActive", "true")
             .param("lockTimeEntriesDaysInPast", "-1")
         )
-            .andExpect(status().isOk())
-            .andExpect(view().name("settings/settings"))
-            .andExpect(model().attributeHasFieldErrors("settings"));
+            .andExpect(flash().attribute("settings", dto))
+            .andExpect(flash().attributeExists(
+                "federalStateSelect",
+                BindingResult.MODEL_KEY_PREFIX + "settings"
+            ))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/settings"));
 
         verifyNoInteractions(settingsService);
     }
@@ -110,6 +114,7 @@ class SettingsControllerTest implements ControllerTest {
             .param("lockingIsActive", "true")
             .param("lockTimeEntriesDaysInPast", "42")
         )
+            .andExpect(flash().attributeCount(0))
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/settings"));
 
