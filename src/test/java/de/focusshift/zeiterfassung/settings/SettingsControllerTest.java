@@ -2,19 +2,28 @@ package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.MessageSource;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.validation.BindingResult;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.Locale;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,10 +48,16 @@ class SettingsControllerTest implements ControllerTest {
     private SettingsService settingsService;
     @Mock
     private SettingsDtoValidator settingsDtoValidator;
+    @Mock
+    private UserSettingsProvider userSettingsProvider;
+    @Mock
+    private MessageSource messageSource;
+
+    private static final Clock fixedClock = Clock.fixed(Instant.parse("2025-05-30T22:00:00.000Z"), ZoneOffset.UTC);
 
     @BeforeEach
     void setUp() {
-        sut = new SettingsController(settingsService, settingsDtoValidator);
+        sut = new SettingsController(settingsService, settingsDtoValidator, userSettingsProvider, messageSource, fixedClock);
     }
 
     @Test
@@ -54,11 +69,52 @@ class SettingsControllerTest implements ControllerTest {
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
 
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
+
         final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, true, "42");
 
         perform(get("/settings"))
             .andExpect(status().isOk())
             .andExpect(model().attribute("settings", expectedSettingsDto));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "-1, 'today'",
+        "0, 'today'",
+        "1, 'yesterday'",
+        "2, 'ereyesterday'"
+    })
+    void ensureGetSettingsWithCorrectExampleLockTimeEntriesText(int lockTimeEntriesDaysInPast, String messageKey) throws Exception {
+
+        final Locale locale = Locale.GERMAN;
+
+        final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
+        final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast);
+
+        when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
+        when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
+        when(messageSource.getMessage(messageKey, null, locale)).thenReturn("any text");
+
+        perform(get("/settings").locale(locale))
+            .andExpect(model().attribute("timeslotLockedExampleDate", "any text"));
+    }
+
+    @Test
+    void ensureGetSettingsWithCorrectExampleLockTimeEntriesTextDate() throws Exception {
+
+        final Locale locale = Locale.GERMAN;
+
+        final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
+        final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(true, 3);
+
+        when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
+        when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
+
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
+
+        perform(get("/settings").locale(locale))
+            .andExpect(model().attribute("timeslotLockedExampleDate", "Mittwoch, 28.05.2025"));
     }
 
     @Test
