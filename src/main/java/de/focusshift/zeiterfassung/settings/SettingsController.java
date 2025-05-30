@@ -2,6 +2,8 @@ package de.focusshift.zeiterfassung.settings;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import org.springframework.context.MessageSource;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,7 +12,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
 import static java.util.Objects.requireNonNullElse;
@@ -24,15 +35,34 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
 
     private final SettingsService settingsService;
     private final SettingsDtoValidator settingsDtoValidator;
+    private final UserSettingsProvider userSettingsProvider;
+    private final MessageSource messageSource;
+    private final Clock clock;
 
-    SettingsController(SettingsService settingsService, SettingsDtoValidator settingsDtoValidator) {
+    SettingsController(
+        SettingsService settingsService,
+        SettingsDtoValidator settingsDtoValidator,
+        UserSettingsProvider userSettingsProvider,
+        MessageSource messageSource, Clock clock
+    ) {
         this.settingsService = settingsService;
         this.settingsDtoValidator = settingsDtoValidator;
+        this.userSettingsProvider = userSettingsProvider;
+        this.messageSource = messageSource;
+        this.clock = clock;
     }
 
     @GetMapping
-    String getSettings(Model model) {
-        fillFederalStateSettings(model);
+    String getSettings(Model model, Locale locale) {
+
+        // settings dto could exist already from POST redirect
+        if (!model.containsAttribute(ATTRIBUTE_NAME_SETTINGS)) {
+            fillFederalStateSettings(model);
+        }
+
+        final SettingsDto settingsDto = getSettingsDtoFromModel(model);
+        model.addAttribute("timeslotLockedExampleDate", getTimeslotLockedExampleDate(settingsDto, locale));
+
         return "settings/settings";
     }
 
@@ -46,17 +76,26 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
     }
 
     @PostMapping
-    ModelAndView saveSettings(@ModelAttribute(ATTRIBUTE_NAME_SETTINGS) SettingsDto settingsDto, BindingResult bindingResult, Model model) {
+    ModelAndView saveSettings(
+        @ModelAttribute(ATTRIBUTE_NAME_SETTINGS) SettingsDto settingsDto,
+        BindingResult bindingResult,
+        @RequestParam(name = "preview", required = false) Optional<String> preview,
+        RedirectAttributes redirectAttributes
+    ) {
 
         settingsDtoValidator.validate(settingsDto, bindingResult);
-        if (bindingResult.hasErrors()) {
-            prepareModel(model, settingsDto);
-            model.addAttribute(BindingResult.MODEL_KEY_PREFIX + ATTRIBUTE_NAME_SETTINGS, bindingResult);
-            return new ModelAndView("settings/settings");
-        }
 
-        settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
-        settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1));
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute(ATTRIBUTE_NAME_SETTINGS, settingsDto);
+            redirectAttributes.addFlashAttribute("federalStateSelect", federalStateSelectDto(settingsDto.federalState()));
+            redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + ATTRIBUTE_NAME_SETTINGS, bindingResult);
+        } else if (preview.isPresent()) {
+            redirectAttributes.addFlashAttribute(ATTRIBUTE_NAME_SETTINGS, settingsDto);
+            redirectAttributes.addFlashAttribute("federalStateSelect", federalStateSelectDto(settingsDto.federalState()));
+        } else {
+            settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
+            settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1));
+        }
 
         return new ModelAndView("redirect:/settings");
     }
@@ -76,5 +115,29 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
             lockTimeEntriesSettings.lockingIsActive(),
             lockTimeEntriesDaysInPast >= 0 ? String.valueOf(lockTimeEntriesDaysInPast) : null
         );
+    }
+
+    private SettingsDto getSettingsDtoFromModel(Model model) {
+        final SettingsDto settingsDto = (SettingsDto) model.getAttribute(ATTRIBUTE_NAME_SETTINGS);
+        if (settingsDto == null) {
+            throw new IllegalStateException("expected settingsDto to exist in model.");
+        }
+        return settingsDto;
+    }
+
+    private String getTimeslotLockedExampleDate(SettingsDto settingsDto, Locale locale) {
+        final int lockedDaysInPat = requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1);
+
+        if (lockedDaysInPat < 1) {
+            return messageSource.getMessage("today", null, locale);
+        } else if (lockedDaysInPat == 1) {
+            return messageSource.getMessage("yesterday", null, locale);
+        } else if (lockedDaysInPat == 2) {
+            return messageSource.getMessage("ereyesterday", null, locale);
+        } else {
+            final ZoneId userZoneId = userSettingsProvider.zoneId();
+            final LocalDate today = LocalDate.now(clock.withZone(userZoneId));
+            return today.minusDays(lockedDaysInPat).format(DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy", locale));
+        }
     }
 }
