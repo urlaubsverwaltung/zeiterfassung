@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
 import static java.util.Objects.requireNonNullElse;
@@ -32,7 +33,12 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
 
     @GetMapping
     String getSettings(Model model) {
-        fillFederalStateSettings(model);
+
+        // settings dto could exist already from POST redirect
+        if (!model.containsAttribute(ATTRIBUTE_NAME_SETTINGS)) {
+            fillFederalStateSettings(model);
+        }
+
         return "settings/settings";
     }
 
@@ -46,17 +52,22 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
     }
 
     @PostMapping
-    ModelAndView saveSettings(@ModelAttribute(ATTRIBUTE_NAME_SETTINGS) SettingsDto settingsDto, BindingResult bindingResult, Model model) {
+    ModelAndView saveSettings(
+        @ModelAttribute(ATTRIBUTE_NAME_SETTINGS) SettingsDto settingsDto,
+        BindingResult bindingResult,
+        RedirectAttributes redirectAttributes
+    ) {
 
         settingsDtoValidator.validate(settingsDto, bindingResult);
-        if (bindingResult.hasErrors()) {
-            prepareModel(model, settingsDto);
-            model.addAttribute(BindingResult.MODEL_KEY_PREFIX + ATTRIBUTE_NAME_SETTINGS, bindingResult);
-            return new ModelAndView("settings/settings");
-        }
 
-        settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
-        settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1));
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute(ATTRIBUTE_NAME_SETTINGS, settingsDto);
+            redirectAttributes.addFlashAttribute("federalStateSelect", federalStateSelectDto(settingsDto.federalState()));
+            redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + ATTRIBUTE_NAME_SETTINGS, bindingResult);
+        } else {
+            settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
+            settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1));
+        }
 
         return new ModelAndView("redirect:/settings");
     }
