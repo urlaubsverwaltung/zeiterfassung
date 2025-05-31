@@ -11,26 +11,34 @@ import de.focusshift.zeiterfassung.ui.pages.ReportPage;
 import de.focusshift.zeiterfassung.ui.pages.SettingsPage;
 import de.focusshift.zeiterfassung.ui.pages.TimeEntryDialogPage;
 import de.focusshift.zeiterfassung.ui.pages.TimeEntryPage;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static com.microsoft.playwright.options.WaitForSelectorState.VISIBLE;
+import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers
 @UiTest
 class TimeEntryUIIT {
+
+    private static final ZoneId USER_ZONE_ID = ZoneId.of("Europe/Berlin");
 
     @LocalServerPort
     private int port;
@@ -44,6 +52,15 @@ class TimeEntryUIIT {
     static void containerProperties(DynamicPropertyRegistry registry) {
         postgre.configureSpringDataSource(registry);
         keycloak.configureSpringDataSource(registry);
+    }
+
+    @MockitoBean
+    private UserSettingsProvider userSettingsProvider;
+
+    @BeforeEach
+    void setUp() {
+        when(userSettingsProvider.zoneId()).thenReturn(USER_ZONE_ID);
+        when(userSettingsProvider.firstDayOfWeek()).thenReturn(DayOfWeek.MONDAY);
     }
 
     @Test
@@ -73,7 +90,7 @@ class TimeEntryUIIT {
 
         login("user", "secret", page);
 
-        final LocalDate yesterday = LocalDate.now().minusDays(1);
+        final LocalDate yesterday = LocalDate.now(USER_ZONE_ID).minusDays(1);
         timeEntryPage.fillNewTimeEntry(yesterday, LocalTime.parse("08:00"), LocalTime.parse("17:00"), "");
         timeEntryPage.submitNewTimeEntryButton().click();
 

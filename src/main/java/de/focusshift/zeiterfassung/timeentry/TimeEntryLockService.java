@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.Temporal;
 import java.util.Collection;
 import java.util.Optional;
@@ -70,7 +71,8 @@ public interface TimeEntryLockService {
     /**
      * Returns the minimum valid date in the past a {@link TimeEntry} can be created for, if there is one.
      *
+     * @param zoneId zoneId to calculate the date for, should be the logged-in user zoneId in most cases
      * @return Optional#empty when locking {@link TimeEntry} is disabled, the min valid date otherwise.
      */
-    Optional<LocalDate> getMinValidTimeEntryDate();
+    Optional<LocalDate> getMinValidTimeEntryDate(ZoneId zoneId);
 }

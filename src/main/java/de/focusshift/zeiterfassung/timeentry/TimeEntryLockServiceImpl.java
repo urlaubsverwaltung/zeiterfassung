@@ -3,12 +3,12 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettingsService;
-import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
@@ -26,12 +26,10 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final LockTimeEntriesSettingsService lockTimeEntriesSettingsService;
-    private final UserSettingsProvider userSettingsProvider;
     private final Clock clock;
 
-    TimeEntryLockServiceImpl(LockTimeEntriesSettingsService lockTimeEntriesSettingsService, UserSettingsProvider userSettingsProvider, Clock clock) {
+    TimeEntryLockServiceImpl(LockTimeEntriesSettingsService lockTimeEntriesSettingsService, Clock clock) {
         this.lockTimeEntriesSettingsService = lockTimeEntriesSettingsService;
-        this.userSettingsProvider = userSettingsProvider;
         this.clock = clock;
     }
 
@@ -82,15 +80,14 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
     }
 
     @Override
-    public Optional<LocalDate> getMinValidTimeEntryDate() {
+    public Optional<LocalDate> getMinValidTimeEntryDate(ZoneId zoneId) {
 
         final LockTimeEntriesSettings settings = getLockTimeEntriesSettings();
 
         final LocalDate minimumValidDate;
         if (settings.lockingIsActive()) {
             final int daysInPast = settings.lockTimeEntriesDaysInPast();
-            final ZoneId userZoneId = userSettingsProvider.zoneId();
-            minimumValidDate = LocalDate.ofInstant(clock.instant(), userZoneId).minusDays(daysInPast);
+            minimumValidDate = LocalDate.now(clock.withZone(zoneId)).minusDays(daysInPast);
         } else {
             minimumValidDate = null;
         }
@@ -100,8 +97,17 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
 
     private boolean isDateLocked(Temporal date, int daysInPastAllowed) {
 
-        final ZonedDateTime now = ZonedDateTime.now(clock);
-        final long daysBetween = DAYS.between(date, now);
+        final LocalDate dateNormalized;
+        if (date instanceof LocalDate localDate) {
+            dateNormalized = localDate;
+        } else if (date instanceof LocalDateTime localDateTime) {
+            dateNormalized = localDateTime.toLocalDate();
+        } else {
+            dateNormalized = ZonedDateTime.from(date).withZoneSameInstant(clock.getZone()).toLocalDate();
+        }
+
+        final LocalDate today = LocalDate.now(clock);
+        final long daysBetween = DAYS.between(dateNormalized, today);
 
         return daysBetween > daysInPastAllowed;
     }
