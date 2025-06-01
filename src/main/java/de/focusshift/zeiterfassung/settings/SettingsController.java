@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -24,6 +23,7 @@ import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
 import static java.util.Objects.requireNonNullElse;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 @Controller
 @RequestMapping("/settings")
@@ -52,24 +52,13 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
     @GetMapping
     String getSettings(Model model, Locale locale) {
 
-        // settings dto could exist already from POST redirect
-        if (!model.containsAttribute(ATTRIBUTE_NAME_SETTINGS)) {
-            fillFederalStateSettings(model);
-        }
-
-        final SettingsDto settingsDto = getSettingsDtoFromModel(model);
-        model.addAttribute("timeslotLockedExampleDate", getTimeslotLockedExampleDate(settingsDto, locale));
-
-        return "settings/settings";
-    }
-
-    void fillFederalStateSettings(Model model) {
-
         final FederalStateSettings federalStateSettings = settingsService.getFederalStateSettings();
         final LockTimeEntriesSettings lockTimeEntriesSettings = settingsService.getLockTimeEntriesSettings();
         final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings);
 
-        prepareModel(model, settingsDto);
+        prepareModel(model, locale, settingsDto);
+
+        return "settings/settings";
     }
 
     @PostMapping
@@ -77,27 +66,27 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
         @ModelAttribute(ATTRIBUTE_NAME_SETTINGS) SettingsDto settingsDto,
         BindingResult bindingResult,
         @RequestParam(name = "preview", required = false) Optional<String> preview,
-        RedirectAttributes redirectAttributes
+        Model model
     ) {
 
         settingsDtoValidator.validate(settingsDto, bindingResult);
 
         if (bindingResult.hasErrors() || preview.isPresent()) {
-            redirectAttributes.addFlashAttribute(ATTRIBUTE_NAME_SETTINGS, settingsDto);
-            redirectAttributes.addFlashAttribute("federalStateSelect", federalStateSelectDto(settingsDto.federalState()));
-            redirectAttributes.addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + ATTRIBUTE_NAME_SETTINGS, bindingResult);
+            model.addAttribute(ATTRIBUTE_NAME_SETTINGS, settingsDto);
+            model.addAttribute("federalStateSelect", federalStateSelectDto(settingsDto.federalState()));
+            return new ModelAndView("settings/settings", model.asMap(), UNPROCESSABLE_ENTITY);
         } else {
             settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
             final int lockTimeEntriesDaysInPast = requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1);
             settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), lockTimeEntriesDaysInPast);
+            return new ModelAndView("redirect:/settings");
         }
-
-        return new ModelAndView("redirect:/settings");
     }
 
-    private void prepareModel(Model model, SettingsDto settingsDto) {
+    private void prepareModel(Model model, Locale locale, SettingsDto settingsDto) {
         model.addAttribute(ATTRIBUTE_NAME_SETTINGS, settingsDto);
         model.addAttribute("federalStateSelect", federalStateSelectDto(settingsDto.federalState()));
+        model.addAttribute("timeslotLockedExampleDate", getTimeslotLockedExampleDate(settingsDto, locale));
     }
 
     private SettingsDto toSettingsDto(FederalStateSettings federalStateSettings, LockTimeEntriesSettings lockTimeEntriesSettings) {
@@ -110,14 +99,6 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
             lockTimeEntriesSettings.lockingIsActive(),
             lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null
         );
-    }
-
-    private SettingsDto getSettingsDtoFromModel(Model model) {
-        final SettingsDto settingsDto = (SettingsDto) model.getAttribute(ATTRIBUTE_NAME_SETTINGS);
-        if (settingsDto == null) {
-            throw new IllegalStateException("expected settingsDto to exist in model.");
-        }
-        return settingsDto;
     }
 
     private String getTimeslotLockedExampleDate(SettingsDto settingsDto, Locale locale) {

@@ -35,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
@@ -125,21 +126,14 @@ class SettingsControllerTest implements ControllerTest {
             .param("lockingIsActive", "true")
             .param("lockTimeEntriesDaysInPast", "-1")
         )
-            .andExpect(flash().attribute("settings", dto))
-            .andExpect(flash().attributeExists(
-                "federalStateSelect",
-                BindingResult.MODEL_KEY_PREFIX + "settings"
-            ))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/settings"));
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(view().name("settings/settings"));
 
         verifyNoInteractions(settingsService);
     }
 
     @Test
     void ensureUpdateSettingsPreviewDoesNotPersist() throws Exception {
-
-        final SettingsDto dto = new SettingsDto(FederalState.NONE, false, true, "42");
 
         perform(post("/settings")
             .param("preview", "")
@@ -148,13 +142,8 @@ class SettingsControllerTest implements ControllerTest {
             .param("lockingIsActive", "true")
             .param("lockTimeEntriesDaysInPast", "42")
         )
-            .andExpect(flash().attribute("settings", dto))
-            .andExpect(flash().attributeExists(
-                "federalStateSelect",
-                BindingResult.MODEL_KEY_PREFIX + "settings"
-            ))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/settings"));
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(view().name("settings/settings"));
 
         verifyNoInteractions(settingsService);
     }
