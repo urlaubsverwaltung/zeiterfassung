@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.overtime;
 
 import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
-import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
@@ -148,9 +147,9 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
         final TimeEntryUpdatedEvent timeEntryUpdatedEvent = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate);
         applicationEventPublisher.publishEvent(timeEntryUpdatedEvent);
 
-        final Stream<UserHasWorkedOvertimeUpdatedEvent> actualEvents = applicationEvents.stream(UserHasWorkedOvertimeUpdatedEvent.class);
+        final Stream<UserHasWorkedOvertimeEvent> actualEvents = applicationEvents.stream(UserHasWorkedOvertimeEvent.class);
         assertThat(actualEvents).containsExactly(
-            new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, currentDate, OvertimeHours.ZERO)
+            new UserHasWorkedOvertimeEvent(userIdComposite, currentDate, OvertimeHours.ZERO)
         );
     }
 }
