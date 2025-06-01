@@ -30,6 +30,10 @@ function submitSettingsFormPreview(event: Event) {
   showProgressBar();
 }
 
+// turbo re-renders the frame, however, the activeElement (e.g. a text input)
+// will be re-rendered and therefore looses the focus. we could append the
+// data-turbo-permanent attribute to enforce keeping it. this, however, results
+// in not getting aria-invalid attribute updated. therefore -> morph it manually
 onTurboBeforeFrameRender(function (event) {
   if (event.detail.newFrame.matches("#frame-settings-form")) {
     event.detail.render = function (currentFrame, newFrame) {
