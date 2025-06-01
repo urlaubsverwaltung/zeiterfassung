@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +16,12 @@ import org.springframework.security.web.method.annotation.AuthenticationPrincipa
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.validation.BindingResult;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.Locale;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,10 +46,14 @@ class SettingsControllerTest implements ControllerTest {
     private SettingsService settingsService;
     @Mock
     private SettingsDtoValidator settingsDtoValidator;
+    @Mock
+    private UserSettingsProvider userSettingsProvider;
+
+    private static final Clock fixedClock = Clock.fixed(Instant.parse("2025-05-30T22:00:00.000Z"), ZoneOffset.UTC);
 
     @BeforeEach
     void setUp() {
-        sut = new SettingsController(settingsService, settingsDtoValidator);
+        sut = new SettingsController(settingsService, settingsDtoValidator, userSettingsProvider, fixedClock);
     }
 
     @Test
@@ -54,11 +65,30 @@ class SettingsControllerTest implements ControllerTest {
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
 
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
+
         final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, true, "42");
 
         perform(get("/settings"))
             .andExpect(status().isOk())
             .andExpect(model().attribute("settings", expectedSettingsDto));
+    }
+
+    @Test
+    void ensureGetSettingsWithCorrectExampleLockTimeEntriesTextDate() throws Exception {
+
+        final Locale locale = Locale.GERMAN;
+
+        final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
+        final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(true, 3);
+
+        when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
+        when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
+
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
+
+        perform(get("/settings").locale(locale))
+            .andExpect(model().attribute("timeslotLockedExampleDate", "Dienstag, 27.05.2025"));
     }
 
     @Test
@@ -69,6 +99,7 @@ class SettingsControllerTest implements ControllerTest {
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
         final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, false, null);
 
@@ -93,6 +124,29 @@ class SettingsControllerTest implements ControllerTest {
             .param("worksOnPublicHoliday", "false")
             .param("lockingIsActive", "true")
             .param("lockTimeEntriesDaysInPast", "-1")
+        )
+            .andExpect(flash().attribute("settings", dto))
+            .andExpect(flash().attributeExists(
+                "federalStateSelect",
+                BindingResult.MODEL_KEY_PREFIX + "settings"
+            ))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/settings"));
+
+        verifyNoInteractions(settingsService);
+    }
+
+    @Test
+    void ensureUpdateSettingsPreviewDoesNotPersist() throws Exception {
+
+        final SettingsDto dto = new SettingsDto(FederalState.NONE, false, true, "42");
+
+        perform(post("/settings")
+            .param("preview", "")
+            .param("federalState", "NONE")
+            .param("worksOnPublicHoliday", "false")
+            .param("lockingIsActive", "true")
+            .param("lockTimeEntriesDaysInPast", "42")
         )
             .andExpect(flash().attribute("settings", dto))
             .andExpect(flash().attributeExists(

@@ -3,7 +3,7 @@ import type { TurboFetchResponse } from "./turbo-events-http-requests";
 type BeforeFrameRenderEventDetail = {
   newFrame: HTMLElement;
   resume(): void;
-  render(currentFrame: Element, newFrame: Element): void;
+  render(currentFrame: HTMLElement, newFrame: HTMLElement): void;
 };
 
 export function onTurboBeforeFrameRender(

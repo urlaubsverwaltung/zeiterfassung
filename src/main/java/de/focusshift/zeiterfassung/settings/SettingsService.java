@@ -78,7 +78,7 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
      * Update {@link LockTimeEntriesSettings}.
      *
      * @param lockingIsActive           whether locking is active or not
-     * @param lockTimeEntriesDaysInPast number of days time entries in past get locked
+     * @param lockTimeEntriesDaysInPast number of days time entries in past get locked, zero based (0 -> yesterday is locked)
      * @return the updated {@link LockTimeEntriesSettings}
      */
     LockTimeEntriesSettings updateLockTimeEntriesSettings(boolean lockingIsActive, int lockTimeEntriesDaysInPast) {
