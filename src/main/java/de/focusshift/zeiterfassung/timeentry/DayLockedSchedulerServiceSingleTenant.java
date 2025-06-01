@@ -45,10 +45,9 @@ class DayLockedSchedulerServiceSingleTenant implements DayLockedSchedulerService
             date -> {
                     final LocalDate lockedDate = date.minusDays(1);
                     LOG.info("Date {} is locked now for zoneId={}. Publish application event.", zoneId, lockedDate);
-                    applicationEventPublisher.publishEvent(new DayLockedEvent(lockedDate));
+                    applicationEventPublisher.publishEvent(new DayLockedEvent(lockedDate, zoneId));
                 },
-                () -> LOG.info("No date to lock available."
-            )
-        );
+                () -> LOG.info("No date to lock available.")
+            );
     }
 }

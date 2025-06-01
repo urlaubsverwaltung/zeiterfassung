@@ -17,6 +17,9 @@ class UserSettingsProviderImpl implements UserSettingsProvider {
 
     @Override
     public ZoneId zoneId() {
+        // once this value becomes dynamic,
+        // we need to consider handling of DayLockedEvent and publishing OvertimeRabbitEvent.
+        // whether a day is locked or not depends on the zoneId. a date can be locked in Berlin, but not in Los Angeles yet.
         return EUROPE_BERLIN;
     }
 }

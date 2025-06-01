@@ -23,6 +23,7 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,8 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @RecordApplicationEvents
 class OvertimePublisherIT extends SingleTenantTestContainersBase {
+
+    private static final ZoneId ZONE_ID_BERLIN = ZoneId.of("Europe/Berlin");
 
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
@@ -64,7 +67,7 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
             userId2, new OvertimeAccount(userId2, true)
         ));
 
-        final DayLockedEvent dayLockedEvent = new DayLockedEvent(date);
+        final DayLockedEvent dayLockedEvent = new DayLockedEvent(date, ZONE_ID_BERLIN);
         applicationEventPublisher.publishEvent(dayLockedEvent);
 
         final List<UserHasWorkedOvertimeEvent> actualEvents = applicationEvents.stream(UserHasWorkedOvertimeEvent.class).toList();
@@ -92,7 +95,7 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
             userId2, new OvertimeAccount(userId, true)
         ));
 
-        final DayLockedEvent dayLockedEvent = new DayLockedEvent(date);
+        final DayLockedEvent dayLockedEvent = new DayLockedEvent(date, ZONE_ID_BERLIN);
         applicationEventPublisher.publishEvent(dayLockedEvent);
 
         final List<UserHasWorkedOvertimeEvent> actualEvents = applicationEvents.stream(UserHasWorkedOvertimeEvent.class).toList();
@@ -116,7 +119,7 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
             userId, new OvertimeAccount(userId, false)
         ));
 
-        final DayLockedEvent dayLockedEvent = new DayLockedEvent(date);
+        final DayLockedEvent dayLockedEvent = new DayLockedEvent(date, ZONE_ID_BERLIN);
         applicationEventPublisher.publishEvent(dayLockedEvent);
 
         final List<UserHasWorkedOvertimeEvent> actualEvents = applicationEvents.stream(UserHasWorkedOvertimeEvent.class).toList();

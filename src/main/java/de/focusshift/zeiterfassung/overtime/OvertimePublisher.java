@@ -44,7 +44,7 @@ class OvertimePublisher {
 
     @EventListener
     public void publishOvertime(DayLockedEvent event) {
-        LOG.info("TimeEntry Locking enabled -> fetch timeEntries and publish overtime entries.");
+        LOG.info("TimeEntry Locking enabled -> fetch timeEntries and publish overtime entries for date={} zoneId={}", event.date(), event.zoneId());
 
         final Map<UserIdComposite, OvertimeAccount> overtimeAccountByUserId = overtimeAccountService.getAllOvertimeAccounts();
 
