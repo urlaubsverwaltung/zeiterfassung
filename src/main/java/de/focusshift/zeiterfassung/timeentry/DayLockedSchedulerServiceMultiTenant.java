@@ -35,11 +35,11 @@ class DayLockedSchedulerServiceMultiTenant implements DayLockedSchedulerService 
     }
 
     @Override
-    public void checkLockedAndPublishOvertime() {
-        tenantContextRunner.runForEachActiveTenant(this::checkLockedAndPublishOvertimeForTenant).run();
+    public void checkDayLockedAndPublish() {
+        tenantContextRunner.runForEachActiveTenant(this::checkDayLockedForTenant).run();
     }
 
-    private void checkLockedAndPublishOvertimeForTenant() {
+    private void checkDayLockedForTenant() {
         // using Europe/Berlin because this is also the hard coded value in UserSettingProvider currently.
         // and our application is used in germany.
         final ZoneId zoneId = ZoneId.of("Europe/Berlin");

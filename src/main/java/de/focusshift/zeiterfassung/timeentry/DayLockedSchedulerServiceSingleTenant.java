@@ -31,7 +31,7 @@ class DayLockedSchedulerServiceSingleTenant implements DayLockedSchedulerService
     }
 
     @Override
-    public void checkLockedAndPublishOvertime() {
+    public void checkDayLockedAndPublish() {
         // using Europe/Berlin because this is also the hard coded value in UserSettingProvider currently.
         // and our application is used in germany.
         final ZoneId zoneId = ZoneId.of("Europe/Berlin");

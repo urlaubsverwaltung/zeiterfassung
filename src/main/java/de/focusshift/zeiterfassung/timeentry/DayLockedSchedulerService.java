@@ -1,11 +1,11 @@
 package de.focusshift.zeiterfassung.timeentry;
 
-import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
+import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
 
 interface DayLockedSchedulerService {
 
     /**
-     * Checks for locked days and publishes {@link UserHasWorkedOvertimeEvent} for locked days.
+     * Checks for locked days and publishes {@link DayLockedEvent}.
      */
-    void checkLockedAndPublishOvertime();
+    void checkDayLockedAndPublish();
 }

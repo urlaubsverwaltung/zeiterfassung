@@ -15,7 +15,7 @@ class DayLockedScheduler {
 
     @Scheduled(cron = "0 0 3 * * *")
     @SchedulerLock(name = "checkOvertimePublish")
-    void scheduledCheckOvertimePublish() {
-        dayLockedSchedulerService.checkLockedAndPublishOvertime();
+    void scheduledCheckDayLockedPublish() {
+        dayLockedSchedulerService.checkDayLockedAndPublish();
     }
 }
