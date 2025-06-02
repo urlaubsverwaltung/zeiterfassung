@@ -102,7 +102,7 @@ class SettingsControllerTest implements ControllerTest {
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
-        final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, false, null);
+        final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, false, "-1");
 
         perform(get("/settings"))
             .andExpect(status().isOk())

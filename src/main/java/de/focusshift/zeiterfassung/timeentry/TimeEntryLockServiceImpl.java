@@ -46,12 +46,14 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
             return false;
         }
 
-        final int daysInPastAllowed = lockTimeEntriesSettings.lockTimeEntriesDaysInPast();
-        boolean isLocked = isDateLocked(temporal, daysInPastAllowed);
-
-        LOG.debug("temporal {} locked={}", temporal, isLocked);
-
-        return isLocked;
+        return lockTimeEntriesSettings.lockTimeEntriesDaysInPast().map(daysInPastAllowed -> {
+            final boolean isLocked = isDateLocked(temporal, daysInPastAllowed);
+            LOG.debug("temporal {} locked={}", temporal, isLocked);
+            return isLocked;
+        }).orElseGet(() -> {
+            LOG.error("TimeEntry locking is active, but unexpected empty daysInPastAllowed value. Therefore date={} is locked.", temporal);
+            return true;
+        });
     }
 
     @Override
@@ -63,15 +65,16 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
             return false;
         }
 
-        final int daysInPastAllowed = settings.lockTimeEntriesDaysInPast();
-
-        final boolean startLocked = isDateLocked(start, daysInPastAllowed);
-        final boolean endLocked = isDateLocked(end, daysInPastAllowed);
-        final boolean isLocked = startLocked || endLocked;
-
-        LOG.debug("start={} locked={}, end={} locked={}", start, startLocked, end, endLocked);
-
-        return isLocked;
+        return settings.lockTimeEntriesDaysInPast().map(daysInPastAllowed -> {
+            final boolean startLocked = isDateLocked(start, daysInPastAllowed);
+            final boolean endLocked = isDateLocked(end, daysInPastAllowed);
+            final boolean isLocked = startLocked || endLocked;
+            LOG.debug("start={} locked={}, end={} locked={}", start, startLocked, end, endLocked);
+            return isLocked;
+        }).orElseGet(() -> {
+            LOG.error("TimeEntry locking is active, but unexpected empty daysInPastAllowed value. Therefore timespan {} to {} is locked.", start, end);
+            return false;
+        });
     }
 
     @Override
@@ -86,8 +89,12 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
 
         final LocalDate minimumValidDate;
         if (settings.lockingIsActive()) {
-            final int daysInPast = settings.lockTimeEntriesDaysInPast();
-            minimumValidDate = LocalDate.now(clock.withZone(zoneId)).minusDays(daysInPast);
+            minimumValidDate = settings.lockTimeEntriesDaysInPast()
+                .map(daysInPast -> LocalDate.now(clock.withZone(zoneId)).minusDays(daysInPast))
+                .orElseGet(() -> {
+                    LOG.error("Time Entry locking is active, but unexpected empty daysInPastAllowed. Therefore using empty minValidTimeEntryDate.");
+                    return null;
+                });
         } else {
             minimumValidDate = null;
         }

@@ -77,8 +77,7 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
             return new ModelAndView("settings/settings", model.asMap(), UNPROCESSABLE_ENTITY);
         } else {
             settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
-            final int lockTimeEntriesDaysInPast = requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1);
-            settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), lockTimeEntriesDaysInPast);
+            settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), settingsDto.lockTimeEntriesDaysInPastAsNumber());
             return new ModelAndView("redirect:/settings");
         }
     }
@@ -90,14 +89,11 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
     }
 
     private SettingsDto toSettingsDto(FederalStateSettings federalStateSettings, LockTimeEntriesSettings lockTimeEntriesSettings) {
-
-        final int lockTimeEntriesDaysInPast = lockTimeEntriesSettings.lockTimeEntriesDaysInPast();
-
         return new SettingsDto(
             federalStateSettings.federalState(),
             federalStateSettings.worksOnPublicHoliday(),
             lockTimeEntriesSettings.lockingIsActive(),
-            lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null
+            lockTimeEntriesSettings.lockTimeEntriesDaysInPast().map(String::valueOf).orElse(null)
         );
     }
 

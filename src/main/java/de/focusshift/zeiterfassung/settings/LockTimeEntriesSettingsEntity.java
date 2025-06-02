@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,7 +21,7 @@ public class LockTimeEntriesSettingsEntity extends AbstractTenantAwareEntity {
     protected Long id;
 
     @Column(name = "lock_time_entries_days_in_past")
-    private int lockTimeEntriesDaysInPast;
+    private Integer lockTimeEntriesDaysInPast;
 
     @Column(name = "locking_is_active")
     private boolean lockingIsActive;
@@ -37,11 +38,12 @@ public class LockTimeEntriesSettingsEntity extends AbstractTenantAwareEntity {
         this.id = id;
     }
 
-    public int getLockTimeEntriesDaysInPast() {
+    @Nullable
+    public Integer getLockTimeEntriesDaysInPast() {
         return lockTimeEntriesDaysInPast;
     }
 
-    public void setLockTimeEntriesDaysInPast(int lockTimeEntriesDaysInPast) {
+    public void setLockTimeEntriesDaysInPast(@Nullable Integer lockTimeEntriesDaysInPast) {
         this.lockTimeEntriesDaysInPast = lockTimeEntriesDaysInPast;
     }
 
