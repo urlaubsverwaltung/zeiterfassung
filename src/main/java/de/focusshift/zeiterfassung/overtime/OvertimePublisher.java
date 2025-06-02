@@ -1,7 +1,6 @@
 package de.focusshift.zeiterfassung.overtime;
 
 import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
-import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
@@ -44,7 +43,7 @@ class OvertimePublisher {
 
     @EventListener
     public void publishOvertime(DayLockedEvent event) {
-        LOG.info("TimeEntry Locking enabled -> fetch timeEntries and publish overtime entries.");
+        LOG.info("Handling DayLockedEvent for date={} and zoneId={}. Calculating overtime and publish application event.", event.date(), event.zoneId());
 
         final Map<UserIdComposite, OvertimeAccount> overtimeAccountByUserId = overtimeAccountService.getAllOvertimeAccounts();
 
@@ -183,7 +182,7 @@ class OvertimePublisher {
 
         final OvertimeHours overtimeHours = overtimeService.getOvertimeForDateAndUser(date, userIdComposite.localId());
 
-        final UserHasWorkedOvertimeUpdatedEvent overtimeUpdatedEvent = new UserHasWorkedOvertimeUpdatedEvent(userIdComposite, date, overtimeHours);
+        final UserHasWorkedOvertimeEvent overtimeUpdatedEvent = new UserHasWorkedOvertimeEvent(userIdComposite, date, overtimeHours);
         LOG.info("publish UserHasWorkedOvertimeUpdatedEvent date={} user={}", overtimeUpdatedEvent, userIdComposite);
         applicationEventPublisher.publishEvent(overtimeUpdatedEvent);
     }

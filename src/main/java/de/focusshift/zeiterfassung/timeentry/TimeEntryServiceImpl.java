@@ -311,7 +311,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
                                                    Map<LocalDate, List<TimeEntry>> timeEntriesByDate,
                                                    WorkingTimeCalendar workingTimeCalendar) {
 
-        final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate();
+        final ZoneId userZoneId = userSettingsProvider.zoneId();
+        final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(userZoneId);
 
         final List<TimeEntryDay> timeEntryDays = new ArrayList<>();
 

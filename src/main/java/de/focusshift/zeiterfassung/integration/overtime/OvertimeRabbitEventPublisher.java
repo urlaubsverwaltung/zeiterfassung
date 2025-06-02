@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.integration.overtime;
 
 import de.focusshift.zeiterfassung.overtime.OvertimeHours;
 import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
-import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeUpdatedEvent;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -38,12 +37,6 @@ class OvertimeRabbitEventPublisher {
     public void publishUserHasWorkedOvertime(UserHasWorkedOvertimeEvent event) {
         publishRabbitEvent(event.userIdComposite(), event.overtimeHours(), event.date());
     }
-
-    @EventListener
-    public void publishUserHasWorkedOvertimeUpdated(UserHasWorkedOvertimeUpdatedEvent event) {
-        publishRabbitEvent(event.userIdComposite(), event.overtimeHours(), event.date());
-    }
-
 
     private void publishRabbitEvent(UserIdComposite userIdComposite, OvertimeHours overtimeHours, LocalDate date) {
         tenantContextHolder.getCurrentTenantId().ifPresentOrElse(

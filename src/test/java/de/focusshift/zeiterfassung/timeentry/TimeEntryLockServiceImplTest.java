@@ -3,18 +3,21 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettingsService;
-import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -32,15 +35,12 @@ class TimeEntryLockServiceImplTest {
 
     @Mock
     private LockTimeEntriesSettingsService lockTimeEntriesSettingsService;
-    @Mock
-    private UserSettingsProvider userSettingsProvider;
 
     private static final Clock clockFixed = Clock.fixed(Clock.systemUTC().instant(), UTC);
-    private static final ZoneId ZONE_TOKYO = ZoneId.of("Asia/Tokyo");
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, userSettingsProvider, clockFixed);
+        sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clockFixed);
     }
 
     @Nested
@@ -51,20 +51,31 @@ class TimeEntryLockServiceImplTest {
 
             mockSettings(new LockTimeEntriesSettings(false, 1));
 
-            final Optional<LocalDate> actual = sut.getMinValidTimeEntryDate();
+            final Optional<LocalDate> actual = sut.getMinValidTimeEntryDate(UTC);
             assertThat(actual).isEmpty();
         }
 
-        @Test
-        void ensureGetMinValidTimeEntryDate() {
+        @ParameterizedTest
+        @CsvSource({
+            //                today: 2025-05-29 23:30:00
+            "Z,                   0, 2025-05-29",
+            "Z,                   1, 2025-05-28",
+            "Europe/Berlin,       0, 2025-05-30", // +02:00 to UTC
+            "Europe/Berlin,       1, 2025-05-29",
+            "Asia/Tokyo,          0, 2025-05-30", // +09:00 to UTC
+            "Asia/Tokyo,          1, 2025-05-29",
+            "America/Los_Angeles, 0, 2025-05-29", // -07:00 to UTC
+            "America/Los_Angeles, 1, 2025-05-28",
+        })
+        void ensureMinValidTimeEntryDateForGivenUserZoneId(String zoneId, int lockTimeEntriesDaysInPast, String expectedMinValidDate) {
 
-            when(userSettingsProvider.zoneId()).thenReturn(ZONE_TOKYO);
-            mockSettings(new LockTimeEntriesSettings(true, 1));
+            final Clock clock = Clock.fixed(Instant.parse("2025-05-29T23:30:00Z"), UTC);
+            sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clock);
 
-            final LocalDate today = LocalDate.now(clockFixed.withZone(ZONE_TOKYO));
+            mockSettings(new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast));
 
-            final Optional<LocalDate> actual = sut.getMinValidTimeEntryDate();
-            assertThat(actual).hasValue(today.minusDays(1));
+            final Optional<LocalDate> actual = sut.getMinValidTimeEntryDate(ZoneId.of(zoneId));
+            assertThat(actual).hasValue(LocalDate.parse(expectedMinValidDate));
         }
     }
 
@@ -80,36 +91,173 @@ class TimeEntryLockServiceImplTest {
             assertThat(actual).isFalse();
         }
 
-        @Test
-        void ensureIsLockedForLocalDate() {
+        @ParameterizedTest
+        @CsvSource({
+            // today: 2025-05-29
+            "0,       2025-05-28",
+            "0,       2025-05-27",
+            "1,       2025-05-27"
+        })
+        void ensureIsLockedForLocalDate(int lockTimeEntriesDaysInPast, String date) {
 
-            mockSettings(new LockTimeEntriesSettings(true, 1));
+            final Clock clock = Clock.fixed(Instant.parse("2025-05-29T23:30:00Z"), UTC);
+            sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clock);
 
-            final boolean actual = sut.isLocked(LocalDate.now(clockFixed).minusDays(5));
+            mockSettings(new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast));
+
+            final boolean actual = sut.isLocked(LocalDate.parse(date));
             assertThat(actual).isTrue();
         }
 
-        @Test
-        void ensureIsLockedForZonedDateTime() {
+        @ParameterizedTest
+        @CsvSource({
+            // today: 2025-05-29
+            "0,       2025-05-30",
+            "0,       2025-05-29",
+            "1,       2025-05-28",
+            "2,       2025-05-27",
+        })
+        void ensureIsNotLockedForLocalDate(int lockTimeEntriesDaysInPast, String date) {
 
-            mockSettings(new LockTimeEntriesSettings(true, 1));
+            final Clock clock = Clock.fixed(Instant.parse("2025-05-29T23:30:00Z"), UTC);
+            sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clock);
 
-            final boolean actual = sut.isLocked(ZonedDateTime.now(clockFixed).minusDays(5));
+            mockSettings(new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast));
+
+            final boolean actual = sut.isLocked(LocalDate.parse(date));
+            assertThat(actual).isFalse();
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            // today: 2025-05-29  23:30:00
+            "0,       2025-05-28, 23:59:59",
+            "1,       2025-05-27, 23:59:59",
+        })
+        void ensureIsLockedForLocalDateTime(int lockTimeEntriesDaysInPast, String date, String time) {
+
+            final Clock clock = Clock.fixed(Instant.parse("2025-05-29T23:30:00Z"), UTC);
+            sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clock);
+
+            mockSettings(new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast));
+
+            final LocalDate localDate = LocalDate.parse(date);
+            final LocalTime localTime = LocalTime.parse(time);
+            final LocalDateTime localDateTime = LocalDateTime.of(localDate, localTime);
+
+            final boolean actual = sut.isLocked(localDateTime);
             assertThat(actual).isTrue();
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            // today: 2025-05-29  23:30:00
+            "0,       2025-05-29, 00:00:00",
+            "1,       2025-05-28, 00:00:00",
+        })
+        void ensureIsNotLockedForLocalDateTime(int lockTimeEntriesDaysInPast, String date, String time) {
+
+            final Clock clock = Clock.fixed(Instant.parse("2025-05-29T23:30:00Z"), UTC);
+            sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clock);
+
+            mockSettings(new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast));
+
+            final LocalDate localDate = LocalDate.parse(date);
+            final LocalTime localTime = LocalTime.parse(time);
+            final LocalDateTime localDateTime = LocalDateTime.of(localDate, localTime);
+
+            final boolean actual = sut.isLocked(localDateTime);
+            assertThat(actual).isFalse();
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            //                today: 2025-05-29  23:30:00
+            "Z,                   0, 2025-05-28, 23:59:59",
+            "Z,                   1, 2025-05-27, 23:59:59",
+            "Europe/Berlin,       0, 2025-05-29, 01:59:59", // +02:00 to UTC
+            "Europe/Berlin,       1, 2025-05-28, 01:59:59", // +02:00 to UTC
+        })
+        void ensureIsLockedForZonedDateTime(String zoneId, int lockTimeEntriesDaysInPast, String date, String time) {
+
+            final Clock clock = Clock.fixed(Instant.parse("2025-05-29T23:30:00Z"), UTC);
+            sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clock);
+
+            mockSettings(new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast));
+
+            final LocalDate localDate = LocalDate.parse(date);
+            final LocalTime localTime = LocalTime.parse(time);
+            final ZonedDateTime zonedDateTime = ZonedDateTime.of(localDate, localTime, ZoneId.of(zoneId));
+
+            final boolean actual = sut.isLocked(zonedDateTime);
+            assertThat(actual).isTrue();
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            //                today: 2025-05-29  23:30:00
+            "Z,                   0, 2025-05-29, 00:00:00",
+            "Z,                   1, 2025-05-28, 00:00:00",
+            "Europe/Berlin,       0, 2025-05-30, 02:00:00", // +02:00 to UTC
+            "Europe/Berlin,       1, 2025-05-29, 02:00:00", // +02:00 to UTC
+        })
+        void ensureIsNotLockedForZonedDateTime(String zoneId, int lockTimeEntriesDaysInPast, String date, String time) {
+
+            final Clock clock = Clock.fixed(Instant.parse("2025-05-29T23:30:00Z"), UTC);
+            sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clock);
+
+            mockSettings(new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast));
+
+            final LocalDate localDate = LocalDate.parse(date);
+            final LocalTime localTime = LocalTime.parse(time);
+            final ZonedDateTime zonedDateTime = ZonedDateTime.of(localDate, localTime, ZoneId.of(zoneId));
+
+            final boolean actual = sut.isLocked(zonedDateTime);
+            assertThat(actual).isFalse();
         }
     }
 
     @Nested
     class IsTimespanLocked {
 
-        @Test
-        void ensureTimespanNotLockedForSameDay() {
+        @ParameterizedTest
+        @CsvSource({
+            // today: 2025-05-29
+            "0,       2025-05-28",
+            "0,       2025-05-27",
+            "1,       2025-05-27"
+        })
+        void ensureIsTrueForSameLocalDate(int lockTimeEntriesDaysInPast, String date) {
 
-            mockSettings(new LockTimeEntriesSettings(true, 0));
+            final Clock clock = Clock.fixed(Instant.parse("2025-05-29T23:30:00Z"), UTC);
+            sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clock);
 
-            final LocalDate today = LocalDate.now(clockFixed);
+            mockSettings(new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast));
 
-            final boolean actual = sut.isTimespanLocked(today, today);
+            final LocalDate localDate = LocalDate.parse(date);
+
+            final boolean actual = sut.isTimespanLocked(localDate, localDate);
+            assertThat(actual).isTrue();
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            // today: 2025-05-29
+            "0,       2025-05-30",
+            "0,       2025-05-29",
+            "1,       2025-05-28",
+            "2,       2025-05-27",
+        })
+        void ensureIsFalseForSameLocalDate(int lockTimeEntriesDaysInPast, String date) {
+
+            final Clock clock = Clock.fixed(Instant.parse("2025-05-29T23:30:00Z"), UTC);
+            sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clock);
+
+            mockSettings(new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast));
+
+            final LocalDate localDate = LocalDate.parse(date);
+
+            final boolean actual = sut.isTimespanLocked(localDate, localDate);
             assertThat(actual).isFalse();
         }
 
@@ -168,26 +316,50 @@ class TimeEntryLockServiceImplTest {
             assertThat(actual).isTrue();
         }
 
-        @Test
-        void ensureTimespanNotLockedForOtherTimeZone() {
+        @ParameterizedTest
+        @CsvSource({
+            //                today: 2025-05-29  23:30:00
+            "Z,                   0, 2025-05-28, 23:59:59",
+            "Z,                   1, 2025-05-27, 23:59:59",
+            "Europe/Berlin,       0, 2025-05-29, 01:59:59", // +02:00 to UTC
+            "Europe/Berlin,       1, 2025-05-28, 01:59:59", // +02:00 to UTC
+        })
+        void ensureIsTrueForSameZonedDateTime(String zoneId, int lockTimeEntriesDaysInPast, String date, String time) {
 
-            mockSettings(new LockTimeEntriesSettings(true, 0));
+            final Clock clock = Clock.fixed(Instant.parse("2025-05-29T23:30:00Z"), UTC);
+            sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clock);
 
-            final ZonedDateTime todayOtherTimeZone = ZonedDateTime.now(clockFixed).withZoneSameLocal(ZONE_TOKYO);
+            mockSettings(new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast));
 
-            final boolean actual = sut.isTimespanLocked(todayOtherTimeZone, todayOtherTimeZone);
-            assertThat(actual).isFalse();
+            final LocalDate localDate = LocalDate.parse(date);
+            final LocalTime localTime = LocalTime.parse(time);
+            final ZonedDateTime zonedDateTime = ZonedDateTime.of(localDate, localTime, ZoneId.of(zoneId));
+
+            final boolean actual = sut.isTimespanLocked(zonedDateTime, zonedDateTime);
+            assertThat(actual).isTrue();
         }
 
-        @Test
-        void ensureTimespanLockedForOtherTimeZone() {
+        @ParameterizedTest
+        @CsvSource({
+            //                today: 2025-05-29  23:30:00
+            "Z,                   0, 2025-05-29, 00:00:00",
+            "Z,                   1, 2025-05-28, 00:00:00",
+            "Europe/Berlin,       0, 2025-05-30, 02:00:00", // +02:00 to UTC
+            "Europe/Berlin,       1, 2025-05-29, 02:00:00", // +02:00 to UTC
+        })
+        void ensureIsFalseForSameZonedDateTime(String zoneId, int lockTimeEntriesDaysInPast, String date, String time) {
 
-            mockSettings(new LockTimeEntriesSettings(true, 0));
+            final Clock clock = Clock.fixed(Instant.parse("2025-05-29T23:30:00Z"), UTC);
+            sut = new TimeEntryLockServiceImpl(lockTimeEntriesSettingsService, clock);
 
-            final ZonedDateTime yesterdayOtherTimezone = ZonedDateTime.now(clockFixed).withZoneSameLocal(ZONE_TOKYO).minusDays(1);
+            mockSettings(new LockTimeEntriesSettings(true, lockTimeEntriesDaysInPast));
 
-            final boolean actual = sut.isTimespanLocked(yesterdayOtherTimezone, yesterdayOtherTimezone);
-            assertThat(actual).isTrue();
+            final LocalDate localDate = LocalDate.parse(date);
+            final LocalTime localTime = LocalTime.parse(time);
+            final ZonedDateTime zonedDateTime = ZonedDateTime.of(localDate, localTime, ZoneId.of(zoneId));
+
+            final boolean actual = sut.isTimespanLocked(zonedDateTime, zonedDateTime);
+            assertThat(actual).isFalse();
         }
     }
 
