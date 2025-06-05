@@ -22,6 +22,10 @@ updates:
           - "eslint"
           - "eslint-*"
           - "@eslint/*"
+      typescript-eslint:
+        patterns:
+          - "typescript-eslint*"
+          - "@typescript-eslint/*"
       postcss:
         patterns:
           - "postcss"
