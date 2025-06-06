@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -31,7 +32,7 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
     private static LockTimeEntriesSettings toLockTimeEntriesSettings(LockTimeEntriesSettingsEntity lockTimeEntriesSettingsEntity) {
         return new LockTimeEntriesSettings(
             lockTimeEntriesSettingsEntity.isLockingIsActive(),
-            lockTimeEntriesSettingsEntity.getLockTimeEntriesDaysInPast()
+            Optional.ofNullable(lockTimeEntriesSettingsEntity.getLockTimeEntriesDaysInPast())
         );
     }
 
@@ -78,10 +79,10 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
      * Update {@link LockTimeEntriesSettings}.
      *
      * @param lockingIsActive           whether locking is active or not
-     * @param lockTimeEntriesDaysInPast number of days time entries in past get locked
+     * @param lockTimeEntriesDaysInPast number of days time entries in past get locked, zero based (0 -> yesterday is locked)
      * @return the updated {@link LockTimeEntriesSettings}
      */
-    LockTimeEntriesSettings updateLockTimeEntriesSettings(boolean lockingIsActive, int lockTimeEntriesDaysInPast) {
+    LockTimeEntriesSettings updateLockTimeEntriesSettings(boolean lockingIsActive, @Nullable Integer lockTimeEntriesDaysInPast) {
 
         final LockTimeEntriesSettingsEntity entity = getLockTimeEntriesSettingsEntity().orElseGet(LockTimeEntriesSettingsEntity::new);
         entity.setLockingIsActive(lockingIsActive);

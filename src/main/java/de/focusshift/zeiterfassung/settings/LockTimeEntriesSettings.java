@@ -1,6 +1,9 @@
 package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
+import jakarta.annotation.Nullable;
+
+import java.util.Optional;
 
 /**
  * Global setting for locking time entries.
@@ -16,12 +19,16 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntry;
  * Note that privileged persons are allowed to bypass this restriction.
  *
  * @param lockingIsActive           whether this feature is enabled or not
- * @param lockTimeEntriesDaysInPast number of days time entries in past get locked. can be negative when
+ * @param lockTimeEntriesDaysInPast number of days time entries in past get locked
+ *                                  <p>
+ *                                  This number is zero based. e.g. 0 -> yesterday is locked.
+ *                                  <p>
+ *                                  Empty optional when
  *                                  {@link LockTimeEntriesSettings#lockingIsActive} is set to {@code false}. must be
  *                                  zero or positive when {@link LockTimeEntriesSettings#lockingIsActive} is set to
  *                                  {@code true}.
  */
-public record LockTimeEntriesSettings(boolean lockingIsActive, int lockTimeEntriesDaysInPast) {
+public record LockTimeEntriesSettings(boolean lockingIsActive, Optional<Integer> lockTimeEntriesDaysInPast) {
 
     /**
      * Default LockTimeSettings.
@@ -31,5 +38,9 @@ public record LockTimeEntriesSettings(boolean lockingIsActive, int lockTimeEntri
      *     <li>{@link LockTimeEntriesSettings#lockTimeEntriesDaysInPast()} = {@code 2}</li>
      * </ul>
      */
-    public static final LockTimeEntriesSettings DEFAULT = new LockTimeEntriesSettings(false, 2);
+    public static final LockTimeEntriesSettings DEFAULT = new LockTimeEntriesSettings(false, Optional.of(2));
+
+    public LockTimeEntriesSettings(boolean lockingIsActive, @Nullable Integer lockTimeEntriesDaysInPast) {
+        this(lockingIsActive, Optional.ofNullable(lockTimeEntriesDaysInPast));
+    }
 }

@@ -46,7 +46,7 @@ class SettingsServiceTest {
 
             final LockTimeEntriesSettings actual = sut.getLockTimeEntriesSettings();
             assertThat(actual.lockingIsActive()).isTrue();
-            assertThat(actual.lockTimeEntriesDaysInPast()).isEqualTo(7);
+            assertThat(actual.lockTimeEntriesDaysInPast()).hasValue(7);
         }
 
         @Test
@@ -56,7 +56,7 @@ class SettingsServiceTest {
 
             final LockTimeEntriesSettings actual = sut.getLockTimeEntriesSettings();
             assertThat(actual.lockingIsActive()).isFalse();
-            assertThat(actual.lockTimeEntriesDaysInPast()).isEqualTo(2);
+            assertThat(actual.lockTimeEntriesDaysInPast()).hasValue(2);
         }
 
         @Test
@@ -73,7 +73,7 @@ class SettingsServiceTest {
             final LockTimeEntriesSettings actual = sut.updateLockTimeEntriesSettings(true, 42);
 
             assertThat(actual.lockingIsActive()).isTrue();
-            assertThat(actual.lockTimeEntriesDaysInPast()).isEqualTo(42);
+            assertThat(actual.lockTimeEntriesDaysInPast()).hasValue(42);
 
             final ArgumentCaptor<LockTimeEntriesSettingsEntity> captor = ArgumentCaptor.forClass(LockTimeEntriesSettingsEntity.class);
             verify(lockTimeEntriesSettingsRepository).save(captor.capture());
@@ -93,7 +93,7 @@ class SettingsServiceTest {
             final LockTimeEntriesSettings actual = sut.updateLockTimeEntriesSettings(true, 42);
 
             assertThat(actual.lockingIsActive()).isTrue();
-            assertThat(actual.lockTimeEntriesDaysInPast()).isEqualTo(42);
+            assertThat(actual.lockTimeEntriesDaysInPast()).hasValue(42);
 
             final ArgumentCaptor<LockTimeEntriesSettingsEntity> captor = ArgumentCaptor.forClass(LockTimeEntriesSettingsEntity.class);
             verify(lockTimeEntriesSettingsRepository).save(captor.capture());

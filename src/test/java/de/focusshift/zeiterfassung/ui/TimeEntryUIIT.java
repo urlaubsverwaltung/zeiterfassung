@@ -94,7 +94,7 @@ class TimeEntryUIIT {
         timeEntryPage.fillNewTimeEntry(yesterday, LocalTime.parse("08:00"), LocalTime.parse("17:00"), "");
         timeEntryPage.submitNewTimeEntryButton().click();
 
-        final Locator error = page.getByText("Für den Zeitraum kann kein Zeitslot mehr erfasst werden. Bitte wende dich an eine berechtigte Person.");
+        final Locator error = page.getByText("Für den Zeitraum kann keine Zeit mehr erfasst werden. Bitte wende dich an eine berechtigte Person.");
         error.waitFor(new Locator.WaitForOptions().setState(VISIBLE));
         assertThat(error).isVisible();
     }

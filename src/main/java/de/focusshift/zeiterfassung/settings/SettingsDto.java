@@ -17,7 +17,7 @@ record SettingsDto(
      * @return number value of the user input
      */
     @Nullable
-    Integer lockTimeEntriesDaysInPastAsNumber() {
+    public Integer lockTimeEntriesDaysInPastAsNumber() {
         if (lockTimeEntriesDaysInPast == null) {
             return null;
         }

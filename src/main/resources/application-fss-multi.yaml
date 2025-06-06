@@ -1,0 +1,135 @@
+zeiterfassung:
+  development:
+    demodata:
+      create: true
+  security:
+    oidc:
+      login-form-url: http://localhost:8070/login/redirect
+      claim-mappers:
+        resource-access-claim:
+          enabled: true
+          resource-app: zeiterfassung
+      client:
+        registration:
+          server-url: http://localhost:8090/auth
+          redirect-uri-template: '{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}'
+      client-registration:
+        rabbitmq:
+          manage-topology: true
+  integration:
+    urlaubsverwaltung:
+      sicknote:
+        enabled: true
+        manage-topology: true
+        topic: urlaubsverwaltung.topic
+        routingKeyCancelled: UV.EVENT.*.SICKNOTE.CANCELLED
+        routingKeyCreated: UV.EVENT.*.SICKNOTE.CREATED
+        routingKeyUpdated: UV.EVENT.*.SICKNOTE.UPDATED
+        routingKeyConvertedToApplication: UV.EVENT.*.SICKNOTE.CONVERTED_TO_APPLICATION
+      application:
+        enabled: true
+        manage-topology: true
+        topic: urlaubsverwaltung.topic
+        routingKeyAllowed: UV.EVENT.*.APPLICATION.ALLOWED
+        routingKeyCancelled: UV.EVENT.*.APPLICATION.CANCELLED
+        routing-key-updated: UV.EVENT.*.APPLICATION.UPDATED
+      vacationtype:
+        enabled: true
+        manage-topology: true
+        topic: urlaubsverwaltung.topic
+        routingKeyUpdated: UV.EVENT.*.VACATIONTYPE.UPDATED
+    overtime:
+      enabled: true
+      manage-topology: true
+      topic: zeiterfassung.topic
+      routing-key-entered: ZE.EVENT.%s.OVERTIME.ENTERED
+  tenant:
+    mode: multi
+    registration:
+      property:
+        oauth:
+          enabled: true
+      rabbitmq:
+        enabled: true
+        topic: oidc_provider.topic
+        routingKeyCreatedTemplate: OIDC_PROVIDER.%s.ZEITERFASSUNG.OIDC_CLIENT.CREATED
+        routingKeyDeletedTemplate: OIDC_PROVIDER.%s.ZEITERFASSUNG.OIDC_CLIENT.DELETED
+
+admin:
+  datasource:
+    url: ${spring.datasource.url}
+    username: admin_user
+    password: admin_password
+
+launchpad:
+  tenant:
+    enabled: true
+    defaultSupplier:
+      enabled: false
+  name-default-locale: de
+  apps[0]:
+    icon: https://urlaubsverwaltung.cloud/static/apps/icon-urlaubsverwaltung.png
+    name:
+      de: Urlaubsverwaltung
+      en: Vacation Management
+    url: http://localhost:8070/launchpad/urlaubsverwaltung/tenant/{tenantId}
+  apps[1]:
+    icon: https://urlaubsverwaltung.cloud/static/apps/icon-zeiterfassung.png
+    name:
+      de: Zeiterfassung
+      en: Timetrack
+    url: http://localhost:8070/launchpad/zeiterfassung/tenant/{tenantId}
+
+server:
+  port: 8060
+
+spring:
+  datasource:
+    username: app_user
+    password: app_password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  mail:
+    host: localhost
+    port: 1025
+  security:
+    oauth2:
+      client:
+        registration:
+          master:
+            authorization-grant-type: authorization_code
+            client-id: zeiterfassung
+            client-name: zeiterfassung
+            client-secret: FEWQK0cBatgWCMx1HyM8jPceN35sDRM8
+            provider: master
+            redirect-uri: http://{baseHost}:8060/login/oauth2/code/{registrationId}
+            scope: openid,profile,email,roles
+          b0838c26:
+            authorization-grant-type: authorization_code
+            client-id: zeiterfassung
+            client-name: zeiterfassung
+            client-secret: IbIm8MVjF4wbBif3qK1fsHuNheRuJ6YO
+            provider: b0838c26
+            redirect-uri: http://{baseHost}:8060/login/oauth2/code/{registrationId}
+            scope: openid,profile,email,roles
+        provider:
+          master:
+            issuer-uri: http://localhost:8090/realms/master
+          b0838c26:
+            issuer-uri: http://localhost:8090/realms/b0838c26
+  thymeleaf:
+    cache: false
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          no-cache: true
+          no-store: true
+        period: 0
+      chain:
+        strategy:
+          content:
+            enabled: false
+  autoconfigure:
+    exclude:
