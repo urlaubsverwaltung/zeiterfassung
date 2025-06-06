@@ -1094,6 +1094,9 @@ class TimeEntryServiceImplTest {
     @Test
     void ensureGetEntriesForAllUsers() {
 
+        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
+
         final Instant now = Instant.now();
         final LocalDate from = LocalDate.of(2023, 1, 1);
         final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
@@ -1106,7 +1109,7 @@ class TimeEntryServiceImplTest {
         final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
         final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "pinguin", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
 
-        when(timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThanOrderByStartDesc(from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+        when(timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThanOrderByStartDesc(from.atStartOfDay().atZone(userZoneId).toInstant(), toExclusive.atStartOfDay().atZone(userZoneId).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
         final UserId batmanId = new UserId("batman");
@@ -1146,6 +1149,9 @@ class TimeEntryServiceImplTest {
     @Test
     void ensureGetEntries() {
 
+        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
+
         final UserId batmanId = new UserId("uuid-1");
         final UserLocalId batmanLocalId = new UserLocalId(1L);
         final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
@@ -1171,7 +1177,7 @@ class TimeEntryServiceImplTest {
         final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
         final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "uuid-2", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
 
-        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("uuid-1", "uuid-2"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("uuid-1", "uuid-2"), from.atStartOfDay().atZone(userZoneId).toInstant(), toExclusive.atStartOfDay().atZone(userZoneId).toInstant()))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
 
         final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntries(from, toExclusive, List.of(batmanLocalId, robinLocalId));
@@ -1199,6 +1205,9 @@ class TimeEntryServiceImplTest {
     @Test
     void ensureGetEntriesByUserLocalIdsReturnsValuesForEveryAskedUserLocalId() {
 
+        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
+
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -1208,7 +1217,7 @@ class TimeEntryServiceImplTest {
         final LocalDate from = LocalDate.of(2023, 1, 1);
         final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
 
-        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("batman"), from.atStartOfDay(UTC).toInstant(), toExclusive.atStartOfDay(UTC).toInstant()))
+        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("batman"), from.atStartOfDay().atZone(userZoneId).toInstant(), toExclusive.atStartOfDay().atZone(userZoneId).toInstant()))
             .thenReturn(List.of());
 
         final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntries(from, toExclusive, List.of(userLocalId));
@@ -1222,6 +1231,9 @@ class TimeEntryServiceImplTest {
 
     @Test
     void ensureGetEntriesSortedByStart_NewestFirst() {
+
+        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
 
         final LocalDate periodFrom = LocalDate.of(2022, 1, 3);
         final LocalDate periodToExclusive = LocalDate.of(2022, 1, 10);
@@ -1238,8 +1250,8 @@ class TimeEntryServiceImplTest {
         final LocalDateTime entryEnd2 = LocalDateTime.of(periodToExclusive, LocalTime.of(8, 30, 0));
         final TimeEntryEntity timeEntryEntity2 = new TimeEntryEntity(3L, "batman", "waking up *zzzz", entryStart2.toInstant(UTC), ZoneId.of("UTC"), entryEnd2.toInstant(UTC), ZoneId.of("UTC"), Instant.now(), false);
 
-        final Instant periodStartInstant = periodFrom.atStartOfDay(UTC).toInstant();
-        final Instant periodEndInstant = periodToExclusive.atStartOfDay(UTC).toInstant();
+        final Instant periodStartInstant = periodFrom.atStartOfDay().atZone(userZoneId).toInstant();
+        final Instant periodEndInstant = periodToExclusive.atStartOfDay().atZone(userZoneId).toInstant();
         when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc("batman", periodStartInstant, periodEndInstant))
             .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity, timeEntryEntity2));
 
