@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_US
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = {"spring.main.allow-bean-definition-overriding=true"})
+@Transactional
 class TimeEntryServiceIT extends SingleTenantTestContainersBase {
 
     @Autowired
