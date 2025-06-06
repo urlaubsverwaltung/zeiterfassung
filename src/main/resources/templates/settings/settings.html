@@ -160,6 +160,7 @@
                   </div>
                   <p
                     class="mt-4 text-gray-600"
+                    th:if="${timeslotLockedExampleDate != null}"
                     th:text="#{settings.lock-timeentries.example(${timeslotLockedExampleDate})}"
                   >
                     Beispiel: Alle Tage bis einschließlich {0} sind
