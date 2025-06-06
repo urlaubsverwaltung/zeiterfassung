@@ -462,8 +462,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
         return new TimeEntry(new TimeEntryId(entity.getId()), userIdComposite, entity.getComment(), startDateTime, endDateTime, entity.isBreak());
     }
 
-    private static Instant toInstant(LocalDate localDate) {
-        return localDate.atStartOfDay(UTC).toInstant();
+    private Instant toInstant(LocalDate localDate) {
+        return localDate.atStartOfDay().atZone(userSettingsProvider.zoneId()).toInstant();
     }
 
     private <T> boolean hasBeenModified(Supplier<T> a, Supplier<T> b) {
