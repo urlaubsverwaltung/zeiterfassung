@@ -107,6 +107,6 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
 
         final ZoneId userZoneId = userSettingsProvider.zoneId();
         final LocalDate today = LocalDate.now(clock.withZone(userZoneId));
-        return today.minusDays(lockedDaysInPast + 1).format(DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy", locale));
+        return today.minusDays(lockedDaysInPast + 1L).format(DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy", locale));
     }
 }
