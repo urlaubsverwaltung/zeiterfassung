@@ -98,12 +98,10 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
     private boolean isDateLocked(Temporal date, int daysInPastAllowed) {
 
         final LocalDate dateNormalized;
-        if (date instanceof LocalDate localDate) {
-            dateNormalized = localDate;
-        } else if (date instanceof LocalDateTime localDateTime) {
-            dateNormalized = localDateTime.toLocalDate();
-        } else {
-            dateNormalized = ZonedDateTime.from(date).withZoneSameInstant(clock.getZone()).toLocalDate();
+        switch (date) {
+            case LocalDate localDate -> dateNormalized = localDate;
+            case LocalDateTime localDateTime -> dateNormalized = localDateTime.toLocalDate();
+            default -> dateNormalized = ZonedDateTime.from(date).withZoneSameInstant(clock.getZone()).toLocalDate();
         }
 
         final LocalDate today = LocalDate.now(clock);
