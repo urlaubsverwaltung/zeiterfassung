@@ -16,7 +16,11 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntry;
  * Note that privileged persons are allowed to bypass this restriction.
  *
  * @param lockingIsActive           whether this feature is enabled or not
- * @param lockTimeEntriesDaysInPast number of days time entries in past get locked. can be negative when
+ * @param lockTimeEntriesDaysInPast number of days time entries in past get locked
+ *                                  <p>
+ *                                  This number is zero based. e.g. 0 -> yesterday is locked.
+ *                                  <p>
+ *                                  can be negative when
  *                                  {@link LockTimeEntriesSettings#lockingIsActive} is set to {@code false}. must be
  *                                  zero or positive when {@link LockTimeEntriesSettings#lockingIsActive} is set to
  *                                  {@code true}.

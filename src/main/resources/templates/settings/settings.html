@@ -1,7 +1,12 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
-  <head th:replace="~{_layout::head(title=~{::title})}">
+  <head
+    th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{::scriptsDefer})}"
+  >
     <title>Zeiterfassung - Einstellungen</title>
+    <th:block th:fragment="scriptsDefer">
+      <script type="module" src="" th:src="@{/assets/settings.js}"></script>
+    </th:block>
   </head>
   <body th:replace="~{_layout::body(~{::content})}">
     <th:block th:fragment="content">
@@ -17,151 +22,186 @@
               Lorem ipsum...
             </p>
           </div>
-          <form
-            action="#"
-            th:action="@{/settings}"
-            method="post"
-            th:object="${settings}"
-          >
-            <div class="mt-8 lg:mt-12">
-              <h2 class="font-bold" th:text="#{settings.federal-state.heading}">
-                Feiertagsregelung
-              </h2>
-              <p
-                class="mt-2 text-gray-600"
-                th:text="#{settings.federal-state.teaser-text}"
-              >
-                Lorem ipsum...
-              </p>
-              <div class="mt-4">
-                <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <div class="flex items-center">
-                    <label
-                      for="federal-state-select"
-                      class="sr-only"
-                      th:text="#{usermanagement.working-time.federalstate.select.label}"
-                    >
-                      Bundesland
-                    </label>
-                    <select
-                      id="federal-state-select"
-                      name="federalState"
-                      th:replace="~{fragments/select::one(id='federal-state-select', name='federalState', options=~{::federal-state-select-options}, testId='federal-state-select')}"
-                    >
-                      <th:block th:ref="federal-state-select-options">
-                        <optgroup
-                          th:each="optgroup : ${federalStateSelect.optgroups}"
-                          th:label="${#messages.msg(optgroup.labelMessageKey)}"
-                        >
-                          <option
-                            th:each="option : ${optgroup.options}"
-                            th:value="${option.value}"
-                            th:text="${#messages.msg(option.textMessageKey)}"
-                            th:selected="${option.selected}"
-                          ></option>
-                        </optgroup>
-                      </th:block>
-                    </select>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="works-on-public-holiday-checkbox"
-                      data-testid="works-on-public-holiday-checkbox"
-                      th:field="*{worksOnPublicHoliday}"
-                    />
-                    <label
-                      for="works-on-public-holiday-checkbox"
-                      th:text="#{settings.federal-state.works-on-public-holiday.label}"
-                    >
-                      arbeitet an Feiertagen
-                    </label>
+          <turbo-frame id="frame-settings-form">
+            <form
+              id="settings-form"
+              action="#"
+              th:action="@{/settings}"
+              method="post"
+              th:object="${settings}"
+            >
+              <div class="mt-8 lg:mt-12">
+                <h2
+                  class="font-bold"
+                  th:text="#{settings.federal-state.heading}"
+                >
+                  Feiertagsregelung
+                </h2>
+                <p
+                  class="mt-2 text-gray-600"
+                  th:text="#{settings.federal-state.teaser-text}"
+                >
+                  Lorem ipsum...
+                </p>
+                <div class="mt-4">
+                  <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <div class="flex items-center">
+                      <label
+                        for="federal-state-select"
+                        class="sr-only"
+                        th:text="#{usermanagement.working-time.federalstate.select.label}"
+                      >
+                        Bundesland
+                      </label>
+                      <select
+                        id="federal-state-select"
+                        name="federalState"
+                        th:replace="~{fragments/select::one(id='federal-state-select', name='federalState', options=~{::federal-state-select-options}, testId='federal-state-select')}"
+                      >
+                        <th:block th:ref="federal-state-select-options">
+                          <optgroup
+                            th:each="optgroup : ${federalStateSelect.optgroups}"
+                            th:label="${#messages.msg(optgroup.labelMessageKey)}"
+                          >
+                            <option
+                              th:each="option : ${optgroup.options}"
+                              th:value="${option.value}"
+                              th:text="${#messages.msg(option.textMessageKey)}"
+                              th:selected="${option.selected}"
+                            ></option>
+                          </optgroup>
+                        </th:block>
+                      </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="works-on-public-holiday-checkbox"
+                        data-testid="works-on-public-holiday-checkbox"
+                        th:field="*{worksOnPublicHoliday}"
+                      />
+                      <label
+                        for="works-on-public-holiday-checkbox"
+                        th:text="#{settings.federal-state.works-on-public-holiday.label}"
+                      >
+                        arbeitet an Feiertagen
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="mt-8 lg:mt-12">
-              <h2
-                class="font-bold"
-                th:text="#{settings.lock-timeentries.heading}"
-              >
-                Festschreiben von Zeitslots
-              </h2>
-              <p
-                class="mt-2 text-gray-600"
-                th:text="#{settings.lock-timeentries.teaser-text}"
-              >
-                Lege fest wie weit in die Vergangenheit Zeitslots durch die Person selbst angepasst oder hinzugefügt werden können.
-              </p>
-              <div class="mt-4">
-                <div class="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="locking-timeentries-is-active-checkbox"
-                    data-testid="locking-timeentries-is-active-checkbox"
-                    th:field="*{lockingIsActive}"
-                  />
-                  <label
-                    for="locking-timeentries-is-active-checkbox"
-                    th:text="#{settings.lock-timeentries-is-active.label}"
-                  >
-                    Festschreibung aktivieren
-                  </label>
-                </div>
+              <div class="mt-8 lg:mt-12">
+                <h2
+                  class="font-bold"
+                  th:text="#{settings.lock-timeentries.heading}"
+                >
+                  Festschreiben von Zeitslots
+                </h2>
+                <p
+                  class="mt-2 text-gray-600"
+                  th:text="#{settings.lock-timeentries.teaser-text}"
+                >
+                  Lege fest wie weit in die Vergangenheit Zeiten erfasst und
+                  bearbeitet werden dürfen.
+                </p>
+                <p
+                  class="text-gray-600"
+                  th:text="#{settings.lock-timeentries.teaser-text-2}"
+                >
+                  Zeiteinträge werden nächtlich festgeschrieben und können dann
+                  nur noch von berechtigten Personen geändert werden.
+                </p>
                 <div
-                  class="mt-2"
+                  class="mt-4"
                   th:with="fieldName=${'lockTimeEntriesDaysInPast'}, hasError=${#fields.hasErrors(fieldName)}"
                 >
-                  <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div class="flex gap-2 items-center">
+                    <input
+                      type="checkbox"
+                      id="locking-timeentries-is-active-checkbox"
+                      data-testid="locking-timeentries-is-active-checkbox"
+                      th:field="*{lockingIsActive}"
+                    />
                     <label
-                      for="lock-timeentries-days-in-past"
-                      th:text="#{settings.lock-timeentries-days-in-past.label}"
+                      for="locking-timeentries-is-active-checkbox"
+                      th:text="#{settings.lock-timeentries-is-active.label}"
                     >
-                      Anzahl der Tage vor Festschreibung
+                      Festschreibung aktivieren
                     </label>
+                  </div>
+                  <div
+                    class="mt-4 flex items-center gap-2 text-gray-600"
+                    th:text="#{settings.lock-timeentries.day-input.pre}"
+                  >
+                    Zeiten können nicht mehr erfasst oder bearbeitet werden für
+                    Tage, die älter sind als:
+                  </div>
+                  <div
+                    class="mt-2 flex flex-col gap-2 xs:flex-row xs:items-center"
+                  >
                     <input
                       type="text"
                       inputmode="numeric"
-                      id="lock-timeentries-days-in-past"
+                      id="lock-timeentries-days-in-past-input"
                       data-testid="lock-timeentries-days-in-past"
-                      class="w-full border border-gray-300 px-2 py-1 sm:w-14"
+                      class="w-full border border-gray-300 px-2 py-1 xs:w-14"
                       th:classappend="${hasError ? 'invalid' : ''}"
                       th:aria-invalid="${hasError}"
                       th:aria-message="${hasError ? fieldName + '-error-message' : ''}"
                       th:field="*{lockTimeEntriesDaysInPast}"
                     />
+                    <label
+                      for="lock-timeentries-days-in-past-input"
+                      class="flex-1"
+                      th:text="#{settings.lock-timeentries.day-input.label(${#objects.nullSafe(settings.lockTimeEntriesDaysInPastAsNumber(), 0)})}"
+                    >
+                      Tage (ausgehend vom heutigen Datum)
+                    </label>
                   </div>
                   <p
-                    th:id="${fieldName + '-error-message'}"
-                    th:text="${#fields.errors(fieldName)[0]}"
-                    th:if="${hasError}"
-                    class="invalid"
+                    class="mt-4 text-gray-600"
+                    th:if="${timeslotLockedExampleDate != null}"
+                    th:text="#{settings.lock-timeentries.example(${timeslotLockedExampleDate})}"
                   >
-                    Fehlernachricht
+                    Beispiel: Alle Tage bis einschließlich {0} sind
+                    festgeschrieben.
                   </p>
+                  <div class="mt-2">
+                    <p
+                      th:id="${fieldName + '-error-message'}"
+                      th:text="${#fields.errors(fieldName)[0]}"
+                      th:if="${hasError}"
+                      class="invalid"
+                    >
+                      Fehlernachricht
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
-              <button
-                type="submit"
-                class="button-primary button-primary-icon"
-                data-testid="settings-submit-button"
-              >
-                <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
-                <th:block th:text="#{settings.save}"> Speichern </th:block>
-              </button>
-              <a
-                id="settings-reset-button"
-                href="#"
-                th:href="@{/settings}"
-                class="button-secondary"
-                th:text="#{settings.reset}"
-              >
-                Zurücksetzen
-              </a>
-            </div>
-          </form>
+              <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <button
+                  type="submit"
+                  class="button-primary button-primary-icon"
+                  data-testid="settings-submit-button"
+                  data-turbo-frame="_top"
+                >
+                  <svg
+                    th:replace="~{icons/save::svg(className='w-5 h-5')}"
+                  ></svg>
+                  <th:block th:text="#{settings.save}"> Speichern </th:block>
+                </button>
+                <a
+                  id="settings-reset-button"
+                  href="#"
+                  th:href="@{/settings}"
+                  class="button-secondary"
+                  th:text="#{settings.reset}"
+                >
+                  Zurücksetzen
+                </a>
+              </div>
+            </form>
+          </turbo-frame>
         </div>
       </main>
     </th:block>

@@ -1,6 +1,8 @@
+import { onTurboFrameRender } from "../../turbo-events";
+
 export {};
 
-document.addEventListener("turbo:frame-render", function (event: CustomEvent) {
+onTurboFrameRender(function (event) {
   const target = event.target as Element;
   if (target.id === "frame-nav-time-clock-edit") {
     const form = target.querySelector("form");

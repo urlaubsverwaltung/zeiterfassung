@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,12 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.validation.BindingResult;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.Locale;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -24,6 +31,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,10 +47,14 @@ class SettingsControllerTest implements ControllerTest {
     private SettingsService settingsService;
     @Mock
     private SettingsDtoValidator settingsDtoValidator;
+    @Mock
+    private UserSettingsProvider userSettingsProvider;
+
+    private static final Clock fixedClock = Clock.fixed(Instant.parse("2025-05-30T22:00:00.000Z"), ZoneOffset.UTC);
 
     @BeforeEach
     void setUp() {
-        sut = new SettingsController(settingsService, settingsDtoValidator);
+        sut = new SettingsController(settingsService, settingsDtoValidator, userSettingsProvider, fixedClock);
     }
 
     @Test
@@ -54,11 +66,30 @@ class SettingsControllerTest implements ControllerTest {
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
 
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
+
         final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, true, "42");
 
         perform(get("/settings"))
             .andExpect(status().isOk())
             .andExpect(model().attribute("settings", expectedSettingsDto));
+    }
+
+    @Test
+    void ensureGetSettingsWithCorrectExampleLockTimeEntriesTextDate() throws Exception {
+
+        final Locale locale = Locale.GERMAN;
+
+        final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
+        final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(true, 3);
+
+        when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
+        when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
+
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
+
+        perform(get("/settings").locale(locale))
+            .andExpect(model().attribute("timeslotLockedExampleDate", "Dienstag, 27.05.2025"));
     }
 
     @Test
@@ -69,6 +100,7 @@ class SettingsControllerTest implements ControllerTest {
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
         final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, false, null);
 
@@ -94,9 +126,24 @@ class SettingsControllerTest implements ControllerTest {
             .param("lockingIsActive", "true")
             .param("lockTimeEntriesDaysInPast", "-1")
         )
-            .andExpect(status().isOk())
-            .andExpect(view().name("settings/settings"))
-            .andExpect(model().attributeHasFieldErrors("settings"));
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(view().name("settings/settings"));
+
+        verifyNoInteractions(settingsService);
+    }
+
+    @Test
+    void ensureUpdateSettingsPreviewDoesNotPersist() throws Exception {
+
+        perform(post("/settings")
+            .param("preview", "")
+            .param("federalState", "NONE")
+            .param("worksOnPublicHoliday", "false")
+            .param("lockingIsActive", "true")
+            .param("lockTimeEntriesDaysInPast", "42")
+        )
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(view().name("settings/settings"));
 
         verifyNoInteractions(settingsService);
     }
@@ -110,6 +157,7 @@ class SettingsControllerTest implements ControllerTest {
             .param("lockingIsActive", "true")
             .param("lockTimeEntriesDaysInPast", "42")
         )
+            .andExpect(flash().attributeCount(0))
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/settings"));
 
