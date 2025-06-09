@@ -284,7 +284,7 @@ public class ReportServiceRaw {
                                          Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportDayEntriesForDate,
                                          boolean dateIsLocked) {
 
-        final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser = reportDayEntriesForDate.apply(date);
+        final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser = reportDayEntriesForDate.apply(date) != null ? reportDayEntriesForDate.apply(date) : new HashMap<>();
         final Map<UserIdComposite, List<ReportDayAbsence>> reportDayAbsencesByUser = new HashMap<>();
 
         for (Map.Entry<UserIdComposite, User> entry : userById.entrySet()) {
