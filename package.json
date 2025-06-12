@@ -47,7 +47,7 @@
     "idiomorph": "0.7.3",
     "jsdom": "26.1.0",
     "lint-staged": "16.1.0",
-    "postcss": "8.5.4",
+    "postcss": "8.5.5",
     "postcss-cli": "11.0.1",
     "postcss-import": "16.1.0",
     "prettier": "3.5.3",
