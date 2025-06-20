@@ -16,14 +16,8 @@
     flex: 1 0 0;
   }
 
-  input {
-    /* text-sm applies line-height */
-    /* which we must not change on inputs (see components#input for more detail) */
-    font-size: theme("fontSize.sm");
-
-    &::-webkit-date-and-time-value {
-      text-align: left;
-    }
+  input::-webkit-date-and-time-value {
+    text-align: left;
   }
 
   label {
@@ -107,6 +101,12 @@
 }
 
 @screen md {
+  .time-entry-cell {
+    /* text-sm applies line-height */
+    /* which we must not change on inputs (see components#input for more detail) */
+    font-size: theme("fontSize.sm");
+  }
+
   .time-entry-cell-container {
     display: grid;
     grid-template-columns: repeat(5, 1fr) max-content;
