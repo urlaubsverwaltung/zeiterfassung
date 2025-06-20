@@ -1,43 +1,48 @@
-body:has(dialog[open] .modal) {
-  overflow: hidden;
-}
+@reference "tailwindcss";
+@config "../../../../tailwind.config.js";
 
-.modal-overlay-background {
-  @apply fixed;
-  @apply inset-0;
-  @apply p-2;
-  @apply sm:p-8;
-  @apply bg-blue-100;
-  @apply backdrop-blur-sm;
-  @apply supports-backdrop-blur:bg-blue-100/[0.85];
-  @apply transition-opacity;
-  padding: 2rem;
-  padding-top: calc(2rem + var(--navigation-header-height));
-}
+@layer components {
+  body:has(dialog[open] .modal) {
+    overflow: hidden;
+  }
 
-.modal-alignment {
-  @apply mx-auto;
-  @apply flex;
-  @apply justify-center;
-  max-height: 100%;
-}
-
-.modal {
-  @apply relative;
-  @apply w-full;
-  @apply max-w-screen-xl;
-  @apply border-4;
-  @apply border-gray-400;
-  @apply rounded-xl;
-  @apply bg-white;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  @apply flex;
-  @apply flex-col;
-}
-
-@screen md {
   .modal-overlay-background {
-    padding: calc(2 * var(--navigation-header-height));
+    @apply fixed;
+    @apply inset-0;
+    @apply p-2;
+    @apply sm:p-8;
+    @apply bg-blue-100;
+    @apply backdrop-blur-xs;
+    @apply supports-backdrop-blur:bg-blue-100/[0.85];
+    @apply transition-opacity;
+    padding: 2rem;
+    padding-top: calc(2rem + var(--navigation-header-height));
+  }
+
+  .modal-alignment {
+    @apply mx-auto;
+    @apply flex;
+    @apply justify-center;
+    max-height: 100%;
+  }
+
+  .modal {
+    @apply relative;
+    @apply w-full;
+    @apply max-w-screen-xl;
+    @apply border-4;
+    @apply border-gray-400;
+    @apply rounded-xl;
+    @apply bg-white;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    @apply flex;
+    @apply flex-col;
+  }
+
+  @variant md {
+    .modal-overlay-background {
+      padding: calc(2 * var(--navigation-header-height));
+    }
   }
 }

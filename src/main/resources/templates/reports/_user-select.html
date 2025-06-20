@@ -61,7 +61,7 @@
               <li
                 th:each="user : ${users}"
                 th:with="rnd=${#strings.randomAlphanumeric(6)}"
-                class="flex items-center space-x-3 py-1"
+                class="flex items-center gap-3 py-1"
               >
                 <input
                   type="checkbox"
@@ -90,7 +90,7 @@
           </div>
           <button
             type="submit"
-            class="button-primary w-full mt-4 rounded"
+            class="button-primary w-full mt-4 rounded-sm"
             th:text="#{report.filter.users.submit}"
             data-testid="report-person-select-submit"
           >

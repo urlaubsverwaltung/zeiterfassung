@@ -1,289 +1,320 @@
-.report-actions {
-  display: grid;
-  gap: 1rem;
-}
+@reference "tailwindcss";
+@config "../../../tailwind.config.js";
 
-.report-actions__pagination {
-  @apply w-full;
-  @apply flex;
-  @apply items-center;
-  @apply gap-1;
-}
-
-.report-actions__persons {
-  display: grid;
-  grid-template-rows: subgrid;
-  grid-template-columns: subgrid;
-}
-
-.report-actions__persons--persons-selected {
-  grid-row: span 2;
-}
-
-.report-actions__avatars {
-  margin-top: -0.75rem;
-}
-
-.report-actions__csv {
-  display: none;
-}
-
-.report-person-detail-table {
-  width: 100%;
-  @apply text-sm;
-
-  th,
-  td {
-    @apply px-2;
-    @apply py-1;
-    &:last-of-type {
-      @apply pr-4;
-    }
-  }
-
-  thead {
-    th {
-      @apply font-medium;
-      @apply text-sm;
-    }
-  }
-
-  tbody {
-    tr {
-      .report-person-detail-table__avatar {
-        @apply text-blue-100;
-        @apply transition-colors;
-      }
-      > * {
-        @apply bg-transparent;
-        @apply transition-colors;
-      }
-      > *:first-child {
-        @apply rounded-l-2xl;
-      }
-      > *:last-child {
-        @apply rounded-r-2xl;
-      }
-      th {
-        @apply font-normal;
-        @apply text-left;
-        @apply sticky;
-        @apply left-0;
-      }
-      &:hover {
-        > * {
-          @apply bg-blue-50;
-        }
-        .report-person-detail-table__avatar {
-          @apply text-blue-200;
-        }
-      }
-    }
-  }
-}
-
-@screen xxs {
+@layer components {
   .report-actions {
-    grid-template-columns: auto;
+    display: grid;
+    gap: 1rem;
   }
+
+  .report-actions__pagination {
+    @apply w-full;
+    @apply flex;
+    @apply items-center;
+    @apply gap-1;
+  }
+
+  .report-actions__persons {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-template-columns: subgrid;
+  }
+
   .report-actions__persons--persons-selected {
     grid-row: span 2;
   }
-  .report-actions__persons-select {
-    grid-row: auto;
-  }
-  .report-actions__avatars {
-    grid-row: 3;
-  }
-}
 
-@screen xs {
-  .report-actions {
-    grid-template-columns: auto 1fr auto;
-  }
-  .report-actions__pagination {
-    grid-column: span 2;
-  }
-  .report-actions__persons {
-    grid-row: 2;
-  }
-  .report-actions__persons--persons-selected {
-    grid-row: 2 / span 2;
-    grid-column: 1 / span 2;
-  }
-  .report-actions__persons-select {
-    grid-column: 1;
-  }
   .report-actions__avatars {
-    grid-row: 2;
-    grid-column: 1 / span 2;
-  }
-  .report-actions__csv {
-    display: block;
-    grid-row: 2;
-    grid-column: 3;
-  }
-}
-
-@screen md {
-  .report-actions {
-    grid-template-columns: auto 1fr auto auto;
-    grid-template-rows: auto auto;
-  }
-  .report-actions__pagination {
-    grid-column: 1;
-  }
-  .report-actions__persons {
-    grid-column: 3;
-    grid-row: 1 / span 2;
-  }
-  .report-actions__persons-select {
-    grid-column: 3;
-  }
-  .report-actions__avatars {
-    grid-row: 2;
-    grid-column: 3 / span 2;
     margin-top: -0.75rem;
   }
+
   .report-actions__csv {
-    grid-row: 1;
-    grid-column: 4;
-  }
-}
-
-@screen 2xl {
-  .report-actions {
-    grid-template-columns: 50% auto auto 1fr auto;
-    grid-template-rows: auto;
-  }
-  .report-actions__pagination {
-    grid-column: 1;
-  }
-  .report-actions__persons {
-    grid-row: 1;
-    grid-column: 2 / span 3;
-  }
-  .report-actions__persons-select {
-    grid-row: 1;
-    grid-column: 1;
-  }
-  .report-actions__avatars {
-    grid-row: 1;
-    grid-column: 2 / span 2;
-    margin-top: 0;
-  }
-  .report-actions__csv {
-    grid-row: 1;
-    grid-column: 5;
-  }
-}
-
-.report-graph-hover-background {
-  fill: transparent;
-}
-
-.report-graph-hover-background.selected,
-.report-graph-hover-background:hover {
-  fill: url(#gradient-background);
-}
-
-.report-graph-hour-line {
-  @apply stroke-gray-200;
-}
-
-.report-graph-hour-text {
-  @apply fill-gray-300;
-}
-
-.report-graph-avg-line {
-  @apply stroke-teal-700;
-}
-
-.report-graph-avg-text {
-  @apply fill-teal-700;
-  @apply text-xs;
-}
-
-.report-graph-day-overtime-bar {
-  @apply fill-teal-900;
-  @apply stroke-emerald-600;
-}
-
-.report-graph-day-should-bar {
-  @apply fill-green-100;
-  @apply stroke-emerald-600;
-}
-
-.report-graph-day-text {
-  @apply fill-gray-600;
-  @apply font-medium;
-}
-
-.report-graph-date-text {
-  @apply fill-gray-400;
-  @apply text-sm;
-}
-
-.report-graph-group--different-month .report-graph-day-bar {
-  @apply fill-transparent;
-}
-
-.report-graph-group--different-month .report-graph-day-text {
-  @apply fill-gray-400;
-  @apply font-normal;
-}
-
-.report-view-selection-link {
-  position: relative;
-  @apply text-gray-600;
-  @apply font-medium;
-  @apply transition-colors;
-}
-
-.report-view-selection-link:hover,
-.report-view-selection-link[aria-current="location"] {
-  @apply text-gray-800;
-}
-
-.report-view-selection-link[aria-current="location"]::after {
-  content: "";
-  display: block;
-  position: absolute;
-  top: 95%;
-  left: 0;
-  right: 0;
-  background: url("/images/underlined-curved-black.svg") no-repeat top;
-  height: 0.5rem;
-}
-
-.report-view-entry-box-absence__absence-color-box {
-  width: 0.75rem;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  height: 3rem;
-  @apply rounded-lg;
-}
-
-.report-summary-grid {
-  dt:not(:first-of-type) {
-    margin-top: 1rem;
+    display: none;
   }
 
-  dd {
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
+  .report-person-detail-table {
+    width: 100%;
+    @apply text-sm;
+
+    th,
+    td {
+      @apply px-2;
+      @apply py-1;
+
+      &:last-of-type {
+        @apply pr-4;
+      }
+    }
+
+    thead {
+      th {
+        @apply font-medium;
+        @apply text-sm;
+      }
+    }
+
+    tbody {
+      tr {
+        .report-person-detail-table__avatar {
+          @apply text-blue-100;
+          @apply transition-colors;
+        }
+
+        > * {
+          @apply bg-transparent;
+          @apply transition-colors;
+        }
+
+        > *:first-child {
+          @apply rounded-l-2xl;
+        }
+
+        > *:last-child {
+          @apply rounded-r-2xl;
+        }
+
+        th {
+          @apply font-normal;
+          @apply text-left;
+          @apply sticky;
+          @apply left-0;
+        }
+
+        &:hover {
+          > * {
+            @apply bg-blue-50;
+          }
+
+          .report-person-detail-table__avatar {
+            @apply text-blue-200;
+          }
+        }
+      }
+    }
   }
-}
 
-@screen sm {
-  .report-summary-grid {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    column-gap: 1rem;
+  @variant xxs {
+    .report-actions {
+      grid-template-columns: auto;
+    }
 
-    dt:not(:first-of-type) {
+    .report-actions__persons--persons-selected {
+      grid-row: span 2;
+    }
+
+    .report-actions__persons-select {
+      grid-row: auto;
+    }
+
+    .report-actions__avatars {
+      grid-row: 3;
+    }
+  }
+
+  @variant xs {
+    .report-actions {
+      grid-template-columns: auto 1fr auto;
+    }
+
+    .report-actions__pagination {
+      grid-column: span 2;
+    }
+
+    .report-actions__persons {
+      grid-row: 2;
+    }
+
+    .report-actions__persons--persons-selected {
+      grid-row: 2 / span 2;
+      grid-column: 1 / span 2;
+    }
+
+    .report-actions__persons-select {
+      grid-column: 1;
+    }
+
+    .report-actions__avatars {
+      grid-row: 2;
+      grid-column: 1 / span 2;
+    }
+
+    .report-actions__csv {
+      display: block;
+      grid-row: 2;
+      grid-column: 3;
+    }
+  }
+
+  @variant md {
+    .report-actions {
+      grid-template-columns: auto 1fr auto auto;
+      grid-template-rows: auto auto;
+    }
+
+    .report-actions__pagination {
+      grid-column: 1;
+    }
+
+    .report-actions__persons {
+      grid-column: 3;
+      grid-row: 1 / span 2;
+    }
+
+    .report-actions__persons-select {
+      grid-column: 3;
+    }
+
+    .report-actions__avatars {
+      grid-row: 2;
+      grid-column: 3 / span 2;
+      margin-top: -0.75rem;
+    }
+
+    .report-actions__csv {
+      grid-row: 1;
+      grid-column: 4;
+    }
+  }
+
+  @variant 2xl {
+    .report-actions {
+      grid-template-columns: 50% auto auto 1fr auto;
+      grid-template-rows: auto;
+    }
+
+    .report-actions__pagination {
+      grid-column: 1;
+    }
+
+    .report-actions__persons {
+      grid-row: 1;
+      grid-column: 2 / span 3;
+    }
+
+    .report-actions__persons-select {
+      grid-row: 1;
+      grid-column: 1;
+    }
+
+    .report-actions__avatars {
+      grid-row: 1;
+      grid-column: 2 / span 2;
       margin-top: 0;
+    }
+
+    .report-actions__csv {
+      grid-row: 1;
+      grid-column: 5;
+    }
+  }
+
+  .report-graph-hover-background {
+    fill: transparent;
+  }
+
+  .report-graph-hover-background.selected,
+  .report-graph-hover-background:hover {
+    fill: url(#gradient-background);
+  }
+
+  .report-graph-hour-line {
+    @apply stroke-gray-200;
+  }
+
+  .report-graph-hour-text {
+    @apply fill-gray-300;
+  }
+
+  .report-graph-avg-line {
+    @apply stroke-teal-700;
+  }
+
+  .report-graph-avg-text {
+    @apply fill-teal-700;
+    @apply text-xs;
+  }
+
+  .report-graph-day-overtime-bar {
+    @apply fill-teal-900;
+    @apply stroke-emerald-600;
+  }
+
+  .report-graph-day-should-bar {
+    @apply fill-green-100;
+    @apply stroke-emerald-600;
+  }
+
+  .report-graph-day-text {
+    @apply fill-gray-600;
+    @apply font-medium;
+  }
+
+  .report-graph-date-text {
+    @apply fill-gray-400;
+    @apply text-sm;
+  }
+
+  .report-graph-group--different-month .report-graph-day-bar {
+    @apply fill-transparent;
+  }
+
+  .report-graph-group--different-month .report-graph-day-text {
+    @apply fill-gray-400;
+    @apply font-normal;
+  }
+
+  .report-view-selection-link {
+    position: relative;
+    @apply text-gray-600;
+    @apply font-medium;
+    @apply transition-colors;
+  }
+
+  .report-view-selection-link:hover,
+  .report-view-selection-link[aria-current="location"] {
+    @apply text-gray-800;
+  }
+
+  .report-view-selection-link[aria-current="location"]::after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 95%;
+    left: 0;
+    right: 0;
+    background: url("/images/underlined-curved-black.svg") no-repeat top;
+    height: 0.5rem;
+  }
+
+  .report-view-entry-box-absence__absence-color-box {
+    width: 0.75rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    height: 3rem;
+    @apply rounded-lg;
+  }
+
+  .report-summary-grid {
+    dt:not(:first-of-type) {
+      margin-top: 1rem;
+    }
+
+    dd {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+  }
+
+  @variant sm {
+    .report-summary-grid {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 1rem;
+
+      dt:not(:first-of-type) {
+        margin-top: 0;
+      }
     }
   }
 }
