@@ -1,11 +1,6 @@
 @reference "tailwindcss";
 
 @layer utilities {
-  /* obsolete with tailwind v4 */
-  .wrap-anywhere {
-    overflow-wrap: anywhere;
-  }
-
   input.invalid {
     @apply border;
     @apply border-red-400;
