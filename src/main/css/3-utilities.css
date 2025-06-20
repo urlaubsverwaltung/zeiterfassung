@@ -1,17 +1,19 @@
-@tailwind utilities;
+@reference "tailwindcss";
 
-/* obsolete with tailwind v4 */
-.wrap-anywhere {
-  overflow-wrap: anywhere;
-}
+@layer utilities {
+  /* obsolete with tailwind v4 */
+  .wrap-anywhere {
+    overflow-wrap: anywhere;
+  }
 
-input.invalid {
-  @apply border;
-  @apply border-red-400;
-  @apply text-red-600;
-}
+  input.invalid {
+    @apply border;
+    @apply border-red-400;
+    @apply text-red-600;
+  }
 
-label.invalid,
-p.invalid {
-  @apply text-red-600;
+  label.invalid,
+  p.invalid {
+    @apply text-red-600;
+  }
 }

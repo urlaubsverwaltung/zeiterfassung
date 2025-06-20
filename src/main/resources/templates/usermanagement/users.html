@@ -239,8 +239,8 @@
                           <a
                             href="#"
                             th:href="@{/users/{userId} (userId=${selectedUser.id}, query=${query})}"
-                            class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-opacity-100"
-                            th:classappend="${(section == null or section == 'working-time-edit') ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
+                            class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-gray-900/100"
+                            th:classappend="${(section == null or section == 'working-time-edit') ? 'border-amber-400' : 'border-gray-200 text-gray-500/50'}"
                             data-turbo-frame="person-frame"
                             data-turbo-action="advance"
                             th:text="#{usermanagement.navigation.working-time}"
@@ -253,8 +253,8 @@
                           <a
                             href="#"
                             th:href="@{/users/{userId}/overtime-account (userId=${selectedUser.id}, query=${query})}"
-                            class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-opacity-100"
-                            th:classappend="${section == 'overtime' ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
+                            class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-gray-900/100"
+                            th:classappend="${section == 'overtime' ? 'border-amber-400' : 'border-gray-200 text-gray-500/50'}"
                             data-turbo-frame="person-frame"
                             data-turbo-action="advance"
                             th:text="#{usermanagement.navigation.overtime-account}"
@@ -267,8 +267,8 @@
                           <a
                             href="#"
                             th:href="@{/users/{userId}/permissions (userId=${selectedUser.id}, query=${query})}"
-                            class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-opacity-100"
-                            th:classappend="${section == 'permissions' ? 'border-amber-400' : 'text-gray-500 text-opacity-50'}"
+                            class="block pt-4 pb-1 px-4 border-b-2 text-gray-900 font-medium transition-colors hover:text-gray-900/100"
+                            th:classappend="${section == 'permissions' ? 'border-amber-400' : 'border-gray-200 text-gray-500/50'}"
                             data-turbo-frame="person-frame"
                             data-turbo-action="advance"
                             th:text="#{usermanagement.navigation.permissions}"
@@ -277,7 +277,10 @@
                             Berechtigungen
                           </a>
                         </li>
-                        <li role="separator" class="flex-1 border-b-2"></li>
+                        <li
+                          role="separator"
+                          class="flex-1 border-b-2 border-gray-200"
+                        ></li>
                       </ul>
                     </div>
                     <div class="flex-1 p-6 bg-white">

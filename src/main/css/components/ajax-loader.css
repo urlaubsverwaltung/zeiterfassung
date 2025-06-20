@@ -1,3 +1,6 @@
+@reference "tailwindcss";
+@config "../../../../tailwind.config.js";
+
 @keyframes to-max-width {
   from {
     max-width: 0;
@@ -7,24 +10,26 @@
   }
 }
 
-.ajax-loader.ajax-loader--loading {
-  position: relative;
-  overflow: hidden;
+@layer components {
+  .ajax-loader.ajax-loader--loading {
+    position: relative;
+    overflow: hidden;
 
-  &::before {
-    --animate-to-width: 100%;
-    animation: to-max-width 8s infinite ease-out;
-    content: "";
-    @apply absolute;
-    @apply inset-0;
-    @apply bg-gradient-to-r;
-    @apply from-transparent;
-    @apply opacity-10;
-    @apply to-blue-600;
-  }
+    &::before {
+      --animate-to-width: 100%;
+      animation: to-max-width 8s infinite ease-out;
+      content: "";
+      @apply absolute;
+      @apply inset-0;
+      @apply bg-gradient-to-r;
+      @apply from-transparent;
+      @apply opacity-10;
+      @apply to-blue-600;
+    }
 
-  &.button-primary::before,
-  &[class*="bg-blue-"]::before {
-    @apply to-white;
+    &.button-primary::before,
+    &[class*="bg-blue-"]::before {
+      @apply to-white;
+    }
   }
 }
