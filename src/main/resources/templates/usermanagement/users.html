@@ -100,9 +100,9 @@
                 <ol class="flex flex-col user-selection-list">
                   <th:block th:each="user : ${users}">
                     <li
-                      class="py-3 px-2 flex items-center justify-between gap-4 rounded-xl transition-colors"
+                      class="py-3 px-2 flex items-center gap-4 rounded-xl transition-colors"
                     >
-                      <span class="text-blue-300">
+                      <span class="shrink-0 text-blue-300">
                         <img
                           alt=""
                           th:replace="~{fragments/avatar::avatar(${user.fullName},48,48)}"
@@ -120,7 +120,7 @@
                         data-turbo-action="advance"
                         data-testid="users-list-person-link"
                       >
-                        <span class="flex flex-col">
+                        <span class="flex flex-col wrap-anywhere">
                           <span
                             class="text-black"
                             th:text="${user.fullName}"
