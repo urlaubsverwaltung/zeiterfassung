@@ -165,6 +165,7 @@
   @apply transition-colors;
 }
 .main-nav-link svg {
+  flex-shrink: 0;
   @apply w-8;
   @apply h-8;
   @apply lg:w-5;
