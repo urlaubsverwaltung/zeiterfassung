@@ -33,7 +33,7 @@
               </label>
               <nav>
                 <ul
-                  class="flex flex-col space-y-8 lg:space-x-8 lg:space-y-0 lg:flex-row overflow-hidden"
+                  class="flex flex-col space-y-8 lg:space-x-8 lg:space-y-0 lg:flex-row"
                 >
                   <li>
                     <a
@@ -286,7 +286,9 @@
         style="min-width: 0"
         th:text="${text}"
       ></span>
-      <svg th:replace="~{icons/external-link::svg(className='ml-1.5 h-4 w-4')}"></svg>
+      <svg
+        th:replace="~{icons/external-link::svg(className='ml-1.5 h-4 w-4')}"
+      ></svg>
     </a>
   </body>
 </html>
