@@ -1,4 +1,5 @@
-@tailwind base;
+@import "tailwindcss";
+@config "../../../tailwind.config.js";
 
 :root {
   --navigation-header-height: 3rem;
@@ -25,11 +26,6 @@ body {
   min-height: --webkit-fill-available;
   background-image: linear-gradient(#ffffff, #fafafa);
   background-attachment: fixed;
-}
-
-input:not([class*="rounded"]),
-textarea:not([class*="rounded"]) {
-  @apply rounded;
 }
 
 @font-face {
