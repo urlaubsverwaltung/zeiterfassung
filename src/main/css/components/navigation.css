@@ -138,6 +138,7 @@
 
   #menu-toggle-checkbox:checked ~ label ~ nav,
   #menu-toggle-checkbox:checked ~ label ~ nav:focus-within {
+    overflow: visible;
     top: var(--navigation-header-height);
     max-height: 100vh !important;
   }
@@ -145,6 +146,7 @@
 
 @screen lg {
   #menu-toggle-checkbox ~ label ~ nav {
+    overflow: visible;
     max-height: unset;
     @apply static;
     @apply scale-x-100;
@@ -163,6 +165,7 @@
   @apply transition-colors;
 }
 .main-nav-link svg {
+  flex-shrink: 0;
   @apply w-8;
   @apply h-8;
   @apply lg:w-5;
