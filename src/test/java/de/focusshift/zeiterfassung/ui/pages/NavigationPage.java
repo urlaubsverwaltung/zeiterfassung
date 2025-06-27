@@ -5,6 +5,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
 
 import static com.microsoft.playwright.options.LoadState.DOMCONTENTLOADED;
+import static com.microsoft.playwright.options.WaitForSelectorState.VISIBLE;
 
 /**
  * The NavigationPage class represents a page in a web application that provides navigation functionality.
@@ -56,7 +57,9 @@ public class NavigationPage {
 
         void logout() {
             page.getByTestId("avatar").click();
-            page.waitForResponse(Response::ok, () -> page.getByTestId("logout").click());
+            final Locator logout = page.getByTestId("logout");
+            logout.waitFor(new Locator.WaitForOptions().setState(VISIBLE));
+            logout.click();
             page.waitForLoadState(DOMCONTENTLOADED);
         }
     }
