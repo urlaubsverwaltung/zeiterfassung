@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.ui.pages;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Response;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -45,7 +46,9 @@ public class TimeEntryPage {
     }
 
     public void submitTimeEntryHaving(Locator childLocator) {
-        timeEntryEditContainer(childLocator).getByTestId("submit-time-entry").click();
+        page.waitForResponse(Response::ok, () -> {
+            timeEntryEditContainer(childLocator).getByTestId("submit-time-entry").click();
+        });
     }
 
     private Locator timeEntryEditContainer(Locator childLocator) {
