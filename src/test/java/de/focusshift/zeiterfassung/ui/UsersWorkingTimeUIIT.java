@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.ui;
 
 import com.microsoft.playwright.Page;
-import de.focusshift.zeiterfassung.TestKeycloakContainer;
 import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
+import de.focusshift.zeiterfassung.TestKeycloakContainer;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.ui.extension.UiTest;
 import de.focusshift.zeiterfassung.ui.pages.LoginPage;
@@ -113,16 +113,16 @@ class UsersWorkingTimeUIIT {
         final SettingsPage settingsPage = new SettingsPage(page);
 
         navigationPage.goToSettingsPage();
-        assertThat(settingsPage.federalStateSelect()).hasValue(federalStateSelectValue(FederalState.NONE));
-        assertThat(settingsPage.worksOnPublicHolidayCheckbox()).not().isChecked();
+
+        settingsPage.assertFederalStateValue(FederalState.NONE);
+        settingsPage.assertWorksOnPublicHolidayNotChecked();
     }
 
     private void setGlobalFederalState(Page page, FederalState federalState) {
 
         final SettingsPage settingsPage = new SettingsPage(page);
 
-        settingsPage.federalStateSelect().selectOption(federalStateSelectValue(federalState));
-        settingsPage.federalStateSelect().click();
+        settingsPage.selectFederalState(federalState);
         settingsPage.submit();
     }
 }

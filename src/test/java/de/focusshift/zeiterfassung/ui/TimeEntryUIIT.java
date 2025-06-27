@@ -74,17 +74,11 @@ class TimeEntryUIIT {
 
         navigationPage.goToSettingsPage();
 
-        final Locator lockTimeEntriesCheckbox = settingsPage.lockTimeEntriesCheckbox();
-        final Locator lockTimeEntriesDaysInPastInput = settingsPage.lockTimEntriesDaysInPastInput();
+        settingsPage.assertLockTimeEntriesNotChecked();
 
-        assertThat(lockTimeEntriesCheckbox).not().isChecked();
-
-        lockTimeEntriesCheckbox.click();
-        lockTimeEntriesDaysInPastInput.fill("0");
+        settingsPage.enableLockTimeEntries();
+        settingsPage.setLockTimeEntriesDaysInPast("0");
         settingsPage.submit();
-
-        assertThat(lockTimeEntriesCheckbox).isChecked();
-        assertThat(lockTimeEntriesDaysInPastInput).hasValue("0");
 
         navigationPage.logout();
 
