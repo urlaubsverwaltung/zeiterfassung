@@ -4,9 +4,7 @@ const isProduction = process.env.NODE_ENV === "production";
 
 module.exports = {
   plugins: [
-    require("postcss-import"),
-    require("tailwindcss"),
-    require("autoprefixer"),
+    require("@tailwindcss/postcss"),
     isProduction && cssnano({ preset: "default" }),
   ].filter(Boolean),
 };

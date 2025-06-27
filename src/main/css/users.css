@@ -1,22 +1,30 @@
-main[data-selected-user] [data-hidden-with-selected-user] {
-  display: none;
-}
+@reference "tailwindcss";
+@config "../../../tailwind.config.js";
 
-main:not([data-selected-user]) [data-hidden-without-selected-user] {
-  display: none;
-}
+@layer utilities {
+  /* must be utilities layer to override element classes...  */
+  main[data-selected-user] [data-hidden-with-selected-user] {
+    display: none;
+  }
 
-@screen lg {
-  main[data-selected-user] [data-hidden-with-selected-user],
   main:not([data-selected-user]) [data-hidden-without-selected-user] {
-    display: var(--display-when-visible);
+    display: none;
+  }
+
+  @variant lg {
+    main[data-selected-user] [data-hidden-with-selected-user],
+    main:not([data-selected-user]) [data-hidden-without-selected-user] {
+      display: var(--display-when-visible);
+    }
   }
 }
 
-.user-selection-list > li {
-  @apply hover:bg-gray-50;
-}
+@layer components {
+  .user-selection-list > li {
+    @apply hover:bg-gray-50;
+  }
 
-.user-selection-list > li:has(a[aria-current="page"]) {
-  @apply bg-gray-100;
+  .user-selection-list > li:has(a[aria-current="page"]) {
+    @apply bg-gray-100;
+  }
 }
