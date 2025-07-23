@@ -126,7 +126,7 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
     }
 
     @Test
-    void ensureUserHasWorkedOvertimeUpdatedEvent() {
+    void ensureUserHasWorkedOvertimeEvent() {
 
         final UserId userId = new UserId("uuid");
         final UserLocalId userLocalId = new UserLocalId(1L);

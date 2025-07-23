@@ -183,7 +183,7 @@ class OvertimePublisher {
         final OvertimeHours overtimeHours = overtimeService.getOvertimeForDateAndUser(date, userIdComposite.localId());
 
         final UserHasWorkedOvertimeEvent overtimeUpdatedEvent = new UserHasWorkedOvertimeEvent(userIdComposite, date, overtimeHours);
-        LOG.info("publish UserHasWorkedOvertimeUpdatedEvent date={} user={}", overtimeUpdatedEvent, userIdComposite);
+        LOG.info("publish UserHasWorkedOvertimeEvent date={} user={}", overtimeUpdatedEvent, userIdComposite);
         applicationEventPublisher.publishEvent(overtimeUpdatedEvent);
     }
 }
