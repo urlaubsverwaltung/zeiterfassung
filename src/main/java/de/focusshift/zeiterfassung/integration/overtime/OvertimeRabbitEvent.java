@@ -8,8 +8,6 @@ import java.util.UUID;
  * Overtime event published on rabbitmq after the fact that a person has
  * worked more or less than the person should work at a given day.
  *
- * <p>
- * Note that the duration value is never ZERO. This is different to {@link OvertimeUpdatedRabbitEvent}.
  *
  * @param id event identifier
  * @param tenantId tenant identifier
