@@ -43,5 +43,3 @@ async function hideForm() {
   await removeBodyOverlay(overlay);
   formElement.reset();
 }
-
-export {};

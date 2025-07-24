@@ -1,7 +1,5 @@
 import { onTurboFrameRender } from "../../turbo-events";
 
-export {};
-
 onTurboFrameRender(function (event) {
   const target = event.target as Element;
   if (target.id === "frame-nav-time-clock-edit") {
