@@ -210,8 +210,9 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
         final List<WorkingTimeListEntryDto> workingTimes = getModelAttribute("workingTimes", result);
         assertThat(workingTimes).extracting(WorkingTimeListEntryDto::isDeletable).contains(true);
     }
+
     @Test
-    void ensureSimpleGetWithNotDeletableWorkingTimeBecauseVeryFirstWorkingTime() throws Exception {
+    void ensureSimpleGetWithNotDeletableWorkingTimeIsEmptyBecauseItWillNotBeDisplayed() throws Exception {
 
         when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
 
@@ -237,7 +238,7 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
         );
 
         final List<WorkingTimeListEntryDto> workingTimes = getModelAttribute("workingTimes", result);
-        assertThat(workingTimes).extracting(WorkingTimeListEntryDto::isDeletable).contains(false);
+        assertThat(workingTimes).isEmpty();
     }
 
     @ParameterizedTest

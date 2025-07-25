@@ -79,9 +79,6 @@ class UsersWorkingTimeUIIT {
         usersPage.selectPerson("Max Mustermann");
         usersPage.goToWorkingTimeAccountSettings();
 
-        // ensure global setting is shown for person
-        Assertions.assertThat(page.content()).contains(i18n("federalState.GERMANY_BADEN_WUERTTEMBERG"));
-
         // update working time settings for person
         workingTimeAccountPage.createNewWorkingTimeButton().click();
         assertThat(workingTimePage.federalStateSelect()).hasValue(federalStateSelectValue(FederalState.GLOBAL));
