@@ -50,12 +50,12 @@ class DayLockedSchedulerServiceMultiTenant implements DayLockedSchedulerService 
         // however, every person has zoneId Europe/Berlin currently
         timeEntryLockService.getMinValidTimeEntryDate(zoneId)
             .ifPresentOrElse(
-            date -> {
-                final LocalDate lockedDate = date.minusDays(1);
-                LOG.info("Date {} is locked now for zoneId={}. Publish application event.", lockedDate, zoneId);
-                applicationEventPublisher.publishEvent(new DayLockedEvent(lockedDate, zoneId));
-            },
-            () -> LOG.info("No date to lock available.")
-        );
+                date -> {
+                    final LocalDate lockedDate = date.minusDays(1);
+                    LOG.info("Date {} is locked now for zoneId={}. Publish application event.", lockedDate, zoneId);
+                    applicationEventPublisher.publishEvent(new DayLockedEvent(lockedDate, zoneId));
+                },
+                () -> LOG.info("No date to lock available.")
+            );
     }
 }
