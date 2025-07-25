@@ -63,7 +63,9 @@ class WorkingTimeAccountController implements HasTimeClock, HasLaunchpad {
                @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
                @CurrentSecurityContext SecurityContext securityContext) {
 
-        final List<WorkingTime> workingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(userId));
+        final List<WorkingTime> workingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(userId)).stream()
+            .filter(workingTime -> workingTime.validFrom().isPresent() || !workingTime.actualWorkingDays().isEmpty())
+            .toList();
         final List<WorkingTimeListEntryDto> workingTimeDtos = workingTimesToDtos(workingTimes);
         final FederalStateSettings federalStateSettings = federalStateSettingsService.getFederalStateSettings();
 
