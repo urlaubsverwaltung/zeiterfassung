@@ -45,11 +45,12 @@ class WorkingTimeAccountController implements HasTimeClock, HasLaunchpad {
     private final FederalStateSettingsService federalStateSettingsService;
     private final Clock clock;
 
-    WorkingTimeAccountController(UserManagementService userManagementService,
-                                 WorkingTimeService workingTimeService,
-                                 FederalStateSettingsService federalStateSettingsService,
-                                 Clock clock) {
-
+    WorkingTimeAccountController(
+        UserManagementService userManagementService,
+        WorkingTimeService workingTimeService,
+        FederalStateSettingsService federalStateSettingsService,
+        Clock clock
+    ) {
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
         this.federalStateSettingsService = federalStateSettingsService;
@@ -75,10 +76,12 @@ class WorkingTimeAccountController implements HasTimeClock, HasLaunchpad {
         }
     }
 
-    private void prepareGetWorkingTimesModel(Model model, String query, Long userId,
-                                             List<WorkingTimeListEntryDto> workingTimeDtos,
-                                             SecurityContext securityContext,
-                                             FederalStateSettings federalStateSettings) {
+    private void prepareGetWorkingTimesModel(
+        Model model, String query, Long userId,
+        List<WorkingTimeListEntryDto> workingTimeDtos,
+        SecurityContext securityContext,
+        FederalStateSettings federalStateSettings
+    ) {
 
         final List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()
