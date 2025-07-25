@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <changeSet author="schneider" id="locking-time-entries-default-to-true">
+    <preConditions>
+      <tableExists tableName="settings_locking_time_entries"/>
+      <columnExists tableName="settings_locking_time_entries" columnName="locking_is_active"/>
+    </preConditions>
+
+    <dropDefaultValue
+      tableName="settings_locking_time_entries"
+      columnName="locking_is_active"
+      columnDataType="BOOLEAN" />
+
+    <addDefaultValue
+      tableName="settings_locking_time_entries"
+      columnName="locking_is_active"
+      columnDataType="BOOLEAN"
+      defaultValueBoolean="true" />
+  </changeSet>
+</databaseChangeLog>
