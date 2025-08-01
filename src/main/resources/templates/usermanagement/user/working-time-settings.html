@@ -21,6 +21,16 @@
           </th:block>
         </a>
       </div>
+      <th:block th:if="${#lists.isEmpty(workingTimes)}">
+        <p class="mt-8">
+          <span class="font-bold">Noch keine Arbeitszeiten erfasst</span>
+        </p>
+        <p class="mt-2">
+          Klaus Müller ist fast startklar. Es fehlt nur noch die erste
+          Arbeitszeit.
+        </p>
+        <p class="">Lege sie jetzt über den "Neu"-Button an.</p>
+      </th:block>
       <ul class="mt-8 flex flex-col gap-1">
         <li
           th:each="workingTime : ${workingTimes}"
@@ -94,7 +104,7 @@
             <div
               th:ref="working-time-block"
               class="mt-4 mb-2 flex flex-col gap-4"
-              th:classappend="${#lists.size(workingTimes) > 1 ? 'pl-6' : ''}"
+              th:classappend="${#lists.size(workingTimes) > 0 ? 'pl-6' : ''}"
             >
               <div>
                 <ul class="flex flex-col gap-4 sm:flex-row">
