@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
+import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -9,11 +10,15 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
 
+import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.stream.Stream.iterate;
 import static java.util.stream.StreamSupport.stream;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
 class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService {
+
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final FederalStateSettingsRepository federalStateSettingsRepository;
     private final LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
@@ -101,6 +106,7 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         final LockTimeEntriesSettingsEntity saved = lockTimeEntriesSettingsRepository.save(entity);
 
         if (saved.isLockingIsActive()) {
+            LOG.info("LockTimeEntriesSettings updated: locking is active. Looking for updated DayLocked events now.");
             publishedDayLockedEvents(previousLockTimeEntriesDaysInPast, lockTimeEntriesDaysInPast);
         }
 
