@@ -23,13 +23,24 @@
       </div>
       <th:block th:if="${#lists.isEmpty(workingTimes)}">
         <p class="mt-8">
-          <span class="font-bold">Noch keine Arbeitszeiten erfasst</span>
+          <span
+            class="font-bold"
+            th:text="#{usermanagement.working-time.empty-state.info-header}"
+            >Noch keine Arbeitszeiten erfasst</span
+          >
         </p>
-        <p class="mt-2">
+        <p
+          class="mt-2"
+          th:text="#{usermanagement.working-time.empty-state.info-text(${user.fullName})}"
+        >
           Klaus Müller ist fast startklar. Es fehlt nur noch die erste
           Arbeitszeit.
         </p>
-        <p class="">Lege sie jetzt über den "Neu"-Button an.</p>
+        <p
+          th:text="#{usermanagement.working-time.empty-state.info-action-text}"
+        >
+          Lege sie jetzt über den "Neu"-Button an.
+        </p>
       </th:block>
       <ul class="mt-8 flex flex-col gap-1">
         <li
