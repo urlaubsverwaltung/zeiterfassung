@@ -68,18 +68,6 @@ class WorkingTimeDtoValidatorTest {
     }
 
     @Test
-    void invalidWhenNothingIsSet() {
-
-        final WorkingTimeDto dto = new WorkingTimeDto();
-
-        final MapBindingResult bindingResult = new MapBindingResult(new HashMap<>(), "");
-        sut.validate(dto, bindingResult);
-
-        assertThat(bindingResult.getFieldError("empty")).isNotNull();
-        assertThat(bindingResult.getFieldError("empty").getCode()).isEqualTo("usermanagement.working-time.validation.not-empty");
-    }
-
-    @Test
     void invalidWhenValidFromIsNotSetAndIdIsNull() {
 
         final WorkingTimeDto dto = new WorkingTimeDto();

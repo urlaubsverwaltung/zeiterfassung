@@ -42,11 +42,6 @@ class WorkingTimeDtoValidator implements Validator {
             field -> errors.rejectValue(field, "usermanagement.working-time.validation.max")
         );
 
-        if (noInput(dto)) {
-            errors.rejectValue("empty", "usermanagement.working-time.validation.not-empty");
-            return;
-        }
-
         // No working day selected
         if (dto.getWorkday().isEmpty()) {
             errors.rejectValue("workday", "usermanagement.working-time.validation.workday.not-empty");
@@ -134,18 +129,6 @@ class WorkingTimeDtoValidator implements Validator {
             "saturday", dto::getWorkingTimeSaturday,
             "sunday", dto::getWorkingTimeSunday
         );
-    }
-
-    private static boolean noInput(WorkingTimeDto dto) {
-        return dto.getWorkday().isEmpty()
-            && isNull(dto.getWorkingTime())
-            && isNull(dto.getWorkingTimeMonday())
-            && isNull(dto.getWorkingTimeTuesday())
-            && isNull(dto.getWorkingTimeWednesday())
-            && isNull(dto.getWorkingTimeThursday())
-            && isNull(dto.getWorkingTimeFriday())
-            && isNull(dto.getWorkingTimeSaturday())
-            && isNull(dto.getWorkingTimeSunday());
     }
 
     private static boolean isNullOrZero(Double doubleValue) {
