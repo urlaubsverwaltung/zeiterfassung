@@ -15,7 +15,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
 @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = SINGLE, matchIfMissing = true)
-class DayLockedSchedulerServiceSingleTenant implements DayLockedSchedulerService{
+class DayLockedSchedulerServiceSingleTenant implements DayLockedSchedulerService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
@@ -42,9 +42,9 @@ class DayLockedSchedulerServiceSingleTenant implements DayLockedSchedulerService
         // however, every person has zoneId Europe/Berlin currently
         timeEntryLockService.getMinValidTimeEntryDate(zoneId)
             .ifPresentOrElse(
-            date -> {
+                date -> {
                     final LocalDate lockedDate = date.minusDays(1);
-                    LOG.info("Date {} is locked now for zoneId={}. Publish application event.", zoneId, lockedDate);
+                    LOG.info("Date {} is locked now for zoneId={}. Publish application event.", lockedDate, zoneId);
                     applicationEventPublisher.publishEvent(new DayLockedEvent(lockedDate, zoneId));
                 },
                 () -> LOG.info("No date to lock available.")

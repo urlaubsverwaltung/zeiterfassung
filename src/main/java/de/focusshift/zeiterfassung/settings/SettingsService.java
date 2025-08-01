@@ -1,24 +1,37 @@
 package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
+import org.slf4j.Logger;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Optional;
 
+import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.stream.Stream.iterate;
 import static java.util.stream.StreamSupport.stream;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
 class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService {
 
+    private static final Logger LOG = getLogger(lookup().lookupClass());
+
     private final FederalStateSettingsRepository federalStateSettingsRepository;
     private final LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     SettingsService(
         FederalStateSettingsRepository federalStateSettingsRepository,
-        LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository
+        LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository,
+        ApplicationEventPublisher applicationEventPublisher
     ) {
         this.federalStateSettingsRepository = federalStateSettingsRepository;
         this.lockTimeEntriesSettingsRepository = lockTimeEntriesSettingsRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     private static FederalStateSettings toFederalStateSettings(FederalStateSettingsEntity federalStateSettingsEntity) {
@@ -84,12 +97,30 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
     LockTimeEntriesSettings updateLockTimeEntriesSettings(boolean lockingIsActive, int lockTimeEntriesDaysInPast) {
 
         final LockTimeEntriesSettingsEntity entity = getLockTimeEntriesSettingsEntity().orElseGet(LockTimeEntriesSettingsEntity::new);
+        final int previousLockTimeEntriesDaysInPast = entity.getLockTimeEntriesDaysInPast();
+
+        // set new values
         entity.setLockingIsActive(lockingIsActive);
         entity.setLockTimeEntriesDaysInPast(lockTimeEntriesDaysInPast);
 
         final LockTimeEntriesSettingsEntity saved = lockTimeEntriesSettingsRepository.save(entity);
 
+        if (saved.isLockingIsActive()) {
+            LOG.info("LockTimeEntriesSettings updated: locking is active. Looking for updated DayLocked events now.");
+            publishedDayLockedEvents(previousLockTimeEntriesDaysInPast, lockTimeEntriesDaysInPast);
+        }
+
         return toLockTimeEntriesSettings(saved);
+    }
+
+    private void publishedDayLockedEvents(final int previousLockTimeEntriesDaysInPast, final int actualLockTimeEntriesDaysInPast) {
+        final ZoneId zoneId = ZoneId.of("Europe/Berlin");
+        final LocalDate today = LocalDate.now(zoneId);
+        final LocalDate oldLockTimeEntryDate = today.minusDays(previousLockTimeEntriesDaysInPast).minusDays(1);
+        final LocalDate actualLockTimeEntryDate = today.minusDays(actualLockTimeEntriesDaysInPast).minusDays(1);
+
+        iterate(oldLockTimeEntryDate, date -> !date.isAfter(actualLockTimeEntryDate), date -> date.plusDays(1))
+            .forEach(lockedDate -> applicationEventPublisher.publishEvent(new DayLockedEvent(lockedDate, zoneId)));
     }
 
     private Optional<LockTimeEntriesSettingsEntity> getLockTimeEntriesSettingsEntity() {
