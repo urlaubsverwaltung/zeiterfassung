@@ -30,6 +30,7 @@ class WorkingTimeDto {
     private Double workingTimeFriday;
     private Double workingTimeSaturday;
     private Double workingTimeSunday;
+    private boolean defaultWorkingTime;
 
     public Long getUserId() {
         return userId;
@@ -160,6 +161,13 @@ class WorkingTimeDto {
         this.workingTimeSunday = workingTimeSunday;
     }
 
+    public boolean isDefaultWorkingTime() {
+        return defaultWorkingTime;
+    }
+
+    public void setDefaultWorkingTime(boolean defaultWorkingTime) {
+        this.defaultWorkingTime = defaultWorkingTime;
+    }
 
     /**
      * marker to ease validation feedback for the user. field error is set in {@linkplain WorkingTimeDtoValidator}.

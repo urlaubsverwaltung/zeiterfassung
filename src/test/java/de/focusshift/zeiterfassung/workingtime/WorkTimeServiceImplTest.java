@@ -84,7 +84,7 @@ class WorkTimeServiceImplTest {
         }
 
         @Test
-        void returnsWorkingTime() {
+        void returnsDefaultWorkingTime() {
 
             final UserId userId = new UserId("userid");
             final UserLocalId userLocalId = new UserLocalId(42L);
@@ -107,11 +107,39 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeUuid));
                 assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite);
                 assertThat(workingTime.isCurrent()).isTrue();
+                assertThat(workingTime.isDefaultWorkingTime()).isTrue();
                 assertThat(workingTime.validFrom()).isEmpty();
                 assertThat(workingTime.validTo()).isEmpty();
                 assertThat(workingTime.minValidFrom()).isEmpty();
                 assertThat(workingTime.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
                 assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+            });
+        }
+
+        @Test
+        void returnsWorkingTimeWhichIsNotDefault() {
+
+            final UserId userId = new UserId("userid");
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+            when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+            final WorkingTimeEntity defaultWorkingTimeEntity = anyWorkingTimeEntity(UUID.randomUUID(), 42L, null);
+
+            final UUID workingTimeUuid = UUID.randomUUID();
+            final WorkingTimeEntity entity = anyWorkingTimeEntity(workingTimeUuid, 42L, LocalDate.parse("2025-08-01"));
+            entity.setId(workingTimeUuid);
+            entity.setUserId(userLocalId.value());
+            entity.setFederalState(GERMANY_BADEN_WUERTTEMBERG);
+            entity.setWorksOnPublicHoliday(true);
+
+            when(workingTimeRepository.findById(workingTimeUuid)).thenReturn(Optional.of(entity));
+            when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(defaultWorkingTimeEntity, entity));
+
+            final Optional<WorkingTime> actual = sut.getWorkingTimeById(new WorkingTimeId(workingTimeUuid));
+            assertThat(actual).hasValueSatisfying(workingTime -> {
+                assertThat(workingTime.isDefaultWorkingTime()).isFalse();
             });
         }
 
@@ -180,6 +208,7 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTime.getFriday()).isEqualTo(PlannedWorkingHours.ZERO);
                 assertThat(workingTime.getSaturday()).isEqualTo(PlannedWorkingHours.ZERO);
                 assertThat(workingTime.getSunday()).isEqualTo(PlannedWorkingHours.ZERO);
+                assertThat(workingTime.isDefaultWorkingTime()).isTrue();
             });
 
             final ArgumentCaptor<WorkingTimeEntity> captor = ArgumentCaptor.forClass(WorkingTimeEntity.class);
@@ -198,6 +227,28 @@ class WorkTimeServiceImplTest {
             assertThat(persistedEntity.getFriday()).isEqualTo("PT0S");
             assertThat(persistedEntity.getSaturday()).isEqualTo("PT0S");
             assertThat(persistedEntity.getSunday()).isEqualTo("PT0S");
+        }
+
+        @Test
+        void setsDefaultWorkingTimeFlag() {
+
+            final User user = anyUser();
+            when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+
+            final UUID workingTimeId_1 = UUID.randomUUID();
+            final UUID workingTimeId_2 = UUID.randomUUID();
+            final UUID workingTimeId_3 = UUID.randomUUID();
+            final WorkingTimeEntity entity_1 = anyWorkingTimeEntity(workingTimeId_1, user.userLocalId().value(), null);
+            final WorkingTimeEntity entity_2 = anyWorkingTimeEntity(workingTimeId_2, user.userLocalId().value(), LocalDate.of(2024, 1, 1));
+            final WorkingTimeEntity entity_3 = anyWorkingTimeEntity(workingTimeId_3, user.userLocalId().value(), LocalDate.of(2024, 7, 1));
+            when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of(entity_1, entity_2, entity_3));
+
+            final List<WorkingTime> actual = sut.getAllWorkingTimesByUser(user.userLocalId());
+
+            assertThat(actual).hasSize(3);
+            assertThat(actual.get(0).isDefaultWorkingTime()).isFalse();
+            assertThat(actual.get(1).isDefaultWorkingTime()).isFalse();
+            assertThat(actual.get(2).isDefaultWorkingTime()).isTrue();
         }
 
         @Test
@@ -359,497 +410,518 @@ class WorkTimeServiceImplTest {
         }
     }
 
-    @Test
-    void ensureGetWorkingTimeByUsers() {
+    @Nested
+    class GetWorkingTimesByUsersFromTo {
 
-        final UUID workingTimeId_1 = UUID.randomUUID();
-        final WorkingTimeEntity entity_1 = new WorkingTimeEntity();
-        entity_1.setId(workingTimeId_1);
-        entity_1.setUserId(1L);
-        entity_1.setFederalState(FederalState.NONE);
-        entity_1.setWorksOnPublicHoliday(false);
-        entity_1.setMonday("PT1H");
-        entity_1.setTuesday("PT2H");
-        entity_1.setWednesday("PT3H");
-        entity_1.setThursday("PT4H");
-        entity_1.setFriday("PT5H");
-        entity_1.setSaturday("PT6H");
-        entity_1.setSunday("PT7H");
+        @Test
+        void ensureGetWorkingTimeByUsers() {
 
-        final UUID workingTimeId_2 = UUID.randomUUID();
-        final WorkingTimeEntity entity_2 = new WorkingTimeEntity();
-        entity_2.setId(workingTimeId_2);
-        entity_2.setUserId(2L);
-        entity_2.setFederalState(GERMANY_BADEN_WUERTTEMBERG);
-        entity_2.setWorksOnPublicHoliday(true);
-        entity_2.setMonday("PT7H");
-        entity_2.setTuesday("PT6H");
-        entity_2.setWednesday("PT5H");
-        entity_2.setThursday("PT4H");
-        entity_2.setFriday("PT3H");
-        entity_2.setSaturday("PT2H");
-        entity_2.setSunday("PT1H");
+            final UUID workingTimeId1 = UUID.randomUUID();
+            final WorkingTimeEntity workingTimeEntity1 = anyWorkingTimeEntity(workingTimeId1, 1L, null);
+            workingTimeEntity1.setFederalState(FederalState.NONE);
+            workingTimeEntity1.setWorksOnPublicHoliday(false);
+            workingTimeEntity1.setMonday("PT1H");
+            workingTimeEntity1.setTuesday("PT2H");
+            workingTimeEntity1.setWednesday("PT3H");
+            workingTimeEntity1.setThursday("PT4H");
+            workingTimeEntity1.setFriday("PT5H");
+            workingTimeEntity1.setSaturday("PT6H");
+            workingTimeEntity1.setSunday("PT7H");
 
-        when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L, 2L))).thenReturn(List.of(entity_1, entity_2));
+            final UUID workingTimeId2 = UUID.randomUUID();
+            final WorkingTimeEntity workingTimeEntity2 = anyWorkingTimeEntity(workingTimeId2, 2L, null);
 
-        final UserId userId_1 = new UserId("uuid-1");
-        final UserLocalId userLocalId_1 = new UserLocalId(1L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+            final UUID workingTimeId3 = UUID.randomUUID();
+            final WorkingTimeEntity workingTimeEntity3 = anyWorkingTimeEntity(workingTimeId3, 2L, LocalDate.parse("2025-08-01"));
+            workingTimeEntity3.setFederalState(GERMANY_BADEN_WUERTTEMBERG);
+            workingTimeEntity3.setWorksOnPublicHoliday(true);
+            workingTimeEntity3.setMonday("PT7H");
+            workingTimeEntity3.setTuesday("PT6H");
+            workingTimeEntity3.setWednesday("PT5H");
+            workingTimeEntity3.setThursday("PT4H");
+            workingTimeEntity3.setFriday("PT3H");
+            workingTimeEntity3.setSaturday("PT2H");
+            workingTimeEntity3.setSunday("PT1H");
 
-        final UserId userId_2 = new UserId("uuid-2");
-        final UserLocalId userLocalId_2 = new UserLocalId(2L);
-        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
-        final User user_2 = new User(userIdComposite_2, "Clark", "Kent", new EMailAddress(""), Set.of());
+            when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L, 2L))).thenReturn(List.of(workingTimeEntity1, workingTimeEntity2, workingTimeEntity3));
 
-        when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1, userLocalId_2)))
-            .thenReturn(List.of(user_1, user_2));
+            final UserId userId_1 = new UserId("uuid-1");
+            final UserLocalId userLocalId_1 = new UserLocalId(1L);
+            final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+            final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
 
-        final LocalDate from = LocalDate.now(clockFixed);
-        final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
-        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getWorkingTimesByUsers(from, toExclusive, List.of(new UserLocalId(1L), new UserLocalId(2L)));
+            final UserId userId_2 = new UserId("uuid-2");
+            final UserLocalId userLocalId_2 = new UserLocalId(2L);
+            final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+            final User user_2 = new User(userIdComposite_2, "Clark", "Kent", new EMailAddress(""), Set.of());
 
-        assertThat(actual)
-            .hasEntrySatisfying(userIdComposite_1, workingTimes -> {
-                assertThat(workingTimes).hasSize(1);
-                assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
-                    assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
-                    assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId_1));
-                    assertThat(workingTime.individualFederalState()).isEqualTo(NONE);
-                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.NO);
-                    assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(1));
-                    assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(2));
-                    assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(3));
-                    assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(4));
-                    assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(5));
-                    assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(6));
-                    assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(7));
+            when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1, userLocalId_2)))
+                .thenReturn(List.of(user_1, user_2));
+
+            final LocalDate from = LocalDate.now(clockFixed);
+            final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
+            final Map<UserIdComposite, List<WorkingTime>> actual = sut.getWorkingTimesByUsers(from, toExclusive, List.of(new UserLocalId(1L), new UserLocalId(2L)));
+
+            assertThat(actual)
+                .hasEntrySatisfying(userIdComposite_1, workingTimes -> {
+                    assertThat(workingTimes).hasSize(1);
+                    assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
+                        assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
+                        assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId1));
+                        assertThat(workingTime.individualFederalState()).isEqualTo(NONE);
+                        assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.NO);
+                        assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(1));
+                        assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(2));
+                        assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(3));
+                        assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(4));
+                        assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(5));
+                        assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(6));
+                        assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(7));
+                        assertThat(workingTime.isDefaultWorkingTime()).isTrue();
+                    });
+                })
+                .hasEntrySatisfying(userIdComposite_2, workingTimes -> {
+                    assertThat(workingTimes).hasSize(1);
+                    assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
+                        assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_2);
+                        assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId3));
+                        assertThat(workingTime.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+                        assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+                        assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(7));
+                        assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(6));
+                        assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(5));
+                        assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(4));
+                        assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(3));
+                        assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(2));
+                        assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(1));
+                        assertThat(workingTime.isDefaultWorkingTime()).isFalse();
+                    });
                 });
-            })
-            .hasEntrySatisfying(userIdComposite_2, workingTimes -> {
-                assertThat(workingTimes).hasSize(1);
-                assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
-                    assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_2);
-                    assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId_2));
-                    assertThat(workingTime.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
-                    assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(7));
-                    assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(6));
-                    assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(5));
-                    assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(4));
-                    assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(3));
-                    assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(2));
-                    assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(1));
+        }
+
+        @Test
+        void ensureGetWorkingTimeByUsersAddsDefaultWorkingTimeForUsersWithoutExplicitOne() {
+
+            when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L))).thenReturn(List.of());
+
+            final UserId userId_1 = new UserId("uuid-1");
+            final UserLocalId userLocalId_1 = new UserLocalId(1L);
+            final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+            final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+            when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1)))
+                .thenReturn(List.of(user_1));
+
+            when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+
+            final LocalDate from = LocalDate.now(clockFixed);
+            final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
+            final Map<UserIdComposite, List<WorkingTime>> actual = sut.getWorkingTimesByUsers(from, toExclusive, List.of(new UserLocalId(1L)));
+
+            assertThat(actual)
+                .hasEntrySatisfying(userIdComposite_1, workingTimes -> {
+                    assertThat(workingTimes).hasSize(1);
+                    assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
+                        assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
+                        assertThat(workingTime.individualFederalState()).isEqualTo(GLOBAL);
+                        assertThat(workingTime.federalState()).isEqualTo(GERMANY_BERLIN);
+                        assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
+                        assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(0));
+                    });
                 });
+        }
+    }
+
+    @Nested
+    class GetAllWorkingTimesFromTo {
+
+        @Test
+        void ensureGetAllWorkingTimeByUsers() {
+
+            final UUID workingTimeId_1 = UUID.randomUUID();
+            final WorkingTimeEntity workingTimeEntity1 = anyWorkingTimeEntity(workingTimeId_1, 1L, null);
+            workingTimeEntity1.setFederalState(FederalState.NONE);
+            workingTimeEntity1.setWorksOnPublicHoliday(false);
+            workingTimeEntity1.setMonday("PT1H");
+            workingTimeEntity1.setTuesday("PT2H");
+            workingTimeEntity1.setWednesday("PT3H");
+            workingTimeEntity1.setThursday("PT4H");
+            workingTimeEntity1.setFriday("PT5H");
+            workingTimeEntity1.setSaturday("PT6H");
+            workingTimeEntity1.setSunday("PT7H");
+
+            final UUID workingTimeId_2 = UUID.randomUUID();
+            final WorkingTimeEntity workingTimeEntity2 = anyWorkingTimeEntity(workingTimeId_2, 2L, null);
+
+            final UUID workingTimeId3 = UUID.randomUUID();
+            final WorkingTimeEntity workingTimeEntity3 = anyWorkingTimeEntity(workingTimeId3, 2L, LocalDate.parse("2025-08-01"));
+            workingTimeEntity3.setFederalState(GERMANY_BADEN_WUERTTEMBERG);
+            workingTimeEntity3.setWorksOnPublicHoliday(true);
+            workingTimeEntity3.setMonday("PT7H");
+            workingTimeEntity3.setTuesday("PT6H");
+            workingTimeEntity3.setWednesday("PT5H");
+            workingTimeEntity3.setThursday("PT4H");
+            workingTimeEntity3.setFriday("PT3H");
+            workingTimeEntity3.setSaturday("PT2H");
+            workingTimeEntity3.setSunday("PT1H");
+
+            final UserId userId_1 = new UserId("uuid-1");
+            final UserLocalId userLocalId_1 = new UserLocalId(1L);
+            final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+            final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+            final UserId userId_2 = new UserId("uuid-2");
+            final UserLocalId userLocalId_2 = new UserLocalId(2L);
+            final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+            final User user_2 = new User(userIdComposite_2, "Clark", "Kent", new EMailAddress(""), Set.of());
+
+            when(userManagementService.findAllUsers()).thenReturn(List.of(user_1, user_2));
+            when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L, 2L))).thenReturn(List.of(workingTimeEntity1, workingTimeEntity2, workingTimeEntity3));
+
+            final LocalDate from = LocalDate.now(clockFixed);
+            final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
+            final Map<UserIdComposite, List<WorkingTime>> actual = sut.getAllWorkingTimes(from, toExclusive);
+
+            assertThat(actual)
+                .hasEntrySatisfying(userIdComposite_1, workingTimes -> {
+                    assertThat(workingTimes).hasSize(1);
+                    assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
+                        assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
+                        assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId_1));
+                        assertThat(workingTime.individualFederalState()).isEqualTo(NONE);
+                        assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.NO);
+                        assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(1));
+                        assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(2));
+                        assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(3));
+                        assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(4));
+                        assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(5));
+                        assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(6));
+                        assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(7));
+                    });
+                })
+                .hasEntrySatisfying(userIdComposite_2, workingTimes -> {
+                    assertThat(workingTimes).hasSize(1);
+                    assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
+                        assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_2);
+                        assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId3));
+                        assertThat(workingTime.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+                        assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+                        assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(7));
+                        assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(6));
+                        assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(5));
+                        assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(4));
+                        assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(3));
+                        assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(2));
+                        assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(1));
+                        assertThat(workingTime.isDefaultWorkingTime()).isFalse();
+                    });
+                });
+        }
+
+        @Test
+        void ensureGetAllWorkingTimesByUsersAddsDefaultWorkingTimeForUsersWithoutExplicitOne() {
+
+            final UserId userId_1 = new UserId("uuid-1");
+            final UserLocalId userLocalId_1 = new UserLocalId(1L);
+            final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+            final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+            when(userManagementService.findAllUsers()).thenReturn(List.of(user_1));
+            when(workingTimeRepository.findAllByUserIdIsIn(List.of(userLocalId_1.value()))).thenReturn(List.of());
+
+            final LocalDate from = LocalDate.now(clockFixed);
+            final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
+            final Map<UserIdComposite, List<WorkingTime>> actual = sut.getAllWorkingTimes(from, toExclusive);
+
+            assertThat(actual)
+                .hasEntrySatisfying(userIdComposite_1, workingTimes -> {
+                    assertThat(workingTimes).hasSize(1);
+                    assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
+                        assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
+                        assertThat(workingTime.individualFederalState()).isEqualTo(GLOBAL);
+                        assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
+                        assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(0));
+                    });
+                });
+        }
+    }
+
+    @Nested
+    class UpdateWorkingTime {
+
+        @Test
+        void ensureUpdateWorkingTimeThrowsWhenWorkingTimeIdIsUnknown() {
+
+            final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+            when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.empty());
+
+            final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
+                MONDAY, Duration.ofHours(1),
+                TUESDAY, Duration.ofHours(2),
+                WEDNESDAY, Duration.ofHours(3),
+                THURSDAY, Duration.ofHours(4),
+                FRIDAY, Duration.ofHours(5),
+                SATURDAY, Duration.ofHours(6),
+                SUNDAY, Duration.ofHours(7)
+            ));
+
+            assertThatThrownBy(() -> sut.updateWorkingTime(workingTimeId, null, NONE, false, workdays))
+                .isInstanceOf(IllegalStateException.class);
+        }
+
+        @Test
+        void ensureUpdateWorkingTimeThrowsWhenValidFromIsNotSet() {
+
+            final UUID id = UUID.randomUUID();
+            final WorkingTimeEntity entity = new WorkingTimeEntity();
+            entity.setId(id);
+            entity.setValidFrom(LocalDate.of(2023, 12, 9));
+
+            when(workingTimeRepository.findById(id)).thenReturn(Optional.of(entity));
+
+            final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
+                MONDAY, Duration.ofHours(1),
+                TUESDAY, Duration.ofHours(2),
+                WEDNESDAY, Duration.ofHours(3),
+                THURSDAY, Duration.ofHours(4),
+                FRIDAY, Duration.ofHours(5),
+                SATURDAY, Duration.ofHours(6),
+                SUNDAY, Duration.ofHours(7)
+            ));
+
+            final WorkingTimeId workingTimeId = new WorkingTimeId(id);
+
+            assertThatThrownBy(() -> sut.updateWorkingTime(workingTimeId, null, NONE, false, workdays))
+                .isInstanceOf(WorkingTimeUpdateException.class);
+        }
+
+        @Test
+        void ensureUpdateWorkingTime() {
+
+            final UserId userId = new UserId("uuid-1");
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+            when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+            final UUID id = UUID.randomUUID();
+            final WorkingTimeEntity entity = new WorkingTimeEntity();
+            entity.setId(id);
+            entity.setUserId(42L);
+            entity.setFederalState(NONE);
+            entity.setWorksOnPublicHoliday(false);
+            entity.setMonday("PT24H");
+            entity.setTuesday("PT24H");
+            entity.setWednesday("PT24H");
+            entity.setThursday("PT24H");
+            entity.setFriday("PT24H");
+            entity.setSaturday("PT24H");
+            entity.setSunday("PT24H");
+
+            when(workingTimeRepository.findById(id)).thenReturn(Optional.of(entity));
+            when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
+
+            when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
+                anyWorkingTimeEntity(id, userLocalId.value(), null)
+            ));
+
+            final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
+                MONDAY, Duration.ofHours(1),
+                TUESDAY, Duration.ofHours(2),
+                WEDNESDAY, Duration.ofHours(3),
+                THURSDAY, Duration.ofHours(4),
+                FRIDAY, Duration.ofHours(5),
+                SATURDAY, Duration.ofHours(6),
+                SUNDAY, Duration.ofHours(7)
+            ));
+
+            final WorkingTime actual = sut.updateWorkingTime(new WorkingTimeId(id), null, GERMANY_BADEN_WUERTTEMBERG, true, workdays);
+
+            assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
+            assertThat(actual.isCurrent()).isTrue();
+            assertThat(actual.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+            assertThat(actual.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+            assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
+            assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(2)));
+            assertThat(actual.getWednesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(3)));
+            assertThat(actual.getThursday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(4)));
+            assertThat(actual.getFriday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(5)));
+            assertThat(actual.getSaturday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(6)));
+            assertThat(actual.getSunday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(7)));
+
+            final ArgumentCaptor<WorkingTimeEntity> captor = ArgumentCaptor.forClass(WorkingTimeEntity.class);
+            verify(workingTimeRepository).save(captor.capture());
+
+            final WorkingTimeEntity actualEntity = captor.getValue();
+            assertThat(actualEntity.getId()).isEqualTo(id);
+            assertThat(actualEntity.getUserId()).isEqualTo(42L);
+            assertThat(actualEntity.getFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+            assertThat(actualEntity.isWorksOnPublicHoliday()).isTrue();
+            assertThat(actualEntity.getMonday()).isEqualTo("PT1H");
+            assertThat(actualEntity.getTuesday()).isEqualTo("PT2H");
+            assertThat(actualEntity.getWednesday()).isEqualTo("PT3H");
+            assertThat(actualEntity.getThursday()).isEqualTo("PT4H");
+            assertThat(actualEntity.getFriday()).isEqualTo("PT5H");
+            assertThat(actualEntity.getSaturday()).isEqualTo("PT6H");
+            assertThat(actualEntity.getSunday()).isEqualTo("PT7H");
+        }
+    }
+
+    @Nested
+    class CreateWorkingTime {
+
+        @Test
+        void ensureCreateWorkingTimeWithNullableDays() {
+
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserId userId = new UserId("user-id");
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+
+            when(userManagementService.findUserByLocalId(userLocalId))
+                .thenReturn(Optional.of(user));
+
+            final UUID uuid = UUID.randomUUID();
+            when(workingTimeRepository.save(any(WorkingTimeEntity.class))).thenAnswer(invocation -> {
+                final WorkingTimeEntity entity = cloneEntity(invocation.getArgument(0));
+                entity.setId(uuid);
+                return entity;
             });
-    }
 
-    @Test
-    void ensureGetWorkingTimeByUsersAddsDefaultWorkingTimeForUsersWithoutExplicitOne() {
+            when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
+                anyWorkingTimeEntity(uuid, userLocalId.value(), null),
+                anyWorkingTimeEntity(uuid, userLocalId.value(), LocalDate.of(2023, 12, 9))
+            ));
 
-        when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L))).thenReturn(List.of());
+            final EnumMap<DayOfWeek, Duration> durations = new EnumMap<>(Map.of(
+                MONDAY, Duration.ofHours(1)
+            ));
 
-        final UserId userId_1 = new UserId("uuid-1");
-        final UserLocalId userLocalId_1 = new UserLocalId(1L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+            final WorkingTime actual = sut.createWorkingTime(userLocalId, LocalDate.of(2023, 12, 9), GERMANY_BADEN_WUERTTEMBERG, true, durations);
+            assertThat(actual.id()).isEqualTo(new WorkingTimeId(uuid));
+            assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
+            assertThat(actual.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+            assertThat(actual.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+            assertThat(actual.validFrom()).hasValue(LocalDate.of(2023, 12, 9));
+            assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
+            assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
+            assertThat(actual.getWednesday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
+            assertThat(actual.getThursday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
+            assertThat(actual.getFriday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
+            assertThat(actual.getSaturday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
+            assertThat(actual.getSunday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
+        }
 
-        when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1)))
-            .thenReturn(List.of(user_1));
+        @Test
+        void ensureCreateWorkingTime() {
 
-        when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserId userId = new UserId("user-id");
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
 
-        final LocalDate from = LocalDate.now(clockFixed);
-        final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
-        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getWorkingTimesByUsers(from, toExclusive, List.of(new UserLocalId(1L)));
+            when(userManagementService.findUserByLocalId(userLocalId))
+                .thenReturn(Optional.of(user));
 
-        assertThat(actual)
-            .hasEntrySatisfying(userIdComposite_1, workingTimes -> {
-                assertThat(workingTimes).hasSize(1);
-                assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
-                    assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
-                    assertThat(workingTime.individualFederalState()).isEqualTo(GLOBAL);
-                    assertThat(workingTime.federalState()).isEqualTo(GERMANY_BERLIN);
-                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
-                    assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(0));
-                });
+            final UUID uuid = UUID.randomUUID();
+            when(workingTimeRepository.save(any(WorkingTimeEntity.class))).thenAnswer(invocation -> {
+                final WorkingTimeEntity entity = cloneEntity(invocation.getArgument(0));
+                entity.setId(uuid);
+                return entity;
             });
+
+            when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
+                anyWorkingTimeEntity(uuid, userLocalId.value(), null),
+                anyWorkingTimeEntity(uuid, userLocalId.value(), LocalDate.of(2023, 12, 9))
+            ));
+
+            final EnumMap<DayOfWeek, Duration> durations = new EnumMap<>(Map.of(
+                MONDAY, Duration.ofHours(1),
+                TUESDAY, Duration.ofHours(2),
+                WEDNESDAY, Duration.ofHours(3),
+                THURSDAY, Duration.ofHours(4),
+                FRIDAY, Duration.ofHours(5),
+                SATURDAY, Duration.ofHours(6),
+                SUNDAY, Duration.ofHours(7)
+            ));
+
+            final WorkingTime actual = sut.createWorkingTime(userLocalId, LocalDate.of(2023, 12, 9), GERMANY_BADEN_WUERTTEMBERG, true, durations);
+            assertThat(actual.id()).isEqualTo(new WorkingTimeId(uuid));
+            assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
+            assertThat(actual.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+            assertThat(actual.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
+            assertThat(actual.validFrom()).hasValue(LocalDate.of(2023, 12, 9));
+            assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
+            assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(2)));
+            assertThat(actual.getWednesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(3)));
+            assertThat(actual.getThursday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(4)));
+            assertThat(actual.getFriday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(5)));
+            assertThat(actual.getSaturday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(6)));
+            assertThat(actual.getSunday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(7)));
+        }
     }
 
-    @Test
-    void ensureGetAllWorkingTimeByUsers() {
+    @Nested
+    class DeleteWorkingTime {
 
-        final UUID workingTimeId_1 = UUID.randomUUID();
-        final WorkingTimeEntity entity_1 = new WorkingTimeEntity();
-        entity_1.setId(workingTimeId_1);
-        entity_1.setUserId(1L);
-        entity_1.setFederalState(FederalState.NONE);
-        entity_1.setWorksOnPublicHoliday(false);
-        entity_1.setMonday("PT1H");
-        entity_1.setTuesday("PT2H");
-        entity_1.setWednesday("PT3H");
-        entity_1.setThursday("PT4H");
-        entity_1.setFriday("PT5H");
-        entity_1.setSaturday("PT6H");
-        entity_1.setSunday("PT7H");
+        @Test
+        void ensureDeleteWorkingTimeThrowsWhenWorkingTimeCannotBeFound() {
+            final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+            assertThatThrownBy(() -> sut.deleteWorkingTime(workingTimeId)).isInstanceOf(IllegalStateException.class);
+        }
 
-        final UUID workingTimeId_2 = UUID.randomUUID();
-        final WorkingTimeEntity entity_2 = new WorkingTimeEntity();
-        entity_2.setId(workingTimeId_2);
-        entity_2.setUserId(2L);
-        entity_2.setFederalState(GERMANY_BADEN_WUERTTEMBERG);
-        entity_2.setWorksOnPublicHoliday(true);
-        entity_2.setMonday("PT7H");
-        entity_2.setTuesday("PT6H");
-        entity_2.setWednesday("PT5H");
-        entity_2.setThursday("PT4H");
-        entity_2.setFriday("PT3H");
-        entity_2.setSaturday("PT2H");
-        entity_2.setSunday("PT1H");
-
-        final UserId userId_1 = new UserId("uuid-1");
-        final UserLocalId userLocalId_1 = new UserLocalId(1L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
-
-        final UserId userId_2 = new UserId("uuid-2");
-        final UserLocalId userLocalId_2 = new UserLocalId(2L);
-        final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
-        final User user_2 = new User(userIdComposite_2, "Clark", "Kent", new EMailAddress(""), Set.of());
-
-        when(userManagementService.findAllUsers()).thenReturn(List.of(user_1, user_2));
-        when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L, 2L))).thenReturn(List.of(entity_1, entity_2));
-
-        final LocalDate from = LocalDate.now(clockFixed);
-        final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
-        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getAllWorkingTimes(from, toExclusive);
-
-        assertThat(actual)
-            .hasEntrySatisfying(userIdComposite_1, workingTimes -> {
-                assertThat(workingTimes).hasSize(1);
-                assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
-                    assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
-                    assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId_1));
-                    assertThat(workingTime.individualFederalState()).isEqualTo(NONE);
-                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.NO);
-                    assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(1));
-                    assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(2));
-                    assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(3));
-                    assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(4));
-                    assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(5));
-                    assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(6));
-                    assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(7));
-                });
-            })
-            .hasEntrySatisfying(userIdComposite_2, workingTimes -> {
-                assertThat(workingTimes).hasSize(1);
-                assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
-                    assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_2);
-                    assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId_2));
-                    assertThat(workingTime.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
-                    assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(7));
-                    assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(6));
-                    assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(5));
-                    assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(4));
-                    assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(3));
-                    assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(2));
-                    assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(1));
-                });
-            });
-    }
-
-    @Test
-    void ensureGetAllWorkingTimesByUsersAddsDefaultWorkingTimeForUsersWithoutExplicitOne() {
-
-        final UserId userId_1 = new UserId("uuid-1");
-        final UserLocalId userLocalId_1 = new UserLocalId(1L);
-        final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
-        final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
-
-        when(userManagementService.findAllUsers()).thenReturn(List.of(user_1));
-        when(workingTimeRepository.findAllByUserIdIsIn(List.of(userLocalId_1.value()))).thenReturn(List.of());
-
-        final LocalDate from = LocalDate.now(clockFixed);
-        final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
-        final Map<UserIdComposite, List<WorkingTime>> actual = sut.getAllWorkingTimes(from, toExclusive);
-
-        assertThat(actual)
-            .hasEntrySatisfying(userIdComposite_1, workingTimes -> {
-                assertThat(workingTimes).hasSize(1);
-                assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
-                    assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
-                    assertThat(workingTime.individualFederalState()).isEqualTo(GLOBAL);
-                    assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
-                    assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(0));
-                    assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(0));
-                });
-            });
-    }
-
-    @Test
-    void ensureUpdateWorkingTimeThrowsWhenWorkingTimeIdIsUnknown() {
-
-        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
-        when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.empty());
-
-        final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
-            MONDAY, Duration.ofHours(1),
-            TUESDAY, Duration.ofHours(2),
-            WEDNESDAY, Duration.ofHours(3),
-            THURSDAY, Duration.ofHours(4),
-            FRIDAY, Duration.ofHours(5),
-            SATURDAY, Duration.ofHours(6),
-            SUNDAY, Duration.ofHours(7)
-        ));
-
-        assertThatThrownBy(() -> sut.updateWorkingTime(workingTimeId, null, NONE, false, workdays))
-            .isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    void ensureUpdateWorkingTimeThrowsWhenValidFromIsNotSet() {
-
-        final UUID id = UUID.randomUUID();
-        final WorkingTimeEntity entity = new WorkingTimeEntity();
-        entity.setId(id);
-        entity.setValidFrom(LocalDate.of(2023, 12, 9));
-
-        when(workingTimeRepository.findById(id)).thenReturn(Optional.of(entity));
-
-        final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
-            MONDAY, Duration.ofHours(1),
-            TUESDAY, Duration.ofHours(2),
-            WEDNESDAY, Duration.ofHours(3),
-            THURSDAY, Duration.ofHours(4),
-            FRIDAY, Duration.ofHours(5),
-            SATURDAY, Duration.ofHours(6),
-            SUNDAY, Duration.ofHours(7)
-        ));
-
-        final WorkingTimeId workingTimeId = new WorkingTimeId(id);
-
-        assertThatThrownBy(() -> sut.updateWorkingTime(workingTimeId, null, NONE, false, workdays))
-            .isInstanceOf(WorkingTimeUpdateException.class);
-    }
-
-    @Test
-    void ensureUpdateWorkingTime() {
-
-        final UserId userId = new UserId("uuid-1");
-        final UserLocalId userLocalId = new UserLocalId(42L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
-        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
-
-        final UUID id = UUID.randomUUID();
-        final WorkingTimeEntity entity = new WorkingTimeEntity();
-        entity.setId(id);
-        entity.setUserId(42L);
-        entity.setFederalState(NONE);
-        entity.setWorksOnPublicHoliday(false);
-        entity.setMonday("PT24H");
-        entity.setTuesday("PT24H");
-        entity.setWednesday("PT24H");
-        entity.setThursday("PT24H");
-        entity.setFriday("PT24H");
-        entity.setSaturday("PT24H");
-        entity.setSunday("PT24H");
-
-        when(workingTimeRepository.findById(id)).thenReturn(Optional.of(entity));
-        when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
-
-        when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
-            anyWorkingTimeEntity(id, userLocalId.value(), null)
-        ));
-
-        final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
-            MONDAY, Duration.ofHours(1),
-            TUESDAY, Duration.ofHours(2),
-            WEDNESDAY, Duration.ofHours(3),
-            THURSDAY, Duration.ofHours(4),
-            FRIDAY, Duration.ofHours(5),
-            SATURDAY, Duration.ofHours(6),
-            SUNDAY, Duration.ofHours(7)
-        ));
-
-        final WorkingTime actual = sut.updateWorkingTime(new WorkingTimeId(id), null, GERMANY_BADEN_WUERTTEMBERG, true, workdays);
-
-        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
-        assertThat(actual.isCurrent()).isTrue();
-        assertThat(actual.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-        assertThat(actual.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
-        assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
-        assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(2)));
-        assertThat(actual.getWednesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(3)));
-        assertThat(actual.getThursday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(4)));
-        assertThat(actual.getFriday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(5)));
-        assertThat(actual.getSaturday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(6)));
-        assertThat(actual.getSunday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(7)));
-
-        final ArgumentCaptor<WorkingTimeEntity> captor = ArgumentCaptor.forClass(WorkingTimeEntity.class);
-        verify(workingTimeRepository).save(captor.capture());
-
-        final WorkingTimeEntity actualEntity = captor.getValue();
-        assertThat(actualEntity.getId()).isEqualTo(id);
-        assertThat(actualEntity.getUserId()).isEqualTo(42L);
-        assertThat(actualEntity.getFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-        assertThat(actualEntity.isWorksOnPublicHoliday()).isTrue();
-        assertThat(actualEntity.getMonday()).isEqualTo("PT1H");
-        assertThat(actualEntity.getTuesday()).isEqualTo("PT2H");
-        assertThat(actualEntity.getWednesday()).isEqualTo("PT3H");
-        assertThat(actualEntity.getThursday()).isEqualTo("PT4H");
-        assertThat(actualEntity.getFriday()).isEqualTo("PT5H");
-        assertThat(actualEntity.getSaturday()).isEqualTo("PT6H");
-        assertThat(actualEntity.getSunday()).isEqualTo("PT7H");
-    }
-
-    @Test
-    void ensureCreateWorkingTimeWithNullableDays() {
-
-        final UserLocalId userLocalId = new UserLocalId(42L);
-        final UserId userId = new UserId("user-id");
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
-
-        when(userManagementService.findUserByLocalId(userLocalId))
-            .thenReturn(Optional.of(user));
-
-        final UUID uuid = UUID.randomUUID();
-        when(workingTimeRepository.save(any(WorkingTimeEntity.class))).thenAnswer(invocation -> {
-            final WorkingTimeEntity entity = cloneEntity(invocation.getArgument(0));
-            entity.setId(uuid);
-            return entity;
-        });
-
-        when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
-            anyWorkingTimeEntity(uuid, userLocalId.value(), null),
-            anyWorkingTimeEntity(uuid, userLocalId.value(), LocalDate.of(2023, 12, 9))
-        ));
-
-        final EnumMap<DayOfWeek, Duration> durations = new EnumMap<>(Map.of(
-            MONDAY, Duration.ofHours(1)
-        ));
-
-        final WorkingTime actual = sut.createWorkingTime(userLocalId, LocalDate.of(2023, 12, 9), GERMANY_BADEN_WUERTTEMBERG, true, durations);
-        assertThat(actual.id()).isEqualTo(new WorkingTimeId(uuid));
-        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
-        assertThat(actual.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-        assertThat(actual.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
-        assertThat(actual.validFrom()).hasValue(LocalDate.of(2023, 12, 9));
-        assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
-        assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
-        assertThat(actual.getWednesday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
-        assertThat(actual.getThursday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
-        assertThat(actual.getFriday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
-        assertThat(actual.getSaturday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
-        assertThat(actual.getSunday()).isEqualTo(new PlannedWorkingHours(Duration.ZERO));
-    }
-
-    @Test
-    void ensureCreateWorkingTime() {
-
-        final UserLocalId userLocalId = new UserLocalId(42L);
-        final UserId userId = new UserId("user-id");
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
-
-        when(userManagementService.findUserByLocalId(userLocalId))
-            .thenReturn(Optional.of(user));
-
-        final UUID uuid = UUID.randomUUID();
-        when(workingTimeRepository.save(any(WorkingTimeEntity.class))).thenAnswer(invocation -> {
-            final WorkingTimeEntity entity = cloneEntity(invocation.getArgument(0));
-            entity.setId(uuid);
-            return entity;
-        });
-
-        when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
-            anyWorkingTimeEntity(uuid, userLocalId.value(), null),
-            anyWorkingTimeEntity(uuid, userLocalId.value(), LocalDate.of(2023, 12, 9))
-        ));
-
-        final EnumMap<DayOfWeek, Duration> durations = new EnumMap<>(Map.of(
-            MONDAY, Duration.ofHours(1),
-            TUESDAY, Duration.ofHours(2),
-            WEDNESDAY, Duration.ofHours(3),
-            THURSDAY, Duration.ofHours(4),
-            FRIDAY, Duration.ofHours(5),
-            SATURDAY, Duration.ofHours(6),
-            SUNDAY, Duration.ofHours(7)
-        ));
-
-        final WorkingTime actual = sut.createWorkingTime(userLocalId, LocalDate.of(2023, 12, 9), GERMANY_BADEN_WUERTTEMBERG, true, durations);
-        assertThat(actual.id()).isEqualTo(new WorkingTimeId(uuid));
-        assertThat(actual.userIdComposite()).isEqualTo(userIdComposite);
-        assertThat(actual.individualFederalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
-        assertThat(actual.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.YES);
-        assertThat(actual.validFrom()).hasValue(LocalDate.of(2023, 12, 9));
-        assertThat(actual.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(1)));
-        assertThat(actual.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(2)));
-        assertThat(actual.getWednesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(3)));
-        assertThat(actual.getThursday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(4)));
-        assertThat(actual.getFriday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(5)));
-        assertThat(actual.getSaturday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(6)));
-        assertThat(actual.getSunday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(7)));
-    }
-
-    @Test
-    void ensureDeleteWorkingTimeThrowsWhenWorkingTimeCannotBeFound() {
-        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
-        assertThatThrownBy(() -> sut.deleteWorkingTime(workingTimeId)).isInstanceOf(IllegalStateException.class);
-    }
-
-    static Stream<Arguments> nowAndPastDate() {
-        return Stream.of(
-            Arguments.of(LocalDate.now(clockFixed)),
-            Arguments.of(LocalDate.now(clockFixed).minusDays(1))
-        );
-    }
-
-    @Test
-    void ensureDeleteWorkingTimeReturnsFalseWhenWorkingTimeIsVeryFirstOne() {
+        @Test
+        void ensureDeleteWorkingTimeReturnsFalseWhenWorkingTimeIsVeryFirstOne() {
 
 
-        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+            final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
-        final WorkingTimeEntity entity = new WorkingTimeEntity();
-        entity.setId(workingTimeId.uuid());
-        entity.setUserId(42L);
-        entity.setValidFrom(null);
+            final WorkingTimeEntity entity = new WorkingTimeEntity();
+            entity.setId(workingTimeId.uuid());
+            entity.setUserId(42L);
+            entity.setValidFrom(null);
 
-        when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.of(entity));
+            when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.of(entity));
 
-        final boolean actual = sut.deleteWorkingTime(workingTimeId);
-        assertThat(actual).isFalse();
-    }
+            final boolean actual = sut.deleteWorkingTime(workingTimeId);
+            assertThat(actual).isFalse();
+        }
 
-    @ParameterizedTest
-    @MethodSource("nowAndPastDate")
-    void ensureDeleteWorkingTime(LocalDate givenValidFromDate) {
+        @ParameterizedTest
+        @MethodSource("nowAndPastDate")
+        void ensureDeleteWorkingTime(LocalDate givenValidFromDate) {
 
-        final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+            final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
-        final WorkingTimeEntity entity = new WorkingTimeEntity();
-        entity.setId(workingTimeId.uuid());
-        entity.setUserId(42L);
-        entity.setValidFrom(givenValidFromDate);
+            final WorkingTimeEntity entity = new WorkingTimeEntity();
+            entity.setId(workingTimeId.uuid());
+            entity.setUserId(42L);
+            entity.setValidFrom(givenValidFromDate);
 
-        when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.of(entity));
+            when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.of(entity));
 
-        final boolean actual = sut.deleteWorkingTime(workingTimeId);
-        assertThat(actual).isTrue();
+            final boolean actual = sut.deleteWorkingTime(workingTimeId);
+            assertThat(actual).isTrue();
+        }
+
+        static Stream<Arguments> nowAndPastDate() {
+            return Stream.of(
+                Arguments.of(LocalDate.now(clockFixed)),
+                Arguments.of(LocalDate.now(clockFixed).minusDays(1))
+            );
+        }
     }
 
     private FederalStateSettings federalStateSettings(FederalState globalFederalState) {

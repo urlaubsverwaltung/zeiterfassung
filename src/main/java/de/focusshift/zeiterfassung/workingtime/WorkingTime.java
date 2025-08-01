@@ -43,6 +43,7 @@ public final class WorkingTime implements HasUserIdComposite {
     private final UserIdComposite userIdComposite;
     private final WorkingTimeId id;
     private final boolean current;
+    private final boolean defaultWorkingTime;
     private final LocalDate validFrom;
     private final LocalDate validTo;
     private final LocalDate minValidFrom;
@@ -55,6 +56,7 @@ public final class WorkingTime implements HasUserIdComposite {
         this.userIdComposite = builder.userIdComposite;
         this.id = builder.id;
         this.current = builder.current;
+        this.defaultWorkingTime = builder.defaultWorkingTime;
         this.validFrom = builder.validFrom;
         this.validTo = builder.validTo;
         this.minValidFrom = builder.minValidFrom;
@@ -78,6 +80,30 @@ public final class WorkingTime implements HasUserIdComposite {
      */
     public boolean isCurrent() {
         return current;
+    }
+
+    /**
+     * The default working time is the one that is automatically created.
+     *
+     * <p>
+     * Due to a refactoring there are two different default working times:
+     *
+     * <ul>
+     *     <li>the legacy one, with a default of 8 hours per day from monday to friday (or edited meanwhile by a user, doesn't matter)</li>
+     *     <li>the new one, without any working day</li>
+     * </ul>
+     *
+     * <p>
+     * The new default working time is not known for the actual user (not displayed anywhere) but exists in the system.
+     * While the legacy default working time is displayed in the UI and can be edited by a user.
+     *
+     * <p>
+     * One notable difference is that the legacy default working time has a {@link #validFrom()} date of {@code null} (the first one created for a person).
+     *
+     * @return {@code true} when this WorkingTime is the automatically created default one for a person, otherwise {@code false}.
+     */
+    public boolean isDefaultWorkingTime() {
+        return defaultWorkingTime;
     }
 
     /**
@@ -262,6 +288,7 @@ public final class WorkingTime implements HasUserIdComposite {
         private final UserIdComposite userIdComposite;
         private final WorkingTimeId id;
         private boolean current;
+        private boolean defaultWorkingTime;
         private LocalDate validFrom;
         private LocalDate validTo;
         private LocalDate minValidFrom;
@@ -285,6 +312,11 @@ public final class WorkingTime implements HasUserIdComposite {
 
         public Builder current(boolean current) {
             this.current = current;
+            return this;
+        }
+
+        public Builder defaultWorkingTime(boolean defaultWorkingTime) {
+            this.defaultWorkingTime = defaultWorkingTime;
             return this;
         }
 
