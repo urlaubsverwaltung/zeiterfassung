@@ -33,7 +33,6 @@ import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -250,7 +249,7 @@ class WorkingTimeControllerTest implements ControllerTest {
 
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId).worksOnPublicHoliday(WorksOnPublicHoliday.GLOBAL).build();
-        when(workingTimeService.getWorkingTimeById(workingTimeId)).thenReturn(Optional.of(workingTime));
+        when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
 
         perform(
             get("/users/42/working-time/" + workingTimeId.value())
@@ -285,7 +284,7 @@ class WorkingTimeControllerTest implements ControllerTest {
             .worksOnPublicHoliday(WorksOnPublicHoliday.GLOBAL)
             .build();
 
-        when(workingTimeService.getWorkingTimeById(workingTimeId)).thenReturn(Optional.of(workingTime));
+        when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
 
         perform(
             get("/users/42/working-time/" + workingTimeId.value())

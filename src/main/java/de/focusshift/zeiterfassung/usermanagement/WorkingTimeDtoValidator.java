@@ -1,5 +1,9 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
+import de.focusshift.zeiterfassung.workingtime.WorkingTime;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
+import org.slf4j.Logger;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
@@ -8,17 +12,27 @@ import org.springframework.validation.Validator;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static java.util.Objects.isNull;
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.util.StringUtils.capitalize;
 
 @Component
 class WorkingTimeDtoValidator implements Validator {
 
+    private static final Logger LOG = getLogger(lookup().lookupClass());
+
     private static final BigDecimal MAX_HOURS = BigDecimal.valueOf(24);
+
+    private final WorkingTimeService workingTimeService;
+
+    WorkingTimeDtoValidator(WorkingTimeService workingTimeService) {
+        this.workingTimeService = workingTimeService;
+    }
 
     @Override
     public boolean supports(@NonNull Class<?> clazz) {
@@ -30,7 +44,7 @@ class WorkingTimeDtoValidator implements Validator {
 
         final WorkingTimeDto dto = (WorkingTimeDto) target;
 
-        if (dto.getId() == null && dto.getValidFrom() == null) {
+        if ((dto.getId() == null || !isLegacyDefaultWorkingTime(dto)) && dto.getValidFrom() == null) {
             errors.rejectValue("validFrom", "usermanagement.working-time.validation.validFrom.not-empty");
         }
 
@@ -41,41 +55,22 @@ class WorkingTimeDtoValidator implements Validator {
         validateDays(dto, WorkingTimeDtoValidator::max,
             field -> errors.rejectValue(field, "usermanagement.working-time.validation.max")
         );
+    }
 
-        if (noInput(dto)) {
-            errors.rejectValue("empty", "usermanagement.working-time.validation.not-empty");
-            return;
+    private boolean isLegacyDefaultWorkingTime(WorkingTimeDto dto) {
+
+        final List<WorkingTime> allWorkingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(dto.getUserId()));
+        final WorkingTime oldestWorkingTime = allWorkingTimes.getLast();
+
+        UUID dtoId;
+        try {
+            dtoId = UUID.fromString(dto.getId());
+        } catch (IllegalArgumentException exception) {
+            LOG.warn("received workingTime id could not be parsed to UUID. This should not happen when the user clicks through the UI.", exception);
+            return false;
         }
 
-        // No working day selected
-        if (dto.getWorkday().isEmpty()) {
-            errors.rejectValue("workday", "usermanagement.working-time.validation.workday.not-empty");
-            return;
-        }
-
-        // no working hours
-        if (isNull(dto.getWorkingTime())) {
-            final List<String> selectedDaysWithoutHours = getSelectedDaysWithoutHours(dto);
-            if (selectedDaysWithoutHours.size() == dto.getWorkday().size()) {
-                // and nothing else is given
-                errors.rejectValue("workingTime", "usermanagement.working-time.validation.working-time.not-empty");
-            } else {
-                // and at least one selected day has no hours
-                for (String day : selectedDaysWithoutHours) {
-                    final String field = "workDay" + capitalize(day);
-                    errors.rejectValue(field, "usermanagement.working-time.validation.day.%s.no-hours".formatted(day));
-                }
-            }
-        }
-
-        // individual day hours given but day is not selected as working day
-        final List<String> daysWithHoursButNotSelected = getDaysWithHoursButNotSelected(dto);
-        if (!daysWithHoursButNotSelected.isEmpty()) {
-            for (String day : daysWithHoursButNotSelected) {
-                final String field = "workingTime" + capitalize(day);
-                errors.rejectValue(field, "usermanagement.working-time.validation.hours.%s.no-workday".formatted(day));
-            }
-        }
+        return oldestWorkingTime.id().equals(new WorkingTimeId(dtoId));
     }
 
     private static boolean positiveOrZero(Double doubleValue) {
@@ -104,26 +99,6 @@ class WorkingTimeDtoValidator implements Validator {
         }
     }
 
-    private static List<String> getDaysWithHoursButNotSelected(WorkingTimeDto dto) {
-        final List<String> workday = dto.getWorkday();
-        final Map<String, Supplier<Double>> hoursByDay = getHoursSupplierByDayMap(dto);
-
-        return hoursByDay.keySet()
-            .stream()
-            .filter(day -> !isNullOrZero(hoursByDay.get(day).get()) && !workday.contains(day))
-            .toList();
-    }
-
-    private static List<String> getSelectedDaysWithoutHours(WorkingTimeDto dto) {
-        final List<String> workday = dto.getWorkday();
-        final Map<String, Supplier<Double>> hoursByDay = getHoursSupplierByDayMap(dto);
-
-        return hoursByDay.keySet()
-            .stream()
-            .filter(day -> workday.contains(day) && isNull(hoursByDay.get(day).get()))
-            .toList();
-    }
-
     private static Map<String, Supplier<Double>> getHoursSupplierByDayMap(WorkingTimeDto dto) {
         return Map.of(
             "monday", dto::getWorkingTimeMonday,
@@ -134,21 +109,5 @@ class WorkingTimeDtoValidator implements Validator {
             "saturday", dto::getWorkingTimeSaturday,
             "sunday", dto::getWorkingTimeSunday
         );
-    }
-
-    private static boolean noInput(WorkingTimeDto dto) {
-        return dto.getWorkday().isEmpty()
-            && isNull(dto.getWorkingTime())
-            && isNull(dto.getWorkingTimeMonday())
-            && isNull(dto.getWorkingTimeTuesday())
-            && isNull(dto.getWorkingTimeWednesday())
-            && isNull(dto.getWorkingTimeThursday())
-            && isNull(dto.getWorkingTimeFriday())
-            && isNull(dto.getWorkingTimeSaturday())
-            && isNull(dto.getWorkingTimeSunday());
-    }
-
-    private static boolean isNullOrZero(Double doubleValue) {
-        return doubleValue == null || doubleValue == 0;
     }
 }

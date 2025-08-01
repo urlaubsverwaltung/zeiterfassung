@@ -49,7 +49,6 @@ import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
-import static java.util.Objects.requireNonNullElseGet;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.util.StringUtils.hasText;
@@ -99,14 +98,18 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     @GetMapping("/{workingTimeId}")
     String getWorkingTime(
         @PathVariable("userId") Long userId, Model model,
-        @PathVariable("workingTimeId") String workingTimeId,
+        @PathVariable("workingTimeId") String workingTimeIdValue,
         @RequestParam(value = "query", required = false, defaultValue = "") String query,
         @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
         @CurrentSecurityContext SecurityContext securityContext
     ) {
 
-        final WorkingTime workingTime = workingTimeService.getWorkingTimeById(WorkingTimeId.fromString(workingTimeId))
-            .orElseThrow(() -> new IllegalStateException("could not find working time with id=" + workingTimeId));
+        final WorkingTimeId workingTimeId = WorkingTimeId.fromString(workingTimeIdValue);
+        final List<WorkingTime> allWorkingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(userId));
+
+        final WorkingTime workingTime = allWorkingTimes.stream()
+            .filter(candidate -> candidate.id().equals(workingTimeId)).findFirst()
+            .orElseThrow(() -> new IllegalStateException("could not find working time with id=" + workingTimeIdValue));
 
         final WorkingTimeDto workingTimeDto = workingTimeToDto(workingTime);
 
@@ -245,9 +248,19 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             SUNDAY, workingTimeDto::getWorkingTimeSunday
         ));
 
-        final ToDoubleFunction<DayOfWeek> duration = dayOfWeek -> checked.get(dayOfWeek)
-            ? requireNonNullElseGet(dayWorkingTime.get(dayOfWeek).get(), workingTimeDto::getWorkingTime)
-            : 0d;
+        final ToDoubleFunction<DayOfWeek> duration = dayOfWeek -> {
+            if (checked.get(dayOfWeek)) {
+                final Double dayOfWeekDuration = dayWorkingTime.get(dayOfWeek).get();
+                if (dayOfWeekDuration != null) {
+                    return dayOfWeekDuration;
+                }
+                final Double commonDuration = workingTimeDto.getWorkingTime();
+                if (commonDuration != null) {
+                    return commonDuration;
+                }
+            }
+            return 0d;
+        };
 
         return new EnumMap<>(Map.of(
             MONDAY, hoursToDuration(duration.applyAsDouble(MONDAY)),
@@ -351,6 +364,8 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         dto.setWorksOnPublicHoliday(workingTime.individualWorksOnPublicHoliday().asBoolean());
         dto.setUserId(workingTime.userIdComposite().localId().value());
         dto.setWorkday(workingTime.actualWorkingDays().stream().map(DayOfWeek::name).map(String::toLowerCase).toList());
+
+        dto.setDefaultWorkingTime(workingTime.isDefaultWorkingTime());
 
         return dto;
     }

@@ -354,6 +354,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final Duration zeroWorkingTime = PlannedWorkingHours.ZERO.duration();
         return WorkingTime.builder(userIdComposite, null)
             .current(true)
+            .defaultWorkingTime(true)
             .federalState(FederalState.GLOBAL)
             .federalStateSettingsSupplier(new CachedSupplier<>(federalStateSettingsSupplier))
             .worksOnPublicHoliday(WorksOnPublicHoliday.GLOBAL)
@@ -390,8 +391,12 @@ class WorkTimeServiceImpl implements WorkingTimeService {
                                             List<WorkingTimeEntity> allEntitiesSorted,
                                             CachedSupplier<FederalStateSettings> federalStateSettingsSupplier) {
 
+        final WorkingTimeEntity veryFirstWorkingTimeEntity = allEntitiesSorted.getLast();
+        final boolean isDefaultWorkingTime = entity.equals(veryFirstWorkingTimeEntity);
+
         return WorkingTime.builder(userIdComposite, new WorkingTimeId(entity.getId()))
             .current(isCurrent(entity, allEntitiesSorted))
+            .defaultWorkingTime(isDefaultWorkingTime)
             .validFrom(entity.getValidFrom())
             .validTo(getValidToDate(entity, allEntitiesSorted))
             .minValidFrom(getMinValidFromDate(entity, allEntitiesSorted))
