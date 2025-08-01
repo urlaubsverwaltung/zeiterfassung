@@ -51,7 +51,7 @@
           <details
             class="group pr-2"
             th:classappend="${workingTime.isCurrent ? 'bg-gray-50 rounded-xl py-2' : ''}"
-            th:attrappend="open=${workingTime.isCurrent ? 'true' : null}"
+            th:attrappend="open=${(workingTime.isCurrent || #lists.size(workingTimes) == 1) ? 'true' : null}"
           >
             <summary
               class="flex gap-1 items-center cursor-pointer"
