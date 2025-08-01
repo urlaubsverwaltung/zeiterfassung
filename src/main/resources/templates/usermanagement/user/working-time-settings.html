@@ -66,7 +66,13 @@
               >
                 <th:block th:case="true">
                   <th:block
-                    th:if="${workingTime.validFrom == null}"
+                    th:if="${workingTime.validFrom == null && workingTime.validTo == null}"
+                    th:text="${federalStateMsg}"
+                  >
+                    Baden-Württemberg
+                  </th:block>
+                  <th:block
+                    th:if="${workingTime.validFrom == null && workingTime.validTo != null}"
                     th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo}, ${federalStateMsg})}"
                   >
                     gültig bis ___
@@ -86,7 +92,13 @@
                 </th:block>
                 <th:block th:case="false">
                   <th:block
-                    th:if="${workingTime.validFrom == null}"
+                    th:if="${workingTime.validFrom == null && workingTime.validTo == null}"
+                    th:text="${federalStateMsg}"
+                  >
+                    Baden-Württemberg
+                  </th:block>
+                  <th:block
+                    th:if="${workingTime.validFrom == null && workingTime.validTo != null}"
                     th:text="#{usermanagement.working-time.multiple-working-time-summary.valid-until(${workingTime.validTo}, ${federalStateMsg})}"
                   >
                     gültig bis ___
