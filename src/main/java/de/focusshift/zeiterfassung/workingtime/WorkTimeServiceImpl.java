@@ -351,19 +351,19 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
     @SuppressWarnings("java:S4276") // we need Supplier because we don't have a CachedBooleanSupplier
     private WorkingTime defaultWorkingTime(UserIdComposite userIdComposite, Supplier<FederalStateSettings> federalStateSettingsSupplier) {
-        final Duration eight = Duration.ofHours(8);
+        final Duration zeroWorkingTime = PlannedWorkingHours.ZERO.duration();
         return WorkingTime.builder(userIdComposite, null)
             .current(true)
             .federalState(FederalState.GLOBAL)
             .federalStateSettingsSupplier(new CachedSupplier<>(federalStateSettingsSupplier))
             .worksOnPublicHoliday(WorksOnPublicHoliday.GLOBAL)
-            .monday(eight)
-            .tuesday(eight)
-            .wednesday(eight)
-            .thursday(eight)
-            .friday(eight)
-            .saturday(Duration.ZERO)
-            .sunday(Duration.ZERO)
+            .monday(zeroWorkingTime)
+            .tuesday(zeroWorkingTime)
+            .wednesday(zeroWorkingTime)
+            .thursday(zeroWorkingTime)
+            .friday(zeroWorkingTime)
+            .saturday(zeroWorkingTime)
+            .sunday(zeroWorkingTime)
             .build();
     }
 

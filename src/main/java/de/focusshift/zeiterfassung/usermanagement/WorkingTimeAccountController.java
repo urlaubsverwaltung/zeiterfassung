@@ -45,11 +45,12 @@ class WorkingTimeAccountController implements HasTimeClock, HasLaunchpad {
     private final FederalStateSettingsService federalStateSettingsService;
     private final Clock clock;
 
-    WorkingTimeAccountController(UserManagementService userManagementService,
-                                 WorkingTimeService workingTimeService,
-                                 FederalStateSettingsService federalStateSettingsService,
-                                 Clock clock) {
-
+    WorkingTimeAccountController(
+        UserManagementService userManagementService,
+        WorkingTimeService workingTimeService,
+        FederalStateSettingsService federalStateSettingsService,
+        Clock clock
+    ) {
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
         this.federalStateSettingsService = federalStateSettingsService;
@@ -62,7 +63,12 @@ class WorkingTimeAccountController implements HasTimeClock, HasLaunchpad {
                @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
                @CurrentSecurityContext SecurityContext securityContext) {
 
-        final List<WorkingTime> workingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(userId));
+        // workingTimes are whether the legacy default workingTime Monday to Friday with 8 hours
+        // OR all user defined working times
+        final List<WorkingTime> workingTimes = workingTimeService.getAllWorkingTimesByUser(new UserLocalId(userId)).stream()
+            .filter(workingTime -> isGivenByUser(workingTime) || !workingTime.actualWorkingDays().isEmpty())
+            .toList();
+
         final List<WorkingTimeListEntryDto> workingTimeDtos = workingTimesToDtos(workingTimes);
         final FederalStateSettings federalStateSettings = federalStateSettingsService.getFederalStateSettings();
 
@@ -75,10 +81,18 @@ class WorkingTimeAccountController implements HasTimeClock, HasLaunchpad {
         }
     }
 
-    private void prepareGetWorkingTimesModel(Model model, String query, Long userId,
-                                             List<WorkingTimeListEntryDto> workingTimeDtos,
-                                             SecurityContext securityContext,
-                                             FederalStateSettings federalStateSettings) {
+    private boolean isGivenByUser(WorkingTime workingTime) {
+        // workingTime with a validFrom date is considered as given by user
+        // because it is a mandatory field when creating a working time
+        return  workingTime.validFrom().isPresent();
+    }
+
+    private void prepareGetWorkingTimesModel(
+        Model model, String query, Long userId,
+        List<WorkingTimeListEntryDto> workingTimeDtos,
+        SecurityContext securityContext,
+        FederalStateSettings federalStateSettings
+    ) {
 
         final List<UserDto> users = userManagementService.findAllUsers(query)
             .stream()
