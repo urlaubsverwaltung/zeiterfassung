@@ -76,7 +76,7 @@ public final class WorkingTimeCalendar {
                 final long workingDaysDuringAbsence = startDate.datesUntil(endDate.plusDays(1))
                     .filter(dayInAbsence -> plannedWorkingHoursByDate.get(dayInAbsence).duration().isPositive())
                     .count();
-                absenceDuration = absenceDuration.plus(absence.overtimeHours().dividedBy(workingDaysDuringAbsence));
+                absenceDuration = absenceDuration.plus(workingDaysDuringAbsence == 0 ? absence.overtimeHours() : absence.overtimeHours().dividedBy(workingDaysDuringAbsence));
             } else {
                 // application for leave or sicknote
                 double absenceValue = absence.dayLength().getValue();

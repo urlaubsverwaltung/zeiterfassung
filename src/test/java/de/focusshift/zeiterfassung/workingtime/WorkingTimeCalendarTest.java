@@ -270,4 +270,28 @@ class WorkingTimeCalendarTest {
 
         assertThat(sut.shouldWorkingHours(today)).hasValue(ShouldWorkingHours.ZERO);
     }
+
+    @Test
+    void ensureShouldHoursForOvertimeReductionWhenAllPlannedWorkingHoursAreZero() {
+        final LocalDate today = LocalDate.now();
+        final Instant date = today.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+        final Absence applicationOvertimeReduction = new Absence(
+            new UserId("user"),
+            date,
+            date,
+            FULL,
+            locale -> "de",
+            PINK,
+            OVERTIME,
+            Duration.ofHours(6L)
+        );
+
+        final WorkingTimeCalendar sut = new WorkingTimeCalendar(
+            Map.of(today, PlannedWorkingHours.ZERO),
+            Map.of(today, List.of(applicationOvertimeReduction))
+        );
+
+        assertThat(sut.shouldWorkingHours(today)).hasValue(new ShouldWorkingHours(Duration.ZERO));
+    }
 }
