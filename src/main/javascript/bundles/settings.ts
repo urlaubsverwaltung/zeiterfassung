@@ -22,7 +22,7 @@ function submitSettingsFormPreview(event: Event) {
 
   const button = document.createElement("button");
   button.setAttribute("type", "submit");
-  button.setAttribute("preview", "");
+  button.setAttribute("value", "preview");
   button.style.display = "none";
   form.append(button);
 

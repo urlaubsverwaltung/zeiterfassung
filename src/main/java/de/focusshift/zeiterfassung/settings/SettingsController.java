@@ -66,14 +66,14 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
         @ModelAttribute(ATTRIBUTE_NAME_SETTINGS) SettingsDto settingsDto,
         BindingResult bindingResult,
         @RequestParam(name = "preview", required = false) Optional<String> preview,
-        Model model
+        Model model,
+        Locale locale
     ) {
 
         settingsDtoValidator.validate(settingsDto, bindingResult);
 
         if (bindingResult.hasErrors() || preview.isPresent()) {
-            model.addAttribute(ATTRIBUTE_NAME_SETTINGS, settingsDto);
-            model.addAttribute("federalStateSelect", federalStateSelectDto(settingsDto.federalState()));
+            prepareModel(model, locale, settingsDto);
             return new ModelAndView("settings/settings", model.asMap(), UNPROCESSABLE_ENTITY);
         } else {
             settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());

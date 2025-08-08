@@ -114,6 +114,8 @@ class SettingsControllerTest implements ControllerTest {
 
         final SettingsDto dto = new SettingsDto(FederalState.NONE, false, true, "-1");
 
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
+
         doAnswer(invocationOnMock -> {
             final BindingResult errors = invocationOnMock.getArgument(1, BindingResult.class);
             errors.reject("something.is.fishy");
@@ -134,6 +136,8 @@ class SettingsControllerTest implements ControllerTest {
 
     @Test
     void ensureUpdateSettingsPreviewDoesNotPersist() throws Exception {
+
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
         perform(post("/settings")
             .param("preview", "")
