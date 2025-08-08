@@ -36,6 +36,10 @@ public class SettingsPage {
         assertThat(lockTimeEntriesCheckbox()).not().isChecked();
     }
 
+    public void assertLockTimeEntriesDaysInPastInputValue(String expectedValue) {
+        assertThat(lockTimEntriesDaysInPastInput()).hasValue(expectedValue);
+    }
+
     public void enableLockTimeEntries() {
         executeUserAction(() -> {
             lockTimeEntriesCheckbox().check();
@@ -56,10 +60,7 @@ public class SettingsPage {
 
     private void executeUserAction(Runnable runnable) {
         // updating interactive elements results in a "page-refresh" when javascript is enabled
-        // 1. first response -> redirect
-        // 2. second response -> ok with updated html
-        // 3. js updates the turbo-frame, not the whole page
-        page.waitForResponse(Response::ok, runnable);
+        page.waitForResponse(response -> response.status() == 422, runnable);
     }
 
     private Locator worksOnPublicHolidayCheckbox() {
