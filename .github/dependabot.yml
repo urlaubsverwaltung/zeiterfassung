@@ -41,7 +41,7 @@ updates:
       tailwindcss:
         patterns:
           - "tailwindcss"
-          - "@tailwindcss-*"
+          - "@tailwindcss/*"
 
   - package-ecosystem: "maven"
     directory: "/"
