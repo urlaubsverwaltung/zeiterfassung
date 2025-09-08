@@ -38,6 +38,10 @@ updates:
         patterns:
           - "prettier"
           - "prettier-*"
+      tailwindcss:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss-*"
 
   - package-ecosystem: "maven"
     directory: "/"
