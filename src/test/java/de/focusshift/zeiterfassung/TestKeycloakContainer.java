@@ -5,7 +5,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 
 public class TestKeycloakContainer extends KeycloakContainer {
 
-    private static final String VERSION = "26.2.5";
+    private static final String VERSION = "26.3.3";
     private static final String IMAGE = "quay.io/keycloak/keycloak";
     public static final String REALM_ZEITERFASSUNG = "zeiterfassung-realm";
 
