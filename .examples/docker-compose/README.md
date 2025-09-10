@@ -15,7 +15,7 @@ This is an example for an environment of Zeiterfassung with [docker-compose](htt
 * zeiterfassung, the application itself
 * postgres, database for storing application data
 * keycloak, oidc-compatible identity and access management for user and access handling, configured with demo users
-* mailhog, as mailserver mock, which should be replaced with your mail server
+* mailpit, as mailserver mock, which should be replaced with your mail server
 
 Additionally, you need to make sure:
 * to add persistence for keycloak, see [keycloak documentation](https://www.keycloak.org/server/db)
