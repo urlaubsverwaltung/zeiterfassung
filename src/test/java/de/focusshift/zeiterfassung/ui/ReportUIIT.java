@@ -39,19 +39,21 @@ class ReportUIIT {
     }
 
     @Test
-    void ensureReportsForAllPersons(Page page) {
+    void ensureReportsForAllPersons(Page pageOffice) {
 
-        final NavigationPage navigationPage = new NavigationPage(page);
-        final ReportPage reportPage = new ReportPage(page);
-        final LoginPage loginPage = new LoginPage(page, port);
+        // user pages
+        final Page userPage = pageOffice.context().browser().newContext().newPage();
+        final LoginPage loginPageUser = new LoginPage(userPage, port);
+        final NavigationPage navigationPageUser = new NavigationPage(userPage);
+        login("user", "secret", loginPageUser);
 
-        // persons are not visible until first login
-        login("user", "secret", loginPage);
-        navigationPage.logout();
+        // office pages
+        final ReportPage reportPage = new ReportPage(pageOffice);
+        final NavigationPage navigationPageOffice = new NavigationPage(pageOffice);
+        final LoginPage loginPageOffice = new LoginPage(pageOffice, port);
+        login("office", "secret", loginPageOffice);
 
-        login("office", "secret", loginPage);
-
-        navigationPage.goToReportsPage();
+        navigationPageOffice.goToReportsPage();
 
         assertThat(reportPage.personDetailTableLocator()).not().isAttached();
 
@@ -68,6 +70,9 @@ class ReportUIIT {
         assertThat(reportPage.personDetailTableLocator()).isVisible();
         assertThat(reportPage.personDetailTableLocator()).containsText("Klaus Müller");
         assertThat(reportPage.personDetailTableLocator()).containsText("Marlene Muster");
+
+        navigationPageOffice.logout();
+        navigationPageUser.logout();
     }
 
     private void login(String username, String password, LoginPage loginPage) {
