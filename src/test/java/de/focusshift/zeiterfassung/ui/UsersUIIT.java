@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.ui;
 
 import com.microsoft.playwright.Page;
-import de.focusshift.zeiterfassung.TestKeycloakContainer;
 import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
+import de.focusshift.zeiterfassung.TestKeycloakContainer;
 import de.focusshift.zeiterfassung.ui.extension.UiTest;
 import de.focusshift.zeiterfassung.ui.pages.LoginPage;
 import de.focusshift.zeiterfassung.ui.pages.NavigationPage;
@@ -41,7 +41,7 @@ class UsersUIIT {
     @Test
     void ensureOvertimeAccount(Page page) {
 
-        final LoginPage loginPage = new LoginPage(page);
+        final LoginPage loginPage = new LoginPage(page, port);
         final NavigationPage navigationPage = new NavigationPage(page);
         final UsersPage usersPage = new UsersPage(page);
         final UserOvertimeAccountPage overtimeAccountPage = new UserOvertimeAccountPage(page);

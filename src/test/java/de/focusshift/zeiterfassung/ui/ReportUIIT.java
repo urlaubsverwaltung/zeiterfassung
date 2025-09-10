@@ -17,6 +17,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.credentials;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -39,18 +40,21 @@ class ReportUIIT {
     }
 
     @Test
-    void ensureReportsForAllPersons(Page page) {
+    void ensureReportsForAllPersons(Page pageOffice) {
 
-        final NavigationPage navigationPage = new NavigationPage(page);
-        final ReportPage reportPage = new ReportPage(page);
+        // user pages
+        final Page userPage = pageOffice.context().browser().newContext().newPage();
+        final LoginPage loginPageUser = new LoginPage(userPage, port);
+        final NavigationPage navigationPageUser = new NavigationPage(userPage);
+        loginPageUser.login(credentials("user", "secret"));
 
-        // persons are not visible until first login
-        login("user", "secret", page);
-        navigationPage.logout();
+        // office pages
+        final ReportPage reportPage = new ReportPage(pageOffice);
+        final NavigationPage navigationPageOffice = new NavigationPage(pageOffice);
+        final LoginPage loginPageOffice = new LoginPage(pageOffice, port);
+        loginPageOffice.login(credentials("office", "secret"));
 
-        login("office", "secret", page);
-
-        navigationPage.goToReportsPage();
+        navigationPageOffice.goToReportsPage();
 
         assertThat(reportPage.personDetailTableLocator()).not().isAttached();
 
@@ -67,10 +71,8 @@ class ReportUIIT {
         assertThat(reportPage.personDetailTableLocator()).isVisible();
         assertThat(reportPage.personDetailTableLocator()).containsText("Klaus Müller");
         assertThat(reportPage.personDetailTableLocator()).containsText("Marlene Muster");
-    }
 
-    private void login(String username, String password, Page page) {
-        page.navigate("http://localhost:" + port + "/oauth2/authorization/keycloak");
-        new LoginPage(page).login(new LoginPage.Credentials(username, password));
+        navigationPageOffice.logout();
+        navigationPageUser.logout();
     }
 }

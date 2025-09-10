@@ -2,8 +2,8 @@ package de.focusshift.zeiterfassung.ui;
 
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
-import de.focusshift.zeiterfassung.TestKeycloakContainer;
 import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
+import de.focusshift.zeiterfassung.TestKeycloakContainer;
 import de.focusshift.zeiterfassung.ui.extension.UiTest;
 import de.focusshift.zeiterfassung.ui.pages.LoginPage;
 import de.focusshift.zeiterfassung.ui.pages.NavigationPage;
@@ -18,6 +18,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.credentials;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -49,10 +50,12 @@ class PermissionUIIT {
         final String user_username = "Klaus Müller";
         final Page user_page = boss_page.context().browser().newContext().newPage();
         final NavigationPage user_navigationPage = new NavigationPage(user_page);
+        final LoginPage loginPageBoss = new LoginPage(boss_page, port);
+        final LoginPage loginPageUser = new LoginPage(user_page, port);
 
-        login("boss", "secret", boss_page);
+        loginPageBoss.login(credentials("boss", "secret"));
 
-        login("user", "secret", user_page);
+        loginPageUser.login(credentials("user", "secret"));
         assertThat(user_navigationPage.usersLink()).not().isAttached();
 
         // Boss: add permission to user
@@ -78,10 +81,5 @@ class PermissionUIIT {
 
         user_navigationPage.logout();
         boss_navigationPage.logout();
-    }
-
-    private void login(String username, String password, Page page) {
-        page.navigate("http://localhost:" + port + "/oauth2/authorization/keycloak");
-        new LoginPage(page).login(new LoginPage.Credentials(username, password));
     }
 }
