@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.credentials;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -50,7 +51,7 @@ class SettingsUIIT {
         final SettingsPage settingsPage = new SettingsPage(page);
         final LoginPage loginPage = new LoginPage(page, port);
 
-        login("office", "secret", loginPage);
+        loginPage.login(credentials("office", "secret"));
 
         navigationPage.goToSettingsPage();
 
@@ -69,9 +70,5 @@ class SettingsUIIT {
 
         settingsPage.assertLockTimeEntriesDaysInPastInputValue("5");
         assertThat(page.getByText(Pattern.compile(expectedDatePreviewText))).isVisible();
-    }
-
-    private void login(String username, String password, LoginPage loginPage) {
-        loginPage.login(new LoginPage.Credentials(username, password));
     }
 }

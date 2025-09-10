@@ -37,5 +37,8 @@ public class LoginPage {
     }
 
     public record Credentials(String username, String password) {
+        public static Credentials credentials(String username, String password) {
+            return new Credentials(username, password);
+        }
     }
 }

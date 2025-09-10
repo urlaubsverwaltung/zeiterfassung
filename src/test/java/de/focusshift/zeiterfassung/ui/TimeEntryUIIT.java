@@ -30,6 +30,7 @@ import java.time.ZoneId;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static com.microsoft.playwright.options.WaitForSelectorState.VISIBLE;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.credentials;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -71,7 +72,7 @@ class TimeEntryUIIT {
         final TimeEntryPage timeEntryPage = new TimeEntryPage(page);
         final LoginPage loginPage = new LoginPage(page, port);
 
-        login("office", "secret", loginPage);
+        loginPage.login(credentials("office", "secret"));
 
         navigationPage.goToSettingsPage();
 
@@ -83,7 +84,7 @@ class TimeEntryUIIT {
 
         navigationPage.logout();
 
-        login("user", "secret", loginPage);
+        loginPage.login(credentials("user", "secret"));
 
         final LocalDate yesterday = LocalDate.now(USER_ZONE_ID).minusDays(1);
         timeEntryPage.fillNewTimeEntry(yesterday, LocalTime.parse("08:00"), LocalTime.parse("17:00"), "");
@@ -103,7 +104,7 @@ class TimeEntryUIIT {
         final TimeEntryDialogPage timeEntryDialogPage = new TimeEntryDialogPage(page);
         final LoginPage loginPage = new LoginPage(page, port);
 
-        login("office", "secret", loginPage);
+        loginPage.login(credentials("office", "secret"));
 
         final LocalDateTime now = LocalDateTime.now();
         final LocalDateTime start = now.withHour(9).withMinute(0).withSecond(0).withNano(0);
@@ -122,9 +123,5 @@ class TimeEntryUIIT {
 
         timeEntryDialogPage.showsTimeEntryHistoryElement(start.toLocalDate(), start.toLocalTime(), end.toLocalTime(), "comment updated");
         timeEntryDialogPage.showsTimeEntryHistoryElement(start.toLocalDate(), start.toLocalTime(), end.toLocalTime(), "comment");
-    }
-
-    private void login(String username, String password, LoginPage loginPage) {
-        loginPage.login(new LoginPage.Credentials(username, password));
     }
 }

@@ -17,6 +17,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.credentials;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -45,13 +46,13 @@ class ReportUIIT {
         final Page userPage = pageOffice.context().browser().newContext().newPage();
         final LoginPage loginPageUser = new LoginPage(userPage, port);
         final NavigationPage navigationPageUser = new NavigationPage(userPage);
-        login("user", "secret", loginPageUser);
+        loginPageUser.login(credentials("user", "secret"));
 
         // office pages
         final ReportPage reportPage = new ReportPage(pageOffice);
         final NavigationPage navigationPageOffice = new NavigationPage(pageOffice);
         final LoginPage loginPageOffice = new LoginPage(pageOffice, port);
-        login("office", "secret", loginPageOffice);
+        loginPageOffice.login(credentials("office", "secret"));
 
         navigationPageOffice.goToReportsPage();
 
@@ -73,9 +74,5 @@ class ReportUIIT {
 
         navigationPageOffice.logout();
         navigationPageUser.logout();
-    }
-
-    private void login(String username, String password, LoginPage loginPage) {
-        loginPage.login(new LoginPage.Credentials(username, password));
     }
 }
