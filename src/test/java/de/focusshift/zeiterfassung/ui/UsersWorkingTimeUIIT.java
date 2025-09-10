@@ -61,13 +61,11 @@ class UsersWorkingTimeUIIT {
     @Test
     void ensureWorkingTime(Page page) {
 
-        final LoginPage loginPage = new LoginPage(page);
+        final LoginPage loginPage = new LoginPage(page, port);
         final NavigationPage navigationPage = new NavigationPage(page);
         final UsersPage usersPage = new UsersPage(page);
         final UserWorkingTimeAccountPage workingTimeAccountPage = new UserWorkingTimeAccountPage(page);
         final UserWorkingTimePage workingTimePage = new UserWorkingTimePage(page);
-
-        page.navigate("http://localhost:" + port + "/oauth2/authorization/keycloak");
 
         loginPage.login(new LoginPage.Credentials("boss", "secret"));
 

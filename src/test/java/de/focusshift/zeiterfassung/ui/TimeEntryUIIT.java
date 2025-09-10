@@ -69,8 +69,9 @@ class TimeEntryUIIT {
         final NavigationPage navigationPage = new NavigationPage(page);
         final SettingsPage settingsPage = new SettingsPage(page);
         final TimeEntryPage timeEntryPage = new TimeEntryPage(page);
+        final LoginPage loginPage = new LoginPage(page, port);
 
-        login("office", "secret", page);
+        login("office", "secret", loginPage);
 
         navigationPage.goToSettingsPage();
 
@@ -82,7 +83,7 @@ class TimeEntryUIIT {
 
         navigationPage.logout();
 
-        login("user", "secret", page);
+        login("user", "secret", loginPage);
 
         final LocalDate yesterday = LocalDate.now(USER_ZONE_ID).minusDays(1);
         timeEntryPage.fillNewTimeEntry(yesterday, LocalTime.parse("08:00"), LocalTime.parse("17:00"), "");
@@ -100,8 +101,9 @@ class TimeEntryUIIT {
         final TimeEntryPage timeEntryPage = new TimeEntryPage(page);
         final ReportPage reportPage = new ReportPage(page);
         final TimeEntryDialogPage timeEntryDialogPage = new TimeEntryDialogPage(page);
+        final LoginPage loginPage = new LoginPage(page, port);
 
-        login("office", "secret", page);
+        login("office", "secret", loginPage);
 
         final LocalDateTime now = LocalDateTime.now();
         final LocalDateTime start = now.withHour(9).withMinute(0).withSecond(0).withNano(0);
@@ -122,8 +124,7 @@ class TimeEntryUIIT {
         timeEntryDialogPage.showsTimeEntryHistoryElement(start.toLocalDate(), start.toLocalTime(), end.toLocalTime(), "comment");
     }
 
-    private void login(String username, String password, Page page) {
-        page.navigate("http://localhost:" + port + "/oauth2/authorization/keycloak");
-        new LoginPage(page).login(new LoginPage.Credentials(username, password));
+    private void login(String username, String password, LoginPage loginPage) {
+        loginPage.login(new LoginPage.Credentials(username, password));
     }
 }

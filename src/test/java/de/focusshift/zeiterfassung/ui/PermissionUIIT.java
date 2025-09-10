@@ -2,8 +2,8 @@ package de.focusshift.zeiterfassung.ui;
 
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
-import de.focusshift.zeiterfassung.TestKeycloakContainer;
 import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
+import de.focusshift.zeiterfassung.TestKeycloakContainer;
 import de.focusshift.zeiterfassung.ui.extension.UiTest;
 import de.focusshift.zeiterfassung.ui.pages.LoginPage;
 import de.focusshift.zeiterfassung.ui.pages.NavigationPage;
@@ -49,10 +49,12 @@ class PermissionUIIT {
         final String user_username = "Klaus Müller";
         final Page user_page = boss_page.context().browser().newContext().newPage();
         final NavigationPage user_navigationPage = new NavigationPage(user_page);
+        final LoginPage loginPageBoss = new LoginPage(boss_page, port);
+        final LoginPage loginPageUser = new LoginPage(user_page, port);
 
-        login("boss", "secret", boss_page);
+        login("boss", "secret", loginPageBoss);
 
-        login("user", "secret", user_page);
+        login("user", "secret", loginPageUser);
         assertThat(user_navigationPage.usersLink()).not().isAttached();
 
         // Boss: add permission to user
@@ -80,8 +82,7 @@ class PermissionUIIT {
         boss_navigationPage.logout();
     }
 
-    private void login(String username, String password, Page page) {
-        page.navigate("http://localhost:" + port + "/oauth2/authorization/keycloak");
-        new LoginPage(page).login(new LoginPage.Credentials(username, password));
+    private void login(String username, String password, LoginPage loginPage) {
+        loginPage.login(new LoginPage.Credentials(username, password));
     }
 }

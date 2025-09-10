@@ -43,12 +43,13 @@ class ReportUIIT {
 
         final NavigationPage navigationPage = new NavigationPage(page);
         final ReportPage reportPage = new ReportPage(page);
+        final LoginPage loginPage = new LoginPage(page, port);
 
         // persons are not visible until first login
-        login("user", "secret", page);
+        login("user", "secret", loginPage);
         navigationPage.logout();
 
-        login("office", "secret", page);
+        login("office", "secret", loginPage);
 
         navigationPage.goToReportsPage();
 
@@ -69,8 +70,7 @@ class ReportUIIT {
         assertThat(reportPage.personDetailTableLocator()).containsText("Marlene Muster");
     }
 
-    private void login(String username, String password, Page page) {
-        page.navigate("http://localhost:" + port + "/oauth2/authorization/keycloak");
-        new LoginPage(page).login(new LoginPage.Credentials(username, password));
+    private void login(String username, String password, LoginPage loginPage) {
+        loginPage.login(new LoginPage.Credentials(username, password));
     }
 }

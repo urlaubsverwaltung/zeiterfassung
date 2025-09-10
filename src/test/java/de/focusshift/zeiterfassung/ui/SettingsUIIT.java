@@ -48,8 +48,9 @@ class SettingsUIIT {
 
         final NavigationPage navigationPage = new NavigationPage(page);
         final SettingsPage settingsPage = new SettingsPage(page);
+        final LoginPage loginPage = new LoginPage(page, port);
 
-        login("office", "secret", page);
+        login("office", "secret", loginPage);
 
         navigationPage.goToSettingsPage();
 
@@ -70,8 +71,7 @@ class SettingsUIIT {
         assertThat(page.getByText(Pattern.compile(expectedDatePreviewText))).isVisible();
     }
 
-    private void login(String username, String password, Page page) {
-        page.navigate("http://localhost:" + port + "/oauth2/authorization/keycloak");
-        new LoginPage(page).login(new LoginPage.Credentials(username, password));
+    private void login(String username, String password, LoginPage loginPage) {
+        loginPage.login(new LoginPage.Credentials(username, password));
     }
 }
