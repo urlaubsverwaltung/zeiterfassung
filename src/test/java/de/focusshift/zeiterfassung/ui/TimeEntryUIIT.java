@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-@Testcontainers
+@Testcontainers(parallel = true)
 @UiTest
 class TimeEntryUIIT {
 

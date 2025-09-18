@@ -24,7 +24,7 @@ import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.credent
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-@Testcontainers
+@Testcontainers(parallel = true)
 @UiTest
 class SettingsUIIT {
 
