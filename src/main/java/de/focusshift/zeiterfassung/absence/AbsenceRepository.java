@@ -28,5 +28,5 @@ interface AbsenceRepository extends CrudRepository<AbsenceWriteEntity, Long> {
 
     @Modifying
     @Transactional
-    int deleteBySourceIdAndType_Category(Long sourceId, AbsenceTypeCategory absenceTypeCategory);
+    Integer deleteBySourceIdAndType_Category(Long sourceId, AbsenceTypeCategory absenceTypeCategory);
 }
