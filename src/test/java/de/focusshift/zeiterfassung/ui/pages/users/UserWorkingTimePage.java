@@ -46,6 +46,10 @@ public class UserWorkingTimePage {
         return page.getByTestId("working-time-hours-input");
     }
 
+    public Locator workingTimeValidFrom() {
+        return page.getByTestId("working-time-valid-from-input");
+    }
+
     public void submit() {
         final Locator submitButton = page.getByTestId("working-time-submit-button");
         page.waitForResponse(Response::ok, submitButton::click);

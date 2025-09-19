@@ -1,4 +1,3 @@
-import "../components/avatar";
 import "../components/details-dropdown";
 import "../components/feedback-form";
 import { enhanceModal } from "../components/modal";
