@@ -46,7 +46,6 @@ record TimeEntryWeek(
             .stream()
             .map(TimeEntryDay::timeEntries)
             .flatMap(Collection::stream)
-            .filter(not(TimeEntry::isBreak))
             .map(TimeEntry::workDuration)
             .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
