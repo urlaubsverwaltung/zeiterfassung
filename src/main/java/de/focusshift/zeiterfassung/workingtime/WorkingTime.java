@@ -7,6 +7,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import jakarta.annotation.Nullable;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -22,6 +23,7 @@ import static de.focusshift.zeiterfassung.publicholiday.FederalState.GLOBAL;
 import static java.math.BigDecimal.ONE;
 import static java.math.RoundingMode.DOWN;
 import static java.math.RoundingMode.HALF_EVEN;
+import static java.math.RoundingMode.HALF_UP;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
@@ -274,10 +276,20 @@ public final class WorkingTime implements HasUserIdComposite {
         return hoursToDuration(BigDecimal.valueOf(hours));
     }
 
-    public static Duration hoursToDuration(BigDecimal hours) {
-        final int hoursPart = hours.setScale(0, DOWN).abs().intValue();
-        final int minutesPart = hours.remainder(ONE).multiply(BigDecimal.valueOf(60)).setScale(0, HALF_EVEN).abs().intValueExact();
-        return Duration.ofHours(hoursPart).plusMinutes(minutesPart);
+    public static Duration hoursToDuration(BigDecimal decimalHours) {
+        BigDecimal hoursPart = decimalHours.setScale(0, RoundingMode.DOWN);
+        BigDecimal fractionalHours = decimalHours.subtract(hoursPart);
+
+        BigDecimal totalMinutes = fractionalHours.multiply(new BigDecimal(60));
+        BigDecimal minutesPart = totalMinutes.setScale(0, RoundingMode.DOWN);
+        BigDecimal fractionalMinutes = totalMinutes.subtract(minutesPart);
+
+        BigDecimal totalSeconds = fractionalMinutes.multiply(new BigDecimal(60));
+        BigDecimal secondsPart = totalSeconds.setScale(0, RoundingMode.DOWN);
+
+        return Duration.ofHours(hoursPart.intValue())
+            .plusMinutes(minutesPart.intValue())
+            .plusSeconds(secondsPart.intValue());
     }
 
     public static Builder builder(UserIdComposite userIdComposite, WorkingTimeId id) {
