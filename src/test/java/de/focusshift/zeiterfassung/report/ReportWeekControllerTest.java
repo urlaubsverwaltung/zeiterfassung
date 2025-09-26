@@ -380,9 +380,9 @@ class ReportWeekControllerTest implements ControllerTest {
 
         perform(get("/report/year/2022/week/1").with(oidcSubject(userIdComposite1)))
             .andExpect(model().attribute("users", List.of(
-                new SelectableUserDto(1L, "Bruce Wayne", false),
-                new SelectableUserDto(3L, "Dick Grayson", false),
-                new SelectableUserDto(2L, "Jack Napier", false)
+                new SelectableUserDto(1L, "Bruce Wayne", "BW", false),
+                new SelectableUserDto(3L, "Dick Grayson", "DG", false),
+                new SelectableUserDto(2L, "Jack Napier", "JN", false)
             )))
             .andExpect(model().attribute("selectedUserIds", List.of()))
             .andExpect(model().attribute("allUsersSelected", false))
@@ -419,9 +419,9 @@ class ReportWeekControllerTest implements ControllerTest {
                 .param("everyone", "")
         )
             .andExpect(model().attribute("users", List.of(
-                new SelectableUserDto(1L, "Bruce Wayne", false),
-                new SelectableUserDto(3L, "Dick Grayson", false),
-                new SelectableUserDto(2L, "Jack Napier", false)
+                new SelectableUserDto(1L, "Bruce Wayne", "BW", false),
+                new SelectableUserDto(3L, "Dick Grayson", "DG", false),
+                new SelectableUserDto(2L, "Jack Napier", "JN", false)
             )))
             .andExpect(model().attribute("selectedUserIds", List.of()))
             .andExpect(model().attribute("allUsersSelected", true))
@@ -458,9 +458,9 @@ class ReportWeekControllerTest implements ControllerTest {
                 .param("user", "2", "3")
         )
             .andExpect(model().attribute("users", List.of(
-                new SelectableUserDto(1L, "Bruce Wayne", false),
-                new SelectableUserDto(3L, "Dick Grayson", true),
-                new SelectableUserDto(2L, "Jack Napier", true)
+                new SelectableUserDto(1L, "Bruce Wayne", "BW", false),
+                new SelectableUserDto(3L, "Dick Grayson", "DG", true),
+                new SelectableUserDto(2L, "Jack Napier", "JN", true)
             )))
             .andExpect(model().attribute("selectedUserIds", List.of(2L, 3L)))
             .andExpect(model().attribute("allUsersSelected", false))

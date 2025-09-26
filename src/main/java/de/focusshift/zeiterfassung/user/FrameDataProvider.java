@@ -9,6 +9,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import static de.focusshift.zeiterfassung.usermanagement.User.generateInitials;
+
 /**
  * Provides all necessary information for the frame (navigation, footer, ...)
  */
@@ -38,7 +40,6 @@ class FrameDataProvider {
 
     private static SignedInUserDto oidcUserToSignedInUserDto(OidcUser oidcUser) {
         final String fullName = oidcUser.getUserInfo().getFullName();
-
-        return new SignedInUserDto(fullName);
+        return new SignedInUserDto(fullName, generateInitials(fullName));
     }
 }

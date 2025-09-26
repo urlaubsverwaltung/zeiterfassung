@@ -21,6 +21,7 @@ export class Tooltip extends HTMLDivElement {
       parent.addEventListener(event, () => {
         this.dataset.show = "";
         this.popperInstance.update();
+        this.classList.remove("hidden");
       });
     }
 

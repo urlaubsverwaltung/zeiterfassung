@@ -106,7 +106,7 @@ class ReportViewHelper {
     }
 
     private static SelectableUserDto userToSelectableUserDto(User user, boolean selected) {
-        return new SelectableUserDto(user.userLocalId().value(), user.fullName(), selected);
+        return new SelectableUserDto(user.userLocalId().value(), user.fullName(), user.initials(), selected);
     }
 
     GraphWeekDto toGraphWeekDto(ReportWeek reportWeek, Month monthPivot) {
@@ -231,7 +231,7 @@ class ReportViewHelper {
         final String dialogUrl = urlBuilder.getTimeEntryIdUrl(reportDayEntry.timeEntryId());
         final User user = reportDayEntry.user();
 
-        return new DetailDayEntryDto(reportDayEntry.timeEntryId().value(), user.fullName(), user.userLocalId().value(),
+        return new DetailDayEntryDto(reportDayEntry.timeEntryId().value(), user.fullName(), user.initials(), user.userLocalId().value(),
             reportDayEntry.comment(), reportDayEntry.isBreak(), reportDayEntry.start().toLocalTime(),
             reportDayEntry.end().toLocalTime(), dialogUrl);
     }
