@@ -45,11 +45,12 @@ class ZeitDurationTest {
 
     static Stream<Arguments> workDurationToHoursArguments() {
         return Stream.of(
+            Arguments.of(7, 0.117),
             Arguments.of(10, 0.167),
             Arguments.of(15, 0.25),
             Arguments.of(30, 0.5),
             Arguments.of(90, 1.5),
-            Arguments.of(110, 1.834)
+            Arguments.of(110, 1.833)
         );
     }
 

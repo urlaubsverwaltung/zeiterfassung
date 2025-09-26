@@ -1,9 +1,8 @@
 package de.focusshift.zeiterfassung.workingtime;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
-
-import static java.math.RoundingMode.CEILING;
 
 /**
  * Container of a {@linkplain Duration} to provide calculation stuff like {@linkplain  ZeitDuration#hoursDoubleValue()}
@@ -38,18 +37,37 @@ public interface ZeitDuration {
     }
 
     /**
-     * Calculate the hour representation of this duration as double value with the precision of three digits.
-     * The duration will be rounded up to full minutes.
+     * Calculate the hour representation of this duration as double value with the precision of three digits and
+     * returns this "Industrieminuten".
      *
      * <p>
-     *     e.g. {@code "PT2H20S"} -> {@code "PT2H1M"} -> {@code 2.017}
-     * </p>
+     * An industrial minute corresponds to 1/100 of a working hour, i.e., 36 seconds.
+     * This makes it easier to calculate working times, cycle times, and costs in manufacturing,
+     * because you work with decimal numbers instead of hours:minutes.
      *
-     * @return duration as double value considering hours as base.
+     * <p>
+     * Rounding for smaller fraction than 3 is done with {@linkplain RoundingMode#HALF_UP}.
+     *
+     * <p>
+     * Examples:
+     * <ul>
+     * <li>0.25 hours (industrial) = PT15M = 15 minutes</li>
+     * <li>0.12 hours (industrial) = PT7M2S = 7 minutes and 2 seconds</li>
+     * </ul>
+     *
+     * @return duration as double value considering hours as base known as "Industrieminute"
+     *
+     * @see <a href="https://de.wikipedia.org/wiki/Industrieminute">Industrieminute</a>
      */
     default double hoursDoubleValue() {
-        final long minutes = durationInMinutes().toMinutes();
-        return minutesToHours(minutes);
+        final double hoursPart = duration().toHours();
+        final double minutesPart = new BigDecimal(duration().toMinutesPart())
+            .divide(new BigDecimal(60), 3, RoundingMode.HALF_UP)
+            .doubleValue();
+        final double secondsPart = new BigDecimal(duration().toSecondsPart())
+            .divide(new BigDecimal(3600), 3, RoundingMode.HALF_UP)
+            .doubleValue();
+        return hoursPart + minutesPart + secondsPart;
     }
 
     /**
@@ -61,9 +79,5 @@ public interface ZeitDuration {
      */
     static ZeitDuration of(Duration duration) {
         return () -> duration;
-    }
-
-    private static double minutesToHours(long minutes) {
-        return BigDecimal.valueOf(minutes).divide(BigDecimal.valueOf(60), 3, CEILING).doubleValue();
     }
 }
