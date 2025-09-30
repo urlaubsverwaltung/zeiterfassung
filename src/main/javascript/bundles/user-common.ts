@@ -1,9 +1,9 @@
-import "../components/avatar";
 import "../components/details-dropdown";
 import "../components/feedback-form";
 import { enhanceModal } from "../components/modal";
 import "../components/navigation";
 import "../components/time-clock";
+import "../components/tooltip";
 import { initPreventDoubleClickSubmit } from "../components/form";
 import { initFeedbackHeartView } from "../components/feedback-heart";
 

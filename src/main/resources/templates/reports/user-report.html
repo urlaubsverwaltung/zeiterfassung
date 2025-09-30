@@ -111,7 +111,7 @@
                             <th:block th:if="${isAllowedToEditTimeEntries}">
                               <a
                                 href="#"
-                                th:replace="~{fragments/avatar::avatar-with-link(fullName=${user.fullName},width='38px',height='38px',tooltip=false,userLocalId=${user.id})}"
+                                th:replace="~{fragments/avatar::avatar-with-link(initials=${user.initials},fullName=${user.fullName},width='38px',height='38px',tooltip=false,userLocalId=${user.id})}"
                               ></a>
                             </th:block>
                             <th:block th:if="${not isAllowedToEditTimeEntries}">

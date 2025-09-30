@@ -1,4 +1,4 @@
 package de.focusshift.zeiterfassung.user;
 
-record SignedInUserDto(String fullName) {
+record SignedInUserDto(String fullName, String initials) {
 }

@@ -127,7 +127,7 @@ class TimeEntryDialogHelperTest {
 
             sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "edit-form-action", "close-form-action");
 
-            final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
+            final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), user.initials(), List.of(), "edit-form-action", "close-form-action");
             assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
         }
 
@@ -155,7 +155,7 @@ class TimeEntryDialogHelperTest {
 
             sut.addTimeEntryEditToModel(model, privilgegedOidcUser, 1L, "edit-form-action", "close-form-action");
 
-            final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), List.of(), "edit-form-action", "close-form-action");
+            final TimeEntryDialogDto expected = new TimeEntryDialogDto(true, user.fullName(), user.initials(), List.of(), "edit-form-action", "close-form-action");
             assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
         }
 
@@ -183,7 +183,7 @@ class TimeEntryDialogHelperTest {
 
             sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "edit-form-action", "close-form-action");
 
-            final TimeEntryDialogDto expected = new TimeEntryDialogDto(false, user.fullName(), List.of(), "edit-form-action", "close-form-action");
+            final TimeEntryDialogDto expected = new TimeEntryDialogDto(false, user.fullName(), user.initials(), List.of(), "edit-form-action", "close-form-action");
             assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
         }
 

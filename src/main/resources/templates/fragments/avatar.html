@@ -5,41 +5,40 @@
     <title>avatar</title>
   </head>
   <body>
-    <img
-      th:fragment="avatar(fullName,width,height)"
-      th:with="tooltip=${#objects.nullSafe(tooltip, true)}, fallbackAvatarUrl=@{/avatar (name=${fullName})}"
-      src="#"
-      th:src="@{/invalid-avatar-url}"
-      alt=""
-      th:alt="${tooltip ? fullName : null}"
-      class="rounded-full"
-      th:classappend="${className}"
-      th:width="${width == null ? '32px' : width}"
-      th:height="${height == null ? '32px' : height}"
-      th:data-fallback="${fallbackAvatarUrl}"
-      is="z-avatar"
-    />
+    <th:block
+      th:fragment="avatar(initials,fullName,width,height)"
+      th:with="tooltip=${#objects.nullSafe(tooltip, true)}"
+    >
+      <span>
+        <svg
+          th:replace="~{icons/avatar::svg(avatarText=${initials}, tooltipText=${fullName}, height=${height}, width=${width})}"
+        ></svg>
+        <z-tooltip th:if="${tooltip}">
+          <p th:text="${fullName}"></p>
+        </z-tooltip>
+      </span>
+    </th:block>
 
     <span
-      th:fragment="avatar-bordered(fullName,width,height)"
+      th:fragment="avatar-bordered(initials,fullName,width,height)"
       class="bg-gradient-to-br from-blue-50 to-blue-200 rounded-full p-1 inline-flex"
     >
       <img
         src="#"
         alt=""
-        th:replace="~{::avatar(${fullName},${width},${height})}"
+        th:replace="~{::avatar(${initials},${fullName},${width},${height})}"
       />
     </span>
 
     <a
-      th:fragment="avatar-with-link(fullName,width,height,userLocalId)"
+      th:fragment="avatar-with-link(initials,fullName,width,height,userLocalId)"
       th:href="@{/timeentries/users/{id} (id=${userLocalId})}"
       class="avatar-link"
     >
       <img
         src="#"
         alt=""
-        th:replace="~{::avatar(${fullName},${width},${height})}"
+        th:replace="~{::avatar(${initials},${fullName},${width},${height})}"
       />
     </a>
   </body>

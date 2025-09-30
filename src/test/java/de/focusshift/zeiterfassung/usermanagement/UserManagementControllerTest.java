@@ -65,8 +65,8 @@ class UserManagementControllerTest implements ControllerTest {
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("query", is("")))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", nullValue()))
             .andExpect(model().attribute("personSearchFormAction", is("/users")));
@@ -96,8 +96,8 @@ class UserManagementControllerTest implements ControllerTest {
             .andExpect(view().name("usermanagement/users::#awesome-frame"))
             .andExpect(model().attribute("query", is("")))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org"),
-                new UserDto(42, "Clark", "Kent", "Clark Kent", "superman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org"),
+                new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", nullValue()))
             .andExpect(model().attribute("personSearchFormAction", is("/users")));
@@ -121,7 +121,7 @@ class UserManagementControllerTest implements ControllerTest {
             .andExpect(view().name("usermanagement/users"))
             .andExpect(model().attribute("query", is("bat")))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", nullValue()))
             .andExpect(model().attribute("personSearchFormAction", is("/users")));
@@ -146,7 +146,7 @@ class UserManagementControllerTest implements ControllerTest {
             .andExpect(view().name("usermanagement/users::#awesome-frame"))
             .andExpect(model().attribute("query", is("bat")))
             .andExpect(model().attribute("users", contains(
-                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "batman@example.org")
+                new UserDto(1337, "Bruce", "Wayne", "Bruce Wayne", "BW", "batman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", nullValue()))
             .andExpect(model().attribute("personSearchFormAction", is("/users")));

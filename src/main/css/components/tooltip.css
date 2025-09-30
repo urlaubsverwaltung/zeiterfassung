@@ -2,6 +2,11 @@
 @config "../../../../tailwind.config.js";
 
 @layer components {
+  /* avoid shortly visible tooltip until js has been loaded */
+  z-tooltip:not([data-show]) {
+    @apply sr-only;
+  }
+
   [role="tooltip"] {
     @apply py-1 px-2;
     @apply text-xs;

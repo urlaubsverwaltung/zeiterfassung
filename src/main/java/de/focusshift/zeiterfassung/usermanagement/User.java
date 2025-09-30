@@ -25,6 +25,24 @@ public record User(
         return authorities.contains(role);
     }
 
+    public String initials() {
+        return generateInitials(fullName());
+    }
+
+    public static String generateInitials(String fullName) {
+
+        if (fullName.isBlank()) {
+            return "??";
+        }
+
+        final int idxLastWhitespace = fullName.lastIndexOf(' ');
+        if (idxLastWhitespace == -1) {
+            return fullName.substring(0, 1).toUpperCase();
+        }
+
+        return (fullName.charAt(0) + fullName.substring(idxLastWhitespace + 1, idxLastWhitespace + 2)).toUpperCase();
+    }
+
     @Override
     public String toString() {
         return "User{" +

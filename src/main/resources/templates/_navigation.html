@@ -174,7 +174,7 @@
                   >
                     <span class="inline-flex text-blue-200">
                       <img
-                        th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='52px',height='52px',className='w-10 h-10 lg:w-9 lg:h-9',tooltip=false)}"
+                        th:replace="~{fragments/avatar::avatar(initials=${signedInUser.initials},fullName=${signedInUser.fullName},width='52px',height='52px',className='w-10 h-10 lg:w-9 lg:h-9',tooltip=false)}"
                         alt=""
                       />
                     </span>
@@ -193,7 +193,7 @@
                       >
                         <span class="text-blue-200">
                           <img
-                            th:replace="~{fragments/avatar::avatar(fullName=${signedInUser.fullName},width='64px',height='64px',tooltip=false)}"
+                            th:replace="~{fragments/avatar::avatar(initials=${signedInUser.initials},fullName=${signedInUser.fullName},width='64px',height='64px',tooltip=false)}"
                             alt=""
                           />
                         </span>

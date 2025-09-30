@@ -86,6 +86,7 @@ class UsersWorkingTimeUIIT {
         workingTimePage.worksOnPublicHolidayYesButton().click();
         workingTimePage.selectWorkdays(List.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY));
         workingTimePage.workingTimeHoursInput().fill("4");
+        workingTimePage.workingTimeValidFrom().fill("2025-06-14");
         workingTimePage.submit();
 
         // ensure global setting is shown for person
