@@ -13,7 +13,7 @@
         <svg
           th:replace="~{icons/avatar::svg(avatarText=${initials}, tooltipText=${fullName}, height=${height}, width=${width})}"
         ></svg>
-        <z-tooltip class="hidden" th:if="${tooltip}">
+        <z-tooltip th:if="${tooltip}">
           <p th:text="${fullName}"></p>
         </z-tooltip>
       </span>

@@ -3,7 +3,7 @@ import { createPopper, type Instance } from "@popperjs/core";
 const showEvents = ["mouseenter", "focus"];
 const hideEvents = ["mouseleave", "blur"];
 
-export class Tooltip extends HTMLDivElement {
+export class Tooltip extends HTMLElement {
   private popperInstance: Instance;
 
   constructor() {
@@ -21,7 +21,6 @@ export class Tooltip extends HTMLDivElement {
       parent.addEventListener(event, () => {
         this.dataset.show = "";
         this.popperInstance.update();
-        this.classList.remove("hidden");
       });
     }
 
@@ -33,4 +32,4 @@ export class Tooltip extends HTMLDivElement {
   }
 }
 
-customElements.define("z-tooltip", Tooltip, { extends: "div" });
+customElements.define("z-tooltip", Tooltip);

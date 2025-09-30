@@ -13,11 +13,6 @@ describe("tooltip", () => {
   });
 
   test("sets role attribute", () => {
-    document.body.innerHTML = '<div id="parent"></div>';
-
-    const paragraph = document.createElement("p");
-    paragraph.textContent = "tooltip text";
-
     const tooltip = new Tooltip();
     expect(tooltip.getAttribute("role")).toBe("tooltip");
   });
