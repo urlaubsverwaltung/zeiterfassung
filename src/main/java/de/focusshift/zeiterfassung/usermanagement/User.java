@@ -18,7 +18,7 @@ public record User(
 ) implements HasUserIdComposite {
 
     public String fullName() {
-        return givenName + " " + familyName;
+        return (givenName.strip() + " " + familyName.strip()).strip();
     }
 
     public boolean hasRole(SecurityRole role) {
@@ -29,18 +29,19 @@ public record User(
         return generateInitials(fullName());
     }
 
-    public static String generateInitials(String fullName) {
+    public static String generateInitials(final String name) {
 
-        if (fullName.isBlank()) {
+        final String nameTrimmed = name.strip();
+        if (nameTrimmed.isBlank()) {
             return "??";
         }
 
-        final int idxLastWhitespace = fullName.lastIndexOf(' ');
+        final int idxLastWhitespace = nameTrimmed.lastIndexOf(' ');
         if (idxLastWhitespace == -1) {
-            return fullName.substring(0, 1).toUpperCase();
+            return nameTrimmed.substring(0, 1).toUpperCase();
         }
 
-        return (fullName.charAt(0) + fullName.substring(idxLastWhitespace + 1, idxLastWhitespace + 2)).toUpperCase();
+        return (nameTrimmed.charAt(0) + nameTrimmed.substring(idxLastWhitespace + 1, idxLastWhitespace + 2)).toUpperCase();
     }
 
     @Override
