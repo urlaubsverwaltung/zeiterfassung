@@ -241,7 +241,7 @@ class ReportViewHelper {
         final User user = reportDayAbsence.user();
         final Absence absence = reportDayAbsence.absence();
 
-        return new DetailDayAbsenceDto(user.fullName(), user.userLocalId().value(), absence.dayLength().name(),
+        return new DetailDayAbsenceDto(user.fullName(), user.initials(), user.userLocalId().value(), absence.dayLength().name(),
             absence.label(locale), absence.color().name());
     }
 }

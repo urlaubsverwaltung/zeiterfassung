@@ -39,9 +39,7 @@
               <svg
                 th:replace="~{icons/lock-keyhole::svg(className='w-4 h-4')}"
               />
-              <span class="sr-only" th:text="#{date.locked}"
-              >Gesperrt</span
-              >
+              <span class="sr-only" th:text="#{date.locked}">Gesperrt</span>
             </span>
             <span
               th:id="${listLabelId}"
@@ -217,14 +215,14 @@
                       <th:block th:if="${isAllowedToEditTimeEntries}">
                         <a
                           href="#"
-                          th:replace="~{fragments/avatar::avatar-with-link(${absence.username},42,42,${absence.userLocalId})}"
+                          th:replace="~{fragments/avatar::avatar-with-link(${absence.initials},${absence.username},42,42,${absence.userLocalId})}"
                         ></a>
                       </th:block>
                       <th:block th:if="${not isAllowedToEditTimeEntries}">
                         <img
                           alt=""
                           src=""
-                          th:replace="~{fragments/avatar::avatar(${absence.username},42,42)}"
+                          th:replace="~{fragments/avatar::avatar(${absence.initials},${absence.username},42,42)}"
                         />
                       </th:block>
                     </span>
