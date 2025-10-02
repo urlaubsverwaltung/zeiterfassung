@@ -4,10 +4,15 @@ import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
@@ -127,5 +132,22 @@ class WorkingTimeTest {
 
     private static UserIdComposite anyUserIdComposite() {
         return new UserIdComposite(new UserId("user-id"), new UserLocalId(1L));
+    }
+
+    static Stream<Arguments> workDurationToHoursArguments() {
+        return Stream.of(
+            Arguments.of(0.12, Duration.parse("PT7M12S")),
+            Arguments.of(0.167, Duration.parse("PT10M1S")),
+            Arguments.of(0.25, Duration.ofMinutes(15)),
+            Arguments.of(0.5, Duration.ofMinutes(30)),
+            Arguments.of(1.5, Duration.ofMinutes(90)),
+            Arguments.of(1.833, Duration.parse("PT1H49M58S"))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("workDurationToHoursArguments")
+    void ensureHoursDoubleValueReturnsRoundedToThreeDigits(double industrialHours, Duration expectedDuration) {
+        assertThat(WorkingTime.hoursToDuration(industrialHours)).isEqualTo(expectedDuration);
     }
 }

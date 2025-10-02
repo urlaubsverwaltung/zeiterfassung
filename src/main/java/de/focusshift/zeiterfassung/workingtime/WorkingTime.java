@@ -7,6 +7,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import jakarta.annotation.Nullable;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -19,9 +20,6 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GLOBAL;
-import static java.math.BigDecimal.ONE;
-import static java.math.RoundingMode.DOWN;
-import static java.math.RoundingMode.HALF_EVEN;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
@@ -274,10 +272,20 @@ public final class WorkingTime implements HasUserIdComposite {
         return hoursToDuration(BigDecimal.valueOf(hours));
     }
 
-    public static Duration hoursToDuration(BigDecimal hours) {
-        final int hoursPart = hours.setScale(0, DOWN).abs().intValue();
-        final int minutesPart = hours.remainder(ONE).multiply(BigDecimal.valueOf(60)).setScale(0, HALF_EVEN).abs().intValueExact();
-        return Duration.ofHours(hoursPart).plusMinutes(minutesPart);
+    public static Duration hoursToDuration(BigDecimal decimalHours) {
+        final BigDecimal hoursPart = decimalHours.setScale(0, RoundingMode.DOWN);
+        final BigDecimal fractionalHours = decimalHours.subtract(hoursPart);
+
+        final BigDecimal totalMinutes = fractionalHours.multiply(new BigDecimal(60));
+        final BigDecimal minutesPart = totalMinutes.setScale(0, RoundingMode.DOWN);
+        final BigDecimal fractionalMinutes = totalMinutes.subtract(minutesPart);
+
+        final BigDecimal totalSeconds = fractionalMinutes.multiply(new BigDecimal(60));
+        final BigDecimal secondsPart = totalSeconds.setScale(0, RoundingMode.DOWN);
+
+        return Duration.ofHours(hoursPart.intValue())
+            .plusMinutes(minutesPart.intValue())
+            .plusSeconds(secondsPart.intValue());
     }
 
     public static Builder builder(UserIdComposite userIdComposite, WorkingTimeId id) {
