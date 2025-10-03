@@ -6,6 +6,11 @@ import static java.math.RoundingMode.CEILING;
 
 public interface HasWorkedHoursRatio {
 
+    /**
+     * Calculates the {@link WorkDuration} of the day.
+     *
+     * @return {@link WorkDuration} of the day
+     */
     WorkDuration workDuration();
 
     ShouldWorkingHours shouldWorkingHours();

@@ -40,6 +40,7 @@ record ReportMonth(YearMonth yearMonth, List<ReportWeek> weeks) implements HasWo
         return calculateAverageDayWorkDuration(weeks, ReportWeek::averageDayWorkDuration);
     }
 
+    @Override
     public WorkDuration workDuration() {
         return summarizeWorkDuration(weeks, ReportWeek::workDuration);
     }
