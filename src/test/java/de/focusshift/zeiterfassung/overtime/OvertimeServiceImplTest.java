@@ -8,6 +8,7 @@ import de.focusshift.zeiterfassung.report.ReportDayEntry;
 import de.focusshift.zeiterfassung.report.ReportServiceRaw;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
+import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -89,7 +90,7 @@ class OvertimeServiceImplTest {
             userIdCompositeRobin, workingTimeCalendarRobin
         );
 
-        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), false);
+        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), new WorkDuration(Duration.ofHours(12)), false);
         final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntries = Map.of(
             userIdCompositeBatman, List.of(reportDayBatman),
             userIdCompositeRobin, List.of()
@@ -129,7 +130,7 @@ class OvertimeServiceImplTest {
             userIdCompositeBatman, workingTimeCalendarBatman
         );
 
-        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), false);
+        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), new WorkDuration(Duration.ofHours(12)), false);
         final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntries = Map.of(
             userIdCompositeBatman, List.of(reportDayBatman)
         );
