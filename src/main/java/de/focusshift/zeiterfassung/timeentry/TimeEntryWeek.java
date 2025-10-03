@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static java.util.Locale.GERMANY;
-import static java.util.function.Predicate.not;
 
 /**
  * Represents a week of time entries.
@@ -41,6 +40,7 @@ record TimeEntryWeek(
         return worked.minus(shouldWorkingHours().durationInMinutes());
     }
 
+    @Override
     public WorkDuration workDuration() {
         return days
             .stream()

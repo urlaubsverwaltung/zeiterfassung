@@ -41,6 +41,7 @@ record TimeEntryDay(
         return workDuration().durationInMinutes().minus(shouldWorkingHours.durationInMinutes());
     }
 
+    @Override
     public WorkDuration workDuration() {
 
         final List<Interval> workIntervals = mergeIntervals(workIntervals());
