@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -263,19 +262,23 @@ public class ReportServiceRaw {
 
     private static Optional<ReportDayEntry> timeEntryToReportDayEntry(TimeEntry timeEntry, Function<UserIdComposite, User> userProvider) {
 
-        final String comment = timeEntry.comment();
-        final ZonedDateTime startDateTime = timeEntry.start();
-        final ZonedDateTime endDateTime = timeEntry.end();
-
         final UserIdComposite userId = timeEntry.userIdComposite();
         final User user = userProvider.apply(userId);
+
         if (user == null) {
             LOG.info("could not find user with id={} for timeEntry={} while generating report.", userId, timeEntry.id());
             return Optional.empty();
         }
 
-        final ReportDayEntry first = new ReportDayEntry(timeEntry.id(), user, comment, startDateTime, endDateTime, timeEntry.isBreak());
-        return Optional.of(first);
+        return Optional.of(new ReportDayEntry(
+            timeEntry.id(),
+            user,
+            timeEntry.comment(),
+            timeEntry.start(),
+            timeEntry.end(),
+            timeEntry.workDuration(),
+            timeEntry.isBreak()
+        ));
     }
 
     private static ReportDay toReportDay(LocalDate date,

@@ -8,6 +8,7 @@ import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
+import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.DateFormatterImpl;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
@@ -557,7 +558,9 @@ class ReportWeekControllerTest implements ControllerTest {
 
     private ReportDayEntry reportDayEntry(User user, LocalDate date) {
         final long randomId = ThreadLocalRandom.current().nextLong();
-        return new ReportDayEntry(new TimeEntryId(randomId), user, "", date.atStartOfDay().plusHours(8).atZone(UTC), date.atStartOfDay().plusHours(16).atZone(UTC), false);
+        final ZonedDateTime start = date.atStartOfDay().plusHours(8).atZone(UTC);
+        final ZonedDateTime end = date.atStartOfDay().plusHours(16).atZone(UTC);
+        return new ReportDayEntry(new TimeEntryId(randomId), user, "", start, end, WorkDuration.EIGHT, false);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {

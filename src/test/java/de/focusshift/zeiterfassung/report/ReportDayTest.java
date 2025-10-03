@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
+import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -42,7 +43,7 @@ class ReportDayTest {
 
         final ZonedDateTime from = dateTime(2024, 11, 13, 1, 0);
         final ZonedDateTime to = dateTime(2024, 11, 13, 2, 0);
-        final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, true);
+        final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, WorkDuration.ZERO, true);
 
         final LocalDate reportDate = LocalDate.of(2024, 11, 13);
         final ReportDay sut = new ReportDay(reportDate, false, Map.of(), Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
@@ -115,7 +116,7 @@ class ReportDayTest {
 
         final ZonedDateTime from = dateTime(2021, 1, 4, 1, 0);
         final ZonedDateTime to = dateTime(2021, 1, 4, 2, 0);
-        final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, true);
+        final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, WorkDuration.ZERO, true);
 
         final LocalDate reportDate = LocalDate.of(2021, 1, 4);
         final WorkingTimeCalendar workingTimeCalendar = new WorkingTimeCalendar(Map.of(reportDate, PlannedWorkingHours.EIGHT), Map.of());
