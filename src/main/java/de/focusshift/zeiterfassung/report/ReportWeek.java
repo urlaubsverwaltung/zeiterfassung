@@ -42,6 +42,7 @@ record ReportWeek(LocalDate firstDateOfWeek, List<ReportDay> reportDays) impleme
         return calculateAverageDayWorkDuration(reportDays, ReportDay::workDuration);
     }
 
+    @Override
     public WorkDuration workDuration() {
         return summarizeWorkDuration(this.reportDays, ReportDay::workDuration);
     }
