@@ -30,6 +30,7 @@ spring:
     open-in-view: false
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-main.xml
+    analytics-enabled: false
   mail:
     host: localhost
     port: 1025
