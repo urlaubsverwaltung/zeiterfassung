@@ -6,6 +6,8 @@ import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -63,8 +65,8 @@ class TimeEntryDayTest {
             assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(2).plusMinutes(30));
         }
 
-        @Test
-        void workDurationForTimeEntryWithOverlappingBreak() {
+        @ParameterizedTest
+        @CsvSource({
             /*
              *  --------------------------------------------------
              * |            [work]  08:00 - 17:00                 |     8h WorkDuration (not 9h)
@@ -72,8 +74,28 @@ class TimeEntryDayTest {
              *            | [break] 12:00 - 13:00 |
              *             -----------------------
              */
-            final TimeEntry workEntry = workEntry("2025-09-26T08:00:00Z", "2025-09-26T17:00:00Z");
-            final TimeEntry breakEntry = breakEntry("2025-09-26T12:00:00Z", "2025-09-26T13:00:00Z");
+            "2025-09-26T08:00:00Z, 2025-09-26T17:00:00Z, 2025-09-26T12:00:00Z, 2025-09-26T13:00:00Z",
+            /*
+             *               --------------------------------------
+             *              | [work]  08:00 - 17:00                |     8h WorkDuration (not 9h)
+             *  ---------------------------------------------------      2h BreakDuration
+             * | [break] 07:00 - 09:00 |
+             *  -----------------------
+             */
+            "2025-09-26T08:00:00Z, 2025-09-26T17:00:00Z, 2025-09-26T07:00:00Z, 2025-09-26T09:00:00Z",
+            /*
+             *  --------------------------------------
+             * | [work]  08:00 - 17:00                |                     8h WorkDuration (not 9h)
+             *  -----------------------------------------------------       2h BreakDuration
+             *                               | [break] 16:00 - 18:00 |
+             *                                -----------------------
+             */
+            "2025-09-26T08:00:00Z, 2025-09-26T17:00:00Z, 2025-09-26T16:00:00Z, 2025-09-26T18:00:00Z"
+        })
+        void ensureOverlappingWorkEntryAndBreakEntry(String workFrom, String workTo, String breakFrom, String breakTo) {
+
+            final TimeEntry workEntry = workEntry(workFrom, workTo);
+            final TimeEntry breakEntry = breakEntry(breakFrom, breakTo);
             final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry, breakEntry));
             assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(8));
         }
@@ -149,36 +171,6 @@ class TimeEntryDayTest {
             final TimeEntry breakEntry2 = breakEntry("2025-09-26T12:30:00Z", "2025-09-26T13:30:00Z");
             final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry, breakEntry1, breakEntry2));
             assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(7).plusMinutes(30));
-        }
-
-        @Test
-        void workDurationForTimeEntryWithOverlappingBreakAtStart() {
-            /*
-             *               --------------------------------------
-             *              | [work]  08:00 - 17:00                |     8h WorkDuration (not 9h)
-             *  ---------------------------------------------------      2h BreakDuration
-             * | [break] 07:00 - 09:00 |
-             *  -----------------------
-             */
-            final TimeEntry workEntry = workEntry("2025-09-26T08:00:00Z", "2025-09-26T17:00:00Z");
-            final TimeEntry breakEntry = breakEntry("2025-09-26T07:00:00Z", "2025-09-26T09:00:00Z");
-            final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry, breakEntry));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(8));
-        }
-
-        @Test
-        void workDurationForTimeEntryWithOverlappingBreakAtEnd() {
-            /*
-             *  --------------------------------------
-             * | [work]  08:00 - 17:00                |                     8h WorkDuration (not 9h)
-             *  -----------------------------------------------------       2h BreakDuration
-             *                               | [break] 16:00 - 18:00 |
-             *                                -----------------------
-             */
-            final TimeEntry workEntry = workEntry("2025-09-26T08:00:00Z", "2025-09-26T17:00:00Z");
-            final TimeEntry breakEntry = breakEntry("2025-09-26T16:00:00Z", "2025-09-26T18:00:00Z");
-            final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry, breakEntry));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(8));
         }
 
         private TimeEntryDay timeEntryDay(LocalDate date, List<TimeEntry> timeEntries) {
