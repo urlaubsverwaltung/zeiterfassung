@@ -44,14 +44,14 @@ record TimeEntryDay(
     @Override
     public WorkDuration workDuration() {
 
-        final List<Interval> workIntervals = mergeIntervals(workIntervals());
-        final List<Interval> breakIntervals = mergeIntervals(breakIntervals());
-        final List<Interval> overlaps = mergeIntervals(breakIntervalOverlaps(workIntervals, breakIntervals));
+        final List<Interval> notMergedWorkIntervals = workIntervals();
+        final List<Interval> mergedBreakIntervals = mergeIntervals(breakIntervals());
+        final List<Interval> notMergedBreakIntervalWithWorkIntervalOverlaps = breakIntervalOverlaps(notMergedWorkIntervals, mergedBreakIntervals);
 
-        final Duration totalWork = summarizeDuration(workIntervals);
-        final Duration breakOverlaps = summarizeDuration(overlaps);
+        final Duration totalWork = summarizeDuration(notMergedWorkIntervals);
+        final Duration totalBreak = summarizeDuration(notMergedBreakIntervalWithWorkIntervalOverlaps);
 
-        return new WorkDuration(totalWork.minus(breakOverlaps));
+        return new WorkDuration(totalWork.minus(totalBreak));
     }
 
     private List<Interval> workIntervals() {
@@ -92,17 +92,18 @@ record TimeEntryDay(
      *     </li>
      * </ul>
      *
-     * @param mergedWorkIntervals non overlapping work intervals
+     * @param workIntervals non overlapping work intervals
      * @param mergedBreakIntervals non overlapping break intervals
      * @return intervals of overlapping break and work, sorted by start
      */
-    private List<Interval> breakIntervalOverlaps(List<Interval> mergedWorkIntervals, List<Interval> mergedBreakIntervals) {
-        return mergedWorkIntervals.stream()
+    private List<Interval> breakIntervalOverlaps(List<Interval> workIntervals, List<Interval> mergedBreakIntervals) {
+        return workIntervals.stream()
             .flatMap(workInterval -> mergedBreakIntervals.stream()
                 .map(breakInterval -> {
                     final ZonedDateTime start = workInterval.start().isAfter(breakInterval.start()) ? workInterval.start() : breakInterval.start();
                     final ZonedDateTime end = workInterval.end().isBefore(breakInterval.end()) ? workInterval.end() : breakInterval.end();
-                    return end.isAfter(start) ? new Interval(start, end) : null;
+                    final Interval overlapInterval = new Interval(start, end);
+                    return end.isAfter(start) ? overlapInterval : null;
                 })
                 .filter(Objects::nonNull)
             )
