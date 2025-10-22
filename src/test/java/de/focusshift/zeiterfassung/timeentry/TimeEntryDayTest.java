@@ -35,7 +35,7 @@ class TimeEntryDayTest {
         }
 
         @Test
-        void workDurationForTimeEntriesOnlyWithOverlapShouldNotBeSubstracted() {
+        void workDurationForTimeEntriesOnlyWithOverlapShouldNotBeSubtracted() {
             /*
              *  ----------------------
              * | [work] 08:00 - 09:00 |                 2h WorkDuration
@@ -50,7 +50,7 @@ class TimeEntryDayTest {
         }
 
         @Test
-        void workDurationForTimeEntriesOnlyWithOverlapAndAdditionalTimeEntryShouldNotBeSubstracted() {
+        void workDurationForTimeEntriesOnlyWithOverlapAndAdditionalTimeEntryShouldNotBeSubtracted() {
             /*
              *  ----------------------                    ----------------------
              * | [work] 08:00 - 09:00 |                  | [work] 10:00 - 11:00 |       3h WorkDuration
@@ -92,7 +92,7 @@ class TimeEntryDayTest {
              */
             "2025-09-26T08:00:00Z, 2025-09-26T17:00:00Z, 2025-09-26T16:00:00Z, 2025-09-26T18:00:00Z"
         })
-        void ensureOverlappingWorkEntryAndBreakEntryGetSubstracted(String workFrom, String workTo, String breakFrom, String breakTo) {
+        void ensureOverlappingWorkEntryAndBreakEntryGetSubtracted(String workFrom, String workTo, String breakFrom, String breakTo) {
 
             final TimeEntry workEntry = workEntry(workFrom, workTo);
             final TimeEntry breakEntry = breakEntry(breakFrom, breakTo);
@@ -101,7 +101,7 @@ class TimeEntryDayTest {
         }
 
         @Test
-        void workDurationForTimeEntriesWithOverlappingBreakGetSubstracted() {
+        void workDurationForTimeEntriesWithOverlappingBreakGetSubtracted() {
             /*
              *  ----------------------        ----------------------
              * | [work] 08:00 - 12:15 |      | [work] 12:45 - 17:00 |       7h 45min WorkDuration (not 8h 30min)
