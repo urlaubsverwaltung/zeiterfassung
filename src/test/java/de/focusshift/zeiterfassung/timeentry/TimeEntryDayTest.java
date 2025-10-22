@@ -35,10 +35,10 @@ class TimeEntryDayTest {
         }
 
         @Test
-        void workDurationForTimeEntriesOnlyWithOverlap() {
+        void workDurationForTimeEntriesOnlyWithOverlapShouldNotBeSubstracted() {
             /*
              *  ----------------------
-             * | [work] 08:00 - 09:00 |                 1h 30min WorkDuration
+             * | [work] 08:00 - 09:00 |                 2h WorkDuration
              *  ----------------------------------      0h BreakDuration
              *             | [work] 08:30 - 09:30 |
              *              ----------------------
@@ -46,14 +46,14 @@ class TimeEntryDayTest {
             final TimeEntry workEntry1 = workEntry("2025-09-26T08:00:00Z", "2025-09-26T09:00:00Z");
             final TimeEntry workEntry2 = workEntry("2025-09-26T08:30:00Z", "2025-09-26T09:30:00Z");
             final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry1, workEntry2));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofMinutes(90));
+            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(2));
         }
 
         @Test
-        void workDurationForTimeEntriesOnlyWithOverlapAndAdditionalTimeEntry() {
+        void workDurationForTimeEntriesOnlyWithOverlapAndAdditionalTimeEntryShouldNotBeSubstracted() {
             /*
              *  ----------------------                    ----------------------
-             * | [work] 08:00 - 09:00 |                  | [work] 10:00 - 11:00 |       2h 30min WorkDuration
+             * | [work] 08:00 - 09:00 |                  | [work] 10:00 - 11:00 |       3h WorkDuration
              *  ----------------------------------        ----------------------        0h BreakDuration
              *             | [work] 08:30 - 09:30 |
              *              ----------------------
@@ -62,7 +62,7 @@ class TimeEntryDayTest {
             final TimeEntry workEntry2 = workEntry("2025-09-26T08:30:00Z", "2025-09-26T09:30:00Z");
             final TimeEntry workEntry3 = workEntry("2025-09-26T10:00:00Z", "2025-09-26T11:00:00Z");
             final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry1, workEntry2, workEntry3));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(2).plusMinutes(30));
+            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(3));
         }
 
         @ParameterizedTest
@@ -92,7 +92,7 @@ class TimeEntryDayTest {
              */
             "2025-09-26T08:00:00Z, 2025-09-26T17:00:00Z, 2025-09-26T16:00:00Z, 2025-09-26T18:00:00Z"
         })
-        void ensureOverlappingWorkEntryAndBreakEntry(String workFrom, String workTo, String breakFrom, String breakTo) {
+        void ensureOverlappingWorkEntryAndBreakEntryGetSubstracted(String workFrom, String workTo, String breakFrom, String breakTo) {
 
             final TimeEntry workEntry = workEntry(workFrom, workTo);
             final TimeEntry breakEntry = breakEntry(breakFrom, breakTo);
@@ -101,7 +101,7 @@ class TimeEntryDayTest {
         }
 
         @Test
-        void workDurationForTimeEntriesWithOverlappingBreak() {
+        void workDurationForTimeEntriesWithOverlappingBreakGetSubstracted() {
             /*
              *  ----------------------        ----------------------
              * | [work] 08:00 - 12:15 |      | [work] 12:45 - 17:00 |       7h 45min WorkDuration (not 8h 30min)
@@ -120,7 +120,7 @@ class TimeEntryDayTest {
         void workDurationForTimeEntriesOverlappingAndBreakOverlapping() {
             /*
              *  ----------------------                    ----------------------
-             * | [work] 08:00 - 09:00 |                  | [work] 10:00 - 11:00 |       1h 30min WorkDuration (not 2h 30min)
+             * | [work] 08:00 - 09:00 |                  | [work] 10:00 - 11:00 |       1h 30min WorkDuration (15min + 15min + 1h)
              *  ----------------------------------        ----------------------        1h BreakDuration
              *             | [work] 08:30 - 09:30 |
              *        ----------------------------
@@ -139,7 +139,7 @@ class TimeEntryDayTest {
         void workDurationForTimeEntriesOverlappingAndBreakOverlappingBoth() {
             /*
              *  ----------------------                    ----------------------
-             * | [work] 08:00 - 09:00 |                  | [work] 10:00 - 11:00 |       1h 15min WorkDuration (not 2h 30min)
+             * | [work] 08:00 - 09:00 |                  | [work] 10:00 - 11:00 |       1h 15min WorkDuration (15min + 1h)
              *  ----------------------------------        ----------------------        1h 30min BreakDuration
              *             | [work] 08:30 - 09:30 |
              *        --------------------------------
