@@ -329,6 +329,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
             final List<TimeEntry> timeEntries = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = workingTimeCalendar.absence(date).orElse(List.of());
             final ShouldWorkingHours shouldWorkingHours = workingTimeCalendar.shouldWorkingHours(date).orElse(ShouldWorkingHours.ZERO);
+            // TODO call workingDurationCalculationService to calculate workDuration instead of doing it in the TimeEntryDay.
+            //      the workingDurationCalculationService then decides wich algorithm to use (e.g. subtract overlapping entries or not)
             timeEntryDays.add(new TimeEntryDay(locked, date, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
 
             date = date.minusDays(1);

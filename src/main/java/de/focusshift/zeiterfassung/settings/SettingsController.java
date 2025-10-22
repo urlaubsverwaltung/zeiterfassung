@@ -54,7 +54,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
 
         final FederalStateSettings federalStateSettings = settingsService.getFederalStateSettings();
         final LockTimeEntriesSettings lockTimeEntriesSettings = settingsService.getLockTimeEntriesSettings();
-        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings);
+        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = settingsService.getSubtractBreakFromTimeEntrySettings();
+        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings);
 
         prepareModel(model, locale, settingsDto);
 
@@ -89,7 +90,7 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
         model.addAttribute("timeslotLockedExampleDate", getTimeslotLockedExampleDate(settingsDto, locale));
     }
 
-    private SettingsDto toSettingsDto(FederalStateSettings federalStateSettings, LockTimeEntriesSettings lockTimeEntriesSettings) {
+    private SettingsDto toSettingsDto(FederalStateSettings federalStateSettings, LockTimeEntriesSettings lockTimeEntriesSettings, SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings) {
 
         final int lockTimeEntriesDaysInPast = lockTimeEntriesSettings.lockTimeEntriesDaysInPast();
 
@@ -97,7 +98,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
             federalStateSettings.federalState(),
             federalStateSettings.worksOnPublicHoliday(),
             lockTimeEntriesSettings.lockingIsActive(),
-            lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null
+            lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null,
+            subtractBreakFromTimeEntrySettings.subtractBreakFromTimeEntryIsActive()
         );
     }
 

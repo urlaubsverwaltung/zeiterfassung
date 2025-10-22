@@ -8,7 +8,8 @@ record SettingsDto(
     boolean worksOnPublicHoliday,
     boolean lockingIsActive,
     @Nullable
-    String lockTimeEntriesDaysInPast
+    String lockTimeEntriesDaysInPast,
+    boolean subtractBreakFromTimeEntryIsActive
 ) {
 
     /**

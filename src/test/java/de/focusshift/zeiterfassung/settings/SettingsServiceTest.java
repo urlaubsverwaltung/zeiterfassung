@@ -31,11 +31,13 @@ class SettingsServiceTest {
     @Mock
     private LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
     @Mock
+    private SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
     @BeforeEach
     void setUp() {
-        sut = new SettingsService(federalStateSettingsRepository, lockTimeEntriesSettingsRepository, applicationEventPublisher);
+        sut = new SettingsService(federalStateSettingsRepository, lockTimeEntriesSettingsRepository, subtractBreakFromTimeEntrySettingsRepository, applicationEventPublisher);
     }
 
     @Nested

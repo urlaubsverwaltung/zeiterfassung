@@ -16,21 +16,24 @@ import static java.util.stream.StreamSupport.stream;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
-class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService {
+class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final FederalStateSettingsRepository federalStateSettingsRepository;
     private final LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
+    private final SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     SettingsService(
         FederalStateSettingsRepository federalStateSettingsRepository,
         LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository,
+        SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository,
         ApplicationEventPublisher applicationEventPublisher
     ) {
         this.federalStateSettingsRepository = federalStateSettingsRepository;
         this.lockTimeEntriesSettingsRepository = lockTimeEntriesSettingsRepository;
+        this.subtractBreakFromTimeEntrySettingsRepository = subtractBreakFromTimeEntrySettingsRepository;
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
@@ -45,6 +48,12 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         return new LockTimeEntriesSettings(
             lockTimeEntriesSettingsEntity.isLockingIsActive(),
             lockTimeEntriesSettingsEntity.getLockTimeEntriesDaysInPast()
+        );
+    }
+
+    private static SubtractBreakFromTimeEntrySettings toSubtractBreakFromTimeEntrySettings(SubtractBreakFromTimeEntrySettingsEntity subtractBreakFromTimeEntrySettingsEntity) {
+        return new SubtractBreakFromTimeEntrySettings(
+            subtractBreakFromTimeEntrySettingsEntity.isSubtractBreakFromTimeEntryIsActive()
         );
     }
 
@@ -128,5 +137,19 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         // however, the tenantId is handled transparently in the background. and we only have the public API of `findAll`.
         final Iterable<LockTimeEntriesSettingsEntity> settings = lockTimeEntriesSettingsRepository.findAll();
         return stream(settings.spliterator(), false).findFirst();
+    }
+
+    private Optional<SubtractBreakFromTimeEntrySettingsEntity> getSubtractBreakFromTimeEntrySettingsEntity() {
+        // `findFirst` is sufficient as there exists only one FederalStateSettingsEntity per tenant.
+        // however, the tenantId is handled transparently in the background. and we only have the public API of `findAll`.
+        final Iterable<SubtractBreakFromTimeEntrySettingsEntity> settings = subtractBreakFromTimeEntrySettingsRepository.findAll();
+        return stream(settings.spliterator(), false).findFirst();
+    }
+
+    @Override
+    public SubtractBreakFromTimeEntrySettings getSubtractBreakFromTimeEntrySettings() {
+        return getSubtractBreakFromTimeEntrySettingsEntity()
+            .map(SettingsService::toSubtractBreakFromTimeEntrySettings)
+            .orElse(SubtractBreakFromTimeEntrySettings.DEFAULT);
     }
 }
