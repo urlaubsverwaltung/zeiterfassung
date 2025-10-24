@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Locale;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -66,11 +67,11 @@ class SettingsControllerTest implements ControllerTest {
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
-        when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(subtractBreakFromTimeEntrySettings);
+        when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.of(subtractBreakFromTimeEntrySettings));
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
-        final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, true, "42", true);
+        final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, true, "42", true, subtractBreakFromTimeEntrySettings.subtractBreakFromTimeEntryEnabledTimestamp());
 
         perform(get("/settings"))
             .andExpect(status().isOk())
@@ -84,11 +85,10 @@ class SettingsControllerTest implements ControllerTest {
 
         final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
         final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(true, 3);
-        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(false, null);
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
-        when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(subtractBreakFromTimeEntrySettings);
+        when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
@@ -101,14 +101,13 @@ class SettingsControllerTest implements ControllerTest {
 
         final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
         final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(false, -1);
-        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(false, null);
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
-        when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(subtractBreakFromTimeEntrySettings);
+        when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
-        final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, false, null, false);
+        final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, false, null, null, null);
 
         perform(get("/settings"))
             .andExpect(status().isOk())
@@ -118,7 +117,7 @@ class SettingsControllerTest implements ControllerTest {
     @Test
     void ensureUpdateSettingsValidates() throws Exception {
 
-        final SettingsDto dto = new SettingsDto(FederalState.NONE, false, true, "-1", false);
+        final SettingsDto dto = new SettingsDto(FederalState.NONE, false, true, "-1", false, null);
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
@@ -142,9 +141,11 @@ class SettingsControllerTest implements ControllerTest {
     }
 
     @Test
-    void ensureUpdateSettingsPreviewDoesNotPersist() throws Exception {
+    void ensureUpdateSettingsPreviewDoesNotPersistAndUpdateSubtractBreakFromTimeEntryTimestamp() throws Exception {
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
+
+        final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, true, "42", true, Instant.now(fixedClock));
 
         perform(post("/settings")
             .param("preview", "")
@@ -152,9 +153,34 @@ class SettingsControllerTest implements ControllerTest {
             .param("worksOnPublicHoliday", "false")
             .param("lockingIsActive", "true")
             .param("lockTimeEntriesDaysInPast", "42")
-            .param("subtractBreakFromTimeEntryIsActive", "false")
+            .param("subtractBreakFromTimeEntryIsActive", "true")
         )
-            .andExpect(status().isUnprocessableEntity())
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("settings", expectedSettingsDto))
+            .andExpect(view().name("settings/settings"));
+
+        verifyNoInteractions(settingsService);
+    }
+
+    @Test
+    void ensureUpdateSettingsPreviewDoesNotPersist_WithoutChangingSubtractBreak() throws Exception {
+
+
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
+
+        final SettingsDto expectedSettingsDto = new SettingsDto(FederalState.NONE, false, true, "42", true, Instant.parse("2025-10-24T00:00:00.000Z"));
+
+        perform(post("/settings")
+            .param("preview", "")
+            .param("federalState", "NONE")
+            .param("worksOnPublicHoliday", "false")
+            .param("lockingIsActive", "true")
+            .param("lockTimeEntriesDaysInPast", "42")
+            .param("subtractBreakFromTimeEntryIsActive", "true")
+            .param("subtractBreakFromTimeEntryEnabledTimestamp", "2025-10-24T00:00:00.000Z")
+        )
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("settings", expectedSettingsDto))
             .andExpect(view().name("settings/settings"));
 
         verifyNoInteractions(settingsService);
