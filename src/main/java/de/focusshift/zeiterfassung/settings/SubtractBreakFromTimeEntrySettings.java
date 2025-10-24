@@ -16,16 +16,4 @@ import java.time.Instant;
  *
  * @param subtractBreakFromTimeEntryIsActive whether this feature is enabled or not
  */
-public record SubtractBreakFromTimeEntrySettings(boolean subtractBreakFromTimeEntryIsActive, Instant subtractBreakFromTimeEntryEnabledTimestamp, Instant featureLaunchTimestamp) {
-
-    public static final Instant FEATURE_LAUNCH_TIMESTAMP = Instant.parse("2025-10-24T00:00:00Z");
-
-    /**
-     * Default LockTimeSettings.
-     *
-     * <ul>
-     *     <li>{@link SubtractBreakFromTimeEntrySettings#subtractBreakFromTimeEntryIsActive()} = {@code true}</li>
-     * </ul>
-     */
-    public static final SubtractBreakFromTimeEntrySettings DEFAULT = new SubtractBreakFromTimeEntrySettings(true, FEATURE_LAUNCH_TIMESTAMP, FEATURE_LAUNCH_TIMESTAMP);
-}
+public record SubtractBreakFromTimeEntrySettings(boolean subtractBreakFromTimeEntryIsActive, Instant subtractBreakFromTimeEntryEnabledTimestamp, Instant featureLaunchTimestamp) { }
