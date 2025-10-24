@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 
+import java.time.Instant;
 import java.util.Objects;
 
 @Entity(name = "settings_subtract_break_from_time_entry")
@@ -15,12 +16,18 @@ public class SubtractBreakFromTimeEntrySettingsEntity extends AbstractTenantAwar
 
     @Id
     @Column(name = "id", unique = true, nullable = false, updatable = false)
-    @SequenceGenerator(name = "settings_subtract_break_from_time_entry_seq", sequenceName = "settings_subtract_break_from_time_entry_seq")
+    @SequenceGenerator(name = "settings_subtract_break_from_time_entry_seq", sequenceName = "settings_subtract_break_from_time_entry_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "settings_subtract_break_from_time_entry_seq")
     protected Long id;
 
-    @Column(name = "subtract_break_from_time_entry")
+    @Column(name = "enabled")
     private boolean subtractBreakFromTimeEntryIsActive;
+
+    @Column(name = "enabled_timestamp")
+    private Instant subtractBreakFromTimeEntryEnabledTimestamp;
+
+    @Column(name = "feature_launch_timestamp")
+    private Instant featureLaunchTimestamp;
 
     protected SubtractBreakFromTimeEntrySettingsEntity() {
         super(null);
@@ -42,6 +49,22 @@ public class SubtractBreakFromTimeEntrySettingsEntity extends AbstractTenantAwar
         this.subtractBreakFromTimeEntryIsActive = subtractBreakFromTimeEntryIsActive;
     }
 
+    public Instant getSubtractBreakFromTimeEntryEnabledTimestamp() {
+        return subtractBreakFromTimeEntryEnabledTimestamp;
+    }
+
+    public void setSubtractBreakFromTimeEntryEnabledTimestamp(Instant subtractBreakFromTimeEntryEnabledTimestamp) {
+        this.subtractBreakFromTimeEntryEnabledTimestamp = subtractBreakFromTimeEntryEnabledTimestamp;
+    }
+
+    public Instant getFeatureLaunchTimestamp() {
+        return featureLaunchTimestamp;
+    }
+
+    public void setFeatureLaunchTimestamp(Instant featureLaunchTimestamp) {
+        this.featureLaunchTimestamp = featureLaunchTimestamp;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
@@ -60,6 +83,8 @@ public class SubtractBreakFromTimeEntrySettingsEntity extends AbstractTenantAwar
         return "SubtractBreakFromTimeEntrySettingsEntity{" +
             "id=" + id +
             ", subtractBreakFromTimeEntryIsActive=" + subtractBreakFromTimeEntryIsActive +
+            ", subtractBreakFromTimeEntryEnabledTimestamp=" + subtractBreakFromTimeEntryEnabledTimestamp +
+            ", featureLaunchTimestamp=" + featureLaunchTimestamp +
             '}';
     }
 }

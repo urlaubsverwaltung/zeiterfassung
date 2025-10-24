@@ -37,4 +37,5 @@
   <include relativeToChangelogFile="true" file="changelog-2.22.0-add-absence-overtime-hours.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.22.0-add-shedlock.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.23.4-locking-time-entries-default-to-true.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-2.24.0-subtract-break-from-timeentry.xml"/>
 </databaseChangeLog>
