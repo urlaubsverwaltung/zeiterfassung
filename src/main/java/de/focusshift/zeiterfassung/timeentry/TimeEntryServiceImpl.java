@@ -63,7 +63,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     private final TimeEntryRepository timeEntryRepository;
     private final TimeEntryLockService timeEntryLockService;
-    private final WorkDurationCalculationService workDurationCalculationService;
+    private final WorkDurationCalculationService workDurationCalculator;
     private final UserManagementService userManagementService;
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final UserDateService userDateService;
@@ -75,7 +75,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
     TimeEntryServiceImpl(
         TimeEntryRepository timeEntryRepository,
         TimeEntryLockService timeEntryLockService,
-        WorkDurationCalculationService workDurationCalculationService,
+        WorkDurationCalculationService workDurationCalculator,
         UserManagementService userManagementService,
         WorkingTimeCalendarService workingTimeCalendarService,
         UserDateService userDateService,
@@ -87,7 +87,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         this.timeEntryRepository = timeEntryRepository;
         this.timeEntryLockService = timeEntryLockService;
-        this.workDurationCalculationService = workDurationCalculationService;
+        this.workDurationCalculator = workDurationCalculator;
         this.userManagementService = userManagementService;
         this.workingTimeCalendarService = workingTimeCalendarService;
         this.userDateService = userDateService;
@@ -334,7 +334,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             final List<TimeEntry> timeEntries = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = workingTimeCalendar.absence(date).orElse(List.of());
             final ShouldWorkingHours shouldWorkingHours = workingTimeCalendar.shouldWorkingHours(date).orElse(ShouldWorkingHours.ZERO);
-            final WorkDuration workDuration = workDurationCalculationService.calculateWorkDuration(timeEntries);
+            final WorkDuration workDuration = workDurationCalculator.calculateWorkDuration(timeEntries);
             timeEntryDays.add(new TimeEntryDay(locked, date, workDuration, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
 
             date = date.minusDays(1);

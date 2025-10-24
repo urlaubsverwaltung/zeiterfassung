@@ -25,23 +25,23 @@ class WorkDurationCalculationServiceTest {
     private WorkDurationCalculationService sut;
 
     @Mock
-    private WorkDurationSubtractBreakCalculationService subtractBreakCalculationService;
+    private SubtractOverlappingBreakCalculator subtractOverlappingBreakCalculator;
 
     @BeforeEach
     void setUp() {
-        sut = new WorkDurationCalculationService(subtractBreakCalculationService);
+        sut = new WorkDurationCalculationService(subtractOverlappingBreakCalculator);
     }
 
     @Nested
     class CalculateWorkDuration {
 
         @Test
-        void delegatesToSubtractBreakCalculation() {
+        void delegatesToSubtractOverlappingBreakCalculation() {
 
             final TimeEntry timeEntry = anyTimeEntry();
 
             final WorkDuration workDuration = new WorkDuration(Duration.ofMinutes(42));
-            when(subtractBreakCalculationService.calculateWorkDuration(List.of(timeEntry))).thenReturn(workDuration);
+            when(subtractOverlappingBreakCalculator.calculateWorkDuration(List.of(timeEntry))).thenReturn(workDuration);
 
             final WorkDuration actual = sut.calculateWorkDuration(List.of(timeEntry));
             assertThat(actual).isEqualTo(workDuration);

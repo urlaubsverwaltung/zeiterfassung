@@ -14,23 +14,25 @@ import static java.time.Duration.between;
 import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.not;
 
+/**
+ * Specific strategy to calculate {@link WorkDuration}.
+ *
+ * <p>
+ * Calculates the {@link WorkDuration} for the given list of {@link TimeEntry} while handling overlapping break
+ * entries.
+ *
+ * <p>
+ * Examples:
+ *
+ * <ul>
+ *   <li>worked from 08:00 to 10:00 with break from 09:00 to 10:00 --> 1 hour WorkDuration</li>
+ * </ul>
+ */
 @Component
-class WorkDurationSubtractBreakCalculationService {
+class SubtractOverlappingBreakCalculator implements WorkDurationCalculator {
 
-    /**
-     * Calculates the {@link WorkDuration} for the given list of {@link TimeEntry} while handling overlapping break
-     * entries.
-     *
-     * <p>
-     * Examples:
-     *
-     * <ul>
-     *   <li>worked from 08:00 to 10:00 with break from 09:00 to 10:00 --> 1 hour WorkDuration</li>
-     * </ul>
-     *
-     * @param timeEntries list of {@link TimeEntry} to calculate the {@link WorkDuration} for
-     */
-    WorkDuration calculateWorkDuration(List<TimeEntry> timeEntries) {
+    @Override
+    public WorkDuration calculateWorkDuration(List<TimeEntry> timeEntries) {
 
         final List<Interval> notMergedWorkIntervals = workIntervals(timeEntries);
         final List<Interval> mergedBreakIntervals = mergeIntervals(breakIntervals(timeEntries));

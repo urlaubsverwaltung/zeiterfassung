@@ -17,13 +17,13 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class WorkDurationSubtractBreakCalculationServiceTest {
+class SubtractOverlappingBreakCalculatorTest {
 
-    private WorkDurationSubtractBreakCalculationService sut;
+    private SubtractOverlappingBreakCalculator sut;
 
     @BeforeEach
     void setUp() {
-        sut = new WorkDurationSubtractBreakCalculationService();
+        sut = new SubtractOverlappingBreakCalculator();
     }
 
     @Nested
