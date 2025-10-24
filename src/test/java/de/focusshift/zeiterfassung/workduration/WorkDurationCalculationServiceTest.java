@@ -25,7 +25,7 @@ class WorkDurationCalculationServiceTest {
     private WorkDurationCalculationService sut;
 
     @Mock
-    private SubtractOverlappingBreakCalculator subtractOverlappingBreakCalculator;
+    private OverlappingBreakCalculator subtractOverlappingBreakCalculator;
 
     @BeforeEach
     void setUp() {

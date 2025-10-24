@@ -16,9 +16,9 @@ import java.util.List;
 @Service
 public class WorkDurationCalculationService {
 
-    private final SubtractOverlappingBreakCalculator subtractOverlappingBreaksCalculator;
+    private final OverlappingBreakCalculator subtractOverlappingBreaksCalculator;
 
-    WorkDurationCalculationService(SubtractOverlappingBreakCalculator subtractOverlappingBreaksCalculator) {
+    WorkDurationCalculationService(OverlappingBreakCalculator subtractOverlappingBreaksCalculator) {
         this.subtractOverlappingBreaksCalculator = subtractOverlappingBreaksCalculator;
     }
 
