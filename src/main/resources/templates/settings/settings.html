@@ -178,23 +178,29 @@
                   </div>
                 </div>
               </div>
-              <div th:if="${settings.subtractBreakFromTimeEntryIsActive() != null}" class="mt-8 lg:mt-12">
+              <div
+                th:if="${settings.subtractBreakFromTimeEntryIsActive() != null}"
+                class="mt-8 lg:mt-12"
+              >
                 <h2
                   class="font-bold"
+                  th:text="#{settings.work-duration.calculation.subtract-breaks.title}"
                 >
                   Abzug von Pausen
                 </h2>
                 <p
                   class="mt-2 text-gray-600"
+                  th:text="#{settings.work-duration.calculation.subtract-breaks.teaser-text}"
                 >
                   Lege fest ob Pausen von Zeiteinträgen automatisch abgezogen
                   werden sollen.
                 </p>
-                <div
-                  class="mt-4 gap-2"
-                >
+                <div class="mt-4 gap-2">
                   <div class="flex gap-2 items-center">
-                    <input type="hidden" th:field="*{subtractBreakFromTimeEntryEnabledTimestamp}" />
+                    <input
+                      type="hidden"
+                      th:field="*{subtractBreakFromTimeEntryEnabledTimestamp}"
+                    />
                     <input
                       type="checkbox"
                       id="subtract-break-from-timeentry-is-active-checkbox"
@@ -203,15 +209,17 @@
                     />
                     <label
                       for="subtract-break-from-timeentry-is-active-checkbox"
+                      th:text="#{settings.work-duration.calculation.subtract-breaks.is-active.label}"
                     >
                       Abzug aktivieren
                     </label>
                   </div>
                   <p
-                    class="mt-4 text-gray-600" th:if="${#bools.isTrue(settings.subtractBreakFromTimeEntryIsActive)}">
-                    Der Pausenabzug ist seit
-                    <span th:text="${subtractBreakFromTimeEntryEnabledDate}">01.01.1970</span>
-                    aktiv.
+                    th:if="${#bools.isTrue(settings.subtractBreakFromTimeEntryIsActive)}"
+                    class="mt-4 text-gray-600"
+                    th:text="#{settings.work-duration.calculation.subtract-breaks.example(${subtractBreakFromTimeEntryEnabledDate})}"
+                  >
+                    Der Pausenabzug ist seit 01.01.1970 aktiv.
                   </p>
                 </div>
               </div>
