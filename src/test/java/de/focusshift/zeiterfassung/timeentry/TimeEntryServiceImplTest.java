@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.TenantAwareRevisionMetadata;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMapper;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionType;
+import de.focusshift.zeiterfassung.settings.SubtractBreakFromTimeEntrySettingsService;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
@@ -82,6 +83,8 @@ class TimeEntryServiceImplTest {
     @Mock
     private UserSettingsProvider userSettingsProvider;
     @Mock
+    private SubtractBreakFromTimeEntrySettingsService subtractBreakFromTimeEntrySettingsService;
+    @Mock
     private EntityRevisionMapper entityRevisionMapper;
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
@@ -91,7 +94,8 @@ class TimeEntryServiceImplTest {
     @BeforeEach
     void setUp() {
         sut = new TimeEntryServiceImpl(timeEntryRepository, timeEntryLockService, workDurationCalculationService, userManagementService,
-            workingTimeCalendarService, userDateService, userSettingsProvider, entityRevisionMapper, applicationEventPublisher, clockFixed);
+            workingTimeCalendarService, userDateService, userSettingsProvider, subtractBreakFromTimeEntrySettingsService,
+            entityRevisionMapper, applicationEventPublisher, clockFixed);
     }
 
     @Nested
