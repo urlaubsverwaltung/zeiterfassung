@@ -51,9 +51,9 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         );
     }
 
-    private static SubtractBreakFromTimeEntrySettings toSubtractBreakFromTimeEntrySettings(SubtractBreakFromTimeEntrySettingsEntity subtractBreakFromTimeEntrySettingsEntity) {
+    private static SubtractBreakFromTimeEntrySettings toSubtractBreakFromTimeEntrySettings(SubtractBreakFromTimeEntrySettingsEntity entity) {
         return new SubtractBreakFromTimeEntrySettings(
-            subtractBreakFromTimeEntrySettingsEntity.isSubtractBreakFromTimeEntryIsActive()
+            entity.isSubtractBreakFromTimeEntryIsActive(), entity.getSubtractBreakFromTimeEntryEnabledTimestamp(), entity.getFeatureLaunchTimestamp()
         );
     }
 
