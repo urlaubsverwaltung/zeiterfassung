@@ -13,6 +13,7 @@ import java.time.ZoneId;
 import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Stream.iterate;
 import static java.util.stream.StreamSupport.stream;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -160,7 +161,8 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
 
         final SubtractBreakFromTimeEntrySettingsEntity entity = getSubtractBreakFromTimeEntrySettingsEntity().orElseGet(SubtractBreakFromTimeEntrySettingsEntity::new);
         if (!entity.isSubtractBreakFromTimeEntryIsActive() && subtractBreakFromTimeEntryIsActive) {
-            entity.setSubtractBreakFromTimeEntryEnabledTimestamp(Instant.now(clock));
+            final Instant timestamp =  LocalDate.now(clock).atStartOfDay().toInstant(UTC);
+            entity.setSubtractBreakFromTimeEntryEnabledTimestamp(timestamp);
         } else if (entity.isSubtractBreakFromTimeEntryIsActive() && !subtractBreakFromTimeEntryIsActive) {
             entity.setSubtractBreakFromTimeEntryEnabledTimestamp(null);
         }
