@@ -17,6 +17,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
+import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
@@ -253,8 +254,10 @@ class SettingsServiceTest {
 
             final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(true);
 
+            final Instant expectedFeatureTimestamp = LocalDate.now(clock).atStartOfDay().toInstant(UTC);
+
             assertThat(result.subtractBreakFromTimeEntryIsActive()).isTrue();
-            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).isNotNull();
+            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).isEqualTo(expectedFeatureTimestamp);
             verify(subtractBreakFromTimeEntrySettingsRepository).save(assertArg(persisted -> assertThat(persisted.getId()).isEqualTo(42L)));
         }
 
@@ -281,8 +284,10 @@ class SettingsServiceTest {
 
             final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(true);
 
+            final Instant expectedFeatureTimestamp = LocalDate.now(clock).atStartOfDay().toInstant(UTC);
+
             assertThat(result.subtractBreakFromTimeEntryIsActive()).isTrue();
-            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).isNotNull();
+            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).isEqualTo(expectedFeatureTimestamp);
 
             verify(subtractBreakFromTimeEntrySettingsRepository).save(assertArg(entity -> assertThat(entity.getId()).isNull()));
         }
