@@ -5,13 +5,21 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Calculates the {@link WorkDuration} of a {@link TimeEntry} collection based on a strategy that has been chosen
+ * by the user.
+ *
+ * <p>
+ * For instance, a break can overlap a timeEntry which can be considered to be subtracted or not for
+ * the calculated duration value.
+ */
 @Service
 public class WorkDurationCalculationService {
 
-    private final WorkDurationSubtractBreakCalculationService subtractBreakCalculationService;
+    private final SubtractOverlappingBreakCalculator subtractOverlappingBreaksCalculator;
 
-    WorkDurationCalculationService(WorkDurationSubtractBreakCalculationService subtractBreakCalculationService) {
-        this.subtractBreakCalculationService = subtractBreakCalculationService;
+    WorkDurationCalculationService(SubtractOverlappingBreakCalculator subtractOverlappingBreaksCalculator) {
+        this.subtractOverlappingBreaksCalculator = subtractOverlappingBreaksCalculator;
     }
 
     /**
@@ -20,6 +28,6 @@ public class WorkDurationCalculationService {
      * @param timeEntries list of {@link TimeEntry} to calculate the {@link WorkDuration} for
      */
     public WorkDuration calculateWorkDuration(List<TimeEntry> timeEntries) {
-        return subtractBreakCalculationService.calculateWorkDuration(timeEntries);
+        return subtractOverlappingBreaksCalculator.calculateWorkDuration(timeEntries);
     }
 }
