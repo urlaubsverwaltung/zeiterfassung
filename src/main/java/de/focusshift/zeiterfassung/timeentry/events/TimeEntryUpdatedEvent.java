@@ -2,8 +2,8 @@ package de.focusshift.zeiterfassung.timeentry.events;
 
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
-import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 
 import java.time.LocalDate;
 

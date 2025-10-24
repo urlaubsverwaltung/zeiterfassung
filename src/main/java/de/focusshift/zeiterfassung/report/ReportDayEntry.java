@@ -2,8 +2,8 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
-import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.usermanagement.User;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 
 import java.time.ZonedDateTime;
 
