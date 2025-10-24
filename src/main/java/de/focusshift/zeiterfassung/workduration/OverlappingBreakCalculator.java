@@ -29,7 +29,7 @@ import static java.util.function.Predicate.not;
  * </ul>
  */
 @Component
-class SubtractOverlappingBreakCalculator implements WorkDurationCalculator {
+class OverlappingBreakCalculator implements WorkDurationCalculator {
 
     @Override
     public WorkDuration calculateWorkDuration(List<TimeEntry> timeEntries) {
