@@ -1330,6 +1330,7 @@ class TimeEntryServiceImplTest {
 
         final WorkDuration calculatedWorkDuration = new WorkDuration(Duration.ofMinutes(42));
         when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry1, timeEntry2))).thenReturn(calculatedWorkDuration);
+        when(workDurationCalculationService.calculateWorkDuration(List.of())).thenReturn(WorkDuration.ZERO);
 
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2022, 1);
 
@@ -1453,6 +1454,7 @@ class TimeEntryServiceImplTest {
         final WorkDuration calculatedWorkDuration2 = new WorkDuration(Duration.ofMinutes(1337));
         when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry1))).thenReturn(calculatedWorkDuration1);
         when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry2))).thenReturn(calculatedWorkDuration2);
+        when(workDurationCalculationService.calculateWorkDuration(List.of())).thenReturn(WorkDuration.ZERO);
 
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2023, 5);
 
@@ -1559,6 +1561,8 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2023, 6, 17), PlannedWorkingHours.ZERO,
                 LocalDate.of(2023, 6, 18), PlannedWorkingHours.ZERO
             ), Map.of()));
+
+        when(workDurationCalculationService.calculateWorkDuration(List.of())).thenReturn(WorkDuration.ZERO);
 
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2023, 24);
 
