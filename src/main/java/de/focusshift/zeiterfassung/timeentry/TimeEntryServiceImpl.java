@@ -3,6 +3,8 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMapper;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
+import de.focusshift.zeiterfassung.settings.SubtractBreakFromTimeEntrySettings;
+import de.focusshift.zeiterfassung.settings.SubtractBreakFromTimeEntrySettingsService;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryDeletedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
@@ -68,6 +70,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final UserDateService userDateService;
     private final UserSettingsProvider userSettingsProvider;
+    private final SubtractBreakFromTimeEntrySettingsService subtractBreakFromTimeEntrySettingsService;
     private final EntityRevisionMapper entityRevisionMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final Clock clock;
@@ -80,6 +83,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         WorkingTimeCalendarService workingTimeCalendarService,
         UserDateService userDateService,
         UserSettingsProvider userSettingsProvider,
+        SubtractBreakFromTimeEntrySettingsService subtractBreakFromTimeEntrySettingsService,
         EntityRevisionMapper entityRevisionMapper,
         ApplicationEventPublisher applicationEventPublisher,
         Clock clock
@@ -92,6 +96,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         this.workingTimeCalendarService = workingTimeCalendarService;
         this.userDateService = userDateService;
         this.userSettingsProvider = userSettingsProvider;
+        this.subtractBreakFromTimeEntrySettingsService = subtractBreakFromTimeEntrySettingsService;
         this.entityRevisionMapper = entityRevisionMapper;
         this.applicationEventPublisher = applicationEventPublisher;
         this.clock = clock;
@@ -319,6 +324,9 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final ZoneId userZoneId = userSettingsProvider.zoneId();
         final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(userZoneId);
 
+        final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
+            subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
+
         final List<TimeEntryDay> timeEntryDays = new ArrayList<>();
 
         // iterate from end to start -> last entry should be on top of the list (the first element)
@@ -334,7 +342,11 @@ class TimeEntryServiceImpl implements TimeEntryService {
             final List<TimeEntry> timeEntries = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = workingTimeCalendar.absence(date).orElse(List.of());
             final ShouldWorkingHours shouldWorkingHours = workingTimeCalendar.shouldWorkingHours(date).orElse(ShouldWorkingHours.ZERO);
-            final WorkDuration workDuration = workDurationCalculator.calculateWorkDuration(timeEntries);
+
+            final WorkDuration workDuration = subtractBreakFromTimeEntrySettings
+                .map(settings -> workDurationCalculator.calculateWorkDuration(settings, timeEntries))
+                .orElseGet(() -> workDurationCalculator.calculateWorkDuration(timeEntries));
+
             timeEntryDays.add(new TimeEntryDay(locked, date, workDuration, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
 
             date = date.minusDays(1);
