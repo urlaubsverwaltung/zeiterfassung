@@ -84,7 +84,7 @@ class SettingsControllerTest implements ControllerTest {
 
         final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
         final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(true, 3);
-        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(false, Instant.now());
+        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(false, null);
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
@@ -101,7 +101,7 @@ class SettingsControllerTest implements ControllerTest {
 
         final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
         final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(false, -1);
-        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(false, Instant.now());
+        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(false, null);
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);

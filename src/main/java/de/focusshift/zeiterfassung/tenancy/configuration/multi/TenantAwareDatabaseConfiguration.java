@@ -45,8 +45,8 @@ import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
         WorkingTimeEntity.class,
         OvertimeAccountEntity.class,
         FederalStateSettingsEntity.class
-        // SubtractBreakFromTimeEntrySettingsEntity.class,
-        // LockTimeEntriesSettingsEntity.class
+        // SubtractBreakFromTimeEntrySettingsEntity.class, // disabled for now to prevent duplicated bean definitions
+        // LockTimeEntriesSettingsEntity.class // disabled for now to prevent duplicated bean definitions
     },
     entityManagerFactoryRef = "tenantAwareEntityManagerFactory",
     transactionManagerRef = "tenantAwareTransactionManager"
@@ -99,8 +99,8 @@ class TenantAwareDatabaseConfiguration {
                 WorkingTimeEntity.class,
                 OvertimeAccountEntity.class,
                 FederalStateSettingsEntity.class
-                // SubtractBreakFromTimeEntrySettingsEntity.class,
-                // LockTimeEntriesSettingsEntity.class
+                // SubtractBreakFromTimeEntrySettingsEntity.class, // disabled for now to prevent duplicated bean definitions
+                // LockTimeEntriesSettingsEntity.class // disabled for now to prevent duplicated bean definitions
             )
             .persistenceUnit("tenantAware")
             // enable hibernate to access spring beans and inject them into jpa entity lifecycle events
