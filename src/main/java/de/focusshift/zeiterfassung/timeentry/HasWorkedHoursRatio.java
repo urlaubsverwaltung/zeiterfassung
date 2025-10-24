@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
+
 import java.math.BigDecimal;
 
 import static java.math.RoundingMode.CEILING;

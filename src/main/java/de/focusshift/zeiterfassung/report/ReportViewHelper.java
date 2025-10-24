@@ -3,12 +3,12 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.overtime.OvertimeHours;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
-import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 

@@ -14,6 +14,7 @@ import de.focusshift.zeiterfassung.user.YearFormat;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;

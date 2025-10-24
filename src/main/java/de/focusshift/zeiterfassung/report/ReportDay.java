@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
-import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 

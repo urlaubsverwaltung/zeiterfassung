@@ -1,11 +1,12 @@
-package de.focusshift.zeiterfassung.timeentry;
+package de.focusshift.zeiterfassung.workduration;
 
+import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-class WorkDurationCalculationService {
+public class WorkDurationCalculationService {
 
     private final WorkDurationSubtractBreakCalculationService subtractBreakCalculationService;
 
@@ -18,7 +19,7 @@ class WorkDurationCalculationService {
      *
      * @param timeEntries list of {@link TimeEntry} to calculate the {@link WorkDuration} for
      */
-    WorkDuration calculateWorkDuration(List<TimeEntry> timeEntries) {
+    public WorkDuration calculateWorkDuration(List<TimeEntry> timeEntries) {
         return subtractBreakCalculationService.calculateWorkDuration(timeEntries);
     }
 }

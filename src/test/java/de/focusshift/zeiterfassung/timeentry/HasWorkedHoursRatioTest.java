@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

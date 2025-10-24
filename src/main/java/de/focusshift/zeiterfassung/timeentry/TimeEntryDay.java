@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.timeentry;
 
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 
 import java.time.Duration;

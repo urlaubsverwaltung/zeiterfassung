@@ -1,5 +1,6 @@
-package de.focusshift.zeiterfassung.timeentry;
+package de.focusshift.zeiterfassung.workduration;
 
+import de.focusshift.zeiterfassung.timeentry.BreakDuration;
 import de.focusshift.zeiterfassung.workingtime.ZeitDuration;
 
 import java.time.Duration;

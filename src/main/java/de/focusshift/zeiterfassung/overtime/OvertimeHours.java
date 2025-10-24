@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.overtime;
 
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
-import de.focusshift.zeiterfassung.timeentry.WorkDuration;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.ZeitDuration;
 
 import java.time.Duration;

@@ -1,5 +1,7 @@
-package de.focusshift.zeiterfassung.timeentry;
+package de.focusshift.zeiterfassung.workduration;
 
+import de.focusshift.zeiterfassung.timeentry.TimeEntry;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;

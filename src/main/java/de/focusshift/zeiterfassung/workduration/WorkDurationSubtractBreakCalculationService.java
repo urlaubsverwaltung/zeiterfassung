@@ -1,5 +1,6 @@
-package de.focusshift.zeiterfassung.timeentry;
+package de.focusshift.zeiterfassung.workduration;
 
+import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
