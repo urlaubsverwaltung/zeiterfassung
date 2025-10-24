@@ -53,7 +53,8 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
 
     private static SubtractBreakFromTimeEntrySettings toSubtractBreakFromTimeEntrySettings(SubtractBreakFromTimeEntrySettingsEntity subtractBreakFromTimeEntrySettingsEntity) {
         return new SubtractBreakFromTimeEntrySettings(
-            subtractBreakFromTimeEntrySettingsEntity.isSubtractBreakFromTimeEntryIsActive()
+            subtractBreakFromTimeEntrySettingsEntity.isSubtractBreakFromTimeEntryIsActive(),
+            subtractBreakFromTimeEntrySettingsEntity.getSubtractBreakFromTimeEntryEnabledTimestamp()
         );
     }
 

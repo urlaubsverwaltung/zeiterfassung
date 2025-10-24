@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.settings;
 
+import java.time.Instant;
+
 /**
  * Global setting for behaviour for subtraction of breaks of time entries.
  *
@@ -14,7 +16,7 @@ package de.focusshift.zeiterfassung.settings;
  *
  * @param subtractBreakFromTimeEntryIsActive whether this feature is enabled or not
  */
-public record SubtractBreakFromTimeEntrySettings(boolean subtractBreakFromTimeEntryIsActive) {
+public record SubtractBreakFromTimeEntrySettings(boolean subtractBreakFromTimeEntryIsActive, Instant subtractBreakFromTimeEntryEnabledTimestamp) {
 
     /**
      * Default LockTimeSettings.
@@ -23,5 +25,5 @@ public record SubtractBreakFromTimeEntrySettings(boolean subtractBreakFromTimeEn
      *     <li>{@link SubtractBreakFromTimeEntrySettings#subtractBreakFromTimeEntryIsActive()} = {@code true}</li>
      * </ul>
      */
-    public static final SubtractBreakFromTimeEntrySettings DEFAULT = new SubtractBreakFromTimeEntrySettings(true);
+    public static final SubtractBreakFromTimeEntrySettings DEFAULT = new SubtractBreakFromTimeEntrySettings(true, Instant.now());
 }

@@ -62,7 +62,7 @@ class SettingsControllerTest implements ControllerTest {
 
         final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
         final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(true, 42);
-        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(true);
+        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(true, Instant.now());
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
@@ -84,7 +84,7 @@ class SettingsControllerTest implements ControllerTest {
 
         final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
         final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(true, 3);
-        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(false);
+        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(false, Instant.now());
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
@@ -101,7 +101,7 @@ class SettingsControllerTest implements ControllerTest {
 
         final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
         final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(false, -1);
-        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(false);
+        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(false, Instant.now());
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);

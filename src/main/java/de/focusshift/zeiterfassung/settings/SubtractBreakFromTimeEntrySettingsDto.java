@@ -1,4 +1,6 @@
 package de.focusshift.zeiterfassung.settings;
 
-public record SubtractBreakFromTimeEntrySettingsDto(boolean subtractBreakFromTimeEntry) {
+import java.time.Instant;
+
+public record SubtractBreakFromTimeEntrySettingsDto(boolean subtractBreakFromTimeEntry, Instant subtractBreakFromTimeEntryEnabledTimestamp) {
 }

@@ -45,6 +45,8 @@ import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
         WorkingTimeEntity.class,
         OvertimeAccountEntity.class,
         FederalStateSettingsEntity.class
+        // SubtractBreakFromTimeEntrySettingsEntity.class,
+        // LockTimeEntriesSettingsEntity.class
     },
     entityManagerFactoryRef = "tenantAwareEntityManagerFactory",
     transactionManagerRef = "tenantAwareTransactionManager"
@@ -62,7 +64,10 @@ class TenantAwareDatabaseConfiguration {
     @Bean
     @Primary
     @ConfigurationProperties("spring.datasource.hikari")
-    DataSource tenantAwareDataSource(DataSourceProperties tenantAwareDataSourceProperties, TenantContextHolder tenantContextHolder) {
+    DataSource tenantAwareDataSource(
+        DataSourceProperties tenantAwareDataSourceProperties,
+        TenantContextHolder tenantContextHolder
+    ) {
         final HikariDataSource dataSource = tenantAwareDataSourceProperties
             .initializeDataSourceBuilder()
             .type(HikariDataSource.class)
@@ -73,9 +78,11 @@ class TenantAwareDatabaseConfiguration {
 
     @Bean
     @Primary
-    LocalContainerEntityManagerFactoryBean tenantAwareEntityManagerFactory(EntityManagerFactoryBuilder builder,
-                                                                           ConfigurableListableBeanFactory beanFactory,
-                                                                           DataSource tenantAwareDataSource) {
+    LocalContainerEntityManagerFactoryBean tenantAwareEntityManagerFactory(
+        EntityManagerFactoryBuilder builder,
+        ConfigurableListableBeanFactory beanFactory,
+        DataSource tenantAwareDataSource
+    ) {
 
         return builder
             .dataSource(tenantAwareDataSource)
@@ -92,6 +99,8 @@ class TenantAwareDatabaseConfiguration {
                 WorkingTimeEntity.class,
                 OvertimeAccountEntity.class,
                 FederalStateSettingsEntity.class
+                // SubtractBreakFromTimeEntrySettingsEntity.class,
+                // LockTimeEntriesSettingsEntity.class
             )
             .persistenceUnit("tenantAware")
             // enable hibernate to access spring beans and inject them into jpa entity lifecycle events
@@ -101,7 +110,9 @@ class TenantAwareDatabaseConfiguration {
 
     @Bean
     @Primary
-    PlatformTransactionManager tenantAwareTransactionManager(LocalContainerEntityManagerFactoryBean tenantAwareEntityManagerFactory) {
+    PlatformTransactionManager tenantAwareTransactionManager(
+        LocalContainerEntityManagerFactoryBean tenantAwareEntityManagerFactory
+    ) {
         return new JpaTransactionManager(requireNonNull(tenantAwareEntityManagerFactory.getObject()));
     }
 }
