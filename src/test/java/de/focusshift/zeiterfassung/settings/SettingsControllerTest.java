@@ -85,7 +85,6 @@ class SettingsControllerTest implements ControllerTest {
 
         final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
         final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(true, 3);
-        final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings = new SubtractBreakFromTimeEntrySettings(false, null, Instant.now());
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
