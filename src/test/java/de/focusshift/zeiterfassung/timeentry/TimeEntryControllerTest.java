@@ -108,7 +108,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final LocalDate timeEntryDate = LocalDate.parse("2025-02-28");
         final LocalDate firstDateOfWeek = LocalDate.parse("2025-02-24");
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, timeEntryDate, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, timeEntryDate, new WorkDuration(Duration.ofMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(firstDateOfWeek, PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(userLocalId, 2025, 9)).thenReturn(timeEntryWeekPage);
@@ -185,9 +185,9 @@ class TimeEntryControllerTest implements ControllerTest {
         final Instant absenceEnd = ZonedDateTime.of(2025, 1, 3, 15, 0, 0, 0, zoneIdBerlin).toInstant();
         final Absence absence = new Absence(userId, absenceStart, absenceEnd, DayLength.FULL, locale -> "", YELLOW, HOLIDAY);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
-        final TimeEntryDay timeEntryDayWithAbsence = new TimeEntryDay(false, LocalDate.of(2025, 1, 2), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of(absence));
-        final TimeEntryDay timeEntryDayWithoutTimeEntriesAndWithoutAbsences = new TimeEntryDay(false, LocalDate.of(2025, 1, 3), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of());
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), new WorkDuration(Duration.ofMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
+        final TimeEntryDay timeEntryDayWithAbsence = new TimeEntryDay(false, LocalDate.of(2025, 1, 2), WorkDuration.ZERO, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of(absence));
+        final TimeEntryDay timeEntryDayWithoutTimeEntriesAndWithoutAbsences = new TimeEntryDay(false, LocalDate.of(2025, 1, 3), WorkDuration.ZERO, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(timeEntryDay, timeEntryDayWithAbsence, timeEntryDayWithoutTimeEntriesAndWithoutAbsences));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(userLocalId, 2025, 1)).thenReturn(timeEntryWeekPage);
@@ -275,7 +275,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2024, 12, 31, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), new WorkDuration(Duration.ofMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 42);
         when(timeEntryService.getEntryWeekPage(userLocalId, 2025, 1)).thenReturn(timeEntryWeekPage);
@@ -757,6 +757,7 @@ class TimeEntryControllerTest implements ControllerTest {
                 new TimeEntryDay(
                     false,
                     LocalDate.of(2022, 9, 28),
+                    new WorkDuration(Duration.ofMinutes(45)),
                     PlannedWorkingHours.EIGHT,
                     ShouldWorkingHours.EIGHT,
                     List.of(timeEntryToEdit),
@@ -764,6 +765,7 @@ class TimeEntryControllerTest implements ControllerTest {
                 new TimeEntryDay(
                     false,
                     LocalDate.of(2022, 9, 29),
+                    new WorkDuration(Duration.ofMinutes(30)),
                     PlannedWorkingHours.EIGHT,
                     ShouldWorkingHours.EIGHT,
                     List.of(timeEntryOtherDay),
@@ -816,7 +818,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryId timeEntryId = new TimeEntryId(1337L);
         final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2022, 9, 19), new WorkDuration(Duration.ofMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryService.getEntryWeekPage(userLocalId, 2021, 52)).thenReturn(timeEntryWeekPage);
@@ -1005,7 +1007,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntryToDelete));
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2022, 9, 28), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry2), List.of());
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2022, 9, 28), new WorkDuration(Duration.ofHours(1)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry2), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
         when(timeEntryService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);

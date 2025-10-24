@@ -3,23 +3,29 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
-import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class TimeEntryDayTest {
+class WorkDurationCalculationServiceTest {
+
+    private WorkDurationCalculationService sut;
+
+    @BeforeEach
+    void setUp() {
+        sut = new WorkDurationCalculationService();
+    }
 
     @Nested
-    class WorkDuration {
+    class CalculateWorkDuration {
 
         @Test
         void workDurationForTimeEntriesOnly() {
@@ -30,8 +36,9 @@ class TimeEntryDayTest {
              */
             final TimeEntry workEntry1 = workEntry("2025-09-26T08:00:00Z", "2025-09-26T10:00:00Z");
             final TimeEntry workEntry2 = workEntry("2025-09-26T11:00:00Z", "2025-09-26T14:00:00Z");
-            final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry1, workEntry2));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(5));
+
+            final WorkDuration actual = sut.calculateWorkDuration(List.of(workEntry1, workEntry2));
+            assertThat(actual.durationInMinutes()).isEqualTo(Duration.ofHours(5));
         }
 
         @Test
@@ -45,8 +52,9 @@ class TimeEntryDayTest {
              */
             final TimeEntry workEntry1 = workEntry("2025-09-26T08:00:00Z", "2025-09-26T09:00:00Z");
             final TimeEntry workEntry2 = workEntry("2025-09-26T08:30:00Z", "2025-09-26T09:30:00Z");
-            final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry1, workEntry2));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(2));
+
+            final WorkDuration actual = sut.calculateWorkDuration(List.of(workEntry1, workEntry2));
+            assertThat(actual.durationInMinutes()).isEqualTo(Duration.ofHours(2));
         }
 
         @Test
@@ -61,8 +69,9 @@ class TimeEntryDayTest {
             final TimeEntry workEntry1 = workEntry("2025-09-26T08:00:00Z", "2025-09-26T09:00:00Z");
             final TimeEntry workEntry2 = workEntry("2025-09-26T08:30:00Z", "2025-09-26T09:30:00Z");
             final TimeEntry workEntry3 = workEntry("2025-09-26T10:00:00Z", "2025-09-26T11:00:00Z");
-            final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry1, workEntry2, workEntry3));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(3));
+
+            final WorkDuration actual = sut.calculateWorkDuration(List.of(workEntry1, workEntry2, workEntry3));
+            assertThat(actual.durationInMinutes()).isEqualTo(Duration.ofHours(3));
         }
 
         @ParameterizedTest
@@ -96,8 +105,9 @@ class TimeEntryDayTest {
 
             final TimeEntry workEntry = workEntry(workFrom, workTo);
             final TimeEntry breakEntry = breakEntry(breakFrom, breakTo);
-            final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry, breakEntry));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(8));
+
+            final WorkDuration actual = sut.calculateWorkDuration(List.of(workEntry, breakEntry));
+            assertThat(actual.durationInMinutes()).isEqualTo(Duration.ofHours(8));
         }
 
         @Test
@@ -112,8 +122,9 @@ class TimeEntryDayTest {
             final TimeEntry workEntry1 = workEntry("2025-09-26T08:00:00Z", "2025-09-26T12:15:00Z");
             final TimeEntry workEntry2 = workEntry("2025-09-26T12:45:00Z", "2025-09-26T17:00:00Z");
             final TimeEntry breakEntry = breakEntry("2025-09-26T12:00:00Z", "2025-09-26T13:15:00Z");
-            final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry1, workEntry2, breakEntry));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(7).plusMinutes(45));
+
+            final WorkDuration actual = sut.calculateWorkDuration(List.of(workEntry1, workEntry2, breakEntry));
+            assertThat(actual.durationInMinutes()).isEqualTo(Duration.ofHours(7).plusMinutes(45));
         }
 
         @Test
@@ -131,8 +142,9 @@ class TimeEntryDayTest {
             final TimeEntry workEntry2 = workEntry("2025-09-26T08:30:00Z", "2025-09-26T09:30:00Z");
             final TimeEntry workEntry3 = workEntry("2025-09-26T10:00:00Z", "2025-09-26T11:00:00Z");
             final TimeEntry breakEntry = breakEntry("2025-09-26T08:15:00Z", "2025-09-26T09:15:00Z");
-            final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry1, workEntry2, workEntry3, breakEntry));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(1).plusMinutes(30));
+
+            final WorkDuration actual = sut.calculateWorkDuration(List.of(workEntry1, workEntry2, workEntry3, breakEntry));
+            assertThat(actual.durationInMinutes()).isEqualTo(Duration.ofHours(1).plusMinutes(30));
         }
 
         @Test
@@ -150,8 +162,9 @@ class TimeEntryDayTest {
             final TimeEntry workEntry2 = workEntry("2025-09-26T08:30:00Z", "2025-09-26T09:30:00Z");
             final TimeEntry workEntry3 = workEntry("2025-09-26T10:00:00Z", "2025-09-26T11:00:00Z");
             final TimeEntry breakEntry = breakEntry("2025-09-26T08:15:00Z", "2025-09-26T09:45:00Z");
-            final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry1, workEntry2, workEntry3, breakEntry));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(1).plusMinutes(15));
+
+            final WorkDuration actual = sut.calculateWorkDuration(List.of(workEntry1, workEntry2, workEntry3, breakEntry));
+            assertThat(actual.durationInMinutes()).isEqualTo(Duration.ofHours(1).plusMinutes(15));
         }
 
 
@@ -169,12 +182,9 @@ class TimeEntryDayTest {
             final TimeEntry workEntry = workEntry("2025-09-26T08:00:00Z", "2025-09-26T17:00:00Z");
             final TimeEntry breakEntry1 = breakEntry("2025-09-26T12:00:00Z", "2025-09-26T13:00:00Z");
             final TimeEntry breakEntry2 = breakEntry("2025-09-26T12:30:00Z", "2025-09-26T13:30:00Z");
-            final TimeEntryDay day = timeEntryDay(LocalDate.parse("2025-09-26"), List.of(workEntry, breakEntry1, breakEntry2));
-            assertThat(day.workDuration().durationInMinutes()).isEqualTo(Duration.ofHours(7).plusMinutes(30));
-        }
 
-        private TimeEntryDay timeEntryDay(LocalDate date, List<TimeEntry> timeEntries) {
-            return new TimeEntryDay(false, date, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, timeEntries, List.of());
+            final WorkDuration actual = sut.calculateWorkDuration(List.of(workEntry, breakEntry1, breakEntry2));
+            assertThat(actual.durationInMinutes()).isEqualTo(Duration.ofHours(7).plusMinutes(30));
         }
 
         private static TimeEntry workEntry(String start, String end) {
