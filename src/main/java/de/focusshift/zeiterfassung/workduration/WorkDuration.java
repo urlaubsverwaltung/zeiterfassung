@@ -9,16 +9,7 @@ import java.time.Duration;
  * Defines the calculated {@linkplain Duration} of worked time. Different to {@linkplain BreakDuration}.
  *
  * <p>
- * Note that this does not represent the actually booked working time. Breaks and overlapping time entry intervals
- * are considered in the calculation of the {@link WorkDuration}.
- *
- * <p>
- * Examples:
- *
- * <ul>
- *     <li>Two work intervals both starting at 08:00 and ending at 10:00 -> {@link WorkDuration} of 2 hours</li>
- *     <li>One work interval and one break interval starting and ending at the same time -> {@link WorkDuration} of 0 hours</li>
- * </ul>
+ * Note that there are various {@link WorkDurationCalculator} implementations that can be configured by the user.
  *
  * @param duration the exact duration. not rounded up to minutes.
  */
