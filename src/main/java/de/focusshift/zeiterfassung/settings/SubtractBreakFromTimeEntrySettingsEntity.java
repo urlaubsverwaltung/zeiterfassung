@@ -11,6 +11,8 @@ import jakarta.persistence.SequenceGenerator;
 import java.time.Instant;
 import java.util.Objects;
 
+import static de.focusshift.zeiterfassung.settings.SubtractBreakFromTimeEntrySettings.FEATURE_LAUNCH_TIMESTAMP;
+
 @Entity(name = "settings_subtract_break_from_time_entry")
 public class SubtractBreakFromTimeEntrySettingsEntity extends AbstractTenantAwareEntity {
 
@@ -27,7 +29,7 @@ public class SubtractBreakFromTimeEntrySettingsEntity extends AbstractTenantAwar
     private Instant subtractBreakFromTimeEntryEnabledTimestamp;
 
     @Column(name = "feature_launch_timestamp")
-    private Instant featureLaunchTimestamp;
+    private Instant featureLaunchTimestamp = FEATURE_LAUNCH_TIMESTAMP; // TODO: Adjust the launch date
 
     protected SubtractBreakFromTimeEntrySettingsEntity() {
         super(null);

@@ -178,6 +178,43 @@
                   </div>
                 </div>
               </div>
+              <div th:if="${settings.subtractBreakFromTimeEntryIsActive() != null}" class="mt-8 lg:mt-12">
+                <h2
+                  class="font-bold"
+                >
+                  Abzug von Pausen
+                </h2>
+                <p
+                  class="mt-2 text-gray-600"
+                >
+                  Lege fest ob Pausen von Zeiteinträgen automatisch abgezogen
+                  werden sollen.
+                </p>
+                <div
+                  class="mt-4 gap-2"
+                >
+                  <div class="flex gap-2 items-center">
+                    <input type="hidden" th:field="*{subtractBreakFromTimeEntryEnabledTimestamp}" />
+                    <input
+                      type="checkbox"
+                      id="subtract-break-from-timeentry-is-active-checkbox"
+                      data-testid="subtract-break-from-timeentry-is-active-checkbox"
+                      th:field="*{subtractBreakFromTimeEntryIsActive}"
+                    />
+                    <label
+                      for="subtract-break-from-timeentry-is-active-checkbox"
+                    >
+                      Abzug aktivieren
+                    </label>
+                  </div>
+                  <p
+                    class="mt-4 text-gray-600" th:if="${#bools.isTrue(settings.subtractBreakFromTimeEntryIsActive)}">
+                    Der Pausenabzug ist seit
+                    <span th:text="${subtractBreakFromTimeEntryEnabledDate}">01.01.1970</span>
+                    aktiv.
+                  </p>
+                </div>
+              </div>
               <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
                 <button
                   type="submit"

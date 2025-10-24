@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.settings;
 
+import java.util.Optional;
+
 public interface SubtractBreakFromTimeEntrySettingsService {
 
     /**
@@ -8,5 +10,5 @@ public interface SubtractBreakFromTimeEntrySettingsService {
      *
      * @return the {@link SubtractBreakFromTimeEntrySettings}
      */
-    SubtractBreakFromTimeEntrySettings getSubtractBreakFromTimeEntrySettings();
+    Optional<SubtractBreakFromTimeEntrySettings> getSubtractBreakFromTimeEntrySettings();
 }

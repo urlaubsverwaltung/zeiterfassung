@@ -3,13 +3,18 @@ package de.focusshift.zeiterfassung.settings;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import jakarta.annotation.Nullable;
 
+import java.time.Instant;
+
 record SettingsDto(
     FederalState federalState,
     boolean worksOnPublicHoliday,
     boolean lockingIsActive,
     @Nullable
     String lockTimeEntriesDaysInPast,
-    boolean subtractBreakFromTimeEntryIsActive
+    @Nullable
+    Boolean subtractBreakFromTimeEntryIsActive,
+    @Nullable
+    Instant subtractBreakFromTimeEntryEnabledTimestamp
 ) {
 
     /**
