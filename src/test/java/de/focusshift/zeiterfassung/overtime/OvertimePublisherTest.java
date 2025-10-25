@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.overtime;
 
 import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
-import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent.UpdatedValueCandidate;
@@ -11,6 +10,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccount;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccountService;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

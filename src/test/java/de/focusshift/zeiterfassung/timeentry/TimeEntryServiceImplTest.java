@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.TenantAwareRevisionMetadata;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMapper;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionType;
+import de.focusshift.zeiterfassung.settings.SubtractBreakFromTimeEntrySettingsService;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
@@ -15,6 +16,8 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
+import de.focusshift.zeiterfassung.workduration.WorkDurationCalculationService;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
@@ -70,6 +73,8 @@ class TimeEntryServiceImplTest {
     @Mock
     private TimeEntryLockService timeEntryLockService;
     @Mock
+    private WorkDurationCalculationService workDurationCalculationService;
+    @Mock
     private UserDateService userDateService;
     @Mock
     private WorkingTimeCalendarService workingTimeCalendarService;
@@ -77,6 +82,8 @@ class TimeEntryServiceImplTest {
     private UserManagementService userManagementService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
+    @Mock
+    private SubtractBreakFromTimeEntrySettingsService subtractBreakFromTimeEntrySettingsService;
     @Mock
     private EntityRevisionMapper entityRevisionMapper;
     @Mock
@@ -86,8 +93,9 @@ class TimeEntryServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryServiceImpl(timeEntryRepository, timeEntryLockService, userManagementService,
-            workingTimeCalendarService, userDateService, userSettingsProvider, entityRevisionMapper, applicationEventPublisher, clockFixed);
+        sut = new TimeEntryServiceImpl(timeEntryRepository, timeEntryLockService, workDurationCalculationService, userManagementService,
+            workingTimeCalendarService, userDateService, userSettingsProvider, subtractBreakFromTimeEntrySettingsService,
+            entityRevisionMapper, applicationEventPublisher, clockFixed);
     }
 
     @Nested
@@ -1323,6 +1331,13 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2022, 1, 9), PlannedWorkingHours.ZERO  // sunday
             ), Map.of()));
 
+        final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", timeEntryStart, timeEntryEnd, false);
+        final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true);
+
+        final WorkDuration calculatedWorkDuration = new WorkDuration(Duration.ofMinutes(42));
+        when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry1, timeEntry2))).thenReturn(calculatedWorkDuration);
+        when(workDurationCalculationService.calculateWorkDuration(List.of())).thenReturn(WorkDuration.ZERO);
+
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2022, 1);
 
         assertThat(actual).isEqualTo(
@@ -1334,6 +1349,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2022, 1, 9),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(),
@@ -1341,6 +1357,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2022, 1, 8),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(),
@@ -1348,6 +1365,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2022, 1, 7),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1355,6 +1373,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2022, 1, 6),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1362,6 +1381,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2022, 1, 5),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1369,16 +1389,15 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2022, 1, 4),
+                            calculatedWorkDuration,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
-                            List.of(
-                                new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", timeEntryStart, timeEntryEnd, false),
-                                new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true)
-                            ),
+                            List.of(timeEntry1, timeEntry2),
                             List.of()),
                         new TimeEntryDay(
                             false,
                             firstDayOfWeek,
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1434,6 +1453,15 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2023, 2, 5), PlannedWorkingHours.ZERO
             ), Map.of()));
 
+        final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false);
+        final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false);
+
+        final WorkDuration calculatedWorkDuration1 = new WorkDuration(Duration.ofMinutes(42));
+        final WorkDuration calculatedWorkDuration2 = new WorkDuration(Duration.ofMinutes(1337));
+        when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry1))).thenReturn(calculatedWorkDuration1);
+        when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry2))).thenReturn(calculatedWorkDuration2);
+        when(workDurationCalculationService.calculateWorkDuration(List.of())).thenReturn(WorkDuration.ZERO);
+
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2023, 5);
 
         assertThat(actual).isEqualTo(
@@ -1445,15 +1473,15 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 2, 5),
+                            calculatedWorkDuration1,
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
-                            List.of(
-                                new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
-                            ),
+                            List.of(timeEntry1),
                             List.of()),
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 2, 4),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(),
@@ -1461,6 +1489,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 2, 3),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1468,6 +1497,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 2, 2),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1475,6 +1505,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 2, 1),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1482,6 +1513,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 1, 31),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1489,11 +1521,10 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             firstDateOfWeek,
+                            calculatedWorkDuration2,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
-                            List.of(
-                                new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
-                            ),
+                            List.of(timeEntry2),
                             List.of())
                     )
                 ),
@@ -1537,6 +1568,8 @@ class TimeEntryServiceImplTest {
                 LocalDate.of(2023, 6, 18), PlannedWorkingHours.ZERO
             ), Map.of()));
 
+        when(workDurationCalculationService.calculateWorkDuration(List.of())).thenReturn(WorkDuration.ZERO);
+
         final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2023, 24);
 
         assertThat(actual).isEqualTo(
@@ -1548,6 +1581,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 6, 18),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(),
@@ -1555,6 +1589,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 6, 17),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.ZERO,
                             ShouldWorkingHours.ZERO,
                             List.of(),
@@ -1562,6 +1597,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 6, 16),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1569,6 +1605,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 6, 15),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1576,6 +1613,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 6, 14),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1583,6 +1621,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 6, 13),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),
@@ -1590,6 +1629,7 @@ class TimeEntryServiceImplTest {
                         new TimeEntryDay(
                             false,
                             LocalDate.of(2023, 6, 12),
+                            WorkDuration.ZERO,
                             PlannedWorkingHours.EIGHT,
                             ShouldWorkingHours.EIGHT,
                             List.of(),

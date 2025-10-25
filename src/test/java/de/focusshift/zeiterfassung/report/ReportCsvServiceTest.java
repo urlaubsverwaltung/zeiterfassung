@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +19,7 @@ import org.springframework.context.MessageSource;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
@@ -101,8 +103,9 @@ class ReportCsvServiceTest {
 
         final ZonedDateTime from = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime to = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 30), ZONE_ID_BERLIN);
-        final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, false);
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
+        final WorkDuration workDuration = new WorkDuration(Duration.ofMinutes(30));
+        final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, workDuration, false);
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of(), Map.of());
 
         when(reportService.getReportWeek(Year.of(2021), 1, List.of(batmanLocalId)))
             .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDay)));
@@ -141,17 +144,17 @@ class ReportCsvServiceTest {
         // day one
         final ZonedDateTime dayOneFirstFrom = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime dayOneFirstTo = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 11, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry dayOneFirstReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayOneFirstFrom, dayOneFirstTo, false);
+        final ReportDayEntry dayOneFirstReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayOneFirstFrom, dayOneFirstTo, new WorkDuration(Duration.ofHours(1)), false);
         final ZonedDateTime dayOneSecondFrom = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 14, 0), ZONE_ID_BERLIN);
         final ZonedDateTime dayOneSecondTo = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 15, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry dayOneSecondReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayOneSecondFrom, dayOneSecondTo, false);
-        final ReportDay reportDayOne = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(dayOneFirstReportDayEntry, dayOneSecondReportDayEntry)), Map.of());
+        final ReportDayEntry dayOneSecondReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayOneSecondFrom, dayOneSecondTo, new WorkDuration(Duration.ofHours(1)), false);
+        final ReportDay reportDayOne = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(dayOneFirstReportDayEntry, dayOneSecondReportDayEntry)), Map.of(), Map.of());
 
         // day two
         final ZonedDateTime dayTwoFrom = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 9, 0), ZONE_ID_BERLIN);
         final ZonedDateTime dayTwoTo = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 17, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry dayTwoReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayTwoFrom, dayTwoTo, false);
-        final ReportDay reportDayTwo = new ReportDay(LocalDate.of(2021, 1, 5), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(dayTwoReportDayEntry)), Map.of());
+        final ReportDayEntry dayTwoReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayTwoFrom, dayTwoTo, new WorkDuration(Duration.ofHours(8)), false);
+        final ReportDay reportDayTwo = new ReportDay(LocalDate.of(2021, 1, 5), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(dayTwoReportDayEntry)), Map.of(), Map.of());
 
         when(reportService.getReportWeek(Year.of(2021), 1, List.of(batmanLocalId)))
             .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDayOne, reportDayTwo)));
@@ -208,8 +211,8 @@ class ReportCsvServiceTest {
 
         final ZonedDateTime from = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime to = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 30), ZONE_ID_BERLIN);
-        final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, false);
-        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of());
+        final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, new WorkDuration(Duration.ofMinutes(30)), false);
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of(), Map.of());
 
         final ReportWeek firstWeek = new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDay));
         final ReportWeek secondWeek = new ReportWeek(LocalDate.of(2021, 1, 4), List.of());
@@ -254,17 +257,17 @@ class ReportCsvServiceTest {
         // week one, day one
         final ZonedDateTime dayOneFirstFrom = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
         final ZonedDateTime dayOneFirstTo = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 11, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry dayOneFirstReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayOneFirstFrom, dayOneFirstTo, false);
+        final ReportDayEntry dayOneFirstReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayOneFirstFrom, dayOneFirstTo, new WorkDuration(Duration.ofHours(1)), false);
         final ZonedDateTime dayOneSecondFrom = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 14, 0), ZONE_ID_BERLIN);
         final ZonedDateTime dayOneSecondTo = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 15, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry dayOneSecondReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayOneSecondFrom, dayOneSecondTo, false);
-        final ReportDay weekOneReportDay = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(dayOneFirstReportDayEntry, dayOneSecondReportDayEntry)), Map.of());
+        final ReportDayEntry dayOneSecondReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayOneSecondFrom, dayOneSecondTo, new WorkDuration(Duration.ofHours(1)), false);
+        final ReportDay weekOneReportDay = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(dayOneFirstReportDayEntry, dayOneSecondReportDayEntry)), Map.of(), Map.of());
 
         // week two, day one
         final ZonedDateTime dayTwoFrom = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 9, 0), ZONE_ID_BERLIN);
         final ZonedDateTime dayTwoTo = ZonedDateTime.of(LocalDateTime.of(2021, 1, 5, 17, 0), ZONE_ID_BERLIN);
-        final ReportDayEntry dayTwoReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayTwoFrom, dayTwoTo, false);
-        final ReportDay weekTwoReportDay = new ReportDay(LocalDate.of(2021, 1, 5), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(dayTwoReportDayEntry)), Map.of());
+        final ReportDayEntry dayTwoReportDayEntry = new ReportDayEntry(null, batman, "hard work", dayTwoFrom, dayTwoTo, new WorkDuration(Duration.ofHours(8)), false);
+        final ReportDay weekTwoReportDay = new ReportDay(LocalDate.of(2021, 1, 5), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(dayTwoReportDayEntry)), Map.of(), Map.of());
 
         final ReportWeek firstWeek = new ReportWeek(LocalDate.of(2020, 12, 28), List.of(weekOneReportDay));
         final ReportWeek secondWeek = new ReportWeek(LocalDate.of(2021, 1, 4), List.of(weekTwoReportDay));

@@ -60,7 +60,7 @@ public class SettingsPage {
 
     private void executeUserAction(Runnable runnable) {
         // updating interactive elements results in a "page-refresh" when javascript is enabled
-        page.waitForResponse(response -> response.status() == 422, runnable);
+        page.waitForResponse(response -> response.ok() || response.status() == 422, runnable);
     }
 
     private Locator worksOnPublicHolidayCheckbox() {

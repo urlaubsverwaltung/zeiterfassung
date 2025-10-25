@@ -2,8 +2,8 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.timeentry.HasWorkedHoursRatio;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
-import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 
 import java.time.YearMonth;
@@ -40,6 +40,7 @@ record ReportMonth(YearMonth yearMonth, List<ReportWeek> weeks) implements HasWo
         return calculateAverageDayWorkDuration(weeks, ReportWeek::averageDayWorkDuration);
     }
 
+    @Override
     public WorkDuration workDuration() {
         return summarizeWorkDuration(weeks, ReportWeek::workDuration);
     }

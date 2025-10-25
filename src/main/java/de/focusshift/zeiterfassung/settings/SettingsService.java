@@ -6,32 +6,42 @@ import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Stream.iterate;
 import static java.util.stream.StreamSupport.stream;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
-class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService {
+class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final FederalStateSettingsRepository federalStateSettingsRepository;
     private final LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
+    private final SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final Clock clock;
+
 
     SettingsService(
         FederalStateSettingsRepository federalStateSettingsRepository,
         LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository,
-        ApplicationEventPublisher applicationEventPublisher
+        SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository,
+        ApplicationEventPublisher applicationEventPublisher,
+        Clock clock
     ) {
         this.federalStateSettingsRepository = federalStateSettingsRepository;
         this.lockTimeEntriesSettingsRepository = lockTimeEntriesSettingsRepository;
+        this.subtractBreakFromTimeEntrySettingsRepository = subtractBreakFromTimeEntrySettingsRepository;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.clock = clock;
     }
 
     private static FederalStateSettings toFederalStateSettings(FederalStateSettingsEntity federalStateSettingsEntity) {
@@ -45,6 +55,12 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         return new LockTimeEntriesSettings(
             lockTimeEntriesSettingsEntity.isLockingIsActive(),
             lockTimeEntriesSettingsEntity.getLockTimeEntriesDaysInPast()
+        );
+    }
+
+    private static SubtractBreakFromTimeEntrySettings toSubtractBreakFromTimeEntrySettings(SubtractBreakFromTimeEntrySettingsEntity entity) {
+        return new SubtractBreakFromTimeEntrySettings(
+            entity.isSubtractBreakFromTimeEntryIsActive(), entity.getSubtractBreakFromTimeEntryEnabledTimestamp(), entity.getFeatureLaunchTimestamp()
         );
     }
 
@@ -129,4 +145,38 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         final Iterable<LockTimeEntriesSettingsEntity> settings = lockTimeEntriesSettingsRepository.findAll();
         return stream(settings.spliterator(), false).findFirst();
     }
+
+    private Optional<SubtractBreakFromTimeEntrySettingsEntity> getSubtractBreakFromTimeEntrySettingsEntity() {
+        // `findFirst` is sufficient as there exists only one FederalStateSettingsEntity per tenant.
+        // however, the tenantId is handled transparently in the background. and we only have the public API of `findAll`.
+        final Iterable<SubtractBreakFromTimeEntrySettingsEntity> settings = subtractBreakFromTimeEntrySettingsRepository.findAll();
+        return stream(settings.spliterator(), false).findFirst();
+    }
+
+    /**
+     * Updates {@link SubtractBreakFromTimeEntrySettings}.
+     *
+     */
+    SubtractBreakFromTimeEntrySettings updateSubtractBreakFromTimeEntrySettings(boolean subtractBreakFromTimeEntryIsActive) {
+
+        final SubtractBreakFromTimeEntrySettingsEntity entity = getSubtractBreakFromTimeEntrySettingsEntity().orElseGet(SubtractBreakFromTimeEntrySettingsEntity::new);
+        if (!entity.isSubtractBreakFromTimeEntryIsActive() && subtractBreakFromTimeEntryIsActive) {
+            final Instant timestamp =  LocalDate.now(clock).atStartOfDay().toInstant(UTC);
+            entity.setSubtractBreakFromTimeEntryEnabledTimestamp(timestamp);
+        } else if (entity.isSubtractBreakFromTimeEntryIsActive() && !subtractBreakFromTimeEntryIsActive) {
+            entity.setSubtractBreakFromTimeEntryEnabledTimestamp(null);
+        }
+        entity.setSubtractBreakFromTimeEntryIsActive(subtractBreakFromTimeEntryIsActive);
+
+        final SubtractBreakFromTimeEntrySettingsEntity saved = subtractBreakFromTimeEntrySettingsRepository.save(entity);
+
+        return toSubtractBreakFromTimeEntrySettings(saved);
+    }
+
+    @Override
+    public Optional<SubtractBreakFromTimeEntrySettings> getSubtractBreakFromTimeEntrySettings() {
+        return getSubtractBreakFromTimeEntrySettingsEntity()
+            .map(SettingsService::toSubtractBreakFromTimeEntrySettings);
+    }
+
 }

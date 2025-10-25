@@ -3,6 +3,8 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMapper;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
+import de.focusshift.zeiterfassung.settings.SubtractBreakFromTimeEntrySettings;
+import de.focusshift.zeiterfassung.settings.SubtractBreakFromTimeEntrySettingsService;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryDeletedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
@@ -14,6 +16,8 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
+import de.focusshift.zeiterfassung.workduration.WorkDurationCalculationService;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
@@ -35,6 +39,7 @@ import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,10 +66,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     private final TimeEntryRepository timeEntryRepository;
     private final TimeEntryLockService timeEntryLockService;
+    private final WorkDurationCalculationService workDurationCalculator;
     private final UserManagementService userManagementService;
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final UserDateService userDateService;
     private final UserSettingsProvider userSettingsProvider;
+    private final SubtractBreakFromTimeEntrySettingsService subtractBreakFromTimeEntrySettingsService;
     private final EntityRevisionMapper entityRevisionMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final Clock clock;
@@ -72,10 +79,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
     TimeEntryServiceImpl(
         TimeEntryRepository timeEntryRepository,
         TimeEntryLockService timeEntryLockService,
+        WorkDurationCalculationService workDurationCalculator,
         UserManagementService userManagementService,
         WorkingTimeCalendarService workingTimeCalendarService,
         UserDateService userDateService,
         UserSettingsProvider userSettingsProvider,
+        SubtractBreakFromTimeEntrySettingsService subtractBreakFromTimeEntrySettingsService,
         EntityRevisionMapper entityRevisionMapper,
         ApplicationEventPublisher applicationEventPublisher,
         Clock clock
@@ -83,10 +92,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         this.timeEntryRepository = timeEntryRepository;
         this.timeEntryLockService = timeEntryLockService;
+        this.workDurationCalculator = workDurationCalculator;
         this.userManagementService = userManagementService;
         this.workingTimeCalendarService = workingTimeCalendarService;
         this.userDateService = userDateService;
         this.userSettingsProvider = userSettingsProvider;
+        this.subtractBreakFromTimeEntrySettingsService = subtractBreakFromTimeEntrySettingsService;
         this.entityRevisionMapper = entityRevisionMapper;
         this.applicationEventPublisher = applicationEventPublisher;
         this.clock = clock;
@@ -141,6 +152,58 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
+    public List<TimeEntryDay> getTimeEntryDays(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId) {
+
+        final List<TimeEntry> allTimeEntries = getEntries(from, toExclusive, userLocalId);
+
+        final Map<LocalDate, List<TimeEntry>> byDate = allTimeEntries.stream()
+            .collect(groupingBy(timeEntry -> timeEntry.start().toLocalDate()));
+
+        final WorkingTimeCalendar workingTimeCalender =
+            workingTimeCalendarService.getWorkingTimeCalender(from, toExclusive, userLocalId);
+
+        return createTimeEntryDays(from, toExclusive, byDate, workingTimeCalender);
+    }
+
+    @Override
+    public Map<UserIdComposite, List<TimeEntryDay>> getTimeEntryDays(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
+
+        final Map<UserIdComposite, List<TimeEntry>> allTimeEntriesByUser = getEntries(from, toExclusive, userLocalIds);
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser = workingTimeCalendarService.getWorkingTimeCalendarForUsers(from, toExclusive, userLocalIds);
+
+        return toTimeEntryDaysByUser(from, toExclusive, allTimeEntriesByUser, workingTimeCalendarByUser);
+    }
+
+    @Override
+    public Map<UserIdComposite, List<TimeEntryDay>> getTimeEntryDaysForAllUsers(LocalDate from, LocalDate toExclusive) {
+
+        final Map<UserIdComposite, List<TimeEntry>> allTimeEntriesByUser = getEntriesForAllUsers(from, toExclusive);
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser = workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(from, toExclusive);
+
+        return toTimeEntryDaysByUser(from, toExclusive, allTimeEntriesByUser, workingTimeCalendarByUser);
+    }
+
+    private Map<UserIdComposite, List<TimeEntryDay>> toTimeEntryDaysByUser(
+        LocalDate from, LocalDate toExclusive,
+        Map<UserIdComposite, List<TimeEntry>> timeEntriesByUser,
+        Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser
+    ) {
+        return timeEntriesByUser.entrySet().stream().collect(toMap(
+            Map.Entry::getKey,
+            entry -> {
+                final UserIdComposite userIdComposite = entry.getKey();
+                final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = groupByDate(entry.getValue());
+                final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarByUser.get(userIdComposite);
+                return createTimeEntryDays(from, toExclusive, timeEntriesByDate, workingTimeCalendar);
+            }
+        ));
+    }
+
+    private Map<LocalDate, List<TimeEntry>> groupByDate(List<TimeEntry> timeEntries) {
+        return timeEntries.stream().collect(groupingBy(timeEntry -> timeEntry.start().toLocalDate()));
+    }
+
+    @Override
     public List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId) {
 
         final User user = findUser(userLocalId);
@@ -156,8 +219,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .toList();
     }
 
-    @Override
-    public Map<UserIdComposite, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive) {
+    private Map<UserIdComposite, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive) {
 
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
@@ -172,8 +234,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .collect(groupingBy(TimeEntry::userIdComposite));
     }
 
-    @Override
-    public Map<UserIdComposite, List<TimeEntry>> getEntries(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
+    private Map<UserIdComposite, List<TimeEntry>> getEntries(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
 
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
@@ -312,7 +373,13 @@ class TimeEntryServiceImpl implements TimeEntryService {
                                                    WorkingTimeCalendar workingTimeCalendar) {
 
         final ZoneId userZoneId = userSettingsProvider.zoneId();
+
+        // TODO inject me
         final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(userZoneId);
+
+        // TODO inject me
+        final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
+            subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
 
         final List<TimeEntryDay> timeEntryDays = new ArrayList<>();
 
@@ -329,7 +396,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
             final List<TimeEntry> timeEntries = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = workingTimeCalendar.absence(date).orElse(List.of());
             final ShouldWorkingHours shouldWorkingHours = workingTimeCalendar.shouldWorkingHours(date).orElse(ShouldWorkingHours.ZERO);
-            timeEntryDays.add(new TimeEntryDay(locked, date, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
+
+            final WorkDuration workDuration = subtractBreakFromTimeEntrySettings
+                .map(settings -> workDurationCalculator.calculateWorkDuration(settings, timeEntries))
+                .orElseGet(() -> workDurationCalculator.calculateWorkDuration(timeEntries));
+
+            timeEntryDays.add(new TimeEntryDay(locked, date, workDuration, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
 
             date = date.minusDays(1);
         }

@@ -12,6 +12,7 @@ import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +53,7 @@ class OvertimeServiceImplTest {
         final LocalDate date = LocalDate.parse("2025-05-09");
 
         when(reportServiceRaw.getReportDayForAllUsers(date))
-           .thenReturn(new ReportDay(date, false, Map.of(), Map.of(), Map.of()));
+           .thenReturn(new ReportDay(date, false, Map.of(), Map.of(), Map.of(), Map.of()));
 
         final Map<UserIdComposite, OvertimeHours> actual = sut.getOvertimeForDate(date);
         assertThat(actual).isEmpty();
@@ -89,7 +90,7 @@ class OvertimeServiceImplTest {
             userIdCompositeRobin, workingTimeCalendarRobin
         );
 
-        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), false);
+        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), new WorkDuration(Duration.ofHours(12)), false);
         final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntries = Map.of(
             userIdCompositeBatman, List.of(reportDayBatman),
             userIdCompositeRobin, List.of()
@@ -101,7 +102,8 @@ class OvertimeServiceImplTest {
         );
 
         when(reportServiceRaw.getReportDayForAllUsers(date))
-            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, absences));
+            // TODO
+            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, Map.of(), absences));
 
         final Map<UserIdComposite, OvertimeHours> actual = sut.getOvertimeForDate(date);
         assertThat(actual).contains(
@@ -129,7 +131,7 @@ class OvertimeServiceImplTest {
             userIdCompositeBatman, workingTimeCalendarBatman
         );
 
-        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), false);
+        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), new WorkDuration(Duration.ofHours(12)), false);
         final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntries = Map.of(
             userIdCompositeBatman, List.of(reportDayBatman)
         );
@@ -139,7 +141,8 @@ class OvertimeServiceImplTest {
         );
 
         when(reportServiceRaw.getReportDayForAllUsers(date))
-            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, absences));
+            // TODO
+            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, Map.of(), absences));
 
         final OvertimeHours actual = sut.getOvertimeForDateAndUser(date, userLocalIdBatman);
         assertThat(actual).isEqualTo(new OvertimeHours(Duration.ofHours(4)));

@@ -1,11 +1,18 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
+
 import java.math.BigDecimal;
 
 import static java.math.RoundingMode.CEILING;
 
 public interface HasWorkedHoursRatio {
 
+    /**
+     * Calculates the {@link WorkDuration} of the day.
+     *
+     * @return {@link WorkDuration} of the day
+     */
     WorkDuration workDuration();
 
     ShouldWorkingHours shouldWorkingHours();

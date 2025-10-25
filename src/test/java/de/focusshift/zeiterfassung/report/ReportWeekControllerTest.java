@@ -15,6 +15,7 @@ import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.BeforeEach;
@@ -138,12 +139,14 @@ class ReportWeekControllerTest implements ControllerTest {
                 LocalDate.of(2023, 2, 4),
                 false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
+                Map.of(),
                 Map.of(userIdComposite, List.of())
             ),
             new ReportDay(
                 LocalDate.of(2023, 2, 5),
                 false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
+                Map.of(),
                 Map.of(userIdComposite, List.of())
             )
         ));
@@ -209,6 +212,7 @@ class ReportWeekControllerTest implements ControllerTest {
                 absenceDate,
                 false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
+                Map.of(),
                 Map.of(userIdComposite, List.of(
                     new ReportDayAbsence(user, absence)
                 ))
@@ -551,13 +555,16 @@ class ReportWeekControllerTest implements ControllerTest {
             date,
             false, Map.of(user.userIdComposite(), workingTimeCalendar),
             Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
+            Map.of(user.userIdComposite(), WorkDuration.EIGHT),
             Map.of(user.userIdComposite(), List.of())
         );
     }
 
     private ReportDayEntry reportDayEntry(User user, LocalDate date) {
         final long randomId = ThreadLocalRandom.current().nextLong();
-        return new ReportDayEntry(new TimeEntryId(randomId), user, "", date.atStartOfDay().plusHours(8).atZone(UTC), date.atStartOfDay().plusHours(16).atZone(UTC), false);
+        final ZonedDateTime start = date.atStartOfDay().plusHours(8).atZone(UTC);
+        final ZonedDateTime end = date.atStartOfDay().plusHours(16).atZone(UTC);
+        return new ReportDayEntry(new TimeEntryId(randomId), user, "", start, end, WorkDuration.EIGHT, false);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
