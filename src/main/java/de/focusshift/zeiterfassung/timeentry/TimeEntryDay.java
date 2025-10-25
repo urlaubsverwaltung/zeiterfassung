@@ -19,7 +19,7 @@ import java.util.List;
  * @param timeEntries         list of time entries
  * @param absences            list of absences. could be one FULL absence or two absences MORNING and NOON
  */
-record TimeEntryDay(
+public record TimeEntryDay(
     boolean locked,
     LocalDate date,
     WorkDuration workDuration,

@@ -7,6 +7,7 @@ import jakarta.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,34 +30,36 @@ public interface TimeEntryService {
      */
     Optional<TimeEntryHistory> findTimeEntryHistory(TimeEntryId id);
 
+    List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId);
+
     /**
-     * {@linkplain TimeEntry}s for the given criteria sorted by {@linkplain TimeEntry#start()}, newest is the first item.
+     * {@linkplain TimeEntryDay}s for the given criteria sorted by date, newest is the first item.
      *
      * @param from        first date of interval
      * @param toExclusive last date (exclusive) of interval
      * @param userLocalId to get {@linkplain TimeEntry}s for
      * @return sorted list of {@linkplain TimeEntry}s
      */
-    List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId);
+    List<TimeEntryDay> getTimeEntryDays(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId);
 
     /**
-     * {@linkplain TimeEntry}s for all given users and interval.
+     * {@linkplain TimeEntryDay}s for all given users and interval.
      *
      * @param from         first date of interval
      * @param toExclusive  last date (exclusive) of interval
      * @param userLocalIds {@linkplain UserLocalId}s of desired users
      * @return unsorted list of {@linkplain TimeEntry}s grouped by user
      */
-    Map<UserIdComposite, List<TimeEntry>> getEntries(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds);
+    Map<UserIdComposite, List<TimeEntryDay>> getTimeEntryDays(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds);
 
     /**
-     * {@linkplain TimeEntry}s for all users and the given interval.
+     * {@linkplain TimeEntryDay}s for all users and the given interval.
      *
      * @param from        first date of interval
      * @param toExclusive last date (exclusive) of interval
      * @return unsorted list of {@linkplain TimeEntry}s grouped by user
      */
-    Map<UserIdComposite, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive);
+    Map<UserIdComposite, List<TimeEntryDay>> getTimeEntryDaysForAllUsers(LocalDate from, LocalDate toExclusive);
 
     /**
      * {@linkplain TimeEntryWeekPage}s for the given user and week of year with sorted {@linkplain TimeEntry}s

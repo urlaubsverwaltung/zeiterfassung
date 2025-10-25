@@ -119,7 +119,7 @@ class ReportServicePermissionAware implements ReportService {
             .mapToObj(daysToAdd -> {
                 LocalDate date = startOfWeekDate.plusDays(daysToAdd);
                 boolean locked = timeEntryLockService.isLocked(date, settings);
-                return new ReportDay(date, locked, Map.of(), Map.of(), Map.of());
+                return new ReportDay(date, locked, Map.of(), Map.of(), Map.of(), Map.of());
             })
             .toList();
 

@@ -139,12 +139,14 @@ class ReportWeekControllerTest implements ControllerTest {
                 LocalDate.of(2023, 2, 4),
                 false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
+                Map.of(),
                 Map.of(userIdComposite, List.of())
             ),
             new ReportDay(
                 LocalDate.of(2023, 2, 5),
                 false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
+                Map.of(),
                 Map.of(userIdComposite, List.of())
             )
         ));
@@ -210,6 +212,7 @@ class ReportWeekControllerTest implements ControllerTest {
                 absenceDate,
                 false, Map.of(userIdComposite, workingTimeCalendar),
                 Map.of(userIdComposite, List.of()),
+                Map.of(),
                 Map.of(userIdComposite, List.of(
                     new ReportDayAbsence(user, absence)
                 ))
@@ -552,6 +555,7 @@ class ReportWeekControllerTest implements ControllerTest {
             date,
             false, Map.of(user.userIdComposite(), workingTimeCalendar),
             Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
+            Map.of(user.userIdComposite(), WorkDuration.EIGHT),
             Map.of(user.userIdComposite(), List.of())
         );
     }

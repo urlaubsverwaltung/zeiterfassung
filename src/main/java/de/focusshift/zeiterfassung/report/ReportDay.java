@@ -8,11 +8,9 @@ import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -26,6 +24,7 @@ import static java.util.stream.Collectors.toMap;
  * @param locked                    true if date is locked for adding/editing time entries
  * @param workingTimeCalendarByUser {@linkplain WorkingTimeCalendar} for all relevant users
  * @param reportDayEntriesByUser    {@linkplain ReportDayEntry entries} for all relevant users
+ * @param workDurationByUser        {@linkplain WorkDuration} for all relevant users
  * @param detailDayAbsencesByUser   {@linkplain ReportDayAbsence absences} for all relevant users
  */
 public record ReportDay(
@@ -33,6 +32,7 @@ public record ReportDay(
     boolean locked,
     Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser,
     Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser,
+    Map<UserIdComposite, WorkDuration> workDurationByUser,
     Map<UserIdComposite, List<ReportDayAbsence>> detailDayAbsencesByUser
 ) implements HasWorkDurationByUser {
 
@@ -70,35 +70,6 @@ public record ReportDay(
     }
 
     public WorkDuration workDuration() {
-
-        final Stream<ReportDayEntry> allReportDayEntries = reportDayEntriesByUser.values()
-            .stream()
-            .flatMap(Collection::stream);
-
-        return calculateWorkDurationFrom(allReportDayEntries);
-    }
-
-    public Map<UserIdComposite, WorkDuration> workDurationByUser() {
-
-        final HashMap<UserIdComposite, WorkDuration> workDurationByUser = new HashMap<>();
-
-        for (Map.Entry<UserIdComposite, List<ReportDayEntry>> entry : reportDayEntriesByUser.entrySet()) {
-            final UserIdComposite id = entry.getKey();
-            final List<ReportDayEntry> reportDayEntries = entry.getValue();
-
-            final WorkDuration workDuration = reportDayEntries.stream()
-                .map(ReportDayEntry::workDuration)
-                .reduce(WorkDuration.ZERO, WorkDuration::plus);
-
-            workDurationByUser.put(id, workDuration);
-        }
-
-        return workDurationByUser;
-    }
-
-    private WorkDuration calculateWorkDurationFrom(Stream<ReportDayEntry> reportDayEntries) {
-        return reportDayEntries
-            .map(ReportDayEntry::workDuration)
-            .reduce(WorkDuration.ZERO, WorkDuration::plus);
+        return workDurationByUser.values().stream().reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
 }

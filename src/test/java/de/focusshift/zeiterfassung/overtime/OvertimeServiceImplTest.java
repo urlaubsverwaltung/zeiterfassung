@@ -53,7 +53,7 @@ class OvertimeServiceImplTest {
         final LocalDate date = LocalDate.parse("2025-05-09");
 
         when(reportServiceRaw.getReportDayForAllUsers(date))
-           .thenReturn(new ReportDay(date, false, Map.of(), Map.of(), Map.of()));
+           .thenReturn(new ReportDay(date, false, Map.of(), Map.of(), Map.of(), Map.of()));
 
         final Map<UserIdComposite, OvertimeHours> actual = sut.getOvertimeForDate(date);
         assertThat(actual).isEmpty();
@@ -102,7 +102,8 @@ class OvertimeServiceImplTest {
         );
 
         when(reportServiceRaw.getReportDayForAllUsers(date))
-            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, absences));
+            // TODO
+            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, Map.of(), absences));
 
         final Map<UserIdComposite, OvertimeHours> actual = sut.getOvertimeForDate(date);
         assertThat(actual).contains(
@@ -140,7 +141,8 @@ class OvertimeServiceImplTest {
         );
 
         when(reportServiceRaw.getReportDayForAllUsers(date))
-            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, absences));
+            // TODO
+            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, Map.of(), absences));
 
         final OvertimeHours actual = sut.getOvertimeForDateAndUser(date, userLocalIdBatman);
         assertThat(actual).isEqualTo(new OvertimeHours(Duration.ofHours(4)));

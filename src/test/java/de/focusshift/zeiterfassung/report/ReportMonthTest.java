@@ -77,20 +77,20 @@ class ReportMonthTest {
 
         return new ReportWeek(firstDateOfWeek, List.of(
             // january
-            new ReportDay(firstDateOfWeek, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of()),
-            new ReportDay(tuesday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of()),
+            new ReportDay(firstDateOfWeek, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of(), Map.of()),
+            new ReportDay(tuesday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of(), Map.of()),
             // february
             new ReportDay(wednesday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of(
                 new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(wednesday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(wednesday, timeEnd), UTC), workDuration, false)
-            )), Map.of()),
+            )), Map.of(), Map.of()),
             new ReportDay(thursday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of(
                 new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(thursday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(thursday, timeEnd), UTC), workDuration, false)
-            )), Map.of()),
+            )), Map.of(), Map.of()),
             new ReportDay(friday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of(
                 new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(friday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(friday, timeEnd), UTC), workDuration, false)
-            )), Map.of()),
-            new ReportDay(saturday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of()),
-            new ReportDay(sunday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of())
+            )), Map.of(), Map.of()),
+            new ReportDay(saturday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of(), Map.of()),
+            new ReportDay(sunday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of(), Map.of())
         ));
     }
 
@@ -123,21 +123,21 @@ class ReportMonthTest {
         return new ReportWeek(firstDateOfWeek, List.of(
             new ReportDay(firstDateOfWeek, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of(
                 new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(firstDateOfWeek, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(firstDateOfWeek, timeEnd), UTC), workDuration, false)
-            )), Map.of()),
+            )), Map.of(), Map.of()),
             new ReportDay(tuesday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of(
                 new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(tuesday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(tuesday, timeEnd), UTC), workDuration, false)
-            )), Map.of()),
+            )), Map.of(), Map.of()),
             new ReportDay(wednesday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of(
                 new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(wednesday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(wednesday, timeEnd), UTC), workDuration, false)
-            )), Map.of()),
+            )), Map.of(), Map.of()),
             new ReportDay(thursday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of(
                 new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(thursday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(thursday, timeEnd), UTC), workDuration, false)
-            )), Map.of()),
+            )), Map.of(), Map.of()),
             new ReportDay(friday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of(
                 new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(friday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(friday, timeEnd), UTC), workDuration, false)
-            )), Map.of()),
-            new ReportDay(saturday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of()),
-            new ReportDay(sunday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of())
+            )), Map.of(), Map.of()),
+            new ReportDay(saturday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of(), Map.of()),
+            new ReportDay(sunday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of(), Map.of())
         ));
     }
 
@@ -171,16 +171,16 @@ class ReportMonthTest {
             // february
             new ReportDay(firstDateOfWeek, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of(
                 new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(wednesday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(wednesday, timeEnd), UTC), workDuration, false)
-            )), Map.of()),
+            )), Map.of(), Map.of()),
             new ReportDay(tuesday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of(
                 new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(wednesday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(wednesday, timeEnd), UTC), workDuration, false)
-            )), Map.of()),
+            )), Map.of(), Map.of()),
             // march
-            new ReportDay(wednesday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of()),
-            new ReportDay(thursday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of()),
-            new ReportDay(friday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of()),
-            new ReportDay(saturday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of()),
-            new ReportDay(sunday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of())
+            new ReportDay(wednesday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of(), Map.of()),
+            new ReportDay(thursday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of(), Map.of()),
+            new ReportDay(friday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of(), Map.of()),
+            new ReportDay(saturday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of(), Map.of()),
+            new ReportDay(sunday, false, workingTimeCalendarByUser, Map.of(user.userIdComposite(), List.of()), Map.of(), Map.of())
         ));
     }
 }
