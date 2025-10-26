@@ -120,15 +120,12 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
 
     private List<TimeEntryDay> getTimeEntryDays(LocalDate from, LocalDate toExclusive, ZoneId zoneIdPivot, UserLocalId userLocalId) {
 
-        final List<TimeEntry> allTimeEntries = timeEntryService.getEntries(from, toExclusive, userLocalId);
-
-        final Map<LocalDate, List<TimeEntry>> byDate = allTimeEntries.stream()
-            .collect(groupingBy(timeEntry -> timeEntry.start().toLocalDate()));
+        final List<TimeEntry> timeEntries = timeEntryService.getEntries(from, toExclusive, userLocalId);
 
         final WorkingTimeCalendar workingTimeCalender =
             workingTimeCalendarService.getWorkingTimeCalender(from, toExclusive, userLocalId);
 
-        return createTimeEntryDays(from, toExclusive, byDate, workingTimeCalender, zoneIdPivot);
+        return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalender, zoneIdPivot);
     }
 
     private User findUser(UserLocalId userLocalId) {
@@ -146,9 +143,9 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
             Map.Entry::getKey,
             entry -> {
                 final UserIdComposite userIdComposite = entry.getKey();
-                final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = groupByDate(entry.getValue(), zoneIdPivot);
+                final List<TimeEntry> timeEntries = entry.getValue();
                 final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarByUser.get(userIdComposite);
-                return createTimeEntryDays(from, toExclusive, timeEntriesByDate, workingTimeCalendar, zoneIdPivot);
+                return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalendar, zoneIdPivot);
             }
         ));
     }
@@ -158,7 +155,7 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
     }
 
     private List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,
-                                                   Map<LocalDate, List<TimeEntry>> timeEntriesByDate,
+                                                   List<TimeEntry> allTimeEntries,
                                                    WorkingTimeCalendar workingTimeCalendar,
                                                    ZoneId zoneIdPivot) {
         // TODO inject me
@@ -167,6 +164,8 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
         // TODO inject me
         final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
             subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
+
+        final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = groupByDate(allTimeEntries, zoneIdPivot);
 
         final List<TimeEntryDay> timeEntryDays = new ArrayList<>();
 
@@ -180,15 +179,15 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
 
             final boolean locked = isDateLocked(date, minValidTimeEntryDate);
 
-            final List<TimeEntry> timeEntries = timeEntriesByDate.getOrDefault(date, List.of());
+            final List<TimeEntry> timeEntriesForDate = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = workingTimeCalendar.absence(date).orElse(List.of());
             final ShouldWorkingHours shouldWorkingHours = workingTimeCalendar.shouldWorkingHours(date).orElse(ShouldWorkingHours.ZERO);
 
             final WorkDuration workDuration = subtractBreakFromTimeEntrySettings
-                .map(settings -> workDurationCalculator.calculateWorkDuration(settings, timeEntries))
-                .orElseGet(() -> workDurationCalculator.calculateWorkDuration(timeEntries));
+                .map(settings -> workDurationCalculator.calculateWorkDuration(settings, timeEntriesForDate))
+                .orElseGet(() -> workDurationCalculator.calculateWorkDuration(timeEntriesForDate));
 
-            timeEntryDays.add(new TimeEntryDay(locked, date, workDuration, plannedWorkingHours, shouldWorkingHours, timeEntries, absences));
+            timeEntryDays.add(new TimeEntryDay(locked, date, workDuration, plannedWorkingHours, shouldWorkingHours, timeEntriesForDate, absences));
 
             date = date.minusDays(1);
         }

@@ -32,10 +32,15 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TimeEntryDayServiceImplTest {
+
+    private static final ZoneId EUROPE_BERLIN = ZoneId.of("Europe/Berlin");
+    private static final WorkDuration WORK_1H = new WorkDuration(Duration.ofHours(1));
+    private static final WorkDuration WORK_2H = new WorkDuration(Duration.ofHours(2));
 
     private TimeEntryDayServiceImpl sut;
 
@@ -63,6 +68,227 @@ class TimeEntryDayServiceImplTest {
         sut = new TimeEntryDayServiceImpl(timeEntryService, timeEntryLockService, workDurationCalculationService,
             workingTimeCalendarService, userManagementService, userSettingsProvider, userDateService,
             subtractBreakFromTimeEntrySettingsService, timeEntryRepository);
+    }
+
+    @Nested
+    class GetTimeEntryDaysForOneUser {
+
+        @Test
+        void ensureTimeEntryDays() {
+
+            when(userSettingsProvider.zoneId()).thenReturn(EUROPE_BERLIN);
+
+            final LocalDate from = LocalDate.parse("2025-10-26");
+            final LocalDate toExclusive = LocalDate.parse("2025-10-27");
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), userLocalId);
+
+            final ZonedDateTime timeEntryStart = ZonedDateTime.parse("2025-10-26T09:00:00.00Z");
+            final ZonedDateTime timeEntryEnd = ZonedDateTime.parse("2025-10-26T10:00:00.00Z");
+            final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "", timeEntryStart, timeEntryEnd, false);
+            when(timeEntryService.getEntries(from, toExclusive, userLocalId)).thenReturn(List.of(timeEntry));
+
+            when(workingTimeCalendarService.getWorkingTimeCalender(from, toExclusive, userLocalId)).thenReturn(
+                new WorkingTimeCalendar(Map.of(from, PlannedWorkingHours.EIGHT), Map.of())
+            );
+
+            when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry))).thenReturn(WORK_1H);
+
+            final List<TimeEntryDay> actual = sut.getTimeEntryDays(from, toExclusive, userLocalId);
+            assertThat(actual).containsExactly(
+                new TimeEntryDay(false, LocalDate.parse("2025-10-26"), WORK_1H, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of())
+            );
+        }
+
+        @Test
+        void ensureTimeEntryDaysAreSortedByDateDescending() {
+
+            when(userSettingsProvider.zoneId()).thenReturn(EUROPE_BERLIN);
+
+            final LocalDate from = LocalDate.parse("2025-10-26");
+            final LocalDate toExclusive = LocalDate.parse("2025-10-28");
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+
+            when(timeEntryService.getEntries(from, toExclusive, userLocalId)).thenReturn(List.of());
+
+            when(workingTimeCalendarService.getWorkingTimeCalender(from, toExclusive, userLocalId)).thenReturn(
+                new WorkingTimeCalendar(Map.of(from, PlannedWorkingHours.EIGHT, from.plusDays(1), PlannedWorkingHours.EIGHT), Map.of())
+            );
+
+            when(workDurationCalculationService.calculateWorkDuration(anyList())).thenReturn(WorkDuration.EIGHT);
+
+            final List<TimeEntryDay> actual = sut.getTimeEntryDays(from, toExclusive, userLocalId);
+            assertThat(actual).satisfiesExactly(
+                day -> assertThat(day.date()).isEqualTo(LocalDate.parse("2025-10-27")),
+                day -> assertThat(day.date()).isEqualTo(LocalDate.parse("2025-10-26"))
+            );
+        }
+    }
+
+    @Nested
+    class GetTimeEntryDaysForMoreUsers {
+
+        @Test
+        void ensureTimeEntryDays() {
+
+            when(userSettingsProvider.zoneId()).thenReturn(EUROPE_BERLIN);
+
+            final LocalDate from = LocalDate.parse("2025-10-26");
+            final LocalDate toExclusive = LocalDate.parse("2025-10-27");
+
+            final UserLocalId userLocalId1 = new UserLocalId(1L);
+            final UserLocalId userLocalId2 = new UserLocalId(2L);
+            final UserIdComposite userIdComposite1 = new UserIdComposite(new UserId("batman"), userLocalId1);
+            final UserIdComposite userIdComposite2 = new UserIdComposite(new UserId("robin"), userLocalId2);
+
+            final ZonedDateTime timeEntry1Start = ZonedDateTime.parse("2025-10-26T09:00:00.00Z");
+            final ZonedDateTime timeEntry1End = ZonedDateTime.parse("2025-10-26T10:00:00.00Z");
+            final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(1L), userIdComposite1, "", timeEntry1Start, timeEntry1End, false);
+
+            final ZonedDateTime timeEntry2Start = ZonedDateTime.parse("2025-10-26T15:00:00.00Z");
+            final ZonedDateTime timeEntry2End = ZonedDateTime.parse("2025-10-26T17:00:00.00Z");
+            final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite2, "", timeEntry2Start, timeEntry2End, false);
+
+            when(timeEntryService.getEntries(from, toExclusive, List.of(userLocalId1, userLocalId2)))
+                .thenReturn(Map.of(
+                    userIdComposite1, List.of(timeEntry1),
+                    userIdComposite2, List.of(timeEntry2)
+                ));
+
+            when(workingTimeCalendarService.getWorkingTimeCalendarForUsers(from, toExclusive, List.of(userLocalId1, userLocalId2)))
+                .thenReturn(Map.of(
+                    userIdComposite1, new WorkingTimeCalendar(Map.of(from, PlannedWorkingHours.EIGHT), Map.of()),
+                    userIdComposite2, new WorkingTimeCalendar(Map.of(from, PlannedWorkingHours.EIGHT), Map.of())
+                ));
+
+            when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry1))).thenReturn(WORK_1H);
+            when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry2))).thenReturn(WORK_2H);
+
+            final Map<UserIdComposite, List<TimeEntryDay>> actual = sut.getTimeEntryDays(from, toExclusive, List.of(userLocalId1, userLocalId2));
+            assertThat(actual).containsAllEntriesOf(Map.of(
+                userIdComposite1, List.of(new TimeEntryDay(false, LocalDate.parse("2025-10-26"), WORK_1H, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry1), List.of())),
+                userIdComposite2, List.of(new TimeEntryDay(false, LocalDate.parse("2025-10-26"), WORK_2H, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry2), List.of()))
+            ));
+        }
+
+        @Test
+        void ensureTimeEntryDaysAreSortedByDateDescending() {
+
+            when(userSettingsProvider.zoneId()).thenReturn(EUROPE_BERLIN);
+
+            final LocalDate from = LocalDate.parse("2025-10-26");
+            final LocalDate toExclusive = LocalDate.parse("2025-10-28");
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), userLocalId);
+
+            final ZonedDateTime timeEntryStart = ZonedDateTime.parse("2025-10-26T09:00:00.00Z");
+            final ZonedDateTime timeEntryEnd = ZonedDateTime.parse("2025-10-26T10:00:00.00Z");
+            final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "", timeEntryStart, timeEntryEnd, false);
+
+            when(timeEntryService.getEntries(from, toExclusive, List.of(userLocalId)))
+                .thenReturn(Map.of(userIdComposite, List.of(timeEntry)));
+
+            when(workingTimeCalendarService.getWorkingTimeCalendarForUsers(from, toExclusive, List.of(userLocalId)))
+                .thenReturn(Map.of(
+                    userIdComposite, new WorkingTimeCalendar(Map.of(from, PlannedWorkingHours.EIGHT, from.plusDays(1), PlannedWorkingHours.EIGHT), Map.of())
+                ));
+
+            when(workDurationCalculationService.calculateWorkDuration(List.of())).thenReturn(WorkDuration.ZERO);
+            when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry))).thenReturn(WORK_1H);
+
+            final Map<UserIdComposite, List<TimeEntryDay>> actual = sut.getTimeEntryDays(from, toExclusive, List.of(userLocalId));
+            assertThat(actual).containsAllEntriesOf(Map.of(
+                userIdComposite, List.of(
+                    new TimeEntryDay(false, LocalDate.parse("2025-10-27"), WorkDuration.ZERO, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of()),
+                    new TimeEntryDay(false, LocalDate.parse("2025-10-26"), WORK_1H, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of())
+                )
+            ));
+        }
+    }
+
+    @Nested
+    class GetTimeEntryDaysForAllUsers {
+
+        @Test
+        void ensureTimeEntryDays() {
+
+            when(userSettingsProvider.zoneId()).thenReturn(EUROPE_BERLIN);
+
+            final LocalDate from = LocalDate.parse("2025-10-26");
+            final LocalDate toExclusive = LocalDate.parse("2025-10-27");
+
+            final UserLocalId userLocalId1 = new UserLocalId(1L);
+            final UserLocalId userLocalId2 = new UserLocalId(2L);
+            final UserIdComposite userIdComposite1 = new UserIdComposite(new UserId("batman"), userLocalId1);
+            final UserIdComposite userIdComposite2 = new UserIdComposite(new UserId("robin"), userLocalId2);
+
+            final ZonedDateTime timeEntry1Start = ZonedDateTime.parse("2025-10-26T09:00:00.00Z");
+            final ZonedDateTime timeEntry1End = ZonedDateTime.parse("2025-10-26T10:00:00.00Z");
+            final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(1L), userIdComposite1, "", timeEntry1Start, timeEntry1End, false);
+
+            final ZonedDateTime timeEntry2Start = ZonedDateTime.parse("2025-10-26T15:00:00.00Z");
+            final ZonedDateTime timeEntry2End = ZonedDateTime.parse("2025-10-26T17:00:00.00Z");
+            final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite2, "", timeEntry2Start, timeEntry2End, false);
+
+            when(timeEntryService.getEntriesForAllUsers(from, toExclusive))
+                .thenReturn(Map.of(
+                    userIdComposite1, List.of(timeEntry1),
+                    userIdComposite2, List.of(timeEntry2)
+                ));
+
+            when(workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(from, toExclusive))
+                .thenReturn(Map.of(
+                    userIdComposite1, new WorkingTimeCalendar(Map.of(from, PlannedWorkingHours.EIGHT), Map.of()),
+                    userIdComposite2, new WorkingTimeCalendar(Map.of(from, PlannedWorkingHours.EIGHT), Map.of())
+                ));
+
+            when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry1))).thenReturn(WORK_1H);
+            when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry2))).thenReturn(WORK_2H);
+
+            final Map<UserIdComposite, List<TimeEntryDay>> actual = sut.getTimeEntryDaysForAllUsers(from, toExclusive);
+            assertThat(actual).containsAllEntriesOf(Map.of(
+                userIdComposite1, List.of(new TimeEntryDay(false, LocalDate.parse("2025-10-26"), WORK_1H, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry1), List.of())),
+                userIdComposite2, List.of(new TimeEntryDay(false, LocalDate.parse("2025-10-26"), WORK_2H, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry2), List.of()))
+            ));
+        }
+
+        @Test
+        void ensureTimeEntryDaysAreSortedByDateDescending() {
+
+            when(userSettingsProvider.zoneId()).thenReturn(EUROPE_BERLIN);
+
+            final LocalDate from = LocalDate.parse("2025-10-26");
+            final LocalDate toExclusive = LocalDate.parse("2025-10-28");
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), userLocalId);
+
+            final ZonedDateTime timeEntryStart = ZonedDateTime.parse("2025-10-26T09:00:00.00Z");
+            final ZonedDateTime timeEntryEnd = ZonedDateTime.parse("2025-10-26T10:00:00.00Z");
+            final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "", timeEntryStart, timeEntryEnd, false);
+
+            when(timeEntryService.getEntriesForAllUsers(from, toExclusive))
+                .thenReturn(Map.of(userIdComposite, List.of(timeEntry)));
+
+            when(workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(from, toExclusive))
+                .thenReturn(Map.of(
+                    userIdComposite, new WorkingTimeCalendar(Map.of(from, PlannedWorkingHours.EIGHT, from.plusDays(1), PlannedWorkingHours.EIGHT), Map.of())
+                ));
+
+            when(workDurationCalculationService.calculateWorkDuration(List.of())).thenReturn(WorkDuration.ZERO);
+            when(workDurationCalculationService.calculateWorkDuration(List.of(timeEntry))).thenReturn(WORK_1H);
+
+            final Map<UserIdComposite, List<TimeEntryDay>> actual = sut.getTimeEntryDaysForAllUsers(from, toExclusive);
+            assertThat(actual).containsAllEntriesOf(Map.of(
+                userIdComposite, List.of(
+                    new TimeEntryDay(false, LocalDate.parse("2025-10-27"), WorkDuration.ZERO, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of()),
+                    new TimeEntryDay(false, LocalDate.parse("2025-10-26"), WORK_1H, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of())
+                )
+            ));
+        }
     }
 
     @Nested
