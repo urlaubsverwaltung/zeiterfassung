@@ -174,12 +174,14 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
         return timeEntries.stream().collect(groupingBy(timeEntry -> timeEntry.start().withZoneSameInstant(zoneIdPivot).toLocalDate()));
     }
 
-    private List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,
-                                                   List<TimeEntry> allTimeEntries,
-                                                   WorkingTimeCalendar workingTimeCalendar,
-                                                   Predicate<LocalDate> isDateLocked,
-                                                   Function<Collection<TimeEntry>, WorkDuration> calculateWorkDuration,
-                                                   ZoneId zoneIdPivot) {
+    private List<TimeEntryDay> createTimeEntryDays(
+        LocalDate from, LocalDate toExclusive,
+        List<TimeEntry> allTimeEntries,
+        WorkingTimeCalendar workingTimeCalendar,
+        Predicate<LocalDate> isDateLocked,
+        Function<Collection<TimeEntry>, WorkDuration> calculateWorkDuration,
+        ZoneId zoneIdPivot
+    ) {
 
         final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = groupByDate(allTimeEntries, zoneIdPivot);
 
