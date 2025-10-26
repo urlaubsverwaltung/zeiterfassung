@@ -9,11 +9,14 @@ import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
+import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -37,7 +40,7 @@ class TimeEntryServiceIT extends SingleTenantTestContainersBase {
     private TimeEntryRepository repository;
 
     @Test
-    void ensureGetTimeEntriesConsideringTimeZones() {
+    void ensureGetTimeEntriesConsideringTimeZone() {
 
         final User user = createAnyUser();
 
@@ -61,11 +64,20 @@ class TimeEntryServiceIT extends SingleTenantTestContainersBase {
         // and it has to return the created Europe/Berlin since it touches the requested date.
         final LocalDate requestedStart = LocalDate.parse("2025-06-05");
         final LocalDate requestedEndExclusive = LocalDate.parse("2025-06-07");
-        final Map<UserIdComposite, List<TimeEntry>> actual = timeEntryService.getEntriesForAllUsers(requestedStart, requestedEndExclusive);
+        final Map<UserIdComposite, List<TimeEntryDay>> actual = timeEntryService.getTimeEntryDaysForAllUsers(requestedStart, requestedEndExclusive);
 
-        assertThat(actual).contains(Map.entry(user.userIdComposite(), List.of(timeEntry3ValidUtc, timeEntry2Valid, timeEntry1Valid)));
+        assertThat(actual.get(user.userIdComposite())).containsExactly(
+            new TimeEntryDay(false, LocalDate.parse("2025-06-06"), new WorkDuration(Duration.ofHours(6).plusMinutes(30)), PlannedWorkingHours.ZERO, ShouldWorkingHours.ZERO,
+                List.of(timeEntry3ValidUtc, timeEntry2Valid),
+                List.of()
+            ),
+            new TimeEntryDay(false, LocalDate.parse("2025-06-05"), new WorkDuration(Duration.ofHours(2)), PlannedWorkingHours.ZERO, ShouldWorkingHours.ZERO,
+                List.of(timeEntry1Valid),
+                List.of()
+            )
+        );
 
-        // just ensure timeEntries exist
+        // just ensure all timeEntries exist
         assertThat(repository.findAll()).hasSize(4);
     }
 

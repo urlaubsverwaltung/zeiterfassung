@@ -39,6 +39,7 @@ import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,6 +152,65 @@ class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
+    public List<TimeEntryDay> getTimeEntryDays(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId) {
+
+        final ZoneId zoneIdPivot = userSettingsProvider.zoneId();
+
+        final List<TimeEntry> allTimeEntries = getEntries(from, toExclusive, userLocalId);
+
+        final Map<LocalDate, List<TimeEntry>> byDate = allTimeEntries.stream()
+            .collect(groupingBy(timeEntry -> timeEntry.start().toLocalDate()));
+
+        final WorkingTimeCalendar workingTimeCalender =
+            workingTimeCalendarService.getWorkingTimeCalender(from, toExclusive, userLocalId);
+
+        return createTimeEntryDays(from, toExclusive, byDate, workingTimeCalender, zoneIdPivot);
+    }
+
+    @Override
+    public Map<UserIdComposite, List<TimeEntryDay>> getTimeEntryDays(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
+
+        final ZoneId zoneIdPivot = userSettingsProvider.zoneId();
+
+        final Map<UserIdComposite, List<TimeEntry>> allTimeEntriesByUser = getEntries(from, toExclusive, userLocalIds);
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser = workingTimeCalendarService.getWorkingTimeCalendarForUsers(from, toExclusive, userLocalIds);
+
+        return toTimeEntryDaysByUser(from, toExclusive, allTimeEntriesByUser, workingTimeCalendarByUser, zoneIdPivot);
+    }
+
+    @Override
+    public Map<UserIdComposite, List<TimeEntryDay>> getTimeEntryDaysForAllUsers(LocalDate from, LocalDate toExclusive) {
+
+        final ZoneId zoneIdPivot = userSettingsProvider.zoneId();
+
+        final Map<UserIdComposite, List<TimeEntry>> allTimeEntriesByUser = getEntriesForAllUsers(from, toExclusive);
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser = workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(from, toExclusive);
+
+        return toTimeEntryDaysByUser(from, toExclusive, allTimeEntriesByUser, workingTimeCalendarByUser, zoneIdPivot);
+    }
+
+    private Map<UserIdComposite, List<TimeEntryDay>> toTimeEntryDaysByUser(
+        LocalDate from, LocalDate toExclusive,
+        Map<UserIdComposite, List<TimeEntry>> timeEntriesByUser,
+        Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser,
+        ZoneId zoneIdPivot
+    ) {
+        return timeEntriesByUser.entrySet().stream().collect(toMap(
+            Map.Entry::getKey,
+            entry -> {
+                final UserIdComposite userIdComposite = entry.getKey();
+                final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = groupByDate(entry.getValue(), zoneIdPivot);
+                final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarByUser.get(userIdComposite);
+                return createTimeEntryDays(from, toExclusive, timeEntriesByDate, workingTimeCalendar, zoneIdPivot);
+            }
+        ));
+    }
+
+    private Map<LocalDate, List<TimeEntry>> groupByDate(List<TimeEntry> timeEntries, ZoneId zoneIdPivot) {
+        return timeEntries.stream().collect(groupingBy(timeEntry -> timeEntry.start().withZoneSameInstant(zoneIdPivot).toLocalDate()));
+    }
+
+    @Override
     public List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId) {
 
         final User user = findUser(userLocalId);
@@ -166,8 +226,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .toList();
     }
 
-    @Override
-    public Map<UserIdComposite, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive) {
+    private Map<UserIdComposite, List<TimeEntry>> getEntriesForAllUsers(LocalDate from, LocalDate toExclusive) {
 
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
@@ -182,8 +241,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
             .collect(groupingBy(TimeEntry::userIdComposite));
     }
 
-    @Override
-    public Map<UserIdComposite, List<TimeEntry>> getEntries(LocalDate from, LocalDate toExclusive, List<UserLocalId> userLocalIds) {
+    private Map<UserIdComposite, List<TimeEntry>> getEntries(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
 
         final Instant fromInstant = toInstant(from);
         final Instant toInstant = toInstant(toExclusive);
@@ -212,26 +270,27 @@ class TimeEntryServiceImpl implements TimeEntryService {
     @Override
     public TimeEntryWeekPage getEntryWeekPage(UserLocalId userLocalId, int year, int weekOfYear) {
 
+        final ZoneId zoneIdPivot = userSettingsProvider.zoneId();
+
         final User user = findUser(userLocalId);
         final UserId userId = user.userIdComposite().id();
 
-        final ZoneId userZoneId = userSettingsProvider.zoneId();
-        final ZonedDateTime fromDateTime = userDateService.firstDayOfWeek(Year.of(year), weekOfYear).atStartOfDay(userZoneId);
+        final ZonedDateTime fromDateTime = userDateService.firstDayOfWeek(Year.of(year), weekOfYear).atStartOfDay(zoneIdPivot);
         final ZonedDateTime toDateTimeExclusive = fromDateTime.plusWeeks(1);
-        final LocalDate fromLocalDate = LocalDate.ofInstant(fromDateTime.toInstant(), userZoneId);
-        final LocalDate toLocalDateExclusive = LocalDate.ofInstant(toDateTimeExclusive.toInstant(), userZoneId);
+        final LocalDate fromLocalDate = LocalDate.ofInstant(fromDateTime.toInstant(), zoneIdPivot);
+        final LocalDate toLocalDateExclusive = LocalDate.ofInstant(toDateTimeExclusive.toInstant(), zoneIdPivot);
         final Instant from = Instant.from(fromDateTime);
         final Instant toExclusive = Instant.from(toDateTimeExclusive);
 
         final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(userId.value(), from, toExclusive)
             .stream()
             .map(timeEntryEntity -> toTimeEntry(timeEntryEntity, user))
-            .collect(groupingBy(entry -> LocalDate.ofInstant(entry.start().toInstant(), userZoneId)));
+            .collect(groupingBy(entry -> LocalDate.ofInstant(entry.start().toInstant(), zoneIdPivot)));
 
         final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarService
             .getWorkingTimeCalender(fromLocalDate, toLocalDateExclusive, userLocalId);
 
-        final List<TimeEntryDay> daysOfWeek = createTimeEntryDays(fromLocalDate, toLocalDateExclusive, timeEntriesByDate, workingTimeCalendar);
+        final List<TimeEntryDay> daysOfWeek = createTimeEntryDays(fromLocalDate, toLocalDateExclusive, timeEntriesByDate, workingTimeCalendar, zoneIdPivot);
 
         final PlannedWorkingHours weekPlannedHours = workingTimeCalendar
             .plannedWorkingHours(fromLocalDate, toLocalDateExclusive);
@@ -319,11 +378,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     private List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,
                                                    Map<LocalDate, List<TimeEntry>> timeEntriesByDate,
-                                                   WorkingTimeCalendar workingTimeCalendar) {
+                                                   WorkingTimeCalendar workingTimeCalendar,
+                                                   ZoneId zoneIdPivot) {
+        // TODO inject me
+        final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(zoneIdPivot);
 
-        final ZoneId userZoneId = userSettingsProvider.zoneId();
-        final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(userZoneId);
-
+        // TODO inject me
         final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
             subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
 

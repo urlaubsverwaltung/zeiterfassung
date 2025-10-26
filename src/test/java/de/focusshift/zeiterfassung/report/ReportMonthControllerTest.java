@@ -572,12 +572,14 @@ class ReportMonthControllerTest implements ControllerTest {
                 firstDateOfWeek.plusDays(5),
                 false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(5), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(5), List.of()))),
                 Map.of(user.userIdComposite(), List.of()),
+                Map.of(),
                 Map.of(user.userIdComposite(), List.of())
             ),
             new ReportDay(
                 firstDateOfWeek.plusDays(6),
                 false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(6), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(6), List.of()))),
                 Map.of(user.userIdComposite(), List.of()),
+                Map.of(),
                 Map.of(user.userIdComposite(), List.of())
             ))
         );
@@ -588,6 +590,7 @@ class ReportMonthControllerTest implements ControllerTest {
             date,
             false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.EIGHT), Map.of(date, List.of()))),
             Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
+            Map.of(user.userIdComposite(), WorkDuration.EIGHT),
             Map.of(user.userIdComposite(), List.of())
         );
     }
@@ -597,6 +600,7 @@ class ReportMonthControllerTest implements ControllerTest {
             date,
             false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.ZERO), Map.of(date, List.of()))),
             Map.of(user.userIdComposite(), List.of()),
+            Map.of(user.userIdComposite(), WorkDuration.ZERO),
             Map.of(user.userIdComposite(), List.of())
         );
     }

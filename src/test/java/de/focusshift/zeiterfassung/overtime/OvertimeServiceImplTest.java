@@ -37,6 +37,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class OvertimeServiceImplTest {
 
+    private static final WorkDuration WORK_12H = new WorkDuration(Duration.ofHours(12));
+
     private OvertimeServiceImpl sut;
 
     @Mock
@@ -53,7 +55,7 @@ class OvertimeServiceImplTest {
         final LocalDate date = LocalDate.parse("2025-05-09");
 
         when(reportServiceRaw.getReportDayForAllUsers(date))
-           .thenReturn(new ReportDay(date, false, Map.of(), Map.of(), Map.of()));
+           .thenReturn(new ReportDay(date, false, Map.of(), Map.of(), Map.of(), Map.of()));
 
         final Map<UserIdComposite, OvertimeHours> actual = sut.getOvertimeForDate(date);
         assertThat(actual).isEmpty();
@@ -90,10 +92,17 @@ class OvertimeServiceImplTest {
             userIdCompositeRobin, workingTimeCalendarRobin
         );
 
-        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), new WorkDuration(Duration.ofHours(12)), false);
+        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), WORK_12H, false);
         final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntries = Map.of(
             userIdCompositeBatman, List.of(reportDayBatman),
             userIdCompositeRobin, List.of()
+        );
+
+        final Map<UserIdComposite, WorkDuration> workDurations = Map.of(
+            // this is of interest for overtime calculation. NOT the ReportDayEntry workDuration.
+            // (workDuration is calculated and injected into ReportDay)
+            userIdCompositeBatman, WORK_12H,
+            userIdCompositeRobin, WorkDuration.ZERO
         );
 
         final Map<UserIdComposite, List<ReportDayAbsence>> absences = Map.of(
@@ -102,7 +111,7 @@ class OvertimeServiceImplTest {
         );
 
         when(reportServiceRaw.getReportDayForAllUsers(date))
-            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, absences));
+            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, workDurations, absences));
 
         final Map<UserIdComposite, OvertimeHours> actual = sut.getOvertimeForDate(date);
         assertThat(actual).contains(
@@ -130,9 +139,15 @@ class OvertimeServiceImplTest {
             userIdCompositeBatman, workingTimeCalendarBatman
         );
 
-        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), new WorkDuration(Duration.ofHours(12)), false);
+        final ReportDayEntry reportDayBatman = new ReportDayEntry(new TimeEntryId(1L), batman, "", ZonedDateTime.parse("2025-05-09T08:00:00Z"), ZonedDateTime.parse("2025-05-09T20:00:00Z"), WORK_12H, false);
         final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntries = Map.of(
             userIdCompositeBatman, List.of(reportDayBatman)
+        );
+
+        final Map<UserIdComposite, WorkDuration> workDurations = Map.of(
+            // this is of interest for overtime calculation. NOT the ReportDayEntry workDuration.
+            // (workDuration is calculated and injected into ReportDay)
+            userIdCompositeBatman, WORK_12H
         );
 
         final Map<UserIdComposite, List<ReportDayAbsence>> absences = Map.of(
@@ -140,7 +155,7 @@ class OvertimeServiceImplTest {
         );
 
         when(reportServiceRaw.getReportDayForAllUsers(date))
-            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, absences));
+            .thenReturn(new ReportDay(date, false, workingTimeCalendars, reportDayEntries, workDurations, absences));
 
         final OvertimeHours actual = sut.getOvertimeForDateAndUser(date, userLocalIdBatman);
         assertThat(actual).isEqualTo(new OvertimeHours(Duration.ofHours(4)));
