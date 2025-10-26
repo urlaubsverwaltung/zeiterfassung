@@ -10,6 +10,14 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
+ * Describes a bucket of multiple {@link TimeEntry} elements for a given date.
+ *
+ * <p>
+ * A notable difference to a single {@link TimeEntry} is the calculated {@link TimeEntryDay#workDuration()}. While a single
+ * {@link TimeEntry#workDuration()} is just the duration between start and end, the {@link TimeEntryDay#workDuration()}
+ * is calculated based on a user selected strategy.
+ * See {@link de.focusshift.zeiterfassung.workduration.WorkDurationCalculationService} for more detail.
+ *
  * @param locked              whether this day is locked or not.
  *                            Note that this does not include whether it can be bypassed or not by a privileged person!
  * @param date                of the time entry day

@@ -9,9 +9,12 @@ import static java.math.RoundingMode.CEILING;
 public interface HasWorkedHoursRatio {
 
     /**
-     * Calculates the {@link WorkDuration} of the day.
+     * The calculated {@link WorkDuration}.
      *
-     * @return {@link WorkDuration} of the day
+     * <p>
+     * See {@link de.focusshift.zeiterfassung.workduration.WorkDurationCalculationService} for more detail.
+     *
+     * @return calculated {@link WorkDuration}
      */
     WorkDuration workDuration();
 

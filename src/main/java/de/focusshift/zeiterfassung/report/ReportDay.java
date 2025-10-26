@@ -24,7 +24,7 @@ import static java.util.stream.Collectors.toMap;
  * @param locked                    true if date is locked for adding/editing time entries
  * @param workingTimeCalendarByUser {@linkplain WorkingTimeCalendar} for all relevant users
  * @param reportDayEntriesByUser    {@linkplain ReportDayEntry entries} for all relevant users
- * @param workDurationByUser        {@linkplain WorkDuration} for all relevant users
+ * @param workDurationByUser        calculated {@linkplain WorkDuration} for all relevant users
  * @param detailDayAbsencesByUser   {@linkplain ReportDayAbsence absences} for all relevant users
  */
 public record ReportDay(
