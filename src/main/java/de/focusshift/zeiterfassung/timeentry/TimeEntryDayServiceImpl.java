@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -129,7 +130,14 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
         final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(zoneIdPivot);
         final Predicate<LocalDate> isDateLocked = date -> isDateLocked(date, minValidTimeEntryDate);
 
-        return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalender, isDateLocked, zoneIdPivot);
+        final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
+            subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
+
+        final Function<List<TimeEntry>, WorkDuration> calculateWorkDuration = entries -> subtractBreakFromTimeEntrySettings
+            .map(settings -> workDurationCalculator.calculateWorkDuration(settings, entries))
+            .orElseGet(() -> workDurationCalculator.calculateWorkDuration(entries));
+
+        return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalender, isDateLocked, calculateWorkDuration, zoneIdPivot);
     }
 
     private User findUser(UserLocalId userLocalId) {
@@ -146,13 +154,20 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
         final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(zoneIdPivot);
         final Predicate<LocalDate> isDateLocked = date -> isDateLocked(date, minValidTimeEntryDate);
 
+        final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
+            subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
+
+        final Function<List<TimeEntry>, WorkDuration> calculateWorkDuration = timeEntries -> subtractBreakFromTimeEntrySettings
+            .map(settings -> workDurationCalculator.calculateWorkDuration(settings, timeEntries))
+            .orElseGet(() -> workDurationCalculator.calculateWorkDuration(timeEntries));
+
         return timeEntriesByUser.entrySet().stream().collect(toMap(
             Map.Entry::getKey,
             entry -> {
                 final UserIdComposite userIdComposite = entry.getKey();
                 final List<TimeEntry> timeEntries = entry.getValue();
                 final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarByUser.get(userIdComposite);
-                return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalendar, isDateLocked, zoneIdPivot);
+                return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalendar, isDateLocked, calculateWorkDuration, zoneIdPivot);
             }
         ));
     }
@@ -165,10 +180,8 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
                                                    List<TimeEntry> allTimeEntries,
                                                    WorkingTimeCalendar workingTimeCalendar,
                                                    Predicate<LocalDate> isDateLocked,
+                                                   Function<List<TimeEntry>, WorkDuration> calculateWorkDuration,
                                                    ZoneId zoneIdPivot) {
-        // TODO inject me
-        final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
-            subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
 
         final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = groupByDate(allTimeEntries, zoneIdPivot);
 
@@ -187,10 +200,7 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
             final List<TimeEntry> timeEntriesForDate = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = workingTimeCalendar.absence(date).orElse(List.of());
             final ShouldWorkingHours shouldWorkingHours = workingTimeCalendar.shouldWorkingHours(date).orElse(ShouldWorkingHours.ZERO);
-
-            final WorkDuration workDuration = subtractBreakFromTimeEntrySettings
-                .map(settings -> workDurationCalculator.calculateWorkDuration(settings, timeEntriesForDate))
-                .orElseGet(() -> workDurationCalculator.calculateWorkDuration(timeEntriesForDate));
+            final WorkDuration workDuration = calculateWorkDuration.apply(timeEntriesForDate);
 
             timeEntryDays.add(new TimeEntryDay(locked, date, workDuration, plannedWorkingHours, shouldWorkingHours, timeEntriesForDate, absences));
 
