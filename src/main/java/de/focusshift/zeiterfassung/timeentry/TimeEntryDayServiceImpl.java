@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
@@ -125,7 +126,10 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
         final WorkingTimeCalendar workingTimeCalender =
             workingTimeCalendarService.getWorkingTimeCalender(from, toExclusive, userLocalId);
 
-        return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalender, zoneIdPivot);
+        final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(zoneIdPivot);
+        final Predicate<LocalDate> isDateLocked = date -> isDateLocked(date, minValidTimeEntryDate);
+
+        return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalender, isDateLocked, zoneIdPivot);
     }
 
     private User findUser(UserLocalId userLocalId) {
@@ -139,13 +143,16 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
         Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser,
         ZoneId zoneIdPivot
     ) {
+        final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(zoneIdPivot);
+        final Predicate<LocalDate> isDateLocked = date -> isDateLocked(date, minValidTimeEntryDate);
+
         return timeEntriesByUser.entrySet().stream().collect(toMap(
             Map.Entry::getKey,
             entry -> {
                 final UserIdComposite userIdComposite = entry.getKey();
                 final List<TimeEntry> timeEntries = entry.getValue();
                 final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarByUser.get(userIdComposite);
-                return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalendar, zoneIdPivot);
+                return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalendar, isDateLocked, zoneIdPivot);
             }
         ));
     }
@@ -157,10 +164,8 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
     private List<TimeEntryDay> createTimeEntryDays(LocalDate from, LocalDate toExclusive,
                                                    List<TimeEntry> allTimeEntries,
                                                    WorkingTimeCalendar workingTimeCalendar,
+                                                   Predicate<LocalDate> isDateLocked,
                                                    ZoneId zoneIdPivot) {
-        // TODO inject me
-        final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(zoneIdPivot);
-
         // TODO inject me
         final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
             subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
@@ -177,7 +182,7 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
             final PlannedWorkingHours plannedWorkingHours = workingTimeCalendar.plannedWorkingHours(date)
                 .orElseThrow(() -> new IllegalStateException("expected plannedWorkingHours to exist in calendar."));
 
-            final boolean locked = isDateLocked(date, minValidTimeEntryDate);
+            final boolean locked = isDateLocked.test(date);
 
             final List<TimeEntry> timeEntriesForDate = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = workingTimeCalendar.absence(date).orElse(List.of());
