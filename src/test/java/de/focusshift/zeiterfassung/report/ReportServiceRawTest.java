@@ -4,9 +4,9 @@ import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDay;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDayService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -55,23 +55,19 @@ class ReportServiceRawTest {
     private ReportServiceRaw sut;
 
     @Mock
-    private TimeEntryService timeEntryService;
-
+    private TimeEntryDayService timeEntryDayService;
     @Mock
     private UserManagementService userManagementService;
-
     @Mock
     private UserDateService userDateService;
-
     @Mock
     private WorkingTimeCalendarService workingTimeCalendarService;
-
     @Mock
     private TimeEntryLockService timeEntryLockService;
 
     @BeforeEach
     void setUp() {
-        sut = new ReportServiceRaw(timeEntryService, userManagementService, userDateService, workingTimeCalendarService, timeEntryLockService);
+        sut = new ReportServiceRaw(timeEntryDayService, userManagementService, userDateService, workingTimeCalendarService, timeEntryLockService);
     }
 
     // ------------------------------------------------------------
@@ -108,7 +104,7 @@ class ReportServiceRawTest {
         final TimeEntryDay d6 = timeEntryDay(LocalDate.of(2021, 1, 9));
         final TimeEntryDay d7 = timeEntryDay(LocalDate.of(2021, 1, 10));
 
-        when(timeEntryService.getTimeEntryDays(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
+        when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
             .thenReturn(List.of(d1, d2, d3, d4, d5, d6, d7));
 
         final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userLocalId());
@@ -145,7 +141,7 @@ class ReportServiceRawTest {
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        when(timeEntryService.getTimeEntryDays(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
+        when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
             .thenReturn(List.of(timeEntryDay1, timeEntryDay2, timeEntryDay2, timeEntryDay3, timeEntryDay4, timeEntryDay5, timeEntryDay6, timeEntryDay7));
 
         final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userLocalId());
@@ -186,7 +182,7 @@ class ReportServiceRawTest {
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        when(timeEntryService.getTimeEntryDays(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
+        when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
             .thenReturn(List.of(timeEntryDay1, timeEntryDay2, timeEntryDay2, timeEntryDay3, timeEntryDay4, timeEntryDay5, timeEntryDay6, timeEntryDay7));
 
         final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userLocalId());
@@ -223,7 +219,7 @@ class ReportServiceRawTest {
         when(userDateService.firstDayOfWeek(Year.of(2021), 1))
             .thenReturn(LocalDate.of(2021, 1, 4));
 
-        when(timeEntryService.getTimeEntryDays(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
+        when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 1, 4), LocalDate.of(2021, 1, 11), user.userLocalId()))
             .thenReturn(List.of(timeEntryDay1, timeEntryDay2, timeEntryDay2, timeEntryDay3, timeEntryDay4, timeEntryDay5, timeEntryDay6, timeEntryDay7));
 
         final ReportWeek actualReportWeek = sut.getReportWeek(Year.of(2021), 1, user.userLocalId());
@@ -250,7 +246,7 @@ class ReportServiceRawTest {
 
         sut.getReportWeek(Year.of(2024), 1, List.of(user.userLocalId()));
 
-        verify(timeEntryService).getTimeEntryDays(start, endExclusive, List.of(user.userLocalId()));
+        verify(timeEntryDayService).getTimeEntryDays(start, endExclusive, List.of(user.userLocalId()));
         verify(workingTimeCalendarService).getWorkingTimeCalendarForUsers(start, endExclusive, List.of(user.userLocalId()));
     }
 
@@ -269,7 +265,7 @@ class ReportServiceRawTest {
                 userTwo.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
             );
 
-        when(timeEntryService.getTimeEntryDays(any(LocalDate.class), any(LocalDate.class), anyList()))
+        when(timeEntryDayService.getTimeEntryDays(any(LocalDate.class), any(LocalDate.class), anyList()))
             .thenReturn(Map.of(
                 user.userIdComposite(), List.of(),
                 userTwo.userIdComposite(), List.of()
@@ -298,7 +294,7 @@ class ReportServiceRawTest {
 
         sut.getReportWeekForAllUsers(Year.of(2024), 1);
 
-        verify(timeEntryService).getTimeEntryDaysForAllUsers(start, endExclusive);
+        verify(timeEntryDayService).getTimeEntryDaysForAllUsers(start, endExclusive);
         verify(workingTimeCalendarService).getWorkingTimeCalendarForAllUsers(start, endExclusive);
     }
 
@@ -316,7 +312,7 @@ class ReportServiceRawTest {
                 userTwo.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
             );
 
-        when(timeEntryService.getTimeEntryDaysForAllUsers(any(LocalDate.class), any(LocalDate.class)))
+        when(timeEntryDayService.getTimeEntryDaysForAllUsers(any(LocalDate.class), any(LocalDate.class)))
             .thenReturn(Map.of(
                 user.userIdComposite(), List.of(),
                 userTwo.userIdComposite(), List.of()
@@ -348,7 +344,7 @@ class ReportServiceRawTest {
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 1, 1)))
             .thenReturn(LocalDate.of(2020, 12, 28));
 
-        when(timeEntryService.getTimeEntryDays(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
+        when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of());
 
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), user.userId());
@@ -369,7 +365,7 @@ class ReportServiceRawTest {
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 12, 1)))
             .thenReturn(LocalDate.of(2021, 11, 29));
 
-        when(timeEntryService.getTimeEntryDays(LocalDate.of(2021, 12, 1), LocalDate.of(2022, 1, 1), List.of(user.userLocalId())))
+        when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 12, 1), LocalDate.of(2022, 1, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of());
 
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 12), user.userId());
@@ -456,7 +452,7 @@ class ReportServiceRawTest {
         when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 1, 1)))
             .thenReturn(LocalDate.of(2020, 12, 28));
 
-        when(timeEntryService.getTimeEntryDays(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
+        when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of(user.userIdComposite(), List.of(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, d29, d30, d31)));
 
         when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
@@ -485,7 +481,7 @@ class ReportServiceRawTest {
 
         sut.getReportMonth(yearMonth, List.of(user.userLocalId()));
 
-        verify(timeEntryService).getTimeEntryDays(start, endExclusive, List.of(user.userLocalId()));
+        verify(timeEntryDayService).getTimeEntryDays(start, endExclusive, List.of(user.userLocalId()));
         verify(workingTimeCalendarService).getWorkingTimeCalendarForUsers(start, endExclusive, List.of(user.userLocalId()));
     }
 
@@ -506,7 +502,7 @@ class ReportServiceRawTest {
                 userTwo.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
             );
 
-        when(timeEntryService.getTimeEntryDays(any(LocalDate.class), any(LocalDate.class), anyList()))
+        when(timeEntryDayService.getTimeEntryDays(any(LocalDate.class), any(LocalDate.class), anyList()))
             .thenReturn(Map.of(
                 user.userIdComposite(), List.of(),
                 userTwo.userIdComposite(), List.of()
@@ -537,7 +533,7 @@ class ReportServiceRawTest {
 
         sut.getReportMonthForAllUsers(month);
 
-        verify(timeEntryService).getTimeEntryDaysForAllUsers(start, endExclusive);
+        verify(timeEntryDayService).getTimeEntryDaysForAllUsers(start, endExclusive);
         verify(workingTimeCalendarService).getWorkingTimeCalendarForAllUsers(start, endExclusive);
     }
 
@@ -557,7 +553,7 @@ class ReportServiceRawTest {
                 userTwo.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
             );
 
-        when(timeEntryService.getTimeEntryDaysForAllUsers(any(LocalDate.class), any(LocalDate.class)))
+        when(timeEntryDayService.getTimeEntryDaysForAllUsers(any(LocalDate.class), any(LocalDate.class)))
             .thenReturn(Map.of(
                 user.userIdComposite(), List.of(),
                 userTwo.userIdComposite(), List.of()

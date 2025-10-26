@@ -33,6 +33,8 @@ class TimeEntryServiceIT extends SingleTenantTestContainersBase {
     @Autowired
     private TimeEntryService timeEntryService;
     @Autowired
+    private TimeEntryDayService timeEntryDayService;
+    @Autowired
     private UserManagementService userManagementService;
     @Autowired
     private TenantUserService tenantUserService;
@@ -64,7 +66,7 @@ class TimeEntryServiceIT extends SingleTenantTestContainersBase {
         // and it has to return the created Europe/Berlin since it touches the requested date.
         final LocalDate requestedStart = LocalDate.parse("2025-06-05");
         final LocalDate requestedEndExclusive = LocalDate.parse("2025-06-07");
-        final Map<UserIdComposite, List<TimeEntryDay>> actual = timeEntryService.getTimeEntryDaysForAllUsers(requestedStart, requestedEndExclusive);
+        final Map<UserIdComposite, List<TimeEntryDay>> actual = timeEntryDayService.getTimeEntryDaysForAllUsers(requestedStart, requestedEndExclusive);
 
         assertThat(actual.get(user.userIdComposite())).containsExactly(
             new TimeEntryDay(false, LocalDate.parse("2025-06-06"), new WorkDuration(Duration.ofHours(6).plusMinutes(30)), PlannedWorkingHours.ZERO, ShouldWorkingHours.ZERO,

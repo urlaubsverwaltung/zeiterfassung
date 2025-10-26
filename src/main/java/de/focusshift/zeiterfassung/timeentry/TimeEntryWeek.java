@@ -18,7 +18,7 @@ import static java.util.Locale.GERMANY;
  * @param plannedWorkingHours {@link PlannedWorkingHours} for this week
  * @param days sorted list of days
  */
-record TimeEntryWeek(
+public record TimeEntryWeek(
     LocalDate firstDateOfWeek,
     PlannedWorkingHours plannedWorkingHours,
     List<TimeEntryDay> days

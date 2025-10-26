@@ -4,8 +4,8 @@ import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDay;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDayService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -41,21 +41,21 @@ public class ReportServiceRaw {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
-    private final TimeEntryService timeEntryService;
+    private final TimeEntryDayService timeEntryDayService;
     private final UserManagementService userManagementService;
     private final UserDateService userDateService;
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final TimeEntryLockService timeEntryLockService;
 
     ReportServiceRaw(
-        TimeEntryService timeEntryService,
+        TimeEntryDayService timeEntryDayService,
         UserManagementService userManagementService,
         UserDateService userDateService,
         WorkingTimeCalendarService workingTimeCalendarService,
         TimeEntryLockService timeEntryLockService
     ) {
 
-        this.timeEntryService = timeEntryService;
+        this.timeEntryDayService = timeEntryDayService;
         this.userManagementService = userManagementService;
         this.userDateService = userDateService;
         this.workingTimeCalendarService = workingTimeCalendarService;
@@ -85,7 +85,7 @@ public class ReportServiceRaw {
 
         return createReportWeek(year, week,
             List.of(user),
-            period -> Map.of(user.userIdComposite(), timeEntryService.getTimeEntryDays(period.from(), period.toExclusive(), userLocalId)),
+            period -> Map.of(user.userIdComposite(), timeEntryDayService.getTimeEntryDays(period.from(), period.toExclusive(), userLocalId)),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
@@ -95,7 +95,7 @@ public class ReportServiceRaw {
 
         return createReportWeek(year, week,
             users,
-            period -> timeEntryService.getTimeEntryDays(period.from(), period.toExclusive(), userLocalIds),
+            period -> timeEntryDayService.getTimeEntryDays(period.from(), period.toExclusive(), userLocalIds),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds));
     }
 
@@ -105,7 +105,7 @@ public class ReportServiceRaw {
 
         return createReportWeek(year, week,
             users,
-            period -> timeEntryService.getTimeEntryDaysForAllUsers(period.from(), period.toExclusive()),
+            period -> timeEntryDayService.getTimeEntryDaysForAllUsers(period.from(), period.toExclusive()),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(period.from(), period.toExclusive()));
     }
 
@@ -116,7 +116,7 @@ public class ReportServiceRaw {
 
         return createReportMonth(yearMonth,
             List.of(user),
-            period -> timeEntryService.getTimeEntryDays(period.from(), period.toExclusive(), List.of(user.userLocalId())),
+            period -> timeEntryDayService.getTimeEntryDays(period.from(), period.toExclusive(), List.of(user.userLocalId())),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
@@ -126,7 +126,7 @@ public class ReportServiceRaw {
 
         return createReportMonth(yearMonth,
             users,
-            period -> timeEntryService.getTimeEntryDays(period.from(), period.toExclusive(), userLocalIds),
+            period -> timeEntryDayService.getTimeEntryDays(period.from(), period.toExclusive(), userLocalIds),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds));
     }
 
@@ -136,12 +136,12 @@ public class ReportServiceRaw {
 
         return createReportMonth(yearMonth,
             users,
-            period -> timeEntryService.getTimeEntryDaysForAllUsers(period.from(), period.toExclusive()),
+            period -> timeEntryDayService.getTimeEntryDaysForAllUsers(period.from(), period.toExclusive()),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(period.from(), period.toExclusive()));
     }
 
     private Map<LocalDate, Map<UserIdComposite, TimeEntryDay>> timeEntryDaysForAllUsers(LocalDate from, LocalDate toExclusive) {
-        final Map<UserIdComposite, List<TimeEntryDay>> timeEntryDaysByUser = timeEntryService.getTimeEntryDaysForAllUsers(from, toExclusive);
+        final Map<UserIdComposite, List<TimeEntryDay>> timeEntryDaysByUser = timeEntryDayService.getTimeEntryDaysForAllUsers(from, toExclusive);
         return groupByDate(timeEntryDaysByUser);
     }
 
