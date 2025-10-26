@@ -38,6 +38,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -1081,88 +1082,88 @@ class TimeEntryServiceImplTest {
         });
     }
 
-//    @Test
-//    void ensureGetEntries() {
-//
-//        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
-//        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
-//
-//        final UserId batmanId = new UserId("uuid-1");
-//        final UserLocalId batmanLocalId = new UserLocalId(1L);
-//        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
-//
-//        final UserId robinId = new UserId("uuid-2");
-//        final UserLocalId robinLocalId = new UserLocalId(2L);
-//        final UserIdComposite robinIdComposite = new UserIdComposite(robinId, robinLocalId);
-//
-//        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-//        final User robin = new User(robinIdComposite, "Dick", "Grayson", new EMailAddress("robin@example.org"), Set.of());
-//
-//        when(userManagementService.findAllUsersByLocalIds(List.of(batmanLocalId, robinLocalId))).thenReturn(List.of(batman, robin));
-//
-//        final Instant now = Instant.now();
-//        final LocalDate from = LocalDate.of(2023, 1, 1);
-//        final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
-//
-//        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
-//        final LocalDateTime entryEnd = LocalDateTime.of(toExclusive, LocalTime.of(12, 0, 0));
-//        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "uuid-1", "hard work", entryStart.toInstant(UTC), ZONE_ID_UTC, entryEnd.toInstant(UTC), ZONE_ID_UTC, now, false);
-//
-//        final LocalDateTime entryBreakStart = LocalDateTime.of(from, LocalTime.of(12, 0, 0));
-//        final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
-//        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "uuid-2", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
-//
-//        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("uuid-1", "uuid-2"), from.atStartOfDay().atZone(userZoneId).toInstant(), toExclusive.atStartOfDay().atZone(userZoneId).toInstant()))
-//            .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
-//
-//        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntries(from, toExclusive, List.of(batmanLocalId, robinLocalId));
-//
-//        final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
-//        final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
-//
-//        final ZonedDateTime expectedBreakStart = ZonedDateTime.of(entryBreakStart, ZONE_ID_UTC);
-//        final ZonedDateTime expectedBreakEnd = ZonedDateTime.of(entryBreakEnd, ZONE_ID_UTC);
-//
-//        assertThat(actual)
-//            .hasSize(2)
-//            .hasEntrySatisfying(batmanIdComposite, timeEntries -> {
-//                assertThat(timeEntries).containsExactly(
-//                    new TimeEntry(new TimeEntryId(1L), batmanIdComposite, "hard work", expectedStart, expectedEnd, false)
-//                );
-//            })
-//            .hasEntrySatisfying(robinIdComposite, timeEntries -> {
-//                assertThat(timeEntries).containsExactly(
-//                    new TimeEntry(new TimeEntryId(2L), robinIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true)
-//                );
-//            });
-//    }
+    @Test
+    void ensureGetEntries() {
 
-//    @Test
-//    void ensureGetEntriesByUserLocalIdsReturnsValuesForEveryAskedUserLocalId() {
-//
-//        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
-//        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
-//
-//        final UserId userId = new UserId("batman");
-//        final UserLocalId userLocalId = new UserLocalId(1L);
-//        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-//        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
-//        when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId))).thenReturn(List.of(user));
-//
-//        final LocalDate from = LocalDate.of(2023, 1, 1);
-//        final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
-//
-//        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("batman"), from.atStartOfDay().atZone(userZoneId).toInstant(), toExclusive.atStartOfDay().atZone(userZoneId).toInstant()))
-//            .thenReturn(List.of());
-//
-//        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntries(from, toExclusive, List.of(userLocalId));
-//
-//        assertThat(actual)
-//            .hasSize(1)
-//            .hasEntrySatisfying(userIdComposite, timeEntries -> {
-//                assertThat(timeEntries).isEmpty();
-//            });
-//    }
+        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
+
+        final UserId batmanId = new UserId("uuid-1");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+
+        final UserId robinId = new UserId("uuid-2");
+        final UserLocalId robinLocalId = new UserLocalId(2L);
+        final UserIdComposite robinIdComposite = new UserIdComposite(robinId, robinLocalId);
+
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        final User robin = new User(robinIdComposite, "Dick", "Grayson", new EMailAddress("robin@example.org"), Set.of());
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(batmanLocalId, robinLocalId))).thenReturn(List.of(batman, robin));
+
+        final Instant now = Instant.now();
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+        final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
+
+        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
+        final LocalDateTime entryEnd = LocalDateTime.of(toExclusive, LocalTime.of(12, 0, 0));
+        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "uuid-1", "hard work", entryStart.toInstant(UTC), ZONE_ID_UTC, entryEnd.toInstant(UTC), ZONE_ID_UTC, now, false);
+
+        final LocalDateTime entryBreakStart = LocalDateTime.of(from, LocalTime.of(12, 0, 0));
+        final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
+        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "uuid-2", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
+
+        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("uuid-1", "uuid-2"), from.atStartOfDay().atZone(userZoneId).toInstant(), toExclusive.atStartOfDay().atZone(userZoneId).toInstant()))
+            .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
+
+        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntries(from, toExclusive, List.of(batmanLocalId, robinLocalId));
+
+        final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
+        final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
+
+        final ZonedDateTime expectedBreakStart = ZonedDateTime.of(entryBreakStart, ZONE_ID_UTC);
+        final ZonedDateTime expectedBreakEnd = ZonedDateTime.of(entryBreakEnd, ZONE_ID_UTC);
+
+        assertThat(actual)
+            .hasSize(2)
+            .hasEntrySatisfying(batmanIdComposite, timeEntries -> {
+                assertThat(timeEntries).containsExactly(
+                    new TimeEntry(new TimeEntryId(1L), batmanIdComposite, "hard work", expectedStart, expectedEnd, false)
+                );
+            })
+            .hasEntrySatisfying(robinIdComposite, timeEntries -> {
+                assertThat(timeEntries).containsExactly(
+                    new TimeEntry(new TimeEntryId(2L), robinIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true)
+                );
+            });
+    }
+
+    @Test
+    void ensureGetEntriesByUserLocalIdsReturnsValuesForEveryAskedUserLocalId() {
+
+        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
+        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId))).thenReturn(List.of(user));
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+        final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
+
+        when(timeEntryRepository.findAllByOwnerIsInAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(List.of("batman"), from.atStartOfDay().atZone(userZoneId).toInstant(), toExclusive.atStartOfDay().atZone(userZoneId).toInstant()))
+            .thenReturn(List.of());
+
+        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntries(from, toExclusive, List.of(userLocalId));
+
+        assertThat(actual)
+            .hasSize(1)
+            .hasEntrySatisfying(userIdComposite, timeEntries -> {
+                assertThat(timeEntries).isEmpty();
+            });
+    }
 
     @Test
     void ensureGetEntriesSortedByStart_NewestFirst() {
