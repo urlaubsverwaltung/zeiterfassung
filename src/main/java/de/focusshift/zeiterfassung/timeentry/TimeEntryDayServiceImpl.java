@@ -129,15 +129,19 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
 
         final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(zoneIdPivot);
         final Predicate<LocalDate> isDateLocked = date -> isDateLocked(date, minValidTimeEntryDate);
+        final Function<Collection<TimeEntry>, WorkDuration> durationCalculator = workDurationCalculator();
+
+        return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalender, isDateLocked, durationCalculator, zoneIdPivot);
+    }
+
+    private Function<Collection<TimeEntry>, WorkDuration> workDurationCalculator() {
 
         final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
             subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
 
-        final Function<Collection<TimeEntry>, WorkDuration> calculateWorkDuration = entries -> subtractBreakFromTimeEntrySettings
+        return entries -> subtractBreakFromTimeEntrySettings
             .map(settings -> workDurationCalculator.calculateWorkDuration(settings, entries))
             .orElseGet(() -> workDurationCalculator.calculateWorkDuration(entries));
-
-        return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalender, isDateLocked, calculateWorkDuration, zoneIdPivot);
     }
 
     private User findUser(UserLocalId userLocalId) {
@@ -153,13 +157,7 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
     ) {
         final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(zoneIdPivot);
         final Predicate<LocalDate> isDateLocked = date -> isDateLocked(date, minValidTimeEntryDate);
-
-        final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
-            subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
-
-        final Function<Collection<TimeEntry>, WorkDuration> calculateWorkDuration = timeEntries -> subtractBreakFromTimeEntrySettings
-            .map(settings -> workDurationCalculator.calculateWorkDuration(settings, timeEntries))
-            .orElseGet(() -> workDurationCalculator.calculateWorkDuration(timeEntries));
+        final Function<Collection<TimeEntry>, WorkDuration> durationCalculator = workDurationCalculator();
 
         return timeEntriesByUser.entrySet().stream().collect(toMap(
             Map.Entry::getKey,
@@ -167,7 +165,7 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
                 final UserIdComposite userIdComposite = entry.getKey();
                 final List<TimeEntry> timeEntries = entry.getValue();
                 final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarByUser.get(userIdComposite);
-                return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalendar, isDateLocked, calculateWorkDuration, zoneIdPivot);
+                return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalendar, isDateLocked, durationCalculator, zoneIdPivot);
             }
         ));
     }
