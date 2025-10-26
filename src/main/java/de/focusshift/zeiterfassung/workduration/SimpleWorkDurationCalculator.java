@@ -3,7 +3,7 @@ package de.focusshift.zeiterfassung.workduration;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Default {@link WorkDuration} calculation simply summarizing the duration of {@link TimeEntry}.
@@ -15,9 +15,8 @@ import java.util.List;
 class SimpleWorkDurationCalculator implements WorkDurationCalculator {
 
     @Override
-    public WorkDuration calculateWorkDuration(List<TimeEntry> timeEntries) {
-        return timeEntries
-            .stream()
+    public WorkDuration calculateWorkDuration(Collection<TimeEntry> timeEntries) {
+        return timeEntries.stream().distinct()
             .map(TimeEntry::workDuration)
             .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }

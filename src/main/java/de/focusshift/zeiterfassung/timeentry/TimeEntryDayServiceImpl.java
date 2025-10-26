@@ -133,7 +133,7 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
         final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
             subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
 
-        final Function<List<TimeEntry>, WorkDuration> calculateWorkDuration = entries -> subtractBreakFromTimeEntrySettings
+        final Function<Collection<TimeEntry>, WorkDuration> calculateWorkDuration = entries -> subtractBreakFromTimeEntrySettings
             .map(settings -> workDurationCalculator.calculateWorkDuration(settings, entries))
             .orElseGet(() -> workDurationCalculator.calculateWorkDuration(entries));
 
@@ -157,7 +157,7 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
         final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings =
             subtractBreakFromTimeEntrySettingsService.getSubtractBreakFromTimeEntrySettings();
 
-        final Function<List<TimeEntry>, WorkDuration> calculateWorkDuration = timeEntries -> subtractBreakFromTimeEntrySettings
+        final Function<Collection<TimeEntry>, WorkDuration> calculateWorkDuration = timeEntries -> subtractBreakFromTimeEntrySettings
             .map(settings -> workDurationCalculator.calculateWorkDuration(settings, timeEntries))
             .orElseGet(() -> workDurationCalculator.calculateWorkDuration(timeEntries));
 
@@ -180,7 +180,7 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
                                                    List<TimeEntry> allTimeEntries,
                                                    WorkingTimeCalendar workingTimeCalendar,
                                                    Predicate<LocalDate> isDateLocked,
-                                                   Function<List<TimeEntry>, WorkDuration> calculateWorkDuration,
+                                                   Function<Collection<TimeEntry>, WorkDuration> calculateWorkDuration,
                                                    ZoneId zoneIdPivot) {
 
         final Map<LocalDate, List<TimeEntry>> timeEntriesByDate = groupByDate(allTimeEntries, zoneIdPivot);

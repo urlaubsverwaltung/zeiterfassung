@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -35,7 +36,7 @@ public class WorkDurationCalculationService {
      *
      * @param timeEntries list of {@link TimeEntry} to calculate the {@link WorkDuration} for
      */
-    public WorkDuration calculateWorkDuration(List<TimeEntry> timeEntries) {
+    public WorkDuration calculateWorkDuration(Collection<TimeEntry> timeEntries) {
         // without given settings the current option is to subtract overlapping breaks
         return subtractOverlappingBreaksCalculator.calculateWorkDuration(timeEntries);
     }
@@ -45,7 +46,7 @@ public class WorkDurationCalculationService {
      *
      * @param timeEntries list of {@link TimeEntry} to calculate the {@link WorkDuration} for
      */
-    public WorkDuration calculateWorkDuration(SubtractBreakFromTimeEntrySettings settings, List<TimeEntry> timeEntries) {
+    public WorkDuration calculateWorkDuration(SubtractBreakFromTimeEntrySettings settings, Collection<TimeEntry> timeEntries) {
 
         if (!settings.subtractBreakFromTimeEntryIsActive()) {
             return simpleWorkDurationCalculator.calculateWorkDuration(timeEntries);

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -32,7 +33,7 @@ import static java.util.function.Predicate.not;
 class OverlappingBreakCalculator implements WorkDurationCalculator {
 
     @Override
-    public WorkDuration calculateWorkDuration(List<TimeEntry> timeEntries) {
+    public WorkDuration calculateWorkDuration(Collection<TimeEntry> timeEntries) {
 
         final List<Interval> notMergedWorkIntervals = workIntervals(timeEntries);
         final List<Interval> mergedBreakIntervals = mergeIntervals(breakIntervals(timeEntries));
@@ -44,16 +45,17 @@ class OverlappingBreakCalculator implements WorkDurationCalculator {
         return new WorkDuration(totalWork.minus(totalBreak));
     }
 
-    private List<Interval> workIntervals(List<TimeEntry> timeEntries) {
+    private List<Interval> workIntervals(Collection<TimeEntry> timeEntries) {
         return intervals(timeEntries, not(TimeEntry::isBreak));
     }
 
-    private List<Interval> breakIntervals(List<TimeEntry> timeEntries) {
+    private List<Interval> breakIntervals(Collection<TimeEntry> timeEntries) {
         return intervals(timeEntries, TimeEntry::isBreak);
     }
 
-    private List<Interval> intervals(List<TimeEntry> timeEntries, Predicate<TimeEntry> filter) {
+    private List<Interval> intervals(Collection<TimeEntry> timeEntries, Predicate<TimeEntry> filter) {
         return timeEntries.stream()
+            .distinct()
             .filter(filter)
             .map(e -> new Interval(e.start(), e.end()))
             .sorted(comparing(Interval::start))
@@ -86,7 +88,7 @@ class OverlappingBreakCalculator implements WorkDurationCalculator {
      * @param mergedBreakIntervals non overlapping break intervals
      * @return intervals of overlapping break and work, sorted by start
      */
-    private List<Interval> breakIntervalOverlaps(List<Interval> workIntervals, List<Interval> mergedBreakIntervals) {
+    private List<Interval> breakIntervalOverlaps(Collection<Interval> workIntervals, Collection<Interval> mergedBreakIntervals) {
         return workIntervals.stream()
             .flatMap(workInterval -> mergedBreakIntervals.stream()
                 .map(breakInterval -> {
@@ -101,7 +103,7 @@ class OverlappingBreakCalculator implements WorkDurationCalculator {
             .toList();
     }
 
-    private static List<Interval> mergeIntervals(List<Interval> intervals) {
+    private static List<Interval> mergeIntervals(Collection<Interval> intervals) {
 
         final List<Interval> merged = new ArrayList<>();
 
@@ -119,7 +121,7 @@ class OverlappingBreakCalculator implements WorkDurationCalculator {
         return merged;
     }
 
-    private Duration summarizeDuration(List<Interval> intervals) {
+    private Duration summarizeDuration(Collection<Interval> intervals) {
         return intervals.stream()
             .map(interval -> between(interval.start(), interval.end()))
             .reduce(Duration.ZERO, Duration::plus);
