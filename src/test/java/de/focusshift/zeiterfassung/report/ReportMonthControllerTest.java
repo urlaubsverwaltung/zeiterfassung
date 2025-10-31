@@ -17,6 +17,7 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +41,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -570,12 +572,14 @@ class ReportMonthControllerTest implements ControllerTest {
                 firstDateOfWeek.plusDays(5),
                 false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(5), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(5), List.of()))),
                 Map.of(user.userIdComposite(), List.of()),
+                Map.of(),
                 Map.of(user.userIdComposite(), List.of())
             ),
             new ReportDay(
                 firstDateOfWeek.plusDays(6),
                 false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(firstDateOfWeek.plusDays(6), PlannedWorkingHours.ZERO), Map.of(firstDateOfWeek.plusDays(6), List.of()))),
                 Map.of(user.userIdComposite(), List.of()),
+                Map.of(),
                 Map.of(user.userIdComposite(), List.of())
             ))
         );
@@ -586,6 +590,7 @@ class ReportMonthControllerTest implements ControllerTest {
             date,
             false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.EIGHT), Map.of(date, List.of()))),
             Map.of(user.userIdComposite(), List.of(reportDayEntry(user, date))),
+            Map.of(user.userIdComposite(), WorkDuration.EIGHT),
             Map.of(user.userIdComposite(), List.of())
         );
     }
@@ -595,13 +600,16 @@ class ReportMonthControllerTest implements ControllerTest {
             date,
             false, Map.of(user.userIdComposite(), new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.ZERO), Map.of(date, List.of()))),
             Map.of(user.userIdComposite(), List.of()),
+            Map.of(user.userIdComposite(), WorkDuration.ZERO),
             Map.of(user.userIdComposite(), List.of())
         );
     }
 
     private ReportDayEntry reportDayEntry(User user, LocalDate date) {
-        final long randomId = ThreadLocalRandom.current().nextLong();
-        return new ReportDayEntry(new TimeEntryId(randomId), user, "", date.atStartOfDay().plusHours(8).atZone(UTC), date.atStartOfDay().plusHours(16).atZone(UTC), false);
+        final Long randomId = ThreadLocalRandom.current().nextLong();
+        final ZonedDateTime start = date.atStartOfDay().plusHours(8).atZone(UTC);
+        final ZonedDateTime end = date.atStartOfDay().plusHours(16).atZone(UTC);
+        return new ReportDayEntry(new TimeEntryId(randomId), user, "", start, end, WorkDuration.EIGHT, false);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {

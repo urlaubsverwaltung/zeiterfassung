@@ -8,16 +8,12 @@ import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
-import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
-import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
-import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
-import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,7 +35,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Year;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -70,10 +65,6 @@ class TimeEntryServiceImplTest {
     @Mock
     private TimeEntryLockService timeEntryLockService;
     @Mock
-    private UserDateService userDateService;
-    @Mock
-    private WorkingTimeCalendarService workingTimeCalendarService;
-    @Mock
     private UserManagementService userManagementService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
@@ -87,7 +78,7 @@ class TimeEntryServiceImplTest {
     @BeforeEach
     void setUp() {
         sut = new TimeEntryServiceImpl(timeEntryRepository, timeEntryLockService, userManagementService,
-            workingTimeCalendarService, userDateService, userSettingsProvider, entityRevisionMapper, applicationEventPublisher, clockFixed);
+            userSettingsProvider, entityRevisionMapper, applicationEventPublisher, clockFixed);
     }
 
     @Nested
@@ -1092,61 +1083,6 @@ class TimeEntryServiceImplTest {
     }
 
     @Test
-    void ensureGetEntriesForAllUsers() {
-
-        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
-
-        final Instant now = Instant.now();
-        final LocalDate from = LocalDate.of(2023, 1, 1);
-        final LocalDate toExclusive = LocalDate.of(2023, 2, 1);
-
-        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(10, 0, 0));
-        final LocalDateTime entryEnd = LocalDateTime.of(toExclusive, LocalTime.of(12, 0, 0));
-        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity(1L, "batman", "hard work", entryStart.toInstant(UTC), ZONE_ID_UTC, entryEnd.toInstant(UTC), ZONE_ID_UTC, now, false);
-
-        final LocalDateTime entryBreakStart = LocalDateTime.of(from, LocalTime.of(12, 0, 0));
-        final LocalDateTime entryBreakEnd = LocalDateTime.of(toExclusive, LocalTime.of(13, 0, 0));
-        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "pinguin", "deserved break", entryBreakStart.toInstant(UTC), ZONE_ID_UTC, entryBreakEnd.toInstant(UTC), ZONE_ID_UTC, now, true);
-
-        when(timeEntryRepository.findAllByStartGreaterThanEqualAndStartLessThanOrderByStartDesc(from.atStartOfDay().atZone(userZoneId).toInstant(), toExclusive.atStartOfDay().atZone(userZoneId).toInstant()))
-            .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
-
-        final UserId batmanId = new UserId("batman");
-        final UserLocalId batmanLocalId = new UserLocalId(1L);
-        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
-
-        final UserId pinguinId = new UserId("pinguin");
-        final UserLocalId pinguinLocalId = new UserLocalId(2L);
-        final UserIdComposite pinguinIdComposite = new UserIdComposite(pinguinId, pinguinLocalId);
-
-        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        final User pinguin = new User(pinguinIdComposite, "ping", "uin", new EMailAddress("pinguin@example.org"), Set.of());
-        when(userManagementService.findAllUsers()).thenReturn(List.of(batman, pinguin));
-
-        final Map<UserIdComposite, List<TimeEntry>> actual = sut.getEntriesForAllUsers(from, toExclusive);
-
-        final ZonedDateTime expectedStart = ZonedDateTime.of(entryStart, ZONE_ID_UTC);
-        final ZonedDateTime expectedEnd = ZonedDateTime.of(entryEnd, ZONE_ID_UTC);
-
-        final ZonedDateTime expectedBreakStart = ZonedDateTime.of(entryBreakStart, ZONE_ID_UTC);
-        final ZonedDateTime expectedBreakEnd = ZonedDateTime.of(entryBreakEnd, ZONE_ID_UTC);
-
-        assertThat(actual)
-            .hasSize(2)
-            .hasEntrySatisfying(batmanIdComposite, timeEntries -> {
-                assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(1L), batmanIdComposite, "hard work", expectedStart, expectedEnd, false)
-                );
-            })
-            .hasEntrySatisfying(pinguinIdComposite, timeEntries -> {
-                assertThat(timeEntries).containsExactly(
-                    new TimeEntry(new TimeEntryId(2L), pinguinIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true)
-                );
-            });
-    }
-
-    @Test
     void ensureGetEntries() {
 
         final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
@@ -1276,328 +1212,6 @@ class TimeEntryServiceImplTest {
             new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", expectedBreakStart, expectedBreakEnd, true),
             new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", expectedStart, expectedEnd, false),
             new TimeEntry(new TimeEntryId(3L), userIdComposite, "waking up *zzzz", expectedStart2, expectedEnd2, false)
-        );
-    }
-
-    @Test
-    void ensureGetEntryWeekPageWithFirstDayOfMonth() {
-
-        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
-
-        final LocalDate firstDayOfWeek = LocalDate.of(2022, 1, 3);
-        when(userDateService.firstDayOfWeek(Year.of(2022), 1)).thenReturn(firstDayOfWeek);
-
-        final ZonedDateTime timeEntryStart = ZonedDateTime.of(2022, 1, 4, 9, 0, 0, 0, userZoneId);
-        final ZonedDateTime timeEntryEnd = ZonedDateTime.of(2022, 1, 4, 12, 0, 0, 0, userZoneId);
-        final TimeEntryEntity timeEntryEntity = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", timeEntryStart.toInstant(), userZoneId, timeEntryEnd.toInstant(), userZoneId, Instant.now(), false);
-
-        final ZonedDateTime timeEntryBreakStart = ZonedDateTime.of(2022, 1, 4, 12, 0, 0, 0, userZoneId);
-        final ZonedDateTime timeEntryBreakEnd = ZonedDateTime.of(2022, 1, 4, 13, 0, 0, 0, userZoneId);
-        final TimeEntryEntity timeEntryBreakEntity = new TimeEntryEntity(2L, "batman", "deserved break", timeEntryBreakStart.toInstant(), userZoneId, timeEntryBreakEnd.toInstant(), userZoneId, Instant.now(), true);
-
-        final ZonedDateTime fromDateTime = firstDayOfWeek.atStartOfDay(userZoneId);
-        final Instant from = Instant.from(fromDateTime);
-        final Instant to = Instant.from(fromDateTime.plusWeeks(1));
-
-        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc("batman", from, to))
-            .thenReturn(List.of(timeEntryEntity, timeEntryBreakEntity));
-
-        when(timeEntryRepository.countAllByOwner("batman")).thenReturn(3L);
-
-        final UserId userId = new UserId("batman");
-        final UserLocalId userLocalId = new UserLocalId(1337L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-
-        final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(batman));
-
-        when(workingTimeCalendarService.getWorkingTimeCalender(firstDayOfWeek, firstDayOfWeek.plusWeeks(1), userLocalId))
-            .thenReturn(new WorkingTimeCalendar(Map.of(
-                LocalDate.of(2022, 1, 3), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2022, 1, 4), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2022, 1, 5), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2022, 1, 6), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2022, 1, 7), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2022, 1, 8), PlannedWorkingHours.ZERO, // saturday
-                LocalDate.of(2022, 1, 9), PlannedWorkingHours.ZERO  // sunday
-            ), Map.of()));
-
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2022, 1);
-
-        assertThat(actual).isEqualTo(
-            new TimeEntryWeekPage(
-                new TimeEntryWeek(
-                    firstDayOfWeek,
-                    new PlannedWorkingHours(Duration.ofHours(40)),
-                    List.of(
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2022, 1, 9),
-                            PlannedWorkingHours.ZERO,
-                            ShouldWorkingHours.ZERO,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2022, 1, 8),
-                            PlannedWorkingHours.ZERO,
-                            ShouldWorkingHours.ZERO,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2022, 1, 7),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2022, 1, 6),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2022, 1, 5),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2022, 1, 4),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(
-                                new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", timeEntryStart, timeEntryEnd, false),
-                                new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true)
-                            ),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            firstDayOfWeek,
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of())
-                    )
-                ),
-                3
-            )
-        );
-    }
-
-    @Test
-    void ensureGetEntryWeekPageWithDaysInCorrectOrder() {
-
-        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
-
-        final LocalDate firstDateOfWeek = LocalDate.of(2023, 1, 30);
-        when(userDateService.firstDayOfWeek(Year.of(2023), 5)).thenReturn(firstDateOfWeek);
-
-        final ZonedDateTime firstDayOfWeekTimeEntryStart = ZonedDateTime.of(2023, 1, 30, 9, 0, 0, 0, userZoneId);
-        final ZonedDateTime firstDayOfWeekTimeEntryEnd = ZonedDateTime.of(2023, 1, 30, 12, 0, 0, 0, userZoneId);
-        final TimeEntryEntity firstDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 1L, "batman", "hack the planet!", firstDayOfWeekTimeEntryStart.toInstant(), userZoneId, firstDayOfWeekTimeEntryEnd.toInstant(), userZoneId, Instant.now(), false);
-
-        final ZonedDateTime lastDayOfWeekTimeEntryStart = ZonedDateTime.of(2023, 2, 5, 9, 0, 0, 0, userZoneId);
-        final ZonedDateTime lastDayOfWeekTimeEntryEnd = ZonedDateTime.of(2023, 2, 5, 12, 0, 0, 0, userZoneId);
-        final TimeEntryEntity lastDayOfWeekTimeEntry = new TimeEntryEntity("tenantId", 2L, "batman", "hack the planet, second time!", lastDayOfWeekTimeEntryStart.toInstant(), userZoneId, lastDayOfWeekTimeEntryEnd.toInstant(), userZoneId, Instant.now(), false);
-
-        final ZonedDateTime fromDateTime = firstDateOfWeek.atStartOfDay(userZoneId);
-        final Instant from = Instant.from(fromDateTime);
-        final Instant to = Instant.from(fromDateTime.plusWeeks(1));
-
-        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc("batman", from, to))
-            .thenReturn(List.of(lastDayOfWeekTimeEntry, firstDayOfWeekTimeEntry));
-
-        when(timeEntryRepository.countAllByOwner("batman")).thenReturn(6L);
-
-        final UserId userId = new UserId("batman");
-        final UserLocalId userLocalId = new UserLocalId(1337L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-
-        final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(batman));
-
-        when(workingTimeCalendarService.getWorkingTimeCalender(firstDateOfWeek, firstDateOfWeek.plusWeeks(1), userLocalId))
-            .thenReturn(new WorkingTimeCalendar(Map.of(
-                firstDateOfWeek, PlannedWorkingHours.EIGHT,
-                LocalDate.of(2023, 1, 31), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2023, 2, 1), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2023, 2, 2), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2023, 2, 3), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2023, 2, 4), PlannedWorkingHours.ZERO,
-                LocalDate.of(2023, 2, 5), PlannedWorkingHours.ZERO
-            ), Map.of()));
-
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2023, 5);
-
-        assertThat(actual).isEqualTo(
-            new TimeEntryWeekPage(
-                new TimeEntryWeek(
-                    firstDateOfWeek,
-                    new PlannedWorkingHours(Duration.ofHours(40)),
-                    List.of(
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 2, 5),
-                            PlannedWorkingHours.ZERO,
-                            ShouldWorkingHours.ZERO,
-                            List.of(
-                                new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false)
-                            ),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 2, 4),
-                            PlannedWorkingHours.ZERO,
-                            ShouldWorkingHours.ZERO,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 2, 3),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 2, 2),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 2, 1),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 1, 31),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            firstDateOfWeek,
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(
-                                new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false)
-                            ),
-                            List.of())
-                    )
-                ),
-                6
-            )
-        );
-    }
-
-    @Test
-    void ensureGetEntryWeekPageWithTimeEntryActuallyNotInWeekOfYear() {
-
-        final ZoneId userZoneId = ZoneId.of("Europe/Berlin");
-        when(userSettingsProvider.zoneId()).thenReturn(userZoneId);
-
-        final LocalDate firstDateOfWeek = LocalDate.of(2023, 6, 12);
-        final LocalDate toDateExclusive = firstDateOfWeek.plusWeeks(1);
-        when(userDateService.firstDayOfWeek(Year.of(2023), 24)).thenReturn(firstDateOfWeek);
-
-        final Instant from = Instant.from(firstDateOfWeek.atStartOfDay().atZone(userZoneId));
-        final Instant to = Instant.from(toDateExclusive.atStartOfDay().atZone(userZoneId));
-        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc("batman", from, to))
-            .thenReturn(List.of());
-
-        when(timeEntryRepository.countAllByOwner("batman")).thenReturn(6L);
-
-        final UserId userId = new UserId("batman");
-        final UserLocalId userLocalId = new UserLocalId(1337L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-
-        final User batman = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
-        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(batman));
-
-        when(workingTimeCalendarService.getWorkingTimeCalender(firstDateOfWeek, firstDateOfWeek.plusWeeks(1), userLocalId))
-            .thenReturn(new WorkingTimeCalendar(Map.of(
-                LocalDate.of(2023, 6, 12), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2023, 6, 13), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2023, 6, 14), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2023, 6, 15), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2023, 6, 16), PlannedWorkingHours.EIGHT,
-                LocalDate.of(2023, 6, 17), PlannedWorkingHours.ZERO,
-                LocalDate.of(2023, 6, 18), PlannedWorkingHours.ZERO
-            ), Map.of()));
-
-        final TimeEntryWeekPage actual = sut.getEntryWeekPage(userLocalId, 2023, 24);
-
-        assertThat(actual).isEqualTo(
-            new TimeEntryWeekPage(
-                new TimeEntryWeek(
-                    firstDateOfWeek,
-                    new PlannedWorkingHours(Duration.ofHours(40)),
-                    List.of(
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 6, 18),
-                            PlannedWorkingHours.ZERO,
-                            ShouldWorkingHours.ZERO,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 6, 17),
-                            PlannedWorkingHours.ZERO,
-                            ShouldWorkingHours.ZERO,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 6, 16),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 6, 15),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 6, 14),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 6, 13),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of()),
-                        new TimeEntryDay(
-                            false,
-                            LocalDate.of(2023, 6, 12),
-                            PlannedWorkingHours.EIGHT,
-                            ShouldWorkingHours.EIGHT,
-                            List.of(),
-                            List.of())
-                    )
-                ),
-                6
-            )
         );
     }
 

@@ -1,7 +1,6 @@
 package de.focusshift.zeiterfassung.overtime;
 
 import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
-import de.focusshift.zeiterfassung.timeentry.WorkDuration;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryDeletedEvent;
@@ -11,6 +10,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccount;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccountService;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;

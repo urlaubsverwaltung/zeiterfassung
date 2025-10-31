@@ -6,7 +6,7 @@ package de.focusshift.zeiterfassung.timeentry;
  * @param timeEntryWeek    one time entry week
  * @param totalTimeEntries number of total existing time entries
  */
-record TimeEntryWeekPage(TimeEntryWeek timeEntryWeek, long totalTimeEntries) {
+public record TimeEntryWeekPage(TimeEntryWeek timeEntryWeek, long totalTimeEntries) {
 
     public long timeEntryWeekTimeEntries() {
         return timeEntryWeek.timeEntries().size();

@@ -178,6 +178,82 @@
                   </div>
                 </div>
               </div>
+              <div
+                th:if="${settings.subtractBreakFromTimeEntryIsActive() != null}"
+                class="mt-8 lg:mt-12"
+              >
+                <h2
+                  class="font-bold"
+                  th:text="#{settings.work-duration.calculation.subtract-breaks.title}"
+                >
+                  Abzug von Pausen
+                </h2>
+                <p
+                  class="mt-2 text-gray-600"
+                  th:text="#{settings.work-duration.calculation.subtract-breaks.teaser-text}"
+                >
+                  Lege fest ob Pausen von Zeiteinträgen automatisch abgezogen
+                  werden sollen.
+                </p>
+                <p
+                  class="text-gray-600"
+                  th:text="#{settings.work-duration.calculation.subtract-breaks.teaser-text-2}"
+                >
+                  Beispiel ...
+                </p>
+                <div
+                  class="mt-4 gap-2"
+                  th:with="fieldName=${'subtractBreakFromTimeEntryActiveDate'}, hasError=${#fields.hasErrors(fieldName)}"
+                >
+                  <div
+                    class="flex gap-4 flex-col xs:flex-row xs:items-center xs:gap-1"
+                  >
+                    <div class="flex gap-2 items-center">
+                      <input
+                        type="checkbox"
+                        id="subtract-break-from-timeentry-is-active-checkbox"
+                        data-testid="subtract-break-from-timeentry-is-active-checkbox"
+                        th:field="*{subtractBreakFromTimeEntryIsActive}"
+                      />
+                      <label
+                        for="subtract-break-from-timeentry-is-active-checkbox"
+                        th:text="#{settings.work-duration.calculation.subtract-breaks.is-active.label}"
+                      >
+                        Abzug aktivieren
+                      </label>
+                    </div>
+                    <div
+                      class="flex flex-col gap-2 xs:flex-row xs:items-center"
+                    >
+                      <label
+                        for="subtractBreakFromTimeEntryActiveDate"
+                        th:text="#{settings.work-duration.calculation.subtract-breaks.date.label}"
+                      >
+                        ab dem
+                      </label>
+                      <input
+                        type="date"
+                        id="subtractBreakFromTimeEntryActiveDate"
+                        th:field="*{subtractBreakFromTimeEntryActiveDate}"
+                        class="w-full border border-gray-300 px-2 py-1 xs:w-40"
+                        th:classappend="${hasError ? 'invalid' : ''}"
+                        th:aria-invalid="${hasError}"
+                        th:aria-message="${hasError ? fieldName + '-error-message' : ''}"
+                      />
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <p
+                      th:id="${fieldName + '-error-message'}"
+                      th:text="${#fields.errors(fieldName)[0]}"
+                      th:if="${hasError}"
+                      class="invalid"
+                    >
+                      Fehlernachricht
+                    </p>
+                  </div>
+                </div>
+              </div>
               <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
                 <button
                   type="submit"

@@ -64,6 +64,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final TimeEntryService timeEntryService;
+    private final TimeEntryDayService timeEntryDayService;
     private final UserManagementService userManagementService;
     private final UserSettingsProvider userSettingsProvider;
     private final TimeEntryLockService timeEntryLockService;
@@ -73,6 +74,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     TimeEntryController(
         TimeEntryService timeEntryService,
+        TimeEntryDayService timeEntryDayService,
         UserManagementService userManagementService,
         UserSettingsProvider userSettingsProvider,
         TimeEntryLockService timeEntryLockService,
@@ -81,6 +83,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         Clock clock
     ) {
         this.timeEntryService = timeEntryService;
+        this.timeEntryDayService = timeEntryDayService;
         this.userManagementService = userManagementService;
         this.userSettingsProvider = userSettingsProvider;
         this.timeEntryLockService = timeEntryLockService;
@@ -287,7 +290,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
                 model.addAttribute("turboEditedTimeEntry", timeEntryDTO);
             } else {
                 LOG.info("Updated timeEntry {}. Rendering turbo frame.", timeEntryId);
-                final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(ownerLocalId, year, weekOfYear);
+                final TimeEntryWeekPage entryWeekPage = timeEntryDayService.getEntryWeekPage(ownerLocalId, year, weekOfYear);
                 final TimeEntryDay timeEntryDay = entryWeekPage.timeEntryWeek().days()
                     .stream()
                     .filter(day -> day.date().equals(timeEntryDTO.getDate()))
@@ -409,7 +412,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final Integer weekOfYear = yearAndWeek.week();
 
         final UserLocalId ownerLocalId = timeEntry.userIdComposite().localId();
-        final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(ownerLocalId, year, weekOfYear);
+        final TimeEntryWeekPage entryWeekPage = timeEntryDayService.getEntryWeekPage(ownerLocalId, year, weekOfYear);
 
         final Optional<TimeEntryDay> timeEntryDay = entryWeekPage.timeEntryWeek().days()
             .stream()
@@ -455,7 +458,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         final Integer year = yearAndWeek.year();
         final Integer weekOfYear = yearAndWeek.week();
 
-        final TimeEntryWeekPage entryWeekPage = timeEntryService.getEntryWeekPage(ownerLocalId, year, weekOfYear);
+        final TimeEntryWeekPage entryWeekPage = timeEntryDayService.getEntryWeekPage(ownerLocalId, year, weekOfYear);
         final TimeEntryWeekDto timeEntryWeekDto = toTimeEntryWeekDto(entryWeekPage.timeEntryWeek(), locale, currentUser);
 
         final int futureYear = lastWeekOfYear(year) == weekOfYear ? year + 1 : year;

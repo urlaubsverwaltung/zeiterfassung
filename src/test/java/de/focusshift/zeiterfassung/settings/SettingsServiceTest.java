@@ -10,13 +10,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.assertArg;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -31,11 +34,19 @@ class SettingsServiceTest {
     @Mock
     private LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
     @Mock
+    private SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
+
 
     @BeforeEach
     void setUp() {
-        sut = new SettingsService(federalStateSettingsRepository, lockTimeEntriesSettingsRepository, applicationEventPublisher);
+        sut = new SettingsService(
+            federalStateSettingsRepository,
+            lockTimeEntriesSettingsRepository,
+            subtractBreakFromTimeEntrySettingsRepository,
+            applicationEventPublisher
+        );
     }
 
     @Nested
@@ -192,6 +203,85 @@ class SettingsServiceTest {
             assertThat(actual.lockTimeEntriesDaysInPast()).isEqualTo(2);
 
             verifyNoInteractions(applicationEventPublisher);
+        }
+    }
+
+    @Nested
+    class SubtractBreakFromTimeEntrySettingsTest {
+
+        @Test
+        void ensureGetSubtractBreakFromTimeEntrySettings() {
+
+            final Instant enabledTimestamp = Instant.now();
+
+            final SubtractBreakFromTimeEntrySettingsEntity entity = new SubtractBreakFromTimeEntrySettingsEntity();
+            entity.setId(1L);
+            entity.setSubtractBreakFromTimeEntryIsActive(true);
+            entity.setSubtractBreakFromTimeEntryEnabledTimestamp(enabledTimestamp);
+
+            when(subtractBreakFromTimeEntrySettingsRepository.findAll()).thenReturn(List.of(entity));
+
+            final SubtractBreakFromTimeEntrySettings expected =
+                new SubtractBreakFromTimeEntrySettings(true, Optional.of(enabledTimestamp));
+
+            final Optional<SubtractBreakFromTimeEntrySettings> actual = sut.getSubtractBreakFromTimeEntrySettings();
+            assertThat(actual).hasValue(expected);
+        }
+
+        @Test
+        void ensureGetSubtractBreakFromTimeEntrySettingsReturnsDefaultSettings() {
+
+            when(subtractBreakFromTimeEntrySettingsRepository.findAll()).thenReturn(List.of());
+
+            assertThat(sut.getSubtractBreakFromTimeEntrySettings()).isEmpty();
+        }
+
+        @Test
+        void ensureUpdateDeactivatesSettingAndRemovesTimestamp() {
+            final SubtractBreakFromTimeEntrySettingsEntity entity = new SubtractBreakFromTimeEntrySettingsEntity();
+            entity.setId(1L);
+            entity.setSubtractBreakFromTimeEntryIsActive(true);
+            entity.setSubtractBreakFromTimeEntryEnabledTimestamp(Instant.now());
+
+            when(subtractBreakFromTimeEntrySettingsRepository.findAll()).thenReturn(List.of(entity));
+            when(subtractBreakFromTimeEntrySettingsRepository.save(any(SubtractBreakFromTimeEntrySettingsEntity.class))).thenAnswer(returnsFirstArg());
+
+            final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(false, null);
+
+            assertThat(result.subtractBreakFromTimeEntryIsActive()).isFalse();
+            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).isEmpty();
+        }
+
+        @Test
+        void ensureUpdateCreatesNewEntityIfNoneExists() {
+            when(subtractBreakFromTimeEntrySettingsRepository.findAll()).thenReturn(List.of());
+            when(subtractBreakFromTimeEntrySettingsRepository.save(any(SubtractBreakFromTimeEntrySettingsEntity.class))).thenAnswer(returnsFirstArg());
+
+            final Instant timestamp = Instant.now();
+
+            final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(true, timestamp);
+
+            assertThat(result.subtractBreakFromTimeEntryIsActive()).isTrue();
+            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).hasValue(timestamp);
+
+            verify(subtractBreakFromTimeEntrySettingsRepository).save(assertArg(entity -> assertThat(entity.getId()).isNull()));
+        }
+
+        @Test
+        void ensureUpdateDoesNotChangeTimestampIfStateUnchanged() {
+            final Instant timestamp = Instant.now();
+            final SubtractBreakFromTimeEntrySettingsEntity entity = new SubtractBreakFromTimeEntrySettingsEntity();
+            entity.setId(1L);
+            entity.setSubtractBreakFromTimeEntryIsActive(true);
+            entity.setSubtractBreakFromTimeEntryEnabledTimestamp(timestamp);
+
+            when(subtractBreakFromTimeEntrySettingsRepository.findAll()).thenReturn(List.of(entity));
+            when(subtractBreakFromTimeEntrySettingsRepository.save(any(SubtractBreakFromTimeEntrySettingsEntity.class))).thenAnswer(returnsFirstArg());
+
+            final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(true, timestamp);
+
+            assertThat(result.subtractBreakFromTimeEntryIsActive()).isTrue();
+            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).hasValue(timestamp);
         }
     }
 }

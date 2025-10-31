@@ -1,11 +1,15 @@
-package de.focusshift.zeiterfassung.timeentry;
+package de.focusshift.zeiterfassung.workduration;
 
+import de.focusshift.zeiterfassung.timeentry.BreakDuration;
 import de.focusshift.zeiterfassung.workingtime.ZeitDuration;
 
 import java.time.Duration;
 
 /**
- * Defines a {@linkplain Duration} of worked time. Different to {@linkplain BreakDuration}.
+ * Defines the calculated {@linkplain Duration} of worked time. Different to {@linkplain BreakDuration}.
+ *
+ * <p>
+ * Note that there are various {@link WorkDurationCalculator} implementations that can be configured by the user.
  *
  * @param duration the exact duration. not rounded up to minutes.
  */

@@ -1,28 +1,17 @@
 package de.focusshift.zeiterfassung.report;
 
-import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
-import de.focusshift.zeiterfassung.timeentry.WorkDuration;
-import de.focusshift.zeiterfassung.user.UserId;
-import de.focusshift.zeiterfassung.user.UserIdComposite;
-import de.focusshift.zeiterfassung.usermanagement.User;
-import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
-import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
-import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ReportWeekTest {
 
@@ -33,67 +22,20 @@ class ReportWeekTest {
     }
 
     @Test
-    void ensureAverageDayWorkDurationIsEmptyWhenAllReportDaysHasNotPlannedWorkingHours() {
-
-        final UserId userId = new UserId("uuid");
-        final UserLocalId userLocalId = new UserLocalId(1L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-
-        LocalDate date = LocalDate.of(2023, 2, 13);
-        final ReportWeek sut = new ReportWeek(date, List.of(
-            new ReportDay(date, false, Map.of(userIdComposite, zeroHoursDay(date)), Map.of(userIdComposite, List.of()), Map.of()),
-            new ReportDay(date.plusDays(1), false, Map.of(userIdComposite, zeroHoursDay(date.plusDays(1))), Map.of(userIdComposite, List.of()), Map.of()),
-            new ReportDay(date.plusDays(2), false, Map.of(userIdComposite, zeroHoursDay(date.plusDays(2))), Map.of(userIdComposite, List.of()), Map.of()),
-            new ReportDay(date.plusDays(3), false, Map.of(userIdComposite, zeroHoursDay(date.plusDays(3))), Map.of(userIdComposite, List.of()), Map.of()),
-            new ReportDay(date.plusDays(4), false, Map.of(userIdComposite, zeroHoursDay(date.plusDays(4))), Map.of(userIdComposite, List.of()), Map.of()),
-            new ReportDay(date.plusDays(5), false, Map.of(userIdComposite, zeroHoursDay(date.plusDays(5))), Map.of(userIdComposite, List.of()), Map.of())
-        ));
-
-        assertThat(sut.averageDayWorkDuration()).isEqualTo(WorkDuration.ZERO);
-    }
-
-    @Test
     void ensureAverageDayWorkDuration() {
 
-        final UserId userId = new UserId("batman");
-        final UserLocalId userLocalId = new UserLocalId(1L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final LocalDate date = LocalDate.of(2023, 2, 13);
 
-        final LocalTime timeStart = LocalTime.of(8, 0);
-        final LocalTime timeEnd = timeStart.plusHours(8);
+        final ReportDay day1 = dayWithWorkDuration(new WorkDuration(Duration.ofHours(1)));
+        final ReportDay day2 = dayWithWorkDuration(new WorkDuration(Duration.ofHours(2)));
+        final ReportDay day3 = dayWithWorkDuration(new WorkDuration(Duration.ofHours(3)));
+        final ReportDay day4 = dayWithWorkDuration(new WorkDuration(Duration.ofHours(4)));
+        final ReportDay day5 = dayWithWorkDuration(new WorkDuration(Duration.ofHours(5)));
+        final ReportDay day6 = dayWithWorkDuration(new WorkDuration(Duration.ofHours(6)));
+        final ReportDay day7 = dayWithWorkDuration(new WorkDuration(Duration.ofHours(7)));
 
-        final LocalDate monday = LocalDate.of(2023, 2, 20);
-        final LocalDate tuesday = monday.plusDays(1);
-        final LocalDate wednesday = monday.plusDays(2);
-        final LocalDate thursday = monday.plusDays(3);
-        final LocalDate friday = monday.plusDays(4);
-        final LocalDate saturday = monday.plusDays(5);
-        final LocalDate sunday = monday.plusDays(6);
-
-        final ReportWeek sut = new ReportWeek(monday, List.of(
-            new ReportDay(monday, false, Map.of(user.userIdComposite(), eightHoursDay(monday)), Map.of(user.userIdComposite(), List.of(
-                new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(monday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(monday, timeEnd), UTC), false)
-            )), Map.of()),
-            new ReportDay(tuesday, false, Map.of(user.userIdComposite(), eightHoursDay(tuesday)), Map.of(user.userIdComposite(), List.of(
-                new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(tuesday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(tuesday, timeEnd), UTC), false)
-            )), Map.of()),
-            new ReportDay(wednesday, false, Map.of(user.userIdComposite(), eightHoursDay(wednesday)), Map.of(user.userIdComposite(), List.of(
-                new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(wednesday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(wednesday, timeEnd), UTC), false)
-            )), Map.of()),
-            new ReportDay(thursday, false, Map.of(user.userIdComposite(), eightHoursDay(thursday)), Map.of(user.userIdComposite(), List.of(
-                new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(thursday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(thursday, timeEnd), UTC), false)
-            )), Map.of()),
-            new ReportDay(friday, false, Map.of(user.userIdComposite(), eightHoursDay(friday)), Map.of(user.userIdComposite(), List.of(
-                new ReportDayEntry(null, user, "", ZonedDateTime.of(LocalDateTime.of(friday, timeStart), UTC), ZonedDateTime.of(LocalDateTime.of(friday, timeEnd), UTC), false)
-            )), Map.of()),
-            new ReportDay(saturday, false, Map.of(user.userIdComposite(), zeroHoursDay(saturday)), Map.of(user.userIdComposite(), List.of()), Map.of()),
-            new ReportDay(sunday, false, Map.of(user.userIdComposite(), zeroHoursDay(sunday)), Map.of(user.userIdComposite(), List.of()), Map.of())
-        ));
-
-        final WorkDuration actual = sut.averageDayWorkDuration();
-
-        assertThat(actual).isEqualTo(new WorkDuration(Duration.ofHours(8)));
+        final ReportWeek sut = new ReportWeek(date, List.of(day1, day2, day3, day4, day4, day5, day6, day7));
+        assertThat(sut.averageDayWorkDuration()).isEqualTo(new WorkDuration(Duration.ofHours(4)));
     }
 
     @ParameterizedTest
@@ -119,12 +61,11 @@ class ReportWeekTest {
         assertThat(timeEntryWeek.calenderWeek()).isEqualTo(week);
     }
 
+    private ReportDay dayWithWorkDuration(WorkDuration workDuration) {
 
-    private WorkingTimeCalendar zeroHoursDay(LocalDate date) {
-        return new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.ZERO), Map.of(date, List.of()));
-    }
+        final ReportDay day = mock(ReportDay.class);
+        when(day.workDuration()).thenReturn(workDuration);
 
-    private WorkingTimeCalendar eightHoursDay(LocalDate date) {
-        return new WorkingTimeCalendar(Map.of(date, PlannedWorkingHours.EIGHT), Map.of(date, List.of()));
+        return day;
     }
 }

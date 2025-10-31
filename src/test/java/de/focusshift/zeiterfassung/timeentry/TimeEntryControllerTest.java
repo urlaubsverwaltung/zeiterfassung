@@ -14,6 +14,7 @@ import de.focusshift.zeiterfassung.user.YearFormat;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,6 +73,8 @@ class TimeEntryControllerTest implements ControllerTest {
     @Mock
     private TimeEntryService timeEntryService;
     @Mock
+    private TimeEntryDayService timeEntryDayService;
+    @Mock
     private TimeEntryLockService timeEntryLockService;
     @Mock
     private UserManagementService userManagementService;
@@ -86,14 +89,15 @@ class TimeEntryControllerTest implements ControllerTest {
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
     }
 
     @Test
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
 
         mockUserSettings(ZoneOffset.UTC);
 
@@ -108,10 +112,10 @@ class TimeEntryControllerTest implements ControllerTest {
         final LocalDate timeEntryDate = LocalDate.parse("2025-02-28");
         final LocalDate firstDateOfWeek = LocalDate.parse("2025-02-24");
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, timeEntryDate, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, timeEntryDate, new WorkDuration(Duration.ofMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(firstDateOfWeek, PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
-        when(timeEntryService.getEntryWeekPage(userLocalId, 2025, 9)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2025, 9)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(LocalDate.class), eq(MonthFormat.STRING), eq(YearFormat.FULL))).thenReturn("formatted-date-year-full");
         when(dateFormatter.formatDate(any(LocalDate.class), eq(MonthFormat.STRING), eq(YearFormat.NONE))).thenReturn("formatted-date");
@@ -185,12 +189,12 @@ class TimeEntryControllerTest implements ControllerTest {
         final Instant absenceEnd = ZonedDateTime.of(2025, 1, 3, 15, 0, 0, 0, zoneIdBerlin).toInstant();
         final Absence absence = new Absence(userId, absenceStart, absenceEnd, DayLength.FULL, locale -> "", YELLOW, HOLIDAY);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
-        final TimeEntryDay timeEntryDayWithAbsence = new TimeEntryDay(false, LocalDate.of(2025, 1, 2), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of(absence));
-        final TimeEntryDay timeEntryDayWithoutTimeEntriesAndWithoutAbsences = new TimeEntryDay(false, LocalDate.of(2025, 1, 3), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of());
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), new WorkDuration(Duration.ofMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
+        final TimeEntryDay timeEntryDayWithAbsence = new TimeEntryDay(false, LocalDate.of(2025, 1, 2), WorkDuration.ZERO, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of(absence));
+        final TimeEntryDay timeEntryDayWithoutTimeEntriesAndWithoutAbsences = new TimeEntryDay(false, LocalDate.of(2025, 1, 3), WorkDuration.ZERO, PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(timeEntryDay, timeEntryDayWithAbsence, timeEntryDayWithoutTimeEntriesAndWithoutAbsences));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
-        when(timeEntryService.getEntryWeekPage(userLocalId, 2025, 1)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2025, 1)).thenReturn(timeEntryWeekPage);
 
         // week from to
         when(dateFormatter.formatDate(LocalDate.of(2024, 12, 30), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-30");
@@ -275,10 +279,10 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2024, 12, 31, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), new WorkDuration(Duration.ofMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 42);
-        when(timeEntryService.getEntryWeekPage(userLocalId, 2025, 1)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2025, 1)).thenReturn(timeEntryWeekPage);
 
         // week from to
         when(dateFormatter.formatDate(LocalDate.of(2024, 12, 30), MonthFormat.STRING, YearFormat.FULL)).thenReturn("formatted-2024-12-30");
@@ -350,7 +354,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 12, 27), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(userLocalId, 2022, 52)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 52)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -386,7 +390,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 1, 3), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(userLocalId, 2022, 1)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 1)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -422,7 +426,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2021, 1, 4), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(userLocalId, 2021, 1)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2021, 1)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -466,7 +470,8 @@ class TimeEntryControllerTest implements ControllerTest {
     void ensureTimeEntriesForOtherUser() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-03-18T10:04:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
 
         final int year = 2025;
         final int weekOfYear = 12;
@@ -486,7 +491,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.parse("2025-03-17"), PlannedWorkingHours.ZERO, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(ownerLocalId, year, weekOfYear)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(ownerLocalId, year, weekOfYear)).thenReturn(timeEntryWeekPage);
 
         final ViewedUserDto expectedViewedUserDto = new ViewedUserDto(ownerLocalId.value(), owner.givenName(), owner.familyName(), owner.fullName(), owner.initials(), owner.email().value());
         final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO();
@@ -617,7 +622,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 99);
-        when(timeEntryService.getEntryWeekPage(userLocalId, 2021, 52)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2021, 52)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -757,6 +762,7 @@ class TimeEntryControllerTest implements ControllerTest {
                 new TimeEntryDay(
                     false,
                     LocalDate.of(2022, 9, 28),
+                    new WorkDuration(Duration.ofMinutes(45)),
                     PlannedWorkingHours.EIGHT,
                     ShouldWorkingHours.EIGHT,
                     List.of(timeEntryToEdit),
@@ -764,6 +770,7 @@ class TimeEntryControllerTest implements ControllerTest {
                 new TimeEntryDay(
                     false,
                     LocalDate.of(2022, 9, 29),
+                    new WorkDuration(Duration.ofMinutes(30)),
                     PlannedWorkingHours.EIGHT,
                     ShouldWorkingHours.EIGHT,
                     List.of(timeEntryOtherDay),
@@ -772,7 +779,7 @@ class TimeEntryControllerTest implements ControllerTest {
         );
 
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
-        when(timeEntryService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
 
         perform(
             post("/timeentries/1337")
@@ -816,10 +823,10 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryId timeEntryId = new TimeEntryId(1337L);
         final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2022, 9, 19), new WorkDuration(Duration.ofMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
-        when(timeEntryService.getEntryWeekPage(userLocalId, 2021, 52)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2021, 52)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -1005,10 +1012,10 @@ class TimeEntryControllerTest implements ControllerTest {
 
         when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntryToDelete));
 
-        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2022, 9, 28), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry2), List.of());
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2022, 9, 28), new WorkDuration(Duration.ofHours(1)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry2), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 
@@ -1092,7 +1099,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
-        when(timeEntryService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
 

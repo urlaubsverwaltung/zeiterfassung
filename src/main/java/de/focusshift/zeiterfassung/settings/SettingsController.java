@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.settings;
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import jakarta.annotation.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -23,6 +25,7 @@ import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
 import static java.util.Objects.requireNonNullElse;
+import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 @Controller
@@ -54,7 +57,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
 
         final FederalStateSettings federalStateSettings = settingsService.getFederalStateSettings();
         final LockTimeEntriesSettings lockTimeEntriesSettings = settingsService.getLockTimeEntriesSettings();
-        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings);
+        final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings = settingsService.getSubtractBreakFromTimeEntrySettings();
+        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings.orElse(null));
 
         prepareModel(model, locale, settingsDto);
 
@@ -72,15 +76,38 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
 
         settingsDtoValidator.validate(settingsDto, bindingResult);
 
-        if (bindingResult.hasErrors() || preview.isPresent()) {
+        final Boolean subtractBreakFromTimeEntryIsActive = settingsDto.subtractBreakFromTimeEntryIsActive();
+
+        if (preview.isPresent()) {
+            prepareModel(model, locale, settingsDto);
+            return new ModelAndView("settings/settings", model.asMap(), OK);
+        }
+
+        if (bindingResult.hasErrors()) {
             prepareModel(model, locale, settingsDto);
             return new ModelAndView("settings/settings", model.asMap(), UNPROCESSABLE_ENTITY);
-        } else {
-            settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
-            final int lockTimeEntriesDaysInPast = requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1);
-            settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), lockTimeEntriesDaysInPast);
-            return new ModelAndView("redirect:/settings");
         }
+
+        settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
+
+        final int lockTimeEntriesDaysInPast = requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1);
+        settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), lockTimeEntriesDaysInPast);
+
+        if (subtractBreakFromTimeEntryIsActive != null) {
+            final LocalDate date = settingsDto.subtractBreakFromTimeEntryActiveDate();
+
+            final Instant timestamp;
+            if (date == null) {
+                timestamp = null;
+            } else {
+                final ZoneId zoneId = userSettingsProvider.zoneId();
+                timestamp = date.atStartOfDay(zoneId).toInstant();
+            }
+
+            settingsService.updateSubtractBreakFromTimeEntrySettings(subtractBreakFromTimeEntryIsActive, timestamp);
+        }
+
+        return new ModelAndView("redirect:/settings");
     }
 
     private void prepareModel(Model model, Locale locale, SettingsDto settingsDto) {
@@ -89,15 +116,31 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
         model.addAttribute("timeslotLockedExampleDate", getTimeslotLockedExampleDate(settingsDto, locale));
     }
 
-    private SettingsDto toSettingsDto(FederalStateSettings federalStateSettings, LockTimeEntriesSettings lockTimeEntriesSettings) {
+    private SettingsDto toSettingsDto(
+        FederalStateSettings federalStateSettings,
+        LockTimeEntriesSettings lockTimeEntriesSettings,
+        @Nullable SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings
+    ) {
+
+        final ZoneId userZoneId = userSettingsProvider.zoneId();
 
         final int lockTimeEntriesDaysInPast = lockTimeEntriesSettings.lockTimeEntriesDaysInPast();
+
+        final Boolean subtractBreakFromTimeEntryIsActive = subtractBreakFromTimeEntrySettings == null
+            ? null
+            : subtractBreakFromTimeEntrySettings.subtractBreakFromTimeEntryIsActive();
+
+        final LocalDate subtractBreakFromTimeEntryIsActiveDate = subtractBreakFromTimeEntrySettings == null
+            ? null
+            : subtractBreakFromTimeEntrySettings.timestampAsLocalDate(userZoneId).orElse(null);
 
         return new SettingsDto(
             federalStateSettings.federalState(),
             federalStateSettings.worksOnPublicHoliday(),
             lockTimeEntriesSettings.lockingIsActive(),
-            lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null
+            lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null,
+            subtractBreakFromTimeEntryIsActive,
+            subtractBreakFromTimeEntryIsActiveDate
         );
     }
 

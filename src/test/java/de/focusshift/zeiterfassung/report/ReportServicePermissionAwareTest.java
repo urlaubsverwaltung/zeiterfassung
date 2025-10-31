@@ -54,13 +54,13 @@ class ReportServicePermissionAwareTest {
         assertThat(actual).isNotNull();
         assertThat(actual.firstDateOfWeek()).isEqualTo(LocalDate.of(2023, 2, 13));
         assertThat(actual.reportDays()).containsExactly(
-            new ReportDay(LocalDate.of(2023, 2, 13), false, Map.of(), Map.of(), Map.of()),
-            new ReportDay(LocalDate.of(2023, 2, 14), false, Map.of(), Map.of(), Map.of()),
-            new ReportDay(LocalDate.of(2023, 2, 15), false, Map.of(), Map.of(), Map.of()),
-            new ReportDay(LocalDate.of(2023, 2, 16), false, Map.of(), Map.of(), Map.of()),
-            new ReportDay(LocalDate.of(2023, 2, 17), false, Map.of(), Map.of(), Map.of()),
-            new ReportDay(LocalDate.of(2023, 2, 18), false, Map.of(), Map.of(), Map.of()),
-            new ReportDay(LocalDate.of(2023, 2, 19), false, Map.of(), Map.of(), Map.of())
+            new ReportDay(LocalDate.of(2023, 2, 13), false, Map.of(), Map.of(), Map.of(), Map.of()),
+            new ReportDay(LocalDate.of(2023, 2, 14), false, Map.of(), Map.of(), Map.of(), Map.of()),
+            new ReportDay(LocalDate.of(2023, 2, 15), false, Map.of(), Map.of(), Map.of(), Map.of()),
+            new ReportDay(LocalDate.of(2023, 2, 16), false, Map.of(), Map.of(), Map.of(), Map.of()),
+            new ReportDay(LocalDate.of(2023, 2, 17), false, Map.of(), Map.of(), Map.of(), Map.of()),
+            new ReportDay(LocalDate.of(2023, 2, 18), false, Map.of(), Map.of(), Map.of(), Map.of()),
+            new ReportDay(LocalDate.of(2023, 2, 19), false, Map.of(), Map.of(), Map.of(), Map.of())
         );
     }
 
@@ -86,65 +86,65 @@ class ReportServicePermissionAwareTest {
         assertThat(actual.weeks().get(0)).satisfies(week -> {
             assertThat(week.firstDateOfWeek()).isEqualTo(LocalDate.of(2023, 1, 30));
             assertThat(week.reportDays()).containsExactly(
-                new ReportDay(LocalDate.of(2023, 1, 30), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 1, 31), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 1), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 2), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 3), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 4), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 5), false, Map.of(), Map.of(), Map.of())
+                new ReportDay(LocalDate.of(2023, 1, 30), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 1, 31), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 1), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 2), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 3), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 4), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 5), false, Map.of(), Map.of(), Map.of(), Map.of())
             );
         });
 
         assertThat(actual.weeks().get(1)).satisfies(week -> {
             assertThat(week.firstDateOfWeek()).isEqualTo(LocalDate.of(2023, 2, 6));
             assertThat(week.reportDays()).containsExactly(
-                new ReportDay(LocalDate.of(2023, 2, 6), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 7), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 8), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 9), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 10), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 11), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 12), false, Map.of(), Map.of(), Map.of())
+                new ReportDay(LocalDate.of(2023, 2, 6), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 7), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 8), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 9), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 10), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 11), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 12), false, Map.of(), Map.of(), Map.of(), Map.of())
             );
         });
 
         assertThat(actual.weeks().get(2)).satisfies(week -> {
             assertThat(week.firstDateOfWeek()).isEqualTo(LocalDate.of(2023, 2, 13));
             assertThat(week.reportDays()).containsExactly(
-                new ReportDay(LocalDate.of(2023, 2, 13), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 14), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 15), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 16), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 17), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 18), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 19), false, Map.of(), Map.of(), Map.of())
+                new ReportDay(LocalDate.of(2023, 2, 13), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 14), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 15), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 16), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 17), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 18), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 19), false, Map.of(), Map.of(), Map.of(), Map.of())
             );
         });
 
         assertThat(actual.weeks().get(3)).satisfies(week -> {
             assertThat(week.firstDateOfWeek()).isEqualTo(LocalDate.of(2023, 2, 20));
             assertThat(week.reportDays()).containsExactly(
-                new ReportDay(LocalDate.of(2023, 2, 20), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 21), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 22), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 23), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 24), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 25), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 26), false, Map.of(), Map.of(), Map.of())
+                new ReportDay(LocalDate.of(2023, 2, 20), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 21), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 22), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 23), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 24), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 25), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 26), false, Map.of(), Map.of(), Map.of(), Map.of())
             );
         });
 
         assertThat(actual.weeks().get(4)).satisfies(week -> {
             assertThat(week.firstDateOfWeek()).isEqualTo(LocalDate.of(2023, 2, 27));
             assertThat(week.reportDays()).containsExactly(
-                new ReportDay(LocalDate.of(2023, 2, 27), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 28), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 3, 1), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 3, 2), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 3, 3), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 3, 4), false, Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 3, 5), false, Map.of(), Map.of(), Map.of())
+                new ReportDay(LocalDate.of(2023, 2, 27), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 28), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 3, 1), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 3, 2), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 3, 3), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 3, 4), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 3, 5), false, Map.of(), Map.of(), Map.of(), Map.of())
             );
         });
     }

@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.ZeitDuration;
 
 import java.time.Duration;
@@ -8,6 +9,10 @@ import java.time.ZonedDateTime;
 
 /**
  * Describes one time entry of a user.
+ *
+ * <p>
+ * Note that the {@link TimeEntry#workDuration()} is not a calculated one but the duration between start and end!
+ * You may be interested in the calculated {@link WorkDuration} of a {@link TimeEntryDay}, actually.
  *
  * @param id id of this time entry
  * @param userIdComposite id composite of the corresponding user
@@ -49,7 +54,16 @@ public record TimeEntry(
         return new BreakDuration(isBreak ? duration() : Duration.ZERO);
     }
 
+    /**
+     * Returns the duration between start and end if this entry is not a break, {@link WorkDuration#ZERO} otherwise.
+     *
+     * <p>
+     * Note that this {@link WorkDuration} must not be used for reports or if you have a day context for instance.
+     * See {@link TimeEntryDay#workDuration()} for this!
+     *
+     * @return the work duration of this entry
+     */
     public WorkDuration workDuration() {
-        return new WorkDuration(isBreak ? Duration.ZERO : duration());
+        return isBreak ? WorkDuration.ZERO : new WorkDuration(duration());
     }
 }

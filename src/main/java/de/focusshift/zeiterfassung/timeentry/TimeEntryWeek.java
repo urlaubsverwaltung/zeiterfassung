@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 
 import java.time.Duration;
@@ -9,7 +10,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static java.util.Locale.GERMANY;
-import static java.util.function.Predicate.not;
 
 /**
  * Represents a week of time entries.
@@ -18,7 +18,7 @@ import static java.util.function.Predicate.not;
  * @param plannedWorkingHours {@link PlannedWorkingHours} for this week
  * @param days sorted list of days
  */
-record TimeEntryWeek(
+public record TimeEntryWeek(
     LocalDate firstDateOfWeek,
     PlannedWorkingHours plannedWorkingHours,
     List<TimeEntryDay> days
@@ -41,12 +41,12 @@ record TimeEntryWeek(
         return worked.minus(shouldWorkingHours().durationInMinutes());
     }
 
+    @Override
     public WorkDuration workDuration() {
         return days
             .stream()
             .map(TimeEntryDay::timeEntries)
             .flatMap(Collection::stream)
-            .filter(not(TimeEntry::isBreak))
             .map(TimeEntry::workDuration)
             .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }

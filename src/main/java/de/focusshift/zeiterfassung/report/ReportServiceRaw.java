@@ -3,14 +3,16 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDay;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDayService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import org.slf4j.Logger;
@@ -20,7 +22,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,8 +32,8 @@ import java.util.stream.IntStream;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.temporal.ChronoUnit.MONTHS;
+import static java.util.HashMap.newHashMap;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 @Service
@@ -40,21 +41,21 @@ public class ReportServiceRaw {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
-    private final TimeEntryService timeEntryService;
+    private final TimeEntryDayService timeEntryDayService;
     private final UserManagementService userManagementService;
     private final UserDateService userDateService;
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final TimeEntryLockService timeEntryLockService;
 
     ReportServiceRaw(
-        TimeEntryService timeEntryService,
+        TimeEntryDayService timeEntryDayService,
         UserManagementService userManagementService,
         UserDateService userDateService,
         WorkingTimeCalendarService workingTimeCalendarService,
         TimeEntryLockService timeEntryLockService
     ) {
 
-        this.timeEntryService = timeEntryService;
+        this.timeEntryDayService = timeEntryDayService;
         this.userManagementService = userManagementService;
         this.userDateService = userDateService;
         this.workingTimeCalendarService = workingTimeCalendarService;
@@ -66,24 +67,15 @@ public class ReportServiceRaw {
         final Map<UserIdComposite, User> userById = userManagementService.findAllUsers().stream()
             .collect(toMap(User::userIdComposite, identity()));
 
-        final Map<UserIdComposite, List<TimeEntry>> timeEntriesByUserId =
-            timeEntryService.getEntriesForAllUsers(date, date.plusDays(1));
-
-        final Map<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportEntriesByDate =
-            mapTimeEntriesToReportDayEntries(timeEntriesByUserId, userById);
+        final Map<LocalDate, Map<UserIdComposite, TimeEntryDay>> timeEntryDaysByDate =
+            timeEntryDaysForAllUsers(date, date.plusDays(1));
 
         final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUserId =
             workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(date, date.plusDays(1));
 
         final boolean locked = timeEntryLockService.isLocked(date);
 
-        return toReportDay(
-            date,
-            userById,
-            workingTimeCalendarByUserId,
-            reportEntriesByDate::get,
-            locked
-        );
+        return toReportDay(date, userById, workingTimeCalendarByUserId, timeEntryDaysByDate, locked);
     }
 
     ReportWeek getReportWeek(Year year, int week, UserLocalId userLocalId) {
@@ -93,7 +85,7 @@ public class ReportServiceRaw {
 
         return createReportWeek(year, week,
             List.of(user),
-            period -> Map.of(user.userIdComposite(), timeEntryService.getEntries(period.from(), period.toExclusive(), userLocalId)),
+            period -> Map.of(user.userIdComposite(), timeEntryDayService.getTimeEntryDays(period.from(), period.toExclusive(), userLocalId)),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
@@ -103,7 +95,7 @@ public class ReportServiceRaw {
 
         return createReportWeek(year, week,
             users,
-            period -> timeEntryService.getEntries(period.from(), period.toExclusive(), userLocalIds),
+            period -> timeEntryDayService.getTimeEntryDays(period.from(), period.toExclusive(), userLocalIds),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds));
     }
 
@@ -113,7 +105,7 @@ public class ReportServiceRaw {
 
         return createReportWeek(year, week,
             users,
-            period -> timeEntryService.getEntriesForAllUsers(period.from(), period.toExclusive()),
+            period -> timeEntryDayService.getTimeEntryDaysForAllUsers(period.from(), period.toExclusive()),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(period.from(), period.toExclusive()));
     }
 
@@ -124,7 +116,7 @@ public class ReportServiceRaw {
 
         return createReportMonth(yearMonth,
             List.of(user),
-            period -> timeEntryService.getEntries(period.from(), period.toExclusive(), List.of(user.userLocalId())),
+            period -> timeEntryDayService.getTimeEntryDays(period.from(), period.toExclusive(), List.of(user.userLocalId())),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), List.of(user.userLocalId())));
     }
 
@@ -134,7 +126,7 @@ public class ReportServiceRaw {
 
         return createReportMonth(yearMonth,
             users,
-            period -> timeEntryService.getEntries(period.from(), period.toExclusive(), userLocalIds),
+            period -> timeEntryDayService.getTimeEntryDays(period.from(), period.toExclusive(), userLocalIds),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForUsers(period.from(), period.toExclusive(), userLocalIds));
     }
 
@@ -144,104 +136,88 @@ public class ReportServiceRaw {
 
         return createReportMonth(yearMonth,
             users,
-            period -> timeEntryService.getEntriesForAllUsers(period.from(), period.toExclusive()),
+            period -> timeEntryDayService.getTimeEntryDaysForAllUsers(period.from(), period.toExclusive()),
             period -> workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(period.from(), period.toExclusive()));
+    }
+
+    private Map<LocalDate, Map<UserIdComposite, TimeEntryDay>> timeEntryDaysForAllUsers(LocalDate from, LocalDate toExclusive) {
+        final Map<UserIdComposite, List<TimeEntryDay>> timeEntryDaysByUser = timeEntryDayService.getTimeEntryDaysForAllUsers(from, toExclusive);
+        return groupByDate(timeEntryDaysByUser);
+    }
+
+    private Map<LocalDate, Map<UserIdComposite, TimeEntryDay>> groupByDate(Map<UserIdComposite, List<TimeEntryDay>> daysByUser) {
+
+        final Map<LocalDate, Map<UserIdComposite, TimeEntryDay>> byDate = new HashMap<>();
+
+        for (Map.Entry<UserIdComposite, List<TimeEntryDay>> entry : daysByUser.entrySet()) {
+            final UserIdComposite userId = entry.getKey();
+            for (TimeEntryDay timeEntryDay : entry.getValue()) {
+                final Map<UserIdComposite, TimeEntryDay> map = byDate.computeIfAbsent(timeEntryDay.date(), date -> new HashMap<>());
+                map.put(userId, timeEntryDay);
+            }
+        }
+
+        return byDate;
     }
 
     private ReportWeek createReportWeek(Year year, int week,
                                         List<User> users,
-                                        Function<Period, Map<UserIdComposite, List<TimeEntry>>> timeEntriesProvider,
+                                        Function<Period, Map<UserIdComposite, List<TimeEntryDay>>> timeEntryDaysProvider,
                                         Function<Period, Map<UserIdComposite, WorkingTimeCalendar>> workingTimeCalendarProvider) {
 
         final LocalDate firstDateOfWeek = userDateService.firstDayOfWeek(year, week);
         final Period period = new Period(firstDateOfWeek, firstDateOfWeek.plusWeeks(1));
 
-        final Map<UserIdComposite, List<TimeEntry>> timeEntries = timeEntriesProvider.apply(period);
+        final Map<UserIdComposite, List<TimeEntryDay>> timeEntryDays = timeEntryDaysProvider.apply(period);
         final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
 
-        return reportWeek(firstDateOfWeek, users, timeEntries, workingTimeCalendars);
+        return reportWeek(firstDateOfWeek, users, timeEntryDays, workingTimeCalendars);
     }
 
     private ReportMonth createReportMonth(YearMonth yearMonth,
                                           List<User> users,
-                                          Function<Period, Map<UserIdComposite, List<TimeEntry>>> timeEntriesProvider,
+                                          Function<Period, Map<UserIdComposite, List<TimeEntryDay>>> timeEntryDaysProvider,
                                           Function<Period, Map<UserIdComposite, WorkingTimeCalendar>> workingTimeCalendarProvider) {
 
         final LocalDate firstOfMonth = LocalDate.of(yearMonth.getYear(), yearMonth.getMonthValue(), 1);
 
         final Period period = new Period(firstOfMonth, firstOfMonth.plusMonths(1));
 
-        final Map<UserIdComposite, List<TimeEntry>> timeEntries = timeEntriesProvider.apply(period);
+        final Map<UserIdComposite, List<TimeEntryDay>> timeEntryDays = timeEntryDaysProvider.apply(period);
         final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
 
         final List<ReportWeek> weeks = getStartOfWeekDatesForMonth(yearMonth)
             .stream()
-            .map(startOfWeekDate -> reportWeek(startOfWeekDate, users, timeEntries, workingTimeCalendars))
+            .map(startOfWeekDate -> reportWeek(startOfWeekDate, users, timeEntryDays, workingTimeCalendars))
             .toList();
 
         return new ReportMonth(yearMonth, weeks);
     }
 
     private ReportWeek reportWeek(LocalDate startOfWeekDate, List<User> users,
-                                  Map<UserIdComposite, List<TimeEntry>> timeEntriesByUserId,
+                                  Map<UserIdComposite, List<TimeEntryDay>> timeEntryDaysByUser,
                                   Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars) {
 
         final Map<UserIdComposite, User> userById = users.stream().collect(toMap(User::userIdComposite, identity()));
-
-        final Map<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportEntriesByDate =
-            mapTimeEntriesToReportDayEntries(timeEntriesByUserId, userById);
-
-        final Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> resolveReportDayEntries =
-            (LocalDate date) -> reportEntriesByDate.getOrDefault(date, new HashMap<>());
+        final Map<LocalDate, Map<UserIdComposite, TimeEntryDay>> timeEntryByDate = groupByDate(timeEntryDaysByUser);
 
         final LockTimeEntriesSettings settings = timeEntryLockService.getLockTimeEntriesSettings();
 
         final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
-            .mapToObj(daysToAdd ->
-            {
-                LocalDate date = startOfWeekDate.plusDays(daysToAdd);
-                boolean locked = timeEntryLockService.isLocked(date, settings);
+            .mapToObj(daysToAdd -> {
+                final LocalDate date = startOfWeekDate.plusDays(daysToAdd);
+                final boolean locked = timeEntryLockService.isLocked(date, settings);
                 return toReportDay(
                     date,
                     userById,
                     workingTimeCalendars,
-                    resolveReportDayEntries,
+                    timeEntryByDate,
                     locked
                 );
             })
             .toList();
 
         return new ReportWeek(startOfWeekDate, reportDays);
-    }
-
-    private Map<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> mapTimeEntriesToReportDayEntries(
-        Map<UserIdComposite, List<TimeEntry>> timeEntriesByUserId,
-        Map<UserIdComposite, User> userById
-    ) {
-
-        final Map<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportEntriesByDate = new HashMap<>();
-
-        for (Map.Entry<UserIdComposite, List<TimeEntry>> entry : timeEntriesByUserId.entrySet()) {
-
-            final UserIdComposite userIdComposite = entry.getKey();
-
-            final Map<LocalDate, List<ReportDayEntry>> collect = entry.getValue()
-                .stream()
-                .map(t -> timeEntryToReportDayEntry(t, userById::get))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(groupingBy(reportDayEntry -> reportDayEntry.start().toLocalDate()));
-
-            for (Map.Entry<LocalDate, List<ReportDayEntry>> localDateListEntry : collect.entrySet()) {
-                reportEntriesByDate.compute(localDateListEntry.getKey(), (localDate, userLocalIdListMap) -> {
-                    final Map<UserIdComposite, List<ReportDayEntry>> map = userLocalIdListMap == null ? new HashMap<>() : userLocalIdListMap;
-                    map.put(userIdComposite, collect.get(localDate));
-                    return map;
-                });
-            }
-        }
-
-        return reportEntriesByDate;
     }
 
     private List<LocalDate> getStartOfWeekDatesForMonth(YearMonth yearMonth) {
@@ -263,36 +239,52 @@ public class ReportServiceRaw {
 
     private static Optional<ReportDayEntry> timeEntryToReportDayEntry(TimeEntry timeEntry, Function<UserIdComposite, User> userProvider) {
 
-        final String comment = timeEntry.comment();
-        final ZonedDateTime startDateTime = timeEntry.start();
-        final ZonedDateTime endDateTime = timeEntry.end();
-
         final UserIdComposite userId = timeEntry.userIdComposite();
         final User user = userProvider.apply(userId);
+
         if (user == null) {
             LOG.info("could not find user with id={} for timeEntry={} while generating report.", userId, timeEntry.id());
             return Optional.empty();
         }
 
-        final ReportDayEntry first = new ReportDayEntry(timeEntry.id(), user, comment, startDateTime, endDateTime, timeEntry.isBreak());
-        return Optional.of(first);
+        return Optional.of(new ReportDayEntry(
+            timeEntry.id(),
+            user,
+            timeEntry.comment(),
+            timeEntry.start(),
+            timeEntry.end(),
+            timeEntry.workDuration(),
+            timeEntry.isBreak()
+        ));
     }
 
     private static ReportDay toReportDay(LocalDate date,
                                          Map<UserIdComposite, User> userById,
                                          Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars,
-                                         Function<LocalDate, Map<UserIdComposite, List<ReportDayEntry>>> reportDayEntriesForDate,
+                                         Map<LocalDate, Map<UserIdComposite, TimeEntryDay>> timeEntryDayByDate,
                                          boolean dateIsLocked) {
 
-        final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser = reportDayEntriesForDate.apply(date) != null ? reportDayEntriesForDate.apply(date) : new HashMap<>();
-        final Map<UserIdComposite, List<ReportDayAbsence>> reportDayAbsencesByUser = new HashMap<>();
+        final Map<UserIdComposite, TimeEntryDay> timeEntryDayByUser = timeEntryDayByDate.getOrDefault(date, newHashMap(userById.size()));
+        final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser = newHashMap(userById.size());
+        final Map<UserIdComposite, WorkDuration> workDurationByUser = newHashMap(userById.size());
+        final Map<UserIdComposite, List<ReportDayAbsence>> reportDayAbsencesByUser = newHashMap(userById.size());
 
         for (Map.Entry<UserIdComposite, User> entry : userById.entrySet()) {
             final UserIdComposite userIdComposite = entry.getKey();
             final User user = entry.getValue();
 
-            // maps must contain entries for every relevant user. therefore add empty list if not present.
-            reportDayEntriesByUser.putIfAbsent(userIdComposite, List.of());
+            final TimeEntryDay timeEntryDay = timeEntryDayByUser.get(userIdComposite);
+            if (timeEntryDay == null) {
+                reportDayEntriesByUser.put(userIdComposite, List.of());
+                workDurationByUser.put(userIdComposite, WorkDuration.ZERO);
+            } else {
+                final List<ReportDayEntry> reportDayEntries = timeEntryDay.timeEntries().stream()
+                    .map(timeEntry -> timeEntryToReportDayEntry(timeEntry, userById::get))
+                    .flatMap(Optional::stream)
+                    .toList();
+                reportDayEntriesByUser.put(userIdComposite, reportDayEntries);
+                workDurationByUser.put(userIdComposite, timeEntryDay.workDuration());
+            }
 
             final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendars.get(userIdComposite);
             if (workingTimeCalendar == null) {
@@ -305,7 +297,7 @@ public class ReportServiceRaw {
             }
         }
 
-        return new ReportDay(date, dateIsLocked, workingTimeCalendars, reportDayEntriesByUser, reportDayAbsencesByUser);
+        return new ReportDay(date, dateIsLocked, workingTimeCalendars, reportDayEntriesByUser, workDurationByUser, reportDayAbsencesByUser);
     }
 
     private static boolean isPreviousMonth(LocalDate possiblePreviousMonthDate, YearMonth yearMonth) {
