@@ -13,7 +13,6 @@ import java.time.ZoneId;
 import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
-import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Stream.iterate;
 import static java.util.stream.StreamSupport.stream;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -110,20 +109,21 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
     /**
      * Updates {@link SubtractBreakFromTimeEntrySettings}.
      *
+     * @param featureActive whether the feature is active or not
+     * @param featureActiveTimestamp timestamp from which the feature is active
      */
-    SubtractBreakFromTimeEntrySettings updateSubtractBreakFromTimeEntrySettings(boolean subtractBreakFromTimeEntryIsActive) {
+    SubtractBreakFromTimeEntrySettings updateSubtractBreakFromTimeEntrySettings(
+        boolean featureActive,
+        Instant featureActiveTimestamp
+    ) {
 
-        final SubtractBreakFromTimeEntrySettingsEntity entity = getSubtractBreakFromTimeEntrySettingsEntity().orElseGet(SubtractBreakFromTimeEntrySettingsEntity::new);
-        if (!entity.isSubtractBreakFromTimeEntryIsActive() && subtractBreakFromTimeEntryIsActive) {
-            final Instant timestamp =  LocalDate.now(clock).atStartOfDay().toInstant(UTC);
-            entity.setSubtractBreakFromTimeEntryEnabledTimestamp(timestamp);
-        } else if (entity.isSubtractBreakFromTimeEntryIsActive() && !subtractBreakFromTimeEntryIsActive) {
-            entity.setSubtractBreakFromTimeEntryEnabledTimestamp(null);
-        }
-        entity.setSubtractBreakFromTimeEntryIsActive(subtractBreakFromTimeEntryIsActive);
+        final SubtractBreakFromTimeEntrySettingsEntity entity = getSubtractBreakFromTimeEntrySettingsEntity()
+            .orElseGet(SubtractBreakFromTimeEntrySettingsEntity::new);
+
+        entity.setSubtractBreakFromTimeEntryIsActive(featureActive);
+        entity.setSubtractBreakFromTimeEntryEnabledTimestamp(featureActiveTimestamp);
 
         final SubtractBreakFromTimeEntrySettingsEntity saved = subtractBreakFromTimeEntrySettingsRepository.save(entity);
-
         return toSubtractBreakFromTimeEntrySettings(saved);
     }
 
@@ -174,7 +174,8 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
 
     private static SubtractBreakFromTimeEntrySettings toSubtractBreakFromTimeEntrySettings(SubtractBreakFromTimeEntrySettingsEntity entity) {
         return new SubtractBreakFromTimeEntrySettings(
-            entity.isSubtractBreakFromTimeEntryIsActive(), entity.getSubtractBreakFromTimeEntryEnabledTimestamp()
+            entity.isSubtractBreakFromTimeEntryIsActive(),
+            Optional.ofNullable(entity.getSubtractBreakFromTimeEntryEnabledTimestamp())
         );
     }
 }

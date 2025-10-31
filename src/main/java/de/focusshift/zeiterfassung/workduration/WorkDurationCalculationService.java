@@ -2,12 +2,17 @@ package de.focusshift.zeiterfassung.workduration;
 
 import de.focusshift.zeiterfassung.settings.SubtractBreakFromTimeEntrySettings;
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Calculates the {@link WorkDuration} of a {@link TimeEntry} collection based on a strategy that has been chosen
@@ -19,6 +24,8 @@ import java.util.List;
  */
 @Service
 public class WorkDurationCalculationService {
+
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final SimpleWorkDurationCalculator simpleWorkDurationCalculator;
     private final OverlappingBreakCalculator subtractOverlappingBreaksCalculator;
@@ -52,10 +59,16 @@ public class WorkDurationCalculationService {
             return simpleWorkDurationCalculator.calculateWorkDuration(timeEntries);
         }
 
+        final Optional<Instant> maybeTimestamp = settings.subtractBreakFromTimeEntryEnabledTimestamp();
+        if (maybeTimestamp.isEmpty()) {
+            LOG.error("Expected subtractBreakFromTimeEntry timestamp to exist, but doesn't. Falling back to SimpleWorkDuration calculation.");
+            return simpleWorkDurationCalculator.calculateWorkDuration(timeEntries);
+        }
+
+        final Instant timestamp = maybeTimestamp.get();
+
         final List<TimeEntry> timeEntriesBeforeEnabledFeature = new ArrayList<>();
         final List<TimeEntry> timeEntriesAfterEnabledFeature = new ArrayList<>();
-
-        final Instant timestamp = settings.subtractBreakFromTimeEntryEnabledTimestamp();
 
         for (TimeEntry timeEntry : timeEntries) {
             if (timeEntry.start().toInstant().isBefore(timestamp)) {

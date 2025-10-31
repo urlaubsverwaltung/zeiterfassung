@@ -17,7 +17,6 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
-import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
@@ -228,7 +227,7 @@ class SettingsServiceTest {
             when(subtractBreakFromTimeEntrySettingsRepository.findAll()).thenReturn(List.of(entity));
 
             final SubtractBreakFromTimeEntrySettings expected =
-                new SubtractBreakFromTimeEntrySettings(true, enabledTimestamp);
+                new SubtractBreakFromTimeEntrySettings(true, Optional.of(enabledTimestamp));
 
             final Optional<SubtractBreakFromTimeEntrySettings> actual = sut.getSubtractBreakFromTimeEntrySettings();
             assertThat(actual).hasValue(expected);
@@ -243,25 +242,6 @@ class SettingsServiceTest {
         }
 
         @Test
-        void ensureUpdateActivatesSettingAndSetsTimestamp() {
-            final SubtractBreakFromTimeEntrySettingsEntity entity = new SubtractBreakFromTimeEntrySettingsEntity();
-            entity.setId(42L);
-            entity.setSubtractBreakFromTimeEntryIsActive(false);
-            entity.setSubtractBreakFromTimeEntryEnabledTimestamp(null);
-
-            when(subtractBreakFromTimeEntrySettingsRepository.findAll()).thenReturn(List.of(entity));
-            when(subtractBreakFromTimeEntrySettingsRepository.save(any(SubtractBreakFromTimeEntrySettingsEntity.class))).thenAnswer(returnsFirstArg());
-
-            final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(true);
-
-            final Instant expectedFeatureTimestamp = LocalDate.now(clock).atStartOfDay().toInstant(UTC);
-
-            assertThat(result.subtractBreakFromTimeEntryIsActive()).isTrue();
-            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).isEqualTo(expectedFeatureTimestamp);
-            verify(subtractBreakFromTimeEntrySettingsRepository).save(assertArg(persisted -> assertThat(persisted.getId()).isEqualTo(42L)));
-        }
-
-        @Test
         void ensureUpdateDeactivatesSettingAndRemovesTimestamp() {
             final SubtractBreakFromTimeEntrySettingsEntity entity = new SubtractBreakFromTimeEntrySettingsEntity();
             entity.setId(1L);
@@ -271,10 +251,10 @@ class SettingsServiceTest {
             when(subtractBreakFromTimeEntrySettingsRepository.findAll()).thenReturn(List.of(entity));
             when(subtractBreakFromTimeEntrySettingsRepository.save(any(SubtractBreakFromTimeEntrySettingsEntity.class))).thenAnswer(returnsFirstArg());
 
-            final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(false);
+            final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(false, null);
 
             assertThat(result.subtractBreakFromTimeEntryIsActive()).isFalse();
-            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).isNull();
+            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).isEmpty();
         }
 
         @Test
@@ -282,12 +262,12 @@ class SettingsServiceTest {
             when(subtractBreakFromTimeEntrySettingsRepository.findAll()).thenReturn(List.of());
             when(subtractBreakFromTimeEntrySettingsRepository.save(any(SubtractBreakFromTimeEntrySettingsEntity.class))).thenAnswer(returnsFirstArg());
 
-            final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(true);
+            final Instant timestamp = Instant.now();
 
-            final Instant expectedFeatureTimestamp = LocalDate.now(clock).atStartOfDay().toInstant(UTC);
+            final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(true, timestamp);
 
             assertThat(result.subtractBreakFromTimeEntryIsActive()).isTrue();
-            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).isEqualTo(expectedFeatureTimestamp);
+            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).hasValue(timestamp);
 
             verify(subtractBreakFromTimeEntrySettingsRepository).save(assertArg(entity -> assertThat(entity.getId()).isNull()));
         }
@@ -303,10 +283,10 @@ class SettingsServiceTest {
             when(subtractBreakFromTimeEntrySettingsRepository.findAll()).thenReturn(List.of(entity));
             when(subtractBreakFromTimeEntrySettingsRepository.save(any(SubtractBreakFromTimeEntrySettingsEntity.class))).thenAnswer(returnsFirstArg());
 
-            final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(true);
+            final SubtractBreakFromTimeEntrySettings result = sut.updateSubtractBreakFromTimeEntrySettings(true, timestamp);
 
             assertThat(result.subtractBreakFromTimeEntryIsActive()).isTrue();
-            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).isEqualTo(timestamp);
+            assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).hasValue(timestamp);
         }
     }
 }

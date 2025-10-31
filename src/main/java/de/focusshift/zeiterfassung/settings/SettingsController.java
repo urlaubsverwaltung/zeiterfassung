@@ -24,7 +24,6 @@ import java.util.Locale;
 import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
-import static java.lang.Boolean.TRUE;
 import static java.util.Objects.requireNonNullElse;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
@@ -77,22 +76,12 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
 
         settingsDtoValidator.validate(settingsDto, bindingResult);
 
+        final Boolean subtractBreakFromTimeEntryIsActive = settingsDto.subtractBreakFromTimeEntryIsActive();
+
         if (preview.isPresent()) {
-            if (TRUE.equals(settingsDto.subtractBreakFromTimeEntryIsActive()) && settingsDto.subtractBreakFromTimeEntryEnabledTimestamp() == null) {
-                // preview settings with added timestamp of subtractBreakFromTimeEntry
-                final SettingsDto updatedSettingsDto = new SettingsDto(
-                    settingsDto.federalState(),
-                    settingsDto.worksOnPublicHoliday(),
-                    settingsDto.lockingIsActive(),
-                    settingsDto.lockTimeEntriesDaysInPast(),
-                    settingsDto.subtractBreakFromTimeEntryIsActive(),
-                    Instant.now(clock)
-                );
-                prepareModel(model, locale, updatedSettingsDto);
-            } else {
-                prepareModel(model, locale, settingsDto);
-            }
-            return new ModelAndView("settings/settings", model.asMap(), bindingResult.hasErrors() ? UNPROCESSABLE_ENTITY : OK);
+            // TODO merge with below?
+            prepareModel(model, locale, settingsDto);
+            return new ModelAndView("settings/settings", model.asMap(), OK);
         }
 
         if (bindingResult.hasErrors()) {
@@ -101,11 +90,24 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
         }
 
         settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
+
         final int lockTimeEntriesDaysInPast = requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1);
         settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), lockTimeEntriesDaysInPast);
-        if (settingsDto.subtractBreakFromTimeEntryIsActive() != null) {
-            settingsService.updateSubtractBreakFromTimeEntrySettings(settingsDto.subtractBreakFromTimeEntryIsActive());
+
+        if (subtractBreakFromTimeEntryIsActive != null) {
+            final LocalDate date = settingsDto.subtractBreakFromTimeEntryActiveDate();
+
+            final Instant timestamp;
+            if (date == null) {
+                timestamp = null;
+            } else {
+                final ZoneId zoneId = userSettingsProvider.zoneId();
+                timestamp = date.atStartOfDay(zoneId).toInstant();
+            }
+
+            settingsService.updateSubtractBreakFromTimeEntrySettings(subtractBreakFromTimeEntryIsActive, timestamp);
         }
+
         return new ModelAndView("redirect:/settings");
     }
 
@@ -113,15 +115,25 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
         model.addAttribute(ATTRIBUTE_NAME_SETTINGS, settingsDto);
         model.addAttribute("federalStateSelect", federalStateSelectDto(settingsDto.federalState()));
         model.addAttribute("timeslotLockedExampleDate", getTimeslotLockedExampleDate(settingsDto, locale));
-        model.addAttribute("subtractBreakFromTimeEntryEnabledDate", getSubtractBreakFromTimeEntryEnabledDate(settingsDto.subtractBreakFromTimeEntryEnabledTimestamp(), locale));
     }
 
-    private SettingsDto toSettingsDto(FederalStateSettings federalStateSettings, LockTimeEntriesSettings lockTimeEntriesSettings, @Nullable SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings) {
+    private SettingsDto toSettingsDto(
+        FederalStateSettings federalStateSettings,
+        LockTimeEntriesSettings lockTimeEntriesSettings,
+        @Nullable SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings
+    ) {
+
+        final ZoneId userZoneId = userSettingsProvider.zoneId();
 
         final int lockTimeEntriesDaysInPast = lockTimeEntriesSettings.lockTimeEntriesDaysInPast();
 
-        final Boolean subtractBreakFromTimeEntryIsActive = subtractBreakFromTimeEntrySettings == null ? null : subtractBreakFromTimeEntrySettings.subtractBreakFromTimeEntryIsActive();
-        final Instant subtractBreakFromTimeEntryEnabledTimestamp = subtractBreakFromTimeEntrySettings == null ? null : subtractBreakFromTimeEntrySettings.subtractBreakFromTimeEntryEnabledTimestamp();
+        final Boolean subtractBreakFromTimeEntryIsActive = subtractBreakFromTimeEntrySettings == null
+            ? null
+            : subtractBreakFromTimeEntrySettings.subtractBreakFromTimeEntryIsActive();
+
+        final LocalDate subtractBreakFromTimeEntryIsActiveDate = subtractBreakFromTimeEntrySettings == null
+            ? null
+            : subtractBreakFromTimeEntrySettings.timestampAsLocalDate(userZoneId).orElse(null);
 
         return new SettingsDto(
             federalStateSettings.federalState(),
@@ -129,17 +141,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
             lockTimeEntriesSettings.lockingIsActive(),
             lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null,
             subtractBreakFromTimeEntryIsActive,
-            subtractBreakFromTimeEntryEnabledTimestamp
+            subtractBreakFromTimeEntryIsActiveDate
         );
-    }
-
-    private String getSubtractBreakFromTimeEntryEnabledDate(Instant subtractBreakFromTimeEntryEnabledTimestamp, Locale locale) {
-        if (subtractBreakFromTimeEntryEnabledTimestamp == null) {
-            return null;
-        }
-        final ZoneId userZoneId = userSettingsProvider.zoneId();
-        final LocalDate date = subtractBreakFromTimeEntryEnabledTimestamp.atZone(userZoneId).toLocalDate();
-        return date.format(DateTimeFormatter.ofPattern("EEEE, dd.MM.yyyy", locale));
     }
 
     private String getTimeslotLockedExampleDate(SettingsDto settingsDto, Locale locale) {

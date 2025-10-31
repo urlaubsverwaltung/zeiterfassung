@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -77,7 +78,7 @@ class WorkDurationCalculationServiceTest {
             final Instant featureEnabledTimestamp = Instant.parse("2025-01-01T00:00:00Z");
 
             final TimeEntry workEntry = workEntry("2025-10-24T08:00:00Z", "2025-10-24T09:00:00Z");
-            final SubtractBreakFromTimeEntrySettings settings = new SubtractBreakFromTimeEntrySettings(true, featureEnabledTimestamp);
+            final SubtractBreakFromTimeEntrySettings settings = new SubtractBreakFromTimeEntrySettings(true, Optional.of(featureEnabledTimestamp));
 
             final WorkDuration workDuration = new WorkDuration(Duration.ofMinutes(42));
             when(subtractOverlappingBreakCalculator.calculateWorkDuration(List.of(workEntry))).thenReturn(workDuration);
@@ -95,7 +96,7 @@ class WorkDurationCalculationServiceTest {
 
             final TimeEntry workEntry1 = workEntry("2025-10-23T08:00:00Z", "2025-10-23T09:00:00Z");
             final TimeEntry workEntry2 = workEntry("2025-10-24T08:00:00Z", "2025-10-24T09:00:00Z");
-            final SubtractBreakFromTimeEntrySettings settings = new SubtractBreakFromTimeEntrySettings(true , featureEnabledTimestamp);
+            final SubtractBreakFromTimeEntrySettings settings = new SubtractBreakFromTimeEntrySettings(true, Optional.of(featureEnabledTimestamp));
 
             final WorkDuration workDuration1 = new WorkDuration(Duration.ofMinutes(1));
             when(simpleWorkDurationCalculator.calculateWorkDuration(List.of(workEntry1))).thenReturn(workDuration1);
