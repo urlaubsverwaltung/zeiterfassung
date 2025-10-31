@@ -195,6 +195,12 @@
                   Lege fest ob Pausen von Zeiteinträgen automatisch abgezogen
                   werden sollen.
                 </p>
+                <p
+                  class="text-gray-600"
+                  th:text="#{settings.work-duration.calculation.subtract-breaks.teaser-text-2}"
+                >
+                  Beispiel ...
+                </p>
                 <div
                   class="mt-4 gap-2"
                   th:with="fieldName=${'subtractBreakFromTimeEntryActiveDate'}, hasError=${#fields.hasErrors(fieldName)}"
