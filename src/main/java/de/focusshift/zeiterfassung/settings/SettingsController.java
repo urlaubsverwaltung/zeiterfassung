@@ -79,7 +79,6 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
         final Boolean subtractBreakFromTimeEntryIsActive = settingsDto.subtractBreakFromTimeEntryIsActive();
 
         if (preview.isPresent()) {
-            // TODO merge with below?
             prepareModel(model, locale, settingsDto);
             return new ModelAndView("settings/settings", model.asMap(), OK);
         }

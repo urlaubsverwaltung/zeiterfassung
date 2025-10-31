@@ -10,7 +10,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -39,7 +38,6 @@ class SettingsServiceTest {
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
-    private final Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
@@ -47,8 +45,7 @@ class SettingsServiceTest {
             federalStateSettingsRepository,
             lockTimeEntriesSettingsRepository,
             subtractBreakFromTimeEntrySettingsRepository,
-            applicationEventPublisher,
-            clock
+            applicationEventPublisher
         );
     }
 
@@ -211,8 +208,6 @@ class SettingsServiceTest {
 
     @Nested
     class SubtractBreakFromTimeEntrySettingsTest {
-
-        private static final Instant FEATURE_ENABLED_TIMESTAMP = Instant.parse("2025-10-24T00:00:00Z");
 
         @Test
         void ensureGetSubtractBreakFromTimeEntrySettings() {
