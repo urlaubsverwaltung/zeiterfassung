@@ -47,6 +47,30 @@ class TimeEntryWeekTest {
     }
 
     @Test
+    void ensureWorkDurationWithSubtractedBreak() {
+
+        final LocalDate startOfWeek = LocalDate.of(2022, 1, 4);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final ZonedDateTime timeEntryStart = ZonedDateTime.of(LocalDateTime.of(2022, 1, 4, 8, 0, 0), ZONE_ID_BERLIN);
+        final ZonedDateTime timeEntryEnd = ZonedDateTime.of(LocalDateTime.of(2022, 1, 4, 17, 0, 0), ZONE_ID_BERLIN);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", timeEntryStart, timeEntryEnd, false);
+
+        final ZonedDateTime breakStart = ZonedDateTime.of(LocalDateTime.of(2022, 1, 4, 12, 0, 0), ZONE_ID_BERLIN);
+        final ZonedDateTime breakEnd = ZonedDateTime.of(LocalDateTime.of(2022, 1, 4, 13, 0, 0), ZONE_ID_BERLIN);
+        final TimeEntry breakEntry = new TimeEntry(new TimeEntryId(2L), userIdComposite, "break", breakStart, breakEnd, true);
+
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, startOfWeek, new WorkDuration(Duration.ofHours(8)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry, breakEntry), List.of());
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(startOfWeek, PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
+
+        final Duration actualWorkDurationOfWeek = timeEntryWeek.workDuration().duration();
+        assertThat(actualWorkDurationOfWeek).isEqualTo(Duration.ofHours(8));
+    }
+
+    @Test
     void ensureWorkDurationSumsUpTouchingNextCalendarWeek() {
 
         final LocalDate startOfWeek = LocalDate.of(2022, 1, 4);
