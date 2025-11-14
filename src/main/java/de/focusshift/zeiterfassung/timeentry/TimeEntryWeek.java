@@ -45,9 +45,7 @@ public record TimeEntryWeek(
     public WorkDuration workDuration() {
         return days
             .stream()
-            .map(TimeEntryDay::timeEntries)
-            .flatMap(Collection::stream)
-            .map(TimeEntry::workDuration)
+            .map(TimeEntryDay::workDuration)
             .reduce(WorkDuration.ZERO, WorkDuration::plus);
     }
 
