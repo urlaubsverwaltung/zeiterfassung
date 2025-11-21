@@ -25,7 +25,7 @@
     "@popperjs/core": "2.11.8",
     "@rollup/plugin-commonjs": "29.0.0",
     "@rollup/plugin-node-resolve": "16.0.3",
-    "@tailwindcss/postcss": "4.1.16",
+    "@tailwindcss/postcss": "4.1.17",
     "@tsconfig/svelte": "5.0.0",
     "@types/node": "24.10.1",
     "@typescript-eslint/eslint-plugin": "8.46.2",
@@ -60,7 +60,7 @@
     "svelte-check": "4.3.4",
     "svelte-eslint-parser": "1.4.0",
     "svelte-preprocess": "6.0.3",
-    "tailwindcss": "4.1.16",
+    "tailwindcss": "4.1.17",
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.2",
     "vitest": "4.0.12"
