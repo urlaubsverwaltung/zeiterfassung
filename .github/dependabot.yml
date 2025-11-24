@@ -57,6 +57,17 @@ updates:
       jollyday:
         patterns:
           - "de.focus-shift:jollyday-*"
+      spring-boot-major-upgrades:
+        patterns:
+          - "org.springframework.boot:*"
+        update-types:
+          - "major"
+      spring-boot-minor-and-patch-upgrades:
+        patterns:
+          - "org.springframework.boot:*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "github-actions"
     directory: "/.github/workflows"
