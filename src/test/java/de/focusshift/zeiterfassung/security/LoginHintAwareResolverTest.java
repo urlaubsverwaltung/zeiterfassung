@@ -10,13 +10,14 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI;
+import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
+import static org.springframework.security.oauth2.core.ClientAuthenticationMethod.CLIENT_SECRET_BASIC;
 
 class LoginHintAwareResolverTest {
 
@@ -25,7 +26,20 @@ class LoginHintAwareResolverTest {
 
     @BeforeEach
     void setUp() {
-        this.clientRegistration = ClientRegistration.withRegistrationId("registration").clientId("client").clientSecret("secret").clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC).authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE).scope("user").authorizationUri("https://provider.com/oauth2/authorize").tokenUri("https://provider.com/oauth2/token").userInfoUri("https://provider.com/oauth2/user").redirectUri("{baseUrl}/{action}/oauth2/code/{registrationId}").userNameAttributeName("id").clientName("client").build();
+        this.clientRegistration = ClientRegistration
+            .withRegistrationId("registration")
+            .clientId("client")
+            .clientSecret("secret")
+            .clientAuthenticationMethod(CLIENT_SECRET_BASIC)
+            .authorizationGrantType(AUTHORIZATION_CODE)
+            .scope("user")
+            .authorizationUri("https://provider.com/oauth2/authorize")
+            .tokenUri("https://provider.com/oauth2/token")
+            .userInfoUri("https://provider.com/oauth2/user")
+            .redirectUri("{baseUrl}/{action}/oauth2/code/{registrationId}")
+            .userNameAttributeName("id")
+            .clientName("client")
+            .build();
 
         this.clientRegistrationRepository = new InMemoryClientRegistrationRepository(this.clientRegistration);
     }
@@ -33,55 +47,61 @@ class LoginHintAwareResolverTest {
     @Test
     void authorizationRequestRedirectWithLoginHint() throws ServletException, IOException {
 
-        String requestUri = OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI + "/" + this.clientRegistration.getRegistrationId();
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", requestUri);
+        final String requestUri = DEFAULT_AUTHORIZATION_REQUEST_BASE_URI + "/" + this.clientRegistration.getRegistrationId();
+        final MockHttpServletRequest request = new MockHttpServletRequest("GET", requestUri);
         request.setServletPath(requestUri);
-        String loginHintParamName = "login_hint";
-        request.addParameter(loginHintParamName, "office");
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        FilterChain filterChain = mock(FilterChain.class);
 
-        OAuth2AuthorizationRequestResolver sut = new LoginHintAwareResolver(this.clientRegistrationRepository);
-        OAuth2AuthorizationRequestRedirectFilter filter = new OAuth2AuthorizationRequestRedirectFilter(sut);
+        final String loginHintParamName = "login_hint";
+        request.addParameter(loginHintParamName, "office");
+
+        final MockHttpServletResponse response = new MockHttpServletResponse();
+        final FilterChain filterChain = mock(FilterChain.class);
+
+        final OAuth2AuthorizationRequestResolver sut = new LoginHintAwareResolver(this.clientRegistrationRepository);
+        final OAuth2AuthorizationRequestRedirectFilter filter = new OAuth2AuthorizationRequestRedirectFilter(sut);
 
         filter.doFilter(request, response, filterChain);
 
-        assertThat(response.getRedirectedUrl()).matches("https://provider.com/oauth2/authorize\\?response_type=code&client_id=client&scope=user&state=.{15,}&redirect_uri=http://localhost/login/oauth2/code/registration&login_hint=office");
+        assertThat(response.getRedirectedUrl()).matches("https://provider.com/oauth2/authorize\\?response_type=code&client_id=client&scope=user&state=.{15,}&redirect_uri=http://localhost/login/oauth2/code/registration&code_challenge=.{15,}&code_challenge_method=S256&login_hint=office");
     }
 
     @Test
     void authorizationRequestRedirectWithoutLoginHint() throws ServletException, IOException {
 
-        String requestUri = OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI + "/" + this.clientRegistration.getRegistrationId();
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", requestUri);
+        final String requestUri = DEFAULT_AUTHORIZATION_REQUEST_BASE_URI + "/" + this.clientRegistration.getRegistrationId();
+        final MockHttpServletRequest request = new MockHttpServletRequest("GET", requestUri);
         request.setServletPath(requestUri);
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        FilterChain filterChain = mock(FilterChain.class);
 
-        OAuth2AuthorizationRequestResolver sut = new LoginHintAwareResolver(this.clientRegistrationRepository);
-        OAuth2AuthorizationRequestRedirectFilter filter = new OAuth2AuthorizationRequestRedirectFilter(sut);
+        final MockHttpServletResponse response = new MockHttpServletResponse();
+        final FilterChain filterChain = mock(FilterChain.class);
+
+        final OAuth2AuthorizationRequestResolver sut = new LoginHintAwareResolver(this.clientRegistrationRepository);
+        final OAuth2AuthorizationRequestRedirectFilter filter = new OAuth2AuthorizationRequestRedirectFilter(sut);
 
         filter.doFilter(request, response, filterChain);
 
-        assertThat(response.getRedirectedUrl()).matches("https://provider.com/oauth2/authorize\\?response_type=code&client_id=client&scope=user&state=.{15,}&redirect_uri=http://localhost/login/oauth2/code/registration");
+                                                         //   "https://provider.com/oauth2/authorize?response_type=code&client_id=client&scope=user&state=afxwHjsrd9AKBmtN5qra9PDZ0aFntZo5hYHWpl0T1Zk%3D&redirect_uri=http://localhost/login/oauth2/code/registration&code_challenge=QeE_yubLpgyrf-2Y1LPknefrTTt1km2ntcTlU3b34nw&code_challenge_method=S256"
+        assertThat(response.getRedirectedUrl()).matches("https://provider.com/oauth2/authorize\\?response_type=code&client_id=client&scope=user&state=.{15,}&redirect_uri=http://localhost/login/oauth2/code/registration&code_challenge=.{15,}&code_challenge_method=S256");
     }
 
     @Test
     void authorizationRequestRedirectWithUnknownParameter() throws ServletException, IOException {
 
-        String requestUri = OAuth2AuthorizationRequestRedirectFilter.DEFAULT_AUTHORIZATION_REQUEST_BASE_URI + "/" + this.clientRegistration.getRegistrationId();
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", requestUri);
+        final String requestUri = DEFAULT_AUTHORIZATION_REQUEST_BASE_URI + "/" + this.clientRegistration.getRegistrationId();
+        final MockHttpServletRequest request = new MockHttpServletRequest("GET", requestUri);
         request.setServletPath(requestUri);
-        String loginHintParamName = "some_parameter";
-        request.addParameter(loginHintParamName, "foobar");
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        FilterChain filterChain = mock(FilterChain.class);
 
-        OAuth2AuthorizationRequestResolver sut = new LoginHintAwareResolver(this.clientRegistrationRepository);
-        OAuth2AuthorizationRequestRedirectFilter filter = new OAuth2AuthorizationRequestRedirectFilter(sut);
+        final String loginHintParamName = "some_parameter";
+        request.addParameter(loginHintParamName, "foobar");
+
+        final MockHttpServletResponse response = new MockHttpServletResponse();
+        final FilterChain filterChain = mock(FilterChain.class);
+
+        final OAuth2AuthorizationRequestResolver sut = new LoginHintAwareResolver(this.clientRegistrationRepository);
+        final OAuth2AuthorizationRequestRedirectFilter filter = new OAuth2AuthorizationRequestRedirectFilter(sut);
 
         filter.doFilter(request, response, filterChain);
 
-        assertThat(response.getRedirectedUrl()).matches("https://provider.com/oauth2/authorize\\?response_type=code&client_id=client&scope=user&state=.{15,}&redirect_uri=http://localhost/login/oauth2/code/registration");
+        assertThat(response.getRedirectedUrl()).matches("https://provider.com/oauth2/authorize\\?response_type=code&client_id=client&scope=user&state=.{15,}&redirect_uri=http://localhost/login/oauth2/code/registration&code_challenge=.{15,}&code_challenge_method=S256");
     }
 }

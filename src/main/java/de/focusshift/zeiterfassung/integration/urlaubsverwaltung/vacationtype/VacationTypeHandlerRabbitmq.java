@@ -30,8 +30,8 @@ class VacationTypeHandlerRabbitmq extends RabbitMessageConsumer {
 
     @RabbitListener(queues = ZEITERFASSUNG_URLAUBSVERWALTUNG_VACATIONTYPE_UPDATED_QUEUE)
     void on(VacationTypeUpdatedEventDTO event) {
-        tenantContextHolder.runInTenantIdContext(event.getTenantId(), tenantId -> {
-            LOG.info("Received VacationTypeUpdatedEvent id={} for tenantId={}", event.getId(), event.getTenantId());
+        tenantContextHolder.runInTenantIdContext(event.tenantId(), tenantId -> {
+            LOG.info("Received VacationTypeUpdatedEvent id={} for tenantId={}", event.id(), event.tenantId());
             toAbsenceTypeUpdate(event)
                 .ifPresentOrElse(
                     absenceTypeService::updateAbsenceType,
@@ -41,15 +41,15 @@ class VacationTypeHandlerRabbitmq extends RabbitMessageConsumer {
     }
 
     private Optional<AbsenceTypeUpdate> toAbsenceTypeUpdate(VacationTypeUpdatedEventDTO eventDTO) {
-        return toAbsenceColor(eventDTO.getColor())
+        return toAbsenceColor(eventDTO.color())
             .flatMap(color ->
-                toAbsenceTypeCategory(eventDTO.getCategory())
+                toAbsenceTypeCategory(eventDTO.category())
                     .map(category ->
                         new AbsenceTypeUpdate(
-                            eventDTO.getSourceId(),
+                            eventDTO.sourceId(),
                             category,
                             color,
-                            eventDTO.getLabel()
+                            eventDTO.label()
                         )
                     )
             );
