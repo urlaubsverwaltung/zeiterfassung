@@ -39,8 +39,8 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CANCELLED_QUEUE})
     void on(SickNoteCancelledEventDTO event) {
-        tenantContextHolder.runInTenantIdContext(new TenantId(event.getTenantId()), tenantId -> {
-            LOG.info("Received SickNoteCancelledEvent for person={} and tenantId={} and sicknoteId={}", event.getPerson(), tenantId, event.getSourceId());
+        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), tenantId -> {
+            LOG.info("Received SickNoteCancelledEvent for person={} and tenantId={} and sicknoteId={}", event.person(), tenantId, event.sourceId());
             toAbsence(new SickNoteEventDtoAdapter(event))
                 .ifPresentOrElse(
                     absenceWriteService::deleteAbsence,
@@ -51,8 +51,8 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CREATED_QUEUE})
     void on(SickNoteCreatedEventDTO event) {
-        tenantContextHolder.runInTenantIdContext(new TenantId(event.getTenantId()), tenantId -> {
-            LOG.info("Received SickNoteCreatedEvent for person={} and tenantId={} and sicknoteId={}", event.getPerson(), tenantId, event.getSourceId());
+        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), tenantId -> {
+            LOG.info("Received SickNoteCreatedEvent for person={} and tenantId={} and sicknoteId={}", event.person(), tenantId, event.sourceId());
             toAbsence(new SickNoteEventDtoAdapter(event))
                 .ifPresentOrElse(
                     absenceWriteService::addAbsence,
@@ -63,8 +63,8 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_UPDATED_QUEUE})
     void on(SickNoteUpdatedEventDTO event) {
-        tenantContextHolder.runInTenantIdContext(event.getTenantId(), tenantId -> {
-            LOG.info("Received SickNoteUpdatedEvent for person={} and tenantId={} and sicknoteId={}", event.getPerson(), tenantId, event.getSourceId());
+        tenantContextHolder.runInTenantIdContext(event.tenantId(), tenantId -> {
+            LOG.info("Received SickNoteUpdatedEvent for person={} and tenantId={} and sicknoteId={}", event.person(), tenantId, event.sourceId());
             toAbsence(new SickNoteEventDtoAdapter(event))
                 .ifPresentOrElse(
                     absenceWriteService::updateAbsence,
@@ -75,8 +75,8 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_CONVERTED_TO_APPLICATION_QUEUE})
     void on(SickNoteConvertedToApplicationEventDTO event) {
-        tenantContextHolder.runInTenantIdContext(new TenantId(event.getTenantId()), tenantId -> {
-            LOG.info("Received SickNoteConvertedToApplicationEvent for person={} and tenantId={} and sicknoteId={}", event.getPerson(), tenantId, event.getSourceId());
+        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), tenantId -> {
+            LOG.info("Received SickNoteConvertedToApplicationEvent for person={} and tenantId={} and sicknoteId={}", event.person(), tenantId, event.sourceId());
             toAbsence(new SickNoteEventDtoAdapter(event))
                 .ifPresentOrElse(
                     absenceWriteService::deleteAbsence,
@@ -88,8 +88,8 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_SICKNOTE_ACCEPTED_QUEUE})
     void on(SickNoteAcceptedEventDTO event) {
-        tenantContextHolder.runInTenantIdContext(new TenantId(event.getTenantId()), tenantId -> {
-            LOG.info("Received SickNoteAcceptedEvent for person={} and tenantId={} and sicknoteId={}", event.getPerson(), tenantId, event.getSourceId());
+        tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), tenantId -> {
+            LOG.info("Received SickNoteAcceptedEvent for person={} and tenantId={} and sicknoteId={}", event.person(), tenantId, event.sourceId());
             toAbsence(new SickNoteEventDtoAdapter(event))
                 .ifPresentOrElse(
                     absenceWriteService::addAbsence,
@@ -100,12 +100,12 @@ public class SickNoteEventHandlerRabbitmq extends RabbitMessageConsumer {
     }
 
     private static Optional<AbsenceWrite> toAbsence(SickNoteEventDtoAdapter event) {
-        return toDayLength(event.getPeriod().getDayLength())
+        return toDayLength(event.getPeriod().dayLength())
             .map(dayLength -> new AbsenceWrite(
                 event.getSourceId(),
-                new UserId(event.getPerson().getUsername()),
-                event.getPeriod().getStartDate(),
-                event.getPeriod().getEndDate(),
+                new UserId(event.getPerson().username()),
+                event.getPeriod().startDate(),
+                event.getPeriod().endDate(),
                 dayLength,
                 null,
                 AbsenceTypeCategory.SICK

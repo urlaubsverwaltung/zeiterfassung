@@ -1,13 +1,12 @@
 package de.focusshift.zeiterfassung.absence;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import org.slf4j.Logger;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
-import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 
@@ -19,13 +18,13 @@ public final class LabelByLocaleConverter implements AttributeConverter<Map<Loca
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
-    private static final ObjectMapper om = new ObjectMapper();
+    private static final JsonMapper jm = new JsonMapper();
 
     @Override
     public String convertToDatabaseColumn(Map<Locale, String> attribute) {
         try {
-            return om.writeValueAsString(attribute);
-        } catch (JsonProcessingException ex) {
+            return jm.writeValueAsString(attribute);
+        } catch (JacksonException ex) {
             LOG.error("could not write value as string", ex);
             return null;
         }
@@ -34,9 +33,9 @@ public final class LabelByLocaleConverter implements AttributeConverter<Map<Loca
     @Override
     public Map<Locale, String> convertToEntityAttribute(String dbData) {
         try {
-            return om.readValue(dbData, new TypeReference<>() {
+            return jm.readValue(dbData, new TypeReference<>() {
             });
-        } catch (IOException ex) {
+        } catch (JacksonException ex) {
             LOG.error("could not convert to entity attribute", ex);
             return Map.of();
         }

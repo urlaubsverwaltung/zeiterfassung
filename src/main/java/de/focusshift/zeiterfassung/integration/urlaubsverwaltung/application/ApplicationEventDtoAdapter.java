@@ -23,34 +23,34 @@ class ApplicationEventDtoAdapter {
     private final Duration overtimeHours;
 
     ApplicationEventDtoAdapter(ApplicationAllowedEventDTO event) {
-        this.sourceId = event.getSourceId();
-        this.person = event.getPerson();
-        this.vacationType = event.getVacationType();
-        this.period = event.getPeriod();
-        this.overtimeHours = event.getHours();
+        this.sourceId = event.sourceId();
+        this.person = event.person();
+        this.vacationType = event.vacationType();
+        this.period = event.period();
+        this.overtimeHours = event.hours();
     }
 
     ApplicationEventDtoAdapter(ApplicationCancelledEventDTO event) {
-        this.sourceId = event.getSourceId();
-        this.person = event.getPerson();
-        this.vacationType = event.getVacationType();
-        this.period = event.getPeriod();
-        this.overtimeHours = event.getHours();
+        this.sourceId = event.sourceId();
+        this.person = event.person();
+        this.vacationType = event.vacationType();
+        this.period = event.period();
+        this.overtimeHours = event.hours();
     }
 
     ApplicationEventDtoAdapter(ApplicationUpdatedEventDTO event) {
-        this.sourceId = event.getSourceId();
-        this.person = event.getPerson();
-        this.vacationType = event.getVacationType();
-        this.period = event.getPeriod();
-        this.overtimeHours = event.getHours();
+        this.sourceId = event.sourceId();
+        this.person = event.person();
+        this.vacationType = event.vacationType();
+        this.period = event.period();
+        this.overtimeHours = event.hours();
     }
 
     ApplicationEventDtoAdapter(ApplicationCreatedFromSickNoteEventDTO event) {
-        this.sourceId = event.getSourceId();
-        this.person = event.getPerson();
-        this.vacationType = event.getVacationType();
-        this.period = event.getPeriod();
+        this.sourceId = event.sourceId();
+        this.person = event.person();
+        this.vacationType = event.vacationType();
+        this.period = event.period();
         this.overtimeHours = null;
     }
 

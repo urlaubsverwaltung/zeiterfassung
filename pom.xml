@@ -20,13 +20,6 @@
     <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
     <java.version>21</java.version>
 
-    <!-- Remove commons-compress dependency when testcontainers ships with commons-compress >= 1.27.1, see
-     https://github.com/testcontainers/testcontainers-java/issues/8338
-     https://www.cve.org/CVERecord?id=CVE-2024-25710
-     https://www.cve.org/CVERecord?id=CVE-2024-26308
-    -->
-    <commons-compress.version>1.28.0</commons-compress.version>
-
     <node.env>production</node.env>
     <docker-publish-registry>registry.example.com</docker-publish-registry>
     <docker-publish-registry-path>path/example</docker-publish-registry-path>
@@ -51,7 +44,7 @@
     <dependency>
       <groupId>de.focus-shift.urlaubsverwaltung.extension.api</groupId>
       <artifactId>model-events</artifactId>
-      <version>2.5.0</version>
+      <version>3.1.0</version>
     </dependency>
 
     <!-- PUBLIC HOLIDAYS INFORMATION -->
@@ -81,11 +74,11 @@
     <!-- Security -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-oauth2-client</artifactId>
+      <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-security</artifactId>
+      <artifactId>spring-boot-starter-security-oauth2-client</artifactId>
     </dependency>
     <dependency>
       <groupId>org.thymeleaf.extras</groupId>
@@ -114,6 +107,11 @@
       <version>7.0.1.Final</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security-test</artifactId>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.threeten</groupId>
@@ -123,8 +121,8 @@
 
     <!-- SESSION -->
     <dependency>
-      <groupId>org.springframework.session</groupId>
-      <artifactId>spring-session-core</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-session-jdbc</artifactId>
     </dependency>
 
     <!-- Web -->
@@ -145,7 +143,12 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
+      <artifactId>spring-boot-starter-webmvc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <!-- Mail -->
@@ -160,8 +163,13 @@
       <artifactId>spring-boot-starter-amqp</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-amqp-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>rabbitmq</artifactId>
+      <artifactId>testcontainers-rabbitmq</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -171,8 +179,8 @@
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.liquibase</groupId>
-      <artifactId>liquibase-core</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-liquibase</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.data</groupId>
@@ -185,7 +193,7 @@
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>postgresql</artifactId>
+      <artifactId>testcontainers-postgresql</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -221,23 +229,8 @@
 
     <!-- Test -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.amqp</groupId>
-      <artifactId>spring-rabbit-test</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -252,13 +245,13 @@
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>junit-jupiter</artifactId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-compress</artifactId>
-      <version>${commons-compress.version}</version>
+      <groupId>org.hibernate.common</groupId>
+      <artifactId>hibernate-commons-annotations</artifactId>
+      <version>7.0.3.Final</version>
       <scope>test</scope>
     </dependency>
 

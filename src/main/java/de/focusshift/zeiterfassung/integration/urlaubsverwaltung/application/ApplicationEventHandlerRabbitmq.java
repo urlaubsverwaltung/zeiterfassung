@@ -39,9 +39,9 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
 
     private static Optional<AbsenceWrite> toAbsence(ApplicationEventDtoAdapter event) {
 
-        final Optional<DayLength> maybeDayLength = toDayLength(event.getPeriod().getDayLength());
+        final Optional<DayLength> maybeDayLength = toDayLength(event.getPeriod().dayLength());
         final Optional<AbsenceTypeCategory> maybeAbsenceTypeCategory = toAbsenceType(event.getVacationType());
-        final AbsenceTypeSourceId absenceTypeSourceId = new AbsenceTypeSourceId(event.getVacationType().getSourceId());
+        final AbsenceTypeSourceId absenceTypeSourceId = new AbsenceTypeSourceId(event.getVacationType().sourceId());
 
         if (maybeDayLength.isEmpty() || maybeAbsenceTypeCategory.isEmpty()) {
             return Optional.empty();
@@ -49,9 +49,9 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
 
         return Optional.of(new AbsenceWrite(
             event.getSourceId(),
-            new UserId(event.getPerson().getUsername()),
-            event.getPeriod().getStartDate(),
-            event.getPeriod().getEndDate(),
+            new UserId(event.getPerson().username()),
+            event.getPeriod().startDate(),
+            event.getPeriod().endDate(),
             maybeDayLength.get(),
             event.getOvertimeHours().orElse(null),
             maybeAbsenceTypeCategory.get(),
@@ -64,52 +64,52 @@ public class ApplicationEventHandlerRabbitmq extends RabbitMessageConsumer {
     }
 
     private static Optional<AbsenceTypeCategory> toAbsenceType(VacationTypeDTO vacationType) {
-        return mapToEnum(vacationType.getCategory(), AbsenceTypeCategory.class);
+        return mapToEnum(vacationType.category(), AbsenceTypeCategory.class);
     }
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_ALLOWED_QUEUE})
     void on(ApplicationAllowedEventDTO event) {
-        tenantContextHolder.runInTenantIdContext(event.getTenantId(), tenantId -> {
+        tenantContextHolder.runInTenantIdContext(event.tenantId(), tenantId -> {
             LOG.info("Received ApplicationAllowedEvent id={} for person={} and tenantId={} and applicationId={}",
-                event.getId(), event.getPerson(), tenantId, event.getSourceId());
+                event.id(), event.person(), tenantId, event.sourceId());
             toAbsence(new ApplicationEventDtoAdapter(event))
                 .ifPresentOrElse(
                     absenceWriteService::addAbsence,
-                    () -> LOG.info("could not map ApplicationAllowedEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), tenantId));
+                    () -> LOG.info("could not map ApplicationAllowedEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.id(), event.person(), tenantId));
         });
     }
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_UPDATED_QUEUE})
     void on(ApplicationUpdatedEventDTO event) {
-        tenantContextHolder.runInTenantIdContext(event.getTenantId(), tenantId -> {
+        tenantContextHolder.runInTenantIdContext(event.tenantId(), tenantId -> {
             LOG.info("Received ApplicationUpdatedEvent id={} for person={} and tenantId={} and applicationId={}",
-                event.getId(), event.getPerson(), tenantId, event.getSourceId());
+                event.id(), event.person(), tenantId, event.sourceId());
             toAbsence(new ApplicationEventDtoAdapter(event))
                 .ifPresentOrElse(
                     absenceWriteService::updateAbsence,
-                    () -> LOG.info("could not map ApplicationUpdatedEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), tenantId));
+                    () -> LOG.info("could not map ApplicationUpdatedEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.id(), event.person(), tenantId));
         });
     }
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CREATED_FROM_SICKNOTE_QUEUE})
     void on(ApplicationCreatedFromSickNoteEventDTO event) {
-        tenantContextHolder.runInTenantIdContext(event.getTenantId(), tenantId -> {
-            LOG.info("Received ApplicationCreatedFromSicknoteEvent for person={} and tenantId={} and applicationId={}", event.getPerson(), tenantId, event.getSourceId());
+        tenantContextHolder.runInTenantIdContext(event.tenantId(), tenantId -> {
+            LOG.info("Received ApplicationCreatedFromSicknoteEvent for person={} and tenantId={} and applicationId={}", event.person(), tenantId, event.sourceId());
             toAbsence(new ApplicationEventDtoAdapter(event))
                 .ifPresentOrElse(
                     absenceWriteService::addAbsence,
-                    () -> LOG.info("could not map ApplicationCreatedFromSicknoteEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), tenantId));
+                    () -> LOG.info("could not map ApplicationCreatedFromSicknoteEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.id(), event.person(), tenantId));
         });
     }
 
     @RabbitListener(queues = {ZEITERFASSUNG_URLAUBSVERWALTUNG_APPLICATION_CANCELLED_QUEUE})
     void on(ApplicationCancelledEventDTO event) {
-        tenantContextHolder.runInTenantIdContext(event.getTenantId(), tenantId -> {
-            LOG.info("Received ApplicationCancelledEvent for person={} and tenantId={} and applicationId={}", event.getPerson(), tenantId, event.getSourceId());
+        tenantContextHolder.runInTenantIdContext(event.tenantId(), tenantId -> {
+            LOG.info("Received ApplicationCancelledEvent for person={} and tenantId={} and applicationId={}", event.person(), tenantId, event.sourceId());
             toAbsence(new ApplicationEventDtoAdapter(event))
                 .ifPresentOrElse(
                     absenceWriteService::deleteAbsence,
-                    () -> LOG.info("could not map ApplicationCancelledEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.getId(), event.getPerson(), tenantId));
+                    () -> LOG.info("could not map ApplicationCancelledEvent with id={} to Absence for person={} and tenantId={} -> skip adding Absence", event.id(), event.person(), tenantId));
         });
     }
 }
