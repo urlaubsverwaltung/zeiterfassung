@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import jakarta.validation.ConstraintValidatorContext;
 import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
 import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
 import org.junit.jupiter.api.Test;
@@ -7,7 +8,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import jakarta.validation.ConstraintValidatorContext;
 import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,7 +74,7 @@ class FieldsNotAllEmptyValidatorTest {
         return AnnotationFactory.create(descriptor);
     }
 
-    static private class SomeEntryDto {
+    private static class SomeEntryDto {
 
         private final LocalTime start;
         private final LocalTime end;
