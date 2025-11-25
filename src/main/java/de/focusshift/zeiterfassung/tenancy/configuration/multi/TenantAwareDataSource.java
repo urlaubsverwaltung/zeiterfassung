@@ -2,12 +2,12 @@ package de.focusshift.zeiterfassung.tenancy.configuration.multi;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.ConnectionProxy;
 import org.springframework.jdbc.datasource.DelegatingDataSource;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
 import javax.sql.DataSource;
 import java.lang.reflect.InvocationHandler;

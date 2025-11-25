@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.security.oidc.claimmapper;
 
 import de.focusshift.zeiterfassung.security.SecurityRole;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.lang.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
