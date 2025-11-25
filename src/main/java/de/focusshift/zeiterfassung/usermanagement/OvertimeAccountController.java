@@ -29,7 +29,7 @@ import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME
 import static java.math.BigDecimal.ONE;
 import static java.math.RoundingMode.DOWN;
 import static java.math.RoundingMode.HALF_EVEN;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 import static org.springframework.util.StringUtils.hasText;
 
 @Controller
@@ -74,7 +74,7 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock {
         if (result.hasErrors()) {
             prepareGetRequestModel(model, query, userId, overtimeAccountDto, securityContext);
             if (hasText(turboFrame)) {
-                return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
+                return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_CONTENT);
             } else {
                 return new ModelAndView("usermanagement/users");
             }
