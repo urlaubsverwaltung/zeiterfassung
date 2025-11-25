@@ -1,12 +1,12 @@
 package de.focusshift.zeiterfassung;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Extend this class for zeiterfassung single tenant based integration tests.
  */
-public class SingleTenantPostgreSQLContainer extends PostgreSQLContainer<SingleTenantPostgreSQLContainer> {
+public class SingleTenantPostgreSQLContainer extends PostgreSQLContainer {
 
     private static final String VERSION = "16.1";
 
