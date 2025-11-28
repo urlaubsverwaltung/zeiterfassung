@@ -1,6 +1,5 @@
 package de.focusshift.zeiterfassung.importer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantService;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
@@ -12,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 @ConditionalOnProperty(prefix = "zeiterfassung.tenant.import", name = "enabled", havingValue = "true")
@@ -19,8 +19,8 @@ import org.springframework.context.annotation.Configuration;
 public class TenantImportConfiguration {
 
     @Bean
-    ImportInputProvider importInputProvider(ObjectMapper objectMapper, TenantImportConfigurationProperties tenantImportConfigurationProperties) {
-        return new FilesystemBasedImportInputProvider(objectMapper, tenantImportConfigurationProperties.filesystem().path());
+    ImportInputProvider importInputProvider(JsonMapper jsonMapper, TenantImportConfigurationProperties tenantImportConfigurationProperties) {
+        return new FilesystemBasedImportInputProvider(jsonMapper, tenantImportConfigurationProperties.filesystem().path());
     }
 
     @Bean

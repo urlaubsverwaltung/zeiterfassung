@@ -26,7 +26,7 @@ import java.util.Optional;
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
 import static java.util.Objects.requireNonNullElse;
 import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 
 @Controller
 @RequestMapping("/settings")
@@ -85,7 +85,7 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
 
         if (bindingResult.hasErrors()) {
             prepareModel(model, locale, settingsDto);
-            return new ModelAndView("settings/settings", model.asMap(), UNPROCESSABLE_ENTITY);
+            return new ModelAndView("settings/settings", model.asMap(), UNPROCESSABLE_CONTENT);
         }
 
         settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());

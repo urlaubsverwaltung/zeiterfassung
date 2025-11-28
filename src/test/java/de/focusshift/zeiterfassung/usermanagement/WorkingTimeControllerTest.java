@@ -195,7 +195,7 @@ class WorkingTimeControllerTest implements ControllerTest {
                 .header("Turbo-Frame", "person-frame")
                 .param("userId", "42")
         )
-            .andExpect(status().isUnprocessableEntity())
+            .andExpect(status().isUnprocessableContent())
             .andExpect(model().attribute("createMode", true))
             .andExpect(view().name("usermanagement/users::#person-frame"));
 
@@ -509,7 +509,7 @@ class WorkingTimeControllerTest implements ControllerTest {
                 .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
                 .param("workingTime", "48")
         )
-            .andExpect(status().isUnprocessableEntity())
+            .andExpect(status().isUnprocessableContent())
             .andExpect(view().name("usermanagement/users::#awesome-frame"))
             .andExpect(model().attribute("query", ""))
             .andExpect(model().attribute("slug", "working-time"))

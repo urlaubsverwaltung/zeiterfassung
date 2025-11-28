@@ -160,7 +160,7 @@ class SettingsControllerTest implements ControllerTest {
             .param("lockTimeEntriesDaysInPast", "-1")
             .param("subtractBreakFromTimeEntryIsActive", "false")
         )
-            .andExpect(status().isUnprocessableEntity())
+            .andExpect(status().isUnprocessableContent())
             .andExpect(view().name("settings/settings"));
 
         verifyNoInteractions(settingsService);
