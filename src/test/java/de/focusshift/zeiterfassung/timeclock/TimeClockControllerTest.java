@@ -228,7 +228,7 @@ class TimeClockControllerTest implements ControllerTest {
                 // actual pattern "HH:mm"
                 .param("time", "13:37:00")
         )
-            .andExpect(status().isUnprocessableEntity())
+            .andExpect(status().isUnprocessableContent())
             .andExpect(model().attributeHasFieldErrors("timeClockUpdate", "comment"))
             .andExpect(view().name("timeclock/timeclock-edit-form::navigation-box-update"));
     }

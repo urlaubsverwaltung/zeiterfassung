@@ -19,38 +19,38 @@ class SickNoteEventDtoAdapter {
     private final SickNotePeriodDTO period;
 
     SickNoteEventDtoAdapter(SickNoteAcceptedEventDTO event) {
-        this.sourceId = event.getSourceId();
-        this.person = event.getPerson();
-        this.type = event.getType();
-        this.period = event.getPeriod();
+        this.sourceId = event.sourceId();
+        this.person = event.person();
+        this.type = event.type();
+        this.period = event.period();
     }
 
     SickNoteEventDtoAdapter(SickNoteCreatedEventDTO event) {
-        this.sourceId = event.getSourceId();
-        this.person = event.getPerson();
-        this.type = event.getType();
-        this.period = event.getPeriod();
+        this.sourceId = event.sourceId();
+        this.person = event.person();
+        this.type = event.type();
+        this.period = event.period();
     }
 
     SickNoteEventDtoAdapter(SickNoteUpdatedEventDTO event) {
-        this.sourceId = event.getSourceId();
-        this.person = event.getPerson();
-        this.type = event.getType();
-        this.period = event.getPeriod();
+        this.sourceId = event.sourceId();
+        this.person = event.person();
+        this.type = event.type();
+        this.period = event.period();
     }
 
     SickNoteEventDtoAdapter(SickNoteConvertedToApplicationEventDTO event) {
-        this.sourceId = event.getSourceId();
-        this.person = event.getPerson();
-        this.type = event.getType();
-        this.period = event.getPeriod();
+        this.sourceId = event.sourceId();
+        this.person = event.person();
+        this.type = event.type();
+        this.period = event.period();
     }
 
     SickNoteEventDtoAdapter(SickNoteCancelledEventDTO event) {
-        this.sourceId = event.getSourceId();
-        this.person = event.getPerson();
-        this.type = event.getType();
-        this.period = event.getPeriod();
+        this.sourceId = event.sourceId();
+        this.person = event.person();
+        this.type = event.type();
+        this.period = event.period();
     }
 
     public Long getSourceId() {

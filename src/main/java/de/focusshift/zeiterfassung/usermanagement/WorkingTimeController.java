@@ -50,7 +50,7 @@ import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
@@ -152,7 +152,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
             model.addAttribute("createMode", workingTimeDto.getId() == null);
             if ("person-frame".equals(turboFrame)) {
-                return new ModelAndView("usermanagement/users::#person-frame", UNPROCESSABLE_ENTITY);
+                return new ModelAndView("usermanagement/users::#person-frame", UNPROCESSABLE_CONTENT);
             } else {
                 return new ModelAndView("usermanagement/users");
             }
@@ -198,7 +198,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
             prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
             model.addAttribute("createMode", workingTimeDto.getId() == null);
             if (hasText(turboFrame)) {
-                return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_ENTITY);
+                return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_CONTENT);
             } else {
                 return new ModelAndView("usermanagement/users");
             }

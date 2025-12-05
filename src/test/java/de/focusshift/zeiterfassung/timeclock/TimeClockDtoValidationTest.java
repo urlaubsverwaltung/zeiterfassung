@@ -15,7 +15,6 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Nested
 class TimeClockDtoValidationTest {
 
     private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
