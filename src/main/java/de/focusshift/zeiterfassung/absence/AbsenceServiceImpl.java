@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.absence;
 
 import de.focusshift.zeiterfassung.CachedFunction;
+import de.focusshift.zeiterfassung.companyvacation.CompanyVacation;
+import de.focusshift.zeiterfassung.companyvacation.CompanyVacationService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -45,27 +47,24 @@ class AbsenceServiceImpl implements AbsenceService {
     private final AbsenceTypeService absenceTypeService;
     private final UserSettingsProvider userSettingsProvider;
     private final UserManagementService userManagementService;
+    private final CompanyVacationService companyVacationService;
     private final MessageSource messageSource;
 
-    AbsenceServiceImpl(AbsenceRepository absenceRepository,
-                       AbsenceTypeService absenceTypeService,
-                       UserSettingsProvider userSettingsProvider,
-                       UserManagementService userManagementService,
-                       MessageSource messageSource) {
+    AbsenceServiceImpl(
+        AbsenceRepository absenceRepository,
+        AbsenceTypeService absenceTypeService,
+        UserSettingsProvider userSettingsProvider,
+        UserManagementService userManagementService,
+        CompanyVacationService companyVacationService,
+        MessageSource messageSource
+    ) {
 
         this.absenceRepository = absenceRepository;
         this.absenceTypeService = absenceTypeService;
         this.userSettingsProvider = userSettingsProvider;
         this.userManagementService = userManagementService;
+        this.companyVacationService = companyVacationService;
         this.messageSource = messageSource;
-    }
-
-    private static void doFromUntil(LocalDate from, LocalDate toExclusive, Consumer<LocalDate> consumer) {
-        LocalDate pivot = from;
-        while (pivot.isBefore(toExclusive)) {
-            consumer.accept(pivot);
-            pivot = pivot.plusDays(1);
-        }
     }
 
     /* TODO is this method ever used?*/
@@ -74,13 +73,20 @@ class AbsenceServiceImpl implements AbsenceService {
 
         final ZoneId zoneId = userSettingsProvider.zoneId();
 
+        // holidays and sick days
         final List<AbsenceWriteEntity> absenceEntities =
             absenceRepository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(List.of(userId.value()), toExclusive, from);
 
-        final List<Absence> absences = toAbsences(absenceEntities).toList();
+        // company vacations
+        final Function<Locale, String> companyVacationLabel = new CachedFunction<>(this::companyVacationLabel);
+        final List<CompanyVacation> companyVacations = companyVacationService.getCompanyVacations(from, toExclusive);
+        final Stream<Absence> companyAbsences = companyVacations.stream()
+            .map(companyVacation -> companyVacationToAbsence(companyVacation, userId, companyVacationLabel));
+
+        // become absences
+        final List<Absence> absences = Stream.concat(companyAbsences, toAbsences(absenceEntities)).toList();
 
         final Map<LocalDate, List<Absence>> absencesByDate = new HashMap<>();
-
         for (Absence absence : absences) {
             final LocalDate start = LocalDate.ofInstant(absence.startDate(), zoneId);
             final LocalDate endExclusive = LocalDate.ofInstant(absence.endDate(), zoneId).plusDays(1);
@@ -119,7 +125,7 @@ class AbsenceServiceImpl implements AbsenceService {
         // add empty lists for users without absences
         idCompositeByUserId.values().forEach(userIdComposite -> result.computeIfAbsent(userIdComposite, unused -> List.of()));
 
-        return result;
+        return addCompanyVacationsToAbsences(period, result);
     }
 
     @Override
@@ -143,7 +149,22 @@ class AbsenceServiceImpl implements AbsenceService {
         // add empty lists for users without absences
         idCompositeByUserId.values().forEach(userIdComposite -> result.computeIfAbsent(userIdComposite, unused -> List.of()));
 
-        return result;
+        return addCompanyVacationsToAbsences(period, result);
+    }
+
+    private Map<UserIdComposite, List<Absence>> addCompanyVacationsToAbsences(InstantPeriod period, Map<UserIdComposite, List<Absence>> absencesByUser) {
+
+        final Function<Locale, String> companyVacationLabel = new CachedFunction<>(this::companyVacationLabel);
+        final List<CompanyVacation> companyVacations = companyVacationService.getCompanyVacations(period.from, period.toExclusive);
+
+        // add company vacations as absences to each user
+        return absencesByUser.entrySet().stream().collect(toMap(Map.Entry::getKey, entry -> {
+
+            final Stream<Absence> companyAbsences = companyVacations.stream()
+                .map(companyVacation -> companyVacationToAbsence(companyVacation, entry.getKey().id(), companyVacationLabel));
+
+            return Stream.concat(entry.getValue().stream(), companyAbsences).toList();
+        }));
     }
 
     @Override
@@ -171,6 +192,10 @@ class AbsenceServiceImpl implements AbsenceService {
 
     private String sickLabel(Locale locale) {
         return messageSource.getMessage("absence.type.category.SICK", null, locale);
+    }
+
+    private String companyVacationLabel(Locale locale) {
+        return messageSource.getMessage("absence.type.category.COMPANY_VACATION", null, locale);
     }
 
     private Optional<Absence> toAbsence(AbsenceWriteEntity entity, LongFunction<AbsenceType> absenceTypeBySourceIdSupplier, Function<Locale, String> sickLabelSupplier) {
@@ -250,5 +275,33 @@ class AbsenceServiceImpl implements AbsenceService {
     }
 
     private record InstantPeriod(ZoneId zoneId, Instant from, Instant toExclusive) {
+    }
+
+    private Absence companyVacationToAbsence(CompanyVacation companyVacation, UserId userId, Function<Locale, String> label) {
+        return new Absence(
+            userId,
+            companyVacation.startDate(),
+            companyVacation.endDate(),
+            toAbsenceDayLength(companyVacation.dayLength()),
+            label,
+            AbsenceColor.YELLOW,
+            AbsenceTypeCategory.HOLIDAY
+        );
+    }
+
+    private DayLength toAbsenceDayLength(de.focusshift.zeiterfassung.companyvacation.DayLength companyVacationDayLength) {
+        return switch (companyVacationDayLength) {
+            case FULL -> DayLength.FULL;
+            case MORNING -> DayLength.MORNING;
+            case NOON -> DayLength.NOON;
+        };
+    }
+
+    private static void doFromUntil(LocalDate from, LocalDate toExclusive, Consumer<LocalDate> consumer) {
+        LocalDate pivot = from;
+        while (pivot.isBefore(toExclusive)) {
+            consumer.accept(pivot);
+            pivot = pivot.plusDays(1);
+        }
     }
 }

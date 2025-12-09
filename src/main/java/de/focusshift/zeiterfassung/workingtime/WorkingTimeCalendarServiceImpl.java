@@ -3,6 +3,8 @@ package de.focusshift.zeiterfassung.workingtime;
 import de.focusshift.zeiterfassung.DateRange;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.AbsenceService;
+import de.focusshift.zeiterfassung.companyvacation.CompanyVacation;
+import de.focusshift.zeiterfassung.companyvacation.CompanyVacationService;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidayCalendar;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidaysService;
@@ -35,9 +37,11 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
     private final PublicHolidaysService publicHolidaysService;
     private final AbsenceService absenceService;
 
-    WorkingTimeCalendarServiceImpl(WorkingTimeService workingTimeService,
-                                   PublicHolidaysService publicHolidaysService,
-                                   AbsenceService absenceService) {
+    WorkingTimeCalendarServiceImpl(
+        WorkingTimeService workingTimeService,
+        PublicHolidaysService publicHolidaysService,
+        AbsenceService absenceService
+    ) {
         this.workingTimeService = workingTimeService;
         this.publicHolidaysService = publicHolidaysService;
         this.absenceService = absenceService;
