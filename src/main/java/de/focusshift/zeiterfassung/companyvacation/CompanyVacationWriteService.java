@@ -1,0 +1,19 @@
+package de.focusshift.zeiterfassung.companyvacation;
+
+
+public interface CompanyVacationWriteService {
+
+    /**
+     * Add a new {@linkplain CompanyVacationWrite}
+     *
+     * @param companyVacation company vacation to add
+     */
+    void addOrUpdateCompanyVacation(CompanyVacationWrite companyVacation);
+
+    /**
+     * Delete an {@linkplain CompanyVacationWrite}
+     *
+     * @param sourceId sourceId of company vacation to delete
+     */
+    void deleteCompanyVacation(String sourceId);
+}
