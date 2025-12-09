@@ -33,12 +33,13 @@ public class SecurityWebConfiguration {
     private final UserManagementService userManagementService;
 
     @Autowired
-    SecurityWebConfiguration(AuthenticationEntryPoint authenticationEntryPoint,
-                             OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler,
-                             ClientRegistrationRepository clientRegistrationRepository,
-                             SessionService sessionService,
-                             UserManagementService userManagementService) {
-
+    SecurityWebConfiguration(
+        AuthenticationEntryPoint authenticationEntryPoint,
+        OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler,
+        ClientRegistrationRepository clientRegistrationRepository,
+        SessionService sessionService,
+        UserManagementService userManagementService
+    ) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.oidcClientInitiatedLogoutSuccessHandler = oidcClientInitiatedLogoutSuccessHandler;
         this.clientRegistrationRepository = clientRegistrationRepository;
@@ -47,7 +48,7 @@ public class SecurityWebConfiguration {
     }
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http, DelegatingSecurityContextRepository securityContextRepository, TenantContextHolder tenantContextHolder) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http, DelegatingSecurityContextRepository securityContextRepository, TenantContextHolder tenantContextHolder) {
         //@formatter:off
         http
             .authorizeHttpRequests(authorizeHttpRequests ->
