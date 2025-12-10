@@ -226,11 +226,7 @@
             </div>
           </th:block>
         </div>
-        <div
-          class="text-red-600"
-          data-error-container
-          xtra:strip-whitespace="deep"
-        >
+        <div class="text-red-600" data-error-container>
           <ul
             th:if="${showErrors && timeEntry.id eq timeEntryErrorId && #fields.hasGlobalErrors()}"
           >
