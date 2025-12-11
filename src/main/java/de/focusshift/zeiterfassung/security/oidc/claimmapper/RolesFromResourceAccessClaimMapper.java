@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security.oidc.claimmapper;
 
+import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -10,9 +11,12 @@ import java.util.Objects;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static java.lang.String.format;
+import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
+import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.SUB;
 
 /**
  * Claim mapper to parse roles from 'resource_access' claim under the 'client name'. This mapping is
@@ -36,14 +40,18 @@ import static java.util.stream.Collectors.toMap;
 @ConditionalOnProperty(value = "zeiterfassung.security.oidc.claim-mappers.resource-access-claim.enabled", havingValue = "true")
 public class RolesFromResourceAccessClaimMapper implements RolesFromClaimMapper {
 
+    private static final Logger LOG = getLogger(lookup().lookupClass());
+
     private static final String CLAIM_RESOURCE_ACCESS = "resource_access";
     private static final String ROLES = "roles";
 
     private final RolesFromClaimMapperConverter converter;
     private final RolesFromClaimMappersProperties properties;
 
-    RolesFromResourceAccessClaimMapper(RolesFromClaimMapperConverter converter,
-                                       RolesFromClaimMappersProperties properties) {
+    RolesFromResourceAccessClaimMapper(
+        RolesFromClaimMapperConverter converter,
+        RolesFromClaimMappersProperties properties
+    ) {
         this.converter = converter;
         this.properties = properties;
     }
@@ -61,7 +69,8 @@ public class RolesFromResourceAccessClaimMapper implements RolesFromClaimMapper 
         final String neededResourceAccessRole = ZEITERFASSUNG_USER.name().toLowerCase();
 
         if (properties.isAuthorityCheckEnabled() && resourceAccessRoles.stream().noneMatch(neededResourceAccessRole::equals)) {
-            throw new MissingClaimAuthorityException(format("User has not required permission '%s' to access zeiterfassung!", neededResourceAccessRole));
+            LOG.error("User with sub '{}' has not required permission '{}' in '{}' to access zeiterfassung!", claims.get(SUB), neededResourceAccessRole, resourceAccessRoles);
+            throw new MissingClaimAuthorityException(format("User with sub '%s' has not required permission '%s' in '%s' to access zeiterfassung!", claims.get(SUB), neededResourceAccessRole, resourceAccessRoles));
         }
 
         return resourceAccessRoles.stream()

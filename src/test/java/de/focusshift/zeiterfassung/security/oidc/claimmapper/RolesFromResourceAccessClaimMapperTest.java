@@ -59,7 +59,7 @@ class RolesFromResourceAccessClaimMapperTest {
 
         assertThatThrownBy(() -> sut.mapClaimToRoles(claims))
             .isInstanceOf(MissingClaimAuthorityException.class)
-            .hasMessageContaining("User has not required permission 'zeiterfassung_user' to access zeiterfassung!");
+            .hasMessageContaining("User with sub 'uniqueID' has not required permission 'zeiterfassung_user' in '[ZEITERFASSUNG_VIEW_REPORT_ALL]' to access zeiterfassung!");
     }
 
     @Test

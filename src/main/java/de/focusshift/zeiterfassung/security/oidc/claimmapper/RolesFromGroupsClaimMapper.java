@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.security.oidc.claimmapper;
 
 import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMappersProperties.GroupClaimMapperProperties;
+import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,9 @@ import java.util.Objects;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static java.lang.String.format;
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.SUB;
 
 /**
  * Claim mapper to parse roles from the 'groups' claim.
@@ -30,11 +34,15 @@ import static java.lang.String.format;
 @ConditionalOnProperty(value = "zeiterfassung.security.oidc.claim-mappers.group-claim.enabled", havingValue = "true")
 public class RolesFromGroupsClaimMapper implements RolesFromClaimMapper {
 
+    private static final Logger LOG = getLogger(lookup().lookupClass());
+
     private final RolesFromClaimMapperConverter converter;
     private final RolesFromClaimMappersProperties properties;
 
-    RolesFromGroupsClaimMapper(RolesFromClaimMapperConverter converter,
-                               RolesFromClaimMappersProperties properties) {
+    RolesFromGroupsClaimMapper(
+        RolesFromClaimMapperConverter converter,
+        RolesFromClaimMappersProperties properties
+    ) {
         this.converter = converter;
         this.properties = properties;
     }
@@ -46,12 +54,14 @@ public class RolesFromGroupsClaimMapper implements RolesFromClaimMapper {
 
         final String neededResourceAccessRole = ZEITERFASSUNG_USER.name().toLowerCase();
         if (properties.isAuthorityCheckEnabled() && !claims.containsKey(groupClaim.getClaimName())) {
-            throw new MissingClaimAuthorityException(format("User has not required permission '%s' to access zeiterfassung! The claim '%s' is missing!", neededResourceAccessRole, groupClaim.getClaimName()));
+            LOG.error("User with sub '{}' has not required permission '{}' in '{}' to access zeiterfassung! The claim '{}' is missing!", claims.get(SUB), neededResourceAccessRole, groupClaim.getClaimName(), groupClaim.getClaimName());
+            throw new MissingClaimAuthorityException(format("User with sub '%s' has not required permission '%s' in '%s' to access zeiterfassung! The claim '%s' is missing!", claims.get(SUB), neededResourceAccessRole, groupClaim.getClaimName(), groupClaim.getClaimName()));
         }
 
         final List<String> groups = extractRolesFromClaimName(claims, groupClaim.getClaimName());
         if (properties.isAuthorityCheckEnabled() && groups.stream().noneMatch(neededResourceAccessRole::equals)) {
-            throw new MissingClaimAuthorityException(format("User has not required permission '%s' to access zeiterfassung!", neededResourceAccessRole));
+            LOG.error("User with sub '{}' has not required permission '{}' in '{}' to access zeiterfassung!", claims.get(SUB), neededResourceAccessRole, claims.get("groups"));
+            throw new MissingClaimAuthorityException(format("User with sub '%s' has not required permission '%s' in '%s' to access zeiterfassung!", claims.get(SUB), neededResourceAccessRole, claims.get("groups")));
         }
 
         return groups.stream()

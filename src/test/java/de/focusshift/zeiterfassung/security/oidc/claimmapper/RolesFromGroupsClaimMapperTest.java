@@ -55,11 +55,11 @@ class RolesFromGroupsClaimMapperTest {
 
         assertThatThrownBy(() -> sut.mapClaimToRoles(claims))
             .isInstanceOf(MissingClaimAuthorityException.class)
-            .hasMessageContaining("User has not required permission 'zeiterfassung_user' to access zeiterfassung!");
+            .hasMessageContaining("User with sub 'uniqueID' has not required permission 'zeiterfassung_user' in '[zeiterfassung_view_report_all]' to access zeiterfassung!");
     }
 
     @Test
-    void ensureToThrowExceptionIfNeededRoleIsNotGiven() {
+    void ensureToThrowExceptionIfNeededGroupClaimIsNotDefined() {
 
         final RolesFromClaimMappersProperties properties = new RolesFromClaimMappersProperties();
         final RolesFromClaimMapperConverter converter = new RolesFromClaimMapperConverter();
@@ -74,6 +74,6 @@ class RolesFromGroupsClaimMapperTest {
 
         assertThatThrownBy(() -> sut.mapClaimToRoles(claims))
             .isInstanceOf(MissingClaimAuthorityException.class)
-            .hasMessageContaining("User has not required permission 'zeiterfassung_user' to access zeiterfassung! The claim 'groups' is missing!");
+            .hasMessageContaining("User with sub 'uniqueID' has not required permission 'zeiterfassung_user' in 'groups' to access zeiterfassung! The claim 'groups' is missing!");
     }
 }
