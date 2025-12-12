@@ -167,16 +167,6 @@ class AbsenceServiceImpl implements AbsenceService {
         }));
     }
 
-    @Override
-    public List<Absence> getAbsencesByUserId(UserId userId, LocalDate from, LocalDate toExclusive) {
-
-        final InstantPeriod period = getInstantPeriod(from, toExclusive);
-
-        final List<AbsenceWriteEntity> absenceEntities = absenceRepository.findAllByUserIdInAndStartDateLessThanAndEndDateGreaterThanEqual(List.of(userId.value()), period.toExclusive, period.from);
-
-        return toAbsences(absenceEntities).toList();
-    }
-
     private Stream<Absence> toAbsences(List<AbsenceWriteEntity> absenceEntities) {
 
         final Map<Long, AbsenceType> absenceTypeBySourceId = findAbsenceTypes(absenceEntities).stream()

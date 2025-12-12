@@ -39,14 +39,4 @@ public interface AbsenceService {
      * @return absences grouped by {@link UserIdComposite}. empty list value when there are no absences on a date within the period.
      */
     Map<UserIdComposite, List<Absence>> getAbsencesByUserIds(List<UserLocalId> userLocalIds, LocalDate from, LocalDate toExclusive);
-
-    /**
-     * Find all absences in a given date range for the given user
-     *
-     * @param userId      user
-     * @param from        from
-     * @param toExclusive to (exclusive)
-     * @return list of absences of {@link UserId}. empty list value when there are no absences on a date within the period.
-     */
-    List<Absence> getAbsencesByUserId(UserId userId, LocalDate from, LocalDate toExclusive);
 }
