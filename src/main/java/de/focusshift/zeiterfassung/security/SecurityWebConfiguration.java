@@ -3,9 +3,9 @@ package de.focusshift.zeiterfassung.security;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
-import org.springframework.boot.actuate.health.HealthEndpoint;
-import org.springframework.boot.actuate.metrics.export.prometheus.PrometheusScrapeEndpoint;
+import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
+import org.springframework.boot.micrometer.metrics.autoconfigure.export.prometheus.PrometheusScrapeEndpoint;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -33,12 +33,13 @@ public class SecurityWebConfiguration {
     private final UserManagementService userManagementService;
 
     @Autowired
-    SecurityWebConfiguration(AuthenticationEntryPoint authenticationEntryPoint,
-                             OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler,
-                             ClientRegistrationRepository clientRegistrationRepository,
-                             SessionService sessionService,
-                             UserManagementService userManagementService) {
-
+    SecurityWebConfiguration(
+        AuthenticationEntryPoint authenticationEntryPoint,
+        OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler,
+        ClientRegistrationRepository clientRegistrationRepository,
+        SessionService sessionService,
+        UserManagementService userManagementService
+    ) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.oidcClientInitiatedLogoutSuccessHandler = oidcClientInitiatedLogoutSuccessHandler;
         this.clientRegistrationRepository = clientRegistrationRepository;
@@ -47,7 +48,7 @@ public class SecurityWebConfiguration {
     }
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http, DelegatingSecurityContextRepository securityContextRepository, TenantContextHolder tenantContextHolder) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http, DelegatingSecurityContextRepository securityContextRepository, TenantContextHolder tenantContextHolder) {
         //@formatter:off
         http
             .authorizeHttpRequests(authorizeHttpRequests ->

@@ -29,7 +29,7 @@ import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 import static org.springframework.util.StringUtils.hasText;
 
 @Controller
@@ -73,7 +73,7 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
 
         if (errors.hasErrors()) {
             if (hasText(turboFrame)) {
-                return new ModelAndView("timeclock/timeclock-edit-form::navigation-box-update", UNPROCESSABLE_ENTITY);
+                return new ModelAndView("timeclock/timeclock-edit-form::navigation-box-update", UNPROCESSABLE_CONTENT);
             } else {
                 return new ModelAndView("timeclock/timeclock-edit");
             }

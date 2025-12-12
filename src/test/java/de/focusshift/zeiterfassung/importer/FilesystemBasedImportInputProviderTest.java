@@ -1,9 +1,6 @@
 package de.focusshift.zeiterfassung.importer;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.focusshift.zeiterfassung.importer.model.OvertimeAccountDTO;
 import de.focusshift.zeiterfassung.importer.model.TenantExport;
 import de.focusshift.zeiterfassung.importer.model.TimeClockDTO;
@@ -13,6 +10,7 @@ import de.focusshift.zeiterfassung.importer.model.UserExport;
 import de.focusshift.zeiterfassung.importer.model.WorkDayDTO;
 import de.focusshift.zeiterfassung.importer.model.WorkingTimeDTO;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -30,7 +28,7 @@ class FilesystemBasedImportInputProviderTest {
 
     @Test
     void handlesImportFileNotFound() {
-        FilesystemBasedImportInputProvider sut = new FilesystemBasedImportInputProvider(objectMapper(), "src/test/resources/doesnt_exists.json");
+        FilesystemBasedImportInputProvider sut = new FilesystemBasedImportInputProvider(jsonMapper(), "src/test/resources/doesnt_exists.json");
 
         assertThat(sut.fromExport()).isEmpty();
     }
@@ -38,7 +36,7 @@ class FilesystemBasedImportInputProviderTest {
     @Test
     void happyPath() {
 
-        FilesystemBasedImportInputProvider sut = new FilesystemBasedImportInputProvider(objectMapper(), "src/test/resources/export_file.json");
+        FilesystemBasedImportInputProvider sut = new FilesystemBasedImportInputProvider(jsonMapper(), "src/test/resources/export_file.json");
 
         Optional<TenantExport> optionalTenantExport = sut.fromExport();
 
@@ -78,10 +76,7 @@ class FilesystemBasedImportInputProviderTest {
         );
     }
 
-    private static ObjectMapper objectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.registerModule(new Jdk8Module());
-        return objectMapper;
+    private static JsonMapper jsonMapper() {
+        return new JsonMapper();
     }
 }

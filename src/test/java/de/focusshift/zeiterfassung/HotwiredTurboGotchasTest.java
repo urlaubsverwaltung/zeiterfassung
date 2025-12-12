@@ -46,7 +46,7 @@ class HotwiredTurboGotchasTest {
             .and(annotatedWith(postMappingProducingHotwiredStream))
             .should().haveRawReturnType(ModelAndView.class)
             .as("Controller methods annotated with @PostMapping and producing hotwired streams " +
-                "must return ModelAndView because form posts returning validation errors are only rendered with HttpStatus.UNPROCESSABLE_ENTITY.")
+                "must return ModelAndView because form posts returning validation errors are only rendered with HttpStatus.UNPROCESSABLE_CONTENT.")
             .allowEmptyShould(true)
             .check(classes);
     }
@@ -62,7 +62,7 @@ class HotwiredTurboGotchasTest {
             .and(consumesTurboFrameHeader)
             .should().haveRawReturnType(ModelAndView.class)
             .as("Controller methods annotated with @PostMapping and accepting @RequestHeader(\"Turbo-Frame\") " +
-                "must return ModelAndView because form posts returning validation errors are only rendered with HttpStatus.UNPROCESSABLE_ENTITY.")
+                "must return ModelAndView because form posts returning validation errors are only rendered with HttpStatus.UNPROCESSABLE_CONTENT.")
             .allowEmptyShould(true)
             .check(classes);
     }

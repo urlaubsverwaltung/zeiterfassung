@@ -1,14 +1,14 @@
 package de.focusshift.zeiterfassung.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 class CommonRabbitmqConfiguration {
     @Bean
-    Jackson2JsonMessageConverter converter(ObjectMapper objectMapper) {
-        return new Jackson2JsonMessageConverter(objectMapper);
+    JacksonJsonMessageConverter converter(JsonMapper jsonMapper) {
+        return new JacksonJsonMessageConverter(jsonMapper);
     }
 }
