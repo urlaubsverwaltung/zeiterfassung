@@ -113,7 +113,7 @@ class CompanyVacationEventHandlerRabbitmqIT extends SingleTenantTestContainersBa
 
         // DELETE company vacation absence
         rabbitTemplate.convertAndSend(TOPIC, DELETED_ROUTING_KEY, CompanyVacationDeletedEventDto.builder()
-            .deletedAt(Instant.now())
+            .createdAt(Instant.now())
             .id(UUID.randomUUID())
             .sourceId("1L")
             .tenantId(TENANT_ID)
