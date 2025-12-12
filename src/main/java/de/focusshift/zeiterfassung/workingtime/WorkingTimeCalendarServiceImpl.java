@@ -35,9 +35,11 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
     private final PublicHolidaysService publicHolidaysService;
     private final AbsenceService absenceService;
 
-    WorkingTimeCalendarServiceImpl(WorkingTimeService workingTimeService,
-                                   PublicHolidaysService publicHolidaysService,
-                                   AbsenceService absenceService) {
+    WorkingTimeCalendarServiceImpl(
+        WorkingTimeService workingTimeService,
+        PublicHolidaysService publicHolidaysService,
+        AbsenceService absenceService
+    ) {
         this.workingTimeService = workingTimeService;
         this.publicHolidaysService = publicHolidaysService;
         this.absenceService = absenceService;

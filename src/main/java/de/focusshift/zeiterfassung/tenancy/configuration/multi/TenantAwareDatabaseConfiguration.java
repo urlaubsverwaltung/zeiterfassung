@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.tenancy.configuration.multi;
 import com.zaxxer.hikari.HikariDataSource;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeEntity;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteEntity;
+import de.focusshift.zeiterfassung.companyvacation.CompanyVacationEntity;
 import de.focusshift.zeiterfassung.settings.FederalStateSettingsEntity;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
@@ -44,7 +45,8 @@ import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
         TenantUserEntity.class,
         WorkingTimeEntity.class,
         OvertimeAccountEntity.class,
-        FederalStateSettingsEntity.class
+        FederalStateSettingsEntity.class,
+        CompanyVacationEntity.class
         // SubtractBreakFromTimeEntrySettingsEntity.class, // disabled for now to prevent duplicated bean definitions
         // LockTimeEntriesSettingsEntity.class // disabled for now to prevent duplicated bean definitions
     },
@@ -98,7 +100,8 @@ class TenantAwareDatabaseConfiguration {
                 TenantUserEntity.class,
                 WorkingTimeEntity.class,
                 OvertimeAccountEntity.class,
-                FederalStateSettingsEntity.class
+                FederalStateSettingsEntity.class,
+                CompanyVacationEntity.class
                 // SubtractBreakFromTimeEntrySettingsEntity.class, // disabled for now to prevent duplicated bean definitions
                 // LockTimeEntriesSettingsEntity.class // disabled for now to prevent duplicated bean definitions
             )
