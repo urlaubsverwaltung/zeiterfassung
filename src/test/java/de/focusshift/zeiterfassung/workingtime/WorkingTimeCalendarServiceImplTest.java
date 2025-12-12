@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.AbsenceService;
-import de.focusshift.zeiterfassung.companyvacation.CompanyVacationService;
 import de.focusshift.zeiterfassung.publicholiday.PublicHoliday;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidayCalendar;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidaysService;
