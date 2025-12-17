@@ -46,8 +46,6 @@ class UsersUIIT {
         final UsersPage usersPage = new UsersPage(page);
         final UserOvertimeAccountPage overtimeAccountPage = new UserOvertimeAccountPage(page);
 
-        page.navigate("http://localhost:" + port + "/oauth2/authorization/keycloak");
-
         loginPage.login(new LoginPage.Credentials("boss", "secret"));
         navigationPage.goToUsersPage();
 
