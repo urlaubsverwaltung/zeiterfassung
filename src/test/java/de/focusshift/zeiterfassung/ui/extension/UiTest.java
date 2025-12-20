@@ -76,6 +76,7 @@ public @interface UiTest {
                     .setLocale("de")
                     .setScreenSize(1500, 1080)
                     .setViewportSize(1500, 1080)
+                    .setRecordVideoSize(1500, 2000)
                 );
         }
     }
