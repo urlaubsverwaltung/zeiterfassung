@@ -35,7 +35,7 @@ information about the available support options at [urlaubsverwaltung.cloud/prei
 
 * [JDK 21](https://adoptium.net)
 * [Docker 20.10+](https://www.docker.com/)
-* [PostgreSQL 16.1+](#database)
+* [PostgreSQL 18+](#database)
 * [E-Mail-Server](#e-mail-server)
 * [OpenID Connect identity provider](#openid-connect-identity-provider)
 
