@@ -1,12 +1,9 @@
 package de.focusshift.zeiterfassung.infobanner;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.Nullable;
-import org.springframework.web.servlet.HandlerInterceptor;
+import de.focusshift.zeiterfassung.web.DataProviderInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-class InfoBannerControllerAdvice implements HandlerInterceptor {
+class InfoBannerControllerAdvice extends DataProviderInterceptor {
 
     private final InfoBannerConfigProperties properties;
 
@@ -15,15 +12,7 @@ class InfoBannerControllerAdvice implements HandlerInterceptor {
     }
 
     @Override
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable ModelAndView modelAndView) throws Exception {
-
-        if (modelAndView != null && modelAndView.hasView() && !redirectOrForward(modelAndView)) {
-            modelAndView.getModelMap().addAttribute("infoBannerText", properties.text().de());
-        }
-    }
-
-    private static boolean redirectOrForward(ModelAndView modelAndView) {
-        final String viewName = modelAndView.getViewName();
-        return viewName != null && (viewName.startsWith("redirect") || viewName.startsWith("forward"));
+    protected void addData(ModelAndView modelAndView) {
+        modelAndView.getModelMap().addAttribute("infoBannerText", properties.text().de());
     }
 }
