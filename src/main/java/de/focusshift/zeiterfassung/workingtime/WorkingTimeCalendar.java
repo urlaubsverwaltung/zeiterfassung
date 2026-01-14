@@ -73,10 +73,45 @@ public final class WorkingTimeCalendar {
             if (absence.absenceTypeCategory() == AbsenceTypeCategory.OVERTIME) {
                 final LocalDate startDate = absence.startDate().atZone(ZoneId.of("UTC")).toLocalDate();
                 final LocalDate endDate = absence.endDate().atZone(ZoneId.of("UTC")).toLocalDate();
-                final long workingDaysDuringAbsence = startDate.datesUntil(endDate.plusDays(1))
-                    .filter(dayInAbsence -> plannedWorkingHoursByDate.get(dayInAbsence).duration().isPositive())
-                    .count();
-                absenceDuration = absenceDuration.plus(workingDaysDuringAbsence == 0 ? absence.overtimeHours() : absence.overtimeHours().dividedBy(workingDaysDuringAbsence));
+
+                // Calculate effective working days considering other absences
+                // overtime reduction hours are only distributed over days that are no absent days. (e.g. companyVacation)
+                double effectiveWorkingDays = 0.0;
+
+                for (LocalDate dayInAbsence = startDate; !dayInAbsence.isAfter(endDate); dayInAbsence = dayInAbsence.plusDays(1)) {
+                    final PlannedWorkingHours dayPlanned = plannedWorkingHoursByDate.getOrDefault(dayInAbsence, PlannedWorkingHours.ZERO);
+                    if (dayPlanned.duration().isPositive()) {
+                        // Check for other absences on this day
+                        final List<Absence> dayAbsences = absencesByDate.getOrDefault(dayInAbsence, List.of());
+                        double dayCapacity = 1.0;
+
+                        for (Absence otherAbsence : dayAbsences) {
+                            // Don't count the current overtime absence or other overtime absences
+                            if (otherAbsence != absence && otherAbsence.absenceTypeCategory() != AbsenceTypeCategory.OVERTIME) {
+                                dayCapacity -= otherAbsence.dayLength().getValue();
+                            }
+                        }
+
+                        // Ensure capacity doesn't go negative
+                        effectiveWorkingDays += Math.max(0, dayCapacity);
+                    }
+                }
+
+                if (effectiveWorkingDays > 0) {
+                    // For the current date, calculate its capacity to determine the portion of overtime
+                    double currentDayCapacity = 1.0;
+                    for (Absence otherAbsence : absences) {
+                        if (otherAbsence != absence && otherAbsence.absenceTypeCategory() != AbsenceTypeCategory.OVERTIME) {
+                            currentDayCapacity -= otherAbsence.dayLength().getValue();
+                        }
+                    }
+                    currentDayCapacity = Math.max(0, currentDayCapacity);
+
+                    // Calculate overtime for this specific day based on its capacity
+                    final Duration overtimePerFullDay = Duration.ofMillis((long)(absence.overtimeHours().toMillis() / effectiveWorkingDays));
+                    final Duration overtimeForThisDay = Duration.ofMillis((long)(overtimePerFullDay.toMillis() * currentDayCapacity));
+                    absenceDuration = absenceDuration.plus(overtimeForThisDay);
+                }
             } else {
                 // application for leave or sicknote
                 double absenceValue = absence.dayLength().getValue();
