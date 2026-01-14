@@ -71,20 +71,8 @@ public final class WorkingTimeCalendar {
 
         for (Absence absence : absencesAtGivenDate) {
             if (absence.absenceTypeCategory() == AbsenceTypeCategory.OVERTIME) {
-                final LocalDate startDate = absence.startDate().atZone(ZoneId.of("UTC")).toLocalDate();
-                final LocalDate endDate = absence.endDate().atZone(ZoneId.of("UTC")).toLocalDate();
-
-                // Calculate effective working days considering other absences
-                // overtime reduction hours are only distributed over days that are no absent days. (e.g. companyVacation)
-                final double effectiveWorkingDays = getEffectiveWorkingDays(startDate, endDate);
-                if (effectiveWorkingDays > 0) {
-                    // For the given date, calculate its capacity to determine the portion of overtime
-                    final double capacity = getShouldWorkDayLengthCapacity(absencesAtGivenDate);
-                    // Calculate overtime for this specific day based on its capacity
-                    final Duration overtimePerFullDay = Duration.ofMillis((long)(absence.overtimeHours().toMillis() / effectiveWorkingDays));
-                    final Duration overtimeForThisDay = Duration.ofMillis((long)(overtimePerFullDay.toMillis() * capacity));
-                    absenceDuration = absenceDuration.plus(overtimeForThisDay);
-                }
+                final Duration duration = getAbsenceDurationOfOvertimeReduction(absence, absencesAtGivenDate);
+                absenceDuration = absenceDuration.plus(duration);
             } else {
                 // application for leave or sicknote
                 double absenceValue = absence.dayLength().getValue();
@@ -152,6 +140,31 @@ public final class WorkingTimeCalendar {
 
     private boolean isDateBetween(LocalDate toCheck, LocalDate from, LocalDate toExclusive) {
         return toCheck.isBefore(toExclusive) && (toCheck.isEqual(from) || toCheck.isAfter(from));
+    }
+
+    /**
+     * Calculate the duration of the overtime reduction absence.
+     *
+     * @param overtimeReductionAbsence overtime reduction absence
+     * @param otherAbsences all other absences at a certain date
+     * @return duration of the overtime reduction absence
+     */
+    private Duration getAbsenceDurationOfOvertimeReduction(Absence overtimeReductionAbsence, List<Absence> otherAbsences) {
+        final LocalDate startDate = overtimeReductionAbsence.startDate().atZone(ZoneId.of("UTC")).toLocalDate();
+        final LocalDate endDate = overtimeReductionAbsence.endDate().atZone(ZoneId.of("UTC")).toLocalDate();
+
+        // Calculate effective working days considering other absences
+        // overtime reduction hours are only distributed over days that are no absent days. (e.g. companyVacation)
+        final double effectiveWorkingDays = getEffectiveWorkingDays(startDate, endDate);
+        if (effectiveWorkingDays > 0) {
+            // For the given date (otherAbsences), calculate its capacity to determine the portion of overtime
+            final double capacity = getShouldWorkDayLengthCapacity(otherAbsences);
+            // Calculate overtime for this specific day based on its capacity
+            final Duration overtimeHoursPerFullDay = Duration.ofMillis((long)(overtimeReductionAbsence.overtimeHours().toMillis() / effectiveWorkingDays));
+            return Duration.ofMillis((long)(overtimeHoursPerFullDay.toMillis() * capacity));
+        }
+
+        return Duration.ZERO;
     }
 
     /**
