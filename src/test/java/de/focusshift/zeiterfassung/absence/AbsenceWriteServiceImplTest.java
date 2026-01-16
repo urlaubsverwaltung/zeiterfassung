@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -26,9 +27,12 @@ class AbsenceWriteServiceImplTest {
     @Mock
     private AbsenceRepository repository;
 
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
     @BeforeEach
     void setUp() {
-        sut = new AbsenceWriteServiceImpl(repository);
+        sut = new AbsenceWriteServiceImpl(repository, applicationEventPublisher);
     }
 
     @Test

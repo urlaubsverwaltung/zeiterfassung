@@ -1,16 +1,27 @@
 package de.focusshift.zeiterfassung.overtime;
 
+import de.focusshift.zeiterfassung.DateRange;
+import de.focusshift.zeiterfassung.absence.AbsenceAddedEvent;
+import de.focusshift.zeiterfassung.absence.AbsenceDeletedEvent;
+import de.focusshift.zeiterfassung.absence.AbsenceUpdatedEvent;
 import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
+import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryDeletedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent.UpdatedValueCandidate;
+import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccount;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccountService;
+import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -18,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -29,16 +41,25 @@ class OvertimePublisher {
 
     private final OvertimeService overtimeService;
     private final OvertimeAccountService overtimeAccountService;
+    private final TimeEntryLockService timeEntryLockService;
+    private final UserManagementService userManagementService;
+    private final WorkingTimeCalendarService workingTimeCalendarService;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     OvertimePublisher(
         OvertimeService overtimeService,
         OvertimeAccountService overtimeAccountService,
+        TimeEntryLockService timeEntryLockService,
+        UserManagementService userManagementService,
+        WorkingTimeCalendarService workingTimeCalendarService,
         ApplicationEventPublisher applicationEventPublisher
     ) {
         this.overtimeService = overtimeService;
         this.overtimeAccountService = overtimeAccountService;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.timeEntryLockService = timeEntryLockService;
+        this.userManagementService = userManagementService;
+        this.workingTimeCalendarService = workingTimeCalendarService;
     }
 
     @EventListener
@@ -48,14 +69,11 @@ class OvertimePublisher {
         final Map<UserIdComposite, OvertimeAccount> overtimeAccountByUserId = overtimeAccountService.getAllOvertimeAccounts();
 
         overtimeService.getOvertimeForDate(event.date()).forEach((userIdComposite, overtimeHours) -> {
-
             // currently we just know whether overtime is allowed or not.
             // this may change in the future to have a date range for this info or more granular stuff.
             final OvertimeAccount overtimeAccount = overtimeAccountByUserId.get(userIdComposite);
             if (overtimeAccount.isAllowed() && !overtimeHours.durationInMinutes().isZero()) {
-                final UserHasWorkedOvertimeEvent overtimeEvent = new UserHasWorkedOvertimeEvent(userIdComposite, event.date(), overtimeHours);
-                LOG.info("publish UserHasWorkedOvertimeEvent date={} user={}", event.date(), userIdComposite);
-                applicationEventPublisher.publishEvent(overtimeEvent);
+                publishUpdated(userIdComposite, event.date(), overtimeHours);
             }
         });
     }
@@ -80,7 +98,6 @@ class OvertimePublisher {
             LOG.info("Ignore TimeEntryCreatedEvent. User {} overtime not allowed.", userIdComposite);
             return;
         }
-
         LOG.info("TimeEntry created and locked.");
         publishUpdated(userIdComposite, event.date());
     }
@@ -178,12 +195,72 @@ class OvertimePublisher {
         publishUpdated(userIdComposite, date);
     }
 
+    @EventListener
+    public void publishOvertimeUpdated(AbsenceAddedEvent event) {
+        publishForUserAndDateRange(event.userId(), event.dateRange());
+    }
+
+    @EventListener
+    public void publishOvertimeUpdated(AbsenceDeletedEvent event) {
+        publishForUserAndDateRange(event.userId(), event.dateRange());
+    }
+
+    @EventListener
+    public void publishOvertimeUpdated(AbsenceUpdatedEvent event) {
+        publishForUserAndDateRange(event.userId(), event.oldDateRange());
+        publishForUserAndDateRange(event.userId(), event.newDateRange());
+    }
+
+    private void publishForUserAndDateRange(UserId userId, DateRange dateRange) {
+        final Optional<UserIdComposite> maybeUserIdComposite = userManagementService.findUserById(userId).map(User::userIdComposite);
+        if (maybeUserIdComposite.isEmpty()) {
+            LOG.info("Ignore absence. Unknown user {}.", userId);
+            return;
+        }
+
+        final UserIdComposite userIdComposite = maybeUserIdComposite.get();
+        final UserLocalId userLocalId = userIdComposite.localId();
+
+        final OvertimeAccount overtimeAccount = overtimeAccountService.getOvertimeAccount(userLocalId);
+        if (!overtimeAccount.isAllowed()) {
+            LOG.info("Ignore absence. User {} overtime not allowed.", userIdComposite);
+            return;
+        }
+
+        final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendarService.getWorkingTimeCalender(
+            dateRange.startDate(), dateRange.endDate().plusDays(1), userLocalId);
+
+        final LockTimeEntriesSettings lockSettings = timeEntryLockService.getLockTimeEntriesSettings();
+
+        for (LocalDate date : dateRange) {
+
+            final boolean locked = timeEntryLockService.isLocked(date, lockSettings);
+            if (!locked) {
+                LOG.info("Skip not locked date {} for user {}.", date, userIdComposite);
+                break;
+            }
+
+            final boolean hasPlannedWorkingHours = workingTimeCalendar.plannedWorkingHours(date)
+                .map(plannedWorkingHours -> !plannedWorkingHours.duration().isZero())
+                .orElse(false);
+
+            if (hasPlannedWorkingHours) {
+                publishUpdated(userIdComposite, date);
+            } else {
+                LOG.info("Skip absence day {} for user {} because planned working hours are zero.", date, userIdComposite);
+            }
+        }
+    }
+
     private void publishUpdated(UserIdComposite userIdComposite, LocalDate date) {
-
+        // optimize maybe: call overtimeService only once with a new method that returns Map<LocalDate, OvertimeHours> -> only one database call
         final OvertimeHours overtimeHours = overtimeService.getOvertimeForDateAndUser(date, userIdComposite.localId());
+        publishUpdated(userIdComposite, date, overtimeHours);
+    }
 
+    private void publishUpdated(UserIdComposite userIdComposite, LocalDate date, OvertimeHours overtimeHours) {
         final UserHasWorkedOvertimeEvent overtimeUpdatedEvent = new UserHasWorkedOvertimeEvent(userIdComposite, date, overtimeHours);
-        LOG.info("publish UserHasWorkedOvertimeEvent date={} user={}", overtimeUpdatedEvent, userIdComposite);
+        LOG.info("publish UserHasWorkedOvertimeEvent date={} user={}", date, userIdComposite);
         applicationEventPublisher.publishEvent(overtimeUpdatedEvent);
     }
 }
