@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.absence;
 
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -15,9 +16,11 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final AbsenceRepository repository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    AbsenceWriteServiceImpl(AbsenceRepository repository) {
+    AbsenceWriteServiceImpl(AbsenceRepository repository, ApplicationEventPublisher applicationEventPublisher) {
         this.repository = repository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -34,6 +37,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
             setEntityFields(entity, absence);
             repository.save(entity);
             LOG.info("successfully persisted absence in database. sourceId={} type={}", sourceId, typeId);
+            applicationEventPublisher.publishEvent(new AbsenceAddedEvent(absence));
         } else {
             LOG.info("did not persist absence because it exists already. sourceId={} type={}", sourceId, typeId);
         }
@@ -53,6 +57,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
             setEntityFields(entity, absence);
             repository.save(entity);
             LOG.info("successfully updated absence in database. sourceId={} type={}", sourceId, typeId);
+            applicationEventPublisher.publishEvent(new AbsenceUpdatedEvent(absence, entity));
         } else {
             LOG.info("no absence found that could be updated, sourceId={} type={}", sourceId, typeId);
         }
@@ -70,6 +75,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
 
         if (countOfDeletedAbsences >= 1) {
             LOG.info("successfully deleted {} absences. sourceId={} typeSourceId={} typeCategory={}", countOfDeletedAbsences, sourceId, typeSourceId, category);
+            applicationEventPublisher.publishEvent(new AbsenceDeletedEvent(absence));
         } else {
             LOG.info("did not delete absence. sourceId={} typeSourceId={} typeCategory={}", sourceId, typeSourceId, category);
         }
