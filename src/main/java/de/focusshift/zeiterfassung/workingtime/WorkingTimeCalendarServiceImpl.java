@@ -53,14 +53,59 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
 
     @Override
     public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimeCalendarForAllUsers(LocalDate from, LocalDate toExclusive) {
-        final Map<UserIdComposite, List<Absence>> absences = absenceService.getAbsencesForAllUsers(from, toExclusive);
+        final Map<UserIdComposite, List<Absence>> absences = fetchAbsencesWithOverlapping(
+            from,
+            toExclusive,
+            absenceService::getAbsencesForAllUsers
+        );
         return toWorkingTimeCalendar(from, toExclusive, absences, workingTimeService::getAllWorkingTimes);
     }
 
     @Override
     public Map<UserIdComposite, WorkingTimeCalendar> getWorkingTimeCalendarForUsers(LocalDate from, LocalDate toExclusive, Collection<UserLocalId> userLocalIds) {
-        final Map<UserIdComposite, List<Absence>> absences = absenceService.getAbsencesByUserIds(userLocalIds.stream().toList(), from, toExclusive);
+        final Map<UserIdComposite, List<Absence>> absences = fetchAbsencesWithOverlapping(
+            from,
+            toExclusive,
+            (start, end) -> absenceService.getAbsencesByUserIds(userLocalIds.stream().toList(), start, end)
+        );
         return toWorkingTimeCalendar(from, toExclusive, absences, (start, endExclusive) -> workingTimeService.getWorkingTimesByUsers(start, endExclusive, userLocalIds));
+    }
+
+    /**
+     * This method fetches absences for the given time interval. While considering overlapping absences of the
+     * result set. This is useful/required to correctly calculate distributed overtime reduction in WorkingTimeCalendar
+     * for instance.
+     *
+     * @param initialFrom start of client/user requested interval
+     * @param initialToExclusive end of client/user request interval
+     * @param absenceSupplier function returning list of absences by user for the requested interval
+     * @return map of absences for the requested interval including overlapping absences
+     */
+    private Map<UserIdComposite, List<Absence>> fetchAbsencesWithOverlapping(
+        LocalDate initialFrom,
+        LocalDate initialToExclusive,
+        BiFunction<LocalDate, LocalDate, Map<UserIdComposite, List<Absence>>> absenceSupplier
+    ) {
+
+        final Map<UserIdComposite, List<Absence>> absencesOfRequestedInterval =
+            absenceSupplier.apply(initialFrom, initialToExclusive);
+
+        final LocalDate minDate = minStartDate(absencesOfRequestedInterval.values(), initialFrom);
+        final LocalDate maxDateExclusive = maxEndDate(absencesOfRequestedInterval.values(), initialToExclusive.minusDays(1)).plusDays(1);
+
+        // if there is no absence overlapping the requested interval -> nothing else to do
+        if (minDate.equals(initialFrom) && maxDateExclusive.equals(initialToExclusive)) {
+            return absencesOfRequestedInterval;
+        }
+
+        // otherwise fetch again, including overlapping absences of the actual interested set
+        // (overlapping absences are required to correctly calculate overtime reduction hours for instance)
+        //
+        // note:
+        // currently only one level of depth is used,
+        // I am not sure whether we need to fetch overlapping of overlapping absences or not...
+        // In theory, we need recursion I think. Practically? maybe?
+        return absenceSupplier.apply(minDate, maxDateExclusive);
     }
 
     private Map<UserIdComposite, WorkingTimeCalendar> toWorkingTimeCalendar(

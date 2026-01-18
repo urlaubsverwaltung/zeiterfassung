@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.absence.AbsenceService;
 import de.focusshift.zeiterfassung.publicholiday.PublicHoliday;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidayCalendar;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidaysService;
+import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -36,9 +37,12 @@ import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BAD
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BAYERN;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.NONE;
 import static java.time.ZoneOffset.UTC;
+import static java.util.Collections.max;
+import static java.util.Collections.min;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -216,7 +220,16 @@ class WorkingTimeCalendarServiceImplTest {
 
             final Absence absence = new Absence(userIdOne, absenceStart.atStartOfDay().toInstant(UTC), absenceEnd.atStartOfDay().toInstant(UTC), FULL, null, YELLOW, OVERTIME, Duration.ofHours(9 * 8));
 
+
+            // first call for requested rance
             when(absenceService.getAbsencesForAllUsers(from, toExclusive)).thenReturn((Map.of(userIdComposite, List.of(absence))));
+
+            // optional second call since absence interval exceeds requested one
+            // lenient since this is not the case for every given state in this test
+            final LocalDate minFrom = min(List.of(from, absenceStart));
+            final LocalDate maxToExclusive = max(List.of(toExclusive.minusDays(1), absenceEnd)).plusDays(1);
+            lenient().when(absenceService.getAbsencesForAllUsers(minFrom, maxToExclusive)).thenReturn((Map.of(userIdComposite, List.of(absence))));
+
             when(workingTimeService.getAllWorkingTimes(workingTimeStart, workingTimeEndExclusive)).thenReturn(Map.of(
                 userIdComposite, List.of(
                     WorkingTime.builder(userIdComposite, new WorkingTimeId(UUID.randomUUID()))
@@ -507,6 +520,140 @@ class WorkingTimeCalendarServiceImplTest {
                     LocalDate.of(2023, 2, 18), PlannedWorkingHours.ZERO,
                     LocalDate.of(2023, 2, 19), PlannedWorkingHours.ZERO
                 ), Map.of()));
+        }
+
+        @Test
+        void ensureGetWorkingTimesWithAbsencesOverlappingAbsencesOutsideRequestedInterval() {
+            // This test verifies that when calculating overtime distribution, all overlapping absences
+            // are fetched even if they don't initially overlap with the requested date range.
+
+            final UserId userId = new UserId("uuid");
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+            // request one week in December
+            final LocalDate requestedFrom = LocalDate.of(2025, 12, 22); // monday
+            final LocalDate requestedToExclusive = LocalDate.of(2025, 12, 29); // monday of next week
+
+            final Absence overtimeAbsence = new Absence(
+                userId,
+                // absence interval exceeds requested interval!
+                // however, touches silvester (not part of requested interval),
+                // and is of interest due to ShouldWorkingHours calculation in WorkingTimeCalendar
+                LocalDate.of(2025, 12, 23).atStartOfDay().toInstant(UTC), // tuesday
+                LocalDate.of(2026, 1, 6).atStartOfDay().toInstant(UTC), // tuesday
+                FULL,
+                null,
+                YELLOW,
+                OVERTIME,
+                Duration.ofHours(20) // full overtime reduction "between the years" considering christmasEve and silvester
+            );
+
+            final Absence christmasEve = new Absence(
+                userId,
+                LocalDate.of(2025, 12, 24).atStartOfDay().toInstant(UTC),
+                LocalDate.of(2025, 12, 24).atStartOfDay().toInstant(UTC),
+                FULL,
+                (locale) -> "Heiligabend",
+                RED,
+                HOLIDAY
+            );
+
+            final Absence silvester = new Absence(
+                userId,
+                LocalDate.of(2025, 12, 31).atStartOfDay().toInstant(UTC),
+                LocalDate.of(2025, 12, 31).atStartOfDay().toInstant(UTC),
+                FULL,
+                (locale) -> "Silvester",
+                RED,
+                HOLIDAY
+            );
+
+            final Absence publicHoliday1 = new Absence(
+                userId,
+                LocalDate.of(2025, 12, 25).atStartOfDay().toInstant(UTC),
+                LocalDate.of(2025, 12, 25).atStartOfDay().toInstant(UTC),
+                FULL,
+                (locale) -> "1. Weihnachtstag",
+                RED,
+                HOLIDAY
+            );
+
+            final Absence publicHoliday2 = new Absence(
+                userId,
+                LocalDate.of(2025, 12, 26).atStartOfDay().toInstant(UTC),
+                LocalDate.of(2025, 12, 26).atStartOfDay().toInstant(UTC),
+                FULL,
+                (locale) -> "2. Weihnachstag",
+                RED,
+                HOLIDAY
+            );
+
+            final Absence publicHoliday3 = new Absence(
+                userId,
+                LocalDate.of(2026, 1, 1).atStartOfDay().toInstant(UTC),
+                LocalDate.of(2026, 1, 1).atStartOfDay().toInstant(UTC),
+                FULL,
+                (locale) -> "Neujahr",
+                RED,
+                HOLIDAY
+            );
+
+            final Absence publicHoliday4 = new Absence(
+                userId,
+                LocalDate.of(2026, 1, 6).atStartOfDay().toInstant(UTC),
+                LocalDate.of(2026, 1, 6).atStartOfDay().toInstant(UTC),
+                FULL,
+                (locale) -> "Heilige Drei Könige",
+                RED,
+                HOLIDAY
+            );
+
+            // first call: December 22 to 28
+            when(absenceService.getAbsencesByUserIds(List.of(userLocalId), requestedFrom, requestedToExclusive))
+                .thenReturn(Map.of(userIdComposite, List.of(overtimeAbsence, christmasEve, publicHoliday1, publicHoliday2)));
+
+            // second call: to get silvester absence due to spanning overtime reduction absence till Jan 6
+            when(absenceService.getAbsencesByUserIds(List.of(userLocalId), requestedFrom, LocalDate.of(2026, 1, 7)))
+                .thenReturn(Map.of(userIdComposite, List.of(overtimeAbsence, christmasEve, publicHoliday1, publicHoliday2, silvester, publicHoliday3, publicHoliday4)));
+
+            // working time is only fetch once, with extended interval
+            when(workingTimeService.getWorkingTimesByUsers(LocalDate.of(2025, 12, 22), LocalDate.of(2026, 1, 7), List.of(userLocalId)))
+                .thenReturn(Map.of(
+                    userIdComposite, List.of(
+                        WorkingTime.builder(userIdComposite, new WorkingTimeId(UUID.randomUUID()))
+                            .worksOnPublicHoliday(WorksOnPublicHoliday.NO)
+                            .federalState(GERMANY_BADEN_WUERTTEMBERG)
+                            .monday(5)
+                            .tuesday(5)
+                            .wednesday(5)
+                            .thursday(5)
+                            .build()
+                    )
+                ));
+
+            final Map<UserIdComposite, WorkingTimeCalendar> actual = sut.getWorkingTimeCalendarForUsers(requestedFrom, requestedToExclusive, List.of(userLocalId));
+
+            final WorkingTimeCalendar calendar = actual.get(userIdComposite);
+            assertThat(calendar).isNotNull();
+
+            // just check absences (shouldWorkingHours calculation is covered by WorkingTimeCalendar test)
+            // calendar must contain absences outside requested interval
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 24))).hasValue(List.of(overtimeAbsence, christmasEve));
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 25))).hasValue(List.of(overtimeAbsence, publicHoliday1));
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 26))).hasValue(List.of(overtimeAbsence, publicHoliday2));
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 31))).hasValue(List.of(overtimeAbsence, silvester));
+            assertThat(calendar.absence(LocalDate.of(2026, 1, 1))).hasValue(List.of(overtimeAbsence, publicHoliday3));
+            assertThat(calendar.absence(LocalDate.of(2026, 1, 6))).hasValue(List.of(overtimeAbsence, publicHoliday4));
+
+            // just peeking...
+            // zero -> overtime reduction
+            assertThat(calendar.shouldWorkingHours(LocalDate.of(2025, 12, 23))).hasValue(ShouldWorkingHours.ZERO);
+            // zero -> christmas-eve FULL
+            assertThat(calendar.shouldWorkingHours(LocalDate.of(2025, 12, 24))).hasValue(ShouldWorkingHours.ZERO);
+            // zero -> silvester FULL (despite outside requested interval, data exists in calendar)
+            assertThat(calendar.shouldWorkingHours(LocalDate.of(2025, 12, 31))).hasValue(ShouldWorkingHours.ZERO);
+            assertThat(calendar.shouldWorkingHours(LocalDate.of(2026, 1, 6))).hasValue(ShouldWorkingHours.ZERO);
         }
 
         @Test
