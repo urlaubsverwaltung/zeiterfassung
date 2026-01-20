@@ -21,7 +21,7 @@
     "@eslint/compat": "2.0.1",
     "@eslint/eslintrc": "3.3.3",
     "@eslint/js": "9.39.2",
-    "@hotwired/turbo": "8.0.20",
+    "@hotwired/turbo": "8.0.21",
     "@popperjs/core": "2.11.8",
     "@rollup/plugin-commonjs": "29.0.0",
     "@rollup/plugin-node-resolve": "16.0.3",
