@@ -1,12 +1,16 @@
 package de.focusshift.zeiterfassung.absence;
 
+import de.focusshift.zeiterfassung.DateRange;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.time.ZoneOffset.UTC;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
@@ -15,9 +19,11 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final AbsenceRepository repository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    AbsenceWriteServiceImpl(AbsenceRepository repository) {
+    AbsenceWriteServiceImpl(AbsenceRepository repository, ApplicationEventPublisher applicationEventPublisher) {
         this.repository = repository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -34,6 +40,14 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
             setEntityFields(entity, absence);
             repository.save(entity);
             LOG.info("successfully persisted absence in database. sourceId={} type={}", sourceId, typeId);
+
+            // AbsenceWriteService only knows a "technical" layer (messaging with urlaubsverwaltung)
+            // and the incoming date is an Instant. Therefore, we can use UTC "safely" here...
+            // The web layer NEVER calls this service -> no user specific timezone knowledge required
+            final LocalDate startDate = LocalDate.ofInstant(absence.startDate(), UTC);
+            final LocalDate endDate = LocalDate.ofInstant(absence.endDate(), UTC);
+            final DateRange dateRange = new DateRange(startDate, endDate);
+            applicationEventPublisher.publishEvent(new AbsenceAddedEvent(absence.userId(), dateRange));
         } else {
             LOG.info("did not persist absence because it exists already. sourceId={} type={}", sourceId, typeId);
         }
@@ -53,6 +67,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
             setEntityFields(entity, absence);
             repository.save(entity);
             LOG.info("successfully updated absence in database. sourceId={} type={}", sourceId, typeId);
+            applicationEventPublisher.publishEvent(new AbsenceUpdatedEvent(absence.userId(), new DateRange(LocalDate.ofInstant(existing.get().getStartDate(), UTC), LocalDate.ofInstant(existing.get().getEndDate(), UTC)), new DateRange(LocalDate.ofInstant(absence.startDate(), UTC), LocalDate.ofInstant(absence.endDate(), UTC))));
         } else {
             LOG.info("no absence found that could be updated, sourceId={} type={}", sourceId, typeId);
         }
@@ -70,6 +85,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
 
         if (countOfDeletedAbsences >= 1) {
             LOG.info("successfully deleted {} absences. sourceId={} typeSourceId={} typeCategory={}", countOfDeletedAbsences, sourceId, typeSourceId, category);
+            applicationEventPublisher.publishEvent(new AbsenceDeletedEvent(absence.userId(), new DateRange(LocalDate.ofInstant(absence.startDate(), UTC), LocalDate.ofInstant(absence.endDate(), UTC))));
         } else {
             LOG.info("did not delete absence. sourceId={} typeSourceId={} typeCategory={}", sourceId, typeSourceId, category);
         }
