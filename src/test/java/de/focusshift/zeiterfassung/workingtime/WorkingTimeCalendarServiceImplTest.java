@@ -554,7 +554,7 @@ class WorkingTimeCalendarServiceImplTest {
                 LocalDate.of(2025, 12, 24).atStartOfDay().toInstant(UTC),
                 LocalDate.of(2025, 12, 24).atStartOfDay().toInstant(UTC),
                 FULL,
-                (locale) -> "Heiligabend",
+                locale -> "Heiligabend",
                 RED,
                 HOLIDAY
             );
@@ -564,7 +564,7 @@ class WorkingTimeCalendarServiceImplTest {
                 LocalDate.of(2025, 12, 31).atStartOfDay().toInstant(UTC),
                 LocalDate.of(2025, 12, 31).atStartOfDay().toInstant(UTC),
                 FULL,
-                (locale) -> "Silvester",
+                locale -> "Silvester",
                 RED,
                 HOLIDAY
             );
@@ -574,7 +574,7 @@ class WorkingTimeCalendarServiceImplTest {
                 LocalDate.of(2025, 12, 25).atStartOfDay().toInstant(UTC),
                 LocalDate.of(2025, 12, 25).atStartOfDay().toInstant(UTC),
                 FULL,
-                (locale) -> "1. Weihnachtstag",
+                locale -> "1. Weihnachtstag",
                 RED,
                 HOLIDAY
             );
@@ -584,7 +584,7 @@ class WorkingTimeCalendarServiceImplTest {
                 LocalDate.of(2025, 12, 26).atStartOfDay().toInstant(UTC),
                 LocalDate.of(2025, 12, 26).atStartOfDay().toInstant(UTC),
                 FULL,
-                (locale) -> "2. Weihnachstag",
+                locale -> "2. Weihnachstag",
                 RED,
                 HOLIDAY
             );
@@ -594,7 +594,7 @@ class WorkingTimeCalendarServiceImplTest {
                 LocalDate.of(2026, 1, 1).atStartOfDay().toInstant(UTC),
                 LocalDate.of(2026, 1, 1).atStartOfDay().toInstant(UTC),
                 FULL,
-                (locale) -> "Neujahr",
+                locale -> "Neujahr",
                 RED,
                 HOLIDAY
             );
@@ -604,7 +604,7 @@ class WorkingTimeCalendarServiceImplTest {
                 LocalDate.of(2026, 1, 6).atStartOfDay().toInstant(UTC),
                 LocalDate.of(2026, 1, 6).atStartOfDay().toInstant(UTC),
                 FULL,
-                (locale) -> "Heilige Drei Könige",
+                locale -> "Heilige Drei Könige",
                 RED,
                 HOLIDAY
             );
