@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.envers.DateTimeFormatter;
 import org.hibernate.envers.RevisionEntity;
@@ -37,8 +38,9 @@ public class TenantAwareRevisionEntity implements Serializable, TenantAware {
     @RevisionTimestamp
     private long timestamp;
 
+    @NotNull
     @Size(max = 255)
-    @Column(name = "tenant_id")
+    @Column(name = "tenant_id", nullable = false)
     private String tenantId;
 
     /**

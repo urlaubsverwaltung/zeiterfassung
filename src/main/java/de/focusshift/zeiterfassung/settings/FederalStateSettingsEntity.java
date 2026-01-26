@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Objects;
 
@@ -23,11 +24,13 @@ public class FederalStateSettingsEntity extends AbstractTenantAwareEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "settings_federal_state_seq")
     protected Long id;
 
-    @Column(name = "federal_state")
+    @NotNull
+    @Column(name = "federal_state", nullable = false)
     @Enumerated(STRING)
     private FederalState federalState;
 
-    @Column(name = "works_on_public_holiday")
+    @NotNull
+    @Column(name = "works_on_public_holiday", nullable = false)
     private boolean worksOnPublicHoliday;
 
     protected FederalStateSettingsEntity() {

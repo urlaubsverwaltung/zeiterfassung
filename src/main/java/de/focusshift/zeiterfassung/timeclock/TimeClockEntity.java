@@ -46,9 +46,12 @@ public class TimeClockEntity extends AbstractTenantAwareEntity {
     @Column(name = "stopped_at_zone_id")
     private String stoppedAtZoneId;
 
+    @Column(name = "comment", nullable = false)
+    @NotNull
     private String comment;
 
-    @Column(name = "is_break")
+    @Column(name = "is_break", nullable = false)
+    @NotNull
     private boolean isBreak;
 
     protected TimeClockEntity() {
