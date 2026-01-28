@@ -85,7 +85,6 @@ spring:
       cache:
         cachecontrol:
           cache-public: false
-          cache-private: false
           max-age: 0
       chain:
         enabled: false

@@ -41,7 +41,6 @@ spring:
       cache:
         cachecontrol:
           cache-public: true
-          cache-private: true
           max-age: P365D
       chain:
         enabled: true
