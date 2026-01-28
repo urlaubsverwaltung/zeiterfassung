@@ -40,8 +40,8 @@ spring:
     resources:
       cache:
         cachecontrol:
-          no-cache: false
-          no-store: false
+          cache-public: true
+          cache-private: true
           max-age: P365D
       chain:
         enabled: true

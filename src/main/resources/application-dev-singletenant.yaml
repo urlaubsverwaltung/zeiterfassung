@@ -58,10 +58,11 @@ spring:
     resources:
       cache:
         cachecontrol:
-          no-cache: true
-          no-store: true
+          cache-public: false
+          cache-private: false
           max-age: 0
       chain:
+        enabled: false
         strategy:
           content:
             enabled: false
