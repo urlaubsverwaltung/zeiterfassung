@@ -65,7 +65,8 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
     @Enumerated(STRING)
     private Set<SecurityRole> authorities;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
+    @NotNull
     private Instant createdAt;
 
     @Column(name = "updated_at")
