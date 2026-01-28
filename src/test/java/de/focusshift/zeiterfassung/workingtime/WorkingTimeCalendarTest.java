@@ -294,4 +294,247 @@ class WorkingTimeCalendarTest {
 
         assertThat(sut.shouldWorkingHours(today)).hasValue(new ShouldWorkingHours(Duration.ZERO));
     }
+
+    @Test
+    void ensureOvertimeReductionExcludesDaysWithFullAbsence() {
+        // Test case: 3-day overtime period with company vacation on one day
+        // Overtime hours should only be distributed over working days without full absences
+        final LocalDate wednesday = LocalDate.of(2025, 1, 14);
+        final LocalDate tuesday = wednesday.minusDays(1);
+        final LocalDate monday = tuesday.minusDays(1);
+
+        final Instant mondayInstant = monday.atStartOfDay().toInstant(ZoneOffset.UTC);
+        final Instant wednesdayInstant = wednesday.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+        // Overtime reduction for 3 days (Mon-Wed) with 6 hours total
+        final Absence overtimeReduction = new Absence(
+            new UserId("user"),
+            mondayInstant,
+            wednesdayInstant,
+            FULL,
+            locale -> "Overtime reduction",
+            PINK,
+            OVERTIME,
+            Duration.ofHours(6L)
+        );
+
+        // Company vacation on Wednesday (full day)
+        final Absence companyVacation = new Absence(
+            new UserId("user"),
+            wednesdayInstant,
+            wednesdayInstant,
+            FULL,
+            locale -> "Company vacation",
+            PINK,
+            HOLIDAY
+        );
+
+        final WorkingTimeCalendar sut = new WorkingTimeCalendar(
+            Map.of(
+                monday, PlannedWorkingHours.EIGHT,
+                tuesday, PlannedWorkingHours.EIGHT,
+                wednesday, PlannedWorkingHours.EIGHT
+            ),
+            Map.of(
+                monday, List.of(overtimeReduction),
+                tuesday, List.of(overtimeReduction),
+                wednesday, List.of(overtimeReduction, companyVacation)
+            )
+        );
+
+        // 8 hour planned workingHours - 3h overtime reduction per day = 5h
+        assertThat(sut.shouldWorkingHours(monday)).hasValue(new ShouldWorkingHours(Duration.ofHours(5)));
+        assertThat(sut.shouldWorkingHours(tuesday)).hasValue(new ShouldWorkingHours(Duration.ofHours(5)));
+        assertThat(sut.shouldWorkingHours(wednesday)).hasValue(new ShouldWorkingHours(Duration.ZERO));
+    }
+
+    @Test
+    void ensureOvertimeReductionConsidersHalfDayAbsences() {
+        // Test case: 2-day overtime period with half-day absence on first day
+        final LocalDate wednesday = LocalDate.of(2025, 1, 14);
+        final LocalDate tuesday = wednesday.minusDays(1);
+
+        final Instant tuesdayInstant = tuesday.atStartOfDay().toInstant(ZoneOffset.UTC);
+        final Instant wednesdayInstant = wednesday.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+        final Absence overtimeReduction = new Absence(
+            new UserId("user"),
+            tuesdayInstant,
+            wednesdayInstant,
+            FULL,
+            locale -> "Overtime reduction",
+            PINK,
+            OVERTIME,
+            Duration.ofHours(6L)
+        );
+
+        final Absence halfDayVacation = new Absence(
+            new UserId("user"),
+            wednesdayInstant,
+            wednesdayInstant,
+            MORNING,
+            locale -> "Half day vacation",
+            PINK,
+            HOLIDAY
+        );
+
+        final WorkingTimeCalendar sut = new WorkingTimeCalendar(
+            Map.of(
+                tuesday, PlannedWorkingHours.EIGHT,
+                wednesday, PlannedWorkingHours.EIGHT
+            ),
+            Map.of(
+                tuesday, List.of(overtimeReduction),
+                wednesday, List.of(overtimeReduction, halfDayVacation)
+            )
+        );
+
+        assertThat(sut.shouldWorkingHours(tuesday)).hasValue(new ShouldWorkingHours(Duration.ofHours(4)));
+        assertThat(sut.shouldWorkingHours(wednesday)).hasValue(new ShouldWorkingHours(Duration.ofHours(2)));
+    }
+
+    @Test
+    void ensureOvertimeReductionWhenAllDaysHaveFullAbsences() {
+        // Test case: Overtime period completely covered by other absences
+        final LocalDate wednesday = LocalDate.of(2025, 1, 14);
+        final LocalDate tuesday = wednesday.minusDays(1);
+
+        final Instant tuesdayInstant = tuesday.atStartOfDay().toInstant(ZoneOffset.UTC);
+        final Instant wednesdayInstant = wednesday.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+        // Overtime reduction for 2 days with 4 hours total
+        final Absence overtimeReduction = new Absence(
+            new UserId("user"),
+            tuesdayInstant,
+            wednesdayInstant,
+            FULL,
+            locale -> "Overtime reduction",
+            PINK,
+            OVERTIME,
+            Duration.ofHours(4L)
+        );
+
+        // Full day absences on both days
+        final Absence tuesdayVacation = new Absence(
+            new UserId("user"),
+            tuesdayInstant,
+            tuesdayInstant,
+            FULL,
+            locale -> "Vacation",
+            PINK,
+            HOLIDAY
+        );
+
+        final Absence wednesdayVacation = new Absence(
+            new UserId("user"),
+            wednesdayInstant,
+            wednesdayInstant,
+            FULL,
+            locale -> "Vacation",
+            PINK,
+            HOLIDAY
+        );
+
+        final WorkingTimeCalendar sut = new WorkingTimeCalendar(
+            Map.of(
+                tuesday, PlannedWorkingHours.EIGHT,
+                wednesday, PlannedWorkingHours.EIGHT
+            ),
+            Map.of(
+                tuesday, List.of(overtimeReduction, tuesdayVacation),
+                wednesday, List.of(overtimeReduction, wednesdayVacation)
+            )
+        );
+
+        assertThat(sut.shouldWorkingHours(tuesday)).hasValue(new ShouldWorkingHours(Duration.ZERO));
+        assertThat(sut.shouldWorkingHours(wednesday)).hasValue(new ShouldWorkingHours(Duration.ZERO));
+    }
+
+    @Test
+    void ensureOvertimeReductionWithMixedAbsences() {
+        // Complex test case: Multiple types of absences during overtime period
+        final LocalDate monday = LocalDate.of(2025, 1, 12);
+        final LocalDate tuesday = monday.plusDays(1);
+        final LocalDate wednesday = monday.plusDays(2);
+        final LocalDate thursday = monday.plusDays(3);
+
+        final Instant mondayInstant = monday.atStartOfDay().toInstant(ZoneOffset.UTC);
+        final Instant tuesdayInstant = tuesday.atStartOfDay().toInstant(ZoneOffset.UTC);
+        final Instant wednesdayInstant = wednesday.atStartOfDay().toInstant(ZoneOffset.UTC);
+        final Instant thursdayInstant = thursday.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+        // Overtime reduction for 4 days with 8 hours total
+        final Absence overtimeReduction = new Absence(
+            new UserId("user"),
+            mondayInstant,
+            thursdayInstant,
+            FULL,
+            locale -> "Overtime reduction",
+            PINK,
+            OVERTIME,
+            Duration.ofHours(8L)
+        );
+
+        // Various absences:
+        // Monday: no other absence (full day available)
+        // Tuesday: morning absence (half day available)
+        // Wednesday: full day absence (not available)
+        // Thursday: noon absence (half day available)
+
+        final Absence tuesdayMorning = new Absence(
+            new UserId("user"),
+            tuesdayInstant,
+            tuesdayInstant,
+            MORNING,
+            locale -> "Morning absence",
+            PINK,
+            HOLIDAY
+        );
+
+        final Absence wednesdayFull = new Absence(
+            new UserId("user"),
+            wednesdayInstant,
+            wednesdayInstant,
+            FULL,
+            locale -> "Full day absence",
+            PINK,
+            HOLIDAY
+        );
+
+        final Absence thursdayNoon = new Absence(
+            new UserId("user"),
+            thursdayInstant,
+            thursdayInstant,
+            NOON,
+            locale -> "Noon absence",
+            PINK,
+            HOLIDAY
+        );
+
+        final WorkingTimeCalendar sut = new WorkingTimeCalendar(
+            Map.of(
+                monday, PlannedWorkingHours.EIGHT,
+                tuesday, PlannedWorkingHours.EIGHT,
+                wednesday, PlannedWorkingHours.EIGHT,
+                thursday, PlannedWorkingHours.EIGHT
+            ),
+            Map.of(
+                monday, List.of(overtimeReduction),
+                tuesday, List.of(overtimeReduction, tuesdayMorning),
+                wednesday, List.of(overtimeReduction, wednesdayFull),
+                thursday, List.of(overtimeReduction, thursdayNoon)
+            )
+        );
+
+        // Effective working days: 1 (Mon) + 0.5 (Tue) + 0 (Wed) + 0.5 (Thu) = 2.0 days
+        // Overtime per effective day: 8 hours / 2 = 4 hours
+        // Monday: 8 - 4 = 4 hours
+        // Tuesday: 4 (half day) - 2 (half of 4) = 2 hours
+        // Wednesday: 0 hours (full absence)
+        // Thursday: 4 (half day) - 2 (half of 4) = 2 hours
+        assertThat(sut.shouldWorkingHours(monday)).hasValue(new ShouldWorkingHours(Duration.ofHours(4)));
+        assertThat(sut.shouldWorkingHours(tuesday)).hasValue(new ShouldWorkingHours(Duration.ofHours(2)));
+        assertThat(sut.shouldWorkingHours(wednesday)).hasValue(new ShouldWorkingHours(Duration.ZERO));
+        assertThat(sut.shouldWorkingHours(thursday)).hasValue(new ShouldWorkingHours(Duration.ofHours(2)));
+    }
 }
