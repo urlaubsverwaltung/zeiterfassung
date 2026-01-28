@@ -42,8 +42,9 @@ spring:
         cachecontrol:
           no-cache: false
           no-store: false
-        period: 365
+          max-age: P365D
       chain:
+        enabled: true
         strategy:
           content:
             enabled: true

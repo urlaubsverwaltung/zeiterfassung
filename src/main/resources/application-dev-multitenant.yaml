@@ -86,7 +86,7 @@ spring:
         cachecontrol:
           no-cache: true
           no-store: true
-        period: 0
+          max-age: 0
       chain:
         strategy:
           content:
