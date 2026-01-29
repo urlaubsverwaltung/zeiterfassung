@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.companyvacation;
 
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import java.time.Instant;
@@ -21,5 +22,11 @@ interface CompanyVacationRepository extends CrudRepository<CompanyVacationEntity
 
     @Modifying
     @Transactional
-    long deleteBySourceId(String sourceId);
+    @Query("""
+        DELETE FROM CompanyVacationEntity e
+        WHERE e.sourceId = :sourceId
+          AND EXTRACT(YEAR FROM e.startDate) = EXTRACT(YEAR FROM CAST(:createdAt AS timestamp))
+          AND EXTRACT(YEAR FROM e.endDate) = EXTRACT(YEAR FROM CAST(:createdAt AS timestamp))
+    """)
+    long deleteBySourceIdAndStartAndEndInSameYearAsCreatedAt(String sourceId, Instant createdAt);
 }

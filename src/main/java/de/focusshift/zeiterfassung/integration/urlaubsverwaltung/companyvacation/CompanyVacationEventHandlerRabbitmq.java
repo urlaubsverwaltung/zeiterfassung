@@ -78,7 +78,7 @@ public class CompanyVacationEventHandlerRabbitmq extends RabbitMessageConsumer {
         tenantContextHolder.runInTenantIdContext(event.tenantId(), tenantId -> {
             LOG.info("Received CompanyVacationDeletedEventDto id={} for tenantId={} and sourceId={}",
                 event.id(), tenantId, event.sourceId());
-            companyVacationWriteService.deleteCompanyVacation(event.sourceId());
+            companyVacationWriteService.deleteCompanyVacation(event.createdAt(), event.sourceId());
         });
     }
 

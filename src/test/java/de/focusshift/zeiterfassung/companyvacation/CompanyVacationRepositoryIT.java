@@ -59,6 +59,29 @@ class CompanyVacationRepositoryIT extends SingleTenantTestContainersBase {
         verify(tenantContextHolder, times(6)).getCurrentTenantId();
     }
 
+    @Test
+    void deleteBySourceIdAndStartAndEndInSameYearAsCreatedAt() {
+        final String sameSourceId = "sameSourceId";
+        final CompanyVacationEntity companyVacationIn2025 = companyVacation("2025-07-29T00:00:00.000Z", "2025-07-29T00:00:00.000Z");
+        companyVacationIn2025.setSourceId(sameSourceId);
+        final CompanyVacationEntity companyVacationIn2026 = companyVacation("2026-07-29T00:00:00.000Z", "2026-07-29T00:00:00.000Z");
+        companyVacationIn2026.setSourceId(sameSourceId);
+
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(TENANT_ID));
+
+        final Iterable<CompanyVacationEntity> companyVacationEntities = sut.saveAll(List.of(companyVacationIn2025, companyVacationIn2026));
+
+        final Instant startOfWeek = Instant.parse("2025-07-20T00:00:00.000Z");
+        final Instant endOfWeekExclusive = Instant.parse("2026-08-01T00:00:00.000Z");
+        final List<CompanyVacationEntity> allCompanyVacations = sut.findAllByStartDateLessThanAndEndDateGreaterThanEqual(endOfWeekExclusive, startOfWeek);
+        assertThat(allCompanyVacations).hasSize(2);
+
+        sut.deleteBySourceIdAndStartAndEndInSameYearAsCreatedAt(sameSourceId, Instant.parse("2025-07-29T00:00:00.000Z"));
+
+        final List<CompanyVacationEntity> allCompanyVacationsAfterDeletion = sut.findAllByStartDateLessThanAndEndDateGreaterThanEqual(endOfWeekExclusive, startOfWeek);
+        assertThat(allCompanyVacationsAfterDeletion).hasSize(1);
+    }
+
     private static CompanyVacationEntity companyVacation(String start, String end) {
 
         final CompanyVacationEntity companyVacation = new CompanyVacationEntity();

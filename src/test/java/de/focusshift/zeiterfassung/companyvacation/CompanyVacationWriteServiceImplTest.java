@@ -94,9 +94,11 @@ class CompanyVacationWriteServiceImplTest {
     class DeleteCompanyVacation {
 
         @Test
-        void ensureToDeleteCompanyVacationBySourceId() {
-            sut.deleteCompanyVacation("sourceId");
-            verify(companyVacationRepository).deleteBySourceId("sourceId");
+        void ensureToDeleteCompanyVacationBySourceIdAndCorrectYear() {
+            final Instant createdAt = Instant.parse("2025-07-29T22:00:00.000Z");
+            final String sourceId = "sourceId";
+            sut.deleteCompanyVacation(createdAt, sourceId);
+            verify(companyVacationRepository).deleteBySourceIdAndStartAndEndInSameYearAsCreatedAt(sourceId, createdAt);
         }
     }
 }

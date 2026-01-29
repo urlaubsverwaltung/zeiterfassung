@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.companyvacation;
 
 
+import java.time.Instant;
+
 public interface CompanyVacationWriteService {
 
     /**
@@ -15,5 +17,5 @@ public interface CompanyVacationWriteService {
      *
      * @param sourceId sourceId of company vacation to delete
      */
-    void deleteCompanyVacation(String sourceId);
+    void deleteCompanyVacation(Instant createdAt, String sourceId);
 }
