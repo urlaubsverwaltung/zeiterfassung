@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.companyvacation;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
@@ -38,8 +39,8 @@ class CompanyVacationWriteServiceImpl implements CompanyVacationWriteService {
     }
 
     @Override
-    public void deleteCompanyVacation(String sourceId) {
-        final boolean deleted = repository.deleteBySourceId(sourceId) == 1;
+    public void deleteCompanyVacation(Instant createdAt, String sourceId) {
+        final boolean deleted = repository.deleteBySourceIdAndStartAndEndInSameYearAsCreatedAt(sourceId, createdAt) == 1;
 
         if (deleted) {
             LOG.info("successfully deleted company vacation. sourceId={}", sourceId);
