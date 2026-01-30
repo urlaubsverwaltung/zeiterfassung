@@ -11,7 +11,14 @@ import java.util.Optional;
 
 interface CompanyVacationRepository extends CrudRepository<CompanyVacationEntity, String> {
 
-    Optional<CompanyVacationEntity> findBySourceId(String sourceId);
+    @Query("""
+        SELECT e
+        FROM CompanyVacationEntity e
+        WHERE e.sourceId = :sourceId
+          AND EXTRACT(YEAR FROM e.startDate) = EXTRACT(YEAR FROM CAST(:createdAt AS timestamp))
+          AND EXTRACT(YEAR FROM e.endDate) = EXTRACT(YEAR FROM CAST(:createdAt AS timestamp))
+    """)
+    Optional<CompanyVacationEntity> findBySourceIdAndStartAndEndInSameYearAsCreatedAt(String sourceId, Instant createdAt);
 
     /**
      * Finds all absences of intersection with interval from and toExclusive-1

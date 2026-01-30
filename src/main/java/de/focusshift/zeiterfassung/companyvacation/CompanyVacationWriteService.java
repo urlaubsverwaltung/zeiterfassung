@@ -10,7 +10,7 @@ public interface CompanyVacationWriteService {
      *
      * @param companyVacation company vacation to add
      */
-    void addOrUpdateCompanyVacation(CompanyVacationWrite companyVacation);
+    void addOrUpdateCompanyVacation(Instant createdAt, CompanyVacationWrite companyVacation);
 
     /**
      * Delete an {@linkplain CompanyVacationWrite}

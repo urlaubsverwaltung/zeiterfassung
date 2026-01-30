@@ -60,6 +60,26 @@ class CompanyVacationRepositoryIT extends SingleTenantTestContainersBase {
     }
 
     @Test
+    void findBySourceIdAndStartAndEndInSameYearAsCreatedAt() {
+        final String sameSourceId = "sameSourceId";
+
+        final CompanyVacationEntity companyVacationIn2025 = companyVacation("2025-07-29T00:00:00.000Z", "2025-07-29T00:00:00.000Z");
+        companyVacationIn2025.setSourceId(sameSourceId);
+        final CompanyVacationEntity companyVacationIn2026 = companyVacation("2026-07-29T00:00:00.000Z", "2026-07-29T00:00:00.000Z");
+        companyVacationIn2026.setSourceId(sameSourceId);
+
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(TENANT_ID));
+
+        sut.saveAll(List.of(companyVacationIn2025, companyVacationIn2026));
+
+        final Instant createdAt = Instant.parse("2026-07-20T00:00:00.000Z");
+        final Optional<CompanyVacationEntity> allCompanyVacationsInTheYearOfCreatedAt = sut.findBySourceIdAndStartAndEndInSameYearAsCreatedAt(sameSourceId, createdAt);
+        assertThat(allCompanyVacationsInTheYearOfCreatedAt)
+            .isPresent()
+            .contains(companyVacationIn2026);
+    }
+
+    @Test
     void deleteBySourceIdAndStartAndEndInSameYearAsCreatedAt() {
         final String sameSourceId = "sameSourceId";
         final CompanyVacationEntity companyVacationIn2025 = companyVacation("2025-07-29T00:00:00.000Z", "2025-07-29T00:00:00.000Z");
@@ -69,7 +89,7 @@ class CompanyVacationRepositoryIT extends SingleTenantTestContainersBase {
 
         when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(TENANT_ID));
 
-        final Iterable<CompanyVacationEntity> companyVacationEntities = sut.saveAll(List.of(companyVacationIn2025, companyVacationIn2026));
+        sut.saveAll(List.of(companyVacationIn2025, companyVacationIn2026));
 
         final Instant startOfWeek = Instant.parse("2025-07-20T00:00:00.000Z");
         final Instant endOfWeekExclusive = Instant.parse("2026-08-01T00:00:00.000Z");
