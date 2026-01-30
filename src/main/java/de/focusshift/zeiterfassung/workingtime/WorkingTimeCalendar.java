@@ -1,7 +1,6 @@
 package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.absence.Absence;
-import de.focusshift.zeiterfassung.absence.AbsenceTypeCategory;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.usermanagement.User;
 
@@ -13,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.OVERTIME;
 import static org.apache.commons.lang3.compare.ComparableUtils.max;
 
 /**
@@ -70,7 +70,7 @@ public final class WorkingTimeCalendar {
         final Duration plannedWorkingHourDuration = plannedWorkingHours.duration();
 
         for (Absence absence : absencesAtGivenDate) {
-            if (absence.absenceTypeCategory() == AbsenceTypeCategory.OVERTIME) {
+            if (absence.absenceTypeCategory() == OVERTIME) {
                 final Duration duration = getAbsenceDurationOfOvertimeReduction(absence, absencesAtGivenDate);
                 absenceDuration = absenceDuration.plus(duration);
             } else {
@@ -103,7 +103,23 @@ public final class WorkingTimeCalendar {
      * @return list of absences for the given date
      */
     public Optional<List<Absence>> absence(LocalDate date) {
-        return Optional.ofNullable(absencesByDate.get(date));
+        final List<Absence> absences = absencesByDate.get(date);
+        if (absences == null) {
+            return Optional.empty();
+        }
+
+        // overtime-reduction is an exceptional case of an absence
+        // which is only of interest when the person has to work at the given date.
+        final boolean hasNotToWorkAtDate = getEffectiveWorkingDays(date, date) == 0;
+        if (hasNotToWorkAtDate) {
+            return Optional.of(
+                absences.stream()
+                    .filter(a -> !a.absenceTypeCategory().equals(OVERTIME))
+                    .toList()
+            );
+        }
+
+        return Optional.of(absences);
     }
 
     /**
@@ -186,7 +202,7 @@ public final class WorkingTimeCalendar {
 
                 for (Absence otherAbsence : dayAbsences) {
                     // Don't count the current overtime absence or other overtime absences
-                    if (otherAbsence.absenceTypeCategory() != AbsenceTypeCategory.OVERTIME) {
+                    if (otherAbsence.absenceTypeCategory() != OVERTIME) {
                         dayCapacity -= otherAbsence.dayLength().getValue();
                     }
                 }
@@ -209,7 +225,7 @@ public final class WorkingTimeCalendar {
         for (Absence otherAbsence : absences) {
             // ignore overtime reduction since capacity is required to calculate distributed overtime hours.
             // if it would not be ignored, the capacity would be 0 and the distribution could not be calculated anymore.
-            if (otherAbsence.absenceTypeCategory() != AbsenceTypeCategory.OVERTIME) {
+            if (otherAbsence.absenceTypeCategory() != OVERTIME) {
                 capacity -= otherAbsence.dayLength().getValue();
             }
         }

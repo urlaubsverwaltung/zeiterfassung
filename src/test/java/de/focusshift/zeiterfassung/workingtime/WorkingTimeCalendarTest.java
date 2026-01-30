@@ -3,10 +3,12 @@ package de.focusshift.zeiterfassung.workingtime;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.user.UserId;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -14,6 +16,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.PINK;
@@ -536,5 +539,139 @@ class WorkingTimeCalendarTest {
         assertThat(sut.shouldWorkingHours(tuesday)).hasValue(new ShouldWorkingHours(Duration.ofHours(2)));
         assertThat(sut.shouldWorkingHours(wednesday)).hasValue(new ShouldWorkingHours(Duration.ZERO));
         assertThat(sut.shouldWorkingHours(thursday)).hasValue(new ShouldWorkingHours(Duration.ofHours(2)));
+    }
+
+    @Nested
+    class AbsenceGetter {
+
+        @Test
+        void ensureAbsenceReturnsEmptyWhenDateNotInCalendar() {
+            final LocalDate today = LocalDate.now();
+            final WorkingTimeCalendar sut = new WorkingTimeCalendar(Map.of(), Map.of());
+
+            final Optional<List<Absence>> actual = sut.absence(today);
+            assertThat(actual).isEmpty();
+        }
+
+        @Test
+        void ensureAbsenceReturnsOvertimeWhenHasToWork() {
+            final LocalDate today = LocalDate.now();
+            final Instant todayInstant = today.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+            final Absence overtimeReduction = new Absence(
+                new UserId("user"),
+                todayInstant,
+                todayInstant,
+                FULL,
+                locale -> "Overtime reduction",
+                PINK,
+                OVERTIME,
+                Duration.ofHours(8L)
+            );
+
+            final WorkingTimeCalendar sut = new WorkingTimeCalendar(
+                Map.of(today, PlannedWorkingHours.EIGHT),
+                Map.of(today, List.of(overtimeReduction))
+            );
+
+            final Optional<List<Absence>> actual = sut.absence(today);
+            assertThat(actual).contains(List.of(overtimeReduction));
+        }
+
+        @Test
+        void ensureAbsenceFiltersOutOvertimeWhenDoesNotHaveToWork() {
+            final LocalDate today = LocalDate.now();
+            final Instant todayInstant = today.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+            final Absence overtimeReduction = new Absence(
+                new UserId("user"),
+                todayInstant,
+                todayInstant,
+                FULL,
+                locale -> "Overtime reduction",
+                PINK,
+                OVERTIME,
+                Duration.ofHours(4L)
+            );
+
+            final WorkingTimeCalendar sut = new WorkingTimeCalendar(
+                Map.of(today, PlannedWorkingHours.ZERO),
+                Map.of(today, List.of(overtimeReduction))
+            );
+
+            final Optional<List<Absence>> actual = sut.absence(today);
+            assertThat(actual).contains(List.of());
+        }
+
+        @Test
+        void ensureAbsenceReturnsAllAbsencesIncludingOvertimeWhenHasToWorkHalfDay() {
+            final LocalDate today = LocalDate.now();
+            final Instant todayInstant = today.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+            final Absence overtimeReduction = new Absence(
+                new UserId("user"),
+                todayInstant,
+                todayInstant,
+                FULL,
+                locale -> "Overtime reduction",
+                PINK,
+                OVERTIME,
+                Duration.ofHours(4L)
+            );
+
+            final Absence halfDayApplicationForLeave = new Absence(
+                new UserId("user"),
+                todayInstant,
+                todayInstant,
+                MORNING,
+                locale -> "Holiday",
+                PINK,
+                HOLIDAY
+            );
+
+            final WorkingTimeCalendar sut = new WorkingTimeCalendar(
+                Map.of(today, PlannedWorkingHours.EIGHT),
+                Map.of(today, List.of(overtimeReduction, halfDayApplicationForLeave))
+            );
+
+            final Optional<List<Absence>> actual = sut.absence(today);
+            assertThat(actual).contains(List.of(overtimeReduction, halfDayApplicationForLeave));
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, 8})
+        void ensureAbsenceFiltersOutOvertimeButKeepsFullDayHoliday(int plannedWorkingHoursValue) {
+            final LocalDate today = LocalDate.now();
+            final Instant todayInstant = today.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+            final Absence overtimeReduction = new Absence(
+                new UserId("user"),
+                todayInstant,
+                todayInstant,
+                FULL,
+                locale -> "Overtime reduction",
+                PINK,
+                OVERTIME,
+                Duration.ofHours(4L)
+            );
+
+            final Absence fullDayApplicationForLeave = new Absence(
+                new UserId("user"),
+                todayInstant,
+                todayInstant,
+                FULL,
+                locale -> "Holiday",
+                PINK,
+                HOLIDAY
+            );
+
+            final WorkingTimeCalendar sut = new WorkingTimeCalendar(
+                Map.of(today, new PlannedWorkingHours(Duration.ofHours(plannedWorkingHoursValue))),
+                Map.of(today, List.of(overtimeReduction, fullDayApplicationForLeave))
+            );
+
+            final Optional<List<Absence>> actual = sut.absence(today);
+            assertThat(actual).contains(List.of(fullDayApplicationForLeave));
+        }
     }
 }
