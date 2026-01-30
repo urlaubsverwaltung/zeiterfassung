@@ -21,20 +21,24 @@ class CompanyVacationWriteServiceImpl implements CompanyVacationWriteService {
     }
 
     @Override
-    public void addOrUpdateCompanyVacation(CompanyVacationWrite companyVacation) {
-        final Optional<CompanyVacationEntity> existing = findEntity(companyVacation);
+    public void addOrUpdateCompanyVacation(Instant createdAt, CompanyVacationWrite companyVacation) {
+        final Optional<CompanyVacationEntity> existing = repository.findBySourceIdAndStartAndEndInSameYearAsCreatedAt(companyVacation.sourceId(), createdAt);
 
-        if (existing.isEmpty()) {
-            final CompanyVacationEntity entity = new CompanyVacationEntity();
-            setEntityFields(entity, companyVacation);
-            repository.save(entity);
-            LOG.info("successfully added company vacation in database. sourceId={}", companyVacation.sourceId());
-        } else {
+        if (existing.isPresent()) {
             final CompanyVacationEntity entity = existing.get();
-            final String sourceId = entity.getSourceId();
-            setEntityFields(entity, companyVacation);
-            repository.save(entity);
-            LOG.info("successfully updated company vacation in database. sourceId={}", sourceId);
+            entity.setDayLength(companyVacation.dayLength());
+
+            final CompanyVacationEntity savedCompanyVacation = repository.save(entity);
+            LOG.info("successfully updated company vacation in database. sourceId={}", savedCompanyVacation.getSourceId());
+        } else {
+            final CompanyVacationEntity entity = new CompanyVacationEntity();
+            entity.setSourceId(companyVacation.sourceId());
+            entity.setStartDate(companyVacation.startDate());
+            entity.setEndDate(companyVacation.endDate());
+            entity.setDayLength(companyVacation.dayLength());
+
+            final CompanyVacationEntity savedCompanyVacation = repository.save(entity);
+            LOG.info("successfully added company vacation in database. sourceId={}", savedCompanyVacation.getSourceId());
         }
     }
 
@@ -47,16 +51,5 @@ class CompanyVacationWriteServiceImpl implements CompanyVacationWriteService {
         } else {
             LOG.info("did not delete company vacation. sourceId={}", sourceId);
         }
-    }
-
-    private Optional<CompanyVacationEntity> findEntity(CompanyVacationWrite companyVacation) {
-        return repository.findBySourceId(companyVacation.sourceId());
-    }
-
-    private static void setEntityFields(CompanyVacationEntity entity, CompanyVacationWrite absence) {
-        entity.setSourceId(absence.sourceId());
-        entity.setStartDate(absence.startDate());
-        entity.setEndDate(absence.endDate());
-        entity.setDayLength(absence.dayLength());
     }
 }

@@ -55,7 +55,7 @@ public class CompanyVacationEventHandlerRabbitmq extends RabbitMessageConsumer {
                 event.id(), tenantId, event.sourceId());
             toCompanyVacation(event)
                 .ifPresentOrElse(
-                    companyVacationWriteService::addOrUpdateCompanyVacation,
+                    companyVacation -> companyVacationWriteService.addOrUpdateCompanyVacation(event.createdAt(), companyVacation),
                     () -> LOG.info("could not map CompanyVacationPublishedEvent with id={} to company vacation for tenantId={} -> skip adding company vacation", event.id(), tenantId));
         });
     }

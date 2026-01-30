@@ -10,12 +10,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.companyvacation.DayLength.FULL;
 import static de.focusshift.zeiterfassung.companyvacation.DayLength.MORNING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,13 +43,16 @@ class CompanyVacationWriteServiceImplTest {
         @Test
         void ensureAddOrUpdateCompanyVacationAddsNewEntity() {
 
+            final Instant createdAt = Instant.parse("2018-05-17T00:00:00.00Z");
+
             final Instant startDate = Instant.parse("2018-10-17T00:00:00.00Z");
             final Instant endDate = Instant.parse("2018-10-17T00:00:00.00Z");
             final CompanyVacationWrite companyVacationWrite = new CompanyVacationWrite("sourceId", startDate, endDate, FULL);
 
-            when(companyVacationRepository.findBySourceId("sourceId")).thenReturn(Optional.empty());
+            when(companyVacationRepository.findBySourceIdAndStartAndEndInSameYearAsCreatedAt("sourceId", createdAt)).thenReturn(Optional.empty());
+            when(companyVacationRepository.save(any(CompanyVacationEntity.class))).thenAnswer(returnsFirstArg());
 
-            sut.addOrUpdateCompanyVacation(companyVacationWrite);
+            sut.addOrUpdateCompanyVacation(createdAt, companyVacationWrite);
 
             verify(companyVacationRepository).save(argumentCaptor.capture());
 
@@ -64,19 +68,22 @@ class CompanyVacationWriteServiceImplTest {
         @Test
         void ensureAddOrUpdateCompanyVacationUpdatesExistingEntity() {
 
+            final Instant createdAt = Instant.parse("2018-05-17T00:00:00.00Z");
+
             final Instant startDate = Instant.parse("2018-10-17T00:00:00.00Z");
             final Instant endDate = Instant.parse("2018-10-17T00:00:00.00Z");
             final CompanyVacationWrite companyVacationWrite = new CompanyVacationWrite("sourceId", startDate, endDate, FULL);
 
             final CompanyVacationEntity companyVacationEntity = new CompanyVacationEntity();
             companyVacationEntity.setId(1L);
-            companyVacationEntity.setStartDate(startDate.minus(1L, ChronoUnit.DAYS));
-            companyVacationEntity.setEndDate(endDate.minus(1L, ChronoUnit.DAYS));
+            companyVacationEntity.setStartDate(startDate);
+            companyVacationEntity.setEndDate(endDate);
             companyVacationEntity.setDayLength(MORNING);
             companyVacationEntity.setSourceId("sourceId");
-            when(companyVacationRepository.findBySourceId("sourceId")).thenReturn(Optional.of(companyVacationEntity));
+            when(companyVacationRepository.findBySourceIdAndStartAndEndInSameYearAsCreatedAt("sourceId", createdAt)).thenReturn(Optional.of(companyVacationEntity));
+            when(companyVacationRepository.save(any(CompanyVacationEntity.class))).thenAnswer(returnsFirstArg());
 
-            sut.addOrUpdateCompanyVacation(companyVacationWrite);
+            sut.addOrUpdateCompanyVacation(createdAt, companyVacationWrite);
 
             verify(companyVacationRepository).save(argumentCaptor.capture());
 

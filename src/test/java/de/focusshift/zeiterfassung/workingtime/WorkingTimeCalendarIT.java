@@ -25,6 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static de.focusshift.zeiterfassung.companyvacation.DayLength.FULL;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
@@ -203,16 +205,14 @@ class WorkingTimeCalendarIT extends SingleTenantTestContainersBase {
 
     private void createCompanyVacation() {
 
-        companyVacationWriteService.addOrUpdateCompanyVacation(new CompanyVacationWrite(UUID.randomUUID().toString(),
-            LocalDate.of(2025, 12, 24).atStartOfDay().toInstant(UTC),
-            LocalDate.of(2025, 12, 24).atStartOfDay().toInstant(UTC),
-            de.focusshift.zeiterfassung.companyvacation.DayLength.FULL
-        ));
+        final Instant createdAt = LocalDate.of(2025, 12, 12).atStartOfDay().toInstant(UTC);
 
-        companyVacationWriteService.addOrUpdateCompanyVacation(new CompanyVacationWrite(UUID.randomUUID().toString(),
-            LocalDate.of(2025, 12, 31).atStartOfDay().toInstant(UTC),
-            LocalDate.of(2025, 12, 31).atStartOfDay().toInstant(UTC),
-            de.focusshift.zeiterfassung.companyvacation.DayLength.FULL
-        ));
+        final Instant christmasEve = LocalDate.of(2025, 12, 24).atStartOfDay().toInstant(UTC);
+        final CompanyVacationWrite christmasEveCompanyVacation = new CompanyVacationWrite(UUID.randomUUID().toString(), christmasEve, christmasEve, FULL);
+        companyVacationWriteService.addOrUpdateCompanyVacation(createdAt, christmasEveCompanyVacation);
+
+        final Instant newYearsEve = LocalDate.of(2025, 12, 31).atStartOfDay().toInstant(UTC);
+        final CompanyVacationWrite newYearsCompanyVacation = new CompanyVacationWrite(UUID.randomUUID().toString(), newYearsEve, newYearsEve, FULL);
+        companyVacationWriteService.addOrUpdateCompanyVacation(createdAt, newYearsCompanyVacation);
     }
 }
