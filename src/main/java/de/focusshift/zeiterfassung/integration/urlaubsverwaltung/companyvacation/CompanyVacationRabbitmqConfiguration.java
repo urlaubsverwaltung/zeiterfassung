@@ -58,7 +58,7 @@ class CompanyVacationRabbitmqConfiguration {
         }
 
         @Bean
-        Binding bindZeiterfassungUrlaubsverwaltungApplicationUpdatedQueue() {
+        Binding bindZeiterfassungUrlaubsverwaltungCompanyVacationUpdatedQueue() {
             final String routingKeyDeleted = companyVacationRabbitmqConfigurationProperties.getRoutingKeyDeleted();
             return BindingBuilder.bind(zeiterfassungUrlaubsverwaltungCompanyVacationDeletedQueue())
                 .to(companyVacationTopic())
