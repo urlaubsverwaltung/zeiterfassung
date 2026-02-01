@@ -639,12 +639,20 @@ class WorkingTimeCalendarServiceImplTest {
 
             // just check absences (shouldWorkingHours calculation is covered by WorkingTimeCalendar test)
             // calendar must contain absences outside requested interval
-            assertThat(calendar.absence(LocalDate.of(2025, 12, 24))).hasValue(List.of(overtimeAbsence, christmasEve));
-            assertThat(calendar.absence(LocalDate.of(2025, 12, 25))).hasValue(List.of(overtimeAbsence, publicHoliday1));
-            assertThat(calendar.absence(LocalDate.of(2025, 12, 26))).hasValue(List.of(overtimeAbsence, publicHoliday2));
-            assertThat(calendar.absence(LocalDate.of(2025, 12, 31))).hasValue(List.of(overtimeAbsence, silvester));
-            assertThat(calendar.absence(LocalDate.of(2026, 1, 1))).hasValue(List.of(overtimeAbsence, publicHoliday3));
-            assertThat(calendar.absence(LocalDate.of(2026, 1, 6))).hasValue(List.of(overtimeAbsence, publicHoliday4));
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 24))).hasValue(List.of(christmasEve));
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 25))).hasValue(List.of(publicHoliday1));
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 26))).hasValue(List.of(publicHoliday2));
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 27))).hasValue(List.of()); // saturday
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 28))).hasValue(List.of()); // sunday
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 29))).hasValue(List.of(overtimeAbsence));
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 30))).hasValue(List.of(overtimeAbsence));
+            assertThat(calendar.absence(LocalDate.of(2025, 12, 31))).hasValue(List.of(silvester));
+            assertThat(calendar.absence(LocalDate.of(2026, 1, 1))).hasValue(List.of(publicHoliday3));
+            assertThat(calendar.absence(LocalDate.of(2026, 1, 2))).hasValue(List.of()); // friday - no workday
+            assertThat(calendar.absence(LocalDate.of(2026, 1, 3))).hasValue(List.of()); // saturday
+            assertThat(calendar.absence(LocalDate.of(2026, 1, 4))).hasValue(List.of()); // sunday
+            assertThat(calendar.absence(LocalDate.of(2026, 1, 5))).hasValue(List.of(overtimeAbsence));
+            assertThat(calendar.absence(LocalDate.of(2026, 1, 6))).hasValue(List.of(publicHoliday4));
 
             // just peeking...
             // zero -> overtime reduction
