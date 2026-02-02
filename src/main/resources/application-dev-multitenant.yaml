@@ -22,6 +22,10 @@ zeiterfassung:
       property:
         oauth:
           enabled: true
+  info-banner:
+    enabled: true
+    text:
+      de: "Development multi tenant"
 
 admin:
   datasource:
