@@ -59,6 +59,8 @@ public class SecurityWebConfiguration {
                 .requestMatchers("/favicons/**").permitAll()
                 .requestMatchers("/browserconfig.xml").permitAll()
                 .requestMatchers("/site.webmanifest").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/api/**").authenticated()
                 .requestMatchers("/", "/**").hasAuthority(ZEITERFASSUNG_USER.name())
                 .anyRequest().authenticated()
             );
@@ -69,8 +71,8 @@ public class SecurityWebConfiguration {
             )
         );
 
-        // exclude /actuator from csrf protection
-        http.securityMatcher(request -> !request.getRequestURI().startsWith("/actuator"))
+        // exclude /actuator and /api from csrf protection
+        http.securityMatcher(request -> !request.getRequestURI().startsWith("/actuator") && !request.getRequestURI().startsWith("/api"))
             .csrf(csrfConfigurer -> csrfConfigurer.csrfTokenRepository(new HttpSessionCsrfTokenRepository()));
 
         // maybe we can remove the authenticationEntryPoint customization, because
