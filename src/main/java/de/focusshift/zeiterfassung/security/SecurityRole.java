@@ -43,7 +43,11 @@ public enum SecurityRole {
     /**
      * Allowed to edit permissions of all persons.
      */
-    ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
+    ZEITERFASSUNG_PERMISSIONS_EDIT_ALL,
+    /**
+     * Allowed to use the REST API.
+     */
+    ZEITERFASSUNG_API_ACCESS;
 
     public static final Set<SecurityRole> DEFAULT_USER_ROLES = Set.of(ZEITERFASSUNG_USER);
     public static final Set<SecurityRole> INITIAL_USER_ROLES = Set.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_PERMISSIONS_EDIT_ALL);
