@@ -14,7 +14,7 @@ public class OpenApiConfiguration {
     @Bean
     public OpenAPI zeiterfassungOpenAPI() {
         final String securitySchemeName = "bearerAuth";
-        
+
         return new OpenAPI()
             .info(new Info()
                 .title("Zeiterfassung API")
