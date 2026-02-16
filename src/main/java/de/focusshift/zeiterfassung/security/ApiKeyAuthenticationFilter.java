@@ -41,16 +41,11 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith(BEARER_PREFIX)) {
             final String apiKey = header.substring(BEARER_PREFIX.length());
 
-            // Validiere API-Key und lade User
-            // TODO: ApiKeyService muss User zurückgeben
-            // Optional<User> userOpt = apiKeyService.validateApiKey(apiKey);
-            //
-            // userOpt.ifPresent(user -> {
-            //     CurrentOidcUser oidcUser = createOidcUser(user);
-            //     UsernamePasswordAuthenticationToken authentication =
-            //         new UsernamePasswordAuthenticationToken(oidcUser, null, oidcUser.getAuthorities());
-            //     SecurityContextHolder.getContext().setAuthentication(authentication);
-            // });
+            apiKeyService.validateApiKey(apiKey).ifPresent(user -> {
+                final UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(user, null, user.grantedAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            });
         }
 
         filterChain.doFilter(request, response);

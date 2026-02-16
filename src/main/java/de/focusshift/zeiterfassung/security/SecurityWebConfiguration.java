@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.apikey.ApiKeyService;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ public class SecurityWebConfiguration {
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final SessionService sessionService;
     private final UserManagementService userManagementService;
+    private final ApiKeyService apiKeyService;
 
     @Autowired
     SecurityWebConfiguration(
@@ -38,13 +40,15 @@ public class SecurityWebConfiguration {
         OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler,
         ClientRegistrationRepository clientRegistrationRepository,
         SessionService sessionService,
-        UserManagementService userManagementService
+        UserManagementService userManagementService,
+        ApiKeyService apiKeyService
     ) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.oidcClientInitiatedLogoutSuccessHandler = oidcClientInitiatedLogoutSuccessHandler;
         this.clientRegistrationRepository = clientRegistrationRepository;
         this.sessionService = sessionService;
         this.userManagementService = userManagementService;
+        this.apiKeyService = apiKeyService;
     }
 
     @Bean
@@ -86,6 +90,7 @@ public class SecurityWebConfiguration {
         );
 
         http.securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository));
+        http.addFilterBefore(new ApiKeyAuthenticationFilter(apiKeyService, userManagementService), BasicAuthenticationFilter.class);
         http.addFilterAfter(new ReloadAuthenticationAuthoritiesFilter(userManagementService, sessionService, securityContextRepository, tenantContextHolder), BasicAuthenticationFilter.class);
 
         //@formatter:on

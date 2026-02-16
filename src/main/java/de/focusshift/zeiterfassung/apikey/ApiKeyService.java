@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.apikey;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +24,13 @@ public class ApiKeyService {
     private final ApiKeyRepository repository;
     private final PasswordEncoder passwordEncoder;
     private final Clock clock;
+    private final UserManagementService userManagementService;
 
-    public ApiKeyService(ApiKeyRepository repository, PasswordEncoder passwordEncoder, Clock clock) {
+    public ApiKeyService(ApiKeyRepository repository, PasswordEncoder passwordEncoder, Clock clock, UserManagementService userManagementService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
         this.clock = clock;
+        this.userManagementService = userManagementService;
     }
 
     @Transactional
@@ -75,7 +78,7 @@ public class ApiKeyService {
                 }
 
                 repository.updateLastUsedAt(entity.getId(), clock.instant());
-                return Optional.empty(); // TODO: load user from entity.getUserId()
+                return userManagementService.findUserByLocalId(new UserLocalId(entity.getUserId()));
             }
         }
 
