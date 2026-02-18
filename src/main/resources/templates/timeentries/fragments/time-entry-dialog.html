@@ -9,7 +9,7 @@
       <!-- @thymesVar id="timeEntry" type="de.focusshift.zeiterfassung.timeentry.TimeEntryDTO" -->
       <!-- @thymesVar id="timeEntryDialog" type="de.focusshift.zeiterfassung.timeentry.TimeEntryDialogDto" -->
       <th:block
-        th:replace="~{/fragments/modal/frame::frame-modal(~{::dialog-content})}"
+        th:replace="~{fragments/modal/frame::frame-modal(~{::dialog-content})}"
       >
         <th:block th:ref="dialog-content">
           <th:block
@@ -32,7 +32,7 @@
                   <div class="mt-4 flex flex-col items-center">
                     <div class="text-blue-200">
                       <svg
-                        th:replace="~{/fragments/avatar::avatar-bordered(initials=${timeEntryDialog.ownerInitials},fullName=${timeEntryDialog.owner},tooltip=false,width=54,height=54)}"
+                        th:replace="~{fragments/avatar::avatar-bordered(initials=${timeEntryDialog.ownerInitials},fullName=${timeEntryDialog.owner},tooltip=false,width=54,height=54)}"
                       ></svg>
                     </div>
                     <div
@@ -78,7 +78,7 @@
                     data-turbo-action="replace"
                   >
                     <div
-                      th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new')}"
+                      th:replace="~{timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new')}"
                     ></div>
                     <div class="mt-8 flex justify-end">
                       <button
@@ -93,7 +93,7 @@
                 </th:block>
                 <th:block th:if="${not timeEntryDialog.allowedToEdit}">
                   <div
-                    th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new', disabled=true)}"
+                    th:replace="~{timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${timeEntry}, actions=null, class='timeslot-form-new', disabled=true)}"
                   ></div>
                 </th:block>
                 <div class="mt-8">
@@ -151,7 +151,7 @@
                             </span>
                             <span class="text-blue-200">
                               <svg
-                                th:replace="~{/fragments/avatar::avatar(initials=${historyItem.initials},fullName=${historyItem.username},width=24,height=24,tooltip=false,className='inline-block')}"
+                                th:replace="~{fragments/avatar::avatar(initials=${historyItem.initials},fullName=${historyItem.username},width=24,height=24,tooltip=false,className='inline-block')}"
                               ></svg>
                             </span>
                             <span th:text="${historyItem.username}">
@@ -163,7 +163,7 @@
                             class="time-entry-history-list__element__content"
                           >
                             <div
-                              th:replace="~{/timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form-existing', disabled=true, showErrors=false)}"
+                              th:replace="~{timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form-existing', disabled=true, showErrors=false)}"
                             ></div>
                           </div>
                         </details>
