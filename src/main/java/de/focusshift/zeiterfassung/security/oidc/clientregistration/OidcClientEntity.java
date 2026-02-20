@@ -1,12 +1,12 @@
 package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
 import de.focusshift.zeiterfassung.tenancy.configuration.multi.AdminAware;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import jakarta.validation.constraints.NotNull;
 
 import static jakarta.persistence.GenerationType.SEQUENCE;
 
@@ -19,10 +19,12 @@ public class OidcClientEntity implements AdminAware<Long> {
     @GeneratedValue(strategy = SEQUENCE, generator = "oidc_client_seq")
     private Long id;
 
-    @Column(name = "tenant_id")
+    @NotNull
+    @Column(name = "tenant_id", nullable = false)
     private String tenantId;
 
-    @Column(name = "client_secret")
+    @NotNull
+    @Column(name = "client_secret", nullable = false)
     private String clientSecret;
 
     public OidcClientEntity(Long id, String tenantId, String clientSecret) {

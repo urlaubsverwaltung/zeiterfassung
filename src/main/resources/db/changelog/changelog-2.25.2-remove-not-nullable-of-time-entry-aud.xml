@@ -1,0 +1,17 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <changeSet author="schneider" id="remove-not-nullable-of-time-entry-aud">
+    <preConditions>
+      <tableExists tableName="time_entry_aud"/>
+      <columnExists tableName="time_entry_aud" columnName="rev"/>
+      <columnExists tableName="time_entry_aud" columnName="revtype"/>
+    </preConditions>
+
+    <dropPrimaryKey tableName="time_entry_aud" constraintName="PK_TIME_ENTRY_AUD"/>
+    <dropNotNullConstraint tableName="time_entry_aud" columnName="rev" columnDataType="BIGINT"/>
+    <dropNotNullConstraint tableName="time_entry_aud" columnName="revtype" columnDataType="TINYINT"/>
+  </changeSet>
+</databaseChangeLog>

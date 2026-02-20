@@ -8,13 +8,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
 
 import static jakarta.persistence.EnumType.STRING;
-
 
 @Entity(name = "working_time")
 public class WorkingTimeEntity extends AbstractTenantAwareEntity {
@@ -24,31 +24,47 @@ public class WorkingTimeEntity extends AbstractTenantAwareEntity {
     @Column(name = "id", unique = true, nullable = false, updatable = false)
     private UUID id;
 
-    @Column(name = "user_id")
+    @NotNull
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
     @Column(name = "valid_from")
     private LocalDate validFrom;
 
-    @Column(name = "federal_state")
+    @NotNull
+    @Column(name = "federal_state", nullable = false)
     @Enumerated(STRING)
     private FederalState federalState;
 
     @Column(name = "works_on_public_holiday")
     private Boolean worksOnPublicHoliday;
 
+    @NotNull
+    @Column(nullable = false)
     private String monday;
 
+    @NotNull
+    @Column(nullable = false)
     private String tuesday;
 
+    @NotNull
+    @Column(nullable = false)
     private String wednesday;
 
+    @NotNull
+    @Column(nullable = false)
     private String thursday;
 
+    @NotNull
+    @Column(nullable = false)
     private String friday;
 
+    @NotNull
+    @Column(nullable = false)
     private String saturday;
 
+    @NotNull
+    @Column(nullable = false)
     private String sunday;
 
     protected WorkingTimeEntity() {
