@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import jakarta.annotation.Nullable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -17,10 +18,13 @@ class OvertimeAccountServiceImpl implements OvertimeAccountService {
 
     private final OvertimeAccountRepository repository;
     private final UserManagementService userManagementService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    OvertimeAccountServiceImpl(OvertimeAccountRepository repository, UserManagementService userManagementService) {
+    OvertimeAccountServiceImpl(OvertimeAccountRepository repository, UserManagementService userManagementService,
+                               ApplicationEventPublisher applicationEventPublisher) {
         this.repository = repository;
         this.userManagementService = userManagementService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -66,7 +70,13 @@ class OvertimeAccountServiceImpl implements OvertimeAccountService {
         entity.setAllowed(isOvertimeAllowed);
         entity.setMaxAllowedOvertime(Optional.ofNullable(maxAllowedOvertime).map(Duration::toString).orElse(null));
 
-        return toOvertimeAccount(repository.save(entity), user.userIdComposite());
+        final OvertimeAccount overtimeAccount = toOvertimeAccount(repository.save(entity), user.userIdComposite());
+
+        applicationEventPublisher.publishEvent(new OvertimeAccountUpdatedEvent(
+            user.userIdComposite(), isOvertimeAllowed, maxAllowedOvertime
+        ));
+
+        return overtimeAccount;
     }
 
     private User findUser(UserLocalId userLocalId) {
