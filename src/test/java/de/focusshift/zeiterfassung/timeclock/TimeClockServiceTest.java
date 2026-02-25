@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -40,10 +41,12 @@ class TimeClockServiceTest {
     private TimeEntryService timeEntryService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @BeforeEach
     void setUp() {
-        sut = new TimeClockService(timeClockRepository, timeEntryService, userSettingsProvider);
+        sut = new TimeClockService(timeClockRepository, timeEntryService, userSettingsProvider, applicationEventPublisher);
     }
 
     @Test
@@ -100,6 +103,24 @@ class TimeClockServiceTest {
         assertThat(persistedTimeClockEntity.getOwner()).isEqualTo("batman");
         assertThat(persistedTimeClockEntity.getStartedAt().truncatedTo(MINUTES)).isEqualTo(Instant.now().truncatedTo(MINUTES));
         assertThat(persistedTimeClockEntity.getStoppedAt()).isNull();
+    }
+
+    @Test
+    void ensureStartTimeClockPublishesTimeClockStartedEvent() {
+
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("UTC"));
+
+        sut.startTimeClock(new UserId("batman"));
+
+        final ArgumentCaptor<TimeClockStartedEvent> eventCaptor = ArgumentCaptor.forClass(TimeClockStartedEvent.class);
+        verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
+
+        assertThat(eventCaptor.getValue()).satisfies(event -> {
+            assertThat(event.userId()).isEqualTo(new UserId("batman"));
+            assertThat(event.startedAt().toInstant().truncatedTo(MINUTES)).isEqualTo(Instant.now().truncatedTo(MINUTES));
+            assertThat(event.comment()).isEmpty();
+            assertThat(event.isBreak()).isFalse();
+        });
     }
 
     @Test
@@ -208,6 +229,52 @@ class TimeClockServiceTest {
     }
 
     @Test
+    void ensureStopTimeClockPublishesTimeClockStoppedEvent() {
+
+        final Instant now = Instant.now();
+        final Instant startedAtInstant = now.minusSeconds(120);
+        final ZonedDateTime startedAt = ZonedDateTime.ofInstant(startedAtInstant, ZONED_ID_BERLIN);
+        final ZonedDateTime stoppedAt = ZonedDateTime.ofInstant(now, ZONED_ID_BERLIN);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final TimeClockEntity runningTimeClockEntity = TimeClockEntity.builder()
+            .id(1L)
+            .owner("batman")
+            .startedAt(startedAt.toInstant())
+            .startedAtZoneId(startedAt.getZone())
+            .comment("awesome comment")
+            .isBreak(true)
+            .build();
+
+        when(timeClockRepository.findByOwnerAndStoppedAtIsNull("batman")).thenReturn(Optional.of(runningTimeClockEntity));
+
+        final TimeClockEntity stoppedTimeClockEntity = TimeClockEntity.builder(runningTimeClockEntity)
+            .stoppedAt(stoppedAt.toInstant())
+            .stoppedAtZoneId(stoppedAt.getZone())
+            .build();
+
+        when(timeClockRepository.save(runningTimeClockEntity)).thenReturn(stoppedTimeClockEntity);
+
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
+
+        sut.stopTimeClock(userIdComposite);
+
+        final ArgumentCaptor<TimeClockStoppedEvent> eventCaptor = ArgumentCaptor.forClass(TimeClockStoppedEvent.class);
+        verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
+
+        assertThat(eventCaptor.getValue()).satisfies(event -> {
+            assertThat(event.userId()).isEqualTo(userId);
+            assertThat(event.startedAt()).isEqualTo(startedAt);
+            assertThat(event.stoppedAt()).isEqualTo(stoppedAt);
+            assertThat(event.comment()).isEqualTo("awesome comment");
+            assertThat(event.isBreak()).isTrue();
+        });
+    }
+
+    @Test
     void ensureUpdateTimeClock() throws Exception {
 
         final TimeClockEntity runningTimeClockEntity = TimeClockEntity.builder()
@@ -243,6 +310,37 @@ class TimeClockServiceTest {
             assertThat(entity.getStartedAtZoneId()).isEqualTo("Europe/Berlin");
             assertThat(entity.getStoppedAt()).isNull();
             assertThat(entity.getStoppedAtZoneId()).isNull();
+        });
+    }
+
+    @Test
+    void ensureUpdateTimeClockPublishesTimeClockUpdatedEvent() throws Exception {
+
+        final TimeClockEntity runningTimeClockEntity = TimeClockEntity.builder()
+            .id(1L)
+            .owner("batman")
+            .startedAt(Instant.now())
+            .startedAtZoneId(ZoneId.of("Europe/Amsterdam"))
+            .build();
+
+        when(timeClockRepository.findByOwnerAndStoppedAtIsNull("batman")).thenReturn(Optional.of(runningTimeClockEntity));
+
+        when(timeClockRepository.save(any(TimeClockEntity.class))).thenAnswer(returnsFirstArg());
+
+        final UserId userId = new UserId("batman");
+        final ZoneId zoneId = ZoneId.of("Europe/Berlin");
+        final ZonedDateTime date = ZonedDateTime.of(2023, 1, 11, 13, 37, 0, 0, zoneId);
+
+        sut.updateTimeClock(userId, new TimeClockUpdate(userId, date, "awesome comment", true));
+
+        final ArgumentCaptor<TimeClockUpdatedEvent> eventCaptor = ArgumentCaptor.forClass(TimeClockUpdatedEvent.class);
+        verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
+
+        assertThat(eventCaptor.getValue()).satisfies(event -> {
+            assertThat(event.userId()).isEqualTo(userId);
+            assertThat(event.startedAt()).isEqualTo(date);
+            assertThat(event.comment()).isEqualTo("awesome comment");
+            assertThat(event.isBreak()).isTrue();
         });
     }
 
