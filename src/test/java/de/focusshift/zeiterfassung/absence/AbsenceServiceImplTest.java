@@ -135,13 +135,13 @@ class AbsenceServiceImplTest {
             final Map<LocalDate, List<Absence>> actual = sut.findAllAbsences(new UserId("user"), startDate, endDateExclusive);
             assertThat(actual)
                 .hasSize(7)
-                .containsEntry(LocalDate.ofInstant(today, UTC), List.of())
-                .containsEntry(LocalDate.ofInstant(today.plus(1, DAYS), UTC), List.of(expectedAbsence_1))
-                .containsEntry(LocalDate.ofInstant(today.plus(2, DAYS), UTC), List.of(expectedAbsence_1))
-                .containsEntry(LocalDate.ofInstant(today.plus(3, DAYS), UTC), List.of())
-                .containsEntry(LocalDate.ofInstant(today.plus(4, DAYS), UTC), List.of(expectedAbsence_2))
-                .containsEntry(LocalDate.ofInstant(today.plus(5, DAYS), UTC), List.of())
-                .containsEntry(LocalDate.ofInstant(today.plus(6, DAYS), UTC), List.of());
+                .containsEntry(LocalDate.ofInstant(today, berlin), List.of())
+                .containsEntry(LocalDate.ofInstant(today.plus(1, DAYS), berlin), List.of(expectedAbsence_1))
+                .containsEntry(LocalDate.ofInstant(today.plus(2, DAYS), berlin), List.of(expectedAbsence_1))
+                .containsEntry(LocalDate.ofInstant(today.plus(3, DAYS), berlin), List.of())
+                .containsEntry(LocalDate.ofInstant(today.plus(4, DAYS), berlin), List.of(expectedAbsence_2))
+                .containsEntry(LocalDate.ofInstant(today.plus(5, DAYS), berlin), List.of())
+                .containsEntry(LocalDate.ofInstant(today.plus(6, DAYS), berlin), List.of());
         }
 
         @ParameterizedTest
@@ -240,13 +240,13 @@ class AbsenceServiceImplTest {
 
             assertThat(actual)
                 .hasSize(7)
-                .containsEntry(LocalDate.ofInstant(today, UTC), List.of())
-                .containsEntry(LocalDate.ofInstant(today.plus(1, DAYS), UTC), List.of(expectedAbsence))
-                .containsEntry(LocalDate.ofInstant(today.plus(2, DAYS), UTC), List.of(expectedAbsence))
-                .containsEntry(LocalDate.ofInstant(today.plus(3, DAYS), UTC), List.of())
-                .containsEntry(LocalDate.ofInstant(today.plus(4, DAYS), UTC), List.of())
-                .containsEntry(LocalDate.ofInstant(today.plus(5, DAYS), UTC), List.of())
-                .containsEntry(LocalDate.ofInstant(today.plus(6, DAYS), UTC), List.of());
+                .containsEntry(LocalDate.ofInstant(today, berlin), List.of())
+                .containsEntry(LocalDate.ofInstant(today.plus(1, DAYS), berlin), List.of(expectedAbsence))
+                .containsEntry(LocalDate.ofInstant(today.plus(2, DAYS), berlin), List.of(expectedAbsence))
+                .containsEntry(LocalDate.ofInstant(today.plus(3, DAYS), berlin), List.of())
+                .containsEntry(LocalDate.ofInstant(today.plus(4, DAYS), berlin), List.of())
+                .containsEntry(LocalDate.ofInstant(today.plus(5, DAYS), berlin), List.of())
+                .containsEntry(LocalDate.ofInstant(today.plus(6, DAYS), berlin), List.of());
         }
     }
 
