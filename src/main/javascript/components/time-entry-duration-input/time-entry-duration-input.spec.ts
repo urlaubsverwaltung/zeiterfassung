@@ -5,7 +5,7 @@ describe("TimeEntryDurationInput", () => {
   test("adds semicolon when two chars has been entered", () => {
     document.body.innerHTML = `<input type="text" is="z-time-entry-duration-input">`;
 
-    const sut = document.querySelector("input");
+    const sut = document.querySelector("input")!;
 
     sut.value = "01";
     sut.dispatchEvent(new InputEvent("input", { data: "1" }));
@@ -16,7 +16,7 @@ describe("TimeEntryDurationInput", () => {
   test("does not add semicolon when a meta key has been pressed", () => {
     document.body.innerHTML = `<input type="text" is="z-time-entry-duration-input">`;
 
-    const sut = document.querySelector("input");
+    const sut = document.querySelector("input")!;
 
     sut.value = "01";
     sut.dispatchEvent(new InputEvent("input", { data: undefined }));
@@ -27,7 +27,7 @@ describe("TimeEntryDurationInput", () => {
   test("prevents multiple semicolon on after another", () => {
     document.body.innerHTML = `<input type="text" is="z-time-entry-duration-input">`;
 
-    const sut = document.querySelector("input");
+    const sut = document.querySelector("input")!;
 
     sut.value = "01::";
     sut.dispatchEvent(new InputEvent("input", { data: ":" }));
@@ -38,7 +38,7 @@ describe("TimeEntryDurationInput", () => {
   test("adds semicolon when input has been deleted and updated again", () => {
     document.body.innerHTML = `<input type="text" is="z-time-entry-duration-input">`;
 
-    const sut = document.querySelector("input");
+    const sut = document.querySelector("input")!;
 
     sut.value = "014";
     sut.dispatchEvent(new InputEvent("input", { data: "4" }));

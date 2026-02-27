@@ -1,7 +1,7 @@
 export class ReportUserSelect extends HTMLAnchorElement {
   connectedCallback() {
-    const href = this.getAttribute("href");
-    const targetElement: HTMLElement = document.querySelector(href);
+    const href = this.getAttribute("href") as string;
+    const targetElement = document.querySelector(href) as HTMLElement;
 
     this.setAttribute("aria-haspopup", "true");
     this.setAttribute("aria-expanded", "false");

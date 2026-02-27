@@ -15,7 +15,7 @@ export interface ResponseWithData<T> extends Response {
  *              with a `data` attribute which contains the deserialized response data.
  */
 export function post<T>(
-  url: string,
+  url: string | URL,
   data: BodyInit,
   options: RequestInit = {},
 ): Promise<ResponseWithData<T>> {
@@ -33,7 +33,7 @@ export function post<T>(
  * @param options
  */
 export function doGet<T>(
-  url: string,
+  url: string | URL,
   options: RequestInit = {},
 ): Promise<ResponseWithData<T>> {
   return doFetch(url, {
@@ -45,7 +45,7 @@ export function doGet<T>(
 // just an internal function to wrap native fetch
 // public api of this module should expose function like `post`, `get`, `getJson`, ...
 async function doFetch<T>(
-  url,
+  url: string | URL,
   options: RequestInit = {},
 ): Promise<ResponseWithData<T>> {
   const fetchOptions: RequestInit = {

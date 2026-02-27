@@ -1,5 +1,5 @@
 export function bodyOverlay() {
-  const bodyOverlay: HTMLDivElement = document.querySelector("#body-overlay");
+  const bodyOverlay = document.querySelector("#body-overlay") as HTMLDivElement;
 
   bodyOverlay.classList.add("visible");
 

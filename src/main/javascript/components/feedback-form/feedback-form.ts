@@ -1,18 +1,12 @@
 import { bodyOverlay, removeBodyOverlay } from "../body-overlay";
 
-const feedbackElement: HTMLDivElement = document.querySelector("#feedback");
-const toggleElement: HTMLButtonElement = document.querySelector(
-  "#feedback-form-toggle-button",
-);
-const formElement: HTMLFormElement = document.querySelector("#feedback-form");
-const closeElement: HTMLButtonElement = document.querySelector(
-  "#feedback-form-close-button",
-);
-const cancelButton: HTMLButtonElement = document.querySelector(
-  "#feedback-form-cancel-button",
-);
+const feedbackElement = document.querySelector("#feedback")!;
+const toggleElement = document.querySelector("#feedback-form-toggle-button")!;
+const formElement = document.querySelector("#feedback-form") as HTMLFormElement;
+const closeElement = document.querySelector("#feedback-form-close-button")!;
+const cancelButton = document.querySelector("#feedback-form-cancel-button")!;
 
-let overlay;
+let overlay: HTMLElement;
 
 toggleElement?.addEventListener("click", function () {
   if (formElement.classList.contains("feedback-form--visible")) {

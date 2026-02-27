@@ -1,12 +1,14 @@
 import { animationInterval } from "./animation-interval";
 
 export class TimeClockDuration extends HTMLSpanElement {
+  // @ts-expect-error it is defined...
   #controller: AbortController;
 
   connectedCallback() {
     this.#controller = new AbortController();
 
-    const start = Date.now() - new Date(this.dataset.startedAt).getTime();
+    const start =
+      Date.now() - new Date(this.dataset.startedAt as string).getTime();
 
     animationInterval(1000, this.#controller.signal, (time) => {
       this.render(start + time);
@@ -19,7 +21,7 @@ export class TimeClockDuration extends HTMLSpanElement {
     this.#controller.abort();
   }
 
-  render(time) {
+  render(time: number) {
     const seconds = Math.floor((time / 1000) % 60);
     const minutes = Math.floor((time / (1000 * 60)) % 60);
     const hours = Math.floor(time / (1000 * 60 * 60));

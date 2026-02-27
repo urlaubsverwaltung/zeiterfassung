@@ -16,6 +16,7 @@ Turbo.session.drive = false;
 export function preserveScrollOnce() {
   onTurboRender(
     function () {
+      // @ts-expect-error it exists
       Turbo.navigator.currentVisit.scrolled = true;
     },
     { once: true },

@@ -26,12 +26,12 @@ export function createDatepicker(selector: string): HTMLDuetDatePickerElement {
   }
 
   duetDateElement.setAttribute("style", "--duet-radius=0");
-  duetDateElement.setAttribute("class", dateElement.getAttribute("class"));
+  duetDateElement.setAttribute("class", dateElement.getAttribute("class")!);
   duetDateElement.setAttribute("value", dateElement.dataset.isoValue || "");
-  duetDateElement.setAttribute("identifier", dateElement.getAttribute("id"));
+  duetDateElement.setAttribute("identifier", dateElement.getAttribute("id")!);
 
   if (dateElement.hasAttribute("min")) {
-    duetDateElement.setAttribute("min", dateElement.getAttribute("min"));
+    duetDateElement.setAttribute("min", dateElement.getAttribute("min")!);
   }
 
   return duetDateElement;

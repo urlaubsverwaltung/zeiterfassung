@@ -5,7 +5,7 @@ import { onTurboRender } from "../turbo-events";
 initAutosubmit();
 
 onTurboRender(function () {
-  const main = document.querySelector("main");
+  const main = document.querySelector("main") as HTMLElement;
 
   const currentLink = document.querySelector(
     "a[aria-current='page']",

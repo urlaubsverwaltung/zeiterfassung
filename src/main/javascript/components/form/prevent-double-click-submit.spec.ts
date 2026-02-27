@@ -15,6 +15,7 @@ describe("DoubleClickSubmitGuard", () => {
 
   beforeEach(() => {
     // prevent HTMLFormElement.prototype.requestSubmit is not implemented log.
+    // @ts-expect-error yep
     globalThis._virtualConsole.emit = () => {};
   });
 
@@ -31,7 +32,7 @@ describe("DoubleClickSubmitGuard", () => {
       </form>
     `;
 
-    const button = document.querySelector("button");
+    const button = document.querySelector("button")!;
 
     expect(button.getAttribute("disabled")).toBeNull();
 
@@ -53,12 +54,14 @@ describe("DoubleClickSubmitGuard", () => {
 
     let called = false;
 
-    document.querySelector("form").addEventListener("submit", function (event) {
-      event.preventDefault();
-      called = true;
-    });
+    document
+      .querySelector("form")!
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
+        called = true;
+      });
 
-    const button = document.querySelector("button");
+    const button = document.querySelector("button")!;
 
     button.click();
 

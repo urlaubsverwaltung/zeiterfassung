@@ -4,6 +4,7 @@ const showEvents = ["mouseenter", "focus"];
 const hideEvents = ["mouseleave", "blur"];
 
 export class Tooltip extends HTMLElement {
+  // @ts-expect-error is defined...
   private popperInstance: Instance;
 
   constructor() {
@@ -13,7 +14,7 @@ export class Tooltip extends HTMLElement {
 
   connectedCallback() {
     // don't know yet if this is cool or not using `this.parentElement` as popper reference element
-    const parent = this.parentElement;
+    const parent = this.parentElement!;
 
     this.popperInstance = createPopper(parent, this);
 

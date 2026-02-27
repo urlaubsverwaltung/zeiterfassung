@@ -1,9 +1,10 @@
 export class ReportBreakdownSection extends HTMLElement {
+  // @ts-expect-error it is defined...
   #cleanup: () => void;
 
   connectedCallback() {
     // eslint-disable-next-line unicorn/consistent-function-scoping
-    const handleDaySelected = (event) => {
+    const handleDaySelected = (event: CustomEvent) => {
       const { date } = event.detail;
       for (const element of this.querySelectorAll("[data-date]")) {
         if (element.parentElement === this) {
@@ -16,9 +17,11 @@ export class ReportBreakdownSection extends HTMLElement {
       }
     };
 
+    // @ts-expect-error so it is
     document.addEventListener("graph-day-selected", handleDaySelected);
 
     this.#cleanup = () => {
+      // @ts-expect-error so it is
       document.removeEventListener("graph-day-selected", handleDaySelected);
     };
   }

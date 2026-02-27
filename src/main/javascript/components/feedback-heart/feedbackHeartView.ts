@@ -3,7 +3,7 @@ import { mount } from "svelte";
 
 type Arguments = {
   target: HTMLElement;
-  props?: {
+  props: {
     showFeedbackKudo?: boolean;
   };
 };

@@ -4,14 +4,15 @@ export class TimeEntryElement extends HTMLDivElement {
   }
 
   #initForm() {
-    const form = this.querySelector("form");
+    const form = this.querySelector("form")!;
 
     const originalFormData = new FormData(form);
 
     // name=date is not in the formData because of customElement DuetDatePicker.
     // I think it is as soon as DuetDatePicker implements FormAssociated (https://github.com/ionic-team/stencil/issues/2284)
-    const duetDatePickerElement: HTMLDuetDatePickerElement =
-      this.querySelector("duet-date-picker");
+    const duetDatePickerElement = this.querySelector(
+      "duet-date-picker",
+    ) as HTMLDuetDatePickerElement;
 
     // due-date-picker does not exist yet on dynamically added elements.
     if (duetDatePickerElement) {
@@ -22,15 +23,16 @@ export class TimeEntryElement extends HTMLDivElement {
     }
     // else: field is in formData
 
-    this.addEventListener("duetChange", (event: CustomEvent) => {
+    this.addEventListener("duetChange", (event) => {
       const datepicker = event.target as HTMLDuetDatePickerElement;
       // duetChange event is dispatched before form data is updated. therefore, put handling to the end of event loop.
       setTimeout(() => {
+        // @ts-expect-error yep...
         handleValueChanged(datepicker.name, event.detail.value, datepicker);
       });
     });
 
-    form.addEventListener("change", (event: FocusEvent) => {
+    form.addEventListener("change", (event: Event) => {
       const target: HTMLInputElement = event.target as HTMLInputElement;
       if (target.matches("input[type='checkbox']")) {
         handleValueChanged(target.name, target.checked, target);
@@ -51,7 +53,7 @@ export class TimeEntryElement extends HTMLDivElement {
       inputElement: HTMLElement,
     ) {
       const nextFormData = new FormData(form);
-      const timeslot = form.querySelector(".timeslot-form-existing");
+      const timeslot = form.querySelector(".timeslot-form-existing")!;
       if (originalFormData.get(fieldName) === nextFormData.get(fieldName)) {
         inputElement.classList.remove("edited");
         if (!isFormChanged()) {

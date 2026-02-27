@@ -1,3 +1,4 @@
+// @ts-expect-error ignore missing types...
 import { Idiomorph } from "idiomorph";
 
 /**

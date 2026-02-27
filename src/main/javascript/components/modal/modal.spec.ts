@@ -65,11 +65,11 @@ describe("modal", () => {
       document.body.firstChild.remove();
     }
     vitest.clearAllMocks();
-    activeElement = undefined;
-    popstateListener = undefined;
-    clickListener = undefined;
-    keyupListener = undefined;
-    turboBeforeFrameRenderListener = undefined;
+    activeElement = undefined as unknown as HTMLElement;
+    popstateListener = undefined as unknown as () => void;
+    clickListener = undefined as unknown as () => void;
+    keyupListener = undefined as unknown as () => void;
+    turboBeforeFrameRenderListener = undefined as unknown as () => void;
   });
 
   it("adds event listeners", () => {
@@ -240,6 +240,7 @@ describe("modal", () => {
       modalContainer.innerHTML = "content";
       document.body.append(modalContainer);
 
+      // @ts-expect-error yep
       event.detail.render(currentFrame, newFrame);
 
       // content should not be touched
@@ -261,6 +262,7 @@ describe("modal", () => {
       const previousFrame = createModalFrame(`some content`);
       document.body.append(previousFrame);
 
+      // @ts-expect-error yep
       event.detail.render(previousFrame, newFrame);
 
       // already attached node is updated
@@ -285,6 +287,7 @@ describe("modal", () => {
       const previousFrame = createModalFrame(`some content`);
       document.body.append(previousFrame);
 
+      // @ts-expect-error yep
       event.detail.render(previousFrame, newFrame);
 
       expect(history.back).toHaveBeenCalledOnce();
@@ -306,6 +309,7 @@ describe("modal", () => {
       const previousFrame = createModalFrame(`some content`);
       document.body.append(previousFrame);
 
+      // @ts-expect-error yep
       event.detail.render(previousFrame, newFrame);
 
       expect(history.back).not.toHaveBeenCalled();
@@ -316,7 +320,7 @@ describe("modal", () => {
 function createModalFrame(innerHtml?: string) {
   const frame = document.createElement("div");
   frame.setAttribute("id", "frame-modal");
-  frame.innerHTML = innerHtml;
+  frame.innerHTML = innerHtml ?? "";
   return frame;
 }
 

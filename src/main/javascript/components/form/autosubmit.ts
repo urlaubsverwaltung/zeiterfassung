@@ -8,9 +8,9 @@
  * ```
  */
 export function initAutosubmit() {
-  let keyupSubmit;
+  let keyupSubmit: number;
 
-  document.addEventListener("input", function (event: InputEvent) {
+  document.addEventListener("input", function (event) {
     if (event.defaultPrevented) {
       return;
     }
@@ -23,14 +23,17 @@ export function initAutosubmit() {
     );
 
     if (autoSubmit) {
-      const button: HTMLButtonElement = document.querySelector(
+      const button = document.querySelector(
         "#" + autoSubmit,
-      );
+      ) as HTMLButtonElement;
       if (button) {
         const submit = () => button.click();
         if (autoSubmitDelay) {
           clearTimeout(keyupSubmit);
-          keyupSubmit = setTimeout(submit, autoSubmitDelay);
+          keyupSubmit = setTimeout(
+            submit,
+            autoSubmitDelay,
+          ) as unknown as number;
         } else {
           submit();
         }
@@ -47,14 +50,14 @@ export function initAutosubmit() {
 
     if ("autoSubmit" in target.dataset) {
       const autoSubmit = target.dataset.autoSubmit ?? "";
-      const element: HTMLElement = autoSubmit
-        ? document.querySelector("#" + autoSubmit)
-        : target.closest("form");
+      const element = autoSubmit
+        ? (document.querySelector("#" + autoSubmit) as HTMLElement)
+        : (target.closest("form") as HTMLFormElement);
 
       if (element instanceof HTMLFormElement) {
         element.requestSubmit();
       } else {
-        element.closest("form").requestSubmit(element);
+        element.closest("form")!.requestSubmit(element);
       }
     }
   });
