@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
@@ -62,12 +63,14 @@ class WorkTimeServiceImplTest {
     private UserManagementService userManagementService;
     @Mock
     private FederalStateSettingsService federalStateSettingsService;
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     private static final Clock clockFixed = Clock.fixed(Clock.systemUTC().instant(), UTC);
 
     @BeforeEach
     void setUp() {
-        sut = new WorkTimeServiceImpl(workingTimeRepository, userManagementService, federalStateSettingsService, clockFixed);
+        sut = new WorkTimeServiceImpl(workingTimeRepository, userManagementService, federalStateSettingsService, clockFixed, applicationEventPublisher);
     }
 
     @Nested
@@ -777,6 +780,55 @@ class WorkTimeServiceImplTest {
             assertThat(actualEntity.getSaturday()).isEqualTo("PT6H");
             assertThat(actualEntity.getSunday()).isEqualTo("PT7H");
         }
+
+        @Test
+        void ensureUpdateWorkingTimePublishesWorkingTimeUpdatedEvent() {
+
+            final UserId userId = new UserId("uuid-1");
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+            when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+            final UUID id = UUID.randomUUID();
+            final WorkingTimeEntity entity = new WorkingTimeEntity();
+            entity.setId(id);
+            entity.setUserId(42L);
+            entity.setFederalState(NONE);
+            entity.setWorksOnPublicHoliday(false);
+            entity.setMonday("PT24H");
+            entity.setTuesday("PT24H");
+            entity.setWednesday("PT24H");
+            entity.setThursday("PT24H");
+            entity.setFriday("PT24H");
+            entity.setSaturday("PT24H");
+            entity.setSunday("PT24H");
+
+            when(workingTimeRepository.findById(id)).thenReturn(Optional.of(entity));
+            when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
+
+            when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
+                anyWorkingTimeEntity(id, userLocalId.value(), null)
+            ));
+
+            final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(
+                MONDAY, Duration.ofHours(8)
+            ));
+
+            sut.updateWorkingTime(new WorkingTimeId(id), null, GERMANY_BADEN_WUERTTEMBERG, true, workdays);
+
+            final ArgumentCaptor<WorkingTimeUpdatedEvent> eventCaptor = ArgumentCaptor.forClass(WorkingTimeUpdatedEvent.class);
+            verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
+
+            assertThat(eventCaptor.getValue()).satisfies(event -> {
+                assertThat(event.userIdComposite()).isEqualTo(userIdComposite);
+                assertThat(event.workingTimeId()).isEqualTo(new WorkingTimeId(id));
+                assertThat(event.validFrom()).isNull();
+                assertThat(event.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+                assertThat(event.worksOnPublicHoliday()).isTrue();
+                assertThat(event.workdays()).containsEntry(MONDAY, Duration.ofHours(8));
+            });
+        }
     }
 
     @Nested
@@ -871,6 +923,48 @@ class WorkTimeServiceImplTest {
             assertThat(actual.getSaturday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(6)));
             assertThat(actual.getSunday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(7)));
         }
+
+        @Test
+        void ensureCreateWorkingTimePublishesWorkingTimeCreatedEvent() {
+
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserId userId = new UserId("user-id");
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+
+            when(userManagementService.findUserByLocalId(userLocalId))
+                .thenReturn(Optional.of(user));
+
+            final UUID uuid = UUID.randomUUID();
+            when(workingTimeRepository.save(any(WorkingTimeEntity.class))).thenAnswer(invocation -> {
+                final WorkingTimeEntity entity = cloneEntity(invocation.getArgument(0));
+                entity.setId(uuid);
+                return entity;
+            });
+
+            when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
+                anyWorkingTimeEntity(uuid, userLocalId.value(), null),
+                anyWorkingTimeEntity(uuid, userLocalId.value(), LocalDate.of(2023, 12, 9))
+            ));
+
+            final EnumMap<DayOfWeek, Duration> durations = new EnumMap<>(Map.of(
+                MONDAY, Duration.ofHours(8)
+            ));
+
+            sut.createWorkingTime(userLocalId, LocalDate.of(2023, 12, 9), GERMANY_BADEN_WUERTTEMBERG, true, durations);
+
+            final ArgumentCaptor<WorkingTimeCreatedEvent> eventCaptor = ArgumentCaptor.forClass(WorkingTimeCreatedEvent.class);
+            verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
+
+            assertThat(eventCaptor.getValue()).satisfies(event -> {
+                assertThat(event.userIdComposite()).isEqualTo(userIdComposite);
+                assertThat(event.workingTimeId()).isEqualTo(new WorkingTimeId(uuid));
+                assertThat(event.validFrom()).isEqualTo(LocalDate.of(2023, 12, 9));
+                assertThat(event.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
+                assertThat(event.worksOnPublicHoliday()).isTrue();
+                assertThat(event.workdays()).containsEntry(MONDAY, Duration.ofHours(8));
+            });
+        }
     }
 
     @Nested
@@ -912,8 +1006,44 @@ class WorkTimeServiceImplTest {
 
             when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.of(entity));
 
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserId userId = new UserId("user-id");
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+            when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
             final boolean actual = sut.deleteWorkingTime(workingTimeId);
             assertThat(actual).isTrue();
+        }
+
+        @Test
+        void ensureDeleteWorkingTimePublishesWorkingTimeDeletedEvent() {
+
+            final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
+
+            final WorkingTimeEntity entity = new WorkingTimeEntity();
+            entity.setId(workingTimeId.uuid());
+            entity.setUserId(42L);
+            entity.setValidFrom(LocalDate.now(clockFixed));
+
+            when(workingTimeRepository.findById(workingTimeId.uuid())).thenReturn(Optional.of(entity));
+
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserId userId = new UserId("user-id");
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = new User(userIdComposite, "", "", new EMailAddress(""), Set.of());
+            when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+            sut.deleteWorkingTime(workingTimeId);
+
+            final ArgumentCaptor<WorkingTimeDeletedEvent> eventCaptor = ArgumentCaptor.forClass(WorkingTimeDeletedEvent.class);
+            verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
+
+            assertThat(eventCaptor.getValue()).satisfies(event -> {
+                assertThat(event.userIdComposite()).isEqualTo(userIdComposite);
+                assertThat(event.workingTimeId()).isEqualTo(workingTimeId);
+                assertThat(event.validFrom()).isEqualTo(LocalDate.now(clockFixed));
+            });
         }
 
         static Stream<Arguments> nowAndPastDate() {

@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.ZoneId;
@@ -17,11 +18,14 @@ public class TimeClockService {
     private final TimeClockRepository timeClockRepository;
     private final TimeEntryService timeEntryService;
     private final UserSettingsProvider userSettingsProvider;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    TimeClockService(TimeClockRepository timeClockRepository, TimeEntryService timeEntryService, UserSettingsProvider userSettingsProvider) {
+    TimeClockService(TimeClockRepository timeClockRepository, TimeEntryService timeEntryService,
+                     UserSettingsProvider userSettingsProvider, ApplicationEventPublisher applicationEventPublisher) {
         this.timeClockRepository = timeClockRepository;
         this.timeEntryService = timeEntryService;
         this.userSettingsProvider = userSettingsProvider;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     Optional<TimeClock> getCurrentTimeClock(UserId userId) {
@@ -33,6 +37,8 @@ public class TimeClockService {
         final TimeClock timeClock = new TimeClock(userId, now);
 
         timeClockRepository.save(toEntity(timeClock));
+
+        applicationEventPublisher.publishEvent(new TimeClockStartedEvent(userId, now, timeClock.comment(), timeClock.isBreak()));
     }
 
     /**
@@ -69,7 +75,11 @@ public class TimeClockService {
 
         final TimeClockEntity timeClockEntity = toEntity(timeClock);
 
-        return toTimeClock(timeClockRepository.save(timeClockEntity));
+        final TimeClock updatedTimeClock = toTimeClock(timeClockRepository.save(timeClockEntity));
+
+        applicationEventPublisher.publishEvent(new TimeClockUpdatedEvent(userId, updatedTimeClock.startedAt(), updatedTimeClock.comment(), updatedTimeClock.isBreak()));
+
+        return updatedTimeClock;
     }
 
     void stopTimeClock(UserIdComposite userIdComposite) {
@@ -82,6 +92,8 @@ public class TimeClockService {
                 final ZonedDateTime start = timeClock.startedAt();
                 final ZonedDateTime end = timeClock.stoppedAt()
                     .orElseThrow(() -> new IllegalStateException("expected stoppedAt to contain a value."));
+
+                applicationEventPublisher.publishEvent(new TimeClockStoppedEvent(userIdComposite.id(), start, end, timeClock.comment(), timeClock.isBreak()));
 
                 timeEntryService.createTimeEntry(userIdComposite.localId(), timeClock.comment(), start, end, timeClock.isBreak());
             });

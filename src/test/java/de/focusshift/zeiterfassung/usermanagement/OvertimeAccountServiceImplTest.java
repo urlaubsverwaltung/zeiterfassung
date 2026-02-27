@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -34,10 +35,12 @@ class OvertimeAccountServiceImplTest {
     private OvertimeAccountRepository repository;
     @Mock
     private UserManagementService userManagementService;
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @BeforeEach
     void setUp() {
-        sut = new OvertimeAccountServiceImpl(repository, userManagementService);
+        sut = new OvertimeAccountServiceImpl(repository, userManagementService, applicationEventPublisher);
     }
 
     @Test
@@ -219,6 +222,30 @@ class OvertimeAccountServiceImplTest {
         assertThat(actualPersisted.getUserId()).isEqualTo(1L);
         assertThat(actualPersisted.isAllowed()).isFalse();
         assertThat(actualPersisted.getMaxAllowedOvertime()).isEqualTo("PT10H");
+    }
+
+    @Test
+    void ensureUpdateOvertimeAccountPublishesOvertimeAccountUpdatedEvent() {
+
+        final UserId userId = new UserId("uuid-1");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+        when(repository.findById(userLocalId.value())).thenReturn(Optional.of(new OvertimeAccountEntity()));
+        when(repository.save(any())).thenAnswer(returnsFirstArg());
+
+        sut.updateOvertimeAccount(userLocalId, false, Duration.ofHours(10));
+
+        final ArgumentCaptor<OvertimeAccountUpdatedEvent> captor = ArgumentCaptor.forClass(OvertimeAccountUpdatedEvent.class);
+        verify(applicationEventPublisher).publishEvent(captor.capture());
+
+        assertThat(captor.getValue()).satisfies(event -> {
+            assertThat(event.userIdComposite()).isEqualTo(userIdComposite);
+            assertThat(event.isOvertimeAllowed()).isFalse();
+            assertThat(event.maxAllowedOvertime()).isEqualTo(Duration.ofHours(10));
+        });
     }
 
     void ensureIsDefaultOvertimeAccount(OvertimeAccount overtimeAccount, UserIdComposite userIdComposite) {

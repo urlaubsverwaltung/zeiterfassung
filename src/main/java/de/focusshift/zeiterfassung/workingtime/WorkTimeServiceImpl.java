@@ -10,6 +10,7 @@ import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -49,13 +50,16 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     private final UserManagementService userManagementService;
     private final FederalStateSettingsService federalStateSettingsService;
     private final Clock clock;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     WorkTimeServiceImpl(WorkingTimeRepository repository, UserManagementService userManagementService,
-                        FederalStateSettingsService federalStateSettingsService, Clock clock) {
+                        FederalStateSettingsService federalStateSettingsService, Clock clock,
+                        ApplicationEventPublisher applicationEventPublisher) {
         this.repository = repository;
         this.userManagementService = userManagementService;
         this.federalStateSettingsService = federalStateSettingsService;
         this.clock = clock;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -111,6 +115,10 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final WorkingTimeEntity saved = repository.save(entity);
         final List<WorkingTimeEntity> allEntitiesSorted = findAllWorkingTimeEntitiesSorted(userLocalId);
 
+        applicationEventPublisher.publishEvent(new WorkingTimeCreatedEvent(
+            user.userIdComposite(), new WorkingTimeId(saved.getId()), validFrom, federalState, worksOnPublicHoliday, workdays
+        ));
+
         return entityToWorkingTime(saved, user.userIdComposite(), allEntitiesSorted, new CachedSupplier<>(this::getGlobalFederalStateSettings));
     }
 
@@ -138,6 +146,10 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final WorkingTimeEntity saved = repository.save(entity);
         final List<WorkingTimeEntity> allEntitiesSorted = findAllWorkingTimeEntitiesSorted(userLocalId);
 
+        applicationEventPublisher.publishEvent(new WorkingTimeUpdatedEvent(
+            user.userIdComposite(), workingTimeId, saved.getValidFrom(), federalState, worksOnPublicHoliday, workdays
+        ));
+
         return entityToWorkingTime(saved, user.userIdComposite(), allEntitiesSorted, new CachedSupplier<>(this::getGlobalFederalStateSettings));
     }
 
@@ -152,7 +164,13 @@ class WorkTimeServiceImpl implements WorkingTimeService {
             return false;
         }
 
+        final UserLocalId userLocalId = new UserLocalId(toDelete.getUserId());
+        final User user = findUser(userLocalId);
+
         repository.deleteById(workingTimeId.uuid());
+
+        applicationEventPublisher.publishEvent(new WorkingTimeDeletedEvent(user.userIdComposite(), workingTimeId, toDelete.getValidFrom()));
+
         return true;
     }
 
