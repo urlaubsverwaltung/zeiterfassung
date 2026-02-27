@@ -23,7 +23,7 @@ describe("tooltip", () => {
 
     expect(popper.createPopper).not.toHaveBeenCalled();
 
-    document.querySelector("#parent").append(tooltip);
+    document.querySelector("#parent")!.append(tooltip);
     expect(popper.createPopper).toHaveBeenCalled();
   });
 
@@ -36,7 +36,7 @@ describe("tooltip", () => {
     );
 
     document.body.innerHTML = '<div id="parent"></div>';
-    const root = document.querySelector("#parent");
+    const root = document.querySelector("#parent")!;
     const tooltip = anyTooltip();
     root.append(tooltip);
 
@@ -49,7 +49,7 @@ describe("tooltip", () => {
 
   test.each([["mouseleave"], ["blur"]])("hides tooltip on %s", (eventName) => {
     document.body.innerHTML = '<div id="parent"></div>';
-    const root = document.querySelector("#parent");
+    const root = document.querySelector("#parent")!;
     const tooltip = anyTooltip();
     root.append(tooltip);
 

@@ -1,8 +1,9 @@
 export class UserSelectionList extends HTMLDivElement {
+  // @ts-expect-error is defined...
   #cleanup: () => void;
 
   #updateMaxHeight() {
-    const list = this.querySelector("ol");
+    const list = this.querySelector("ol")!;
 
     const { top } = this.getBoundingClientRect();
     const { height: listHeight } = list.getBoundingClientRect();

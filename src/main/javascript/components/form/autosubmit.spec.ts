@@ -15,6 +15,7 @@ describe("autosubmit", () => {
 
   beforeEach(() => {
     // prevent HTMLFormElement.prototype.requestSubmit is not implemented log.
+    // @ts-expect-error yep
     globalThis._virtualConsole.emit = () => {};
   });
 
@@ -34,11 +35,13 @@ describe("autosubmit", () => {
 
     let submitter;
 
-    document.querySelector("form").addEventListener("submit", function (event) {
-      submitter = event.submitter;
-    });
+    document
+      .querySelector("form")!
+      .addEventListener("submit", function (event) {
+        submitter = event.submitter;
+      });
 
-    const inputElement = document.querySelector("input");
+    const inputElement = document.querySelector("input")!;
     inputElement.value = "awesome text";
     inputElement.dispatchEvent(new InputEvent("input", { bubbles: true }));
 
@@ -57,11 +60,13 @@ describe("autosubmit", () => {
 
     let submitter;
 
-    document.querySelector("form").addEventListener("submit", function (event) {
-      submitter = event.submitter;
-    });
+    document
+      .querySelector("form")!
+      .addEventListener("submit", function (event) {
+        submitter = event.submitter;
+      });
 
-    const inputElement = document.querySelector("input");
+    const inputElement = document.querySelector("input")!;
     inputElement.value = "awesome text";
     inputElement.dispatchEvent(new InputEvent("input", { bubbles: true }));
 

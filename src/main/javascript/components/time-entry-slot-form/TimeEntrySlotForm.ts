@@ -18,17 +18,18 @@ class TimeEntrySlotForm extends HTMLFormElement {
       }
     });
 
-    const errorContainer: HTMLElement = this.querySelector(
+    const errorContainer = this.querySelector(
       "[data-error-container]",
-    );
-    const startElement: HTMLInputElement = this.querySelector(
+    ) as HTMLElement;
+    const startElement = this.querySelector(
       "input[name='start']",
-    );
-    const endElement: HTMLInputElement =
-      this.querySelector("input[name='end']");
-    const durationElement: HTMLInputElement = this.querySelector(
+    ) as HTMLInputElement;
+    const endElement = this.querySelector(
+      "input[name='end']",
+    ) as HTMLInputElement;
+    const durationElement = this.querySelector(
       "input[name='duration']",
-    );
+    ) as HTMLInputElement;
 
     startElement.addEventListener("blur", () => {
       if (!this.#hasBeenTriedToSubmitAtLeastOnce) {
@@ -159,17 +160,18 @@ class TimeEntrySlotForm extends HTMLFormElement {
   }
 
   #validate(): boolean {
-    const errorContainer: HTMLElement = this.querySelector(
+    const errorContainer = this.querySelector(
       "[data-error-container]",
-    );
-    const startElement: HTMLInputElement = this.querySelector(
+    ) as HTMLElement;
+    const startElement = this.querySelector(
       "input[name='start']",
-    );
-    const endElement: HTMLInputElement =
-      this.querySelector("input[name='end']");
-    const durationElement: HTMLInputElement = this.querySelector(
+    ) as HTMLInputElement;
+    const endElement = this.querySelector(
+      "input[name='end']",
+    ) as HTMLInputElement;
+    const durationElement = this.querySelector(
       "input[name='duration']",
-    );
+    ) as HTMLInputElement;
 
     let valid = true;
     let errorMessage = "";

@@ -6,7 +6,10 @@
     "moduleResolution": "Node",
     "types": ["node", "svelte"]
   },
-  "include": ["src/main/javascript/**/*"],
+  "include": [
+    "types.d.ts",
+    "src/main/javascript/**/*"
+  ],
   "exclude": [
     "node_modules"
   ]

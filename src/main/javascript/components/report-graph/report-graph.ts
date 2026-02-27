@@ -1,11 +1,12 @@
 /* eslint-disable unicorn/consistent-function-scoping */
 
 export class ReportGraph extends HTMLDivElement {
+  // @ts-expect-error it is defined...
   #cleanup: () => void;
 
   connectedCallback() {
-    const handleClick = (event) => {
-      const target = event.target;
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
       if (!target.matches("[data-date]")) {
         return;
       }
@@ -14,14 +15,14 @@ export class ReportGraph extends HTMLDivElement {
 
       const currentlySelected = target.classList.contains("selected");
       if (currentlySelected) {
-        this.querySelector("svg").dispatchEvent(
+        this.querySelector("svg")!.dispatchEvent(
           new CustomEvent("graph-day-selected", {
             bubbles: true,
             detail: {},
           }),
         );
       } else {
-        this.querySelector("svg").dispatchEvent(
+        this.querySelector("svg")!.dispatchEvent(
           new CustomEvent("graph-day-selected", {
             bubbles: true,
             detail: {

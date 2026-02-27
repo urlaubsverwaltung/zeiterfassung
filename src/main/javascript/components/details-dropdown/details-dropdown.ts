@@ -1,11 +1,12 @@
 export class DetailsDropdown extends HTMLDetailsElement {
+  // @ts-expect-error is defined...
   #cleanup: () => void;
 
   connectedCallback() {
     let contentClicked = false;
 
-    const handleDocumentClick = (event) => {
-      const { target } = event;
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
       contentClicked = this.contains(target);
       if (contentClicked) {
         if (!isInteractiveElement(target)) {
@@ -21,15 +22,15 @@ export class DetailsDropdown extends HTMLDetailsElement {
       }
     };
 
-    const handleDocumentKeyUp = (event) => {
+    const handleDocumentKeyUp = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         this.open = false;
         contentClicked = false;
       }
     };
 
-    const handleFocusOut = (event) => {
-      if (event.target.tagName !== "SUMMARY") {
+    const handleFocusOut = (event: FocusEvent) => {
+      if ((event.target as HTMLElement).tagName !== "SUMMARY") {
         setTimeout(
           () => {
             if (
@@ -68,7 +69,7 @@ const interactiveElements = [
   HTMLLabelElement,
 ];
 
-function isInteractiveElement(element) {
+function isInteractiveElement(element: HTMLElement) {
   return interactiveElements.some(
     (ElementType) => element instanceof ElementType,
   );

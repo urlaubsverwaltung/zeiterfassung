@@ -12,11 +12,11 @@ document.addEventListener("input", function (event) {
   }
 });
 
-let progressBarTimer;
+let progressBarTimer: undefined | number;
 
 function submitSettingsFormPreview(event: Event) {
   const target = event.target as HTMLElement;
-  const form = target.closest("form");
+  const form = target.closest("form") as HTMLFormElement;
 
   form.dataset.turbo = "true";
 
@@ -38,6 +38,7 @@ onTurboBeforeFrameRender(function (event) {
   if (event.detail.newFrame.matches("#frame-settings-form")) {
     event.detail.render = function (currentFrame, newFrame) {
       morphWithoutTouchingValueOfActiveElement(currentFrame, newFrame);
+      // @ts-expect-error it exists
       Turbo.navigator.delegate.adapter.progressBar.hide();
       hideProgressBar();
     };
@@ -47,8 +48,9 @@ onTurboBeforeFrameRender(function (event) {
 function showProgressBar() {
   if (!progressBarTimer) {
     progressBarTimer = setTimeout(function () {
+      // @ts-expect-error it exists
       Turbo.navigator.delegate.adapter.progressBar.show();
-    }, Turbo.config.drive.progressBarDelay);
+    }, Turbo.config.drive.progressBarDelay) as unknown as number;
   }
 }
 

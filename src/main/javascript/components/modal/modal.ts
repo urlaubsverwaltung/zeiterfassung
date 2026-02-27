@@ -86,7 +86,7 @@ export function enhanceModal() {
           const dialog = document.createElement("dialog");
           dialog.setAttribute("open", "");
           dialog.innerHTML = newFrame.innerHTML;
-          document.querySelector("#frame-modal").innerHTML = dialog.outerHTML;
+          document.querySelector("#frame-modal")!.innerHTML = dialog.outerHTML;
         } else {
           console.warn(
             "rendering frame-modal should use renderMethod=replace but was",

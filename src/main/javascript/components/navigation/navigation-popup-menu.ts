@@ -5,24 +5,24 @@ export class NavPopupMenuButton extends HTMLElement {
 
   #open = false;
 
-  attributeChangedCallback(name, oldValue, newValue) {
+  attributeChangedCallback(name: string, oldValue: unknown, newValue: unknown) {
     if (oldValue === newValue) {
       return;
     }
 
     this.#open = typeof newValue === "string";
 
-    const href = this.querySelector("a")?.getAttribute("href");
-    const menu = document.querySelector(href);
+    const href = this.querySelector("a")!.getAttribute("href")!;
+    const menu = document.querySelector(href)!;
 
-    menu?.classList.toggle("visible", this.#open);
+    menu.classList.toggle("visible", this.#open);
   }
 
   connectedCallback() {
     this.addEventListener("click", (event) => {
       event.preventDefault();
-      const href = this.querySelector("a").getAttribute("href");
-      const menu = document.querySelector(href);
+      const href = this.querySelector("a")!.getAttribute("href")!;
+      const menu = document.querySelector(href)!;
 
       for (const otherMenu of document.querySelectorAll(
         ".nav-popup-menu[data-open]",

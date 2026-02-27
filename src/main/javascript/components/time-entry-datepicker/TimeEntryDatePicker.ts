@@ -4,6 +4,7 @@ import { createDatepicker } from "../datepicker/datepicker";
 import { i18n } from "../../i18n";
 
 class TimeEntryDatePicker extends HTMLDivElement {
+  // @ts-expect-error is defined...
   #duetDateElement: HTMLDuetDatePickerElement;
 
   connectedCallback() {
@@ -11,14 +12,14 @@ class TimeEntryDatePicker extends HTMLDivElement {
   }
 
   #initDatepicker() {
-    const originalDateInput = this.querySelector("input[type=date]");
+    const originalDateInput = this.querySelector("input[type=date]")!;
 
     if (originalDateInput.hasAttribute("disabled")) {
       return;
     }
 
-    const originalDateInputId = originalDateInput.getAttribute("id");
-    const label = document.querySelector(`[for='${originalDateInputId}']`);
+    const originalDateInputId = originalDateInput.getAttribute("id")!;
+    const label = document.querySelector(`[for='${originalDateInputId}']`)!;
 
     originalDateInput.classList.add("hidden");
 
@@ -50,8 +51,9 @@ class TimeEntryDatePicker extends HTMLDivElement {
       this.#duetDateElement.classList.remove("hidden");
 
       // reset width of 100% which aligns the datepicker on the left
-      const duetDateDialog: HTMLElement =
-        this.#duetDateElement.querySelector(".duet-date__dialog");
+      const duetDateDialog = this.#duetDateElement.querySelector(
+        ".duet-date__dialog",
+      ) as HTMLElement;
       duetDateDialog.style.width = "auto";
     }, 100);
 
@@ -62,27 +64,23 @@ class TimeEntryDatePicker extends HTMLDivElement {
     });
 
     // update selected date text on change
-    this.#duetDateElement.addEventListener(
-      "duetChange",
-      (event: CustomEvent) => {
-        const { valueAsDate } = event.detail;
+    this.#duetDateElement.addEventListener("duetChange", (event) => {
+      // @ts-expect-error sure...
+      const { valueAsDate } = event.detail;
 
-        const dayOfWeek = format(valueAsDate, "EEEE");
-        label.querySelector("[data-day]").textContent = format(
-          valueAsDate,
-          "dd",
-        );
-        label.querySelector("[data-day-text]").textContent = isToday(
-          valueAsDate,
-        )
-          ? `${i18n("datepicker.today")}, ${dayOfWeek}`
-          : dayOfWeek;
-        label.querySelector("[data-date]").textContent = format(
-          valueAsDate,
-          "dd. MMMM yyyy",
-        );
-      },
-    );
+      const dayOfWeek = format(valueAsDate, "EEEE");
+      label.querySelector("[data-day]")!.textContent = format(
+        valueAsDate,
+        "dd",
+      );
+      label.querySelector("[data-day-text]")!.textContent = isToday(valueAsDate)
+        ? `${i18n("datepicker.today")}, ${dayOfWeek}`
+        : dayOfWeek;
+      label.querySelector("[data-date]")!.textContent = format(
+        valueAsDate,
+        "dd. MMMM yyyy",
+      );
+    });
   }
 }
 
