@@ -66,7 +66,8 @@ class SettingsControllerTest implements ControllerTest {
         final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(true, 42);
 
         final Instant subtractBreakFeatureTimestamp = Instant.now();
-        final LocalDate subtractBreakFeatureDate = subtractBreakFeatureTimestamp.atZone(UTC).toLocalDate();
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        final LocalDate subtractBreakFeatureDate = subtractBreakFeatureTimestamp.atZone(berlin).toLocalDate();
         final SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings =
             new SubtractBreakFromTimeEntrySettings(true, Optional.of(subtractBreakFeatureTimestamp));
 
