@@ -1,0 +1,94 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+  <changeSet author="seber" id="add-working-time--audit-table">
+    <preConditions>
+      <not>
+        <tableExists tableName="working_time_aud"/>
+      </not>
+    </preConditions>
+
+    <createSequence sequenceName="working_time_aud_seq" incrementBy="50" />
+
+    <createTable tableName="working_time_aud">
+      <column name="id" type="BIGINT" />
+      <column name="tenant_id" type="VARCHAR(255)"/>
+      <column name="user_id" type="BIGINT" />
+      <column name="monday" type="VARCHAR" />
+      <column name="tuesday" type="VARCHAR" />
+      <column name="wednesday" type="VARCHAR" />
+      <column name="thursday" type="VARCHAR" />
+      <column name="friday" type="VARCHAR" />
+      <column name="saturday" type="VARCHAR" />
+      <column name="sunday" type="VARCHAR" />
+      <column name="federal_state" type="VARCHAR" />
+      <column name="valid_from" type="DATE" />
+      <column name="works_on_public_holiday" type="BOOLEAN" defaultValue="false" />
+
+      <!-- Add audit-specific columns -->
+      <column name="rev" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="revtype" type="TINYINT">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addPrimaryKey tableName="working_time_aud" columnNames="id,rev" constraintName="PK_WORKING_TIME_AUD"/>
+
+    <!-- omit foreign key constraint to working_time.id so we have access to the history. -->
+    <!-- we may introduce a feature to delete the history as well by an authenticated person? -->
+    <!-- however, application has to delete the history on person delete! -->
+
+    <addForeignKeyConstraint baseTableName="working_time_aud"
+                             baseColumnNames="rev"
+                             referencedTableName="revinfo"
+                             referencedColumnNames="id"
+                             constraintName="FK_WORKING_TIME_AUD_REV"/>
+
+    <addForeignKeyConstraint baseTableName="working_time_aud"
+                             baseColumnNames="user_id"
+                             referencedTableName="tenant_user"
+                             referencedColumnNames="id"
+                             constraintName="FK_WORKING_TIME_AUD_OWNER"/>
+  </changeSet>
+
+  <changeSet author="seber" id="migrate-existing-working-time-to-audit">
+    <sql>
+      -- create the first revtype=INSERT audit item
+      -- for every working-time not existing in the _aud table yet
+      --
+      with new_rev as (
+        select nextval('revinfo_seq') as id,
+               extract(epoch from w.updated_at) * 1000 as timestamp,
+               w.tenant_id,
+               -- null owner since we don't know who created this working-time :(
+               null,
+               w.id as working_time_id
+        from working_time w
+        where w.id not in (select id from working_time_aud)
+      ),
+      insert_revinfo as (
+        -- first create the revinfo entry, to be able to reference the id in the _aud table
+        insert into revinfo (id, timestamp, tenant_id, updated_by)
+        select r.id, r.timestamp, r.tenant_id, r.updated_by from new_rev r
+      )
+      -- then create the final revtype=INSERT _aud entry
+      insert into working_time_aud (
+        id, tenant_id, user_id, monday, monday_mod, tuesday, tuesday_mod, wednesday, wednesday_mod, thursday,
+        thursday_mod, friday, friday_mod, saturday, saturday_mod, sunday, sunday_mod, valid_from, valid_from_mod,
+        works_on_public_holiday, works_on_public_holiday_mod, rev, revtype
+      )
+      select
+        -- tenant_id == null since tenant id is not set in future modification inserts anyway
+        -- tenant_id exists in the revinfo metadata.
+        w.id, null, w.user_id, true,
+        w.monday, true, w.tuesday, true, w.wednesday, true, w.thursday, true, w.friday, true, w.saturday, true,
+        w.sunday, true, w.valid_from, true, w.works_on_public_holiday, true, r.id, 0
+      from working_timne w
+      join new_rev r on r.working_time_id = w.id
+    </sql>
+  </changeSet>
+</databaseChangeLog>
