@@ -39,4 +39,5 @@
   <include relativeToChangelogFile="true" file="changelog-2.23.4-locking-time-entries-default-to-true.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.24.0-subtract-break-from-timeentry.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.25.0-add-company-vacation.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-2.26.0-add-api-key.xml"/>
 </databaseChangeLog>

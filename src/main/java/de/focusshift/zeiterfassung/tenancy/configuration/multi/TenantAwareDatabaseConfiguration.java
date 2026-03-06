@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.tenancy.configuration.multi;
 import com.zaxxer.hikari.HikariDataSource;
 import de.focusshift.zeiterfassung.absence.AbsenceTypeEntity;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteEntity;
+import de.focusshift.zeiterfassung.apikey.ApiKeyEntity;
 import de.focusshift.zeiterfassung.companyvacation.CompanyVacationEntity;
 import de.focusshift.zeiterfassung.settings.FederalStateSettingsEntity;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
@@ -40,6 +41,7 @@ import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
     basePackageClasses = {
         AbsenceWriteEntity.class,
         AbsenceTypeEntity.class,
+        ApiKeyEntity.class,
         TimeEntryEntity.class,
         TimeClockEntity.class,
         TenantUserEntity.class,
