@@ -72,8 +72,10 @@ public class OvertimePublisher {
             // currently we just know whether overtime is allowed or not.
             // this may change in the future to have a date range for this info or more granular stuff.
             final OvertimeAccount overtimeAccount = overtimeAccountByUserId.get(userIdComposite);
-            if (overtimeAccount.isAllowed() && !overtimeHours.durationInMinutes().isZero()) {
+            if (overtimeAccount.isAllowed()) {
                 publishUpdated(userIdComposite, event.date(), overtimeHours);
+            } else {
+                LOG.info("Overtime not allowed, ignore DayLockedEvent for User {}", userIdComposite);
             }
         });
     }

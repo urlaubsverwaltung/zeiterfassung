@@ -95,8 +95,10 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         final LockTimeEntriesSettingsEntity saved = lockTimeEntriesSettingsRepository.save(entity);
 
         if (saved.isLockingIsActive()) {
-            LOG.info("LockTimeEntriesSettings updated: locking is active. Looking for updated DayLocked events now.");
+            LOG.info("LockTimeEntriesSettings updated: locking is active. Looking for updated DayLocked events now (previousLockTimeEntriesDaysInPast={} lockTimeEntriesDaysInPast={})", previousLockTimeEntriesDaysInPast, lockTimeEntriesDaysInPast);
             publishedDayLockedEvents(previousLockTimeEntriesDaysInPast, lockTimeEntriesDaysInPast);
+        } else {
+            LOG.info("LockTimeEntriesSettings updated: locking is disabled.");
         }
 
         return toLockTimeEntriesSettings(saved);
