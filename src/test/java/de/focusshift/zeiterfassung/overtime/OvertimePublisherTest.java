@@ -9,6 +9,7 @@ import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
+import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent.UpdatedValueCandidate;
@@ -35,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,6 +79,73 @@ class OvertimePublisherTest {
             userManagementService,
             workingTimeCalendarService,
             applicationEventPublisher);
+    }
+
+    @Nested
+    class DayLocked {
+
+        @Test
+        void ensureOvertimePublishedForAllowedUsersOnly() {
+
+            final UserIdComposite userAllowed = anyUserIdComposite();
+            final UserIdComposite userNotAllowed = new UserIdComposite(new UserId("user-id-2"), new UserLocalId(2L));
+
+            when(overtimeAccountService.getAllOvertimeAccounts()).thenReturn(Map.of(
+                userAllowed, new OvertimeAccount(userAllowed, true),
+                userNotAllowed, new OvertimeAccount(userNotAllowed, false)
+            ));
+
+            final LocalDate date = LocalDate.parse("2026-03-06");
+            when(overtimeService.getOvertimeForDate(date)).thenReturn(Map.of(
+                userAllowed, OvertimeHours.EIGHT_POSITIVE,
+                userNotAllowed, OvertimeHours.EIGHT_NEGATIVE
+            ));
+
+            sut.publishOvertime(new DayLockedEvent(date, ZoneId.of("Europe/Berlin")));
+
+            final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+            verify(applicationEventPublisher).publishEvent(captor.capture());
+
+            assertThat(captor.getAllValues()).containsExactly(
+                new UserHasWorkedOvertimeEvent(userAllowed, date, OvertimeHours.EIGHT_POSITIVE)
+            );
+        }
+
+        @Test
+        void ensureOvertimePublishedForZeroOvertime() {
+
+            final UserIdComposite userAllowed = anyUserIdComposite();
+
+            when(overtimeAccountService.getAllOvertimeAccounts()).thenReturn(Map.of(
+                userAllowed, new OvertimeAccount(userAllowed, true)
+            ));
+
+            final LocalDate date = LocalDate.parse("2026-03-06");
+            when(overtimeService.getOvertimeForDate(date)).thenReturn(Map.of(
+                userAllowed, OvertimeHours.ZERO
+            ));
+
+            sut.publishOvertime(new DayLockedEvent(date, ZoneId.of("Europe/Berlin")));
+
+            final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+            verify(applicationEventPublisher).publishEvent(captor.capture());
+
+            assertThat(captor.getAllValues()).containsExactly(
+                new UserHasWorkedOvertimeEvent(userAllowed, date, OvertimeHours.ZERO)
+            );
+        }
+
+        @Test
+        void ensureOvertimeNotPublishedWhenNoOvertimeExistsForDate() {
+
+            when(overtimeAccountService.getAllOvertimeAccounts()).thenReturn(Map.of());
+            final LocalDate date = LocalDate.parse("2026-03-06");
+            when(overtimeService.getOvertimeForDate(date)).thenReturn(Map.of());
+
+            sut.publishOvertime(new DayLockedEvent(date, ZoneId.of("Europe/Berlin")));
+
+            verifyNoInteractions(applicationEventPublisher);
+        }
     }
 
     @Nested
