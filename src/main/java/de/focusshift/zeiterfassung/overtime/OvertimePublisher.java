@@ -74,6 +74,8 @@ public class OvertimePublisher {
             final OvertimeAccount overtimeAccount = overtimeAccountByUserId.get(userIdComposite);
             if (overtimeAccount.isAllowed()) {
                 publishUpdated(userIdComposite, event.date(), overtimeHours);
+            } else {
+                LOG.info("Overtime not allowed, ignore DayLockedEvent for User {}", userIdComposite);
             }
         });
     }
