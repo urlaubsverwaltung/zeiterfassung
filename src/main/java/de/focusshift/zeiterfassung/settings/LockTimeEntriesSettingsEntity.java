@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Objects;
 
@@ -19,10 +20,12 @@ public class LockTimeEntriesSettingsEntity extends AbstractTenantAwareEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "settings_locking_time_entries_seq")
     protected Long id;
 
-    @Column(name = "lock_time_entries_days_in_past")
+    @NotNull
+    @Column(name = "lock_time_entries_days_in_past", nullable = false)
     private int lockTimeEntriesDaysInPast;
 
-    @Column(name = "locking_is_active")
+    @NotNull
+    @Column(name = "locking_is_active", nullable = false)
     private boolean lockingIsActive;
 
     protected LockTimeEntriesSettingsEntity() {
