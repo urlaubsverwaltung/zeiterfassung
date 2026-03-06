@@ -144,6 +144,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final User user = findUser(userLocalId);
 
         final WorkingTimeEntity saved = repository.save(entity);
+        LOG.info("Updated WorkingTime id={}", saved.getId());
+
         final List<WorkingTimeEntity> allEntitiesSorted = findAllWorkingTimeEntitiesSorted(userLocalId);
 
         applicationEventPublisher.publishEvent(new WorkingTimeUpdatedEvent(

@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import org.hibernate.envers.Audited;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -15,7 +16,7 @@ import java.util.UUID;
 
 import static jakarta.persistence.EnumType.STRING;
 
-
+@Audited(withModifiedFlag = true)
 @Entity(name = "working_time")
 public class WorkingTimeEntity extends AbstractTenantAwareEntity {
 
