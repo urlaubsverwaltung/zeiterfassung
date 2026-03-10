@@ -1,0 +1,69 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <changeSet author="automated" id="add-api-key-table">
+
+    <preConditions>
+      <not>
+        <tableExists tableName="api_key"/>
+      </not>
+    </preConditions>
+
+    <createSequence sequenceName="api_key_seq" incrementBy="50"/>
+
+    <createTable tableName="api_key">
+      <column name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_API_KEY"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="user_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="key_hash" type="VARCHAR(255)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="UC_API_KEY_HASH"/>
+      </column>
+      <column name="label" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+        <constraints nullable="false"/>
+      </column>
+      <column name="last_used_at" type="TIMESTAMP WITH TIME ZONE"/>
+      <column name="expires_at" type="TIMESTAMP WITH TIME ZONE"/>
+      <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint baseColumnNames="tenant_id" baseTableName="api_key"
+                             constraintName="FK_API_KEY_TENANT_ID"
+                             deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+                             referencedColumnNames="tenant_id" referencedTableName="tenant"/>
+
+    <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="api_key"
+                             constraintName="FK_API_KEY_TENANT_USER_ID"
+                             deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+                             referencedColumnNames="id" referencedTableName="tenant_user"/>
+
+    <sql>
+      ALTER TABLE api_key ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS api_key_tenant_isolation_policy ON api_key;
+      CREATE POLICY api_key_tenant_isolation_policy ON api_key
+      USING (tenant_id = current_setting('app.tenant_id', true)::VARCHAR);
+    </sql>
+
+    <createIndex tableName="api_key" indexName="IDX_API_KEY_USER_ID">
+      <column name="user_id"/>
+    </createIndex>
+
+    <createIndex tableName="api_key" indexName="IDX_API_KEY_TENANT_ID">
+      <column name="tenant_id"/>
+    </createIndex>
+
+  </changeSet>
+
+</databaseChangeLog>

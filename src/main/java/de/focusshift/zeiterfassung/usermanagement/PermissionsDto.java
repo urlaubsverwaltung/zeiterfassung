@@ -8,6 +8,7 @@ class PermissionsDto {
     private boolean permissionsEditAll;
     private boolean timeEntryEditAll;
     private boolean globalSettings;
+    private boolean apiAccess;
 
     public boolean isViewReportAll() {
         return viewReportAll;
@@ -57,6 +58,14 @@ class PermissionsDto {
         this.globalSettings = globalSettings;
     }
 
+    public boolean isApiAccess() {
+        return apiAccess;
+    }
+
+    public void setApiAccess(boolean apiAccess) {
+        this.apiAccess = apiAccess;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
@@ -67,7 +76,8 @@ class PermissionsDto {
             && overtimeEditAll == that.overtimeEditAll
             && permissionsEditAll == that.permissionsEditAll
             && timeEntryEditAll == that.timeEntryEditAll
-            && globalSettings == that.globalSettings;
+            && globalSettings == that.globalSettings
+            && apiAccess == that.apiAccess;
     }
 
     @Override
@@ -78,6 +88,7 @@ class PermissionsDto {
         result = 31 * result + Boolean.hashCode(permissionsEditAll);
         result = 31 * result + Boolean.hashCode(timeEntryEditAll);
         result = 31 * result + Boolean.hashCode(globalSettings);
+        result = 31 * result + Boolean.hashCode(apiAccess);
         return result;
     }
 
@@ -90,6 +101,7 @@ class PermissionsDto {
             ", permissionsEditAll=" + permissionsEditAll +
             ", timeEntryEditAll=" + timeEntryEditAll +
             ", globalSettings=" + globalSettings +
+            ", apiAccess=" + apiAccess +
             '}';
     }
 }
