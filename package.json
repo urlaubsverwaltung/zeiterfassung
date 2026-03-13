@@ -23,7 +23,7 @@
     "@eslint/js": "9.39.2",
     "@hotwired/turbo": "8.0.23",
     "@popperjs/core": "2.11.8",
-    "@rollup/plugin-commonjs": "29.0.0",
+    "@rollup/plugin-commonjs": "29.0.2",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@tailwindcss/postcss": "4.2.1",
     "@tsconfig/svelte": "5.0.8",
