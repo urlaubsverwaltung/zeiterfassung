@@ -28,7 +28,7 @@
     "@tailwindcss/postcss": "4.2.1",
     "@tsconfig/svelte": "5.0.8",
     "@types/hotwired__turbo": "8.0.9",
-    "@types/node": "25.3.3",
+    "@types/node": "25.5.0",
     "@typescript-eslint/eslint-plugin": "8.57.0",
     "@typescript-eslint/parser": "8.57.0",
     "@ungap/custom-elements": "1.3.0",
