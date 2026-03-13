@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -20,7 +21,8 @@ public class SubtractBreakFromTimeEntrySettingsEntity extends AbstractTenantAwar
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "settings_subtract_break_from_time_entry_seq")
     protected Long id;
 
-    @Column(name = "enabled")
+    @NotNull
+    @Column(name = "enabled", nullable = false)
     private boolean subtractBreakFromTimeEntryIsActive;
 
     @Column(name = "enabled_timestamp")

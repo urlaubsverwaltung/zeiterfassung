@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.tenancy.tenant;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.envers.NotAudited;
 
@@ -17,8 +18,9 @@ public abstract class AbstractTenantAwareEntity implements TenantAware, Serializ
     private static final long serialVersionUID = 1L;
 
     @NotAudited
+    @NotNull
     @Size(max = 255)
-    @Column(name = "tenant_id")
+    @Column(name = "tenant_id", nullable = false)
     private String tenantId;
 
     protected AbstractTenantAwareEntity(String tenantId) {
