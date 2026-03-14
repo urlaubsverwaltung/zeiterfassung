@@ -2,7 +2,7 @@
 @config "../../../../tailwind.config.js";
 
 @layer components {
-  .floating-heart {
+  .feedback-floating-heart {
     background-color: red;
     position: absolute;
     height: 32px;

@@ -10,7 +10,7 @@ export class FeedbackHeart extends HTMLElement {
 
   unleash() {
     const heart = document.createElement("div");
-    heart.classList.add("floating-heart");
+    heart.classList.add("feedback-floating-heart");
     document.body.append(heart);
   }
 
