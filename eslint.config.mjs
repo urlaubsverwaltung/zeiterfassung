@@ -5,8 +5,6 @@ import globals from "globals";
 import eslintPluginUnicorn from "eslint-plugin-unicorn";
 import importPlugin from "eslint-plugin-import";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
-import sveltePlugin from "eslint-plugin-svelte";
-import svelteParser from "svelte-eslint-parser";
 
 export default ts.config(
   globalIgnores(["target"]),
@@ -64,21 +62,6 @@ export default ts.config(
     rules: {
       "@typescript-eslint/no-require-imports": "off",
       "unicorn/prefer-module": "off",
-    },
-  },
-
-  {
-    files: ["**/*.svelte"],
-    plugins: {
-      svelte: sveltePlugin,
-    },
-    extends: [sveltePlugin.configs["flat/prettier"]],
-    languageOptions: {
-      parser: svelteParser,
-      parserOptions: {
-        parser: ts.parser,
-        extraFileExtensions: [".svelte"],
-      },
     },
   },
 );

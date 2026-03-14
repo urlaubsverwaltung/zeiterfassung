@@ -5,7 +5,6 @@ module.exports = {
     "./src/main/resources/templates/**/*.html",
     "./src/main/resources/templates/**/*.svg",
     "./src/main/javascript/**/*.ts",
-    "./src/main/javascript/**/*.svelte",
   ],
   darkMode: "class",
   theme: {
