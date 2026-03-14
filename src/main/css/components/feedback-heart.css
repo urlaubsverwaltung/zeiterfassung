@@ -1,10 +1,8 @@
-<script lang="ts">
-</script>
+@reference "tailwindcss";
+@config "../../../../tailwind.config.js";
 
-<div></div>
-
-<style>
-  div {
+@layer components {
+  .floating-heart {
     background-color: red;
     position: absolute;
     height: 32px;
@@ -57,4 +55,4 @@
       left: 2.4em;
     }
   }
-</style>
+}

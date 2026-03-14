@@ -1,1 +1,1 @@
-export * from "./feedbackHeartView";
+export * from "./FeedbackHeart";
