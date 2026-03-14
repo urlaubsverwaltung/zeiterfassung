@@ -30,10 +30,6 @@ updates:
         patterns:
           - "postcss"
           - "postcss-*"
-      svelte:
-        patterns:
-          - "svelte"
-          - "svelte-*"
       prettier:
         patterns:
           - "prettier"

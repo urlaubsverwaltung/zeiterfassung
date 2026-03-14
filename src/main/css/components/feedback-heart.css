@@ -1,12 +1,10 @@
-<script lang="ts">
-</script>
+@reference "tailwindcss";
+@config "../../../../tailwind.config.js";
 
-<div></div>
-
-<style>
-  div {
+@layer components {
+  .feedback-floating-heart {
     background-color: red;
-    position: absolute;
+    position: fixed;
     height: 32px;
     min-height: 16px;
     width: 32px;
@@ -19,6 +17,7 @@
     -webkit-mask-position: bottom;
     mask-position: bottom;
     animation: floating-heart 10s normal cubic-bezier(0.5, 0.5, 0.5, 0.5);
+    pointer-events: none;
   }
 
   @keyframes floating-heart {
@@ -57,4 +56,4 @@
       left: 2.4em;
     }
   }
-</style>
+}

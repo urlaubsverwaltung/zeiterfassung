@@ -3,8 +3,6 @@ import postcss from "rollup-plugin-postcss";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import esbuild from "rollup-plugin-esbuild";
-import svelte from "rollup-plugin-svelte";
-import sveltePreprocess from "svelte-preprocess";
 import glob from "fast-glob";
 
 const paths = {
@@ -36,10 +34,6 @@ export default {
         rimraf.sync(paths.dist);
       },
     },
-    svelte({
-      include: `${paths.src}/**/*.svelte`,
-      preprocess: sveltePreprocess(),
-    }),
     postcss(),
     resolve({
       preferBuiltins: false,
