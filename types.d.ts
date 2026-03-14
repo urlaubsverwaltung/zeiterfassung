@@ -6,6 +6,9 @@ declare global {
     datepicker: {
       localization: DuetLocalizedText;
     };
+    feedback: {
+      showFeedbackKudo: boolean;
+    };
     i18n: Record<string, string>;
   };
 

@@ -14,7 +14,6 @@ const feedbackHeart = new FeedbackHeart();
 feedbackHeart.classList.add("fixed", "left-0", "bottom-0", "p-2");
 document.body.append(feedbackHeart);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-if ((globalThis as any).zeiterfassung?.feedback?.showFeedbackKudo) {
+if (globalThis.zeiterfassung.feedback.showFeedbackKudo) {
   feedbackHeart.unleash();
 }
