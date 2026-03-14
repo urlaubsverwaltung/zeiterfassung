@@ -42,6 +42,7 @@
       }
     </script>
     <script>
+      injectStyle("[data-js-only] { display: revert !important; }"); // hidden without js, shown with js
       injectStyle("[data-js-hidden] { display: none; }");
     </script>
     <th:block th:replace="${scripts}"></th:block>
