@@ -17,6 +17,7 @@
     -webkit-mask-position: bottom;
     mask-position: bottom;
     animation: floating-heart 10s normal cubic-bezier(0.5, 0.5, 0.5, 0.5);
+    pointer-events: none;
   }
 
   @keyframes floating-heart {
