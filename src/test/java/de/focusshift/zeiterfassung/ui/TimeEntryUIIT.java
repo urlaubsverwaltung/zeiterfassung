@@ -29,6 +29,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static com.microsoft.playwright.options.AriaRole.LINK;
 import static com.microsoft.playwright.options.WaitForSelectorState.VISIBLE;
 import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.credentials;
 import static org.mockito.Mockito.when;
@@ -62,6 +63,61 @@ class TimeEntryUIIT {
     void setUp() {
         when(userSettingsProvider.zoneId()).thenReturn(USER_ZONE_ID);
         when(userSettingsProvider.firstDayOfWeek()).thenReturn(DayOfWeek.MONDAY);
+    }
+
+    @Test
+    void ensureUserSearch(Page page) {
+
+        final NavigationPage navigationPage = new NavigationPage(page);
+        final TimeEntryPage timeEntryPage = new TimeEntryPage(page);
+        final LoginPage loginPage = new LoginPage(page, port);
+
+        final Locator userSearchLocator = timeEntryPage.userSearchLocator();
+        final Locator userSuggestionsLocator = timeEntryPage.userSuggestionsLocator();
+
+        // first login with boss, so user exists
+        loginPage.login(credentials("boss", "secret"));
+        // boss is allowed to search
+        assertThat(userSearchLocator).isAttached();
+        navigationPage.logout();
+
+        // then login with user (klaus), so he exists...
+        // and assert that user search is not available
+        loginPage.login(credentials("user", "secret"));
+        assertThat(userSearchLocator).not().isAttached();
+        navigationPage.logout();
+
+        // then login with office
+        // who is allowed to search and navigate
+        loginPage.login(credentials("office", "secret"));
+        assertThat(userSearchLocator).isAttached();
+
+        // focusing search input has to open the suggestions popover
+        userSearchLocator.focus();
+        assertThat(userSuggestionsLocator).isVisible();
+
+        userSearchLocator.fill("Klaus");
+        userSuggestionsLocator.getByRole(LINK, new Locator.GetByRoleOptions().setName("Klaus Müller")).click();
+
+        timeEntryPage.isVisibleForOtherPerson("Klaus Müller");
+        assertThat(userSuggestionsLocator).not().isAttached();
+
+        // search must also be available on other persons timeEntry page
+        userSearchLocator.focus();
+        userSearchLocator.fill("Max");
+        userSuggestionsLocator.getByRole(LINK, new Locator.GetByRoleOptions().setName("Max Mustermann")).click();
+
+        timeEntryPage.isVisibleForOtherPerson("Max Mustermann");
+        assertThat(userSuggestionsLocator).not().isAttached();
+
+        // ensure browser history
+        page.goBack();
+        timeEntryPage.isVisibleForOtherPerson("Klaus Müller");
+        assertThat(userSuggestionsLocator).not().isAttached();
+
+        page.goForward();
+        timeEntryPage.isVisibleForOtherPerson("Max Mustermann");
+        assertThat(userSuggestionsLocator).not().isAttached();
     }
 
     @Test

@@ -1,3 +1,5 @@
+@import "./components/time-entry-user-search.css" layer(components);
+
 @reference "tailwindcss";
 @config "../../../tailwind.config.js";
 

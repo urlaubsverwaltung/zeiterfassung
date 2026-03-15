@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
+import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.DateFormatter;
@@ -20,6 +21,10 @@ import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
@@ -49,12 +54,16 @@ import java.util.Set;
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.YELLOW;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -91,6 +100,87 @@ class TimeEntryControllerTest implements ControllerTest {
     void setUp() {
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
             userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/timeentries", "/timeentries/users/1337"})
+    void ensureTimeEntriesUserSearch(String url) throws Exception {
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final UserId jokerUserId = new UserId("batman");
+        final UserLocalId jokerUserLocalId = new UserLocalId(2L);
+        final UserIdComposite jokerUserIdComposite = new UserIdComposite(jokerUserId, jokerUserLocalId);
+
+        final User joker = new User(jokerUserIdComposite, "Jack", "Napier", new EMailAddress("joker@example.org"), Set.of());
+        when(userManagementService.findAllUsers("joker")).thenReturn(List.of(joker));
+
+        perform(
+            get(url)
+                .queryParam("query", "joker")
+                .header("Turbo-Frame", "frame-users-suggestions")
+                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("timeentries/fragments/user-search::#frame-users-suggestions"))
+            .andExpect(model().attributeDoesNotExist("userSearchEnabled"))
+            .andExpect(model().attribute("userSearchSuggestions", List.of(
+                new TimeEntryController.UserSearchSuggestion("JN", "Jack Napier", "joker@example.org", jokerUserLocalId.value())
+            )));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "/timeentries,",
+        "/timeentries, any-value",
+        "/timeentries/users/1337,",
+        "/timeentries/users/1337, any-value",
+    })
+    void ensureTimeEntriesUserSearchDoesNotWorkWithoutMatchingTurboFrame(String url, String givenTurboFrame) throws Exception {
+        mockUserSettings(ZoneOffset.UTC);
+        when(timeEntryDayService.getEntryWeekPage(any(UserLocalId.class), anyInt(), anyInt())).thenReturn(emptyTimeEntryWeekPage());
+
+        // this is only called for other persons timeentries
+        lenient().when(userManagementService.findUserByLocalId(any(UserLocalId.class)))
+            .thenReturn(Optional.of(anyUser(anyUserIdComposite(new UserId("any-user")))));
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        perform(
+            get(url)
+                .queryParam("query", "joker")
+                .header("Turbo-Frame", givenTurboFrame)
+                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("timeentries/index"))
+            .andExpect(model().attribute("userSearchEnabled", true))
+            .andExpect(model().attributeDoesNotExist("userSearchSuggestions"));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SecurityRole.class, names = {"ZEITERFASSUNG_USER", "ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL"}, mode = EXCLUDE)
+    void ensureTimeEntriesUserSearchNotAllowed(SecurityRole role) throws Exception {
+        mockUserSettings(ZoneOffset.UTC);
+        when(timeEntryDayService.getEntryWeekPage(any(UserLocalId.class), anyInt(), anyInt())).thenReturn(emptyTimeEntryWeekPage());
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        perform(
+            get("/timeentries")
+                .queryParam("query", "joker")
+                .header("Turbo-Frame", "frame-users-suggestions")
+                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, role)))
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("timeentries/index"))
+            .andExpect(model().attribute("userSearchEnabled", false))
+            .andExpect(model().attributeDoesNotExist("userSearchSuggestions"));
     }
 
     @Test
@@ -333,7 +423,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         perform(
             get("/timeentries").queryParam("year", "2025").queryParam("week", "01")
-                .header("Turbo-Frame", "any-value")
+                .header("Turbo-Frame", "frame-time-entry-weeks")
                 .with(oidcSubject(userIdComposite))
         )
             .andExpect(view().name("timeentries/index::#frame-time-entry-weeks"))
@@ -1207,6 +1297,14 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime end = ZonedDateTime.now(clock);
 
         return new TimeEntry(id, userIdComposite, "", start, end, false);
+    }
+
+    private static TimeEntryWeekPage emptyTimeEntryWeekPage() {
+        return new TimeEntryWeekPage(emptyTimeEntryWeek(), 0);
+    }
+
+    private static TimeEntryWeek emptyTimeEntryWeek() {
+        return new TimeEntryWeek(LocalDate.now(), PlannedWorkingHours.ZERO, List.of());
     }
 
     private void mockUserSettings(ZoneId zoneId) {

@@ -28,6 +28,10 @@ body {
   background-attachment: fixed;
 }
 
+[data-js-only] {
+  display: none;
+}
+
 @font-face {
   font-family: "KaushanScript";
   src:

@@ -32,7 +32,14 @@
       <script type="module" src="" th:src="@{/assets/time-entries.js}"></script>
     </th:block>
   </head>
-  <body th:replace="~{_layout::body(~{::content})}">
+  <body th:replace="~{_layout::body(~{::content}, ~{::fixed-bottom-bar})}">
+    <th:block th:ref="fixed-bottom-bar">
+      <th:block th:if="${userSearchEnabled}">
+        <div
+          th:replace="~{timeentries/fragments/user-search::user-search}"
+        ></div>
+      </th:block>
+    </th:block>
     <th:block
       th:fragment="content"
       th:with="noTimeEntriesYet=${timeEntryWeeksPage.totalTimeEntryElements eq 0}"
@@ -296,7 +303,10 @@
                             class="relative flex justify-between gap-x-2 flex-wrap text-green-900 text-sm"
                           >
                             <h4 class="font-medium flex gap-1">
-                              <span class="content-center" th:if="${day.locked}">
+                              <span
+                                class="content-center"
+                                th:if="${day.locked}"
+                              >
                                 <svg
                                   th:replace="~{icons/lock-keyhole::svg(className='w-4 h-4')}"
                                 />
