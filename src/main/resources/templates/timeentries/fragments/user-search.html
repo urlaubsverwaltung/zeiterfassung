@@ -41,6 +41,7 @@
           <ul
             th:if="${not #lists.isEmpty(userSearchSuggestions)}"
             class="xs:max-w-80 time-entry-user-search__list"
+            data-testid="user-suggestions"
           >
             <li th:each="suggestion : ${userSearchSuggestions}">
               <a
