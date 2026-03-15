@@ -34,7 +34,7 @@ export class TimeEntryUserSearch extends HTMLElement {
         // this should not be a problem in other browsers since the full page is loaded which "closes" the popover, too.
         setTimeout(() => {
           this.hideSuggestionsPopover();
-        }, 100);
+        }, 150);
       }
     };
 
