@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static com.microsoft.playwright.options.AriaRole.LINK;
+import static com.microsoft.playwright.options.LoadState.NETWORKIDLE;
 
 public class TimeEntryPage {
 
@@ -33,12 +34,14 @@ public class TimeEntryPage {
         assertThat(userSuggestionsLocator()).isVisible();
 
         userSearchLocator().fill(query);
+
+        // wait for rerendered suggestions otherwise an old link outside the DOM could be tried to be clicked.
+        // networkidle should be ok, we don't have long-running stuff
+        page.waitForLoadState(NETWORKIDLE);
     }
 
     public void selectUserSuggestion(String name) {
-        userSuggestionsLocator().getByRole(LINK, new Locator.GetByRoleOptions().setName(name))
-            // enforce click, do not wait for stable element (popover is fading to top)
-            .click(new Locator.ClickOptions().setForce(true));
+        userSuggestionsLocator().getByRole(LINK, new Locator.GetByRoleOptions().setName(name)).click();
     }
 
     public Locator userSearchLocator() {

@@ -71,47 +71,44 @@ class TimeEntryUIIT {
         final TimeEntryPage timeEntryPage = new TimeEntryPage(page);
         final LoginPage loginPage = new LoginPage(page, port);
 
-        final Locator userSearchLocator = timeEntryPage.userSearchLocator();
-        final Locator userSuggestionsLocator = timeEntryPage.userSuggestionsLocator();
-
         // first login with boss, so user exists
         loginPage.login(credentials("boss", "secret"));
         // boss is allowed to search
-        assertThat(userSearchLocator).isAttached();
+        assertThat(timeEntryPage.userSearchLocator()).isAttached();
         navigationPage.logout();
 
         // then login with user (klaus), so he exists...
         // and assert that user search is not available
         loginPage.login(credentials("user", "secret"));
-        assertThat(userSearchLocator).not().isAttached();
+        assertThat(timeEntryPage.userSearchLocator()).not().isAttached();
         navigationPage.logout();
 
         // then login with office
         // who is allowed to search and navigate
         loginPage.login(credentials("office", "secret"));
-        assertThat(userSearchLocator).isAttached();
+        assertThat(timeEntryPage.userSearchLocator()).isAttached();
 
         timeEntryPage.searchForUser("Klau");
         timeEntryPage.selectUserSuggestion("Klaus Müller");
 
         timeEntryPage.isVisibleForOtherPerson("Klaus Müller");
-        assertThat(userSuggestionsLocator).not().isAttached();
+        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
 
         // search must also be available on other persons timeEntry page
         timeEntryPage.searchForUser("Max");
         timeEntryPage.selectUserSuggestion("Max Mustermann");
 
         timeEntryPage.isVisibleForOtherPerson("Max Mustermann");
-        assertThat(userSuggestionsLocator).not().isAttached();
+        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
 
         // ensure browser history
         page.goBack();
         timeEntryPage.isVisibleForOtherPerson("Klaus Müller");
-        assertThat(userSuggestionsLocator).not().isAttached();
+        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
 
         page.goForward();
         timeEntryPage.isVisibleForOtherPerson("Max Mustermann");
-        assertThat(userSuggestionsLocator).not().isAttached();
+        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
     }
 
     @Test
