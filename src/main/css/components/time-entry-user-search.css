@@ -12,9 +12,10 @@
 
     position-anchor: --time-entry-user-search-anchor;
     position: fixed;
-    left: anchor(left);
+    left: 0.5rem;
+    right: 0.5rem;
+    width: calc(100vw - 1rem);
     top: calc(anchor(top) - 0.5rem);
-    width: anchor-size();
 
     background-color: white;
     padding: 0.5rem;
@@ -32,6 +33,12 @@
         opacity: 0;
         transform: translateY(0);
       }
+    }
+
+    @variant xs {
+      left: anchor(left);
+      right: auto;
+      width: anchor-size();
     }
   }
 

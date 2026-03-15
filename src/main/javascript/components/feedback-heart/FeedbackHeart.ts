@@ -17,7 +17,7 @@ export class FeedbackHeart extends HTMLElement {
   private render() {
     const button = document.createElement("button");
     button.setAttribute("type", "button");
-    button.classList.add("cursor-pointer");
+    button.classList.add("block", "cursor-pointer");
     button.addEventListener("click", this.unleash.bind(this));
     button.innerHTML = `
       <svg class="w-8 h-8" width="16px" height="16px" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

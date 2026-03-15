@@ -97,7 +97,7 @@
     <th:block th:replace="${additional}"></th:block>
     <th:block th:replace="~{_header-script::script}"></th:block>
   </head>
-  <body th:fragment="body(content)" class="flex flex-col">
+  <body th:fragment="body(content, fixedBottomContent)" class="flex flex-col">
     <noscript th:if="${showFeedbackKudo}">
       <p th:text="#{feedback.kudos}">Vielen Dank für dein Feedback.</p>
     </noscript>
@@ -110,6 +110,15 @@
     </div>
 
     <footer th:replace="~{_footer::footer}">footer block</footer>
+
+    <!-- right "padding" because of feedback button -->
+    <div
+      id="fixed-bottom-bar"
+      class="z-50 fixed left-0 right-0 bottom-0 flex flex-row items-center p-2 gap-2"
+      th:classappend="${#bools.isTrue(feedbackEnabled) ? 'right-9 sm:right-28' : ''}"
+    >
+      <div th:replace="${fixedBottomContent}"></div>
+    </div>
 
     <div th:replace="~{fragments/feedback-form::feedback}"></div>
 

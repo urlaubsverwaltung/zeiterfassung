@@ -16,7 +16,7 @@
       <script type="module" src="" th:src="@{/assets/reports.js}"></script>
     </th:block>
   </head>
-  <body th:replace="~{_layout::body(~{::content})}">
+  <body th:replace="~{_layout::body(~{::content}, ~{})}">
     <th:block th:fragment="content">
       <main class="grow">
         <div

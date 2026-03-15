@@ -11,7 +11,7 @@
       <script type="module" src="" th:src="@{/assets/users.js}"></script>
     </th:block>
   </head>
-  <body th:replace="~{_layout::body(~{::content})}">
+  <body th:replace="~{_layout::body(~{::content}, ~{})}">
     <th:block th:fragment="content">
       <main
         class="flex-1 flex flex-col"

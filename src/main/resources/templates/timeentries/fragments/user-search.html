@@ -9,7 +9,7 @@
     <z-time-entry-user-search
       th:fragment="user-search"
       data-js-only
-      class="time-entry-user-search"
+      class="flex-1 sm:max-w-80 time-entry-user-search"
     >
       <!-- use relative action (URL) since this form is used on different pages which all allow searching for users -->
       <form
@@ -20,7 +20,7 @@
         data-turbo-action="replace"
       >
         <label
-          class="z-50 fixed left-12 bottom-3.5 w-80 rounded border border-gray-300 bg-white flex items-center py-1 pl-4 pr-2 focus-within:outline-1"
+          class="rounded border border-gray-300 bg-white flex items-center py-1 pl-4 pr-2 focus-within:outline-1"
         >
           <svg th:replace="~{/icons/users::svg(className='w-4 h-4')}"></svg>
           <input
@@ -40,7 +40,7 @@
         <turbo-frame id="frame-users-suggestions" refresh="morph">
           <ul
             th:if="${not #lists.isEmpty(userSearchSuggestions)}"
-            class="time-entry-user-search__list"
+            class="xs:max-w-80 time-entry-user-search__list"
           >
             <li th:each="suggestion : ${userSearchSuggestions}">
               <a
