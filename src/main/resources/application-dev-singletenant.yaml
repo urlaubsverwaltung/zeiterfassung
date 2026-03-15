@@ -12,6 +12,10 @@ zeiterfassung:
     mode: single
     single:
       default-tenant-id: default
+  info-banner:
+    enabled: true
+    text:
+      de: "Development single tenant"
 
 launchpad:
   tenant:
@@ -54,16 +58,5 @@ spring:
             issuer-uri: http://localhost:8090/realms/zeiterfassung-realm
   thymeleaf:
     cache: false
-  web:
-    resources:
-      cache:
-        cachecontrol:
-          cache-public: false
-          max-age: 0
-      chain:
-        enabled: false
-        strategy:
-          content:
-            enabled: false
   autoconfigure:
     exclude:
