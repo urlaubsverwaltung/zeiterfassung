@@ -72,8 +72,10 @@ public class OvertimePublisher {
             // currently we just know whether overtime is allowed or not.
             // this may change in the future to have a date range for this info or more granular stuff.
             final OvertimeAccount overtimeAccount = overtimeAccountByUserId.get(userIdComposite);
-            if (overtimeAccount.isAllowed() && !overtimeHours.durationInMinutes().isZero()) {
+            if (overtimeAccount.isAllowed()) {
                 publishUpdated(userIdComposite, event.date(), overtimeHours);
+            } else {
+                LOG.info("Overtime not allowed, ignore DayLockedEvent for User {}", userIdComposite);
             }
         });
     }
@@ -83,11 +85,6 @@ public class OvertimePublisher {
 
         if (!event.locked()) {
             LOG.debug("Ignore not locked TimeEntryCreatedEvent.");
-            return;
-        }
-
-        if (event.workDuration().durationInMinutes().isZero()) {
-            LOG.info("Ignore TimeEntryCreatedEvent. WorkDuration is zero.");
             return;
         }
 
@@ -169,8 +166,6 @@ public class OvertimePublisher {
 
         final boolean locked = event.locked();
         final LocalDate date = event.date();
-        final WorkDuration workDuration = event.workDuration();
-
         if (!locked) {
             LOG.info("Ignore not locked TimeEntryDeleteEvent.");
             return;
@@ -184,11 +179,6 @@ public class OvertimePublisher {
         // otherwise we would have to check the date here!
         if (!overtimeAccount.isAllowed()) {
             LOG.info("Ignore TimeEntryDeletedEvent. User {} overtime not allowed.", userIdComposite);
-            return;
-        }
-
-        if (workDuration.durationInMinutes().isZero()) {
-            LOG.info("Ignore TimeEntryDeleted Event. WorkDuration is zero.");
             return;
         }
 
