@@ -8,6 +8,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static com.microsoft.playwright.options.AriaRole.LINK;
+
 public class TimeEntryPage {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -17,6 +20,33 @@ public class TimeEntryPage {
 
     public TimeEntryPage(Page page) {
         this.page = page;
+    }
+
+    public void isVisibleForOtherPerson(String username) {
+        assertThat(page.getByText("Neuen Zeiteintrag erfassen für %s".formatted(username))).isVisible();
+    }
+
+    public void searchForUser(String query) {
+
+        // search input focus opens the suggestions popover
+        userSearchLocator().focus();
+        assertThat(userSuggestionsLocator()).isVisible();
+
+        userSearchLocator().fill(query);
+    }
+
+    public void selectUserSuggestion(String name) {
+        userSuggestionsLocator().getByRole(LINK, new Locator.GetByRoleOptions().setName(name))
+            // enforce click, do not wait for stable element (popover is fading to top)
+            .click(new Locator.ClickOptions().setForce(true));
+    }
+
+    public Locator userSearchLocator() {
+        return page.locator("input[name=query]");
+    }
+
+    public Locator userSuggestionsLocator() {
+        return page.getByTestId("user-suggestions");
     }
 
     public void fillNewTimeEntry(LocalDate date, LocalTime start, LocalTime end, String comment) {
