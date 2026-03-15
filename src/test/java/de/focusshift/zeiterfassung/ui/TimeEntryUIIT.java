@@ -66,6 +66,10 @@ class TimeEntryUIIT {
 
     @Test
     void ensureUserSearch(Page page) {
+        if ("firefox".equals(System.getProperty("browser"))) {
+            System.out.println(">> IGNORE 'ensure user search' ui test, css anchor not supported in firefox 146...");
+            return;
+        }
 
         final NavigationPage navigationPage = new NavigationPage(page);
         final TimeEntryPage timeEntryPage = new TimeEntryPage(page);
