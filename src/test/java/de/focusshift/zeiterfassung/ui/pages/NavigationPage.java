@@ -56,11 +56,17 @@ public class NavigationPage {
     private record AvatarMenu(Page page) {
 
         void logout() {
+
+            page.waitForLoadState(DOMCONTENTLOADED);
+
             page.getByTestId("avatar").click();
             final Locator logout = page.getByTestId("logout");
             logout.waitFor(new Locator.WaitForOptions().setState(VISIBLE));
             logout.click();
-            page.waitForLoadState(DOMCONTENTLOADED);
+
+            page.context().clearCookies();
+            page.context().clearPermissions();
+
         }
     }
 }
