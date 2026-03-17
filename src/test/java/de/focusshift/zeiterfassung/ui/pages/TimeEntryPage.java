@@ -8,6 +8,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static com.microsoft.playwright.options.AriaRole.LINK;
+import static com.microsoft.playwright.options.LoadState.NETWORKIDLE;
+
 public class TimeEntryPage {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -17,6 +21,35 @@ public class TimeEntryPage {
 
     public TimeEntryPage(Page page) {
         this.page = page;
+    }
+
+    public void isVisibleForOtherPerson(String username) {
+        assertThat(page.getByText("Neuen Zeiteintrag erfassen für %s".formatted(username))).isVisible();
+    }
+
+    public void searchForUser(String query) {
+
+        // search input focus opens the suggestions popover
+        userSearchLocator().focus();
+        assertThat(userSuggestionsLocator()).isVisible();
+
+        userSearchLocator().fill(query);
+
+        // wait for rerendered suggestions otherwise an old link outside the DOM could be tried to be clicked.
+        // networkidle should be ok, we don't have long-running stuff
+        page.waitForLoadState(NETWORKIDLE);
+    }
+
+    public void selectUserSuggestion(String name) {
+        userSuggestionsLocator().getByRole(LINK, new Locator.GetByRoleOptions().setName(name)).click();
+    }
+
+    public Locator userSearchLocator() {
+        return page.locator("input[name=query]");
+    }
+
+    public Locator userSuggestionsLocator() {
+        return page.getByTestId("user-suggestions");
     }
 
     public void fillNewTimeEntry(LocalDate date, LocalTime start, LocalTime end, String comment) {

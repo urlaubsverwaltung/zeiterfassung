@@ -60,6 +60,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 class TimeEntryController implements HasTimeClock, HasLaunchpad {
 
     private static final String IS_REDIRECTED = "isRedirected";
+    private static final String FRAME_USERS_SUGGESTION = "frame-users-suggestions";
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
@@ -92,37 +93,45 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         this.clock = clock;
     }
 
+    record UserSearchSuggestion(String initials, String name, String email, Long userLocalId) {}
+
     @GetMapping("/timeentries")
     public ModelAndView timeEntries(@RequestParam(value = "year", required = false) Integer year,
                                     @RequestParam(value = "week", required = false) Integer weekOfYear,
+                                    @RequestParam(value = "query", required = false) String userQuery,
                                     @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
                                     Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
 
-        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
-        final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
-
-        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, currentUserLocalId, currentUser, model, locale, turboFrame);
+        return userSuggestionsFrame(userQuery, turboFrame, model, currentUser).orElseGet(() -> {
+            final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
+            final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
+            return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, currentUserLocalId, currentUser, model, locale, turboFrame);
+        });
     }
 
     @GetMapping("/timeentries/users/{ownerLocalIdValue}")
     public ModelAndView userTimeEntries(@PathVariable Long ownerLocalIdValue,
                                         @RequestParam(value = "year", required = false) Integer year,
                                         @RequestParam(value = "week", required = false) Integer weekOfYear,
+                                        @RequestParam(value = "query", required = false) String userQuery,
                                         @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
                                         Model model, Locale locale, @CurrentUser CurrentOidcUser currentUser) {
 
-        assertTimeEntryAccess(currentUser, ownerLocalIdValue);
+        return userSuggestionsFrame(userQuery, turboFrame, model, currentUser).orElseGet(() -> {
 
-        final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
-        final UserLocalId ownerUserLocalId = new UserLocalId(ownerLocalIdValue);
-        prepareViewedUser(model, ownerUserLocalId);
+            assertTimeEntryAccess(currentUser, ownerLocalIdValue);
 
-        return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerUserLocalId, currentUser, model, locale, turboFrame);
+            final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
+            final UserLocalId ownerUserLocalId = new UserLocalId(ownerLocalIdValue);
+            prepareViewedUser(model, ownerUserLocalId);
+
+            return prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerUserLocalId, currentUser, model, locale, turboFrame);
+        });
     }
 
     private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, CurrentOidcUser currentUser, Model model, Locale locale, String turboFrame) {
 
-        if (!model.containsAttribute(IS_REDIRECTED) && hasText(turboFrame)) {
+        if (!model.containsAttribute(IS_REDIRECTED) && "frame-time-entry-weeks".equals(turboFrame)) {
             prepareTimeEntriesForYearAndWeekOfYear(yearAndWeek, ownerLocalId, model, locale, currentUser);
             model.addAttribute("turboStreamsEnabled", true);
             return new ModelAndView("timeentries/index::#frame-time-entry-weeks");
@@ -139,7 +148,13 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         viewHelper.addTimeEntryToModel(model, timeEntryDTO);
         addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale, currentUser);
 
+        model.addAttribute("userSearchEnabled", isUserAllowedToSearch(currentUser));
+
         return new ModelAndView("timeentries/index");
+    }
+
+    private boolean isUserAllowedToSearch(CurrentOidcUser user) {
+        return user.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
     }
 
     @PostMapping("/timeentries")
@@ -187,7 +202,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         }
 
         final String userTimeEntriesUri = fromMethodCall(on(TimeEntryController.class)
-            .userTimeEntries(ownerLocalIdValue, null, null, null, model, locale, currentUser))
+            .userTimeEntries(ownerLocalIdValue, null, null, null, null, model, locale, currentUser))
             .build().toUriString();
 
         LOG.info("User {} created new timeEntry for user {}. Redirecting to {}.", currentUserLocalId, ownerLocalId, userTimeEntriesUri);
@@ -394,11 +409,31 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad {
         }
 
         final String userTimeEntriesUri = fromMethodCall(on(TimeEntryController.class)
-            .userTimeEntries(ownerLocalIdValue, year, weekOfYear, null, model, locale, currentUser))
+            .userTimeEntries(ownerLocalIdValue, year, weekOfYear, null, null, model, locale, currentUser))
             .build().toUriString();
 
         LOG.info("User {} deleted timeEntry {} of user {}. Redirecting to {}.", currentUserLocalId, timeEntryId, ownerLocalId, userTimeEntriesUri);
         return new ModelAndView(new RedirectView(userTimeEntriesUri));
+    }
+
+    private Optional<ModelAndView> userSuggestionsFrame(String userQuery, String turboFrame, Model model, CurrentOidcUser currentUser) {
+        // check for turbo-frame since searching users is only possible with js
+        if (FRAME_USERS_SUGGESTION.equals(turboFrame) && isUserAllowedToSearch(currentUser)) {
+            // TODO paginated search
+            final List<User> users = userManagementService.findAllUsers(userQuery);
+            final List<UserSearchSuggestion> suggestions = users.stream()
+                // do not include logged-in user in suggestions
+                .filter(user -> !user.userIdComposite().equals(currentUser.getUserIdComposite()))
+                .limit(6)
+                .map(user -> new UserSearchSuggestion(user.initials(), user.fullName(), user.email().value(), user.userLocalId().value()))
+                .toList();
+            model.addAttribute("userSearchSuggestions", suggestions);
+
+            // hotwired/turbo partially updates the frame only
+            return Optional.of(new ModelAndView("timeentries/fragments/user-search::#" + FRAME_USERS_SUGGESTION));
+        }
+
+        return Optional.empty();
     }
 
     private void prepareViewedUser(Model model, UserLocalId userLocalId) {
