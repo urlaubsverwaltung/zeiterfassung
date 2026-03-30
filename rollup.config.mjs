@@ -5,6 +5,10 @@ import commonjs from "@rollup/plugin-commonjs";
 import esbuild from "rollup-plugin-esbuild";
 import glob from "fast-glob";
 
+const NODE_ENV = process.env.NODE_ENV;
+const MODE = process.env.MODE || NODE_ENV || "development";
+const isProduction = MODE === "production";
+
 const paths = {
   src: "src/main/javascript",
   dist: "target/classes/static/assets",
@@ -19,6 +23,7 @@ export default {
     dir: paths.dist,
     format: "es",
     sourcemap: true,
+    entryFileNames: isProduction ? `[name].[hash].js` : `[name].js`,
     manualChunks: {
       "duet-date-picker": [
         "@duetds/date-picker",
@@ -42,7 +47,7 @@ export default {
     commonjs(),
     esbuild({
       sourceMap: true,
-      minify: process.env.NODE_ENV === "production",
+      minify: isProduction,
     }),
   ],
 };
