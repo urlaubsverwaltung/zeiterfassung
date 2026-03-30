@@ -1,4 +1,4 @@
-import { preserveScrollOnce } from "../../turbo";
+import { preserveScrollOnce } from "./modal-preserve-scroll-once";
 
 const MODAL_TURBO_FRAME = "#frame-modal";
 

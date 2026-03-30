@@ -2,26 +2,11 @@ import * as Turbo from "@hotwired/turbo";
 import {
   onTurboClick,
   onTurboFetchRequestError,
-  onTurboRender,
   onTurboSubmitStart,
 } from "./turbo-events";
 
 // opt-in to turbo with `data-turbo="true"`
 Turbo.session.drive = false;
-
-/**
- * Locks the scroll position for the next turbo rendering.
- * Useful when called before window.history.back() for instance.
- */
-export function preserveScrollOnce() {
-  onTurboRender(
-    function () {
-      // @ts-expect-error it exists
-      Turbo.navigator.currentVisit.scrolled = true;
-    },
-    { once: true },
-  );
-}
 
 onTurboClick(function (event) {
   maybeToggleAjaxLoading(event.target as HTMLElement);
