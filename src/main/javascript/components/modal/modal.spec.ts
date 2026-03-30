@@ -9,9 +9,9 @@ import {
   vi,
   vitest,
 } from "vitest";
-import { preserveScrollOnce } from "../../turbo";
+import { preserveScrollOnce } from "./modal-preserve-scroll-once";
 
-vi.mock("../../turbo");
+vi.mock("./modal-preserve-scroll-once");
 
 describe("modal", () => {
   type Listener<E> = (event: Partial<E>) => void;
