@@ -1,6 +1,5 @@
-package de.focusshift.zeiterfassung.user;
+package de.focusshift.zeiterfassung.web;
 
-import de.focusshift.zeiterfassung.web.MenuProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
