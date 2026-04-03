@@ -1,5 +1,4 @@
 import "../components/details-dropdown";
-import "../components/feedback-form";
 import "../components/info-banner";
 import { enhanceModal } from "../components/modal";
 import "../components/navigation";

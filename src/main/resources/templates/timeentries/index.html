@@ -42,7 +42,10 @@
       th:with="noTimeEntriesYet=${timeEntryWeeksPage.totalTimeEntryElements eq 0}"
     >
       <main>
-        <div th:if="${userSearchEnabled}" class="fixed bottom-0 p-4 z-[999999]">
+        <div
+          th:if="${userSearchEnabled}"
+          class="fixed bottom-0 left-0 right-0 sm:left-auto sm:right-auto p-4 z-[999999]"
+        >
           <div
             th:replace="~{timeentries/fragments/user-search::user-search}"
           ></div>

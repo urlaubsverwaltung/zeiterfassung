@@ -150,13 +150,12 @@
     >
       <div class="@container/main">
         <main th:replace="${content}">content block</main>
+        <div th:replace="~{fragments/feedback-form::feedback}"></div>
       </div>
       <div>
         <footer th:replace="~{_footer::footer}">footer block</footer>
       </div>
     </div>
-
-    <div th:replace="~{fragments/feedback-form::feedback}"></div>
 
     <div id="body-overlay" class="body-overlay"></div>
     <th:block
