@@ -48,8 +48,10 @@ body {
   }
 }
 
-[data-js-only] {
-  display: none;
+@layer base {
+  [data-js-only] {
+    display: none;
+  }
 }
 
 @font-face {
