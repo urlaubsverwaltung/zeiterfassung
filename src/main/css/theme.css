@@ -1,9 +1,16 @@
-@import "../config.css";
+@theme {
+  /* 26.25rem = 420px (16px base), tailwind uses rem, so we are */
+  --breakpoint-xxs: 26.25rem;
+  /* 30rem = 480px (16px base), tailwind uses rem, so we are */
+  --breakpoint-xs: 30rem;
+  --breakpoint-2xl: 1440px;
+  /* TODO maybe refactor breakpoint-3xl to tailwinds 2xl? what happen with currently used 2xl? */
+  --breakpoint-3xl: 1600px;
+
+  --font-logo: "KaushanScript";
+}
 
 :root {
-  --navigation-header-height: 3rem;
-  --z-index-tooltip: 99999; /* tooltips shown on pointer hover should always be on top */
-
   /* 500 */
   --absence-color-GRAY: #6b7280;
   --absence-color-ORANGE: #f97316;
@@ -14,21 +21,6 @@
   --absence-color-VIOLET: #8b5cf6;
   --absence-color-PINK: #ec4899;
   --absence-color-RED: #991b1b; /* sick-note, red-800 */
-}
-
-html {
-  height: --webkit-fill-available;
-}
-
-body {
-  min-height: 100vh;
-  min-height: --webkit-fill-available;
-  background-image: linear-gradient(#ffffff, #fafafa);
-  background-attachment: fixed;
-}
-
-[data-js-only] {
-  display: none;
 }
 
 @font-face {

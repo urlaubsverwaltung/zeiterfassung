@@ -1,5 +1,4 @@
-@reference "tailwindcss";
-@config "../../../../tailwind.config.js";
+@reference "../config.css";
 
 @layer utilities {
   /* must be utilities layer to override element classes...  */

@@ -1,4 +1,4 @@
-@reference "tailwindcss";
+@reference "../config.css";
 
 @layer utilities {
   input.invalid {

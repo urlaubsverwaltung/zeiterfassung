@@ -1,16 +1,16 @@
-@import "../components/ajax-loader.css";
-@import "../components/avatar-group.css";
-@import "../components/body-overlay.css";
-@import "../components/checkbox-switch.css";
-@import "../components/info-banner.css";
-@import "../components/modal.css";
-@import "../components/feedback.css";
-@import "../components/feedback-heart.css";
-@import "../components/navigation.css";
-@import "../components/time-clock.css";
-@import "../components/tooltip.css";
+@import "../components/ajax-loader.css" layer(components);
+@import "../components/avatar-group.css" layer(components);
+@import "../components/body-overlay.css" layer(components);
+@import "../components/checkbox-switch.css" layer(components);
+@import "../components/info-banner.css" layer(components);
+@import "../components/modal.css" layer(components);
+@import "../components/feedback.css" layer(components);
+@import "../components/feedback-heart.css" layer(components);
+@import "../components/navigation.css" layer(components);
+@import "../components/time-clock.css" layer(components);
+@import "../components/tooltip.css" layer(components);
 
-@reference "tailwindcss";
+@reference "../config.css";
 
 @layer components {
   .sloth-background {

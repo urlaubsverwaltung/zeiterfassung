@@ -1,5 +1,4 @@
-@reference "tailwindcss";
-@config "../../../../tailwind.config.js";
+@reference "../config.css";
 
 @layer components {
   .report-actions {

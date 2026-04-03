@@ -1,31 +1,26 @@
-@reference "tailwindcss";
-@config "../../../../tailwind.config.js";
+/* avoid shortly visible tooltip until js has been loaded */
+z-tooltip:not([data-show]) {
+  @apply sr-only;
+}
 
-@layer components {
-  /* avoid shortly visible tooltip until js has been loaded */
-  z-tooltip:not([data-show]) {
-    @apply sr-only;
-  }
+[role="tooltip"] {
+  @apply py-1 px-2;
+  @apply text-xs;
+  @apply font-bold;
+  @apply text-white;
+  @apply bg-gray-800;
+  @apply rounded-sm;
+  @apply whitespace-nowrap;
+  @apply invisible;
+  @apply opacity-0;
+  @apply transition-opacity;
+  @apply duration-200;
+  @apply delay-300;
+  @apply ease-in;
 
-  [role="tooltip"] {
-    @apply py-1 px-2;
-    @apply text-xs;
-    @apply font-bold;
-    @apply text-white;
-    @apply bg-gray-800;
-    @apply rounded-sm;
-    @apply whitespace-nowrap;
-    @apply invisible;
-    @apply opacity-0;
-    @apply transition-opacity;
-    @apply duration-200;
-    @apply delay-300;
-    @apply ease-in;
-
-    &[data-show] {
-      @apply visible;
-      @apply opacity-100;
-      z-index: var(--z-index-tooltip);
-    }
+  &[data-show] {
+    @apply visible;
+    @apply opacity-100;
+    z-index: var(--z-index-tooltip);
   }
 }

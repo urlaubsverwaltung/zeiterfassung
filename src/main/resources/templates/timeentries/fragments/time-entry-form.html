@@ -54,7 +54,7 @@
               >
                 <span
                   data-day
-                  class="rounded-full w-6 h-6 p-5 flex items-center justify-center bg-timeslot-form-day text-black mr-4 font-bold"
+                  class="rounded-full w-6 h-6 p-5 flex items-center justify-center bg-(--timeslot-form-day-background-color) timeslot-form-day text-black mr-4 font-bold"
                   th:text="${#temporals.day(timeEntry.date)}"
                 >
                   21
@@ -80,7 +80,7 @@
             </div>
             <div class="time-entry-box__input__fields">
               <svg
-                class="hidden md:block h-full text-timeslot-form-datepicker-background border border-timeslot-form border-l-0 border-r-0"
+                class="hidden md:block h-full text-(--timeslot-form-datepicker-background-color) border border-(--timeslot-form-border-color) border-l-0 border-r-0"
                 width="28"
                 height="76"
                 viewBox="0 0 28 76"
@@ -96,7 +96,7 @@
                 />
               </svg>
               <div
-                class="ajax-loader flex-1 border md:border-l-0 border-timeslot-form rounded-b-3xl md:rounded-bl-none md:rounded-r-3xl flex items-center"
+                class="ajax-loader flex-1 border md:border-l-0 border-(--timeslot-form-border-color) rounded-b-3xl md:rounded-bl-none md:rounded-r-3xl flex items-center"
               >
                 <div class="time-entry-cell-container">
                   <div class="time-entry-cell time-entry-cell__comment">

@@ -1,7 +1,6 @@
 @import "../components/time-entry-user-search.css" layer(components);
 
-@reference "tailwindcss";
-@config "../../../../tailwind.config.js";
+@reference "../config.css";
 
 @layer theme {
   :root {
@@ -187,8 +186,6 @@
     --timeslot-form-day-color: var(--color-white);
     --timeslot-form-day-background-color: var(--color-blue-50);
     --timeslot-form-border-color: var(--color-blue-700);
-    --timeslot-form-input-color: var(--color-gray-900);
-    --timeslot-form-label-color: var(--color-blue-700);
   }
 
   .timeslot-form-existing {
@@ -197,8 +194,6 @@
     --timeslot-form-day-color: var(--color-black);
     --timeslot-form-day-background-color: var(--color-white);
     --timeslot-form-border-color: var(--color-gray-200);
-    --timeslot-form-input-color: var(--color-gray-900);
-    --timeslot-form-label-color: var(--color-gray-500);
   }
 
   .time-entry-slot-form--disabled {
@@ -207,8 +202,6 @@
     --timeslot-form-day-color: var(--color-gray-500);
     --timeslot-form-day-background-color: var(--color-gray-50);
     --timeslot-form-border-color: var(--color-gray-200);
-    --timeslot-form-input-color: var(--color-gray-50);
-    --timeslot-form-label-color: var(--color-gray-50);
   }
 
   .timeslot-form-existing input.edited {

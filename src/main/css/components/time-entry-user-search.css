@@ -1,5 +1,3 @@
-@reference "tailwindcss";
-
 .time-entry-user-search {
   label {
     anchor-name: --time-entry-user-search-anchor;
