@@ -1,6 +1,8 @@
 .feedback-floating-heart {
-  background-color: red;
   position: fixed;
+  position-anchor: --feedback-heart-anchor;
+
+  background-color: red;
   height: 32px;
   min-height: 16px;
   width: 32px;
@@ -20,35 +22,35 @@
   0% {
     opacity: 0;
     bottom: 0%;
-    left: 1em;
+    left: calc(anchor(left) + 1em);
   }
   10% {
     opacity: 1;
     bottom: 20%;
-    left: 1.6em;
+    left: calc(anchor(left) + 1.6em);
     z-index: 999;
   }
   20% {
     bottom: 40%;
-    left: 2.4em;
+    left: calc(anchor(left) + 2.4em);
   }
   30% {
     bottom: 60%;
-    left: 1.8em;
+    left: calc(anchor(left) + 1.8em);
   }
   40% {
     opacity: 1;
     bottom: 80%;
-    left: 2em;
+    left: calc(anchor(left) + 2em);
   }
   48% {
     opacity: 0;
     bottom: 100%;
-    left: 2.6em;
+    left: calc(anchor(left) + 2.6em);
   }
   100% {
     opacity: 0;
     bottom: 100%;
-    left: 2.4em;
+    left: calc(anchor(left) + 2.4em);
   }
 }

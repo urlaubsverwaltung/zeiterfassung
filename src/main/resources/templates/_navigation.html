@@ -43,21 +43,24 @@
               data-sticky="bottom"
               class="navigation-inner__bottom flex flex-col gap-2"
             >
-              <a
-                class="navigation-link flex items-center gap-2"
-                th:href="${menuHelpUrl}"
-                target="_blank"
-                rel="noopener"
-              >
-                <span
-                  class="whitespace-nowrap text-ellipsis overflow-hidden"
-                  style="min-width: 0"
-                  th:text="#{nav.help.title}"
-                ></span>
-                <svg
-                  th:replace="~{icons/external-link::svg(className='h-4 w-4')}"
-                ></svg>
-              </a>
+              <div class="flex items-center gap-4">
+                <a
+                  class="flex-1 navigation-link flex items-center gap-2"
+                  th:href="${menuHelpUrl}"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <span
+                    class="whitespace-nowrap text-ellipsis overflow-hidden"
+                    style="min-width: 0"
+                    th:text="#{nav.help.title}"
+                  ></span>
+                  <svg
+                    th:replace="~{icons/external-link::svg(className='h-4 w-4')}"
+                  ></svg>
+                </a>
+                <div id="feedback-heart-container"></div>
+              </div>
             </z-sticky>
           </div>
         </nav>

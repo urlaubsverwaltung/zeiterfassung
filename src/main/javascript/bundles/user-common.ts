@@ -17,7 +17,7 @@ initPreventDoubleClickSubmit();
 initAutosubmit();
 
 const feedbackHeart = new FeedbackHeart();
-document.querySelector("#fixed-bottom-bar")?.prepend(feedbackHeart);
+document.querySelector("#feedback-heart-container")?.replaceWith(feedbackHeart);
 
 if (globalThis.zeiterfassung.feedback.showFeedbackKudo) {
   feedbackHeart.unleash();
