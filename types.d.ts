@@ -13,6 +13,7 @@ declare global {
   };
 
   var __datefnsLocale__: Locale;
+  var injectStyle: (style: string) => HTMLElement;
 }
 
 // eslint-disable-next-line unicorn/require-module-specifiers

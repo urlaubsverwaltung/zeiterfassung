@@ -1,7 +1,9 @@
 import "../components/details-dropdown";
 import "../components/feedback-form";
+import "../components/info-banner";
 import { enhanceModal } from "../components/modal";
 import "../components/navigation";
+import "../components/sticky";
 import "../components/time-clock";
 import "../components/tooltip";
 import {

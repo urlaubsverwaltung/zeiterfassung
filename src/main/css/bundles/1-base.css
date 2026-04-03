@@ -1,6 +1,9 @@
 @import "../config.css";
 
 :root {
+  /* info-banner is optional and value is overridden by javascript with real height on runtime. as we don't know the content yet... */
+  --info-banner-height: 0;
+
   --navigation-header-height: 3rem;
   --z-index-tooltip: 99999; /* tooltips shown on pointer hover should always be on top */
 
@@ -17,14 +20,32 @@
 }
 
 html {
-  height: --webkit-fill-available;
+  height: -webkit-fill-available;
 }
 
 body {
   min-height: 100vh;
-  min-height: --webkit-fill-available;
-  background-image: linear-gradient(#ffffff, #fafafa);
-  background-attachment: fixed;
+  min-height: -webkit-fill-available;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  grid-template-columns: auto 1fr auto auto auto;
+  grid-template-areas:
+    "banner banner banner banner banner"
+    "navigation _ timeclock launchpad-app avatar"
+    "content content content content content";
+  overflow: hidden;
+  height: 100vh;
+}
+
+@variant desktop {
+  body {
+    grid-template-rows: auto auto 1fr;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "banner banner banner"
+      "launchpad-app timeclock avatar"
+      "navigation content content";
+  }
 }
 
 [data-js-only] {

@@ -1,15 +1,3 @@
-@theme {
-  /* 26.25rem = 420px (16px base), tailwind uses rem, so we are */
-  --breakpoint-xxs: 26.25rem;
-  /* 30rem = 480px (16px base), tailwind uses rem, so we are */
-  --breakpoint-xs: 30rem;
-  --breakpoint-2xl: 1440px;
-  /* TODO maybe refactor breakpoint-3xl to tailwinds 2xl? what happen with currently used 2xl? */
-  --breakpoint-3xl: 1600px;
-
-  --font-logo: "KaushanScript";
-}
-
 :root {
   /* 500 */
   --absence-color-GRAY: #6b7280;

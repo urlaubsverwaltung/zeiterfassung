@@ -17,6 +17,10 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 public interface ControllerTest {
 
+    default UserIdComposite anyUserIdComposit() {
+        return new UserIdComposite(new UserId("uuid"), new UserLocalId(1L));
+    }
+
     /**
      * Oidc Login using the given subject.
      *

@@ -51,8 +51,8 @@ class FrameDataProvider {
         final String url = request.getRequestURI();
 
         final String timeentries = "/timeentries";
-        final boolean timeentriesActive = url.startsWith(timeentries);
-        final AriaCurrent timeentriesCurrent = (timeentriesActive && !url.startsWith("/timeentries/users")) ? AriaCurrent.PAGE : AriaCurrent.FALSE;
+        final boolean timeentriesActive = url.equals(timeentries);
+        final AriaCurrent timeentriesCurrent = timeentriesActive ? AriaCurrent.PAGE : AriaCurrent.FALSE;
 
         final String report = "/report";
         final boolean reportActive = url.startsWith(report);
@@ -81,8 +81,10 @@ class FrameDataProvider {
         return new NavigationDto(items);
     }
 
-    private static SignedInUserDto oidcUserToSignedInUserDto(OidcUser oidcUser) {
-        final String fullName = oidcUser.getUserInfo().getFullName();
-        return new SignedInUserDto(fullName, generateInitials(fullName));
+    private static SignedInUserDto oidcUserToSignedInUserDto(CurrentOidcUser user) {
+        final Long id = user.getUserLocalId().orElseThrow().value();
+        final String fullName = user.getFullName();
+        final String initials = generateInitials(fullName);
+        return new SignedInUserDto(id, fullName, initials);
     }
 }

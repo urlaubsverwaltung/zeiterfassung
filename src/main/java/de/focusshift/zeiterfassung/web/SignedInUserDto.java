@@ -1,4 +1,4 @@
 package de.focusshift.zeiterfassung.web;
 
-record SignedInUserDto(String fullName, String initials) {
+record SignedInUserDto(Long id, String fullName, String initials) {
 }

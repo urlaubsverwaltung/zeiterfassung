@@ -105,11 +105,51 @@
     <div th:replace="~{_info-banner::banner}"></div>
     <nav th:replace="~{_navigation::nav}">navigation block</nav>
 
-    <div class="pb-16 flex-1 flex flex-col">
-      <div th:replace="${content}">content block</div>
+    <div
+      class="flex items-center gap-2 p-2 lg:pl-6"
+      style="grid-area: launchpad-app"
+    >
+      <div th:replace="~{launchpad/launchpad::launchpad}"></div>
+      <a
+        href="/"
+        class="hidden desktop:block font-logo text-xl font-medium mr-8 md:mr-16 text-zinc-900 no-underline"
+        th:text="#{navigation.zeiterfassung}"
+      >
+        Zeiterfassung
+      </a>
     </div>
 
-    <footer th:replace="~{_footer::footer}">footer block</footer>
+    <div
+      th:fragment="row"
+      class="flex items-center gap-4 justify-end p-2 lg:pr-4 bg-white"
+      style="grid-area: timeclock"
+    >
+      <div th:replace="~{_top::timeclock}"></div>
+    </div>
+
+    <div
+      th:fragment="row"
+      class="flex items-center gap-4 justify-end p-2 lg:pr-6 bg-white"
+      style="grid-area: avatar"
+    >
+      <div th:replace="~{_top::avatar}"></div>
+    </div>
+
+    <div
+      class="grid overflow-y-scroll top-bar-content-separator bg-linear-to-b from-white to-[#fafafa]"
+      style="
+        grid-area: content;
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+      "
+    >
+      <div class="@container/main">
+        <main th:replace="${content}">content block</main>
+      </div>
+      <div>
+        <footer th:replace="~{_footer::footer}">footer block</footer>
+      </div>
+    </div>
 
     <!-- right "padding" because of feedback button -->
     <div

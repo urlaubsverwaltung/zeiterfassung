@@ -14,7 +14,7 @@
   <body th:replace="~{_layout::body(~{::content}, ~{})}">
     <th:block th:fragment="content">
       <main
-        class="flex-1 flex flex-col"
+        class="content-container content--max-w flex flex-col"
         data-turbo="true"
         th:data-selected-user="${selectedUser == null ? '' :  selectedUser.id}"
       >
@@ -144,15 +144,6 @@
             </div>
             <turbo-frame class="flex-1" id="person-frame">
               <th:block th:if="${selectedUser}">
-                <turbo-stream
-                  target="main-navigation-link-users"
-                  action="replace"
-                >
-                  <!-- replace main-navigation-link to update aria-current -->
-                  <template
-                    th:insert="~{_navigation::#main-navigation-link-users}"
-                  ></template>
-                </turbo-stream>
                 <turbo-stream
                   th:each="user : ${users}"
                   th:target="${'user-element-link-' + user.id}"
