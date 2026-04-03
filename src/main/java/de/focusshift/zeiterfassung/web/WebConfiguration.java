@@ -8,19 +8,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 class WebConfiguration implements WebMvcConfigurer {
 
-    private final AuthoritiesModelProvider authoritiesModelProvider;
     private final DoubleFormatter doubleFormatter;
     private final CurrentTenantInterceptor currentTenantInterceptor;
 
-    WebConfiguration(AuthoritiesModelProvider authoritiesModelProvider, CurrentTenantInterceptor currentTenantInterceptor, DoubleFormatter doubleFormatter) {
-        this.authoritiesModelProvider = authoritiesModelProvider;
+    WebConfiguration(CurrentTenantInterceptor currentTenantInterceptor, DoubleFormatter doubleFormatter) {
         this.currentTenantInterceptor = currentTenantInterceptor;
         this.doubleFormatter = doubleFormatter;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(authoritiesModelProvider);
         registry.addInterceptor(currentTenantInterceptor);
     }
 

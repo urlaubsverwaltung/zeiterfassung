@@ -18,20 +18,9 @@ class WebConfigurationTest {
     private WebConfiguration sut;
 
     @Mock
-    private AuthoritiesModelProvider authoritiesModelProvider;
-    @Mock
     private DoubleFormatter doubleFormatter;
     @Mock
     private CurrentTenantInterceptor currentTenantInterceptor;
-
-    @Test
-    void ensureThatAuthoritiesModelProviderWasAdded() {
-
-        final InterceptorRegistry registry = mock(InterceptorRegistry.class);
-        sut.addInterceptors(registry);
-
-        verify(registry).addInterceptor(authoritiesModelProvider);
-    }
 
     @Test
     void ensureThatCurrentTenantInterceptorWasAdded() {

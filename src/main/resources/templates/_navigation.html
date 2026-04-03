@@ -35,63 +35,18 @@
                 <ul
                   class="flex flex-col space-y-8 lg:space-x-8 lg:space-y-0 lg:flex-row"
                 >
-                  <li>
+                  <li th:each="link : ${navigation.items}">
                     <a
-                      href="#"
-                      th:href="@{/timeentries}"
                       class="flex items-center main-nav-link"
-                      th:classappend="${currentRequestURI.startsWith('/timeentries') ? 'current' : ''}"
-                      th:aria-current="${currentRequestURI.startsWith('/timeentries') && !currentRequestURI.startsWith('/timeentries/users')  ? 'page' : 'false'}"
+                      th:classappend="${link.active ? 'current' : ''}"
+                      th:id="${link.id}"
+                      th:href="@{__${link.href}__}"
+                      th:data-test-id="${link.dataTestId}"
+                      th:aria-current="${link.ariaCurrent}"
                     >
-                      <svg th:replace="~{icons/bookmark::svg}"></svg>
                       <th:block
-                        th:text="#{navigation.main.timetrack}"
+                        th:text="${#messages.msg(link.messageKey)}"
                       ></th:block>
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      id="main-navigation-link-reports"
-                      href="#"
-                      th:href="@{/report}"
-                      class="flex items-center main-nav-link"
-                      th:aria-current="${currentRequestURI.startsWith('/report') ? 'page' : 'false'}"
-                      data-testid="navigation-link-reports"
-                    >
-                      <svg th:replace="~{icons/chart-pie::svg}"></svg>
-                      <th:block th:text="#{navigation.main.reports}"></th:block>
-                    </a>
-                  </li>
-                  <li th:if="${showMainNavigationPersons}">
-                    <a
-                      id="main-navigation-link-users"
-                      href="#"
-                      th:href="@{/users}"
-                      class="flex items-center main-nav-link"
-                      th:classappend="${currentRequestURI.startsWith('/users') || currentRequestURI.startsWith('/timeentries/users') ? 'current' : ''}"
-                      th:aria-current="${currentRequestURI.equals('/users') ? 'page' : 'false'}"
-                      data-testid="navigation-link-users"
-                    >
-                      <svg th:replace="~{icons/users::svg}"></svg>
-                      <th:block th:text="#{navigation.main.users}"
-                        >Personen</th:block
-                      >
-                    </a>
-                  </li>
-                  <li th:if="${showMainNavigationSettings}">
-                    <a
-                      id="main-navigation-link-settings"
-                      href="#"
-                      th:href="@{/settings}"
-                      class="flex items-center main-nav-link"
-                      th:classappend="${currentRequestURI.startsWith('/settings') ? 'current' : ''}"
-                      th:aria-current="${currentRequestURI.equals('/settings') ? 'page' : 'false'}"
-                      data-testid="navigation-link-settings"
-                    >
-                      <svg th:replace="~{icons/cog::svg}"></svg>
-                      <th:block th:text="#{navigation.main.settings}"
-                        >Einstellungen</th:block
-                      >
                     </a>
                   </li>
                 </ul>
