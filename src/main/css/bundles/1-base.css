@@ -4,7 +4,7 @@
   /* info-banner is optional and value is overridden by javascript with real height on runtime. as we don't know the content yet... */
   --info-banner-height: 0;
 
-  --navigation-header-height: 3rem;
+  --navigation-header-height: 3rem; /* TODO remove me, not required anymore? */
   --z-index-tooltip: 99999; /* tooltips shown on pointer hover should always be on top */
 
   /* 500 */
