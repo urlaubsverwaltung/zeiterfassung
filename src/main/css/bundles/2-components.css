@@ -1,14 +1,14 @@
-@import "./components/ajax-loader.css";
-@import "./components/avatar-group.css";
-@import "./components/body-overlay.css";
-@import "./components/checkbox-switch.css";
-@import "./components/info-banner.css";
-@import "./components/modal.css";
-@import "./components/feedback.css";
-@import "./components/feedback-heart.css";
-@import "./components/navigation.css";
-@import "./components/time-clock.css";
-@import "./components/tooltip.css";
+@import "../components/ajax-loader.css";
+@import "../components/avatar-group.css";
+@import "../components/body-overlay.css";
+@import "../components/checkbox-switch.css";
+@import "../components/info-banner.css";
+@import "../components/modal.css";
+@import "../components/feedback.css";
+@import "../components/feedback-heart.css";
+@import "../components/navigation.css";
+@import "../components/time-clock.css";
+@import "../components/tooltip.css";
 
 @reference "tailwindcss";
 

@@ -5,8 +5,12 @@
   >
     <title th:text="#{report.page.meta.title}">Zeiterfassung - Bericht</title>
     <th:block th:fragment="styles">
-      <link rel="stylesheet" type="text/css" th:href="@{/time-entries.css}" />
-      <link rel="stylesheet" type="text/css" th:href="@{/reports.css}" />
+      <link
+        rel="stylesheet"
+        type="text/css"
+        th:href="@{/css/time-entries.css}"
+      />
+      <link rel="stylesheet" type="text/css" th:href="@{/css/reports.css}" />
     </th:block>
     <th:block th:fragment="scriptsDefer">
       <script th:replace="~{fragments/i18n::date-picker}"></script>

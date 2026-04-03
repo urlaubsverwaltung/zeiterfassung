@@ -16,7 +16,11 @@
       Zeiterfassung von XXX
     </title>
     <th:block th:fragment="styles">
-      <link rel="stylesheet" type="text/css" th:href="@{/time-entries.css}" />
+      <link
+        rel="stylesheet"
+        type="text/css"
+        th:href="@{/css/time-entries.css}"
+      />
     </th:block>
     <th:block th:fragment="scripts">
       <script th:replace="~{fragments/i18n::date-picker}"></script>

@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@config "../../../tailwind.config.js";
+@config "../../../../tailwind.config.js";
 
 :root {
   --navigation-header-height: 3rem;
