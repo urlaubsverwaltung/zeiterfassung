@@ -1,0 +1,224 @@
+/* common popover animation duration. (e.g. opacity)
+ * popover can also be slided in, see `--popover-transform-duration`
+ */
+@property --popover-duration {
+  syntax: "<time>";
+  inherits: false;
+  initial-value: 100ms;
+}
+
+/* webkit/safari has a bug not positioning the popover to it's anchor anymore when hidden
+ * since hiding popover is animated (with `transition-behavior:allow-discrete`) we're just animating when supported (see @supports(overlay: auto))
+ * there are some issues I've found that may or may not be related to this:
+ * - https://bugs.webkit.org/show_bug.cgi?id=276727 -> https://github.com/WebKit/WebKit/pull/59831
+ * - https://bugs.webkit.org/show_bug.cgi?id=309921
+ * - https://github.com/whatwg/html/issues/11694
+ */
+@property --popover-transform-duration {
+  syntax: "<time>";
+  inherits: false;
+  initial-value: 0ms;
+}
+
+@property --popover-opacity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0; /* animated to 1 when visible */
+}
+
+/* "private" property (to "ensure" the type. devtools can give you a hint when type mismatches.) */
+@property --popover-x {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+/* set by `.popover--slide-to-[left/right]` utility classes. property can be overridden by elements. */
+@property --popover-x-start {
+  syntax: "*";
+  inherits: false;
+  initial-value: unset;
+}
+
+/* set by `.popover--slide-to-[left/right]` utility classes. property can be overridden by elements. */
+@property --popover-x-end {
+  syntax: "*";
+  inherits: false;
+  initial-value: unset;
+}
+
+/* "private" property (to "ensure" the type. devtools can give you a hint when type mismatches.) */
+@property --popover-y {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+/* set by `.popover--slide-to-[top/bottom]` utility classes. property can be overridden by elements. */
+@property --popover-y-start {
+  syntax: "*";
+  inherits: false;
+  initial-value: unset;
+}
+
+/* set by `.popover--slide-to-[top/bottom]` utility classes. property can be overridden by elements. */
+@property --popover-y-end {
+  syntax: "*";
+  inherits: false;
+  initial-value: unset;
+}
+
+@property --popover-opacity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+@property --popover-backdrop-opacity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0.5;
+}
+
+@layer components {
+  .popover {
+    --popover-x: 0%;
+    --popover-y: 0%;
+    --popover-opacity: 0;
+
+    position-area: block-end span-inline-start;
+    top: calc(anchor(bottom) + --spacing(4));
+
+    opacity: var(--popover-opacity);
+    transform: translateX(var(--popover-x)) translateY(var(--popover-y));
+
+    transition:
+      display var(--popover-transform-duration),
+      overlay var(--popover-duration),
+      transform var(--popover-transform-duration) ease-in-out,
+      opacity var(--popover-duration) ease-in-out;
+    transition-behavior: allow-discrete;
+
+    &:popover-open {
+      --popover-opacity: 1;
+    }
+
+    @supports (overlay: auto) {
+      --popover-duration: 300ms;
+      --popover-transform-duration: 300ms;
+    }
+
+    @starting-style {
+      &:popover-open {
+        --popover-opacity: 0;
+      }
+    }
+  }
+
+  .popover--backdrop-screen,
+  .popover--backdrop-content {
+    &::backdrop {
+      --popover-backdrop-opacity: 0;
+      opacity: var(--popover-backdrop-opacity);
+      background-color: var(--color-black);
+      transition: opacity var(--popover-duration) ease-in-out;
+      transition-behavior: allow-discrete;
+    }
+
+    &:popover-open {
+      &::backdrop {
+        --popover-backdrop-opacity: 0.5;
+      }
+    }
+
+    @starting-style {
+      &:popover-open {
+        &::backdrop {
+          --popover-backdrop-opacity: 0;
+        }
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .popover {
+      --popover-duration: 50ms;
+      --popover-transform-duration: 0ms;
+    }
+  }
+}
+
+@utility popover--backdrop-content {
+  &::backdrop {
+    position-anchor: --container-main-anchor;
+    position: absolute;
+    /* anchor positioning of this ::backdrop pseudo element does not work in safari :( */
+    /* you may should use a shadow to elevate the popover from content. */
+    top: anchor(top);
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
+
+@utility popover--backdrop-none {
+  &::backdrop {
+    display: none;
+  }
+}
+
+@utility popover--slide-to-top {
+  @supports (overlay: auto) {
+    --popover-y: abs(var(--popover-y-start, 100%));
+    &:popover-open {
+      --popover-y: abs(var(--popover-y-end, 0px));
+    }
+  }
+  @starting-style {
+    &:popover-open {
+      --popover-y: abs(var(--popover-y-start, 100%));
+    }
+  }
+}
+
+@utility popover--slide-to-bottom {
+  @supports (overlay: auto) {
+    --popover-y: calc(-1 * abs(var(--popover-y-start, -100%)));
+    &:popover-open {
+      --popover-y: calc(-1 * abs(var(--popover-y-end, 0px)));
+    }
+  }
+  @starting-style {
+    &:popover-open {
+      --popover-y: calc(-1 * abs(var(--popover-y-start, -100%)));
+    }
+  }
+}
+
+@utility popover--slide-to-left {
+  @supports (overlay: auto) {
+    --popover-x: abs(var(--popover-x-start, 100%));
+    &:popover-open {
+      --popover-x: abs(var(--popover-x-end, 0px));
+    }
+  }
+  @starting-style {
+    &:popover-open {
+      --popover-x: abs(var(--popover-x-start, 100%));
+    }
+  }
+}
+
+@utility popover--slide-to-right {
+  @supports (overlay: auto) {
+    --popover-x: calc(-1 * abs(var(--popover-x-start, -100%)));
+    &:popover-open {
+      --popover-x: calc(-1 * abs(var(--popover-x-end, 0px)));
+    }
+  }
+  @starting-style {
+    &:popover-open {
+      --popover-x: calc(-1 * abs(var(--popover-x-start, -100%)));
+    }
+  }
+}
