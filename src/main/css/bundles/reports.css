@@ -3,14 +3,14 @@
 @layer components {
   .report-actions {
     display: grid;
-    gap: 1rem;
+    gap: --spacing(4);
   }
 
   .report-actions__pagination {
     @apply w-full;
     @apply flex;
     @apply items-center;
-    @apply gap-1;
+    gap: --spacing(1);
   }
 
   .report-actions__persons {
@@ -24,7 +24,7 @@
   }
 
   .report-actions__avatars {
-    margin-top: -0.75rem;
+    margin-top: calc(-1 * --spacing(3));
   }
 
   .report-actions__csv {
@@ -37,11 +37,10 @@
 
     th,
     td {
-      @apply px-2;
-      @apply py-1;
+      padding: --spacing(1) --spacing(2);
 
       &:last-of-type {
-        @apply pr-4;
+        padding-right: --spacing(4);
       }
     }
 
@@ -76,7 +75,7 @@
           @apply font-normal;
           @apply text-left;
           @apply sticky;
-          @apply left-0;
+          left: 0;
         }
 
         &:hover {
@@ -166,7 +165,7 @@
     .report-actions__avatars {
       grid-row: 2;
       grid-column: 3 / span 2;
-      margin-top: -0.75rem;
+      margin-top: calc(-1 * --spacing(3));
     }
 
     .report-actions__csv {
@@ -287,15 +286,15 @@
 
   .report-view-entry-box-absence__absence-color-box {
     width: 0.75rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-top: --spacing(2);
+    margin-bottom: --spacing(2);
     height: 3rem;
     @apply rounded-lg;
   }
 
   .report-summary-grid {
     dt:not(:first-of-type) {
-      margin-top: 1rem;
+      margin-top: --spacing(4);
     }
 
     dd {
@@ -309,7 +308,7 @@
     .report-summary-grid {
       display: grid;
       grid-template-columns: max-content 1fr;
-      column-gap: 1rem;
+      column-gap: --spacing(4);
 
       dt:not(:first-of-type) {
         margin-top: 0;

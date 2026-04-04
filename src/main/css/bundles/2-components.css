@@ -23,7 +23,7 @@
   .content-container {
     margin-left: auto;
     margin-right: auto;
-    padding: calc(var(--spacing) * 8);
+    padding: --spacing(8);
     padding-bottom: 0;
   }
 
@@ -67,8 +67,10 @@
     @apply text-white;
     @apply font-medium;
     @apply rounded-sm;
-    @apply px-4;
-    @apply py-2;
+    padding-top: --spacing(2);
+    padding-bottom: --spacing(2);
+    padding-left: --spacing(4);
+    padding-right: --spacing(4);
     @apply flex;
     @apply transition-colors;
     @apply hover:bg-blue-600;
@@ -77,8 +79,8 @@
 
   .button-primary-icon {
     @apply items-center;
-    @apply gap-2;
     @apply justify-center;
+    gap: --spacing(2);
   }
 
   .button-secondary {
@@ -90,15 +92,17 @@
     @apply font-medium;
     @apply rounded-sm;
     @apply text-center;
-    @apply px-4;
-    @apply py-2;
+    padding-top: --spacing(2);
+    padding-bottom: --spacing(2);
+    padding-left: --spacing(4);
+    padding-right: --spacing(4);
     @apply sm:text-left;
   }
 
   .button-secondary-icon {
     @apply flex;
     @apply items-center;
-    @apply gap-2;
+    gap: --spacing(2);
   }
 
   .button-secondary--subtle {
@@ -108,14 +112,17 @@
   }
 
   .button-secondary.button-secondary--narrow {
-    @apply py-1;
-    @apply px-4;
+    padding-top: --spacing(1);
+    padding-bottom: --spacing(1);
+    padding-left: --spacing(4);
+    padding-right: --spacing(4);
   }
 
   .button-secondary-icon.button-secondary--narrow {
-    @apply py-1;
-    @apply pl-3;
-    @apply pr-4;
+    padding-top: --spacing(1);
+    padding-bottom: --spacing(1);
+    padding-left: --spacing(3);
+    padding-right: --spacing(4);
   }
 
   input {
@@ -124,7 +131,7 @@
     display: block;
     width: 100%;
     line-height: var(--input-line-height);
-    padding: 0.25rem 0.5rem;
+    padding: --spacing(1) --spacing(2);
     appearance: none;
     background-color: white;
 

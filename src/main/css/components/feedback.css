@@ -1,14 +1,13 @@
 .feedback-button {
-  /*flex flex-row items-center gap-2 cursor-pointer absolute right-0 bottom-0 p-2*/
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.5rem;
+  gap: --spacing(2);
   cursor: pointer;
 
   position: fixed;
-  right: 1rem;
-  bottom: 1rem;
+  right: --spacing(4);
+  bottom: --spacing(4);
   z-index: 20;
 }
 
@@ -18,7 +17,7 @@
   /* which has to override default .popover positioning to anchor edges, */
   position-area: center;
   /* as we want a slightly different spacing to the screen edge */
-  margin: 1rem;
+  margin: --spacing(4);
 
   border: 1px solid var(--color-gray-300);
   background-color: var(--color-white);
@@ -27,8 +26,8 @@
 
   .feedback-form {
     width: 100%;
-    padding: 1rem;
-    padding-bottom: 0.5rem;
+    padding: --spacing(4);
+    padding-bottom: --spacing(2);
     @apply w-96;
   }
 }

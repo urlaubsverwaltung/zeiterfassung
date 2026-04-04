@@ -4,7 +4,7 @@ z-tooltip:not([data-show]) {
 }
 
 [role="tooltip"] {
-  @apply py-1 px-2;
+  padding: --spacing(1) --spacing(2);
   @apply text-xs;
   @apply font-bold;
   @apply text-white;

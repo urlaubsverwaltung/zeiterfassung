@@ -11,12 +11,12 @@ a.avatar-link {
 
 .avatar-group {
   display: flex;
-  @apply p-0.5;
+  padding: calc(--spacing(1) / 2);
   @apply bg-gradient-to-b from-transparent via-blue-100 to-blue-100;
   @apply rounded-full;
 
   & > *:not(:first-child):not(.avatar-more) {
-    margin-left: -0.5rem;
+    margin-left: calc(-1 * --spacing(2));
   }
 
   .avatar {

@@ -45,9 +45,9 @@
   .time-entry-cell-container {
     display: grid;
     grid-template-columns: repeat(5, 1fr) max-content;
-    gap: 0.5rem;
+    gap: --spacing(2);
     width: 100%;
-    padding: 1rem 1.25rem;
+    padding: --spacing(4) --spacing(5);
   }
 
   .time-entry-cell__comment {
@@ -79,7 +79,7 @@
     .time-entry-cell-container {
       display: grid;
       grid-template-columns: repeat(6, 1fr) max-content;
-      gap: 0.5rem;
+      gap: --spacing(2);
     }
 
     .time-entry-cell__comment {
@@ -118,7 +118,7 @@
     .time-entry-cell-container {
       display: grid;
       grid-template-columns: repeat(5, 1fr) max-content;
-      gap: 0.5rem;
+      gap: --spacing(2);
     }
 
     .time-entry-cell__comment {
@@ -149,7 +149,9 @@
 
   @variant lg {
     .time-entry-cell-container {
-      grid-template-columns: 1fr max-content max-content 4rem max-content;
+      grid-template-columns: 1fr max-content max-content --spacing(
+          16
+        ) max-content;
       padding-top: 0;
       padding-bottom: 0;
     }
@@ -234,16 +236,16 @@
   .timeslot-form-existing.edited button[type="submit"]:not([name]) {
     color: var(--color-gray-700);
     background-color: var(--color-blue-100);
-    padding: 0.25rem 0.5rem;
+    padding: --spacing(1) --spacing(2);
     border-radius: 99999px;
   }
 
   .timeslot-form-new [data-error-container]:not(:empty) {
-    margin-top: 1rem;
+    margin-top: --spacing(4);
   }
 
   .timeslot-form-existing [data-error-container]:not(:empty) {
-    margin-top: 0.5rem;
+    margin-top: --spacing(2);
   }
 
   .time-entry-slot-form--disabled label {
@@ -257,7 +259,7 @@
   }
 
   .time-entry-box__input__date {
-    padding: 1.5rem 1.25rem;
+    padding: --spacing(6) --spacing(5);
     border-top-left-radius: var(--time-entries-box-border-radius);
     border-top-right-radius: var(--time-entries-box-border-radius);
     border-right-color: var(--timeslot-form-border-color);
@@ -283,7 +285,7 @@
     display: flex;
     align-items: center;
     @apply bg-gray-200;
-    padding: 0.75rem 1.25rem;
+    padding: --spacing(3) --spacing(5);
     border-top-left-radius: var(--time-entries-box-border-radius);
     border-top-right-radius: var(--time-entries-box-border-radius);
   }
@@ -298,7 +300,7 @@
   }
 
   .time-entry-box__controls {
-    margin-top: 0.5rem;
+    margin-top: --spacing(2);
   }
 
   .time-entry-box__controls,
@@ -316,7 +318,7 @@
   }
 
   .time-entry-box-absence__absence-text {
-    padding: 1.5rem 1.25rem;
+    padding: --spacing(6) --spacing(5);
   }
 
   @variant md {
@@ -360,14 +362,14 @@
 
     .time-entry-box__controls,
     .time-entry-box-absence__controls {
-      margin-left: 1rem;
+      margin-left: --spacing(4);
       justify-content: flex-start;
       width: 20%;
     }
 
     .time-entry-box-absence__absence-color-box {
-      margin-top: 0.5rem;
-      margin-bottom: 0.5rem;
+      margin-top: --spacing(2);
+      margin-bottom: --spacing(2);
       width: 0.75rem;
       @apply rounded-lg;
     }
@@ -388,7 +390,7 @@
   .time-entry-history-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: --spacing(2);
 
     > li {
       .time-entry-history-list__element__summary {
@@ -402,7 +404,7 @@
       }
 
       .time-entry-history-list__element__content {
-        margin-top: 0.5rem;
+        margin-top: --spacing(2);
       }
 
       .time-entry-history-list__element__details[open] {
@@ -417,7 +419,7 @@
     > li:not(:last-of-type) {
       .time-entry-history-list__element__details {
         .time-entry-history-list__element__content {
-          padding-bottom: 1rem;
+          padding-bottom: --spacing(4);
         }
       }
     }
@@ -429,7 +431,7 @@
         .time-entry-history-list__element__summary {
           display: flex;
           align-items: center;
-          gap: 0.25rem;
+          gap: --spacing(1);
         }
       }
     }
