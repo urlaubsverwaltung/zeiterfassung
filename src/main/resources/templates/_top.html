@@ -24,11 +24,13 @@
         </button>
       </form>
       <div th:if="${timeClock != null}" class="flex items-center gap-4">
-        <details
-          class="time-clock-dropdown mr-4 sr-only xs:not-sr-only xs:relative"
-          is="z-details-dropdown"
-        >
-          <summary id="time-clock-summary" class="time-clock-dropdown_summary">
+        <div>
+          <button
+            id="time-clock-summary"
+            type="button"
+            popovertarget="time-clock-popover"
+            class="flex items-center gap-1"
+          >
             <span
               class="sr-only"
               th:text="#{timeclock.elapsed-time.label}"
@@ -42,13 +44,18 @@
             <svg
               th:replace="~{icons/chevron-down::svg(className='w-4 h-4')}"
             ></svg>
-          </summary>
-          <div class="time-clock-dropdown_content">
+          </button>
+          <div
+            popover
+            id="time-clock-popover"
+            class="popover popover--backdrop-content popover--slide-to-bottom p-4 rounded shadow-2xl border border-gray-200"
+            style="--popover-y-start: 15%"
+          >
             <div
               th:replace="~{timeclock/timeclock-edit-form::navigation-box}"
             ></div>
           </div>
-        </details>
+        </div>
         <form
           action="#"
           th:action="@{/timeclock/stop}"

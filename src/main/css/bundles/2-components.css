@@ -1,6 +1,5 @@
 @import "../components/ajax-loader.css" layer(components);
 @import "../components/avatar-group.css" layer(components);
-@import "../components/body-overlay.css" layer(components);
 @import "../components/checkbox-switch.css" layer(components);
 @import "../components/info-banner.css" layer(components);
 @import "../components/launchpad.css" layer(components);
@@ -8,7 +7,6 @@
 @import "../components/feedback.css" layer(components);
 @import "../components/feedback-heart.css" layer(components);
 @import "../components/navigation.css" layer(components);
-@import "../components/time-clock.css" layer(components);
 @import "../components/tooltip.css" layer(components);
 
 @reference "../config.css";
