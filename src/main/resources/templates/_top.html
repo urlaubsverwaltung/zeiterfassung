@@ -72,7 +72,7 @@
       <button
         popovertarget="avatar-menu"
         class="flex items-center gap-1"
-        data-testId="avatar"
+        data-testid="avatar"
       >
         <span class="shrink-0 inline-flex text-blue-200">
           <img
@@ -85,7 +85,7 @@
       <div
         popover
         id="avatar-menu"
-        class="nav-popover-menu-container nav-avatar-popover"
+        class="nav-popover-menu-container nav-avatar-popover popover popover--slide-to-left"
         data-testId="avatar-popupmenu"
       >
         <div class="navigation-popover-menu-header">
@@ -121,7 +121,7 @@
                 <button
                   type="submit"
                   class="navigation-popover-menu__link"
-                  data-testId="logout"
+                  data-testid="logout"
                 >
                   <svg
                     th:replace="~{icons/logout::svg(className='w-6 h-6')}"
