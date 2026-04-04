@@ -176,9 +176,6 @@
 }
 
 .nav-popover-menu-container {
-  width: calc(100% - 1rem);
-  height: calc(100% - 1.5rem);
-  margin: 0 auto;
   @apply rounded-2xl;
 
   .navigation-popover-menu-header {
@@ -232,19 +229,17 @@
   }
 }
 
+.nav-avatar-popover,
 .nav-launchpad-popover {
-  --popover-fade-x-start: 100%;
-  --popover-fade-x-end: 0;
-  position-area: bottom;
-  right: 0.5rem;
-  bottom: 0.5rem;
-}
-
-.nav-avatar-popover {
+  margin: 0;
   /* override default .popover anchor positioning. */
   /* we want it to be on the right of the screen instead of relative to the anchor. */
-  position-area: bottom !important;
-  right: 0.5rem !important;
+  position-area: unset !important;
+  inset: unset;
+  top: calc(anchor(bottom) + 1rem);
+  right: 0.5rem;
+  bottom: 0.5rem;
+  height: auto;
 }
 
 @keyframes linear-loading {
@@ -321,8 +316,7 @@
   }
 
   .nav-launchpad-popover {
-    --popover-fade-x-start: -100%;
-    --popover-fade-x-end: 0;
     left: 0.5rem;
+    right: auto;
   }
 }
