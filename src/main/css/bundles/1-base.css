@@ -27,11 +27,12 @@ body {
   min-height: 100vh;
   min-height: -webkit-fill-available;
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto auto auto 1fr;
   grid-template-columns: auto 1fr auto auto auto;
   grid-template-areas:
     "banner banner banner banner banner"
     "navigation _ timeclock launchpad-app avatar"
+    "search search search search search"
     "content content content content content";
   overflow: hidden;
   height: 100vh;
@@ -40,11 +41,11 @@ body {
 @variant desktop {
   body {
     grid-template-rows: auto auto 1fr;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr auto auto;
     grid-template-areas:
-      "banner banner banner"
-      "launchpad-app timeclock avatar"
-      "navigation content content";
+      "banner banner banner banner"
+      "launchpad-app search timeclock avatar"
+      "navigation content content content";
   }
 }
 
