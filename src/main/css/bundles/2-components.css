@@ -23,8 +23,7 @@
   .content-container {
     margin-left: auto;
     margin-right: auto;
-    padding: --spacing(8);
-    padding-bottom: 0;
+    padding-top: --spacing(8);
   }
 
   .content--max-w {

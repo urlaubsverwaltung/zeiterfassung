@@ -14,9 +14,7 @@
   <body th:replace="~{_layout::body(~{::content})}">
     <th:block th:fragment="content">
       <main class="content-container">
-        <div
-          class="mx-auto w-full max-w-screen-lg 2xl:max-w-screen-3xl space-y-8"
-        >
+        <div class="mx-auto w-full max-w-fit space-y-8">
           <div class="px-8">
             <div class="flex items-center">
               <p class="mr-4" th:text="#{report.view.select}">Ansicht:</p>
@@ -50,7 +48,7 @@
               th:insert="~{__${chartNavigationFragment}__}"
             ></div>
           </div>
-          <div class="px-8 grid grid-cols-1 gap-8 2xl:grid-cols-2">
+          <div class="px-4 grid grid-cols-1 gap-8 2xl:grid-cols-2 desktop:px-8">
             <div class="2xl:sticky 2xl:top-0 2xl:self-start">
               <div
                 class="p-8 pt-9 bg-gradient-to-b from-gray-100 rounded-t-3xl"
