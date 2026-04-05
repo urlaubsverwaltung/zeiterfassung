@@ -17,7 +17,7 @@ export class UserSelectionList extends HTMLDivElement {
   }
 
   connectedCallback() {
-    this.classList.add("lg:overflow-y-auto");
+    this.classList.add("@5xl/main:overflow-y-auto");
     this.#updateMaxHeight();
 
     const onResize = () => {

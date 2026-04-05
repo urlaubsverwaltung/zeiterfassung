@@ -10,7 +10,7 @@
     display: none;
   }
 
-  @variant lg {
+  @variant @5xl/main {
     main[data-selected-user] [data-hidden-with-selected-user],
     main:not([data-selected-user]) [data-hidden-without-selected-user] {
       display: var(--display-when-visible);
