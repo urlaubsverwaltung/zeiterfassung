@@ -1,12 +1,14 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
-import de.focusshift.zeiterfassung.security.SecurityRole;
+import de.focusshift.zeiterfassung.search.HasUserSearch;
+import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.security.CurrentUser;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import org.slf4j.Logger;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.CurrentSecurityContext;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -16,24 +18,34 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 
+import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.FRAME_USERS_SUGGESTION;
+import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 
 @Controller
 @RequestMapping("/users")
 @PreAuthorize("hasAnyAuthority('ZEITERFASSUNG_WORKING_TIME_EDIT_ALL', 'ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL', 'ZEITERFASSUNG_PERMISSIONS_EDIT_ALL')")
-class UserManagementController implements HasTimeClock, HasLaunchpad {
+class UserManagementController implements HasTimeClock, HasLaunchpad, HasUserSearch {
+
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final UserManagementService userManagementService;
+    private final UserSearchViewHelper userSearchViewHelper;
 
-    UserManagementController(UserManagementService userManagementService) {
+    UserManagementController(UserManagementService userManagementService, UserSearchViewHelper userSearchViewHelper) {
         this.userManagementService = userManagementService;
+        this.userSearchViewHelper = userSearchViewHelper;
     }
 
     @GetMapping
@@ -50,7 +62,6 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
         model.addAttribute("slug", "");
         model.addAttribute("users", users);
         model.addAttribute("selectedUser", null);
-        model.addAttribute("personSearchFormAction", "/users");
 
         if (StringUtils.hasText(turboFrame)) {
             return "usermanagement/users::#" + turboFrame;
@@ -60,33 +71,51 @@ class UserManagementController implements HasTimeClock, HasLaunchpad {
     }
 
     @GetMapping("/{id}")
-    String user(@PathVariable("id") Long id, @CurrentSecurityContext SecurityContext securityContext) {
+    ModelAndView user(@PathVariable Long id, @CurrentUser CurrentOidcUser currentUser) {
+        return forward(currentUser, id);
+    }
 
+    @GetMapping(value = {"","/{userId}"}, params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
+    ModelAndView userSearchFragment(@RequestParam(USER_SEARCH_QUERY_PARAM) String query,
+                                    @PathVariable(required = false) Long userId,
+                                    @RequestHeader(TURBO_FRAME_HEADER) String turboFrame,
+                                    @CurrentUser CurrentOidcUser currentUser, Model model) {
+
+        if (FRAME_USERS_SUGGESTION.equals(turboFrame)) {
+            return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
+                suggestion -> "/users/%s".formatted(suggestion.userLocalId().value())
+            );
+        } else if ("person-frame".equals(turboFrame) && userId != null) {
+            return forward(currentUser, userId);
+        } else {
+            LOG.error("unknown turbo-frame requested or person-frame but without userId");
+            return new ModelAndView("error/404", UNPROCESSABLE_CONTENT);
+        }
+    }
+
+    private ModelAndView forward(CurrentOidcUser currentUser, Long selectedUserId) {
         final String slug;
 
-        if (hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, securityContext)) {
+        if (currentUser.hasRole(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)) {
             slug = "working-time";
-        } else if (hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, securityContext)) {
+        } else if (currentUser.hasRole(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL)) {
             slug = "overtime-account";
-        } else if (hasAuthority(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, securityContext)) {
+        } else if (currentUser.hasRole(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL)) {
             slug = "permissions";
         } else {
             slug = null;
         }
 
         if (slug == null) {
-            throw new ResponseStatusException(UNAUTHORIZED);
+            LOG.error("could not determine user settings slug for logged-in user.");
+            return new ModelAndView("error/403");
         }
 
-        return "forward:/users/%s/%s".formatted(id, slug);
+        final String uri = "forward:/users/%s/%s".formatted(selectedUserId, slug);
+        return new ModelAndView(uri);
     }
 
     static UserDto userToDto(User user) {
         return new UserDto(user.userLocalId().value(), user.givenName(), user.familyName(), user.givenName() + " " + user.familyName(), user.initials(), user.email().value());
-    }
-
-    static boolean hasAuthority(SecurityRole securityRole, SecurityContext securityContext) {
-        final Authentication authentication = securityContext.getAuthentication();
-        return authentication.getAuthorities().contains(securityRole.authority());
     }
 }

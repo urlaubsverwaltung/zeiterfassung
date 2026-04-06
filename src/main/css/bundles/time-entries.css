@@ -1,5 +1,3 @@
-@import "../components/time-entry-user-search.css" layer(components);
-
 @reference "../config.css";
 
 @layer theme {
@@ -149,9 +147,9 @@
 
   @variant lg {
     .time-entry-cell-container {
-      grid-template-columns: 1fr max-content max-content --spacing(
-          16
-        ) max-content;
+      grid-template-columns:
+        1fr max-content max-content --spacing(16)
+        max-content;
       padding-top: 0;
       padding-bottom: 0;
     }

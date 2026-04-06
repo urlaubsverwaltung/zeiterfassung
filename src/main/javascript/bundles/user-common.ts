@@ -5,6 +5,7 @@ import "../components/navigation";
 import "../components/sticky";
 import "../components/time-clock";
 import "../components/tooltip";
+import "../components/user-search";
 import {
   initAutosubmit,
   initPreventDoubleClickSubmit,

@@ -1,12 +1,15 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
+import de.focusshift.zeiterfassung.search.HasUserSearch;
+import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.security.SessionService;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import org.slf4j.Logger;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.CurrentSecurityContext;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.util.HashSet;
 import java.util.List;
@@ -24,49 +28,68 @@ import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
+import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.FRAME_USERS_SUGGESTION;
+import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
-import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.userToDto;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 
 @Controller
 @RequestMapping("/users/{userId}/permissions")
 @PreAuthorize("hasAuthority('ZEITERFASSUNG_PERMISSIONS_EDIT_ALL')")
-class PermissionsController implements HasLaunchpad, HasTimeClock {
+class PermissionsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
+
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final UserManagementService userManagementService;
     private final SessionService sessionService;
+    private final UserSearchViewHelper userSearchViewHelper;
 
-    PermissionsController(UserManagementService userManagementService, SessionService sessionService) {
+    PermissionsController(UserManagementService userManagementService, SessionService sessionService,
+                          UserSearchViewHelper userSearchViewHelper) {
         this.userManagementService = userManagementService;
         this.sessionService = sessionService;
+        this.userSearchViewHelper = userSearchViewHelper;
     }
 
     @GetMapping
-    String get(@PathVariable("userId") Long userId, Model model,
-               @RequestParam(value = "query", required = false, defaultValue = "") String query,
-               @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
-               @CurrentSecurityContext SecurityContext securityContext) {
+    ModelAndView get(@PathVariable Long userId, Model model,
+                     @RequestParam(value = USER_SEARCH_QUERY_PARAM, required = false, defaultValue = "") String query,
+                     @CurrentUser CurrentOidcUser currentUser) {
 
-        prepareGetRequestModel(model, query, userId, this::userToPermissionsDto, securityContext);
+        prepareGetRequestModel(model, query, userId, this::userToPermissionsDto, currentUser);
+        return new ModelAndView("usermanagement/users");
+    }
 
-        if ("person-frame".equals(turboFrame)) {
-            return "usermanagement/users::#person-frame";
-        } else if ("person-list-frame".equals(turboFrame)) {
-            return "usermanagement/users::#person-list-frame";
+    @GetMapping(params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
+    ModelAndView userSearchFragment(@RequestParam(USER_SEARCH_QUERY_PARAM) String query,
+                                    @PathVariable(required = false) Long userId,
+                                    @RequestHeader(TURBO_FRAME_HEADER) String turboFrame,
+                                    @CurrentUser CurrentOidcUser currentUser, Model model) {
+
+        if (FRAME_USERS_SUGGESTION.equals(turboFrame)) {
+            return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
+                suggestion -> "/users/%s/permissions".formatted(suggestion.userLocalId().value())
+            );
+        } else if ("person-frame".equals(turboFrame) && userId != null) {
+            return get(userId, model, query, currentUser);
         } else {
-            return "usermanagement/users";
+            LOG.error("unknown turbo-frame requested or person-frame but without userId");
+            return new ModelAndView("error/404", UNPROCESSABLE_CONTENT);
         }
     }
 
     @PostMapping
-    String post(@PathVariable("userId") Long userId, Model model,
+    String post(@PathVariable Long userId, Model model,
                 @ModelAttribute("permissions") PermissionsDto permissionsDto,
-                @RequestParam(value = "query", required = false, defaultValue = "") String query,
-                @CurrentSecurityContext SecurityContext securityContext) {
+                @RequestParam(value = USER_SEARCH_QUERY_PARAM, required = false, defaultValue = "") String query,
+                @CurrentUser CurrentOidcUser currentUser) {
 
         final UserLocalId userLocalId = new UserLocalId(userId);
 
@@ -78,12 +101,12 @@ class PermissionsController implements HasLaunchpad, HasTimeClock {
             throw new IllegalArgumentException("could not find person=%s".formatted(userLocalId));
         }
 
-        prepareGetRequestModel(model, query, userId, this::userToPermissionsDto, securityContext);
+        prepareGetRequestModel(model, query, userId, this::userToPermissionsDto, currentUser);
 
         return "redirect:/users/%s/permissions".formatted(userId);
     }
 
-    private void prepareGetRequestModel(Model model, String query, Long selectedUserIdValue, Function<User, PermissionsDto> permissionsDtoSupplier, SecurityContext securityContext) {
+    private void prepareGetRequestModel(Model model, String query, Long selectedUserIdValue, Function<User, PermissionsDto> permissionsDtoSupplier, CurrentOidcUser currentUser) {
 
         final UserLocalId selectedUserId = new UserLocalId(selectedUserIdValue);
         final List<User> allUsers = userManagementService.findAllUsers(query);
@@ -107,13 +130,12 @@ class PermissionsController implements HasLaunchpad, HasTimeClock {
         model.addAttribute("slug", "permissions");
         model.addAttribute("users", allUserDtos);
         model.addAttribute("selectedUser", selectedUserDto);
-        model.addAttribute("personSearchFormAction", "/users/%s/permissions".formatted(selectedUserDto.id()));
         model.addAttribute("permissions", permissionsDto);
 
-        model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, securityContext));
-        model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, securityContext));
-        model.addAttribute("allowedToEditPermissions", hasAuthority(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, securityContext));
-        model.addAttribute("allowedToEditTimeentries", hasAuthority(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL, securityContext));
+        model.addAttribute("allowedToEditWorkingTime", currentUser.hasRole(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL));
+        model.addAttribute("allowedToEditOvertimeAccount", currentUser.hasRole(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL));
+        model.addAttribute("allowedToEditPermissions", currentUser.hasRole(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL));
+        model.addAttribute("allowedToEditTimeentries", currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
     }
 
     private PermissionsDto userToPermissionsDto(User user) {

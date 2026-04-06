@@ -58,7 +58,7 @@ class FrameDataProviderTest implements ControllerTest {
 
         perform(
             get("/test-endpoint")
-                .with(oidcSubject(anyUserIdComposit(), List.of(ZEITERFASSUNG_USER)))
+                .with(oidcSubject(anyUserIdComposite(), List.of(ZEITERFASSUNG_USER)))
         )
             .andExpect(status().isOk())
             .andExpect(model().attribute("lang", notNullValue()))
@@ -132,7 +132,7 @@ class FrameDataProviderTest implements ControllerTest {
     }
 
     private MvcResult perform(String url, List<SecurityRole> roles) throws Exception {
-        return perform(get(url).with(oidcSubject(anyUserIdComposit(), roles)))
+        return perform(get(url).with(oidcSubject(anyUserIdComposite(), roles)))
             .andExpect(status().isOk())
             .andReturn();
     }

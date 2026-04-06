@@ -1,4 +1,4 @@
-.time-entry-user-search {
+.user-search {
   anchor-name: --time-entry-user-search-anchor;
 
   [popover] {
@@ -30,12 +30,12 @@
     }
   }
 
-  .time-entry-user-search__list {
+  .user-search__list {
     display: flex;
     flex-direction: column;
     width: 100%;
 
-    li > a {
+    > li {
       padding: --spacing(2) --spacing(3);
       transition: colors 150ms;
       background-color: transparent;

@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
+import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
@@ -28,6 +29,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
@@ -36,7 +38,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.testcontainers.shaded.com.google.common.base.Function;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
@@ -55,6 +59,7 @@ import static de.focusshift.zeiterfassung.absence.AbsenceColor.YELLOW;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -66,6 +71,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -76,6 +82,11 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standal
 
 @ExtendWith(MockitoExtension.class)
 class TimeEntryControllerTest implements ControllerTest {
+
+    private static final String TIME_ENTRIES_URL_TEMPLATE = "/timeentries";
+    private static final String TIME_ENTRIES_EDIT_URL_TEMPLATE = "/timeentries/{timeEntryId}";
+    private static final String TIME_ENTRIES_USER_URL_TEMPLATE = "/timeentries/users/{userId}";
+    private static final String TIME_ENTRIES_USER_EDIT_URL_TEMPLATE = "/timeentries/users/{userId}/timeentry/{timeEntryId}";
 
     private TimeEntryController sut;
 
@@ -93,101 +104,44 @@ class TimeEntryControllerTest implements ControllerTest {
     private DateFormatter dateFormatter;
     @Mock
     private TimeEntryViewHelper timeEntryViewHelper;
+    @Mock
+    private UserSearchViewHelper userSearchViewHelper;
 
     private Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, clock);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/timeentries", "/timeentries/users/1337"})
-    void ensureTimeEntriesUserSearch(String url) throws Exception {
-        final UserId userId = new UserId("batman");
-        final UserLocalId userLocalId = new UserLocalId(1L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+    @ValueSource(strings = {TIME_ENTRIES_URL_TEMPLATE, "/timeentries/users/42"})
+    void ensureUserSearchReturnsSuggestionsFrameWithJavaScript(String url) throws Exception {
 
-        final UserId jokerUserId = new UserId("batman");
-        final UserLocalId jokerUserLocalId = new UserLocalId(2L);
-        final UserIdComposite jokerUserIdComposite = new UserIdComposite(jokerUserId, jokerUserLocalId);
-
-        final User joker = new User(jokerUserIdComposite, "Jack", "Napier", new EMailAddress("joker@example.org"), Set.of());
-        when(userManagementService.findAllUsers("joker")).thenReturn(List.of(joker));
-
-        perform(
-            get(url)
-                .queryParam("query", "joker")
-                .header("Turbo-Frame", "frame-users-suggestions")
-                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
-        )
-            .andExpect(status().isOk())
-            .andExpect(view().name("timeentries/fragments/user-search::#frame-users-suggestions"))
-            .andExpect(model().attributeDoesNotExist("userSearchEnabled"))
-            .andExpect(model().attribute("userSearchSuggestions", List.of(
-                new TimeEntryController.UserSearchSuggestion("JN", "Jack Napier", "joker@example.org", jokerUserLocalId.value())
-            )));
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-        "/timeentries,",
-        "/timeentries, any-value",
-        "/timeentries/users/1337,",
-        "/timeentries/users/1337, any-value",
-    })
-    void ensureTimeEntriesUserSearchDoesNotWorkWithoutMatchingTurboFrame(String url, String givenTurboFrame) throws Exception {
-        mockUserSettings(ZoneOffset.UTC);
-        when(timeEntryDayService.getEntryWeekPage(any(UserLocalId.class), anyInt(), anyInt())).thenReturn(emptyTimeEntryWeekPage());
-
-        // this is only called for other persons timeentries
-        lenient().when(userManagementService.findUserByLocalId(any(UserLocalId.class)))
-            .thenReturn(Optional.of(anyUser(anyUserIdComposite(new UserId("any-user")))));
-
-        final UserId userId = new UserId("batman");
+        final UserId userId = new UserId("uuid");
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
-        perform(
-            get(url)
-                .queryParam("query", "joker")
-                .header("Turbo-Frame", givenTurboFrame)
-                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
+        final CurrentOidcUser oidcUser = currentOidcUser(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL));
+
+        when(userSearchViewHelper.getSuggestionFragment(eq("super"), eq(oidcUser), any(Model.class), any(java.util.function.Function.class)))
+            .thenReturn(new ModelAndView("user-search-view"));
+
+        perform(get(url)
+            .with(oidcLogin().oidcUser(oidcUser))
+            .header("Turbo-Frame", "frame-users-suggestions")
+            .param("query", "super")
         )
             .andExpect(status().isOk())
-            .andExpect(view().name("timeentries/index"))
-            .andExpect(model().attribute("userSearchEnabled", true))
-            .andExpect(model().attributeDoesNotExist("userSearchSuggestions"));
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = SecurityRole.class, names = {"ZEITERFASSUNG_USER", "ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL"}, mode = EXCLUDE)
-    void ensureTimeEntriesUserSearchNotAllowed(SecurityRole role) throws Exception {
-        mockUserSettings(ZoneOffset.UTC);
-        when(timeEntryDayService.getEntryWeekPage(any(UserLocalId.class), anyInt(), anyInt())).thenReturn(emptyTimeEntryWeekPage());
-
-        final UserId userId = new UserId("batman");
-        final UserLocalId userLocalId = new UserLocalId(42L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-
-        perform(
-            get("/timeentries")
-                .queryParam("query", "joker")
-                .header("Turbo-Frame", "frame-users-suggestions")
-                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, role)))
-        )
-            .andExpect(status().isOk())
-            .andExpect(view().name("timeentries/index"))
-            .andExpect(model().attribute("userSearchEnabled", false))
-            .andExpect(model().attributeDoesNotExist("userSearchSuggestions"));
+            .andExpect(view().name("user-search-view"));
     }
 
     @Test
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, clock);
 
         mockUserSettings(ZoneOffset.UTC);
 
@@ -250,9 +204,8 @@ class TimeEntryControllerTest implements ControllerTest {
 
         when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(expectedTimeEntryDto);
 
-        perform(
-            get("/timeentries")
-                .with(oidcSubject(userIdComposite))
+        perform(get(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attribute("timeEntryWeeksPage", is(expectedPage)));
@@ -348,9 +301,10 @@ class TimeEntryControllerTest implements ControllerTest {
 
         when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(expectedTimeEntryDto);
 
-        perform(
-            get("/timeentries").queryParam("year", "2025").queryParam("week", "1")
-                .with(oidcSubject(userIdComposite))
+        perform(get(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
+            .queryParam("year", "2025")
+            .queryParam("week", "1")
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -421,10 +375,11 @@ class TimeEntryControllerTest implements ControllerTest {
 
         when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(expectedTimeEntryDto);
 
-        perform(
-            get("/timeentries").queryParam("year", "2025").queryParam("week", "01")
-                .header("Turbo-Frame", "frame-time-entry-weeks")
-                .with(oidcSubject(userIdComposite))
+        perform(get(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
+            .queryParam("year", "2025")
+            .queryParam("week", "01")
+            .header("Turbo-Frame", "frame-time-entry-weeks")
         )
             .andExpect(view().name("timeentries/index::#frame-time-entry-weeks"))
             .andExpect(model().attribute("turboStreamsEnabled", is(true)))
@@ -462,9 +417,10 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2023, 1, 2022, 51, expectedTimeEntryWeekDto, 0);
 
-        perform(
-            get("/timeentries").queryParam("year", "2022").queryParam("week", "52")
-                .with(oidcSubject(userIdComposite))
+        perform(get(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
+            .queryParam("year", "2022")
+            .queryParam("week", "52")
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -498,9 +454,10 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 2, 2021, 52, expectedTimeEntryWeekDto, 0);
 
-        perform(
-            get("/timeentries").queryParam("year", "2022").queryParam("week", "1")
-                .with(oidcSubject(userIdComposite))
+        perform(get(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
+            .queryParam("year", "2022")
+            .queryParam("week", "1")
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -534,9 +491,10 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2021, 2, 2020, 53, expectedTimeEntryWeekDto, 0);
 
-        perform(
-            get("/timeentries").queryParam("year", "2021").queryParam("week", "1")
-                .with(oidcSubject(userIdComposite))
+        perform(get(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
+            .queryParam("year", "2021")
+            .queryParam("week", "1")
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attributeDoesNotExist("turboStreamsEnabled"))
@@ -561,7 +519,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         clock = Clock.fixed(Instant.parse("2025-03-18T10:04:00.00Z"), ZoneOffset.UTC);
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, clock);
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, clock);
 
         final int year = 2025;
         final int weekOfYear = 12;
@@ -590,7 +548,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(weekOfYear, null, null, "00:00", "00:00", "00:00", false, 0.0, List.of());
         final TimeEntryWeeksPageDto expetectedWeeksPageDto = new TimeEntryWeeksPageDto(year, weekOfYear + 1, year, weekOfYear - 1, expectedTimeEntryWeekDto, 0);
 
-        perform(get("/timeentries/users/2")
+        perform(get(TIME_ENTRIES_USER_URL_TEMPLATE, ownerLocalId.value())
             .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
         )
             .andExpect(status().isOk())
@@ -610,16 +568,14 @@ class TimeEntryControllerTest implements ControllerTest {
 
         mockUserSettings(DayOfWeek.MONDAY);
 
-        perform(
-            post("/timeentries")
-                .header("Referer", "/timeentries")
-                .with(oidcSubject(userIdComposite)
-                )
-                .param("userLocalId", userLocalId.value().toString())
-                .param("date", "2022-01-02")
-                .param("start", "14:30:00.000+01:00")
-                .param("end", "15:00:00.000+01:00")
-                .param("comment", "hard work")
+        perform(post(TIME_ENTRIES_URL_TEMPLATE)
+            .header("Referer", "/timeentries")
+            .with(oidcSubject(userIdComposite))
+            .param("userLocalId", userLocalId.value().toString())
+            .param("date", "2022-01-02")
+            .param("start", "14:30:00.000+01:00")
+            .param("end", "15:00:00.000+01:00")
+            .param("comment", "hard work")
         )
             .andExpect(redirectedUrl("/timeentries"));
 
@@ -642,17 +598,15 @@ class TimeEntryControllerTest implements ControllerTest {
 
         mockUserSettings(DayOfWeek.MONDAY);
 
-        perform(
-            post("/timeentries")
-                .header("Referer", "/timeentries")
-                .with(oidcSubject(userIdComposite)
-                )
-                .param("userLocalId", userLocalId.value().toString())
-                .param("date", "2022-01-02")
-                .param("start", "14:30:00.000+01:00")
-                .param("end", "15:00:00.000+01:00")
-                .param("comment", "hard work")
-                .param("break", "true")
+        perform(post(TIME_ENTRIES_URL_TEMPLATE)
+            .header("Referer", "/timeentries")
+            .with(oidcSubject(userIdComposite))
+            .param("userLocalId", userLocalId.value().toString())
+            .param("date", "2022-01-02")
+            .param("start", "14:30:00.000+01:00")
+            .param("end", "15:00:00.000+01:00")
+            .param("comment", "hard work")
+            .param("break", "true")
         )
             .andExpect(redirectedUrl("/timeentries"));
 
@@ -677,16 +631,14 @@ class TimeEntryControllerTest implements ControllerTest {
 
         mockUserSettings(DayOfWeek.MONDAY);
 
-        perform(
-            post("/timeentries")
-                .header("Referer", "/timeentries")
-                .with(oidcSubject(userIdComposite)
-                )
-                .param("userLocalId", userLocalId.value().toString())
-                .param("date", "2022-01-02")
-                .param("start", "22:30:00.000+01:00")
-                .param("end", "01:15:00.000+01:00")
-                .param("comment", "hard work")
+        perform(post(TIME_ENTRIES_URL_TEMPLATE)
+            .header("Referer", "/timeentries")
+            .with(oidcSubject(userIdComposite))
+            .param("userLocalId", userLocalId.value().toString())
+            .param("date", "2022-01-02")
+            .param("start", "22:30:00.000+01:00")
+            .param("end", "01:15:00.000+01:00")
+            .param("comment", "hard work")
         )
             .andExpect(redirectedUrl("/timeentries"));
 
@@ -731,14 +683,12 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(
             2022, 1, 2021, 51, expectedTimeEntryWeekDto, 99);
 
-        perform(
-            post("/timeentries")
-                .with(oidcSubject(userIdComposite)
-                )
-                .param("userLocalId", userLocalId.value().toString())
-                .param("date", "2022-01-02")
-                .param("comment", "hard work")
-                .param("duration", "08:00")
+        perform(post(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
+            .param("userLocalId", userLocalId.value().toString())
+            .param("date", "2022-01-02")
+            .param("comment", "hard work")
+            .param("duration", "08:00")
             // missing start/end/value
         )
             .andExpect(view().name("timeentries/index"))
@@ -752,7 +702,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final UserId userId = new UserId("joker");
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
-        assertThatThrownBy(() -> perform(post("/timeentries/users/1337").with(oidcSubject(userIdComposite))))
+        assertThatThrownBy(() -> perform(post(TIME_ENTRIES_USER_URL_TEMPLATE, "1337").with(oidcSubject(userIdComposite))))
             .isInstanceOf(ServletException.class)
             .hasCauseInstanceOf(AccessDeniedException.class)
             .hasRootCauseMessage("You are not allowed to access timeentries of user 1337");
@@ -769,16 +719,14 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final UserLocalId ownerLocalId = new UserLocalId(2L);
 
-        perform(
-            post("/timeentries/users/2")
-                .header("Referer", "/timeentries/users/2")
-                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL))
-                )
-                .param("userLocalId", ownerLocalId.value().toString())
-                .param("date", "2025-03-17")
-                .param("start", "14:30:00.000+02:00")
-                .param("end", "15:00:00.000+02:00")
-                .param("comment", "hard work")
+        perform(post(TIME_ENTRIES_USER_URL_TEMPLATE, ownerLocalId.value())
+            .header("Referer", "/timeentries/users/2")
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
+            .param("userLocalId", ownerLocalId.value().toString())
+            .param("date", "2025-03-17")
+            .param("start", "14:30:00.000+02:00")
+            .param("end", "15:00:00.000+02:00")
+            .param("comment", "hard work")
         )
             .andExpect(redirectedUrl("http://localhost/timeentries/users/2"));
 
@@ -800,18 +748,16 @@ class TimeEntryControllerTest implements ControllerTest {
 
         mockUserSettings(DayOfWeek.MONDAY);
 
-        perform(
-            post("/timeentries/1337")
-                .header("Referer", "/timeentries/2022/39")
-                .with(oidcSubject(userIdComposite)
-                )
-                .param("id", "1337")
-                .param("userLocalId", userIdComposite.localId().value().toString())
-                .param("date", "2022-09-28")
-                .param("start", "21:15:00.000+01:00")
-                .param("end", "")
-                .param("duration", "01:00")
-                .param("comment", "")
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
+            .header("Referer", "/timeentries/2022/39")
+            .with(oidcSubject(userIdComposite))
+            .param("id", "1337")
+            .param("userLocalId", userIdComposite.localId().value().toString())
+            .param("date", "2022-09-28")
+            .param("start", "21:15:00.000+01:00")
+            .param("end", "")
+            .param("duration", "01:00")
+            .param("comment", "")
         )
             .andExpect(redirectedUrl("/timeentries/2022/39"));
 
@@ -871,17 +817,15 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
 
-        perform(
-            post("/timeentries/1337")
-                .header("Turbo-Frame", "any-value")
-                .with(oidcSubject(userIdComposite)
-                )
-                .param("id", "1337")
-                .param("userLocalId", userIdComposite.localId().value().toString())
-                .param("date", "2022-09-28")
-                .param("start", "20:30:00.000+01:00")
-                .param("end", "21:15:00.000+01:00")
-                .param("comment", "hard work extended")
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
+            .header("Turbo-Frame", "any-value")
+            .with(oidcSubject(userIdComposite))
+            .param("id", "1337")
+            .param("userLocalId", userIdComposite.localId().value().toString())
+            .param("date", "2022-09-28")
+            .param("start", "20:30:00.000+01:00")
+            .param("end", "21:15:00.000+01:00")
+            .param("comment", "hard work extended")
         )
             .andExpect(status().isOk())
             .andExpect(view().name("timeentries/index::#frame-time-entry"));
@@ -959,14 +903,12 @@ class TimeEntryControllerTest implements ControllerTest {
 
         when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(expectedTimeEntryDto);
 
-        perform(
-            post("/timeentries/1337")
-                .with(oidcSubject(userIdComposite)
-                )
-                .param("id", "1337")
-                .param("userLocalId", userLocalId.value().toString())
-                .param("date", "2022-01-02")
-                .param("comment", "hard work")
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
+            .with(oidcSubject(userIdComposite))
+            .param("id", "1337")
+            .param("userLocalId", userLocalId.value().toString())
+            .param("date", "2022-01-02")
+            .param("comment", "hard work")
             // missing start/end/value
         )
             .andExpect(view().name("timeentries/index"))
@@ -993,17 +935,15 @@ class TimeEntryControllerTest implements ControllerTest {
             return null;
         }).when(timeEntryViewHelper).updateTimeEntry(any(CurrentOidcUser.class), eq(expectedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
 
-        perform(
-            post("/timeentries/1337")
-                .header("Turbo-Frame", "any-value")
-                .with(oidcSubject(userIdComposite)
-                )
-                .param("id", "1337")
-                .param("userLocalId", userLocalId.value().toString())
-                .param("date", "2022-09-28")
-                .param("start", "")
-                .param("end", "")
-                .param("comment", "hard work extended")
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
+            .header("Turbo-Frame", "any-value")
+            .with(oidcSubject(userIdComposite))
+            .param("id", "1337")
+            .param("userLocalId", userLocalId.value().toString())
+            .param("date", "2022-09-28")
+            .param("start", "")
+            .param("end", "")
+            .param("comment", "hard work extended")
         )
             .andExpect(model().attributeDoesNotExist("timeEntryWeeks"))
             .andExpect(view().name("timeentries/index::#frame-time-entry"));
@@ -1031,17 +971,15 @@ class TimeEntryControllerTest implements ControllerTest {
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
-        perform(
-            post("/timeentries/users/2/timeentry/42")
-                .header("Referer", "/timeentries/users/2")
-                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL))
-                )
-                .param("id", "42")
-                .param("userLocalId", "2")
-                .param("date", "2025-03-17")
-                .param("start", "20:30:00.000+02:00")
-                .param("end", "21:15:00.000+02:00")
-                .param("comment", "hard work extended")
+        perform(post(TIME_ENTRIES_USER_EDIT_URL_TEMPLATE, "2", "42")
+            .header("Referer", "/timeentries/users/2")
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
+            .param("id", "42")
+            .param("userLocalId", "2")
+            .param("date", "2025-03-17")
+            .param("start", "20:30:00.000+02:00")
+            .param("end", "21:15:00.000+02:00")
+            .param("comment", "hard work extended")
         )
             .andExpect(redirectedUrl("/timeentries/users/2"));
 
@@ -1065,22 +1003,21 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
 
+        final TimeEntryId timeEntryToDeleteId = new TimeEntryId(1337L);
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1337L), userIdComposite, "hard work extended", start, end, false);
+        final TimeEntry timeEntry = new TimeEntry(timeEntryToDeleteId, userIdComposite, "hard work extended", start, end, false);
 
-        when(timeEntryService.findTimeEntry(new TimeEntryId(1337L))).thenReturn(Optional.of(timeEntry));
+        when(timeEntryService.findTimeEntry(timeEntryToDeleteId)).thenReturn(Optional.of(timeEntry));
 
-        perform(
-            post("/timeentries/1337")
-                .with(oidcSubject(userIdComposite)
-                )
-                .param("delete", "")
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, timeEntryToDeleteId.value())
+            .with(oidcSubject(userIdComposite))
+            .param("delete", "")
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/timeentries?year=2022&week=39"));
 
-        verify(timeEntryService).deleteTimeEntry(new TimeEntryId(1337L));
+        verify(timeEntryService).deleteTimeEntry(timeEntryToDeleteId);
     }
 
     @Test
@@ -1092,15 +1029,16 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
 
+        final TimeEntryId timeEntryToDeleteId = new TimeEntryId(1L);
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntryToDelete = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", start, end, false);
+        final TimeEntry timeEntryToDelete = new TimeEntry(timeEntryToDeleteId, userIdComposite, "hard work", start, end, false);
 
         final ZonedDateTime start2 = ZonedDateTime.of(2022, 9, 28, 16, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end2 = ZonedDateTime.of(2022, 9, 28, 17, 30, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet", start2, end2, false);
 
-        when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntryToDelete));
+        when(timeEntryService.findTimeEntry(timeEntryToDeleteId)).thenReturn(Optional.of(timeEntryToDelete));
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2022, 9, 28), new WorkDuration(Duration.ofHours(1)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry2), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
@@ -1157,19 +1095,17 @@ class TimeEntryControllerTest implements ControllerTest {
         when(timeEntryViewHelper.toTimeEntryDto(timeEntryToDelete)).thenReturn(expectedDeletedTimeEntryDeletedDto);
         when(timeEntryViewHelper.toTimeEntryDto(timeEntry2)).thenReturn(expectedTimeEntry2Dto);
 
-        perform(
-            post("/timeentries/1")
-                .with(oidcSubject(userIdComposite)
-                )
-                .param("delete", "")
-                .header("Turbo-Frame", "awesome-turbo-frame")
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, timeEntryToDeleteId.value())
+            .with(oidcSubject(userIdComposite))
+            .param("delete", "")
+            .header("Turbo-Frame", "awesome-turbo-frame")
         )
             .andExpect(status().isOk())
             .andExpect(model().attribute("turboEditedWeek", expectedWeekDto))
             .andExpect(model().attribute("turboEditedDay", expectedDayDto))
             .andExpect(model().attribute("turboDeletedTimeEntry", expectedDeletedTimeEntryDeletedDto));
 
-        verify(timeEntryService).deleteTimeEntry(new TimeEntryId(1L));
+        verify(timeEntryService).deleteTimeEntry(timeEntryToDeleteId);
     }
 
     @Test
@@ -1181,11 +1117,12 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
 
+        final TimeEntryId timeEntryToDeleteId = new TimeEntryId(1L);
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntryToDelete = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hard work", start, end, false);
+        final TimeEntry timeEntryToDelete = new TimeEntry(timeEntryToDeleteId, userIdComposite, "hard work", start, end, false);
 
-        when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntryToDelete));
+        when(timeEntryService.findTimeEntry(timeEntryToDeleteId)).thenReturn(Optional.of(timeEntryToDelete));
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of());
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 0);
@@ -1217,19 +1154,17 @@ class TimeEntryControllerTest implements ControllerTest {
 
         when(timeEntryViewHelper.toTimeEntryDto(timeEntryToDelete)).thenReturn(expectedDeletedTimeEntryDto);
 
-        perform(
-            post("/timeentries/1")
-                .with(oidcSubject(userIdComposite)
-                )
-                .param("delete", "")
-                .header("Turbo-Frame", "awesome-turbo-frame")
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, timeEntryToDeleteId.value())
+            .with(oidcSubject(userIdComposite))
+            .param("delete", "")
+            .header("Turbo-Frame", "awesome-turbo-frame")
         )
             .andExpect(status().isOk())
             .andExpect(model().attribute("turboEditedWeek", expectedWeekDto))
             .andExpect(model().attribute("turboEditedDay", nullValue()))
             .andExpect(model().attribute("turboDeletedTimeEntry", expectedDeletedTimeEntryDto));
 
-        verify(timeEntryService).deleteTimeEntry(new TimeEntryId(1L));
+        verify(timeEntryService).deleteTimeEntry(timeEntryToDeleteId);
     }
 
     @Test
@@ -1247,7 +1182,10 @@ class TimeEntryControllerTest implements ControllerTest {
         final UserId userId = new UserId("joker");
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
-        assertThatThrownBy(() -> perform(post("/timeentries/users/1337/timeentry/1").with(oidcSubject(userIdComposite)).param("delete", "")))
+        assertThatThrownBy(() ->
+            perform(post(TIME_ENTRIES_USER_EDIT_URL_TEMPLATE, ownerUserLocalId.value(), timeEntryId.value())
+                .with(oidcSubject(userIdComposite)).param("delete", ""))
+        )
             .isInstanceOf(ServletException.class)
             .hasCauseInstanceOf(AccessDeniedException.class)
             .hasRootCauseMessage("You are not allowed to access timeentries of user 1337");
@@ -1271,24 +1209,14 @@ class TimeEntryControllerTest implements ControllerTest {
 
         when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(timeEntry));
 
-        perform(
-            post("/timeentries/users/2/timeentry/42")
-                .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL))
-                )
-                .param("delete", "")
+        perform(post(TIME_ENTRIES_USER_EDIT_URL_TEMPLATE, ownerLocalId.value(), "42")
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
+            .param("delete", "")
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("http://localhost/timeentries/users/2?year=2025&week=12"));
 
         verify(timeEntryService).deleteTimeEntry(timeEntryId);
-    }
-
-    private UserIdComposite anyUserIdComposite(UserId userId) {
-        return new UserIdComposite(userId, new UserLocalId(1L));
-    }
-
-    private User anyUser(UserIdComposite userIdComposite) {
-        return new User(userIdComposite, "given name", "family name", new EMailAddress("email@example.org"), Set.of());
     }
 
     private TimeEntry anyTimeEntry(TimeEntryId id, UserIdComposite userIdComposite) {

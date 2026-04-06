@@ -38,11 +38,9 @@
   </head>
   <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
     <th:block th:ref="search">
-      <th:block th:if="${userSearchEnabled}">
-        <div
-          th:replace="~{timeentries/fragments/user-search::user-search}"
-        ></div>
-      </th:block>
+      <div
+        th:replace="~{fragments/user-search::user-search(placeholder=#{timeentries.usersearch.placeholder})}"
+      ></div>
     </th:block>
 
     <th:block

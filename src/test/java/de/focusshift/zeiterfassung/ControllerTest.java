@@ -2,8 +2,10 @@ package de.focusshift.zeiterfassung;
 
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -12,13 +14,22 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.OidcLoginRequestPostProcessor;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 
 public interface ControllerTest {
 
-    default UserIdComposite anyUserIdComposit() {
-        return new UserIdComposite(new UserId("uuid"), new UserLocalId(1L));
+    default UserIdComposite anyUserIdComposite() {
+        return anyUserIdComposite(new UserId("uuid"));
+    }
+
+    default UserIdComposite anyUserIdComposite(UserId userId) {
+        return new UserIdComposite(userId, new UserLocalId(1L));
+    }
+
+    default User anyUser(UserIdComposite userIdComposite) {
+        return new User(userIdComposite, "given name", "family name", new EMailAddress("email@example.org"), Set.of());
     }
 
     /**
@@ -68,6 +79,11 @@ public interface ControllerTest {
      * @return {@link OidcLoginRequestPostProcessor} configured with idToken and userInfoToken
      */
     default OidcLoginRequestPostProcessor oidcSubject(UserIdComposite userIdComposite, List<SecurityRole> roles) {
+        final CurrentOidcUser currentOidcUser = currentOidcUser(userIdComposite, roles);
+        return oidcLogin().oidcUser(currentOidcUser);
+    }
+
+    default CurrentOidcUser currentOidcUser(UserIdComposite userIdComposite, List<SecurityRole> roles) {
 
         final List<GrantedAuthority> authorities = roles.stream().map(SecurityRole::authority).toList();
 
@@ -79,8 +95,6 @@ public interface ControllerTest {
             .name("Some Name");
 
         final DefaultOidcUser defaultOidcUser = new DefaultOidcUser(authorities, tokenBuilder.build(), userInfoBuilder.build());
-        final CurrentOidcUser currentUser = new CurrentOidcUser(defaultOidcUser, List.of(), authorities, userIdComposite.localId());
-
-        return oidcLogin().oidcUser(currentUser);
+        return new CurrentOidcUser(defaultOidcUser, List.of(), authorities, userIdComposite.localId());
     }
 }

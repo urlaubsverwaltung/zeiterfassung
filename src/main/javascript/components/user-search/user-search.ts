@@ -1,11 +1,11 @@
 import { TurboFrameRenderEvent } from "@hotwired/turbo";
 
-export class TimeEntryUserSearch extends HTMLElement {
+export class UserSearch extends HTMLElement {
   private cleanup = () => {};
   private popoverVisible = false;
 
   connectedCallback() {
-    const handleFocusin = () => {
+    const handleThisFocusin = () => {
       // trigger empty search to show initial suggestions when input is focused
       if (document.activeElement?.matches("input")) {
         this.submit();
@@ -24,25 +24,41 @@ export class TimeEntryUserSearch extends HTMLElement {
       }
     };
 
-    const handleFocusout = () => {
-      if (this.popoverVisible && !this.matches(":focus-within")) {
-        // safari doesn't like hiding this synchronously...
-        // clicking a link first triggers focusout, THEN the link click is handled (click, document.activeElement, ...)
-        // therefore delay hiding so clicking a link has an effect.
-        // this should not be a problem in other browsers since the full page is loaded which "closes" the popover, too.
-        setTimeout(() => {
-          this.hideSuggestionsPopover();
-        }, 150);
+    // suggestion popover should not be closed
+    // when a suggestion link is supposed to be clicked
+    let pointerdownSuggestionLink = false;
+
+    const handleGlobalPointerdown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement;
+      pointerdownSuggestionLink = Boolean(
+        target.closest("a") && this.contains(target),
+      );
+    };
+
+    const handleGlobalPointerup = () => {
+      pointerdownSuggestionLink = false;
+    };
+
+    const handleThisFocusout = (event: FocusEvent) => {
+      if (
+        !pointerdownSuggestionLink &&
+        !this.contains(event.relatedTarget as Element)
+      ) {
+        this.hideSuggestionsPopover();
       }
     };
 
-    this.addEventListener("focusin", handleFocusin);
-    this.addEventListener("focusout", handleFocusout);
+    this.addEventListener("focusin", handleThisFocusin);
+    this.addEventListener("focusout", handleThisFocusout);
+    document.addEventListener("pointerdown", handleGlobalPointerdown);
+    document.addEventListener("pointerup", handleGlobalPointerup);
     document.addEventListener("turbo:frame-render", handleFrameRender);
 
     this.cleanup = function () {
-      this.removeEventListener("focusin", handleFocusin);
-      this.removeEventListener("focusout", handleFocusout);
+      this.removeEventListener("focusin", handleThisFocusin);
+      this.removeEventListener("focusout", handleThisFocusout);
+      document.removeEventListener("pointerdown", handleGlobalPointerdown);
+      document.removeEventListener("pointerup", handleGlobalPointerup);
       document.removeEventListener("turbo:frame-render", handleFrameRender);
     };
   }
@@ -75,4 +91,4 @@ export class TimeEntryUserSearch extends HTMLElement {
   }
 }
 
-customElements.define("z-time-entry-user-search", TimeEntryUserSearch);
+customElements.define("z-user-search", UserSearch);

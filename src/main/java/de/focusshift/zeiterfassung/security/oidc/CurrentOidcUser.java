@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.stream.Collectors.toSet;
@@ -132,5 +133,16 @@ public class CurrentOidcUser implements OidcUser {
     @Override
     public String getName() {
         return oidcUser.getName();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        return this.oidcUser.equals(((CurrentOidcUser) o).oidcUser);
+    }
+
+    @Override
+    public int hashCode() {
+        return oidcUser.hashCode();
     }
 }

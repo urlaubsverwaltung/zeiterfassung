@@ -13,40 +13,9 @@
   </head>
   <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
     <th:block th:ref="search">
-      <form
-        id="person-search-form"
-        method="get"
-        action="#"
-        th:action="${personSearchFormAction}"
-        class="top-search-form"
-        data-turbo="true"
-        data-turbo-frame="person-list-frame"
-        data-turbo-action="replace"
-      >
-        <label
-          for="person-query"
-          th:text="#{usermanagement.person-list.search.label}"
-        >
-          Personensuche
-        </label>
-        <input
-          type="search"
-          name="query"
-          placeholder="Suche nach Vor- / Nachname"
-          th:placeholder="#{usermanagement.person-list.search.placeholder}"
-          th:value="${query}"
-          id="person-query"
-          data-auto-submit="user-search-submit"
-          data-auto-submit-delay="100"
-        />
-        <button
-          id="user-search-submit"
-          type="submit"
-          th:text="#{usermanagement.person-list.search.submit}"
-        >
-          Suchen
-        </button>
-      </form>
+      <div
+        th:replace="~{fragments/user-search::user-search(placeholder=#{usermanagement.person-list.search.placeholder})}"
+      ></div>
     </th:block>
 
     <th:block th:fragment="content">
@@ -81,96 +50,61 @@
               data-hidden-with-selected-user
               is="z-user-selection-list"
             >
-              <turbo-frame id="person-list-frame">
-                <turbo-stream target="user-settings-tabs" action="replace">
-                  <template th:insert="~{::#user-settings-tabs}"></template>
-                </turbo-stream>
-                <ol class="flex flex-col user-selection-list">
-                  <th:block th:each="user : ${users}">
-                    <li
-                      class="py-3 px-2 flex items-center gap-4 rounded-xl transition-colors"
+              <ol id="person-list" class="flex flex-col user-selection-list">
+                <th:block th:each="user : ${users}">
+                  <li
+                    class="py-3 px-2 flex items-center gap-4 rounded-xl transition-colors"
+                  >
+                    <span class="shrink-0 text-blue-300">
+                      <img
+                        alt=""
+                        th:replace="~{fragments/avatar::avatar(${user.initials},${user.fullName},48,48)}"
+                      />
+                    </span>
+                    <a
+                      th:fragment="user-element-link(user)"
+                      th:id="${'user-element-link-' + user.id}"
+                      href="#"
+                      th:href="@{/users/{id}{slug} (id=${user.id}, query=${query}, slug=${#strings.isEmpty(slug) ? '' : '/' + slug})}"
+                      th:aria-current="${selectedUser != null && user.id == selectedUser.id ? 'page' : ''}"
+                      th:data-user="${user.id}"
+                      class="flex-1 flex items-center justify-between gap-4"
+                      data-turbo-frame="person-frame"
+                      data-turbo-action="advance"
+                      data-testid="users-list-person-link"
                     >
-                      <span class="shrink-0 text-blue-300">
-                        <img
-                          alt=""
-                          th:replace="~{fragments/avatar::avatar(${user.initials},${user.fullName},48,48)}"
-                        />
+                      <span class="flex flex-col wrap-anywhere">
+                        <span
+                          class="text-black"
+                          th:text="${user.fullName}"
+                        ></span>
+                        <span
+                          class="text-gray-400"
+                          th:text="${user.email}"
+                        ></span>
                       </span>
-                      <a
-                        th:fragment="user-element-link(user)"
-                        th:id="${'user-element-link-' + user.id}"
-                        href="#"
-                        th:href="@{/users/{id}{slug} (id=${user.id}, query=${query}, slug=${#strings.isEmpty(slug) ? '' : '/' + slug})}"
-                        th:aria-current="${selectedUser != null && user.id == selectedUser.id ? 'page' : ''}"
-                        th:data-user="${user.id}"
-                        class="flex-1 flex items-center justify-between gap-4"
-                        data-turbo-frame="person-frame"
-                        data-turbo-action="advance"
-                        data-testid="users-list-person-link"
-                      >
-                        <span class="flex flex-col wrap-anywhere">
-                          <span
-                            class="text-black"
-                            th:text="${user.fullName}"
-                          ></span>
-                          <span
-                            class="text-gray-400"
-                            th:text="${user.email}"
-                          ></span>
-                        </span>
-                        <svg
-                          th:replace="~{icons/chevron-right::svg(className='w-6 h-6 text-gray-400')}"
-                        ></svg>
-                      </a>
-                    </li>
-                    <li th:if="${not userStat.last}" role="separator">
-                      <div class="bg-gray-100 h-px mx-2"></div>
-                    </li>
-                  </th:block>
-                </ol>
-              </turbo-frame>
+                      <svg
+                        th:replace="~{icons/chevron-right::svg(className='w-6 h-6 text-gray-400')}"
+                      ></svg>
+                    </a>
+                  </li>
+                  <li th:if="${not userStat.last}" role="separator">
+                    <div class="bg-gray-100 h-px mx-2"></div>
+                  </li>
+                </th:block>
+              </ol>
             </div>
             <turbo-frame class="flex-1" id="person-frame">
-              <th:block th:if="${selectedUser}">
-                <turbo-stream
-                  th:each="user : ${users}"
-                  th:target="${'user-element-link-' + user.id}"
-                  action="replace"
-                >
-                  <template
-                    th:insert="~{::user-element-link(${user})}"
-                  ></template>
-                </turbo-stream>
-                <turbo-stream target="back-to-users-link" action="replace">
-                  <template th:insert="~{::#back-to-users-link}"></template>
-                </turbo-stream>
-                <turbo-stream target="person-search-form" action="replace">
-                  <template th:insert="~{::#person-search-form}"></template>
-                </turbo-stream>
-              </th:block>
+              <turbo-stream target="person-list" action="replace">
+                <template th:insert="~{::#person-list}"></template>
+              </turbo-stream>
               <div
                 class="h-full flex flex-col"
                 style="--display-when-visible: flex"
                 data-hidden-without-selected-user
               >
-                <div class="@5xl/main:hidden mb-8">
-                  <a
-                    id="back-to-users-link"
-                    href="#"
-                    th:href="@{/users (query=${query})}"
-                    class="inline-flex items-center gap-2 text-black font-medium"
-                    th:if="${selectedUser}"
-                    data-turbo-frame="_top"
-                    data-turbo-action="advance"
-                  >
-                    <svg
-                      th:replace="~{icons/arrow-left::svg(className='w-5 h-5')}"
-                    ></svg>
-                    Zurück zu Personen
-                  </a>
-                </div>
                 <div
-                  class="flex-1 flex flex-col border border-gray-100 rounded-xl overflow-hidden flex"
+                  class="flex-1 flex flex-col border border-gray-100 rounded-xl overflow-hidden"
                   th:classappend="${selectedUser == null ? 'bg-gradient-to-br from-blue-200 to-blue-50' : ''}"
                 >
                   <div
@@ -188,7 +122,7 @@
                     th:if="${selectedUser}"
                     class="w-full h-full flex flex-col"
                   >
-                    <div class="bg-gradient-to-br from-blue-200 to-blue-100">
+                    <div class="bg-linear-to-br from-blue-200 to-blue-100">
                       <h2
                         class="sr-only"
                         th:text="${selectedUser.fullName}"

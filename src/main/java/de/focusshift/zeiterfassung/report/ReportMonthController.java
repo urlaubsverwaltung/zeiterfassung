@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
+import de.focusshift.zeiterfassung.search.HasUserSearch;
+import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
@@ -16,6 +18,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -37,17 +42,26 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Function;
 
+import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.FRAME_USERS_SUGGESTION;
+import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
+import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_SIGNAL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.ScrollPreservation.PRESERVE;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_REFRESH_SCROLL_ATTRIBUTE;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_STREAM_MEDIA_TYPE;
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.net.URLEncoder.encode;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.fromMethodCall;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 @Controller
-class ReportMonthController implements HasTimeClock, HasLaunchpad {
+class ReportMonthController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
@@ -56,17 +70,20 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
     private final DateFormatter dateFormatter;
     private final ReportViewHelper viewHelper;
     private final TimeEntryDialogHelper timeEntryDialogHelper;
+    private final UserSearchViewHelper userSearchViewHelper;
     private final ReportPermissionService reportPermissionService;
     private final Clock clock;
 
     ReportMonthController(ReportService reportService, ReportPermissionService reportPermissionService,
                           DateFormatter dateFormatter, ReportViewHelper viewHelper,
-                          TimeEntryDialogHelper timeEntryDialogHelper, Clock clock) {
+                          TimeEntryDialogHelper timeEntryDialogHelper, UserSearchViewHelper userSearchViewHelper,
+                          Clock clock) {
         this.reportService = reportService;
         this.dateFormatter = dateFormatter;
         this.viewHelper = viewHelper;
         this.timeEntryDialogHelper = timeEntryDialogHelper;
         this.reportPermissionService = reportPermissionService;
+        this.userSearchViewHelper = userSearchViewHelper;
         this.clock = clock;
     }
 
@@ -82,8 +99,8 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
 
     @GetMapping("/report/year/{year}/month/{month}")
     public ModelAndView monthlyUserReport(
-        @PathVariable("year") Integer year,
-        @PathVariable("month") Integer month,
+        @PathVariable Integer year,
+        @PathVariable Integer month,
         @RequestParam(value = "everyone", required = false) String allUsersSelectedParam,
         @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
         @RequestParam(value = "timeEntryId", required = false) Long timeEntryId,
@@ -147,10 +164,32 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad {
         return new ModelAndView("reports/user-report");
     }
 
+    @GetMapping(value = {"/report/month", "/report/year/{year}/month/{month}"}, params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
+    @PreAuthorize("hasAuthority('ZEITERFASSUNG_VIEW_REPORT_ALL')")
+    ModelAndView userSearchFragment(
+        @RequestParam(USER_SEARCH_QUERY_PARAM) String query,
+        @PathVariable(required = false) Integer year,
+        @PathVariable(required = false) Integer month,
+        @CurrentUser CurrentOidcUser currentUser, Model model) {
+
+        if ((year != null && month == null) || (year == null && month != null)) {
+            LOG.error("called user search for month report but whether year or month is not given.");
+            return new ModelAndView("error/404");
+        }
+
+        final boolean monthMode = month != null;
+
+        return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
+            suggestion -> monthMode
+                ? "/report/year/%s/month/%s?user=%s".formatted(year, month, suggestion.userLocalId().value())
+                : "/report/month?user=%s".formatted(suggestion.userLocalId().value())
+        );
+    }
+
     @PostMapping("/report/year/{year}/month/{month}")
     public ModelAndView postEditTimeEntry(
-        @PathVariable("year") Integer year,
-        @PathVariable("month") Integer month,
+        @PathVariable Integer year,
+        @PathVariable Integer month,
         @Valid @ModelAttribute(name = "timeEntry") TimeEntryDTO timeEntryDTO, BindingResult errors,
         @RequestParam(value = "everyone", required = false) String allUsersSelectedParam,
         @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,

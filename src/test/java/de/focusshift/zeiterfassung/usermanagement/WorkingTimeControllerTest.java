@@ -2,6 +2,8 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.settings.FederalStateSettings;
 import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
@@ -21,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
-import org.springframework.security.web.method.annotation.CurrentSecurityContextArgumentResolver;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.validation.BindingResult;
@@ -39,6 +41,8 @@ import java.util.UUID;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BAYERN;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BERLIN;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
@@ -47,7 +51,6 @@ import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -65,6 +68,10 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standal
 @ExtendWith(MockitoExtension.class)
 class WorkingTimeControllerTest implements ControllerTest {
 
+    private static final String WORKING_TIME_CREATE_URL_TEMPLATE = "/users/{userId}/working-time/new";
+    private static final String WORKING_TIME_EDIT_URL_TEMPLATE = "/users/{userId}/working-time/{workingTimeId}";
+    private static final String WORKING_TIME_DELETE_URL_TEMPLATE = "/users/{userId}/working-time/{workingTimeId}/delete";
+
     private WorkingTimeController sut;
 
     @Mock
@@ -75,10 +82,12 @@ class WorkingTimeControllerTest implements ControllerTest {
     private WorkingTimeDtoValidator workingTimeDtoValidator;
     @Mock
     private FederalStateSettingsService federalStateSettingsService;
+    @Mock
+    private UserSearchViewHelper userSearchViewHelper;
 
     @BeforeEach
     void setUp() {
-        sut = new WorkingTimeController(userManagementService, workingTimeService, workingTimeDtoValidator, federalStateSettingsService);
+        sut = new WorkingTimeController(userManagementService, workingTimeService, workingTimeDtoValidator, federalStateSettingsService, userSearchViewHelper);
     }
 
     @Test
@@ -94,9 +103,8 @@ class WorkingTimeControllerTest implements ControllerTest {
         when(federalStateSettingsService.getFederalStateSettings())
             .thenReturn(new FederalStateSettings(GERMANY_BERLIN, true));
 
-        perform(
-            get("/users/42/working-time/new")
-                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        perform(get(WORKING_TIME_CREATE_URL_TEMPLATE, userLocalId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -122,9 +130,8 @@ class WorkingTimeControllerTest implements ControllerTest {
         when(federalStateSettingsService.getFederalStateSettings())
             .thenReturn(new FederalStateSettings(GERMANY_BERLIN, worksOnPublicHoliday));
 
-        perform(
-            get("/users/42/working-time/new")
-                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        perform(get(WORKING_TIME_CREATE_URL_TEMPLATE, userLocalId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
         )
             .andExpect(model().attribute("globalWorksOnPublicHoliday", expectedValue));
     }
@@ -153,10 +160,9 @@ class WorkingTimeControllerTest implements ControllerTest {
             }
         ).when(workingTimeDtoValidator).validate(eq(expectedWorkingTimeDto), any(BindingResult.class));
 
-        perform(
-            post("/users/42/working-time/new")
-                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
-                .param("userId", "42")
+        perform(post(WORKING_TIME_CREATE_URL_TEMPLATE, userLocalId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
+            .param("userId", "42")
         )
             .andExpect(status().isOk())
             .andExpect(model().attribute("createMode", true))
@@ -189,11 +195,10 @@ class WorkingTimeControllerTest implements ControllerTest {
             }
         ).when(workingTimeDtoValidator).validate(eq(expectedWorkingTimeDto), any(BindingResult.class));
 
-        perform(
-            post("/users/42/working-time/new")
-                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
-                .header("Turbo-Frame", "person-frame")
-                .param("userId", "42")
+        perform(post(WORKING_TIME_CREATE_URL_TEMPLATE, userLocalId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
+            .header("Turbo-Frame", "person-frame")
+            .param("userId", "42")
         )
             .andExpect(status().isUnprocessableContent())
             .andExpect(model().attribute("createMode", true))
@@ -205,14 +210,17 @@ class WorkingTimeControllerTest implements ControllerTest {
     @Test
     void ensurePostCreateWorkingTime() throws Exception {
 
-        perform(
-            post("/users/42/working-time/new")
-                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
-                .param("userId", "42")
-                .param("validFrom", "2024-04-01")
-                .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
-                .param("workday", "monday", "wednesday")
-                .param("workingTime", "4.0")
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        perform(post(WORKING_TIME_CREATE_URL_TEMPLATE, userLocalId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
+            .param("userId", "42")
+            .param("validFrom", "2024-04-01")
+            .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
+            .param("workday", "monday", "wednesday")
+            .param("workingTime", "4.0")
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/42/working-time"));
@@ -251,9 +259,8 @@ class WorkingTimeControllerTest implements ControllerTest {
         final WorkingTime workingTime = WorkingTime.builder(userIdComposite, workingTimeId).worksOnPublicHoliday(WorksOnPublicHoliday.GLOBAL).build();
         when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
 
-        perform(
-            get("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        perform(get(WORKING_TIME_EDIT_URL_TEMPLATE, userLocalId.value(), workingTimeId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -286,9 +293,8 @@ class WorkingTimeControllerTest implements ControllerTest {
 
         when(workingTimeService.getAllWorkingTimesByUser(userLocalId)).thenReturn(List.of(workingTime));
 
-        perform(
-            get("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
+        perform(get(WORKING_TIME_EDIT_URL_TEMPLATE, userLocalId.value(), workingTimeId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
         )
             .andExpect(model().attribute("globalWorksOnPublicHoliday", expectedValue));
     }
@@ -296,22 +302,25 @@ class WorkingTimeControllerTest implements ControllerTest {
     @Test
     void ensureEdit() throws Exception {
 
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
-        perform(
-            post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
-                .param("id", workingTimeId.value())
-                .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
-                .param("worksOnPublicHoliday", "true")
-                .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
-                .param("workingTimeMonday", "0")
-                .param("workingTimeTuesday", "1")
-                .param("workingTimeWednesday", "2")
-                .param("workingTimeThursday", "3")
-                .param("workingTimeFriday", "4")
-                .param("workingTimeSaturday", "5")
-                .param("workingTimeSunday", "6")
+        perform(post(WORKING_TIME_EDIT_URL_TEMPLATE, userLocalId.value(), workingTimeId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
+            .param("id", workingTimeId.value())
+            .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
+            .param("worksOnPublicHoliday", "true")
+            .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+            .param("workingTimeMonday", "0")
+            .param("workingTimeTuesday", "1")
+            .param("workingTimeWednesday", "2")
+            .param("workingTimeThursday", "3")
+            .param("workingTimeFriday", "4")
+            .param("workingTimeSaturday", "5")
+            .param("workingTimeSunday", "6")
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/42/working-time"));
@@ -332,23 +341,26 @@ class WorkingTimeControllerTest implements ControllerTest {
     @Test
     void ensureEditJavaScript() throws Exception {
 
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
-        perform(
-            post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
-                .header("Turbo-Frame", "awesome-frame")
-                .param("id", workingTimeId.value())
-                .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
-                .param("worksOnPublicHoliday", "true")
-                .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
-                .param("workingTimeMonday", "0")
-                .param("workingTimeTuesday", "1")
-                .param("workingTimeWednesday", "2")
-                .param("workingTimeThursday", "3")
-                .param("workingTimeFriday", "4")
-                .param("workingTimeSaturday", "5")
-                .param("workingTimeSunday", "6")
+        perform(post(WORKING_TIME_EDIT_URL_TEMPLATE, userLocalId.value(), workingTimeId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
+            .header("Turbo-Frame", "awesome-frame")
+            .param("id", workingTimeId.value())
+            .param("federalState", "GERMANY_BADEN_WUERTTEMBERG")
+            .param("worksOnPublicHoliday", "true")
+            .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+            .param("workingTimeMonday", "0")
+            .param("workingTimeTuesday", "1")
+            .param("workingTimeWednesday", "2")
+            .param("workingTimeThursday", "3")
+            .param("workingTimeFriday", "4")
+            .param("workingTimeSaturday", "5")
+            .param("workingTimeSunday", "6")
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/42/working-time"));
@@ -399,12 +411,11 @@ class WorkingTimeControllerTest implements ControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        perform(
-            post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcSubject("batman").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
-                .param("id", workingTimeId.value())
-                .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
-                .param("workingTime", "48")
+        perform(post(WORKING_TIME_EDIT_URL_TEMPLATE, supermanLocalId.value(), workingTimeId.value())
+            .with(oidcSubject(batmanIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
+            .param("id", workingTimeId.value())
+            .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
+            .param("workingTime", "48")
         )
             .andExpect(status().isOk())
             .andExpect(view().name("usermanagement/users"))
@@ -416,8 +427,7 @@ class WorkingTimeControllerTest implements ControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")))
             .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
-            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"))
-            .andExpect(model().attribute("personSearchFormAction", is("/users/42")));
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"));
 
         verifyNoInteractions(workingTimeService);
     }
@@ -457,11 +467,10 @@ class WorkingTimeControllerTest implements ControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        perform(
-            post("/users/42/working-time/" + UUID.randomUUID())
-                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority(authority)))
-                .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
-                .param("workingTime", "48")
+        perform(post(WORKING_TIME_EDIT_URL_TEMPLATE, supermanLocalId.value(), UUID.randomUUID())
+            .with(oidcSubject(batmanIdComposite, List.of(ZEITERFASSUNG_USER, SecurityRole.valueOf(authority))))
+            .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
+            .param("workingTime", "48")
         )
             .andExpect(model().attribute("allowedToEditWorkingTime", editWorkingTime))
             .andExpect(model().attribute("allowedToEditOvertimeAccount", editOvertimeAccount))
@@ -501,13 +510,12 @@ class WorkingTimeControllerTest implements ControllerTest {
         final User superman = new User(supermanIdComposite, "Clark", "Kent", new EMailAddress("superman@example.org"), Set.of());
         when(userManagementService.findAllUsers("")).thenReturn(List.of(batman, superman));
 
-        perform(
-            post("/users/42/working-time/" + workingTimeId.value())
-                .with(oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL")))
-                .header("Turbo-Frame", "awesome-frame")
-                .param("id", workingTimeId.value())
-                .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
-                .param("workingTime", "48")
+        perform(post(WORKING_TIME_EDIT_URL_TEMPLATE, supermanLocalId.value(), workingTimeId.value())
+            .with(oidcSubject(batmanIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
+            .header("Turbo-Frame", "awesome-frame")
+            .param("id", workingTimeId.value())
+            .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
+            .param("workingTime", "48")
         )
             .andExpect(status().isUnprocessableContent())
             .andExpect(view().name("usermanagement/users::#awesome-frame"))
@@ -519,8 +527,7 @@ class WorkingTimeControllerTest implements ControllerTest {
             )))
             .andExpect(model().attribute("selectedUser", new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")))
             .andExpect(model().attribute("workingTime", expectedWorkingTimeDto))
-            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BAYERN"))
-            .andExpect(model().attribute("personSearchFormAction", is("/users/42")));
+            .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BAYERN"));
 
         verifyNoInteractions(workingTimeService);
     }
@@ -528,15 +535,16 @@ class WorkingTimeControllerTest implements ControllerTest {
     @Test
     void ensureDeleteWorkingTimeRendersErrorPageWhenItCannotBeDeleted() throws Exception {
 
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
         when(workingTimeService.deleteWorkingTime(workingTimeId)).thenReturn(false);
 
-        perform(
-            post("/users/42/working-time/%s/delete".formatted(workingTimeId.value()))
-                .with(
-                    oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL"))
-                )
+        perform(post(WORKING_TIME_DELETE_URL_TEMPLATE, userLocalId.value(), workingTimeId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
         )
             .andExpect(status().isBadRequest())
             .andExpect(view().name("error/5xx"));
@@ -545,15 +553,16 @@ class WorkingTimeControllerTest implements ControllerTest {
     @Test
     void ensureDeleteWorkingTimeRedirectsToWorkingTimeView() throws Exception {
 
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
         final WorkingTimeId workingTimeId = new WorkingTimeId(UUID.randomUUID());
 
         when(workingTimeService.deleteWorkingTime(workingTimeId)).thenReturn(true);
 
-        perform(
-            post("/users/42/working-time/%s/delete".formatted(workingTimeId.value()))
-                .with(
-                    oidcSubject("uuid").authorities(new SimpleGrantedAuthority("ZEITERFASSUNG_WORKING_TIME_EDIT_ALL"))
-                )
+        perform(post(WORKING_TIME_DELETE_URL_TEMPLATE, userLocalId.value(), workingTimeId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/users/42/working-time"));
@@ -566,7 +575,7 @@ class WorkingTimeControllerTest implements ControllerTest {
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {
         return standaloneSetup(sut)
             .addFilters(new SecurityContextHolderFilter(new HttpSessionSecurityContextRepository()))
-            .setCustomArgumentResolvers(new CurrentSecurityContextArgumentResolver())
+            .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
             .build()
             .perform(builder);
     }

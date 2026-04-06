@@ -13,40 +13,9 @@
   </head>
   <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
     <th:block th:ref="search">
-      <form
-        id="person-search-form"
-        method="get"
-        action="#"
-        th:action="${personSearchFormAction}"
-        class="top-search-form"
-        data-turbo="true"
-        data-turbo-frame="person-list-frame"
-        data-turbo-action="replace"
-      >
-        <label
-          for="person-query"
-          th:text="#{usermanagement.person-list.search.label}"
-        >
-          Personensuche
-        </label>
-        <input
-          type="search"
-          name="query"
-          placeholder="Suche nach Vor- / Nachname"
-          th:placeholder="#{usermanagement.person-list.search.placeholder}"
-          th:value="${query}"
-          id="person-query"
-          data-auto-submit="user-search-submit"
-          data-auto-submit-delay="100"
-        />
-        <button
-          id="user-search-submit"
-          type="submit"
-          th:text="#{usermanagement.person-list.search.submit}"
-        >
-          Suchen
-        </button>
-      </form>
+      <div
+        th:replace="~{fragments/user-search::user-search(placeholder=#{user-search.input.placeholder})}"
+      ></div>
     </th:block>
 
     <th:block th:fragment="content">
@@ -59,7 +28,7 @@
                 <li>
                   <a
                     href="#"
-                    th:href="${#lists.isEmpty(selectedUserIds)} ? @{/report/week} : @{/report/week (user=${selectedUserIds})}"
+                    th:href="${#lists.isEmpty(selectedUserIds)} ? @{/report/week (query=${query})} : @{/report/week (query=${query},user=${selectedUserIds})}"
                     class="report-view-selection-link"
                     th:aria-current="${weekAriaCurrent}"
                     th:text="#{report.view.select.week}"

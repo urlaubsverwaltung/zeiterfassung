@@ -2,15 +2,18 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.search.HasUserSearch;
+import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.security.CurrentUser;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.settings.FederalStateSettings;
 import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
+import org.slf4j.Logger;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.CurrentSecurityContext;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -34,14 +37,16 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
+import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.FRAME_USERS_SUGGESTION;
+import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateMessageKey;
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
-import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.hasAuthority;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static de.focusshift.zeiterfassung.workingtime.WorkingTime.hoursToDuration;
+import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
@@ -49,6 +54,7 @@ import static java.time.DayOfWeek.SUNDAY;
 import static java.time.DayOfWeek.THURSDAY;
 import static java.time.DayOfWeek.TUESDAY;
 import static java.time.DayOfWeek.WEDNESDAY;
+import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 import static org.springframework.util.StringUtils.hasText;
@@ -59,49 +65,53 @@ import static org.springframework.util.StringUtils.hasText;
 @Controller
 @RequestMapping("/users/{userId}/working-time")
 @PreAuthorize("hasAuthority('ZEITERFASSUNG_WORKING_TIME_EDIT_ALL')")
-class WorkingTimeController implements HasTimeClock, HasLaunchpad {
+class WorkingTimeController implements HasTimeClock, HasLaunchpad, HasUserSearch {
+
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final UserManagementService userManagementService;
     private final WorkingTimeService workingTimeService;
     private final WorkingTimeDtoValidator validator;
     private final FederalStateSettingsService federalStateSettingsService;
+    private final UserSearchViewHelper userSearchViewHelper;
 
     WorkingTimeController(
         UserManagementService userManagementService,
         WorkingTimeService workingTimeService,
         WorkingTimeDtoValidator validator,
-        FederalStateSettingsService federalStateSettingsService
+        FederalStateSettingsService federalStateSettingsService,
+        UserSearchViewHelper userSearchViewHelper
     ) {
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
         this.validator = validator;
         this.federalStateSettingsService = federalStateSettingsService;
+        this.userSearchViewHelper = userSearchViewHelper;
     }
 
     @GetMapping("/new")
-    String newWorkingTime(
-        @PathVariable("userId") Long userId, Model model,
+    ModelAndView newWorkingTime(
+        @PathVariable Long userId, Model model,
         @RequestParam(value = "query", required = false, defaultValue = "") String query,
-        @CurrentSecurityContext SecurityContext securityContext
+        @CurrentUser CurrentOidcUser currentUser
     ) {
 
         final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
         workingTimeDto.setFederalState(FederalState.GLOBAL);
         workingTimeDto.setWorksOnPublicHoliday(null);
 
-        prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
+        prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, currentUser);
         model.addAttribute("createMode", true);
 
-        return "usermanagement/users";
+        return new ModelAndView("usermanagement/users");
     }
 
     @GetMapping("/{workingTimeId}")
-    String getWorkingTime(
-        @PathVariable("userId") Long userId, Model model,
+    ModelAndView getWorkingTime(
+        @PathVariable Long userId, Model model,
         @PathVariable("workingTimeId") String workingTimeIdValue,
         @RequestParam(value = "query", required = false, defaultValue = "") String query,
-        @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
-        @CurrentSecurityContext SecurityContext securityContext
+        @CurrentUser CurrentOidcUser currentUser
     ) {
 
         final WorkingTimeId workingTimeId = WorkingTimeId.fromString(workingTimeIdValue);
@@ -113,23 +123,42 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         final WorkingTimeDto workingTimeDto = workingTimeToDto(workingTime);
 
-        prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
+        prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, currentUser);
         model.addAttribute("createMode", false);
 
-        if (hasText(turboFrame)) {
-            return "usermanagement/users::#" + turboFrame;
+        return new ModelAndView("usermanagement/users");
+    }
+
+    @GetMapping(value = {"/new", "/{workingTimeId}"}, params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
+    ModelAndView userSearchFragment(@RequestParam(USER_SEARCH_QUERY_PARAM) String query,
+                                    @PathVariable Long userId,
+                                    @PathVariable(required = false) String workingTimeId,
+                                    @RequestHeader(TURBO_FRAME_HEADER) String turboFrame,
+                                    @CurrentUser CurrentOidcUser currentUser, Model model) {
+
+        if (FRAME_USERS_SUGGESTION.equals(turboFrame)) {
+            return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
+                suggestion -> "/users/%s/working-time".formatted(suggestion.userLocalId().value())
+            );
+        } else if ("person-frame".equals(turboFrame)) {
+            if (workingTimeId == null) {
+                return newWorkingTime(userId, model, query, currentUser);
+            } else {
+                return getWorkingTime(userId, model, workingTimeId, query, currentUser);
+            }
         } else {
-            return "usermanagement/users";
+            LOG.error("unknown turbo-frame requested or person-frame but without userId");
+            return new ModelAndView("error/404", UNPROCESSABLE_CONTENT);
         }
     }
 
     @PostMapping("/new")
     ModelAndView createNewWorkingTime(
-        @PathVariable("userId") Long userId, Model model,
+        @PathVariable Long userId, Model model,
         @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
         @RequestParam(value = "query", required = false, defaultValue = "") String query,
         @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
-        @CurrentSecurityContext SecurityContext securityContext,
+        @CurrentUser CurrentOidcUser currentUser,
         @RequestParam Map<String, Object> requestParameters
     ) {
 
@@ -149,7 +178,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         validator.validate(workingTimeDto, result);
         if (result.hasErrors()) {
-            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
+            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, currentUser);
             model.addAttribute("createMode", workingTimeDto.getId() == null);
             if ("person-frame".equals(turboFrame)) {
                 return new ModelAndView("usermanagement/users::#person-frame", UNPROCESSABLE_CONTENT);
@@ -169,13 +198,13 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         return new ModelAndView("redirect:/users/%s/working-time".formatted(userId));
     }
 
-    @PostMapping("/{workingTimeId}")
+    @PostMapping("/{}")
     ModelAndView updateWorkingTime(
-        @PathVariable("userId") Long userId, Model model,
+        @PathVariable Long userId, Model model,
         @ModelAttribute("workingTime") WorkingTimeDto workingTimeDto, BindingResult result,
         @RequestParam(value = "query", required = false, defaultValue = "") String query,
         @RequestHeader(name = TURBO_FRAME_HEADER, required = false) String turboFrame,
-        @CurrentSecurityContext SecurityContext securityContext,
+        @CurrentUser CurrentOidcUser currentUser,
         @RequestParam Map<String, Object> requestParameters
     ) {
 
@@ -195,7 +224,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
 
         validator.validate(workingTimeDto, result);
         if (result.hasErrors()) {
-            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, securityContext);
+            prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, currentUser);
             model.addAttribute("createMode", workingTimeDto.getId() == null);
             if (hasText(turboFrame)) {
                 return new ModelAndView("usermanagement/users::#" + turboFrame, UNPROCESSABLE_CONTENT);
@@ -214,7 +243,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping("/{workingTimeId}/delete")
-    ModelAndView deleteWorkingTime(@PathVariable("userId") Long userId, @PathVariable("workingTimeId") UUID workingTimeId) {
+    ModelAndView deleteWorkingTime(@PathVariable Long userId, @PathVariable UUID workingTimeId) {
 
         final boolean deleted = workingTimeService.deleteWorkingTime(new WorkingTimeId(workingTimeId));
         if (!deleted) {
@@ -276,7 +305,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
     private void prepareGetWorkingTimesModel(
         Model model, String query, Long userId,
         List<WorkingTimeListEntryDto> workingTimeDtos,
-        SecurityContext securityContext,
+        CurrentOidcUser currentUser,
         FederalStateSettings federalStateSettings
     ) {
 
@@ -299,18 +328,17 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad {
         model.addAttribute("workingTimes", workingTimeDtos);
         model.addAttribute("globalFederalState", globalFederalState);
         model.addAttribute("globalFederalStateMessageKey", federalStateMessageKey(globalFederalState));
-        model.addAttribute("personSearchFormAction", "/users/" + selectedUser.id());
 
-        model.addAttribute("allowedToEditWorkingTime", hasAuthority(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, securityContext));
-        model.addAttribute("allowedToEditOvertimeAccount", hasAuthority(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, securityContext));
-        model.addAttribute("allowedToEditPermissions", hasAuthority(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, securityContext));
+        model.addAttribute("allowedToEditWorkingTime", currentUser.hasRole(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL));
+        model.addAttribute("allowedToEditOvertimeAccount", currentUser.hasRole(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL));
+        model.addAttribute("allowedToEditPermissions", currentUser.hasRole(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL));
     }
 
-    private void prepareWorkingTimeCreateOrEditModel(Model model, String query, Long userId, WorkingTimeDto workingTimeDto, SecurityContext securityContext) {
+    private void prepareWorkingTimeCreateOrEditModel(Model model, String query, Long userId, WorkingTimeDto workingTimeDto, CurrentOidcUser currentUser) {
 
         final FederalStateSettings federalStateSettings = federalStateSettingsService.getFederalStateSettings();
 
-        prepareGetWorkingTimesModel(model, query, userId, List.of(), securityContext, federalStateSettings);
+        prepareGetWorkingTimesModel(model, query, userId, List.of(), currentUser, federalStateSettings);
 
         model.addAttribute("section", "working-time-edit");
         model.addAttribute("workingTime", workingTimeDto);

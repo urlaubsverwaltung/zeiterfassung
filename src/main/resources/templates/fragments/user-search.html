@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Document</title>
+  </head>
+  <body>
+    <th:block th:fragment="user-search(placeholder)">
+      <z-user-search
+        th:if="${userSearchEnabled}"
+        data-js-only
+        class="block w-full user-search"
+      >
+        <!-- use relative action (URL) since this form is used on different pages which all allow searching for users -->
+        <form
+          action=""
+          method="get"
+          data-turbo="true"
+          data-turbo-frame="frame-users-suggestions"
+          data-turbo-action="replace"
+          class="top-search-form"
+        >
+          <label
+            for="user-search-input"
+            class="sr-only"
+            th:text="#{user-search.input.label}"
+          ></label>
+          <input
+            type="search"
+            id="user-search-input"
+            name="query"
+            th:value="${userSearchQuery}"
+            autocomplete="off"
+            th:placeholder="${placeholder}"
+            data-auto-submit="user-search-submit"
+            data-auto-submit-delay="100"
+          />
+          <button
+            id="user-search-submit"
+            type="submit"
+            th:text="#{form.button.search}"
+          >
+            Suchen
+          </button>
+        </form>
+        <div
+          popover="manual"
+          class="popover popover--slide-to-bottom popover--backdrop-content desktop:popover--backdrop-none"
+        >
+          <turbo-frame id="frame-users-suggestions" refresh="morph">
+            <ul
+              th:if="${not #lists.isEmpty(userSearchSuggestions)}"
+              class="user-search__list"
+              data-testid="user-suggestions"
+            >
+              <li
+                th:each="suggestion : ${userSearchSuggestions}"
+                class="flex items-center gap-5"
+              >
+                <!-- @thymesVar id="suggestion" type="de.focusshift.zeiterfassung.search.UserSuggestion" -->
+                <a
+                  data-turbo="false"
+                  th:href="@{__${suggestion.href}__}"
+                  class="flex items-center gap-2"
+                >
+                  <span class="text-blue-300">
+                    <span
+                      th:replace="~{fragments/avatar::avatar(${suggestion.initials},${suggestion.name},42,42)}"
+                    ></span>
+                  </span>
+                  <span class="flex flex-col gap-px">
+                    <span th:text="${suggestion.name}">Nice Name</span>
+                    <span
+                      class="text-gray-400 text-xs"
+                      th:text="${suggestion.email}"
+                      >email@example.org</span
+                    >
+                  </span>
+                  &nbsp;
+                </a>
+                <ul
+                  th:if="${not #lists.isEmpty(suggestion.links)}"
+                  class="ml-auto flex flex-row gap-4"
+                >
+                  <li th:each="link : ${suggestion.links}">
+                    <a
+                      href="#"
+                      data-turbo="false"
+                      th:href="@{__${link.href}__}"
+                      class="flex items-center gap-2 rounded-full p-2 transition-colors text-gray-800 bg-transparent hover:bg-blue-200 hover:text-blue-800"
+                    >
+                      <th:block th:if="${link.icon().name() == 'TIME'}">
+                        <svg
+                          th:replace="~{icons/clock::svg(className='w-5 h-5')}"
+                        />
+                      </th:block>
+                      <th:block th:if="${link.icon().name() == 'REPORTS'}">
+                        <svg
+                          th:replace="~{icons/chart-pie::svg(className='w-5 h-5')}"
+                        />
+                      </th:block>
+                      <th:block th:if="${link.icon().name() == 'SETTINGS'}">
+                        <svg
+                          th:replace="~{icons/user-cog::svg(className='w-5 h-5')}"
+                        />
+                      </th:block>
+                      <span
+                        class="sr-only"
+                        th:text="${#messages.msg(link.messageKey)}"
+                      ></span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+            <p
+              th:if="${#lists.isEmpty(userSearchSuggestions)}"
+              th:text="#{user-search.nothing-found}"
+            >
+              Nichts gefunden
+            </p>
+          </turbo-frame>
+        </div>
+      </z-user-search>
+    </th:block>
+  </body>
+</html>
