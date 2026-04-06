@@ -11,7 +11,44 @@
       <script type="module" src="" th:src="@{/assets/reports.js}"></script>
     </th:block>
   </head>
-  <body th:replace="~{_layout::body(~{::content})}">
+  <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
+    <th:block th:ref="search">
+      <form
+        id="person-search-form"
+        method="get"
+        action="#"
+        th:action="${personSearchFormAction}"
+        class="top-search-form"
+        data-turbo="true"
+        data-turbo-frame="person-list-frame"
+        data-turbo-action="replace"
+      >
+        <label
+          for="person-query"
+          th:text="#{usermanagement.person-list.search.label}"
+        >
+          Personensuche
+        </label>
+        <input
+          type="search"
+          name="query"
+          placeholder="Suche nach Vor- / Nachname"
+          th:placeholder="#{usermanagement.person-list.search.placeholder}"
+          th:value="${query}"
+          id="person-query"
+          data-auto-submit="user-search-submit"
+          data-auto-submit-delay="100"
+        />
+        <button
+          id="user-search-submit"
+          type="submit"
+          th:text="#{usermanagement.person-list.search.submit}"
+        >
+          Suchen
+        </button>
+      </form>
+    </th:block>
+
     <th:block th:fragment="content">
       <main class="content-container">
         <div class="mx-auto space-y-8 w-full max-w-4xl @7xl/main:max-w-400">
