@@ -1,54 +1,45 @@
 .time-entry-user-search {
-  label {
-    anchor-name: --time-entry-user-search-anchor;
-  }
+  anchor-name: --time-entry-user-search-anchor;
 
   [popover] {
+    --popover-y-start: 6%;
+
     height: fit-content;
-    max-height: 50vh;
+    max-height: 62svh;
+    margin-bottom: --spacing(4);
     overscroll-behavior: none;
 
+    position: absolute;
     position-anchor: --time-entry-user-search-anchor;
-    position: fixed;
-    left: --spacing(2);
-    right: --spacing(2);
-    width: calc(100vw - --spacing(4));
-    top: calc(anchor(top) - --spacing(2));
+    position-area: bottom;
+    top: calc(anchor(bottom) + --spacing(2));
+    width: calc(100svw);
 
     background-color: white;
     padding: --spacing(2);
-    @apply border border-gray-200;
-    @apply rounded;
+    border: 1px solid var(--color-gray-100);
+    @apply rounded-b-2xl;
+    @apply shadow-2xl;
 
-    opacity: 1;
-    transform: translateY(-100%);
-    transition:
-      opacity 300ms,
-      transform 300ms;
-
-    &:popover-open {
-      @starting-style {
-        opacity: 0;
-        transform: translateY(0);
-      }
-    }
-
-    @variant xs {
-      left: anchor(left);
-      right: auto;
-      width: anchor-size();
+    @variant desktop {
+      max-height: 33vh;
+      border-color: var(--color-gray-200);
+      @apply rounded-2xl;
+      top: calc(anchor(bottom) + --spacing(1));
+      width: calc(anchor-size(width) - --spacing(1));
     }
   }
 
   .time-entry-user-search__list {
     display: flex;
     flex-direction: column;
+    width: 100%;
 
     li > a {
       padding: --spacing(2) --spacing(3);
       transition: colors 150ms;
       background-color: transparent;
-      @apply rounded;
+      @apply rounded-xl;
       &:hover {
         background-color: var(--color-gray-100);
       }

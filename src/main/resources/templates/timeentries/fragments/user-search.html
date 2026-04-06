@@ -9,7 +9,7 @@
     <z-time-entry-user-search
       th:fragment="user-search"
       data-js-only
-      class="block w-full sm:w-[320px] time-entry-user-search"
+      class="block w-full time-entry-user-search"
     >
       <!-- use relative action (URL) since this form is used on different pages which all allow searching for users -->
       <form
@@ -18,30 +18,34 @@
         data-turbo="true"
         data-turbo-frame="frame-users-suggestions"
         data-turbo-action="replace"
+        class="top-search-form"
       >
-        <label
-          class="rounded border border-gray-300 bg-white flex items-center py-1 pl-4 pr-2 focus-within:outline-1"
+        <label for="user-search-input"></label>
+        <input
+          type="search"
+          id="user-search-input"
+          name="query"
+          autocomplete="off"
+          th:placeholder="#{timeentries.usersearch.placeholder}"
+          data-auto-submit="time-entry-user-search-submit"
+          data-auto-submit-delay="100"
+        />
+        <button
+          id="time-entry-user-search-submit"
+          type="submit"
+          th:text="#{form.button.search}"
         >
-          <svg th:replace="~{/icons/users::svg(className='w-4 h-4')}"></svg>
-          <input
-            type="search"
-            name="query"
-            autocomplete="off"
-            th:placeholder="#{timeentries.usersearch.placeholder}"
-            class="text-sm placeholder:text-gray-400 border-none focus-visible:outline-0"
-            data-auto-submit="time-entry-user-search-submit"
-            data-auto-submit-delay="100"
-          />
-        </label>
-        <button hidden id="time-entry-user-search-submit" type="submit">
           Suchen
         </button>
       </form>
-      <div popover="manual">
+      <div
+        popover="manual"
+        class="popover popover--slide-to-bottom popover--backdrop-content desktop:popover--backdrop-none"
+      >
         <turbo-frame id="frame-users-suggestions" refresh="morph">
           <ul
             th:if="${not #lists.isEmpty(userSearchSuggestions)}"
-            class="xs:max-w-80 time-entry-user-search__list"
+            class="time-entry-user-search__list"
             data-testid="user-suggestions"
           >
             <li th:each="suggestion : ${userSearchSuggestions}">
