@@ -423,7 +423,13 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         }
 
         return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
-            suggestion -> "/timeentries/users/%s".formatted(suggestion.userLocalId().value())
+            suggestion -> {
+                if (suggestion.userIdComposite().equals(currentUser.getUserIdComposite())) {
+                    return "/timeentries";
+                } else {
+                    return "/timeentries/users/%s".formatted(suggestion.userLocalId().value());
+                }
+            }
         );
     }
 

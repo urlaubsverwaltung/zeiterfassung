@@ -127,7 +127,13 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
     @GetMapping(params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
     ModelAndView userSearchFragment(@RequestParam(USER_SEARCH_QUERY_PARAM) String query, @CurrentUser CurrentOidcUser currentUser, Model model) {
         return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
-            suggestion -> "/timeentries/users/%s".formatted(suggestion.userLocalId().value())
+            suggestion -> {
+                if (suggestion.userIdComposite().equals(currentUser.getUserIdComposite())) {
+                    return "/timeentries";
+                } else {
+                    return "/timeentries/users/%s".formatted(suggestion.userLocalId().value());
+                }
+            }
         );
     }
 

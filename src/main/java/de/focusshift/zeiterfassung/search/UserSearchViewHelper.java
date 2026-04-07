@@ -94,9 +94,6 @@ public class UserSearchViewHelper {
 
         final List<User> users = userManagementService.findAllUsers(query);
         final List<UserSuggestion> suggestions = users.stream()
-            // TODO should be included now as search is more powerful
-            // do not include logged-in user in suggestions
-            .filter(user -> !user.userIdComposite().equals(currentUser.getUserIdComposite()))
             .limit(USER_RESULT_LIMIT)
             .map(user -> toUserSearchSuggestion(currentUser, user, query, customizer))
             .toList();
@@ -116,19 +113,20 @@ public class UserSearchViewHelper {
 
         final UserSuggestionBlueprint template = customizer.get(user);
         final Long userLocalId = user.userLocalId().value();
+        final boolean isLoggedInUser = currentUser.getUserIdComposite().equals(user.userIdComposite());
 
         final List<UserSuggestionLink> links = new ArrayList<>();
-        if (currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)) {
-            final String href = withQuery("/timeentries/users/" + userLocalId, query);
-            links.add(new UserSuggestionLink(href, "user-search.suggestion.link.time", Icon.TIME));
+        if (isLoggedInUser || currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)) {
+            final String href = isLoggedInUser ? "/timeentries" : "/timeentries/users/" + userLocalId;
+            links.add(new UserSuggestionLink(withQuery(href, query), "user-search.suggestion.link.time", Icon.TIME));
         }
-        if (currentUser.hasRole(ZEITERFASSUNG_VIEW_REPORT_ALL)) {
-            final String href = withQuery("/report?user=" + userLocalId, query);
-            links.add(new UserSuggestionLink(href, "user-search.suggestion.link.reports", Icon.REPORTS));
+        if (isLoggedInUser || currentUser.hasRole(ZEITERFASSUNG_VIEW_REPORT_ALL)) {
+            final String href = isLoggedInUser ? "/report" : "/report?user=" + userLocalId;
+            links.add(new UserSuggestionLink(withQuery(href, query), "user-search.suggestion.link.reports", Icon.REPORTS));
         }
         if (currentUser.hasAnyRole(ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, ZEITERFASSUNG_PERMISSIONS_EDIT_ALL, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)) {
-            final String href = withQuery("/users/" + userLocalId, query);
-            links.add(new UserSuggestionLink(href, "user-search.suggestion.link.settings", Icon.SETTINGS));
+            final String href = "/users/" + userLocalId;
+            links.add(new UserSuggestionLink(withQuery(href, query), "user-search.suggestion.link.settings", Icon.SETTINGS));
         }
 
         final String mainHref = withQuery(template.mainLink(), query);
