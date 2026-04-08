@@ -33,7 +33,7 @@ information about the available support options at [urlaubsverwaltung.cloud/prei
 
 ### Prerequisites
 
-* [JDK 21](https://adoptium.net)
+* [JDK 25](https://adoptium.net)
 * [Docker 20.10+](https://www.docker.com/)
 * [PostgreSQL 16.1+](#database)
 * [E-Mail-Server](#e-mail-server)
@@ -264,7 +264,7 @@ An example for an environment of Zeiterfassung with [docker-compose](https://doc
 
 ### Prerequisites
 
-* [JDK 21](https://adoptium.net)
+* [JDK 25](https://adoptium.net)
 * [Docker 20.10.+](https://docs.docker.com/get-docker/)
 * [Docker Compose](https://docs.docker.com/compose/install/)
 
