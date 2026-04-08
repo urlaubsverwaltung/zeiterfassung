@@ -3,11 +3,6 @@ export class FeedbackHeart extends HTMLElement {
     this.render();
   }
 
-  connectedMoveCallback() {
-    // prevent connectedCallback to be called when element is moved.
-    // (actually not of interest yet, since we have only one heart at the bottom left which is not moved)
-  }
-
   unleash() {
     const heart = document.createElement("div");
     heart.classList.add("feedback-floating-heart");
@@ -15,6 +10,10 @@ export class FeedbackHeart extends HTMLElement {
   }
 
   private render() {
+    if (this.matches(":has(button)")) {
+      return;
+    }
+
     const button = document.createElement("button");
     button.setAttribute("type", "button");
     button.classList.add("block", "cursor-pointer");
