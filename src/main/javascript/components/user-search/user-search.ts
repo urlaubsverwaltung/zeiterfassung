@@ -5,6 +5,17 @@ export class UserSearch extends HTMLElement {
   private popoverVisible = false;
 
   connectedCallback() {
+    let loading = false;
+
+    this.addEventListener("submit", () => {
+      loading = true;
+      setTimeout(() => {
+        if (loading) {
+          this.querySelector("[type=submit]")!.classList.add("button--loading");
+        }
+      }, 100);
+    });
+
     const handleThisFocusin = () => {
       // trigger empty search to show initial suggestions when input is focused
       if (document.activeElement?.matches("input")) {
@@ -15,6 +26,8 @@ export class UserSearch extends HTMLElement {
     // show popover on initial submit.
     // subsequent renders can be ignored since content is updated, not the popover itself.
     const handleFrameRender = (event: TurboFrameRenderEvent) => {
+      loading = false;
+      this.querySelector("[type=submit]")!.classList.remove("button--loading");
       if (
         !this.popoverVisible &&
         // @ts-expect-error matches exists...
