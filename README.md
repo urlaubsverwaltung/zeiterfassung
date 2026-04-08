@@ -16,6 +16,8 @@ Unsere Entwicklung lebt von eurem Feedback. Wir freuen uns die Zeiterfassung mit
 
 Wenn du mehr Informationen und Bilder über dieses Projekt sehen möchtest dann schaue auf unserer [Landingpage](https://urlaubsverwaltung.cloud/zeiterfassung/) vorbei.
 
+*Hinweis*: Der `main`-Branch enthält die 3.x-Release-Reihe der Zeiterfassung. Der aktuelle 2.x-Branch, der die 2.x-Reihe fortführt, ist unter `v2.x` verfügbar.
+
 ![Ein Bild der Zeiterfassung auf verschiedenen Endgeräten](docs/zeiterfassung-screens.png)
 
 ⚠️ Die Dokumentationen zu Betrieb und Entwicklung sind aktuell nur in englischer Sprache verfügbar.
