@@ -20,7 +20,6 @@ export class UserSelectionList extends HTMLDivElement {
     this.classList.add("lg:overflow-y-auto");
     this.#updateMaxHeight();
 
-    // eslint-disable-next-line unicorn/consistent-function-scoping
     const onResize = () => {
       this.#updateMaxHeight();
     };

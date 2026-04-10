@@ -14,7 +14,6 @@ export class TimeEntryUserSearch extends HTMLElement {
 
     // show popover on initial submit.
     // subsequent renders can be ignored since content is updated, not the popover itself.
-    // eslint-disable-next-line unicorn/consistent-function-scoping
     const handleFrameRender = (event: TurboFrameRenderEvent) => {
       if (
         !this.popoverVisible &&
@@ -25,7 +24,6 @@ export class TimeEntryUserSearch extends HTMLElement {
       }
     };
 
-    // eslint-disable-next-line unicorn/consistent-function-scoping
     const handleFocusout = () => {
       if (this.popoverVisible && !this.matches(":focus-within")) {
         // safari doesn't like hiding this synchronously...

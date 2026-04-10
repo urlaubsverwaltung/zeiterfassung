@@ -3,7 +3,6 @@ export class ReportBreakdownSection extends HTMLElement {
   #cleanup: () => void;
 
   connectedCallback() {
-    // eslint-disable-next-line unicorn/consistent-function-scoping
     const handleDaySelected = (event: CustomEvent) => {
       const { date } = event.detail;
       for (const element of this.querySelectorAll("[data-date]")) {
