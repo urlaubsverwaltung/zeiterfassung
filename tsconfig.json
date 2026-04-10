@@ -1,12 +1,10 @@
 {
   "compilerOptions": {
-    "module": "esnext",
     "moduleResolution": "bundler",
-    "target": "es2017",
     "sourceMap": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node", "hotwired__turbo"],
+    "lib": ["dom"]
   },
   "include": [
     "types.d.ts",

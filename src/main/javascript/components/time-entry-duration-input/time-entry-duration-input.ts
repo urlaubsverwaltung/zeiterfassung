@@ -21,11 +21,9 @@ export class TimeEntryDurationInput extends HTMLInputElement {
       }
     };
 
-    // @ts-expect-error so it is
     this.addEventListener("input", handleInput);
 
     this.#cleanup = () => {
-      // @ts-expect-error so it is
       this.removeEventListener("input", handleInput);
     };
   }

@@ -1,5 +1,6 @@
 import { dateAdapter as dateAdapterDE } from "./de";
 import { defineCustomElements } from "@duetds/date-picker/custom-element";
+// @ts-expect-error file exists
 import "@duetds/date-picker/dist/collection/themes/default.css";
 
 // register @duet/datepicker
