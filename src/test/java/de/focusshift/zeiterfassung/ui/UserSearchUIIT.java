@@ -44,11 +44,11 @@ class UserSearchUIIT {
     void ensureUserSearch(Page page) {
 
         // log in with different users first, otherwise they don't exist in the application
-        final Page boss_page = page.context().browser().newContext().newPage();
-        new LoginPage(boss_page, port).login(Credentials.BOSS);
+        final Page bossPage = page.context().browser().newContext().newPage();
+        new LoginPage(bossPage, port).login(Credentials.BOSS);
 
-        final Page user_page = page.context().browser().newContext().newPage();
-        new LoginPage(user_page, port).login(Credentials.USER);
+        final Page userPage = page.context().browser().newContext().newPage();
+        new LoginPage(userPage, port).login(Credentials.USER);
 
         // then ensure user search for OFFICE
         new LoginPage(page, port).login(Credentials.OFFICE);
@@ -62,7 +62,7 @@ class UserSearchUIIT {
         ensureSettingsUserSearch(page, navigationPage, userSearchPage);
 
         // USER is not allowed to search for other users
-        new UserSearchPage(user_page).isNotPresent();
+        new UserSearchPage(userPage).isNotPresent();
     }
 
     private void ensureTimeEntriesUserSearch(Page page, NavigationPage navigationPage, UserSearchPage userSearchPage) {
