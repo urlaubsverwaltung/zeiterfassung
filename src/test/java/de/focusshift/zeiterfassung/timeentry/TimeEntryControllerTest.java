@@ -1217,14 +1217,6 @@ class TimeEntryControllerTest implements ControllerTest {
         return new TimeEntry(id, userIdComposite, "", start, end, false);
     }
 
-    private static TimeEntryWeekPage emptyTimeEntryWeekPage() {
-        return new TimeEntryWeekPage(emptyTimeEntryWeek(), 0);
-    }
-
-    private static TimeEntryWeek emptyTimeEntryWeek() {
-        return new TimeEntryWeek(LocalDate.now(), PlannedWorkingHours.ZERO, List.of());
-    }
-
     private void mockUserSettings(ZoneId zoneId) {
         when(userSettingsProvider.zoneId()).thenReturn(zoneId);
     }
