@@ -1,5 +1,3 @@
-/* eslint-disable unicorn/consistent-function-scoping */
-
 export class ReportGraph extends HTMLDivElement {
   // @ts-expect-error it is defined...
   #cleanup: () => void;

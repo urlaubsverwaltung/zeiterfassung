@@ -2,7 +2,6 @@ export class TimeEntryDurationInput extends HTMLInputElement {
   #cleanup = () => {};
 
   connectedCallback() {
-    // eslint-disable-next-line unicorn/consistent-function-scoping
     const handleInput = (event: InputEvent) => {
       if (!event.data) {
         // ignore meta keys

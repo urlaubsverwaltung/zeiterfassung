@@ -1,20 +1,30 @@
-import ts from "typescript-eslint";
-import { globalIgnores } from "eslint/config";
-import js from "@eslint/js";
+import { defineConfig, globalIgnores } from "eslint/config";
+import eslint from "@eslint/js";
+import tseslint from "typescript-eslint";
 import globals from "globals";
 import eslintPluginUnicorn from "eslint-plugin-unicorn";
-import importPlugin from "eslint-plugin-import";
+import { importX } from "eslint-plugin-import-x";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import tsParser from "@typescript-eslint/parser";
 
-export default ts.config(
+export default defineConfig(
   globalIgnores(["target"]),
 
-  js.configs.recommended,
-  ts.configs.recommended,
+  eslint.configs.recommended,
+  tseslint.configs.recommended,
   eslintPluginUnicorn.configs["flat/recommended"],
   eslintPluginPrettierRecommended,
-  importPlugin.flatConfigs.recommended,
-  importPlugin.flatConfigs.typescript,
+  importX.flatConfigs.recommended,
+  importX.flatConfigs.typescript,
+
+  {
+    files: ["**/*.{js,mjs,cjs,ts}"],
+    languageOptions: {
+      parser: tsParser,
+      ecmaVersion: "latest",
+      sourceType: "module",
+    },
+  },
 
   {
     languageOptions: {
@@ -36,6 +46,8 @@ export default ts.config(
           },
         },
       ],
+      "import-x/no-named-as-default": "off",
+      "import-x/no-named-as-default-member": "off",
     },
   },
 
