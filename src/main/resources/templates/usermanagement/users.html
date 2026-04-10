@@ -81,7 +81,11 @@
                 </th:block>
               </ol>
             </div>
-            <turbo-frame class="flex-1" id="person-frame">
+            <turbo-frame
+              class="flex-1"
+              id="person-frame"
+              data-testid="user-section"
+            >
               <turbo-stream target="person-list" action="replace">
                 <template th:insert="~{::#person-list}"></template>
               </turbo-stream>

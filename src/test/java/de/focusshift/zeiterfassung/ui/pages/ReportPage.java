@@ -4,6 +4,8 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
 
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static com.microsoft.playwright.options.AriaRole.PARAGRAPH;
 import static com.microsoft.playwright.options.LoadState.DOMCONTENTLOADED;
 
 public class ReportPage {
@@ -26,6 +28,12 @@ public class ReportPage {
         return page.getByTestId("report-time-entry")
             .filter(new Locator.FilterOptions().setHasText(comment))
             .getByTestId("report-time-entry-detail-button");
+    }
+
+    public void isVisibleForOtherPerson(String name) {
+        final Locator hint = page.getByTestId("report-users-selected-hint");
+        final Locator locator = hint.locator("z-tooltip").filter(new Locator.FilterOptions().setHasText(name));
+        assertThat(locator).isAttached();
     }
 
     public class PersonSelect {

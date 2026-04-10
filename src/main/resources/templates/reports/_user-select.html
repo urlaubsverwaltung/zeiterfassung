@@ -102,6 +102,7 @@
         th:with="maximum=7"
         th:if="${not #lists.isEmpty(selectedUsers)}"
         class="report-actions__avatars"
+        data-testid="report-users-selected-hint"
       >
         <div class="avatar-group flex w-fit">
           <th:block th:each="user : ${selectedUsers}">

@@ -24,6 +24,10 @@ public class NavigationPage {
         avatarMenu.logout();
     }
 
+    public void goToTimeEntryPage() {
+        goTo(timeEntryLink());
+    }
+
     public void goToUsersPage() {
         goTo(usersLink());
     }
@@ -34,6 +38,10 @@ public class NavigationPage {
 
     public void goToReportsPage() {
         goTo(reportsLink());
+    }
+
+    public Locator timeEntryLink() {
+        return page.getByTestId("navigation-link-timeentries");
     }
 
     public Locator usersLink() {

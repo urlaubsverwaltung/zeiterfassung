@@ -67,7 +67,7 @@ class FrameDataProvider {
         final AriaCurrent settingsCurrent = settingsActive ? AriaCurrent.PAGE : AriaCurrent.FALSE;
 
         final List<NavigationItemDto> items = new ArrayList<>();
-        items.add(new NavigationItemDto("main-navigation-link-timeentries", timeentries, "navigation.main.timetrack", timeentriesActive, timeentriesCurrent));
+        items.add(new NavigationItemDto("main-navigation-link-timeentries", timeentries, "navigation.main.timetrack", timeentriesActive, timeentriesCurrent, "navigation-link-timeentries"));
         items.add(new NavigationItemDto("main-navigation-link-reports", report, "navigation.main.reports", reportActive, reportCurrent, "navigation-link-reports"));
 
         if (currentUser.hasAnyRole(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, ZEITERFASSUNG_PERMISSIONS_EDIT_ALL)) {

@@ -30,7 +30,6 @@ import java.time.ZoneId;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static com.microsoft.playwright.options.WaitForSelectorState.VISIBLE;
-import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.BOSS;
 import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.OFFICE;
 import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.USER;
 import static org.mockito.Mockito.when;
@@ -64,53 +63,6 @@ class TimeEntryUIIT {
     void setUp() {
         when(userSettingsProvider.zoneId()).thenReturn(USER_ZONE_ID);
         when(userSettingsProvider.firstDayOfWeek()).thenReturn(DayOfWeek.MONDAY);
-    }
-
-    @Test
-    void ensureUserSearch(Page page) {
-
-        final NavigationPage navigationPage = new NavigationPage(page);
-        final TimeEntryPage timeEntryPage = new TimeEntryPage(page);
-        final LoginPage loginPage = new LoginPage(page, port);
-
-        // first login with boss, so user exists
-        loginPage.login(BOSS);
-        // boss is allowed to search
-        assertThat(timeEntryPage.userSearchLocator()).isAttached();
-        navigationPage.logout();
-
-        // then login with user (klaus), so he exists...
-        // and assert that user search is not available
-        loginPage.login(USER);
-        assertThat(timeEntryPage.userSearchLocator()).not().isAttached();
-        navigationPage.logout();
-
-        // then login with office
-        // who is allowed to search and navigate
-        loginPage.login(OFFICE);
-        assertThat(timeEntryPage.userSearchLocator()).isAttached();
-
-        timeEntryPage.searchForUser("Klau");
-        timeEntryPage.selectUserSuggestion("Klaus Müller");
-
-        timeEntryPage.isVisibleForOtherPerson("Klaus Müller");
-        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
-
-        // search must also be available on other persons timeEntry page
-        timeEntryPage.searchForUser("Max");
-        timeEntryPage.selectUserSuggestion("Max Mustermann");
-
-        timeEntryPage.isVisibleForOtherPerson("Max Mustermann");
-        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
-
-        // ensure browser history
-        page.goBack();
-        timeEntryPage.isVisibleForOtherPerson("Klaus Müller");
-        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
-
-        page.goForward();
-        timeEntryPage.isVisibleForOtherPerson("Max Mustermann");
-        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
     }
 
     @Test
