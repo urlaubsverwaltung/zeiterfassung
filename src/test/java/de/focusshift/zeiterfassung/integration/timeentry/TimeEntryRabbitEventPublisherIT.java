@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.integration.timeentry;
 
 import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
+import de.focusshift.zeiterfassung.overtime.OvertimePublisher;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
@@ -8,7 +9,6 @@ import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryDeletedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent.UpdatedValueCandidate;
-import de.focusshift.zeiterfassung.overtime.OvertimePublisher;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;

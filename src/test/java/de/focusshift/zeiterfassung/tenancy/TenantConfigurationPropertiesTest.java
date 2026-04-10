@@ -1,11 +1,11 @@
 package de.focusshift.zeiterfassung.tenancy;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.Set;
 
 import static jakarta.validation.Validation.buildDefaultValidatorFactory;

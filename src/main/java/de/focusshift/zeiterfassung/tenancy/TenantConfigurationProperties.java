@@ -1,9 +1,8 @@
 package de.focusshift.zeiterfassung.tenancy;
 
+import jakarta.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-
-import jakarta.validation.constraints.NotNull;
 
 @Validated
 @ConfigurationProperties("zeiterfassung.tenant")

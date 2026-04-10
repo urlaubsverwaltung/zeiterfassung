@@ -5,7 +5,6 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-import static com.microsoft.playwright.options.AriaRole.PARAGRAPH;
 import static com.microsoft.playwright.options.LoadState.DOMCONTENTLOADED;
 
 public class ReportPage {

@@ -1,10 +1,9 @@
 package de.focusshift.zeiterfassung.tenancy.tenant;
 
-import org.springframework.stereotype.Component;
-
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
+import org.springframework.stereotype.Component;
 
 @Component
 class TenantListener {

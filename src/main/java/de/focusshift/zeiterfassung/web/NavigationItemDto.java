@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.web;
 
 import de.focusshift.zeiterfassung.web.html.AriaCurrent;
 
-import java.util.List;
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNullElse;
