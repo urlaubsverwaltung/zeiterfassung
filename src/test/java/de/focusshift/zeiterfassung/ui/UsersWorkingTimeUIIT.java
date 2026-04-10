@@ -28,6 +28,7 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BERLIN;
 import static de.focusshift.zeiterfassung.ui.pages.FederalStateSelect.federalStateSelectValue;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.BOSS;
 import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.THURSDAY;
@@ -67,7 +68,7 @@ class UsersWorkingTimeUIIT {
         final UserWorkingTimeAccountPage workingTimeAccountPage = new UserWorkingTimeAccountPage(page);
         final UserWorkingTimePage workingTimePage = new UserWorkingTimePage(page);
 
-        loginPage.login(new LoginPage.Credentials("boss", "secret"));
+        loginPage.login(BOSS);
 
         ensureDefaultGlobalWorkingTime(page);
         setGlobalFederalState(page, GERMANY_BADEN_WUERTTEMBERG);

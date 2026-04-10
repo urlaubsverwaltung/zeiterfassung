@@ -20,7 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.credentials;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.OFFICE;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -51,7 +51,7 @@ class SettingsUIIT {
         final SettingsPage settingsPage = new SettingsPage(page);
         final LoginPage loginPage = new LoginPage(page, port);
 
-        loginPage.login(credentials("office", "secret"));
+        loginPage.login(OFFICE);
 
         navigationPage.goToSettingsPage();
 

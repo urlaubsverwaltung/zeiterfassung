@@ -17,6 +17,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.BOSS;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @Testcontainers(parallel = true)
@@ -46,7 +47,7 @@ class UsersUIIT {
         final UsersPage usersPage = new UsersPage(page);
         final UserOvertimeAccountPage overtimeAccountPage = new UserOvertimeAccountPage(page);
 
-        loginPage.login(new LoginPage.Credentials("boss", "secret"));
+        loginPage.login(BOSS);
         navigationPage.goToUsersPage();
 
         usersPage.selectPerson("Max Mustermann");

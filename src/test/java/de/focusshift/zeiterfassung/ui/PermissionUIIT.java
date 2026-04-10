@@ -18,7 +18,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.credentials;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.BOSS;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.USER;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -53,9 +54,9 @@ class PermissionUIIT {
         final LoginPage loginPageBoss = new LoginPage(boss_page, port);
         final LoginPage loginPageUser = new LoginPage(user_page, port);
 
-        loginPageBoss.login(credentials("boss", "secret"));
+        loginPageBoss.login(BOSS);
 
-        loginPageUser.login(credentials("user", "secret"));
+        loginPageUser.login(USER);
         assertThat(user_navigationPage.usersLink()).not().isAttached();
 
         // Boss: add permission to user
