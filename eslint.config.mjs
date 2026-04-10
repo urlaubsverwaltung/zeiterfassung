@@ -5,6 +5,7 @@ import globals from "globals";
 import eslintPluginUnicorn from "eslint-plugin-unicorn";
 import { importX } from "eslint-plugin-import-x";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+// eslint-disable-next-line import-x/default
 import tsParser from "@typescript-eslint/parser";
 
 export default defineConfig(
