@@ -1,5 +1,10 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head>
     <title>Zeiterfassung - Personen</title>
   </head>
@@ -30,13 +35,14 @@
           >
         </p>
         <p
-          class="mt-2"
+          class="mt-2 text-dimmed"
           th:text="#{usermanagement.working-time.empty-state.info-text(${user.fullName})}"
         >
           Klaus Müller ist fast startklar. Es fehlt nur noch die erste
           Arbeitszeit.
         </p>
         <p
+          class="text-dimmed"
           th:text="#{usermanagement.working-time.empty-state.info-action-text}"
         >
           Lege sie jetzt über den "Neu"-Button an.
@@ -45,12 +51,12 @@
       <ul class="mt-8 flex flex-col gap-1">
         <li
           th:each="workingTime : ${workingTimes}"
-          class="border-t border-t-gray-100 first:border-t-0"
+          class="border-t border-t-gray-100 dark:border-t-zinc-700 first:border-t-0"
           th:classappend="${workingTime.isCurrent ? '' : 'py-2'}"
         >
           <details
-            class="group pr-2"
-            th:classappend="${workingTime.isCurrent ? 'bg-gray-50 rounded-xl py-2' : ''}"
+            class="group p-2"
+            th:classappend="${workingTime.isCurrent ? 'bg-gray-50 rounded-lg dark:bg-zinc-800 dark:border dark:border-zinc-800' : ''}"
             th:attrappend="open=${(workingTime.isCurrent || #lists.size(workingTimes) == 1) ? 'true' : null}"
           >
             <summary
@@ -58,7 +64,7 @@
               th:classappend="${workingTime.current ? 'font-bold' : ''}"
             >
               <svg
-                th:replace="~{icons/chevron-right::svg(className='w-5 h-5 transition-transform group-open:rotate-90')}"
+                th:replace="~{icons/chevron-right::svg(className='shrink-0 w-5 h-5 transition-transform group-open:rotate-90')}"
               ></svg>
               <th:block
                 th:switch="${workingTime.validFromIsPast}"
@@ -138,10 +144,10 @@
                   >
                     <span th:text="${#messages.msg(dayOfWeek)}"> Montag </span>
                     <span
-                      class="flex rounded-lg border border-green-300 bg-white"
+                      class="flex rounded-lg border border-green-300 bg-white dark:bg-zinc-900 dark:border-green-600"
                     >
                       <span
-                        class="rounded-lg bg-green-300 h-2"
+                        class="rounded-lg bg-green-300 h-2 dark:bg-green-600"
                         th:with="max=${workingTime.max}, width=${((hours eq 0) or (max eq 0)) ? 0 : #numbers.formatDecimal((hours/max)*100, 2, 'POINT', 3, 'POINT')}"
                         th:styleappend="${'width:' + width + '%'}"
                       ></span>

@@ -1,5 +1,10 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head
     th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{::scriptsDefer})}"
   >
@@ -24,7 +29,7 @@
             <h1 class="text-xl font-bold" th:text="#{settings.heading}">
               Einstellungen
             </h1>
-            <p class="mt-2 text-gray-600" th:text="#{settings.teaser-text}">
+            <p class="mt-2 text-dimmed" th:text="#{settings.teaser-text}">
               Lorem ipsum...
             </p>
           </div>
@@ -44,7 +49,7 @@
                   Feiertagsregelung
                 </h2>
                 <p
-                  class="mt-2 text-gray-600"
+                  class="mt-2 text-dimmed"
                   th:text="#{settings.federal-state.teaser-text}"
                 >
                   Lorem ipsum...
@@ -104,14 +109,14 @@
                   Festschreiben von Zeitslots
                 </h2>
                 <p
-                  class="mt-2 text-gray-600"
+                  class="mt-2 text-dimmed"
                   th:text="#{settings.lock-timeentries.teaser-text}"
                 >
                   Lege fest wie weit in die Vergangenheit Zeiten erfasst und
                   bearbeitet werden dürfen.
                 </p>
                 <p
-                  class="text-gray-600"
+                  class="text-dimmed"
                   th:text="#{settings.lock-timeentries.teaser-text-2}"
                 >
                   Zeiteinträge werden nächtlich festgeschrieben und können dann
@@ -136,7 +141,7 @@
                     </label>
                   </div>
                   <div
-                    class="mt-4 flex items-center gap-2 text-gray-600"
+                    class="mt-4 flex items-center gap-2 text-dimmed"
                     th:text="#{settings.lock-timeentries.day-input.pre}"
                   >
                     Zeiten können nicht mehr erfasst oder bearbeitet werden für
@@ -150,7 +155,7 @@
                       inputmode="numeric"
                       id="lock-timeentries-days-in-past-input"
                       data-testid="lock-timeentries-days-in-past"
-                      class="w-full border border-gray-300 px-2 py-1 xs:w-14"
+                      class="xs:w-14"
                       th:classappend="${hasError ? 'invalid' : ''}"
                       th:aria-invalid="${hasError}"
                       th:aria-message="${hasError ? fieldName + '-error-message' : ''}"
@@ -165,7 +170,7 @@
                     </label>
                   </div>
                   <p
-                    class="mt-4 text-gray-600"
+                    class="mt-4 text-dimmed"
                     th:if="${timeslotLockedExampleDate != null}"
                     th:text="#{settings.lock-timeentries.example(${timeslotLockedExampleDate})}"
                   >
@@ -195,14 +200,14 @@
                   Abzug von Pausen
                 </h2>
                 <p
-                  class="mt-2 text-gray-600"
+                  class="mt-2 text-dimmed"
                   th:text="#{settings.work-duration.calculation.subtract-breaks.teaser-text}"
                 >
                   Lege fest ob Pausen von Zeiteinträgen automatisch abgezogen
                   werden sollen.
                 </p>
                 <p
-                  class="text-gray-600"
+                  class="text-dimmed"
                   th:text="#{settings.work-duration.calculation.subtract-breaks.teaser-text-2}"
                 >
                   Beispiel ...
@@ -241,7 +246,7 @@
                         type="date"
                         id="subtractBreakFromTimeEntryActiveDate"
                         th:field="*{subtractBreakFromTimeEntryActiveDate}"
-                        class="w-full border border-gray-300 px-2 py-1 xs:w-40"
+                        class="xs:w-40"
                         th:classappend="${hasError ? 'invalid' : ''}"
                         th:aria-invalid="${hasError}"
                         th:aria-message="${hasError ? fieldName + '-error-message' : ''}"

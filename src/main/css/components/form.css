@@ -1,0 +1,90 @@
+label {
+  font-weight: 600;
+  @apply text-sm;
+  @apply leading-6;
+
+  &:has(input[type="radio"], input[type="checkbox"]) {
+    font-weight: normal; /* override with utils if bolder text is required */
+    display: flex;
+    flex-wrap: nowrap;
+    gap: --spacing(2);
+  }
+}
+
+input:not(:is([type="radio"], [type="checkbox"])),
+textarea,
+select {
+  display: inline-block;
+  width: 100%;
+
+  &::placeholder {
+    color: var(--z-placeholder-color);
+  }
+
+  &[readonly] {
+    background-color: var(--color-gray-200);
+  }
+
+  @variant dark {
+    &[readonly] {
+      background-color: var(--color-zinc-800);
+    }
+  }
+}
+
+input:not(:is([type="radio"], [type="checkbox"])),
+textarea,
+select {
+  --input-padding-y: 6px;
+  --input-padding-x: 12px;
+
+  padding: var(--input-padding-y) var(--input-padding-x);
+  font-size: var(--z-form-control-text-size);
+  line-height: 1.428571429;
+  color: #555;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: var(--uv-input-border-radius);
+
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  transition:
+    border-color ease-in-out 0.15s,
+    box-shadow ease-in-out 0.15s;
+
+  &:focus {
+    border-color: transparent;
+    outline: 2px solid var(--uv-focus-ring-color);
+    box-shadow: 0 0 8px rgba(102, 175, 233, 0.6);
+  }
+
+  @variant dark {
+    color: var(--color-zinc-300);
+    background-color: var(--color-zinc-700);
+    border-color: var(--color-zinc-600);
+  }
+}
+
+input[disabled],
+fieldset[disabled] input {
+  @apply dark:text-neutral-700!;
+  @apply dark:bg-neutral-800!;
+  @apply border-0!;
+}
+
+/* ======================== */
+/* debug helpers */
+
+div[role="group"]:not([aria-describedby]) {
+  outline: 2px solid magenta;
+  &::after {
+    content: "Form Group ohne aria-describedby";
+    position: fixed;
+    top: 0;
+    right: 0;
+    background-color: magenta;
+    color: white;
+    font-weight: 600;
+    padding: --spacing(4);
+    z-index: 999999;
+  }
+}

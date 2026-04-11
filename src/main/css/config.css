@@ -22,9 +22,28 @@
   --font-logo: "KaushanScript";
 }
 
+/* html element has .dark class to enforce dark theme */
+@custom-variant dark (&:where(.theme-dark, .theme-dark *));
+
+@variant dark {
+  @layer base {
+    * {
+      color-scheme: dark;
+    }
+  }
+}
+
 @custom-variant supports-backdrop-blur {
   @supports (backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0)) {
     @slot;
+  }
+}
+
+@utility text-dimmed {
+  color: var(--color-gray-600);
+
+  @variant dark {
+    color: var(--color-zinc-500);
   }
 }
 
@@ -33,6 +52,12 @@
     var(--color-white) / var(--frosted-glass-opacity, 80%)
   );
   backdrop-filter: blur(3px) saturate(180%);
+
+  @variant dark {
+    background-color: --alpha(
+      var(--color-zinc-900) / var(--frosted-glass-opacity, 80%)
+    );
+  }
 }
 
 @utility frosted-glass-opacity-* {

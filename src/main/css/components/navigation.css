@@ -14,8 +14,11 @@
     overscroll-behavior: none;
     height: calc(100dvh - anchor-size(height) - var(--info-banner-height));
 
+    @variant dark {
+      background-color: var(--color-zinc-950);
+    }
+
     .navigation-inner {
-      background-color: var(--color-white);
       padding: --spacing(8);
       padding-bottom: --spacing(4);
       min-height: 100%;
@@ -31,8 +34,16 @@
         border-top: 1px solid transparent;
         transition: border-color 150ms;
 
+        @variant dark {
+          background-color: var(--color-zinc-900);
+        }
+
         &.z-sticky--stuck {
           border-top-color: var(--color-gray-100);
+
+          @variant dark {
+            border-top-color: var(--color-zinc-800);
+          }
         }
       }
     }
@@ -66,6 +77,15 @@
 
       &:hover {
         background-color: var(--color-blue-50);
+      }
+
+      @variant dark {
+        color: var(--color-zinc-200);
+
+        &:hover {
+          color: var(--color-zinc-100);
+          background-color: var(--color-zinc-800);
+        }
       }
     }
 
@@ -112,6 +132,11 @@
           background-color: var(--dot-color);
         }
       }
+
+      @variant dark {
+        --dot-color: var(--color-sky-600);
+        --color: var(--color-zinc-300);
+      }
     }
 
     .navigation-link--active {
@@ -119,6 +144,16 @@
 
       &:hover {
         background-color: var(--color-blue-100);
+      }
+
+      @variant dark {
+        color: var(--color-zinc-300);
+        background-color: var(--color-zinc-800);
+
+        &:hover {
+          color: var(--color-zinc-50);
+          background-color: var(--color-zinc-700);
+        }
       }
     }
 
@@ -135,6 +170,12 @@
       );
       background-size: 300% 100%;
       animation: linear-loading 1.2s infinite linear;
+
+      @variant dark {
+        --from: var(--color-zinc-800);
+        --via: var(--color-zinc-700);
+        --to: var(--color-zinc-800);
+      }
     }
 
     .navigation-sublink--loading {
@@ -172,6 +213,10 @@
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--color-gray-400);
+
+    @variant dark {
+      color: var(--color-zinc-500);
+    }
   }
 }
 
@@ -184,6 +229,12 @@
     @apply from-blue-50;
     @apply via-gray-100;
     @apply to-blue-100;
+
+    @variant dark {
+      @apply from-sky-800;
+      @apply via-slate-800;
+      @apply to-sky-900;
+    }
   }
 
   .navigation-popover-menu-content {
@@ -215,6 +266,16 @@
         &:focus-visible {
           color: var(--color-black);
           background-color: var(--color-blue-50);
+        }
+
+        @variant dark {
+          color: var(--color-zinc-200);
+
+          &:hover,
+          &:focus-visible {
+            color: var(--color-zinc-200);
+            background-color: var(--color-slate-800);
+          }
         }
       }
 
@@ -260,6 +321,11 @@
     margin: unset;
     @apply shadow-2xl;
     border: 1px solid var(--color-gray-200);
+
+    @variant dark {
+      @apply shadow-zinc-950;
+      border-color: var(--color-zinc-800);
+    }
   }
 }
 
@@ -288,6 +354,18 @@
       .navigation-inner {
         padding: --spacing(4) --spacing(5);
         padding-bottom: --spacing(2);
+
+        .navigation-inner__bottom {
+          @variant dark {
+            background-color: var(--color-zinc-950);
+          }
+
+          .uv-sticky--stuck {
+            @variant dark {
+              border-top-color: var(--color-zinc-900);
+            }
+          }
+        }
 
         .navigation-link {
           padding: --spacing(1) --spacing(2);

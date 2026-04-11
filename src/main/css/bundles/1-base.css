@@ -20,6 +20,12 @@
 
   --frosted-glass-opacity: 80%;
 
+  --z-form-control-text-size: 0.875rem; /* TODO ios input require 1rem to not zoom in on focus I think */
+  --z-input-border-radius: 6px;
+  --z-input-border-color: var(--color-gray-300);
+  --z-placeholder-color: var(--color-gray-400);
+  --z-focus-ring-color: var(--color-blue-300);
+
   /* 500 */
   --absence-color-GRAY: #6b7280;
   --absence-color-ORANGE: #f97316;
@@ -30,6 +36,37 @@
   --absence-color-VIOLET: #8b5cf6;
   --absence-color-PINK: #ec4899;
   --absence-color-RED: #991b1b; /* sick-note, red-800 */
+
+  @variant dark {
+    --z-input-border-color: var(--color-zinc-600);
+    --z-placeholder-color: var(--color-zinc-400);
+
+    --uv-cal-border-color: var(--color-neutral-900);
+    --uv-cal-today-border-color: var(--color-gray-500);
+    --uv-cal-default-bg: var(--color-neutral-800);
+    --uv-cal-default-color: var(--color-neutral-300);
+    --uv-cal-weekend-bg: var(--color-sky-500);
+    --uv-cal-weekend-color: var(--color-neutral-900);
+    --uv-cal-public-holiday-bg: #0369a1;
+    --uv-cal-public-holiday-color: var(--color-neutral-900);
+    --uv-chart-container-background: var(--color-zinc-800);
+    --uv-chart-background: var(--color-zinc-800);
+    --uv-chart-border: var(--color-zinc-700);
+    --uv-error-color: var(--color-red-400);
+    --uv-error-border-color: var(--color-red-400);
+
+    /* 400 */
+    --absence-color-GRAY: #9ca3af;
+    --absence-color-ORANGE: #fb923c;
+    --absence-color-YELLOW: #facc15;
+    --absence-color-EMERALD: #34d399;
+    --absence-color-CYAN: #22d3ee;
+    --absence-color-BLUE: #60a5fa;
+    --absence-color-VIOLET: #a78bfa;
+    --absence-color-PINK: #f472b6;
+    --sick-note-color: var(--color-red-800);
+    --sick-note-child-color: var(--color-red-950);
+  }
 }
 
 @variant desktop {
@@ -37,6 +74,17 @@
     --search-bar-height: auto;
     --top-content-start: calc(var(--info-banner-height) + var(--topbar-height));
   }
+}
+
+@font-face {
+  font-family: "KaushanScript";
+  src:
+    local("KaushanScript"),
+    local("KaushanScript Regular"),
+    local("KaushanScript-Regular"),
+    url("/fonts/kaushanscript/KaushanScript-Regular.woff2") format("woff2"),
+    url("/fonts/kaushanscript/KaushanScript-Regular.woff") format("woff");
+  font-display: swap;
 }
 
 html {
@@ -56,6 +104,11 @@ body {
     "content content content content content";
   overflow: hidden;
   height: 100vh;
+
+  @variant dark {
+    background-color: var(--color-zinc-900);
+    color: var(--color-zinc-300);
+  }
 }
 
 @variant desktop {
@@ -73,15 +126,87 @@ body {
   [data-js-only] {
     display: none;
   }
-}
 
-@font-face {
-  font-family: "KaushanScript";
-  src:
-    local("KaushanScript"),
-    local("KaushanScript Regular"),
-    local("KaushanScript-Regular"),
-    url("/fonts/kaushanscript/KaushanScript-Regular.woff2") format("woff2"),
-    url("/fonts/kaushanscript/KaushanScript-Regular.woff") format("woff");
-  font-display: swap;
+  z-sticky {
+    display: block;
+  }
+
+  fieldset {
+    border-top: 1px solid var(--color-gray-100);
+
+    @variant dark {
+      border-color: var(--color-zinc-700);
+    }
+
+    legend {
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-gray-400);
+
+      @variant dark {
+        color: var(--color-zinc-400);
+      }
+    }
+  }
+
+  input {
+    --input-line-height: 1.5;
+
+    display: block;
+    width: 100%;
+    line-height: var(--input-line-height);
+    padding: --spacing(1) --spacing(2);
+    appearance: none;
+
+    /* kudos @bootstrap, https://github.com/twbs/bootstrap/blob/ed36faae9dcd03f1fbf5bbbf859c706e63ae24c9/scss/forms/_form-control.scss */
+
+    &::-webkit-date-and-time-value {
+      min-width: 85px;
+      height: calc(var(--input-line-height) * 1em);
+      margin: 0;
+    }
+
+    &::-webkit-datetime-edit {
+      display: block;
+      padding: 0;
+      height: calc(var(--input-line-height) * 1em);
+    }
+
+    &::-webkit-datetime-edit-fields-wrapper {
+      padding: 0;
+    }
+  }
+
+  input[type="radio"],
+  input[type="checkbox"] {
+    width: auto;
+    appearance: auto;
+  }
+
+  select,
+  textarea,
+  input:not(:is([type="radio"], [type="checkbox"])) {
+    color: var(--color-gray-950);
+    background-color: var(--color-white);
+    border-color: var(--z-input-border-color);
+    border-radius: var(--radius-sm);
+    padding: --spacing(1) --spacing(2);
+
+    &::placeholder {
+      color: var(--z-placeholder-color);
+    }
+
+    @variant dark {
+      color: var(--color-zinc-300);
+      background-color: var(--color-zinc-700);
+    }
+  }
+
+  button,
+  input[type="submit"],
+  input[type="button"] {
+    &:not(:disabled) {
+      cursor: pointer;
+    }
+  }
 }

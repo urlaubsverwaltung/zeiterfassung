@@ -14,10 +14,6 @@
 @reference "../config.css";
 
 @layer components {
-  z-sticky {
-    display: block;
-  }
-
   .content-container {
     margin-left: auto;
     margin-right: auto;
@@ -52,74 +48,93 @@
     }
   }
 
-  button:not(:disabled) {
-    cursor: pointer;
-  }
-
   .button-primary {
-    @apply whitespace-nowrap;
-    @apply bg-blue-700;
-    @apply border;
-    @apply border-blue-700;
-    @apply text-white;
-    @apply font-medium;
-    @apply rounded-sm;
-    padding-top: --spacing(2);
-    padding-bottom: --spacing(2);
-    padding-left: --spacing(4);
-    padding-right: --spacing(4);
-    @apply flex;
+    display: flex;
+    padding: --spacing(2) --spacing(4);
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+    border-radius: var(--radius-sm);
+
+    background-color: var(--color-blue-700);
+    border: 1px solid var(--color-blue-700);
+    color: var(--color-white);
     @apply transition-colors;
-    @apply hover:bg-blue-600;
-    @apply sm:justify-start;
+
+    &:hover {
+      background-color: var(--color-blue-600);
+    }
+
+    @variant sm {
+      justify-content: flex-start;
+    }
+
+    @variant dark {
+      color: var(--color-zinc-950);
+      background-color: var(--color-sky-600);
+      border-color: var(--color-sky-600);
+
+      &:hover {
+        color: var(--color-zinc-950);
+        background-color: var(--color-sky-500);
+      }
+    }
   }
 
   .button-primary-icon {
-    @apply items-center;
-    @apply justify-center;
+    align-items: center;
+    justify-content: center;
     gap: --spacing(2);
   }
 
   .button-secondary {
-    @apply whitespace-nowrap;
-    @apply border;
-    @apply border-blue-700;
-    @apply text-blue-700;
-    @apply bg-white;
-    @apply font-medium;
-    @apply rounded-sm;
-    @apply text-center;
-    padding-top: --spacing(2);
-    padding-bottom: --spacing(2);
-    padding-left: --spacing(4);
-    padding-right: --spacing(4);
-    @apply sm:text-left;
+    white-space: nowrap;
+    border: 1px solid var(--color-blue-700);
+    color: var(--color-blue-700);
+    background-color: var(--color-white);
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    padding: --spacing(2) --spacing(4);
+
+    @variant sm {
+      text-align: left;
+    }
+
+    @variant dark {
+      color: var(--color-sky-600);
+      border-color: var(--color-sky-600);
+      background-color: transparent;
+
+      &:hover {
+        color: var(--color-sky-500);
+        border-color: var(--color-sky-500);
+      }
+    }
   }
 
   .button-secondary-icon {
-    @apply flex;
-    @apply items-center;
+    display: flex;
+    align-items: center;
     gap: --spacing(2);
   }
 
   .button-secondary--subtle {
-    @apply border-gray-400;
-    @apply text-gray-500;
-    @apply font-normal;
+    color: var(--color-gray-500);
+    border-color: var(--color-gray-400);
+    font-weight: var(--font-weight-normal);
+
+    @variant dark {
+      color: var(--color-zinc-400);
+      border-color: var(--color-zinc-400);
+    }
   }
 
   .button-secondary.button-secondary--narrow {
-    padding-top: --spacing(1);
-    padding-bottom: --spacing(1);
-    padding-left: --spacing(4);
-    padding-right: --spacing(4);
+    padding: --spacing(1.5) --spacing(4);
   }
 
   .button-secondary-icon.button-secondary--narrow {
-    padding-top: --spacing(1);
-    padding-bottom: --spacing(1);
-    padding-left: --spacing(3);
-    padding-right: --spacing(4);
+    padding: --spacing(1) --spacing(4) --spacing(1) --spacing(3);
   }
 
   .button--loading {
@@ -152,53 +167,5 @@
       );
       animation: rotate-loading 1s infinite linear;
     }
-  }
-
-  input {
-    --input-line-height: 1.5;
-
-    display: block;
-    width: 100%;
-    line-height: var(--input-line-height);
-    padding: --spacing(1) --spacing(2);
-    appearance: none;
-    background-color: white;
-
-    /* kudos @bootstrap, https://github.com/twbs/bootstrap/blob/ed36faae9dcd03f1fbf5bbbf859c706e63ae24c9/scss/forms/_form-control.scss */
-
-    &::-webkit-date-and-time-value {
-      min-width: 85px;
-      height: calc(var(--input-line-height) * 1em);
-      margin: 0;
-    }
-
-    &::-webkit-datetime-edit {
-      display: block;
-      padding: 0;
-      height: calc(var(--input-line-height) * 1em);
-    }
-
-    &::-webkit-datetime-edit-fields-wrapper {
-      padding: 0;
-    }
-  }
-
-  input:not([class*="rounded"]),
-  textarea:not([class*="rounded"]) {
-    border-radius: var(--radius-sm);
-  }
-
-  input[type="checkbox"],
-  input[type="radio"] {
-    width: auto;
-    appearance: auto;
-  }
-
-  select {
-    background-color: white;
-  }
-
-  textarea {
-    background-color: white;
   }
 }

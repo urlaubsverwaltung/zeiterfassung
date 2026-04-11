@@ -83,7 +83,7 @@
         class="flex items-center gap-1"
         data-testid="avatar"
       >
-        <span class="shrink-0 inline-flex text-blue-200">
+        <span class="shrink-0 inline-flex text-blue-200 dark:text-sky-800">
           <img
             th:replace="~{fragments/avatar::avatar(className='w-8 h-8 lg:w-9 lg:h-9', initials=${signedInUser.initials},fullName=${signedInUser.fullName},width='40',height='40',tooltip=false)}"
             alt=""
@@ -103,7 +103,7 @@
             th:href="@{/web/person/{userId}/overview(userId=${signedInUser.id})}"
             class="flex items-center gap-4 no-underline"
           >
-            <span class="text-blue-200">
+            <span class="text-blue-200 dark:text-sky-800">
               <img
                 th:replace="~{fragments/avatar::avatar(initials=${signedInUser.initials},fullName=${signedInUser.fullName},width='64',height='64',tooltip=false)}"
                 alt=""
@@ -112,10 +112,10 @@
             <span class="block whitespace-nowrap overflow-hidden text-ellipsis">
               <span
                 th:text="#{navigation.avatar-menu.signed-in-as}"
-                class="text-sm block text-gray-600"
+                class="text-sm block text-gray-600 dark:text-zinc-100"
               ></span>
               <span
-                class="text-lg leading-none text-gray-600"
+                class="text-lg leading-none text-gray-600 dark:text-zinc-100"
                 th:text="${signedInUser.fullName}"
               >
                 Max Mustermann
@@ -125,6 +125,10 @@
         </div>
         <div class="navigation-popover-menu-content">
           <ul class="navigation-popover-menu">
+            <li
+              role="separator"
+              class="border-t border-t-gray-100 dark:border-t-zinc-700"
+            ></li>
             <li>
               <form th:action="@{/logout}" method="POST">
                 <button

@@ -472,7 +472,6 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
             throw new AccessDeniedException("You are not allowed to access timeentries of user " + ownerLocalIdValue);
         }
     }
-
     private User findUser(UserLocalId userLocalId) {
         return userManagementService.findUserByLocalId(userLocalId)
             .orElseThrow(() -> new NotFoundException("could not find user " + userLocalId));

@@ -1,0 +1,199 @@
+@reference "../../../css/config.css";
+
+duet-date-picker {
+  /* --duet-color-surface is used by duet for input-bg as well as button-bg  */
+  /* however, we want it different (in dark theme) ... therefore don't use this variable and style element instead */
+
+  --duet-color-button: #eee;
+  --duet-color-border: #ccc;
+  --duet-radius: var(--z-input-border-radius);
+  --duet-color-placeholder: var(--z-placeholder-color);
+
+  @variant dark {
+    --duet-color-primary: #005fcc;
+    --duet-color-text: var(--color-zinc-50);
+    --duet-color-text-active: var(--color-zinc-50);
+    --duet-color-button: var(--color-zinc-800);
+    --duet-color-overlay: rgba(0, 0, 0, 0.8);
+    --duet-color-border: var(--color-zinc-600);
+
+    --duet-font:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+      sans-serif;
+    --duet-font-normal: 400;
+    --duet-font-bold: 600;
+
+    --duet-z-index: 600;
+  }
+}
+
+duet-date-picker.error {
+  @apply border-red-700;
+}
+
+fieldset[disabled] duet-date-picker duet-date-picker[disabled] {
+  @apply dark:border-0!;
+}
+
+fieldset[disabled] duet-date-picker input,
+duet-date-picker[disabled] input {
+  background-color: #eee !important; /* bootstrap .form-input[readonly] forms.less:L170 */
+
+  @variant dark {
+    color: var(--color-neutral-700) !important; /* color of `input:read-only` */
+    background-color: unset !important; /* override light theme bg-color and use input:read-only bg-color */
+  }
+}
+
+.duet-date {
+  height: 100%;
+}
+
+.duet-date__input-wrapper {
+  /* !important used everywhere to override duet-date style */
+  --uv-duet-toggle-width: 48px;
+
+  height: 100%;
+
+  .duet-date__input {
+    padding: 6px 12px !important;
+    font-size: var(--z-form-control-text-size) !important;
+    line-height: 1.428571429 !important;
+    height: 100%;
+    @variant dark {
+      background-color: var(--color-zinc-700) !important;
+    }
+  }
+
+  .duet-date__toggle {
+    box-shadow: none !important;
+    height: calc(100% - 2px) !important;
+    width: var(--uv-duet-toggle-width) !important;
+    top: 1px !important;
+    right: 1px !important;
+  }
+
+  .duet-date__input:focus,
+  .duet-date__toggle:focus {
+    border-color: transparent !important;
+    outline: 2px solid var(--z-focus-ring-color) !important;
+    box-shadow: 0 0 8px rgba(102, 175, 233, 0.6) !important;
+  }
+
+  &:focus-within {
+    .duet-date__toggle {
+      min-width: var(--uv-duet-toggle-width) !important;
+    }
+  }
+}
+
+.duet-date__dialog-content {
+  max-width: none;
+  background-color: var(--color-white) !important;
+
+  @variant dark {
+    border-color: var(--color-zinc-600) !important;
+    background-color: var(--color-zinc-800) !important;
+  }
+}
+
+@media screen and (min-width: 576px) {
+  /* due datepicker not shown on the bottom of the screen anymore */
+  .duet-date__dialog {
+    width: 25rem;
+  }
+  .duet-date__dialog-content {
+    width: 25rem;
+  }
+}
+
+@variant sm {
+  .duet-date__dialog {
+    /* stretch dialog content container */
+    /* dialog-content has `margin-left: auto` which aligns it on the right */
+    width: 100%;
+  }
+}
+
+@media screen and (min-width: 992px) {
+  /* bootstrap breakpoint */
+  .duet-date__dialog {
+    width: 25rem;
+  }
+}
+
+.duet-date__day,
+.duet-date__day.datepicker-day,
+.duet-date__day.datepicker-day:not(.is-month) {
+  /* override duet stuff */
+  opacity: 1;
+  --background-color-left: var(--uv-cal-default-bg);
+  --background-color-right: var(--uv-cal-default-bg);
+  --font-color: var(--uv-cal-default-color);
+  background: linear-gradient(
+    90deg,
+    var(--background-color-left) 50%,
+    var(--background-color-right) 50%
+  );
+  color: var(--font-color);
+  padding: 0.5rem 0.375rem 1rem 0.5rem;
+}
+
+.duet-date__day.datepicker-day-weekend,
+.duet-date__day.datepicker-day-weekend:not(.is-month) {
+  --background-color-left: var(--uv-cal-weekend-bg);
+  --background-color-right: var(--uv-cal-weekend-bg);
+  --font-color: var(--uv-cal-weekend-color);
+}
+
+.duet-date__day.datepicker-day-public-holiday-morning,
+.duet-date__day.datepicker-day-public-holiday-morning:not(.is-month) {
+  --background-color-left: var(--uv-cal-public-holiday-bg);
+}
+.duet-date__day.datepicker-day-public-holiday-noon,
+.duet-date__day.datepicker-day-public-holiday-noon:not(.is-month) {
+  --background-color-right: var(--uv-cal-public-holiday-bg);
+}
+.duet-date__day.datepicker-day-public-holiday-full,
+.duet-date__day.datepicker-day-public-holiday-full:not(.is-month) {
+  --background-color-left: var(--uv-cal-public-holiday-bg);
+  --background-color-right: var(--uv-cal-public-holiday-bg);
+  --font-color: var(--uv-cal-public-holiday-color);
+}
+
+.duet-date__day.datepicker-day-today {
+  box-shadow: inset 0 0 0 var(--uv-cal-selection-box-width, 1px)
+    var(--tw-shadow-color);
+  @apply shadow-cyan-600;
+  @apply dark:shadow-sky-400;
+}
+
+/* override styling for selected or currently focused day */
+.duet-date__day.datepicker-day:focus,
+.duet-date__day.datepicker-day[aria-pressed="true"] {
+  background: var(--duet-color-primary);
+  color: var(--duet-color-text-active);
+  box-shadow: 0 0 5px var(--duet-color-primary);
+  z-index: 200;
+}
+
+.duet-date__table-header {
+  padding-left: --spacing(2);
+}
+
+.duet-date__day {
+  border-radius: 0;
+  width: 100%;
+}
+
+.duet-date__day:hover:before,
+.duet-date__day.datepicker-day-today::before {
+  border-radius: 0;
+}
+
+/* override @duetds styling to not hide the absence-bars */
+.duet-date__day:hover:before,
+.duet-date__day.datepicker-day-today::before {
+  opacity: 1; /* would be nearly opaque */
+  top: auto; /* absence-bar should be shown at the bottom */
+}

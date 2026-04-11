@@ -1,5 +1,10 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head
     th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scriptsDefer=~{::scriptsDefer})}"
   >
@@ -156,7 +161,9 @@
               </div>
             </div>
             <div class="">
-              <div class="p-4 bg-white border border-gray-100 rounded-3xl">
+              <div
+                class="p-4 bg-white border border-gray-100 rounded-3xl dark:bg-zinc-950 dark:border-zinc-800 @7xl/main:dark:border-t-transparent @7xl/main:dark:border-l-sky-950 @7xl/main:dark:inset-shadow-xs @7xl/main:dark:inset-shadow-sky-900"
+              >
                 <h2 class="sr-only" th:text="#{report.detail.section.heading}">
                   Zeiteinträge
                 </h2>
