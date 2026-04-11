@@ -10,6 +10,11 @@ import {
   vitest,
 } from "vitest";
 import { preserveScrollOnce } from "./modal-preserve-scroll-once";
+import {
+  FrameElement,
+  TurboBeforeFrameRenderEvent,
+  TurboFrameRenderEvent,
+} from "@hotwired/turbo";
 
 vi.mock("./modal-preserve-scroll-once");
 
@@ -20,7 +25,8 @@ describe("modal", () => {
   let popstateListener: NoArgumentListener;
   let clickListener: Listener<MouseEvent>;
   let keyupListener: Listener<KeyboardEvent>;
-  let turboBeforeFrameRenderListener: Listener<CustomEvent>;
+  let turboBeforeFrameRenderListener: Listener<TurboBeforeFrameRenderEvent>;
+  let turboFrameRenderListener: Listener<TurboFrameRenderEvent>;
 
   let activeElement: HTMLElement;
 
@@ -51,7 +57,11 @@ describe("modal", () => {
           keyupListener = handler as Listener<KeyboardEvent>;
         }
         if (event === "turbo:before-frame-render") {
-          turboBeforeFrameRenderListener = handler as Listener<CustomEvent>;
+          turboBeforeFrameRenderListener =
+            handler as Listener<TurboBeforeFrameRenderEvent>;
+        }
+        if (event === "turbo:frame-render") {
+          turboFrameRenderListener = handler as Listener<TurboFrameRenderEvent>;
         }
       });
   });
@@ -198,26 +208,16 @@ describe("modal", () => {
 
   describe("turbo:before-frame-render", () => {
     it("is ignored when new frame does not match the modal frame", () => {
-      const newFrame = document.createElement("div");
-      const event = {
-        detail: {
-          newFrame,
-          render: undefined,
-        },
-      };
+      const event = beforeFrameRenderEvent({});
       turboBeforeFrameRenderListener(event);
       expect(event.detail.render).toBe(undefined);
     });
 
     it("sets render function when modal frame is about to be rendered", () => {
-      const newFrame = createModalFrame();
-
-      const event = {
-        detail: {
-          newFrame,
-          render: undefined,
-        },
-      };
+      const event = beforeFrameRenderEvent({
+        newFrame: createModalFrame(),
+        render: undefined,
+      });
       turboBeforeFrameRenderListener(event);
       expect(event.detail.render).toBeDefined();
     });
@@ -225,22 +225,18 @@ describe("modal", () => {
     it("attached render function does nothing when renderMethod != replace", () => {
       const newFrame = createModalFrame(`some <strong>new</strong> content`);
 
-      const event = {
-        detail: {
-          newFrame,
-          render: undefined,
-          renderMethod: "not-replace",
-        },
-      };
+      const event = beforeFrameRenderEvent({
+        newFrame,
+        renderMethod: "not-replace",
+      });
       turboBeforeFrameRenderListener(event);
 
-      const currentFrame = document.createElement("div");
+      const currentFrame = document.createElement("turbo-frame");
 
       const modalContainer = createModalFrame();
       modalContainer.innerHTML = "content";
       document.body.append(modalContainer);
 
-      // @ts-expect-error yep
       event.detail.render(currentFrame, newFrame);
 
       // content should not be touched
@@ -250,44 +246,70 @@ describe("modal", () => {
     it("attached render function wraps modal with dialog when renderMethod = 'replace'", () => {
       const newFrame = createModalFrame(`some <strong>new</strong> content`);
 
-      const event = {
-        detail: {
-          newFrame,
-          render: undefined,
-          renderMethod: "replace",
-        },
-      };
+      const event = beforeFrameRenderEvent({
+        newFrame,
+        render: () => {},
+        renderMethod: "replace",
+      });
       turboBeforeFrameRenderListener(event);
 
       const previousFrame = createModalFrame(`some content`);
       document.body.append(previousFrame);
 
-      // @ts-expect-error yep
       event.detail.render(previousFrame, newFrame);
 
       // already attached node is updated
       expect(previousFrame.innerHTML).toBe(
-        `<dialog open="">some <strong>new</strong> content</dialog>`,
+        `<dialog>some <strong>new</strong> content</dialog>`,
       );
+    });
+
+    it("opens dialog on frame-render", () => {
+      const dialog = document.createElement("dialog");
+      // jsdom(?) has no showModal on dialogs, therefore add function instead of spy
+      dialog.showModal = vi.fn();
+
+      const newFrame = createModalFrame();
+      newFrame.append(dialog);
+
+      const event = frameRenderEvent({
+        target: newFrame,
+      });
+      turboFrameRenderListener(event);
+
+      expect(dialog.showModal).toHaveBeenCalled();
+    });
+
+    it("does not open dialog on frame-render when target frame does not match", () => {
+      const dialog = document.createElement("dialog");
+      // jsdom(?) has no showModal on dialogs, therefore add function instead of spy
+      dialog.showModal = vi.fn();
+
+      const newFrame = document.createElement("turbo-frame");
+      newFrame.append(dialog);
+
+      const event = frameRenderEvent({
+        target: newFrame,
+      });
+      turboFrameRenderListener(event);
+
+      expect(dialog.showModal).not.toHaveBeenCalled();
     });
 
     it("updates history after dialog has been closed", () => {
       // closing the dialog results in empty frame-modal response
-      const newFrame = createModalFrame(``);
+      const newFrame = createModalFrame();
 
-      const event = {
-        detail: {
-          newFrame,
-          render: undefined,
-          renderMethod: "replace",
-        },
-      };
+      const event = beforeFrameRenderEvent({
+        newFrame,
+        render: undefined,
+        renderMethod: "replace",
+      });
       turboBeforeFrameRenderListener(event);
 
       const previousFrame = createModalFrame(`some content`);
       document.body.append(previousFrame);
 
-      // @ts-expect-error yep
       event.detail.render(previousFrame, newFrame);
 
       expect(history.back).toHaveBeenCalledOnce();
@@ -297,19 +319,16 @@ describe("modal", () => {
       // closing the dialog results in empty frame-modal response
       const newFrame = createModalFrame(`next content`);
 
-      const event = {
-        detail: {
-          newFrame,
-          render: undefined,
-          renderMethod: "replace",
-        },
-      };
+      const event = beforeFrameRenderEvent({
+        newFrame,
+        render: undefined,
+        renderMethod: "replace",
+      });
       turboBeforeFrameRenderListener(event);
 
       const previousFrame = createModalFrame(`some content`);
       document.body.append(previousFrame);
 
-      // @ts-expect-error yep
       event.detail.render(previousFrame, newFrame);
 
       expect(history.back).not.toHaveBeenCalled();
@@ -317,8 +336,28 @@ describe("modal", () => {
   });
 });
 
-function createModalFrame(innerHtml?: string) {
-  const frame = document.createElement("div");
+function beforeFrameRenderEvent(
+  detail: Partial<
+    TurboBeforeFrameRenderEvent["detail"] & { renderMethod: string }
+  >,
+) {
+  return {
+    detail: {
+      newFrame: document.createElement("turbo-frame"),
+      ...detail,
+    },
+  } as TurboBeforeFrameRenderEvent;
+}
+
+function frameRenderEvent(event: Partial<TurboFrameRenderEvent>) {
+  return {
+    target: document.createElement("turbo-frame"),
+    ...event,
+  } as TurboFrameRenderEvent;
+}
+
+function createModalFrame(innerHtml?: string): FrameElement {
+  const frame = document.createElement("turbo-frame");
   frame.setAttribute("id", "frame-modal");
   frame.innerHTML = innerHtml ?? "";
   return frame;

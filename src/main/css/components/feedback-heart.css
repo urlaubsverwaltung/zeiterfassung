@@ -21,14 +21,14 @@
 @keyframes floating-heart {
   0% {
     opacity: 0;
-    bottom: 0%;
+    bottom: 0;
     left: calc(anchor(left) + 1em);
+    z-index: var(--z-index-topbar);
   }
   10% {
     opacity: 1;
     bottom: 20%;
     left: calc(anchor(left) + 1.6em);
-    z-index: 999;
   }
   20% {
     bottom: 40%;

@@ -9,8 +9,7 @@
     <th:block th:fragment="user-search(placeholder)">
       <z-user-search
         th:if="${userSearchEnabled}"
-        data-js-only
-        class="block w-full user-search"
+        class="user-search desktop:max-w-lg"
       >
         <!-- use relative action (URL) since this form is used on different pages which all allow searching for users -->
         <form
@@ -19,7 +18,7 @@
           data-turbo="true"
           data-turbo-frame="frame-users-suggestions"
           data-turbo-action="replace"
-          class="top-search-form"
+          class="user-search__form"
         >
           <label
             for="user-search-input"

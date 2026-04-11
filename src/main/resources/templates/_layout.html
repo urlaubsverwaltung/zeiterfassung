@@ -110,12 +110,15 @@
       <p th:text="#{feedback.kudos}">Vielen Dank für dein Feedback.</p>
     </noscript>
 
+    <div class="topbar-backdrop frosted-glass"></div>
+    <div class="topbar-backdrop--after"></div>
+
     <div th:replace="~{_info-banner::banner}"></div>
     <nav th:replace="~{_navigation::nav}">navigation block</nav>
-    <div class="border-b border-gray-100" style="grid-area: _"></div>
+    <div style="grid-area: _" class="topbar"></div>
 
     <div
-      class="flex items-center gap-2 p-2 border-b border-gray-100 lg:pl-6"
+      class="topbar-cell flex items-center gap-2 p-2 lg:pl-6"
       style="grid-area: launchpad-app"
     >
       <div th:replace="~{launchpad/launchpad::launchpad}"></div>
@@ -130,7 +133,7 @@
 
     <div
       th:fragment="row"
-      class="flex items-center gap-4 justify-end p-2 lg:pr-4 bg-white border-b border-gray-100"
+      class="topbar-cell flex items-center gap-4 justify-end p-2 lg:pr-4"
       style="grid-area: timeclock"
     >
       <div th:replace="~{_top::timeclock}"></div>
@@ -138,28 +141,27 @@
 
     <div
       th:fragment="row"
-      class="flex items-center gap-4 justify-end p-2 lg:pr-6 bg-white border-b border-gray-100"
+      class="topbar-cell flex items-center gap-4 justify-end p-2 lg:pr-6"
       style="grid-area: avatar"
     >
       <div th:replace="~{_top::avatar}"></div>
     </div>
 
-    <div
-      style="grid-area: search"
-      class="flex items-center justify-center px-4 py-2 desktop:p-0 desktop:border-b desktop:border-gray-100"
-    >
-      <div th:if="${search}" class="mx-auto w-full desktop:max-w-lg">
+    <div class="user-search-container" style="grid-area: search">
+      <th:block th:if="${search}">
         <div th:replace="${search}"></div>
-      </div>
+      </th:block>
     </div>
 
     <div
+      id="main"
       class="grid overflow-y-scroll bg-linear-to-b from-white to-[#fafafa]"
       style="
         grid-area: content;
         grid-template-columns: 1fr;
         grid-template-rows: 1fr auto;
-        anchor-name: --container-main-anchor;
+        margin-top: calc(-1 * var(--top-content-start));
+        padding-top: var(--top-content-start);
       "
     >
       <div class="@container/main">

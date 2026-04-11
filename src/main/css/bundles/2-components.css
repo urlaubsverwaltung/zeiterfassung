@@ -8,7 +8,7 @@
 @import "../components/feedback-heart.css" layer(components);
 @import "../components/navigation.css" layer(components);
 @import "../components/tooltip.css" layer(components);
-@import "../components/top-search-input.css" layer(components);
+@import "../components/topbar.css" layer(components);
 @import "../components/user-search.css" layer(components);
 
 @reference "../config.css";
