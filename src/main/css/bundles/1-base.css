@@ -61,7 +61,7 @@ body {
 @variant desktop {
   body {
     grid-template-rows: auto auto 1fr;
-    grid-template-columns: auto 1fr auto auto;
+    grid-template-columns: minmax(300px, auto) 1fr auto auto;
     grid-template-areas:
       "banner banner banner banner"
       "launchpad-app search timeclock avatar"
