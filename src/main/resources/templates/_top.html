@@ -24,7 +24,7 @@
         </button>
       </form>
       <div th:if="${timeClock != null}" class="flex items-center gap-4">
-        <div>
+        <turbo-frame id="frame-nav-time-clock-edit" refresh="morph">
           <button
             id="time-clock-summary"
             type="button"
@@ -50,12 +50,14 @@
             id="time-clock-popover"
             class="popover popover--backdrop-content popover--slide-to-bottom p-4 rounded shadow-2xl border border-gray-200"
             style="--popover-y-start: 15%"
+            th:object="${timeClock}"
+            th:with="timeClock=${timeClock}"
           >
             <div
-              th:replace="~{timeclock/timeclock-edit-form::navigation-box}"
+              th:replace="~{timeclock/timeclock-edit-form::time-clock-form}"
             ></div>
           </div>
-        </div>
+        </turbo-frame>
         <form
           action="#"
           th:action="@{/timeclock/stop}"

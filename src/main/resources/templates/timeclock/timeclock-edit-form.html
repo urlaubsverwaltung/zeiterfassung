@@ -5,20 +5,6 @@
     <title>Title</title>
   </head>
   <body>
-    <!-- default box rendered in the header. -->
-    <th:block
-      th:fragment="navigation-box"
-      th:object="${timeClock}"
-      th:with="timeClock=${timeClock}"
-    >
-      <turbo-frame id="frame-nav-time-clock-edit">
-        <turbo-stream target="time-clock-summary" action="replace">
-          <template th:insert="~{_top::#time-clock-summary}"></template>
-        </turbo-stream>
-        <form action="#" th:replace="~{::time-clock-form}"></form>
-      </turbo-frame>
-    </th:block>
-
     <!-- POSTing a timeClock Update with JavaScript (Turbo) should render this fragment. -->
     <th:block
       th:fragment="navigation-box-update"
