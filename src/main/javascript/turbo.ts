@@ -1,24 +1,19 @@
 import * as Turbo from "@hotwired/turbo";
-import {
-  onTurboClick,
-  onTurboFetchRequestError,
-  onTurboSubmitStart,
-} from "./turbo-events";
 
 // opt-in to turbo with `data-turbo="true"`
 Turbo.session.drive = false;
 
-onTurboClick(function (event) {
+document.addEventListener("turbo:click", function (event) {
   maybeToggleAjaxLoading(event.target as HTMLElement);
 });
 
-onTurboSubmitStart(function (event) {
+document.addEventListener("turbo:submit-start", function (event) {
   maybeToggleAjaxLoading(
     event.detail.formSubmission.submitter as HTMLButtonElement,
   );
 });
 
-onTurboFetchRequestError(function (event) {
+document.addEventListener("turbo:fetch-request-error", function (event) {
   // e.g. happens when user does a request after session-timeout
 
   console.debug(

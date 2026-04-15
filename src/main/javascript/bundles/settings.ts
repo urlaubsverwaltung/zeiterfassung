@@ -1,5 +1,4 @@
 import * as Turbo from "@hotwired/turbo";
-import { onTurboBeforeFrameRender } from "../turbo-events";
 import { morphWithoutTouchingValueOfActiveElement } from "../morph";
 
 // submit settings form in preview mode
@@ -34,7 +33,7 @@ function submitSettingsFormPreview(event: Event) {
 // will be re-rendered and therefore looses the focus. we could append the
 // data-turbo-permanent attribute to enforce keeping it. this, however, results
 // in not getting aria-invalid attribute updated. therefore -> morph it manually
-onTurboBeforeFrameRender(function (event) {
+document.addEventListener("turbo:before-frame-render", function (event) {
   if (event.detail.newFrame.matches("#frame-settings-form")) {
     event.detail.render = function (currentFrame, newFrame) {
       morphWithoutTouchingValueOfActiveElement(currentFrame, newFrame);
