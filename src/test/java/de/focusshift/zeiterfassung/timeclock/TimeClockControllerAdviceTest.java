@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.ui.Model;
 import org.springframework.validation.support.BindingAwareModelMap;
 
+import java.time.Clock;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Map;
@@ -33,6 +34,8 @@ class TimeClockControllerAdviceTest {
     private TimeEntryLockService timeEntryLockService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
+
+    private final Clock clock = Clock.systemUTC();
 
     static Stream<Arguments> timeClockArguments() {
         return Stream.of(
@@ -82,6 +85,6 @@ class TimeClockControllerAdviceTest {
     }
 
     private TimeClockControllerAdvice createSut() {
-        return new TimeClockControllerAdvice(timeClockService, timeEntryLockService, userSettingsProvider);
+        return new TimeClockControllerAdvice(timeClockService, timeEntryLockService, userSettingsProvider, clock);
     }
 }

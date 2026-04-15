@@ -18,6 +18,7 @@ import org.springframework.security.web.method.annotation.AuthenticationPrincipa
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -54,13 +55,14 @@ class TimeClockControllerTest implements ControllerTest {
 
     @Mock
     private TimeClockService timeClockService;
-
     @Mock
     private TimeEntryLockService timeEntryLockService;
 
+    private final Clock clock = Clock.systemUTC();
+
     @BeforeEach
     void setUp() {
-        sut = new TimeClockController(timeClockService, timeEntryLockService);
+        sut = new TimeClockController(timeClockService, timeEntryLockService, clock);
     }
 
     @Test
