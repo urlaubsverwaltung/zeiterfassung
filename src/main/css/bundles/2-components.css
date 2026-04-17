@@ -1,0 +1,204 @@
+@import "../components/ajax-loader.css" layer(components);
+@import "../components/avatar-group.css" layer(components);
+@import "../components/checkbox-switch.css" layer(components);
+@import "../components/info-banner.css" layer(components);
+@import "../components/launchpad.css" layer(components);
+@import "../components/modal.css" layer(components);
+@import "../components/feedback.css" layer(components);
+@import "../components/feedback-heart.css" layer(components);
+@import "../components/navigation.css" layer(components);
+@import "../components/tooltip.css" layer(components);
+@import "../components/topbar.css" layer(components);
+@import "../components/user-search.css" layer(components);
+
+@reference "../config.css";
+
+@layer components {
+  z-sticky {
+    display: block;
+  }
+
+  .content-container {
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: --spacing(8);
+  }
+
+  .content--max-w {
+    @apply max-w-7xl;
+  }
+
+  .sloth-background {
+    background-image: url("/images/sloths_1280.png");
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    background-size: contain;
+    min-height: 350px;
+    max-height: 600px;
+    margin-top: auto;
+  }
+
+  duet-date-picker.edited ~ label > span {
+    color: var(--color-blue-600);
+  }
+
+  details.details-unstyled {
+    > summary {
+      list-style: none;
+    }
+
+    > summary::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  .button-primary {
+    @apply whitespace-nowrap;
+    @apply bg-blue-700;
+    @apply border;
+    @apply border-blue-700;
+    @apply text-white;
+    @apply font-medium;
+    @apply rounded-sm;
+    padding-top: --spacing(2);
+    padding-bottom: --spacing(2);
+    padding-left: --spacing(4);
+    padding-right: --spacing(4);
+    @apply flex;
+    @apply transition-colors;
+    @apply hover:bg-blue-600;
+    @apply sm:justify-start;
+  }
+
+  .button-primary-icon {
+    @apply items-center;
+    @apply justify-center;
+    gap: --spacing(2);
+  }
+
+  .button-secondary {
+    @apply whitespace-nowrap;
+    @apply border;
+    @apply border-blue-700;
+    @apply text-blue-700;
+    @apply bg-white;
+    @apply font-medium;
+    @apply rounded-sm;
+    @apply text-center;
+    padding-top: --spacing(2);
+    padding-bottom: --spacing(2);
+    padding-left: --spacing(4);
+    padding-right: --spacing(4);
+    @apply sm:text-left;
+  }
+
+  .button-secondary-icon {
+    @apply flex;
+    @apply items-center;
+    gap: --spacing(2);
+  }
+
+  .button-secondary--subtle {
+    @apply border-gray-400;
+    @apply text-gray-500;
+    @apply font-normal;
+  }
+
+  .button-secondary.button-secondary--narrow {
+    padding-top: --spacing(1);
+    padding-bottom: --spacing(1);
+    padding-left: --spacing(4);
+    padding-right: --spacing(4);
+  }
+
+  .button-secondary-icon.button-secondary--narrow {
+    padding-top: --spacing(1);
+    padding-bottom: --spacing(1);
+    padding-left: --spacing(3);
+    padding-right: --spacing(4);
+  }
+
+  .button--loading {
+    position: relative;
+    padding-left: 2.25rem !important;
+    transition: padding ease-in-out 150ms;
+
+    &::before {
+      --dot-size: 0.5rem;
+      --dot-color: var(--color-gray-600);
+      --gradient-shift: calc((var(--dot-size) / 2) - 1px);
+
+      content: "";
+      position: absolute;
+      top: calc(50% - var(--dot-size));
+      left: 0.75rem;
+
+      display: block;
+      width: calc(var(--dot-size) * 2);
+      aspect-ratio: 1;
+      border-radius: 9999px;
+      background:
+        radial-gradient(farthest-side, var(--dot-color) 94%, #0000)
+          top/var(--gradient-shift) var(--gradient-shift) no-repeat,
+        conic-gradient(#0000 30%, var(--dot-color));
+      -webkit-mask: radial-gradient(
+        farthest-side,
+        #0000 calc(100% - var(--gradient-shift)),
+        #000 0
+      );
+      animation: rotate-loading 1s infinite linear;
+    }
+  }
+
+  input {
+    --input-line-height: 1.5;
+
+    display: block;
+    width: 100%;
+    line-height: var(--input-line-height);
+    padding: --spacing(1) --spacing(2);
+    appearance: none;
+    background-color: white;
+
+    /* kudos @bootstrap, https://github.com/twbs/bootstrap/blob/ed36faae9dcd03f1fbf5bbbf859c706e63ae24c9/scss/forms/_form-control.scss */
+
+    &::-webkit-date-and-time-value {
+      min-width: 85px;
+      height: calc(var(--input-line-height) * 1em);
+      margin: 0;
+    }
+
+    &::-webkit-datetime-edit {
+      display: block;
+      padding: 0;
+      height: calc(var(--input-line-height) * 1em);
+    }
+
+    &::-webkit-datetime-edit-fields-wrapper {
+      padding: 0;
+    }
+  }
+
+  input:not([class*="rounded"]),
+  textarea:not([class*="rounded"]) {
+    border-radius: var(--radius-sm);
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: auto;
+    appearance: auto;
+  }
+
+  select {
+    background-color: white;
+  }
+
+  textarea {
+    background-color: white;
+  }
+}

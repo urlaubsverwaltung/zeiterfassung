@@ -1,0 +1,8 @@
+.launchpad-container {
+  .launchpad {
+    .launchpad__title {
+      font-size: 1rem;
+      color: var(--color-gray-700);
+    }
+  }
+}

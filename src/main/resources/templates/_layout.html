@@ -38,11 +38,15 @@
             a.styleSheet
               ? (a.styleSheet.cssText = r)
               : a.appendChild(document.createTextNode(r)));
+          return a;
         }
       }
     </script>
     <script>
-      injectStyle("[data-js-only] { display: revert !important; }"); // hidden without js, shown with js
+      // injectStyle("[data-js-only] { display: revert !important; }"); // hidden without js, shown with js
+      injectStyle(
+        "[data-js-only]:not(:where(.inline, .block, .inline-block, .flex, .inline-flex, .grid, .inline-grid, .hidden)) { display: revert !important; }",
+      ); // hidden without js, shown with js
       injectStyle("[data-js-hidden] { display: none; }");
     </script>
     <th:block th:replace="${scripts}"></th:block>
@@ -79,10 +83,10 @@
       th:content="${turboRefreshScroll}"
     />
 
-    <link rel="stylesheet" type="text/css" th:href="@{/1-base.css}" />
-    <link rel="stylesheet" type="text/css" th:href="@{/2-components.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/1-base.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/2-components.css}" />
     <th:block th:replace="${styles}"></th:block>
-    <link rel="stylesheet" type="text/css" th:href="@{/3-utilities.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/3-utilities.css}" />
 
     <th:block th:replace="${preload}"></th:block>
     <script
@@ -97,32 +101,78 @@
     <th:block th:replace="${additional}"></th:block>
     <th:block th:replace="~{_header-script::script}"></th:block>
   </head>
-  <body th:fragment="body(content, fixedBottomContent)" class="flex flex-col">
+  <body
+    th:fragment="body(content)"
+    th:with="search=${search ?: null}"
+    class="flex flex-col"
+  >
     <noscript th:if="${showFeedbackKudo}">
       <p th:text="#{feedback.kudos}">Vielen Dank für dein Feedback.</p>
     </noscript>
 
+    <div class="topbar-backdrop frosted-glass"></div>
+    <div class="topbar-backdrop--after"></div>
+
     <div th:replace="~{_info-banner::banner}"></div>
     <nav th:replace="~{_navigation::nav}">navigation block</nav>
+    <div style="grid-area: _" class="topbar"></div>
 
-    <div class="pb-16 flex-1 flex flex-col">
-      <div th:replace="${content}">content block</div>
-    </div>
-
-    <footer th:replace="~{_footer::footer}">footer block</footer>
-
-    <!-- right "padding" because of feedback button -->
     <div
-      id="fixed-bottom-bar"
-      class="z-50 fixed left-0 right-0 bottom-0 flex flex-row items-center p-2 gap-2"
-      th:classappend="${#bools.isTrue(feedbackEnabled) ? 'right-9 sm:right-28' : ''}"
+      class="topbar-cell flex items-center gap-2 p-2 lg:pl-6"
+      style="grid-area: launchpad-app"
     >
-      <div th:replace="${fixedBottomContent}"></div>
+      <div th:replace="~{launchpad/launchpad::launchpad}"></div>
+      <a
+        href="/"
+        class="hidden desktop:block font-logo text-xl font-medium mr-8 md:mr-16 text-zinc-900 no-underline"
+        th:text="#{navigation.zeiterfassung}"
+      >
+        Zeiterfassung
+      </a>
     </div>
 
-    <div th:replace="~{fragments/feedback-form::feedback}"></div>
+    <div
+      th:fragment="row"
+      class="topbar-cell flex items-center gap-4 justify-end p-2 lg:pr-4"
+      style="grid-area: timeclock"
+    >
+      <div th:replace="~{_top::timeclock}"></div>
+    </div>
 
-    <div id="body-overlay" class="body-overlay"></div>
+    <div
+      th:fragment="row"
+      class="topbar-cell flex items-center gap-4 justify-end p-2 lg:pr-6"
+      style="grid-area: avatar"
+    >
+      <div th:replace="~{_top::avatar}"></div>
+    </div>
+
+    <div class="user-search-container" style="grid-area: search">
+      <th:block th:if="${search}">
+        <div th:replace="${search}"></div>
+      </th:block>
+    </div>
+
+    <div
+      id="main"
+      class="grid overflow-y-scroll bg-linear-to-b from-white to-[#fafafa]"
+      style="
+        grid-area: content;
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+        margin-top: calc(-1 * var(--top-content-start));
+        padding-top: var(--top-content-start);
+      "
+    >
+      <div class="@container/main">
+        <main th:replace="${content}">content block</main>
+        <div th:replace="~{fragments/feedback-form::feedback}"></div>
+      </div>
+      <div>
+        <footer th:replace="~{_footer::footer}">footer block</footer>
+      </div>
+    </div>
+
     <th:block
       th:replace="~{fragments/modal/frame::frame-modal(~{})}"
     ></th:block>

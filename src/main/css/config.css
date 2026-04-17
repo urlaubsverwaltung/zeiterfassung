@@ -1,0 +1,41 @@
+@import "tailwindcss";
+@import "./theme.css";
+
+@import "./components/popover.css";
+
+@layer utilities {
+  /* TODO required? */
+  .z-sticky {
+    z-index: var(--z-index-sticky);
+  }
+}
+
+@theme {
+  /* 26.25rem = 420px (16px base), tailwind uses rem, so we are */
+  --breakpoint-xxs: 26.25rem;
+  /* 30rem = 480px (16px base), tailwind uses rem, so we are */
+  --breakpoint-xs: 30rem;
+  --breakpoint-desktop: 1280px;
+  --breakpoint-2xl: 1440px;
+  /* TODO maybe refactor breakpoint-3xl to tailwinds 2xl? what happen with currently used 2xl? */
+  --breakpoint-3xl: 1600px;
+
+  --font-logo: "KaushanScript";
+}
+
+@custom-variant supports-backdrop-blur {
+  @supports (backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0)) {
+    @slot;
+  }
+}
+
+@utility frosted-glass {
+  background-color: --alpha(
+    var(--color-white) / var(--frosted-glass-opacity, 80%)
+  );
+  backdrop-filter: blur(3px) saturate(180%);
+}
+
+@utility frosted-glass-opacity-* {
+  --frosted-glass-opacity: calc(1% * --value(integer));
+}

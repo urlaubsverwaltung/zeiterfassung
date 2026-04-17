@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,12 +52,14 @@ class SettingsControllerTest implements ControllerTest {
     private SettingsDtoValidator settingsDtoValidator;
     @Mock
     private UserSettingsProvider userSettingsProvider;
+    @Mock
+    private UserSearchViewHelper userSearchViewHelper;
 
     private static final Clock fixedClock = Clock.fixed(Instant.parse("2025-05-30T22:00:00.000Z"), UTC);
 
     @BeforeEach
     void setUp() {
-        sut = new SettingsController(settingsService, settingsDtoValidator, userSettingsProvider, fixedClock);
+        sut = new SettingsController(settingsService, settingsDtoValidator, userSettingsProvider, userSearchViewHelper, fixedClock);
     }
 
     @Test

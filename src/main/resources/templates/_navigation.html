@@ -2,293 +2,69 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
-    <title>Navigation fragment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Navigation</title>
   </head>
   <body>
-    <th:block th:ref="nav">
-      <div class="sticky top-0 z-50 mb-8 lg:mb-12">
-        <div class="py-1.5 px-2 pr-4 lg:px-8 lg:py-1.5 bg-zinc-100">
-          <div class="flex items-center">
-            <div class="hidden lg:block flex-1">
-              <a
-                href="/"
-                class="font-logo text-xl font-medium mr-8 md:mr-16"
-                th:text="#{navigation.zeiterfassung}"
-              >
-                Zeiterfassung
-              </a>
-            </div>
-            <div
-              class="grow w-full max-w-screen-lg 2xl:max-w-screen-3xl px-4 flex relative"
-            >
-              <input id="menu-toggle-checkbox" type="checkbox" class="hidden" />
-              <label for="menu-toggle-checkbox" class="z-50 flex lg:hidden">
-                <span class="inline-block">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </span>
-              </label>
-              <nav>
-                <ul
-                  class="flex flex-col space-y-8 lg:space-x-8 lg:space-y-0 lg:flex-row"
-                >
-                  <li>
-                    <a
-                      href="#"
-                      th:href="@{/timeentries}"
-                      class="flex items-center main-nav-link"
-                      th:classappend="${currentRequestURI.startsWith('/timeentries') ? 'current' : ''}"
-                      th:aria-current="${currentRequestURI.startsWith('/timeentries') && !currentRequestURI.startsWith('/timeentries/users')  ? 'page' : 'false'}"
-                    >
-                      <svg th:replace="~{icons/bookmark::svg}"></svg>
-                      <th:block
-                        th:text="#{navigation.main.timetrack}"
-                      ></th:block>
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      id="main-navigation-link-reports"
-                      href="#"
-                      th:href="@{/report}"
-                      class="flex items-center main-nav-link"
-                      th:aria-current="${currentRequestURI.startsWith('/report') ? 'page' : 'false'}"
-                      data-testid="navigation-link-reports"
-                    >
-                      <svg th:replace="~{icons/chart-pie::svg}"></svg>
-                      <th:block th:text="#{navigation.main.reports}"></th:block>
-                    </a>
-                  </li>
-                  <li th:if="${showMainNavigationPersons}">
-                    <a
-                      id="main-navigation-link-users"
-                      href="#"
-                      th:href="@{/users}"
-                      class="flex items-center main-nav-link"
-                      th:classappend="${currentRequestURI.startsWith('/users') || currentRequestURI.startsWith('/timeentries/users') ? 'current' : ''}"
-                      th:aria-current="${currentRequestURI.equals('/users') ? 'page' : 'false'}"
-                      data-testid="navigation-link-users"
-                    >
-                      <svg th:replace="~{icons/users::svg}"></svg>
-                      <th:block th:text="#{navigation.main.users}"
-                        >Personen</th:block
-                      >
-                    </a>
-                  </li>
-                  <li th:if="${showMainNavigationSettings}">
-                    <a
-                      id="main-navigation-link-settings"
-                      href="#"
-                      th:href="@{/settings}"
-                      class="flex items-center main-nav-link"
-                      th:classappend="${currentRequestURI.startsWith('/settings') ? 'current' : ''}"
-                      th:aria-current="${currentRequestURI.equals('/settings') ? 'page' : 'false'}"
-                      data-testid="navigation-link-settings"
-                    >
-                      <svg th:replace="~{icons/cog::svg}"></svg>
-                      <th:block th:text="#{navigation.main.settings}"
-                        >Einstellungen</th:block
-                      >
-                    </a>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-            <div class="z-50 flex-1 flex justify-end gap-4">
-              <form
-                th:if="${timeClock == null}"
-                action="#"
-                th:action="@{/timeclock/start}"
-                method="post"
-                class="flex items-center"
-              >
-                <button
-                  type="submit"
-                  class="button-primary button-primary-icon pl-3 pr-4 py-1 text-lg rounded-full"
-                >
-                  <svg
-                    th:replace="~{icons/play::svg(className='w-6 h-6 mr-1.5')}"
-                  />
-                  <span th:text="#{timeclock.start}"> Start </span>
-                </button>
-              </form>
-              <div th:if="${timeClock != null}" class="flex items-center gap-4">
-                <details
-                  class="time-clock-dropdown mr-4 sr-only xs:not-sr-only xs:relative"
-                  is="z-details-dropdown"
-                >
-                  <summary
-                    id="time-clock-summary"
-                    class="time-clock-dropdown_summary"
-                  >
-                    <span
-                      class="sr-only"
-                      th:text="#{timeclock.elapsed-time.label}"
-                    ></span>
-                    <span
-                      class="text-lg"
-                      th:text="${timeClock.duration}"
-                      th:data-started-at="${timeClock.startedAt}"
-                      is="z-time-clock-duration"
-                    ></span>
-                    <svg
-                      th:replace="~{icons/chevron-down::svg(className='w-4 h-4')}"
-                    ></svg>
-                  </summary>
-                  <div class="time-clock-dropdown_content">
-                    <div
-                      th:replace="~{timeclock/timeclock-edit-form::navigation-box}"
-                    ></div>
-                  </div>
-                </details>
-                <form
-                  action="#"
-                  th:action="@{/timeclock/stop}"
-                  method="post"
-                  class="flex items-center"
-                >
-                  <button
-                    type="submit"
-                    class="bg-red-700 text-white py-1 pl-2 pr-3 text-lg font-medium rounded-full flex items-center gap-1.5 hover:bg-red-600 transition-colors"
-                  >
-                    <svg
-                      th:replace="~{icons/stop::svg(className='text-red-100 w-6 h-6')}"
-                    />
-                    <span th:text="#{timeclock.stop}"> Stop </span>
-                  </button>
-                </form>
-              </div>
-              <div th:replace="~{launchpad/launchpad::navigation-item}"></div>
-              <div class="shrink-0 relative flex">
-                <z-nav-popup-menu-button>
-                  <a
-                    href="#avatar-menu"
-                    id="avatar-link"
-                    aria-expanded="false"
-                    aria-haspopup="true"
-                    class="flex flex-row items-center"
-                    data-testid="avatar"
-                  >
-                    <span class="inline-flex text-blue-200">
-                      <img
-                        th:replace="~{fragments/avatar::avatar(initials=${signedInUser.initials},fullName=${signedInUser.fullName},width='52px',height='52px',className='w-10 h-10 lg:w-9 lg:h-9',tooltip=false)}"
-                        alt=""
-                      />
-                    </span>
-                    <svg
-                      th:replace="~{icons/chevron-down::svg(className='w-4 h-4')}"
-                    ></svg>
-                  </a>
-                </z-nav-popup-menu-button>
-                <div id="avatar-menu" class="nav-popup-menu xs:max-w-xs">
-                  <div class="nav-popup-menu-inner">
-                    <div class="nav-popup-menu-inner__header">
-                      <a
-                        href="/"
-                        th:href="@{/}"
-                        class="flex items-center gap-4 hover:no-underline focus:no-underline"
-                      >
-                        <span class="text-blue-200">
-                          <img
-                            th:replace="~{fragments/avatar::avatar(initials=${signedInUser.initials},fullName=${signedInUser.fullName},width='64px',height='64px',tooltip=false)}"
-                            alt=""
-                          />
-                        </span>
-                        <p
-                          class="m-0 whitespace-nowrap overflow-hidden text-ellipsis"
-                        >
-                          <span
-                            th:text="#{navigation.avatar-menu.signed-in-as}"
-                            class="text-sm block text-gray-600 dark:text-zinc-100"
-                          ></span>
-                          <span
-                            class="text-lg leading-none text-gray-700 hover:text-black focus:text-black dark:text-zinc-200"
-                            th:text="${signedInUser.fullName}"
-                          >
-                            Max Mustermann
-                          </span>
-                        </p>
-                      </a>
-                    </div>
-                    <div class="nav-popup-menu-inner__content">
-                      <ul class="list-none m-0 p-0">
-                        <li>
-                          <a
-                            href="#"
-                            th:replace="~{::nav-popup-menu-link-external(href=${menuHelpUrl}, icon=~{::menu-help-icon}, text=#{navigation.avatar-menu.help})}"
-                          >
-                            <svg
-                              th:ref="menu-help-icon"
-                              th:replace="~{icons/help-circle::svg(className='w-6 h-6')}"
-                            ></svg>
-                          </a>
-                        </li>
-                        <li class="mt-4 xs:mt-1" role="separator"></li>
-                        <li>
-                          <form
-                            action="#"
-                            th:action="@{/logout}"
-                            method="POST"
-                            class="ml-auto w-full"
-                          >
-                            <button
-                              type="submit"
-                              class="nav-popup-menu_link rounded-b-2xl"
-                              data-testid="logout"
-                            >
-                              <span
-                                class="px-2 py-1 rounded-sm flex items-center ml-2.5"
-                              >
-                                <svg
-                                  th:replace="~{icons/logout::svg(className='w-6 h-6')}"
-                                ></svg>
-                              </span>
-                              <span
-                                class="ml-4"
-                                th:text="#{navigation.avatar-menu.logout}"
-                              ></span>
-                            </button>
-                          </form>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div
-          class="navigation-content-spacer flex justify-between w-full lg:hidden"
+    <th:block th:fragment="nav">
+      <div class="topbar-cell navigation-container desktop:h-auto">
+        <button
+          class="navigation-button flex items-center gap-2 desktop:hidden"
+          popovertarget="navigation"
         >
-          <div class="navigation-content-spacer--left h-4 w-4"></div>
-          <div class="navigation-content-spacer--right h-4 w-4"></div>
-        </div>
+          <svg th:replace="~{icons/menu::svg(className='w-5 h-5')}" />
+          <th:block th:text="#{nav.menu}">Menü</th:block>
+        </button>
+        <nav
+          id="navigation"
+          popover
+          class="navigation popover popover--slide-to-right"
+        >
+          <div class="navigation-inner">
+            <div>
+              <ul>
+                <li th:each="link : ${navigation.items}">
+                  <a
+                    class="navigation-link"
+                    th:classappend="${link.active ? 'navigation-link--active' : ''}"
+                    th:id="${link.id}"
+                    th:href="@{__${link.href}__}"
+                    th:data-testid="${link.dataTestId}"
+                    th:aria-current="${link.ariaCurrent}"
+                  >
+                    <th:block
+                      th:text="${#messages.msg(link.messageKey)}"
+                    ></th:block>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <z-sticky
+              data-sticky="bottom"
+              class="navigation-inner__bottom flex flex-col gap-2"
+            >
+              <div class="flex items-center gap-4">
+                <a
+                  class="flex-1 navigation-link flex items-center gap-2"
+                  th:href="${menuHelpUrl}"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <span
+                    class="whitespace-nowrap text-ellipsis overflow-hidden"
+                    style="min-width: 0"
+                    th:text="#{nav.help.title}"
+                  ></span>
+                  <svg
+                    th:replace="~{icons/external-link::svg(className='h-4 w-4')}"
+                  ></svg>
+                </a>
+                <div id="feedback-heart-container"></div>
+              </div>
+            </z-sticky>
+          </div>
+        </nav>
       </div>
     </th:block>
-
-    <a
-      th:fragment="nav-popup-menu-link-external(href, icon, text)"
-      th:href="${href}"
-      class="nav-popup-menu_link"
-      target="_blank"
-      rel="noopener"
-      th:data-test-id="${dataTestId}"
-    >
-      <span class="px-2 py-1 rounded-sm flex items-center ml-2.5">
-        <svg th:replace="${icon}"></svg>
-      </span>
-      <span
-        class="ml-4 whitespace-nowrap text-ellipsis overflow-hidden"
-        style="min-width: 0"
-        th:text="${text}"
-      ></span>
-      <svg
-        th:replace="~{icons/external-link::svg(className='ml-1.5 h-4 w-4')}"
-      ></svg>
-    </a>
   </body>
 </html>

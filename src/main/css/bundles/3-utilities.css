@@ -1,0 +1,14 @@
+@reference "../config.css";
+
+@layer utilities {
+  input.invalid {
+    @apply border;
+    @apply border-red-400;
+    @apply text-red-600;
+  }
+
+  label.invalid,
+  p.invalid {
+    @apply text-red-600;
+  }
+}

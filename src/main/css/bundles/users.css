@@ -1,0 +1,11 @@
+@reference "../config.css";
+
+@layer components {
+  .user-selection-list > li {
+    @apply hover:bg-gray-50;
+  }
+
+  .user-selection-list > li:has(a[aria-current="page"]) {
+    @apply bg-gray-100;
+  }
+}

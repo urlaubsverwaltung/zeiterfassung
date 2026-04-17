@@ -4,6 +4,8 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
 
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static com.microsoft.playwright.options.AriaRole.HEADING;
 import static com.microsoft.playwright.options.LoadState.DOMCONTENTLOADED;
 
 /**
@@ -16,6 +18,11 @@ public class UsersPage {
 
     public UsersPage(Page page) {
         this.page = page;
+    }
+
+    public void isVisibleForOtherPerson(String name) {
+        assertThat(personLink(name)).isVisible();
+        assertThat(page.getByTestId("user-section").getByRole(HEADING, new Locator.GetByRoleOptions().setName(name))).isVisible();
     }
 
     /**

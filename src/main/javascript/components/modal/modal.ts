@@ -56,46 +56,51 @@ export function enhanceModal() {
   });
 
   // enhance modal with <dialog>
-  document.addEventListener(
-    "turbo:before-frame-render",
-    (event: CustomEvent) => {
-      if (!event.detail.newFrame.matches(MODAL_TURBO_FRAME)) {
-        return;
-      }
+  document.addEventListener("turbo:before-frame-render", (event) => {
+    if (!event.detail.newFrame.matches(MODAL_TURBO_FRAME)) {
+      return;
+    }
 
-      event.detail.render = (
-        currentFrame: HTMLElement,
-        newFrame: HTMLElement,
-      ) => {
-        if (event.detail.renderMethod === "replace") {
-          const currentlyShowingDialog = Boolean(currentFrame.innerHTML.trim());
-          const nextShowingDialog = Boolean(newFrame.innerHTML.trim());
+    event.detail.render = (
+      currentFrame: HTMLElement,
+      newFrame: HTMLElement,
+    ) => {
+      // @ts-expect-error renderMethod exists
+      const renderMethod = event.detail.renderMethod;
+      if (renderMethod === "replace") {
+        const currentlyShowingDialog = Boolean(currentFrame.innerHTML.trim());
+        const nextShowingDialog = Boolean(newFrame.innerHTML.trim());
 
-          // next showing dialog could contain constraint validation errors
-          // in this case turbo doesn't update the history, and we don't have to touch it either.
-          if (currentlyShowingDialog && !nextShowingDialog) {
-            // rendering the dialog advances history. (to be able to close the dialog with back-button)
-            // --
-            // closing the dialog via submit or close, sends a request to the server
-            // which answers with an empty frame-modal. due to the request the history stack is replaced (by turbo).
-            // without calling history.back() here, the user would still be on the same view going backwards the first time.
-            // therefore we have to go back first programmatically :)
-            globalThis.history.back();
-          }
-
-          const dialog = document.createElement("dialog");
-          dialog.setAttribute("open", "");
-          dialog.innerHTML = newFrame.innerHTML;
-          document.querySelector("#frame-modal")!.innerHTML = dialog.outerHTML;
-        } else {
-          console.warn(
-            "rendering frame-modal should use renderMethod=replace but was",
-            event.detail.renderMethod,
-          );
+        // next showing dialog could contain constraint validation errors
+        // in this case turbo doesn't update the history, and we don't have to touch it either.
+        if (currentlyShowingDialog && !nextShowingDialog) {
+          // rendering the dialog advances history. (to be able to close the dialog with back-button)
+          // --
+          // closing the dialog via submit or close, sends a request to the server
+          // which answers with an empty frame-modal. due to the request the history stack is replaced (by turbo).
+          // without calling history.back() here, the user would still be on the same view going backwards the first time.
+          // therefore we have to go back first programmatically :)
+          globalThis.history.back();
         }
-      };
-    },
-  );
+
+        const dialog = document.createElement("dialog");
+        dialog.innerHTML = newFrame.innerHTML;
+        document.querySelector("#frame-modal")!.innerHTML = dialog.outerHTML;
+      } else {
+        console.warn(
+          "rendering frame-modal should use renderMethod=replace but was",
+          renderMethod,
+        );
+      }
+    };
+  });
+
+  document.addEventListener("turbo:frame-render", function (event) {
+    const target = event.target as HTMLElement;
+    if (target?.matches?.(MODAL_TURBO_FRAME)) {
+      target.querySelector("dialog")!.showModal();
+    }
+  });
 }
 
 function closeModal() {

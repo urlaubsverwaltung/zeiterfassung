@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,18 @@ public class CurrentOidcUser implements OidcUser {
 
     public boolean hasRole(SecurityRole role) {
         return getAuthorities().contains(role.authority());
+    }
+
+    /**
+     * Checks whether this user has at least one of the given roles or not.
+     *
+     * @param roles to check
+     * @return <code>true</code> if at least one role matches, <code>false</code> otherwise
+     */
+    public boolean hasAnyRole(SecurityRole... roles) {
+        final List<SecurityRole> list = Arrays.asList(roles);
+        return getAuthorities().stream()
+            .anyMatch(authority -> SecurityRole.fromAuthority(authority).map(list::contains).orElse(false));
     }
 
     /**
@@ -119,5 +132,16 @@ public class CurrentOidcUser implements OidcUser {
     @Override
     public String getName() {
         return oidcUser.getName();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        return this.oidcUser.equals(((CurrentOidcUser) o).oidcUser);
+    }
+
+    @Override
+    public int hashCode() {
+        return oidcUser.hashCode();
     }
 }

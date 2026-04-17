@@ -20,9 +20,11 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.timeclock.TimeClockMapper.timeClockToTimeClockDto;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -41,10 +43,12 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
 
     private final TimeClockService timeClockService;
     private final TimeEntryLockService timeEntryLockService;
+    private final Clock clock;
 
-    TimeClockController(TimeClockService timeClockService, TimeEntryLockService timeEntryLockService) {
+    TimeClockController(TimeClockService timeClockService, TimeEntryLockService timeEntryLockService, Clock clock) {
         this.timeClockService = timeClockService;
         this.timeEntryLockService = timeEntryLockService;
+        this.clock = clock;
     }
 
     @GetMapping
@@ -53,7 +57,7 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
         final UserId userId = currentUser.getUserIdComposite().id();
 
         timeClockService.getCurrentTimeClock(userId)
-            .map(TimeClockMapper::timeClockToTimeClockDto)
+            .map(timeClock -> timeClockToTimeClockDto(timeClock, clock))
             .ifPresent(dto -> model.addAttribute("timeClockUpdate", dto));
 
         return "timeclock/timeclock-edit";

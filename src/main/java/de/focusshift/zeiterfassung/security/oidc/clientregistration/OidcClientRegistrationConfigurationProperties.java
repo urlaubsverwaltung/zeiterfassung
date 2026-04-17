@@ -1,10 +1,9 @@
 package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
+import jakarta.validation.constraints.NotEmpty;
 import org.hibernate.validator.constraints.URL;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-
-import jakarta.validation.constraints.NotEmpty;
 
 @Validated
 @ConfigurationProperties("zeiterfassung.security.oidc.client.registration")

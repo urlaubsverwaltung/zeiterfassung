@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -6,91 +6,82 @@
   </head>
   <body>
     <div
-      th:fragment="navigation-item"
+      th:fragment="launchpad"
       th:if="${launchpad}"
-      class="relative flex items-center"
+      class="launchpad-container"
     >
-      <z-nav-popup-menu-button>
-        <a
-        href="#launchpad"
-        aria-expanded="false"
-        aria-haspopup="true"
+      <div class="flex gap-2 items-center">
+        <button popovertarget="launchpad">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            role="presentation"
+            aria-hidden="true"
+            class="w-9 h-9 @5xl/main:w-8 @5xl/main:h-8"
+          >
+            <circle cx="12" cy="6" r="1"></circle>
+            <circle cx="19" cy="6" r="1"></circle>
+            <circle cx="5" cy="6" r="1"></circle>
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="19" cy="12" r="1"></circle>
+            <circle cx="5" cy="12" r="1"></circle>
+            <circle cx="12" cy="18" r="1"></circle>
+            <circle cx="19" cy="18" r="1"></circle>
+            <circle cx="5" cy="18" r="1"></circle>
+          </svg>
+          <span class="sr-only" th:text="#{launchpad.core.apps.heading}"
+            >Anwendungen</span
+          >
+        </button>
+      </div>
+      <div
+        popover
+        id="launchpad"
+        class="nav-popover-menu-container nav-launchpad-popover popover popover--slide-to-left desktop:popover--slide-to-right"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          role="presentation"
-          aria-hidden="true"
-          class="w-9 h-9 lg:w-8 lg:h-8 text-gray-800"
-        >
-          <circle cx="12" cy="6" r="1"></circle>
-          <circle cx="19" cy="6" r="1"></circle>
-          <circle cx="5" cy="6" r="1"></circle>
-          <circle cx="12" cy="12" r="1"></circle>
-          <circle cx="19" cy="12" r="1"></circle>
-          <circle cx="5" cy="12" r="1"></circle>
-          <circle cx="12" cy="18" r="1"></circle>
-          <circle cx="19" cy="18" r="1"></circle>
-          <circle cx="5" cy="18" r="1"></circle>
-        </svg>
-        <span class="sr-only" th:text="#{launchpad.core.apps.heading}">
-          Anwendungen
-        </span>
-      </a>
-      </z-nav-popup-menu-button>
-      <div id="launchpad" class="nav-popup-menu xs:-right-4">
-        <div class="nav-popup-menu-inner">
-          <div class="nav-popup-menu-inner__header">
-            <h2
-              class="text-base text-gray-700"
-              th:text="#{launchpad.core.apps.heading}"
-            >
-              Anwendungen
-            </h2>
-          </div>
-          <div class="nav-popup-menu-inner__content">
-            <ul
-              class="grid gap-2"
-              style="
-                grid-template-columns: repeat(
-                  var(--cols, 1),
-                  minmax(8rem, 1fr)
-                );
-              "
-              th:with="size=${#lists.size(launchpad.apps)}"
-              th:styleappend="${size > 3 ? '--cols:3' : (size > 1 ? '--cols:2' : '--cols:1')}"
-            >
-              <li th:each="app : ${launchpad.apps}">
-                <a
-                  class="h-full flex flex-col items-center gap-2 text-sm px-4 py-2 rounded-lg bg-transparent transition-colors hover:bg-gray-100"
-                  href="#"
-                  th:href="${app.url}"
+        <div class="navigation-popover-menu-header">
+          <h2 class="launchpad__title" th:text="#{launchpad.core.apps.heading}">
+            Anwendungen
+          </h2>
+        </div>
+        <div class="navigation-popover-menu-content">
+          <ul
+            class="grid gap-2"
+            style="
+              grid-template-columns: repeat(var(--cols, 1), minmax(8rem, 1fr));
+            "
+            th:with="size=${#lists.size(launchpad.apps)}"
+            th:styleappend="${size > 3 ? ';--cols:3' : (size > 1 ? ';--cols:2' : ';--cols:1')}"
+          >
+            <li th:each="app : ${launchpad.apps}">
+              <a
+                class="flex flex-col items-center gap-2 no-underline text-black text-sm px-4 py-2 rounded-lg bg-transparent transition-colors hover:bg-gray-100"
+                th:href="${app.url}"
+              >
+                <img
+                  src=""
+                  th:src="${app.icon}"
+                  width="64"
+                  height="64"
+                  alt=""
+                  crossorigin="anonymous"
+                />
+                <span
+                  class="text-center w-full break-words"
+                  th:text="${app.name}"
                 >
-                  <img
-                    src=""
-                    th:src="${app.icon}"
-                    width="64"
-                    height="64"
-                    alt=""
-                    crossorigin="anonymous"
-                  />
-                  <span
-                    class="block text-center w-full break-words"
-                    th:text="${app.name}"
-                  >
-                    Awesome App
-                  </span>
-                </a>
-              </li>
-            </ul>
-          </div>
+                  Awesome App
+                </span>
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
     </div>

@@ -30,7 +30,8 @@ import java.time.ZoneId;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static com.microsoft.playwright.options.WaitForSelectorState.VISIBLE;
-import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.credentials;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.OFFICE;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.USER;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -65,57 +66,6 @@ class TimeEntryUIIT {
     }
 
     @Test
-    void ensureUserSearch(Page page) {
-        if ("firefox".equals(System.getProperty("browser"))) {
-            System.out.println(">> IGNORE 'ensure user search' ui test, css anchor not supported in firefox 146...");
-            return;
-        }
-
-        final NavigationPage navigationPage = new NavigationPage(page);
-        final TimeEntryPage timeEntryPage = new TimeEntryPage(page);
-        final LoginPage loginPage = new LoginPage(page, port);
-
-        // first login with boss, so user exists
-        loginPage.login(credentials("boss", "secret"));
-        // boss is allowed to search
-        assertThat(timeEntryPage.userSearchLocator()).isAttached();
-        navigationPage.logout();
-
-        // then login with user (klaus), so he exists...
-        // and assert that user search is not available
-        loginPage.login(credentials("user", "secret"));
-        assertThat(timeEntryPage.userSearchLocator()).not().isAttached();
-        navigationPage.logout();
-
-        // then login with office
-        // who is allowed to search and navigate
-        loginPage.login(credentials("office", "secret"));
-        assertThat(timeEntryPage.userSearchLocator()).isAttached();
-
-        timeEntryPage.searchForUser("Klau");
-        timeEntryPage.selectUserSuggestion("Klaus Müller");
-
-        timeEntryPage.isVisibleForOtherPerson("Klaus Müller");
-        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
-
-        // search must also be available on other persons timeEntry page
-        timeEntryPage.searchForUser("Max");
-        timeEntryPage.selectUserSuggestion("Max Mustermann");
-
-        timeEntryPage.isVisibleForOtherPerson("Max Mustermann");
-        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
-
-        // ensure browser history
-        page.goBack();
-        timeEntryPage.isVisibleForOtherPerson("Klaus Müller");
-        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
-
-        page.goForward();
-        timeEntryPage.isVisibleForOtherPerson("Max Mustermann");
-        assertThat(timeEntryPage.userSuggestionsLocator()).not().isAttached();
-    }
-
-    @Test
     void ensureTimeEntryCreationNotAllowedForLockedDate(Page page) {
 
         final NavigationPage navigationPage = new NavigationPage(page);
@@ -123,7 +73,7 @@ class TimeEntryUIIT {
         final TimeEntryPage timeEntryPage = new TimeEntryPage(page);
         final LoginPage loginPage = new LoginPage(page, port);
 
-        loginPage.login(credentials("office", "secret"));
+        loginPage.login(OFFICE);
 
         navigationPage.goToSettingsPage();
 
@@ -135,7 +85,7 @@ class TimeEntryUIIT {
 
         navigationPage.logout();
 
-        loginPage.login(credentials("user", "secret"));
+        loginPage.login(USER);
 
         final LocalDate yesterday = LocalDate.now(USER_ZONE_ID).minusDays(1);
         timeEntryPage.fillNewTimeEntry(yesterday, LocalTime.parse("08:00"), LocalTime.parse("17:00"), "");
@@ -155,7 +105,7 @@ class TimeEntryUIIT {
         final TimeEntryDialogPage timeEntryDialogPage = new TimeEntryDialogPage(page);
         final LoginPage loginPage = new LoginPage(page, port);
 
-        loginPage.login(credentials("office", "secret"));
+        loginPage.login(OFFICE);
 
         final LocalDateTime now = LocalDateTime.now();
         final LocalDateTime start = now.withHour(9).withMinute(0).withSecond(0).withNano(0);

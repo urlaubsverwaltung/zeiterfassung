@@ -10,9 +10,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
+
+import static de.focusshift.zeiterfassung.timeclock.TimeClockMapper.timeClockToTimeClockDto;
 
 @ControllerAdvice(assignableTypes = {HasTimeClock.class})
 class TimeClockControllerAdvice {
@@ -20,15 +23,18 @@ class TimeClockControllerAdvice {
     private final TimeClockService timeClockService;
     private final TimeEntryLockService timeEntryLockService;
     private final UserSettingsProvider userSettingsProvider;
+    private final Clock clock;
 
     TimeClockControllerAdvice(
         TimeClockService timeClockService,
         TimeEntryLockService timeEntryLockService,
-        UserSettingsProvider userSettingsProvider
+        UserSettingsProvider userSettingsProvider,
+        Clock clock
     ) {
         this.timeClockService = timeClockService;
         this.timeEntryLockService = timeEntryLockService;
         this.userSettingsProvider = userSettingsProvider;
+        this.clock = clock;
     }
 
     private static UserId userId(OidcUser oidcUser) {
@@ -38,14 +44,13 @@ class TimeClockControllerAdvice {
     @ModelAttribute
     public void addAttributes(Model model, @CurrentUser CurrentOidcUser principal) {
         final UserId userId = userId(principal);
-        final Optional<TimeClock> currentTimeClock = timeClockService.getCurrentTimeClock(userId);
 
-        currentTimeClock.map(TimeClockMapper::timeClockToTimeClockDto)
+        timeClockService.getCurrentTimeClock(userId)
+            .map(timeClock -> timeClockToTimeClockDto(timeClock, clock))
             .ifPresent(timeClockDto -> model.addAttribute("timeClock", timeClockDto));
 
-        getMinValidTimeEntryDate(principal).ifPresent(date ->
-            model.addAttribute("minValidTimeEntryDate", date)
-        );
+        getMinValidTimeEntryDate(principal)
+            .ifPresent(date -> model.addAttribute("minValidTimeEntryDate", date));
     }
 
     private Optional<LocalDate> getMinValidTimeEntryDate(CurrentOidcUser currentUser) {

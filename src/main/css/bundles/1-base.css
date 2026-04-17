@@ -1,0 +1,87 @@
+@import "../config.css";
+
+:root {
+  /* tooltips shown on pointer hover should always be on top */
+  --z-index-tooltip: 99999;
+  /* topbar above everything else */
+  --z-index-topbar: 200;
+  /* datepicker must be above sticky elements, at least on time-entries page */
+  --z-index-duet-datepicker: 110;
+  --z-index-sticky: 100;
+
+  /* info-banner is optional and value is overridden by javascript with real height on runtime. as we don't know the content yet... */
+  --info-banner-height: 0;
+  --topbar-height: 3.5rem;
+  --search-bar-height: 3.5rem;
+
+  --top-content-start: calc(
+    var(--info-banner-height) + var(--topbar-height) + var(--search-bar-height)
+  );
+
+  --frosted-glass-opacity: 80%;
+
+  /* 500 */
+  --absence-color-GRAY: #6b7280;
+  --absence-color-ORANGE: #f97316;
+  --absence-color-YELLOW: #eab308;
+  --absence-color-EMERALD: #10b981;
+  --absence-color-CYAN: #06b6d4;
+  --absence-color-BLUE: #3b82f6;
+  --absence-color-VIOLET: #8b5cf6;
+  --absence-color-PINK: #ec4899;
+  --absence-color-RED: #991b1b; /* sick-note, red-800 */
+}
+
+@variant desktop {
+  :root {
+    --search-bar-height: auto;
+    --top-content-start: calc(var(--info-banner-height) + var(--topbar-height));
+  }
+}
+
+html {
+  height: -webkit-fill-available;
+}
+
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  grid-template-columns: auto 1fr auto auto auto;
+  grid-template-areas:
+    "banner banner banner banner banner"
+    "navigation _ timeclock launchpad-app avatar"
+    "search search search search search"
+    "content content content content content";
+  overflow: hidden;
+  height: 100vh;
+}
+
+@variant desktop {
+  body {
+    grid-template-rows: auto auto 1fr;
+    grid-template-columns: minmax(300px, auto) 1fr auto auto;
+    grid-template-areas:
+      "banner banner banner banner"
+      "launchpad-app search timeclock avatar"
+      "navigation content content content";
+  }
+}
+
+@layer base {
+  [data-js-only] {
+    display: none;
+  }
+}
+
+@font-face {
+  font-family: "KaushanScript";
+  src:
+    local("KaushanScript"),
+    local("KaushanScript Regular"),
+    local("KaushanScript-Regular"),
+    url("/fonts/kaushanscript/KaushanScript-Regular.woff2") format("woff2"),
+    url("/fonts/kaushanscript/KaushanScript-Regular.woff") format("woff");
+  font-display: swap;
+}

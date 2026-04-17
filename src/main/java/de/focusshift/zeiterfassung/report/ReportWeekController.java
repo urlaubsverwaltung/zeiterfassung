@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
+import de.focusshift.zeiterfassung.search.HasUserSearch;
+import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
@@ -13,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -33,8 +36,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.ScrollPreservation.PRESERVE;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_REFRESH_SCROLL_ATTRIBUTE;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -43,7 +48,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 @Controller
-class ReportWeekController implements HasTimeClock, HasLaunchpad {
+class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
@@ -53,14 +58,17 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
     private final ReportPermissionService reportPermissionService;
     private final ReportViewHelper reportViewHelper;
     private final TimeEntryDialogHelper timeEntryDialogHelper;
+    private final UserSearchViewHelper userSearchViewHelper;
     private final Clock clock;
 
     ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService,
-                         ReportViewHelper reportViewHelper, TimeEntryDialogHelper timeEntryDialogHelper, Clock clock) {
+                         ReportViewHelper reportViewHelper, TimeEntryDialogHelper timeEntryDialogHelper,
+                         UserSearchViewHelper userSearchViewHelper, Clock clock) {
         this.reportService = reportService;
         this.reportPermissionService = reportPermissionService;
         this.reportViewHelper = reportViewHelper;
         this.timeEntryDialogHelper = timeEntryDialogHelper;
+        this.userSearchViewHelper = userSearchViewHelper;
         this.clock = clock;
     }
 
@@ -76,8 +84,8 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
 
     @GetMapping("/report/year/{year}/week/{week}")
     public ModelAndView weeklyUserReport(
-        @PathVariable("year") Integer year,
-        @PathVariable("week") Integer week,
+        @PathVariable Integer year,
+        @PathVariable Integer week,
         @RequestParam(value = "everyone", required = false) String allUsersSelectedParam,
         @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
         @RequestParam(value = "timeEntryId", required = false) Long timeEntryId,
@@ -142,10 +150,33 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad {
         return new ModelAndView("reports/user-report");
     }
 
+    @GetMapping(value = {"/report/week", "/report/year/{year}/week/{week}"}, params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
+    @PreAuthorize("hasAuthority('ZEITERFASSUNG_VIEW_REPORT_ALL')")
+    ModelAndView userSearchFragment(
+        @RequestParam(USER_SEARCH_QUERY_PARAM) String query,
+        @PathVariable(required = false) Integer year,
+        @PathVariable(required = false) Integer week,
+        @CurrentUser CurrentOidcUser currentUser, Model model) {
+
+        if ((year != null && week == null) || (year == null && week != null)) {
+            LOG.error("called user search for week report but whether year or week is not given.");
+            return new ModelAndView("error/404");
+        }
+
+        final boolean weekMode = week != null;
+
+        return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
+            suggestion -> weekMode
+                ? "/report/year/%s/week/%s?user=%s".formatted(year, week, suggestion.userLocalId().value())
+                : "/report/week?user=%s".formatted(suggestion.userLocalId().value())
+        );
+    }
+
+
     @PostMapping("/report/year/{year}/week/{week}")
     public ModelAndView postEditTimeEntry(
-        @PathVariable("year") Integer year,
-        @PathVariable("week") Integer week,
+        @PathVariable Integer year,
+        @PathVariable Integer week,
         @Valid @ModelAttribute(name = "timeEntry") TimeEntryDTO timeEntryDTO, BindingResult errors,
         @RequestParam(value = "everyone", required = false) String allUsersSelectedParam,
         @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,

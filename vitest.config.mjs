@@ -8,5 +8,6 @@ export default defineConfig({
       reporter: ["text", "lcov"],
       reportsDirectory: "target/js-coverage",
     },
+    setupFiles: ["src/test/javascript/setup.ts"],
   },
 });

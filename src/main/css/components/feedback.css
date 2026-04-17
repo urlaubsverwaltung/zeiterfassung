@@ -1,20 +1,33 @@
-@reference "tailwindcss";
-@config "../../../../tailwind.config.js";
+.feedback-button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: --spacing(2);
+  cursor: pointer;
 
-@layer components {
+  position: fixed;
+  right: --spacing(4);
+  bottom: --spacing(4);
+  z-index: calc(var(--z-index-sticky) - 1); /* TODO +1 -1 or nothing? I think -1 is ok! */
+}
+
+.feedback-popover {
+  /* feedback button is on the bottom right of the screen. */
+  /* browser handles popover positioning without overflowing with `position-area`. */
+  /* which has to override default .popover positioning to anchor edges, */
+  position-area: center;
+  /* as we want a slightly different spacing to the screen edge */
+  margin: --spacing(4);
+
+  border: 1px solid var(--color-gray-300);
+  background-color: var(--color-white);
+  @apply rounded-md;
+  @apply shadow-xl;
+
   .feedback-form {
-    max-height: 0;
-    --transition-duration: 300ms;
-    opacity: 0;
-    transform: translateY(100%);
-    transition:
-      opacity var(--transition-duration) ease-in-out,
-      transform var(--transition-duration) ease-in-out;
-  }
-
-  .feedback-form.feedback-form--visible {
-    max-height: revert;
-    opacity: 1;
-    transform: translateY(0);
+    width: 100%;
+    padding: --spacing(4);
+    padding-bottom: --spacing(2);
+    @apply w-96;
   }
 }

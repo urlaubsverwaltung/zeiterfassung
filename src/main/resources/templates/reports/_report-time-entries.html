@@ -27,12 +27,7 @@
                hasAbsences=${not #lists.isEmpty(day.absences)}"
         >
           <div
-            class="sticky bg-white h-4"
-            style="top: calc(var(--navigation-header-height))"
-          ></div>
-          <div
-            class="sticky flex justify-between gap-x-2 flex-wrap text-sm border-b border-gray-200 bg-white"
-            style="top: calc(var(--navigation-header-height) + 1rem)"
+            class="sticky top-0 pt-4 pb-1 flex justify-between gap-x-2 flex-wrap text-sm border-b border-gray-200 bg-white"
             th:attrappend="aria-hidden=${hasEntries ? 'true' : null}"
           >
             <span class="content-center" th:if="${day.locked}">

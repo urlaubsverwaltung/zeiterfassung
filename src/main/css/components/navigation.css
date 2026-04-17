@@ -1,332 +1,318 @@
-@reference "tailwindcss";
-@config "../../../../tailwind.config.js";
+.navigation-container {
+  grid-area: navigation;
+  anchor-name: --navigation-container-anchor;
 
-@layer components {
-  #menu-toggle-checkbox ~ label ~ nav {
-    position: fixed;
-    top: 100%;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    @apply px-6;
-    @apply py-8;
-    @apply transition-all;
-    @apply duration-150;
-    @apply bg-white;
+  .navigation-button {
+    padding: --spacing(4);
   }
 
-  #menu-toggle-checkbox:checked ~ label ~ nav {
-    top: calc(var(--navigation-header-height) + 1.5rem);
+  .navigation {
+    background-color: inherit;
+    width: 100dvw;
+
+    /* prevent body scrolling with overscroll behaviour and full height */
+    overscroll-behavior: none;
+    height: calc(100dvh - anchor-size(height) - var(--info-banner-height));
+
+    .navigation-inner {
+      background-color: var(--color-white);
+      padding: --spacing(8);
+      padding-bottom: --spacing(4);
+      min-height: 100%;
+
+      display: flex;
+      flex-direction: column;
+      gap: --spacing(8);
+
+      .navigation-inner__bottom {
+        margin-top: auto;
+        background: white;
+        padding: --spacing(2) 0;
+        border-top: 1px solid transparent;
+        transition: border-color 150ms;
+
+        &.z-sticky--stuck {
+          border-top-color: var(--color-gray-100);
+        }
+      }
+    }
+
+    ul {
+      display: flex;
+      flex-direction: column;
+      gap: calc(--spacing(1) / 2);
+    }
+
+    .subnav-group {
+      margin-top: --spacing(1);
+      gap: --spacing(3);
+    }
+
+    .navigation-link,
+    .navigation-sublink {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .navigation-link {
+      padding: --spacing(2);
+      @apply rounded;
+
+      --duration: 150ms;
+      transition:
+        color var(--duration),
+        background-color var(--duration);
+
+      &:hover {
+        background-color: var(--color-blue-50);
+      }
+    }
+
+    .navigation-sublink {
+      --dot-size: 0.5rem;
+      --dot-color: var(--color-blue-300);
+      --color: var(--color-gray-900);
+
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: --spacing(2);
+
+      margin-left: --spacing(4);
+      /* two times dot-size because of loading spinner */
+      padding-left: calc(var(--dot-size) * 2 + --spacing(1));
+      padding-right: --spacing(1);
+
+      color: var(--color);
+
+      /* dot (+ ::after as spinner) */
+      &::before {
+        --duration: 300ms;
+        transition:
+          background-color var(--duration),
+          border-color var(--duration);
+
+        position: absolute;
+        top: calc(50% - (var(--dot-size) / 2));
+        left: calc(var(--dot-size) / 2);
+
+        content: "";
+        display: block;
+        width: var(--dot-size);
+        aspect-ratio: 1;
+        border-radius: 9999px;
+        border: 1px solid var(--dot-color);
+        background-color: transparent;
+      }
+
+      &:hover,
+      &.navigation-sublink--active {
+        &::before {
+          background-color: var(--dot-color);
+        }
+      }
+    }
+
+    .navigation-link--active {
+      background-color: var(--color-blue-50);
+
+      &:hover {
+        background-color: var(--color-blue-100);
+      }
+    }
+
+    .navigation-link--loading {
+      --from: var(--color-blue-50);
+      --via: var(--color-blue-100);
+      --to: var(--color-blue-50);
+
+      background: linear-gradient(
+        90deg,
+        var(--from) 33%,
+        var(--via) 50%,
+        var(--to) 66%
+      );
+      background-size: 300% 100%;
+      animation: linear-loading 1.2s infinite linear;
+    }
+
+    .navigation-sublink--loading {
+      /* spinner */
+      &::after {
+        --gradient-shift: calc((var(--dot-size) / 2) - 1px);
+
+        content: "";
+        position: absolute;
+        top: calc(50% - var(--dot-size));
+        left: 0;
+
+        display: block;
+        width: calc(var(--dot-size) * 2);
+        aspect-ratio: 1;
+        border-radius: 9999px;
+        background:
+          radial-gradient(farthest-side, var(--dot-color) 94%, #0000)
+            top/var(--gradient-shift) var(--gradient-shift) no-repeat,
+          conic-gradient(#0000 30%, var(--dot-color));
+        -webkit-mask: radial-gradient(
+          farthest-side,
+          #0000 calc(100% - var(--gradient-shift)),
+          #000 0
+        );
+        animation: rotate-loading 1s infinite linear;
+      }
+    }
   }
 
-  .navigation-content-spacer {
-    @apply bg-transparent;
-  }
-
-  .navigation-content-spacer--left,
-  .navigation-content-spacer--right {
-    position: relative;
-    @apply dark:hidden;
-  }
-
-  .navigation-content-spacer--left::before,
-  .navigation-content-spacer--right::before,
-  .navigation-content-spacer--left::after,
-  .navigation-content-spacer--right::after {
-    content: "";
-    position: absolute;
-    @apply inset-0;
-  }
-
-  .navigation-content-spacer--left::before,
-  .navigation-content-spacer--right::before {
-    @apply bg-zinc-100;
-    @apply dark:bg-zinc-800;
-  }
-
-  .navigation-content-spacer--left::after,
-  .navigation-content-spacer--right::after {
-    @apply bg-white;
-    @apply dark:bg-zinc-900;
-  }
-
-  .navigation-content-spacer--left::after {
-    @apply rounded-tl-full;
-  }
-
-  .navigation-content-spacer--right::after {
-    @apply rounded-tr-full;
-  }
-
-  #menu-toggle-checkbox + label > span:first-child {
-    width: 30px;
-    height: 18px;
-    position: relative;
-  }
-
-  #menu-toggle-checkbox + label > span > span {
-    padding: 0;
-    width: 30px;
-    height: 4px;
+  .nav-group-label {
     display: block;
-    border-radius: 4px;
-    transition: all 0.4s ease-in-out;
-    position: absolute;
-    @apply bg-gray-800;
+    margin-bottom: --spacing(2);
+    @apply font-mono;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-gray-400);
   }
+}
 
-  #menu-toggle-checkbox + label > span > span:nth-child(1) {
-    top: 0;
-    transition:
-      all 0.4s ease-in-out,
-      transform 0.4s ease-in-out 0.4s;
-  }
+.nav-popover-menu-container {
+  @apply rounded-2xl;
 
-  #menu-toggle-checkbox + label > span > span:nth-child(2) {
-    top: 6.5px;
-    width: 1px;
-    transform: rotate(90deg);
-    left: 6.5px;
-  }
-
-  #menu-toggle-checkbox + label > span > span:nth-child(3) {
-    top: 6.5px;
-    right: 0;
-    width: 1px;
-    left: 6.5px;
-  }
-
-  #menu-toggle-checkbox + label > span > span:nth-child(4) {
-    bottom: 0;
-    top: 6.5px;
-  }
-
-  #menu-toggle-checkbox + label > span > span:nth-child(5) {
-    bottom: 0;
-  }
-
-  #menu-toggle-checkbox:checked + label > span > span:nth-child(1) {
-    top: 6.5px;
-    background-color: transparent;
-  }
-
-  #menu-toggle-checkbox:checked + label > span > span:nth-child(2) {
-    left: 0;
-    width: 30px;
-    transform: rotate(45deg);
-  }
-
-  #menu-toggle-checkbox:checked + label > span > span:nth-child(3) {
-    left: 0;
-    width: 30px;
-    transform: rotate(-45deg);
-  }
-
-  #menu-toggle-checkbox:checked + label > span > span:nth-child(4) {
-    background-color: transparent !important;
-  }
-
-  #menu-toggle-checkbox:checked + label > span > span:nth-child(5) {
-    bottom: 6.5px;
-    background-color: transparent !important;
-  }
-
-  @variant xs {
-    #menu-toggle-checkbox ~ label ~ nav {
-      overflow: hidden;
-      max-height: 0;
-      top: -100%;
-      @apply bg-zinc-100;
-      z-index: 10;
-    }
-
-    #menu-toggle-checkbox:checked ~ label ~ nav,
-    #menu-toggle-checkbox:checked ~ label ~ nav:focus-within {
-      overflow: visible;
-      top: var(--navigation-header-height);
-      max-height: 100vh !important;
-    }
-  }
-
-  @variant lg {
-    #menu-toggle-checkbox ~ label ~ nav {
-      overflow: visible;
-      max-height: unset;
-      @apply static;
-      @apply scale-x-100;
-      @apply scale-y-100;
-      @apply opacity-100;
-      @apply py-0;
-      @apply px-0;
-    }
-  }
-
-  .main-nav-link {
-    @apply text-2xl;
-    @apply lg:text-lg;
-    @apply font-medium;
-    @apply text-gray-800;
-    @apply transition-colors;
-  }
-
-  .main-nav-link svg {
-    flex-shrink: 0;
-    @apply w-8;
-    @apply h-8;
-    @apply lg:w-5;
-    @apply lg:h-5;
-    @apply lg:stroke-gray-800;
-    @apply mr-4;
-    @apply lg:mr-1.5;
-  }
-
-  .main-nav-link:hover svg {
-    @apply fill-amber-500;
-    @apply fill-amber-500;
-  }
-
-  .main-nav-link.current svg,
-  .main-nav-link[aria-current="page"] svg {
-    @apply fill-amber-500;
-    @apply fill-amber-500;
-  }
-
-  .nav-popup-menu {
-    position: fixed;
-    z-index: 1;
-    top: 100%;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    @apply transition-all;
-    @apply duration-150;
-
-    @apply rounded-t-2xl;
-    @apply bg-white;
-  }
-
-  .nav-popup-menu.visible {
-    top: calc(var(--navigation-header-height) + 1.5rem);
-  }
-
-  .nav-popup-menu-inner {
-    @apply flex flex-col;
-    @apply max-h-screen;
-  }
-
-  .nav-popup-menu-inner__header {
-    @apply rounded-t-2xl;
-    @apply bg-gradient-to-br;
+  .navigation-popover-menu-header {
+    padding: --spacing(2) --spacing(4);
+    @apply bg-linear-to-br;
     @apply from-blue-50;
     @apply via-gray-100;
     @apply to-blue-100;
-    @apply px-4;
-    @apply py-2;
   }
 
-  .nav-popup-menu-inner__content {
-    @apply p-2;
-    overflow-y: auto;
-  }
+  .navigation-popover-menu-content {
+    padding: --spacing(2);
 
-  body:has(.nav-popup-menu.visible) {
-    /* disable body scroll as long as nav-popup-menu is open */
-    overflow: hidden;
-  }
+    ul.navigation-popover-menu {
+      display: flex;
+      flex-direction: column;
+      gap: --spacing(1);
 
-  .nav-popup-menu.visible .nav-popup-menu-inner {
-    width: 100%;
-    height: 100%;
-  }
+      .navigation-popover-menu__link {
+        --duration: 150ms;
 
-  @variant xs {
-    .nav-popup-menu::before {
-      content: "";
-      border-color: transparent;
-      border-width: 8px;
-      @apply border-b-gray-200;
-      position: absolute;
-      top: -17px;
-      @apply right-6;
-    }
+        display: flex;
+        width: 100%;
+        justify-items: center;
+        gap: --spacing(4);
 
-    .nav-popup-menu {
-      @apply transition-transform;
-      @apply origin-top-right;
-      @apply scale-0;
-      @apply border;
-      @apply border-gray-200;
-      @apply shadow-xl;
-      @apply mt-3;
-      @apply z-50;
-      @apply absolute;
-      @apply left-auto;
-      @apply right-0;
-      @apply bottom-auto;
-      @apply rounded-2xl;
-      @apply dark:border-zinc-800;
-      @apply dark:shadow-none;
-    }
+        color: var(--color-gray-700);
+        transition:
+          color var(--duration) ease-in-out,
+          background-color var(--duration) ease-in-out;
+        text-decoration: none;
+        padding: --spacing(3);
+        padding-left: --spacing(6);
+        padding-right: --spacing(10);
 
-    .nav-popup-menu.visible {
-      @apply top-full;
-      @apply z-10;
-    }
+        &:hover,
+        &:focus-visible {
+          color: var(--color-black);
+          background-color: var(--color-blue-50);
+        }
+      }
 
-    .nav-popup-menu-inner {
-      max-height: 75vh;
-      @apply w-auto;
-      @apply h-auto;
-      @apply rounded-2xl;
-      @apply border-gray-200;
-      @apply bg-white;
-      @apply backdrop-blur-sm;
-      @apply supports-backdrop-blur:bg-white/[0.85];
-    }
+      li:first-of-type .navigation-popover-menu__link {
+        @apply rounded-t-2xl;
+      }
 
-    .nav-popup-menu-inner ul li:first-of-type .nav-popup-menu_link {
-      @apply rounded-t-2xl;
-    }
-
-    .nav-popup-menu-inner ul li:last-of-type .nav-popup-menu_link {
-      @apply rounded-b-2xl;
-    }
-
-    .nav-popup-menu-inner ul li[role="separator"] {
-      @apply border-t;
-      @apply border-gray-200;
-    }
-
-    .nav-popup-menu.visible,
-    .nav-popup-menu:focus-within {
-      @apply scale-100;
-    }
-
-    .nav-popup-menu-button_icon {
-      @apply text-zinc-900/75;
-      @apply transition-colors;
-    }
-
-    .nav-popup-menu-button:is(:hover, :focus) .nav-popup-menu-button_icon {
-      @apply text-zinc-800/100;
+      li:last-of-type .navigation-popover-menu__link {
+        @apply rounded-b-2xl;
+      }
     }
   }
+}
 
-  .nav-popup-menu_link {
-    @apply w-full;
-    @apply flex;
-    @apply items-center;
-    @apply p-2;
-    @apply pr-10;
-    @apply no-underline;
-    @apply hover:no-underline;
-    @apply focus:no-underline;
-    @apply text-base;
-    @apply text-gray-700;
-    @apply bg-transparent;
-    @apply hover:text-black;
-    @apply focus:text-black;
-    @apply hover:bg-gray-50;
-    @apply focus:bg-gray-50;
+.nav-avatar-popover,
+.nav-launchpad-popover {
+  margin: 0;
+  /* override default .popover anchor positioning. */
+  /* we want it to be on the right of the screen instead of relative to the anchor. */
+  position-area: unset !important;
+  inset: unset;
+  top: calc(anchor(bottom) + --spacing(4));
+  right: --spacing(2);
+  bottom: --spacing(2);
+  height: auto;
+}
+
+@keyframes linear-loading {
+  0% {
+    background-position: right;
+  }
+}
+
+@keyframes rotate-loading {
+  100% {
+    transform: rotate(1turn);
+  }
+}
+
+@variant xs {
+  .nav-popover-menu-container {
+    width: min-content;
+    margin: unset;
+    @apply shadow-2xl;
+    border: 1px solid var(--color-gray-200);
+  }
+}
+
+@variant desktop {
+  .navigation-container {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+
+    .navigation-button {
+      display: none;
+    }
+
+    .navigation {
+      flex: 1 0 0;
+      width: 100%;
+      overflow: auto;
+      overscroll-behavior: none;
+
+      /* override popover animation stuff */
+      position: static;
+      display: block;
+      opacity: 1;
+      transform: unset;
+
+      .navigation-inner {
+        padding: --spacing(4) --spacing(5);
+        padding-bottom: --spacing(2);
+
+        .navigation-link {
+          padding: --spacing(1) --spacing(2);
+        }
+
+        .navigation-link ~ .subnav-group {
+          display: none;
+        }
+
+        .navigation-link--loading ~ .subnav-group,
+        .navigation-link--active ~ .subnav-group {
+          display: flex;
+        }
+
+        .subnav-group {
+          margin-top: --spacing(1);
+          margin-bottom: --spacing(1);
+          gap: --spacing(1);
+        }
+      }
+    }
+  }
+
+  .nav-launchpad-popover {
+    left: --spacing(2);
+    right: auto;
   }
 }

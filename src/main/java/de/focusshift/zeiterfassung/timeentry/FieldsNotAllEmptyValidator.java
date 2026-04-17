@@ -1,11 +1,11 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;

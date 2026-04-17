@@ -1,6 +1,10 @@
 package de.focusshift.zeiterfassung.settings;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
+import de.focusshift.zeiterfassung.search.HasUserSearch;
+import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.security.CurrentUser;
+import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import jakarta.annotation.Nullable;
@@ -23,7 +27,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
+import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.util.Objects.requireNonNullElse;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
@@ -31,24 +37,27 @@ import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 @Controller
 @RequestMapping("/settings")
 @PreAuthorize("hasAnyAuthority('ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL', 'ZEITERFASSUNG_SETTINGS_GLOBAL')")
-class SettingsController implements HasLaunchpad, HasTimeClock {
+class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
 
     private static final String ATTRIBUTE_NAME_SETTINGS = "settings";
 
     private final SettingsService settingsService;
     private final SettingsDtoValidator settingsDtoValidator;
     private final UserSettingsProvider userSettingsProvider;
+    private final UserSearchViewHelper userSearchViewHelper;
     private final Clock clock;
 
     SettingsController(
         SettingsService settingsService,
         SettingsDtoValidator settingsDtoValidator,
         UserSettingsProvider userSettingsProvider,
+        UserSearchViewHelper userSearchViewHelper,
         Clock clock
     ) {
         this.settingsService = settingsService;
         this.settingsDtoValidator = settingsDtoValidator;
         this.userSettingsProvider = userSettingsProvider;
+        this.userSearchViewHelper = userSearchViewHelper;
         this.clock = clock;
     }
 
@@ -108,6 +117,19 @@ class SettingsController implements HasLaunchpad, HasTimeClock {
         }
 
         return new ModelAndView("redirect:/settings");
+    }
+
+    @GetMapping(params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
+    ModelAndView userSearchFragment(@RequestParam(USER_SEARCH_QUERY_PARAM) String query, @CurrentUser CurrentOidcUser currentUser, Model model) {
+        return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
+            suggestion -> {
+                if (suggestion.userIdComposite().equals(currentUser.getUserIdComposite())) {
+                    return "/timeentries";
+                } else {
+                    return "/timeentries/users/%s".formatted(suggestion.userLocalId().value());
+                }
+            }
+        );
     }
 
     private void prepareModel(Model model, Locale locale, SettingsDto settingsDto) {

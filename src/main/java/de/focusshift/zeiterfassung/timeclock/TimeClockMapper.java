@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeclock;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -12,12 +13,12 @@ final class TimeClockMapper {
         //
     }
 
-    static TimeClockDto timeClockToTimeClockDto(TimeClock timeClock) {
+    static TimeClockDto timeClockToTimeClockDto(TimeClock timeClock, Clock clock) {
 
         final Instant startedAt = timeClock.startedAt().toInstant();
 
-        final Duration duration = Duration.between(startedAt, Instant.now());
-        final int hours = duration.toHoursPart();
+        final Duration duration = Duration.between(startedAt, Instant.now(clock));
+        final long hours = duration.toHours();
         final int minutes = duration.toMinutesPart();
         final int seconds = duration.toSecondsPart();
         final String durationString = String.format("%02d:%02d:%02d", hours, minutes, seconds);

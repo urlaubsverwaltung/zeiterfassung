@@ -3,9 +3,11 @@
   <head th:replace="~{_layout::head(~{::title})}">
     <title>Zeiterfassung</title>
   </head>
-  <body th:replace="~{_layout::body(~{::content}, ~{})}">
+  <body th:replace="~{_layout::body(~{::content})}">
     <th:block th:fragment="content">
-      <main class="grow flex flex-col items-center">
+      <main
+        class="content-container content--max-w grow flex flex-col items-center"
+      >
         <div class="w-full max-w-screen-xl lg:mt-16">
           <div class="px-8 xs:px-16">
             <h1
