@@ -58,7 +58,7 @@
           @apply transition-colors;
 
           @variant dark {
-            color: var(--color-sky-800); /* TODO background? */
+            color: var(--color-sky-800);
           }
         }
 
@@ -85,10 +85,16 @@
         &:hover {
           > * {
             background-color: var(--color-blue-50);
+            @variant dark {
+              background-color: var(--color-zinc-800);
+            }
           }
 
           .report-person-detail-table__avatar {
             color: var(--color-blue-200);
+            @variant dark {
+              color: var(--color-sky-700);
+            }
           }
         }
       }
@@ -217,33 +223,56 @@
   .report-graph-hover-background.selected,
   .report-graph-hover-background:hover {
     fill: url(#gradient-background);
+    /*@variant dark {*/
+    /*  fill: url(#gradient-background-dark);*/
+    /*}*/
   }
 
   .report-graph-hour-line {
     stroke: var(--color-gray-200);
+    @variant dark {
+      stroke: var(--color-zinc-700);
+    }
   }
 
   .report-graph-hour-text {
     fill: var(--color-gray-300);
+    @variant dark {
+      fill: var(--color-zinc-800);
+    }
   }
 
   .report-graph-avg-line {
     stroke: var(--color-teal-700);
+    @variant dark {
+      stroke: var(--color-teal-500);
+    }
   }
 
   .report-graph-avg-text {
     fill: var(--color-teal-700);
     font-size: var(--text-xs);
+    @variant dark {
+      fill: var(--color-teal-500);
+    }
   }
 
   .report-graph-day-overtime-bar {
     fill: var(--color-teal-900);
     stroke: var(--color-emerald-600);
+    @variant dark {
+      fill: var(--color-teal-700);
+      stroke: var(--color-emerald-500);
+    }
   }
 
   .report-graph-day-should-bar {
     fill: var(--color-green-100);
     stroke: var(--color-emerald-600);
+    @variant dark {
+      fill: var(--color-green-900);
+      stroke: var(--color-emerald-500);
+    }
   }
 
   .report-graph-day-text {
