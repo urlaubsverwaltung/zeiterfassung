@@ -2,6 +2,8 @@ import { dateAdapter as dateAdapterDE } from "./de";
 import { defineCustomElements } from "@duetds/date-picker/custom-element";
 // @ts-expect-error file exists
 import "@duetds/date-picker/dist/collection/themes/default.css";
+// @ts-expect-error just do it
+import "./datepicker.css";
 
 /* override duetds default after adding default theme to DOM */
 injectStyle(":root { --duet-z-index: var(--z-index-duet-datepicker) }");

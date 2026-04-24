@@ -1,5 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head>
     <meta charset="UTF-8" />
     <title>Title</title>
@@ -27,7 +32,7 @@
                hasAbsences=${not #lists.isEmpty(day.absences)}"
         >
           <div
-            class="sticky top-0 pt-4 pb-1 flex justify-between gap-x-2 flex-wrap text-sm border-b border-gray-200 bg-white"
+            class="sticky top-0 pt-4 pb-1 flex justify-between gap-x-2 flex-wrap text-sm border-b border-gray-200 bg-white dark:bg-zinc-950 dark:border-sky-950"
             th:attrappend="aria-hidden=${hasEntries ? 'true' : null}"
           >
             <span class="content-center" th:if="${day.locked}">
@@ -87,17 +92,17 @@
           </div>
 
           <th:block th:if="${hasEntries || hasAbsences}">
-            <ol class="mt-1 w-full" th:aria-labelledby="${listLabelId}">
+            <ol class="mt-2 w-full" th:aria-labelledby="${listLabelId}">
               <li
                 th:each="dayEntry : ${day.dayEntries}"
                 data-testid="report-time-entry"
               >
                 <div
-                  class="group flex items-start gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80"
+                  class="group flex items-start gap-6 py-2 px-1.5 rounded-2xl transition-colors hover:bg-blue-50/80 dark:hover:bg-zinc-900"
                 >
                   <div class="flex items-center gap-1">
                     <span
-                      class="text-blue-100 transition-colors group-hover:text-blue-200"
+                      class="text-blue-100 transition-colors group-hover:text-blue-200 dark:text-sky-800 group-hover:dark:text-sky-700"
                       aria-hidden="true"
                     >
                       <th:block th:if="${isAllowedToEditTimeEntries}">
@@ -122,11 +127,11 @@
                     class="flex-1 flex flex-col gap-1 md:flex-row md:items-start md:gap-8 2xl:flex-col 2xl:gap-1"
                   >
                     <div
-                      class="shrink-0 flex flex-col gap-1 text-sm transition-colors text-gray-500 group-hover:text-gray-600 xs:flex-row xs:gap-4 md:flex-col md:gap-1 md:w-1/4 2xl:flex-row 2xl:w-full 2xl:gap-4 2xl:text-gray-500 group-hover:2xl:text-gray-600"
+                      class="shrink-0 flex flex-col gap-1 text-sm transition-colors text-gray-500 group-hover:text-gray-600 dark:text-zinc-300 group-hover:dark:text-zinc-200 xs:flex-row xs:gap-4 md:flex-col md:gap-1 md:w-1/4 2xl:flex-row 2xl:w-full 2xl:gap-4 2xl:text-gray-500 group-hover:2xl:text-gray-600"
                     >
                       <p class="flex items-center gap-1">
                         <svg
-                          th:replace="~{icons/clock::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')}"
+                          th:replace="~{icons/clock::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400 dark:text-sky-500 group-hover:dark:text-sky-400')}"
                         />
                         <span
                           class="tabular-nums"
@@ -136,12 +141,12 @@
                       <p class="flex items-center gap-0.5">
                         <th:block th:if="${!dayEntry.isBreak}">
                           <svg
-                            th:replace="~{icons/timer::svg(className='shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')}"
+                            th:replace="~{icons/timer::svg(className='shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400 dark:text-sky-500 group-hover:dark:text-sky-400')}"
                           />
                         </th:block>
                         <th:block th:if="${dayEntry.isBreak}">
                           <svg
-                            th:replace="~{icons/coffee::svg(className='shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400')}"
+                            th:replace="~{icons/coffee::svg(className='shrink-0 stroke-1 w-[1.425rem] h-[1.425rem] text-blue-300 transition-colors group-hover:text-blue-400 dark:text-sky-500 group-hover:dark:text-sky-400')}"
                           />
                         </th:block>
                         <span
@@ -151,13 +156,13 @@
                       </p>
                     </div>
                     <p
-                      class="flex-1 flex items-start gap-1 text-sm text-gray-500 transition-colors group-hover:text-black"
+                      class="flex-1 flex items-start gap-1 text-sm text-gray-500 transition-colors group-hover:text-black dark:text-zinc-300 group-hover:dark:text-zinc-200"
                     >
                       <th:block
                         th:if="${not #strings.isEmpty(dayEntry.comment)}"
                       >
                         <svg
-                          th:replace="~{icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400')}"
+                          th:replace="~{icons/message-circle::svg(className='shrink-0 stroke-1 w-5 h-5 text-blue-300 transition-colors group-hover:text-blue-400 dark:text-sky-500 group-hover:dark:text-sky-400')}"
                         />
                         <span
                           class="sr-only"
@@ -179,11 +184,11 @@
                       </th:block>
                     </p>
                   </div>
-                  <div class="self-center pr-2">
+                  <div class="self-center pr-1">
                     <a
                       href="#"
                       th:href="@{__${dayEntry.detailDialogUrl}__}"
-                      class="button"
+                      class="button block p-2 rounded-full bg-transparent transition-colors text-gray-800 hover:bg-blue-200 dark:text-zinc-300 dark:hover:bg-sky-700 dark:hover:text-sky-100"
                       title="Bearbeitungshistorie"
                       data-turbo="true"
                       data-turbo-frame="frame-modal"
@@ -192,7 +197,7 @@
                     >
                       <span class="sr-only">Bearbeitungshistorie</span>
                       <svg
-                        th:replace="~{icons/layers::svg(className='w-4 h-4 text-gray-400')}"
+                        th:replace="~{icons/layers::svg(className='w-4 h-4')}"
                       ></svg>
                     </a>
                   </div>

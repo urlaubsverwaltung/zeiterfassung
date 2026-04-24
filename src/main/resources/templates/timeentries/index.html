@@ -1,5 +1,10 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="de" th:lang="${lang}">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head
     th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scripts=~{::scripts}, scriptsDefer=~{::scriptsDefer})}"
   >
@@ -57,7 +62,7 @@
               <div class="flex">
                 <h1
                   th:if="${viewedUser == null}"
-                  class="flex-1 text-2xl text-blue-700 text-center mb-4"
+                  class="flex-1 text-2xl text-blue-700 text-center mb-4 dark:text-sky-600"
                   th:text="#{time-entry.create.title}"
                 >
                   Neuen Zeiteintrag erfassen
@@ -66,13 +71,13 @@
                   th:if="${viewedUser != null}"
                   class="flex-1 flex items-center justify-center gap-4 mb-4"
                 >
-                  <span class="inline-flex text-blue-200">
+                  <span class="inline-flex text-blue-200 dark:text-sky-800">
                     <span
                       th:replace="~{fragments/avatar::avatar-bordered(${viewedUser.initials()},${viewedUser.fullName()},52,52)}"
                     ></span>
                   </span>
                   <h1
-                    class="text-2xl text-blue-700"
+                    class="text-2xl text-blue-700 dark:text-sky-600"
                     th:text="#{time-entry.create.title.other-user(${viewedUser.fullName()})}"
                   >
                     Neuen Zeiteintrag erfassen für Max Mustermann
@@ -208,10 +213,10 @@
                       class="flex items-center"
                     >
                       <div
-                        class="flex-1 py-1 px-4 w-full rounded-full bg-blue-50 border border-blue-100"
+                        class="flex-1 py-1 px-4 w-full rounded-full bg-blue-50 border border-blue-100 dark:bg-sky-600 dark:border-sky-700"
                       >
                         <div
-                          class="relative flex justify-between gap-x-2 flex-wrap text-blue-900 text-sm"
+                          class="relative flex justify-between gap-x-2 flex-wrap text-blue-900 text-sm dark:text-sky-950"
                         >
                           <h3
                             class="font-medium"
@@ -266,7 +271,7 @@
                           </p>
                         </div>
                         <div
-                          class="translate-y-1 h-1 rounded-full bg-gradient-to-r from-blue-100 to-blue-500"
+                          class="translate-y-1 h-1 rounded-full bg-gradient-to-r from-blue-100 to-blue-500 dark:from-sky-100 dark:to-sky-200"
                           th:styleappend="${'width:' + week.hoursWorkedRatio + '%'}"
                         ></div>
                       </div>
@@ -301,10 +306,10 @@
                           class="flex items-center"
                         >
                           <div
-                            class="flex-1 py-1 px-4 w-full rounded-full bg-green-50 border border-green-100"
+                            class="flex-1 py-1 px-4 w-full rounded-full bg-green-50 border border-green-100 dark:bg-emerald-600 dark:border-emerald-700"
                           >
                             <div
-                              class="relative flex justify-between gap-x-2 flex-wrap text-green-900 text-sm"
+                              class="relative flex justify-between gap-x-2 flex-wrap text-green-900 text-sm dark:text-emerald-950"
                             >
                               <h4 class="font-medium flex gap-1">
                                 <span
@@ -321,7 +326,7 @@
                                 <span th:text="${day.date}"></span>
                               </h4>
                               <p
-                                class="tabular-nums text-sm text-gray-800 font-medium sm:flex-1 sm:absolute sm:left-0 sm:right-0 sm:text-center"
+                                class="tabular-nums text-sm text-gray-800 font-medium sm:flex-1 sm:absolute sm:left-0 sm:right-0 sm:text-center dark:text-emerald-950"
                               >
                                 <span class="inline-flex items-center">
                                   <th:block th:if="${day.hoursDeltaNegative}"
@@ -371,7 +376,7 @@
                               </p>
                             </div>
                             <div
-                              class="translate-y-1 h-1 rounded-full bg-gradient-to-r from-green-100 to-green-500"
+                              class="translate-y-1 h-1 rounded-full bg-linear-to-r from-green-100 to-green-500 dark:from-emerald-200 dark:to-emerald-300"
                               th:styleappend="${'width:' + day.hoursWorkedRatio + '%'}"
                             ></div>
                           </div>
@@ -388,7 +393,7 @@
                                 <div class="flex items-center">
                                   <span
                                     th:text="${#temporals.day(absenceEntry.date)}"
-                                    class="rounded-full w-6 h-6 p-5 flex items-center justify-center bg-white text-black mr-4 font-bold"
+                                    class="rounded-full w-6 h-6 p-5 flex items-center justify-center bg-white text-black mr-4 font-bold dark:bg-zinc-800 dark:text-zinc-300"
                                   ></span>
                                   <span
                                     th:text="${#temporals.format(absenceEntry.date, 'dd. MMMM yyyy')}"
@@ -504,7 +509,7 @@
                   other=@{/timeentries/users/{id} (id=${viewedUser==null ? -1 : viewedUser.localId()}, year=${timeEntryWeeksPage.pastYear}, week=${timeEntryWeeksPage.pastWeekOfYear})}
                 "
                   th:href="${viewedUser == null ? myself : other}"
-                  class="ajax-loader text-lg font-medium mx-auto px-4 py-2 inline-block border border-blue-600 text-blue-600 rounded-full"
+                  class="ajax-loader button-secondary text-lg inline-block px-4 py-2 rounded-full"
                   data-turbo-frame="frame-time-entry-weeks"
                   th:text="#{time-entry.pagination.load-more}"
                 >
@@ -527,7 +532,7 @@
       <th:block th:fragment="timeentry-slot-form-actions-new">
         <button
           type="submit"
-          class="mr-4 flex items-center justify-center text-blue-700 md:rounded-full md:w-12 md:h-12 hover:md:bg-blue-100 transition-colors duration-200"
+          class="mr-4 flex items-center justify-center text-blue-700 md:rounded-full md:w-12 md:h-12 hover:md:bg-blue-100 transition-colors duration-200 dark:hover:md:bg-sky-400"
           data-testid="submit-time-entry"
         >
           <svg

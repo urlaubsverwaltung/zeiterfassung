@@ -19,6 +19,9 @@
     background-position 0.15s ease-in-out,
     background-color 0.15s ease-in-out;
   background-color: var(--color-zinc-200) !important;
+  @variant dark {
+    background-color: var(--color-zinc-300) !important;
+  }
 }
 
 .checkbox-switch input[type="checkbox"]:disabled {
@@ -29,6 +32,9 @@
   background-color: var(--color-blue-500) !important;
   background-position: right center;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+  @variant dark {
+    background-color: var(--color-sky-500) !important;
+  }
 }
 
 .checkbox-switch input[type="checkbox"]:disabled {

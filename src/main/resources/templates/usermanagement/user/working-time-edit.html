@@ -1,5 +1,10 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head>
     <title>Zeiterfassung - Personen</title>
   </head>
@@ -39,11 +44,8 @@
               Leeres Formular Fehlernachricht.
             </p>
           </div>
-          <fieldset class="border-t border-gray-100">
-            <legend
-              class="text-sm font-medium text-gray-400"
-              th:text="#{usermanagement.working-time.federalstate.title}"
-            >
+          <fieldset>
+            <legend th:text="#{usermanagement.working-time.federalstate.title}">
               Bundesland
             </legend>
             <div class="mt-2 flex items-center gap-4 sm:mt-4">
@@ -77,9 +79,8 @@
               </div>
             </div>
           </fieldset>
-          <fieldset class="border-t border-gray-100">
+          <fieldset>
             <legend
-              class="text-sm font-medium text-gray-400"
               th:text="#{usermanagement.working-time.federalstate.works-on-public-holiday.title}"
             >
               Arbeitsregelung an Feiertagen
@@ -136,14 +137,10 @@
             </div>
           </fieldset>
           <fieldset
-            class="border-t border-gray-100"
             th:with="hasError=${#fields.hasErrors('validFrom') or #fields.hasErrors('validFrom')}"
             th:if="${not workingTime.isDefaultWorkingTime}"
           >
-            <legend
-              th:text="#{usermanagement.working-time.validity}"
-              class="text-sm font-medium text-gray-400"
-            >
+            <legend th:text="#{usermanagement.working-time.validity}">
               Gültigkeit
             </legend>
             <div class="mt-2 sm:mt-4">
@@ -166,7 +163,6 @@
                     th:errorclass="invalid"
                     id="working-time-valid-from-input"
                     data-testid="working-time-valid-from-input"
-                    class="px-2 border border-gray-300"
                     th:min="${workingTime.minValidFrom}"
                     th:max="${workingTime.maxValidFrom}"
                   />
@@ -182,13 +178,9 @@
             </div>
           </fieldset>
           <fieldset
-            class="border-t border-gray-100"
             th:with="hasError=${#fields.hasErrors('workday') or #fields.hasErrors('workDayMonday') or #fields.hasErrors('workDayTuesday') or #fields.hasErrors('workDayWednesday') or #fields.hasErrors('workDayThursday') or #fields.hasErrors('workDayFriday') or #fields.hasErrors('workDaySaturday') or #fields.hasErrors('workDaySunday')}"
           >
-            <legend
-              class="text-sm font-medium text-gray-400"
-              th:text="#{usermanagement.working-time.workdays.title}"
-            >
+            <legend th:text="#{usermanagement.working-time.workdays.title}">
               Arbeitstage
             </legend>
             <div class="mt-2 sm:mt-4">
@@ -256,17 +248,17 @@
             </div>
           </fieldset>
           <fieldset
-            class="border-t border-gray-100"
             th:classappend="${#fields.hasErrors('workingTimeClash') ? 'border-red-600' : ''}"
           >
             <legend
-              class="text-sm font-medium text-gray-400"
               th:classappend="${#fields.hasErrors('workingTimeClash') ? 'text-red-600' : ''}"
               th:text="#{usermanagement.working-time.hours.common.title}"
             >
               Arbeitszeit
             </legend>
-            <p class="mt-2 text-gray-400 sm:flex items-center gap-1 text-sm">
+            <p
+              class="mt-2 text-gray-400 dark:text-zinc-400 sm:flex items-center gap-1 text-sm"
+            >
               <svg
                 th:replace="~{icons/help-circle::svg(className='w-4 h-4 inline')}"
               ></svg>
@@ -285,7 +277,7 @@
                   inputmode="numeric"
                   name="workingTime"
                   id="input-workingtime"
-                  class="border border-gray-300 px-2 py-1 w-14 sm:w-full"
+                  class="w-14 sm:w-full"
                   th:field="*{workingTime}"
                   th:errorclass="invalid"
                   th:aria-invalid="${#fields.hasErrors('workingTime')}"
@@ -309,11 +301,9 @@
             </div>
           </fieldset>
           <fieldset
-            class="border-t border-gray-100"
             th:classappend="${#fields.hasErrors('workingTimeClash') ? 'border-red-400' : ''}"
           >
             <legend
-              class="text-sm font-medium text-gray-400"
               th:classappend="${#fields.hasErrors('workingTimeClash') ? 'text-red-600' : ''}"
               th:text="#{usermanagement.working-time.hours.individual.title}"
             >

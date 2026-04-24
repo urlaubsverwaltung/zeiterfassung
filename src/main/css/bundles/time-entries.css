@@ -186,6 +186,13 @@
     --timeslot-form-day-color: var(--color-white);
     --timeslot-form-day-background-color: var(--color-blue-50);
     --timeslot-form-border-color: var(--color-blue-700);
+    @variant dark {
+      --timeslot-form-color: var(--color-sky-800);
+      --timeslot-form-datepicker-background-color: var(--color-sky-700);
+      --timeslot-form-day-color: var(--color-zinc-300);
+      --timeslot-form-day-background-color: var(--color-sky-100);
+      --timeslot-form-border-color: var(--color-sky-700);
+    }
   }
 
   .timeslot-form-existing {
@@ -194,6 +201,13 @@
     --timeslot-form-day-color: var(--color-black);
     --timeslot-form-day-background-color: var(--color-white);
     --timeslot-form-border-color: var(--color-gray-200);
+    @variant dark {
+      --timeslot-form-color: var(--color-zinc-700);
+      --timeslot-form-datepicker-background-color: var(--color-zinc-950);
+      --timeslot-form-day-color: var(--color-zinc-300);
+      --timeslot-form-day-background-color: var(--color-zinc-300);
+      --timeslot-form-border-color: var(--color-zinc-800);
+    }
   }
 
   .time-entry-slot-form--disabled {
@@ -202,6 +216,7 @@
     --timeslot-form-day-color: var(--color-gray-500);
     --timeslot-form-day-background-color: var(--color-gray-50);
     --timeslot-form-border-color: var(--color-gray-200);
+    /* TODO dark */
   }
 
   .timeslot-form-existing input.edited {
@@ -279,13 +294,16 @@
   }
 
   .time-entry-box-absence__input__date {
-    /* md:rounded-tr-none md:rounded-bl-[27px] md:bg-gray-100*/
     display: flex;
     align-items: center;
-    @apply bg-gray-200;
+    background-color: var(--color-gray-200);
     padding: --spacing(3) --spacing(5);
     border-top-left-radius: var(--time-entries-box-border-radius);
     border-top-right-radius: var(--time-entries-box-border-radius);
+    @variant dark {
+      /* TODO */
+      background-color: var(--color-red-300);
+    }
   }
 
   .time-entry-box-absence__input__fields {
@@ -350,8 +368,12 @@
     .time-entry-box-absence__input__fields {
       border-bottom-left-radius: 0;
       border-top-right-radius: var(--time-entries-box-border-radius);
-      @apply bg-gray-100;
-      @apply border-gray-100;
+      background-color: var(--color-gray-100);
+      border-color: var(--color-gray-100);
+      @variant dark {
+        background-color: var(--color-red-300);
+        border-color: var(--color-red-300);
+      }
     }
 
     .time-entry-box__controls {

@@ -10,7 +10,6 @@
   }
 }
 
-
 .user-search {
   anchor-name: --user-search-anchor;
 
@@ -26,7 +25,7 @@
     position: relative;
     display: flex;
     align-items: stretch;
-    border: 1px solid var(--color-gray-300);
+    border: 1px solid var(--z-input-border-color);
     @apply rounded-full;
     overflow: hidden;
 
@@ -47,7 +46,7 @@
       mask-position: center;
       mask-size: contain;
       mask-repeat: no-repeat;
-      background-color: var(--color-gray-400);
+      background-color: var(--z-placeholder-color);
     }
 
     label {
@@ -56,17 +55,12 @@
 
     /* enforce html structure with label + and type search*/
     label + input[type="search"] {
-      background-color: var(--color-white);
       font-size: 0.875rem;
       padding: --spacing(2) --spacing(3) --spacing(2) --spacing(10);
       border: none;
       outline: none;
       @apply rounded-l-full;
       @apply inset-shadow-sm;
-
-      &::placeholder {
-        color: var(--color-gray-400);
-      }
     }
 
     /* enforce html structure with + and types */
@@ -79,6 +73,12 @@
       border-left: 1px solid var(--color-gray-200);
       @apply rounded-r-full;
       @apply inset-shadow-sm;
+
+      @variant dark {
+        color: var(--color-zinc-300);
+        background-color: var(--color-zinc-800);
+        border-left-color: var(--color-zinc-700);
+      }
     }
   }
 
@@ -102,12 +102,21 @@
     @apply rounded-b-2xl;
     @apply shadow-2xl;
 
+    @variant dark {
+      background-color: var(--color-zinc-950);
+      border-color: var(--color-zinc-800);
+    }
+
     @variant desktop {
       max-height: 33vh;
       border-color: var(--color-gray-200);
       @apply rounded-2xl;
       top: anchor(bottom);
       width: calc(anchor-size(width) - --spacing(1));
+
+      @variant dark {
+        border-color: var(--color-zinc-800);
+      }
     }
   }
 
@@ -121,8 +130,13 @@
       transition: colors 150ms;
       background-color: transparent;
       @apply rounded-xl;
+
       &:hover {
         background-color: var(--color-gray-100);
+
+        @variant dark {
+          background-color: var(--color-zinc-900);
+        }
       }
     }
   }

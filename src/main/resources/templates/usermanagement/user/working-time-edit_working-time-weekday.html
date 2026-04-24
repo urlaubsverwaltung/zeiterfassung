@@ -1,5 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head>
     <meta charset="UTF-8" />
     <title>Title</title>
@@ -16,7 +21,7 @@
         th:name="${fieldName}"
         id="input-working-time-day-of-week"
         th:id="${'input-working-time-' + dayOfWeek}"
-        class="border border-gray-300 px-2 py-1 w-14 sm:w-full"
+        class="w-14 sm:w-full"
         th:classappend="${hasError ? 'invalid' : ''}"
         th:value="${{value}}"
         th:aria-invalid="${hasError}"

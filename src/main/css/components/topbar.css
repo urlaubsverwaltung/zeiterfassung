@@ -33,6 +33,12 @@
   height: 1px;
   box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.05);
 
+  @variant dark {
+    @apply bg-zinc-900/80;
+    /* subtle "border" bottom */
+    box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.05);
+  }
+
   @variant desktop {
     /* backdrop must be above the navigation */
     z-index: calc(var(--z-index-topbar) + 1);

@@ -19,7 +19,13 @@
       alt=""
       th:alt="${tooltip ? tooltipText : null}"
     >
-      <circle cx="32" cy="32" r="32" fill="#eff6ff" class="fill-current"></circle>
+      <circle
+        cx="32"
+        cy="32"
+        r="32"
+        fill="#eff6ff"
+        class="fill-current"
+      ></circle>
       <text
         x="32"
         y="32"
@@ -28,7 +34,7 @@
         font-size="1.625rem"
         stroke="#27272a"
         fill="#27272a"
-        class="stroke-zinc-700 fill-zinc-700"
+        class="stroke-zinc-700 fill-zinc-700 dark:stroke-zinc-50 dark:fill-zinc-50"
         th:text="${avatarText}"
       >
         AB
