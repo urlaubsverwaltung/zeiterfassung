@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.infobanner;
 
 import de.focusshift.zeiterfassung.web.DataProviderInterceptor;
+import jakarta.servlet.http.HttpServletRequest;
+import org.jspecify.annotations.NonNull;
 import org.springframework.web.servlet.ModelAndView;
 
 class InfoBannerControllerAdvice extends DataProviderInterceptor {
@@ -12,7 +14,7 @@ class InfoBannerControllerAdvice extends DataProviderInterceptor {
     }
 
     @Override
-    protected void addData(ModelAndView modelAndView) {
+    protected void addData(@NonNull ModelAndView modelAndView, @NonNull HttpServletRequest request) {
         modelAndView.getModelMap().addAttribute("infoBannerText", properties.text().de());
     }
 }

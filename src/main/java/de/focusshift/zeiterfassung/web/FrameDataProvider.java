@@ -1,13 +1,15 @@
 package de.focusshift.zeiterfassung.web;
 
-import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.web.html.AriaCurrent;
 import jakarta.servlet.http.HttpServletRequest;
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +24,7 @@ import static de.focusshift.zeiterfassung.usermanagement.User.generateInitials;
 /**
  * Provides all necessary information for the frame (navigation, footer, ...)
  */
-@ControllerAdvice
-class FrameDataProvider {
+class FrameDataProvider extends DataProviderInterceptor {
 
     private final MenuProperties menuProperties;
 
@@ -31,21 +32,27 @@ class FrameDataProvider {
         this.menuProperties = menuProperties;
     }
 
-    @ModelAttribute
-    public void addLocale(Model model, @CurrentUser CurrentOidcUser user, HttpServletRequest httpServletRequest) {
+    @Override
+    protected void addData(@NonNull ModelAndView modelAndView, @NonNull HttpServletRequest request) {
 
-        model.addAttribute("lang", LocaleContextHolder.getLocale().toLanguageTag());
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof OAuth2AuthenticationToken token
+            && token.getPrincipal() instanceof CurrentOidcUser oidcUser) {
 
-        model.addAttribute("menuHelpUrl", menuProperties.getHelp().getUrl());
-        model.addAttribute("navigation", createNavigation(httpServletRequest, user));
+            final ModelMap modelMap = modelAndView.getModelMap();
+            modelMap.addAttribute("lang", LocaleContextHolder.getLocale().toLanguageTag());
 
-        model.addAttribute("currentRequestURI", httpServletRequest.getRequestURI());
-        model.addAttribute("header_referer", httpServletRequest.getHeader("Referer"));
+            modelMap.addAttribute("menuHelpUrl", menuProperties.getHelp().getUrl());
+            modelMap.addAttribute("navigation", createNavigation(request, oidcUser));
 
-        model.addAttribute("signedInUser", oidcUserToSignedInUserDto(user));
+            modelMap.addAttribute("currentRequestURI", request.getRequestURI());
+            modelMap.addAttribute("header_referer", request.getHeader("Referer"));
+
+            modelMap.addAttribute("signedInUser", oidcUserToSignedInUserDto(oidcUser));
+        }
     }
 
-    private NavigationDto createNavigation(HttpServletRequest request, CurrentOidcUser currentUser) {
+    private NavigationDto createNavigation(@NonNull HttpServletRequest request, @NonNull CurrentOidcUser currentUser) {
 
         final String url = request.getRequestURI();
 
@@ -80,7 +87,7 @@ class FrameDataProvider {
         return new NavigationDto(items);
     }
 
-    private static SignedInUserDto oidcUserToSignedInUserDto(CurrentOidcUser user) {
+    private static SignedInUserDto oidcUserToSignedInUserDto(@NonNull CurrentOidcUser user) {
         final Long id = user.getUserLocalId().orElseThrow().value();
         final String fullName = user.getFullName();
         final String initials = generateInitials(fullName);
