@@ -60,6 +60,7 @@
               th:classappend="${hasDateError ? 'border-red-300' : ''}"
               th:aria-invalid="${hasDateError ?: 'true'}"
               th:aria-describedBy="${hasDateError ?: 'errors-time-clock-date'}"
+              data-testid="time-clock-date-input"
             />
           </div>
           <div class="flex flex-col gap-0.5">
@@ -80,6 +81,7 @@
               th:classappend="${hasTimeError ? 'border-red-300' : ''}"
               th:aria-invalid="${hasTimeError ?: 'true'}"
               th:aria-describedBy="${hasTimeError ?: 'errors-time-clock-time'}"
+              data-testid="time-clock-time-input"
             />
           </div>
           <div class="flex flex-col gap-0.5 checkbox-switch">
@@ -96,6 +98,7 @@
               name="break"
               th:checked="${timeClock.isBreak}"
               class="border border-gray-200"
+              data-testid="time-clock-is-break-input"
             />
           </div>
         </div>
@@ -131,6 +134,7 @@
             name="comment"
             th:classappend="${hasCommentError ? 'border-red-300' : ''}"
             th:text="${timeClock.comment}"
+            data-testid="time-clock-comment-input"
           ></textarea>
           <p
             th:if="${hasCommentError}"
@@ -144,6 +148,7 @@
           type="submit"
           class="w-full text-center bg-blue-600 text-blue-50 rounded-sm px-4 py-2 whitespace-nowrap border border-blue-600"
           th:text="#{timeclock.edit.submit}"
+          data-testid="time-clock-update-button"
         >
           Aktualisieren
         </button>

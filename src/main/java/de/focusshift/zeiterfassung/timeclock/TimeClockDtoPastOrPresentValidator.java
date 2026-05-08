@@ -35,27 +35,18 @@ public class TimeClockDtoPastOrPresentValidator implements ConstraintValidator<P
         final boolean valid;
 
         if (date.isAfter(now.toLocalDate())) {
-            // given date is in the future.
-            // -> `date` AND `time` are both invalid
             context
                 .buildConstraintViolationWithTemplate(message)
                 .addPropertyNode("date").addConstraintViolation();
-            context
-                .buildConstraintViolationWithTemplate(message)
-                .addPropertyNode("time").addConstraintViolation();
             valid = false;
         }
         else if (date.isEqual(now.toLocalDate()) && time.isAfter(now.toLocalTime())) {
-            // given date is today. given time is in the future.
-            // -> `time` is invalid
             context
                 .buildConstraintViolationWithTemplate(message)
                 .addPropertyNode("time").addConstraintViolation();
             valid = false;
         }
         else {
-            // given date is in the past. time cannot be in the future anymore.
-            // -> everything is fine
             valid = true;
         }
 
