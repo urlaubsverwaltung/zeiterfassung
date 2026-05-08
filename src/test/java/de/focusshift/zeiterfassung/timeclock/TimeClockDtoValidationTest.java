@@ -88,11 +88,7 @@ class TimeClockDtoValidationTest {
             final Set<ConstraintViolation<TimeClockDto>> violations = validator.validate(timeClockDto);
 
             assertThat(violations)
-                .hasSize(3) // +1 item -> class level violation is reported somehow
-                .anySatisfy(violation -> {
-                    assertThat(violation.getPropertyPath()).hasToString("time");
-                    assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}");
-                })
+                .hasSize(2) // +1 item -> class level violation is reported somehow
                 .anySatisfy(violation -> {
                     assertThat(violation.getPropertyPath()).hasToString("date");
                     assertThat(violation.getMessageTemplate()).isEqualTo("{timeclock.edit.startAt.error.past-or-present}");

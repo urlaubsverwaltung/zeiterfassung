@@ -18,6 +18,7 @@
         <button
           type="submit"
           class="button-primary button-primary-icon pl-3 pr-4 py-1 text-lg rounded-full"
+          data-testid="time-clock-start-button"
         >
           <svg th:replace="~{icons/play::svg(className='w-6 h-6 mr-1.5')}" />
           <span th:text="#{timeclock.start}"> Start </span>
@@ -30,6 +31,7 @@
             type="button"
             popovertarget="time-clock-popover"
             class="flex items-center gap-1"
+            data-testid="time-clock-edit-button"
           >
             <span
               class="sr-only"
@@ -67,6 +69,7 @@
           <button
             type="submit"
             class="bg-red-700 text-white py-1 pl-2 pr-3 text-lg font-medium rounded-full flex items-center gap-1.5 hover:bg-red-600 transition-colors"
+            data-testid="time-clock-stop-button"
           >
             <svg
               th:replace="~{icons/stop::svg(className='text-red-100 w-6 h-6')}"
