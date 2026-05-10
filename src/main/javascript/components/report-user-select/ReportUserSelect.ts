@@ -25,6 +25,8 @@ export class ReportUserSelect extends HTMLAnchorElement {
       "border",
       "border-gray-100",
       "mt-1",
+      "dark:bg-zinc-950",
+      "dark:border-zinc-700",
     );
 
     const hidePopup = () => {

@@ -12,8 +12,12 @@ a.avatar-link {
 .avatar-group {
   display: flex;
   padding: calc(--spacing(1) / 2);
-  @apply bg-gradient-to-b from-transparent via-blue-100 to-blue-100;
+  @apply bg-linear-to-b from-transparent via-blue-100 to-blue-100;
   @apply rounded-full;
+
+  @variant dark {
+    @apply bg-none;
+  }
 
   & > *:not(:first-child):not(.avatar-more) {
     margin-left: calc(-1 * --spacing(2));
@@ -31,12 +35,15 @@ a.avatar-link {
     img {
       cursor: default;
       border: 2px solid white;
+      @variant dark {
+        border-color: var(--color-zinc-300);
+      }
     }
   }
 
   .avatar-more {
-    @apply flex;
-    @apply items-center;
+    display: flex;
+    align-items: center;
     @apply rounded-full;
   }
 }

@@ -1,5 +1,10 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head>
     <title>Zeiterfassung - Bericht</title>
   </head>
@@ -22,7 +27,7 @@
         >
           <th:block th:if="${personsSelected}">
             <svg
-              th:replace="~{icons/users.html::svg(className='w-4 h-4 fill-amber-500')}"
+              th:replace="~{icons/users.html::svg(className='w-4 h-4 fill-amber-500 stroke-amber-500')}"
             />
           </th:block>
           <th:block th:if="${not personsSelected}">
@@ -38,7 +43,7 @@
         <div id="report-user-selection" data-js-hidden>
           <div class="w-48 overflow-y-auto" style="max-height: 10rem">
             <div
-              class="flex items-center gap-2 border-b border-dashed border-b-gray-300 pb-1.5"
+              class="flex items-center gap-2 border-b border-dashed border-b-gray-300 pb-1.5 dark:border-b-zinc-700"
             >
               <input
                 type="checkbox"
@@ -77,7 +82,7 @@
                   th:for="|${rnd}-user|"
                   class="group flex items-center gap-2"
                 >
-                  <span class="text-blue-300">
+                  <span class="text-blue-300 dark:text-sky-800">
                     <img
                       alt=""
                       th:replace="~{fragments/avatar::avatar(${user.initials},${user.fullName},26,26)}"
@@ -90,7 +95,7 @@
           </div>
           <button
             type="submit"
-            class="button-primary w-full mt-4 rounded-sm"
+            class="button-primary w-full mt-4 rounded-sm flex justify-center items-center"
             th:text="#{report.filter.users.submit}"
             data-testid="report-person-select-submit"
           >
@@ -108,7 +113,7 @@
           <th:block th:each="user : ${selectedUsers}">
             <div
               th:if="${userStat.index < maximum}"
-              class="avatar text-blue-300"
+              class="avatar text-blue-300 dark:text-sky-800"
             >
               <img
                 alt=""
@@ -122,7 +127,7 @@
             class="avatar-more"
           >
             <div
-              th:replace="~{icons/ellipsis::svg(className='w-8 h-8 text-white')}"
+              th:replace="~{icons/ellipsis::svg(className='w-8 h-8 text-white dark:text-zinc-300')}"
             ></div>
           </div>
         </div>

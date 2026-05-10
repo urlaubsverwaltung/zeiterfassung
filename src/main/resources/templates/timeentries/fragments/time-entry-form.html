@@ -16,7 +16,7 @@
         th:fragment="timeentry-slot-form-content(timeEntry, actions, class)"
         th:with="rnd=${#strings.randomAlphanumeric(6)}, disabled=${disabled ?: false}, showErrors=${showErrors ?: true}"
         class="flex flex-col-reverse md:flex-col"
-        th:classappend="${class} + ' ' + ${disabled ? 'time-entry-slot-form--disabled' : ''}"
+        th:classappend="${class} + ' ' + ${disabled ? 'timeslot-form--disabled' : ''}"
         th:object="${timeEntry}"
       >
         <input type="hidden" name="id" th:value="*{id}" />
@@ -25,8 +25,8 @@
           class="sr-only"
           th:text="${#temporals.format(timeEntry.date, 'dd. MMMM yyyy')}"
         ></h4>
-        <div class="flex flex-col md:flex-row">
-          <div class="flex-1 flex flex-col md:flex-row">
+        <div class="time-entry-box flex flex-col md:flex-row">
+          <div class="time-entry-box__inputs flex-1 flex flex-col md:flex-row">
             <div
               is="z-time-entry-date-picker"
               class="time-entry-box__input__date flex flex-col items-center"
@@ -80,7 +80,7 @@
             </div>
             <div class="time-entry-box__input__fields">
               <svg
-                class="hidden md:block h-full text-(--timeslot-form-datepicker-background-color) border border-(--timeslot-form-border-color) border-l-0 border-r-0"
+                class="hidden md:block h-full text-(--timeslot-form-datepicker-background-color) border border-(--timeslot-form-border-color) border-l-0 border-r-0 dark:border-0"
                 width="28"
                 height="76"
                 viewBox="0 0 28 76"
@@ -95,125 +95,119 @@
                   fill="currentColor"
                 />
               </svg>
-              <div
-                class="ajax-loader flex-1 border md:border-l-0 border-(--timeslot-form-border-color) rounded-b-3xl md:rounded-bl-none md:rounded-r-3xl flex items-center"
-              >
-                <div class="time-entry-cell-container">
-                  <div class="time-entry-cell time-entry-cell__comment">
+              <div class="ajax-loader time-entry-cell-container">
+                <div class="time-entry-cell time-entry-cell__comment">
+                  <input
+                    type="text"
+                    id="input-entry-comment"
+                    th:id="|${rnd}-input-entry-comment|"
+                    name="comment"
+                    th:value="${timeEntry.comment}"
+                    th:placeholder="#{time-entry.form.comment.input.placeholder}"
+                    th:disabled="${disabled}"
+                    data-testid="input-time-entry-comment"
+                  />
+                  <label
+                    for="input-entry-comment"
+                    th:for="|${rnd}-input-entry-comment|"
+                    th:text="#{time-entry.form.comment.label}"
+                  >
+                    Kommentar
+                  </label>
+                </div>
+                <div class="time-entry-cell time-entry-cell__from">
+                  <input
+                    type="time"
+                    id="input-entry-from"
+                    th:id="|${rnd}-input-entry-from|"
+                    name="start"
+                    th:value="${timeEntry.start}"
+                    placeholder="Von"
+                    th:placeholder="#{time-entry.form.start.input.placeholder}"
+                    class="peer invalid:border-(--z-error-border-color)"
+                    th:classappend="${showErrors && #fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'invalid' : ''}"
+                    th:disabled="${disabled}"
+                    data-testid="input-time-entry-start"
+                  />
+                  <label
+                    for="input-entry-from"
+                    th:for="|${rnd}-input-entry-from|"
+                    class="peer-invalid:text-(--z-error-color)"
+                    th:classappend="${showErrors && #fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'invalid' : ''}"
+                    th:text="#{time-entry.form.start.label}"
+                  >
+                    Von
+                  </label>
+                </div>
+                <div class="time-entry-cell time-entry-cell__to">
+                  <input
+                    type="time"
+                    id="input-entry-to"
+                    th:id="|${rnd}-input-entry-to|"
+                    name="end"
+                    th:value="${timeEntry.end}"
+                    placeholder="Bis"
+                    th:placeholder="#{time-entry.form.end.input.placeholder}"
+                    class="peer invalid:border-(--z-error-border-color)"
+                    th:classappend="${showErrors && #fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'invalid' : ''}"
+                    th:disabled="${disabled}"
+                    data-testid="input-time-entry-end"
+                  />
+                  <label
+                    for="input-entry-to"
+                    th:for="|${rnd}-input-entry-to|"
+                    class="peer-invalid:text-(--z-error-color)"
+                    th:classappend="${showErrors && #fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'invalid' : ''}"
+                    th:text="#{time-entry.form.end.label}"
+                  >
+                    Bis
+                  </label>
+                </div>
+                <div class="time-entry-cell time-entry-cell__duration">
+                  <input
+                    is="z-time-entry-duration-input"
+                    type="text"
+                    id="input-entry-duration"
+                    th:id="|${rnd}-input-entry-duration|"
+                    name="duration"
+                    th:value="${timeEntry.duration}"
+                    placeholder="hh:mm"
+                    th:placeholder="#{time-entry.form.duration.input.placeholder}"
+                    class="peer invalid:border-(--z-error-border-color)"
+                    th:classappend="${showErrors && #fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'invalid' : ''}"
+                    th:disabled="${disabled}"
+                    data-testid="input-time-entry-duration"
+                  />
+                  <label
+                    for="input-entry-duration"
+                    th:for="|${rnd}-input-entry-duration|"
+                    class="peer-invalid:text-(--z-error-color)"
+                    th:classappend="${showErrors && #fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'invalid' : ''}"
+                    th:text="#{time-entry.form.duration.label}"
+                  >
+                    Dauer
+                  </label>
+                </div>
+                <div class="time-entry-cell time-entry-cell__break">
+                  <span class="checkbox-switch">
                     <input
-                      type="text"
-                      id="input-entry-comment"
-                      th:id="|${rnd}-input-entry-comment|"
-                      name="comment"
-                      th:value="${timeEntry.comment}"
-                      placeholder="Woran arbeitest du gerade?"
-                      th:placeholder="#{time-entry.form.comment.input.placeholder}"
-                      class="border border-gray-200"
+                      type="checkbox"
+                      id="input-entry-is-break"
+                      th:id="|${rnd}-input-entry-is-break|"
+                      name="break"
+                      th:checked="${timeEntry.isBreak}"
+                      class="peer mt-0.5"
                       th:disabled="${disabled}"
-                      data-testid="input-time-entry-comment"
+                      data-testid="input-time-entry-break"
                     />
-                    <label
-                      for="input-entry-comment"
-                      th:for="|${rnd}-input-entry-comment|"
-                      th:text="#{time-entry.form.comment.label}"
-                    >
-                      Kommentar
-                    </label>
-                  </div>
-                  <div class="time-entry-cell time-entry-cell__from">
-                    <input
-                      type="time"
-                      id="input-entry-from"
-                      th:id="|${rnd}-input-entry-from|"
-                      name="start"
-                      th:value="${timeEntry.start}"
-                      placeholder="Von"
-                      th:placeholder="#{time-entry.form.start.input.placeholder}"
-                      class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${showErrors && #fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
-                      th:disabled="${disabled}"
-                      data-testid="input-time-entry-start"
-                    />
-                    <label
-                      for="input-entry-from"
-                      th:for="|${rnd}-input-entry-from|"
-                      class="peer-invalid:text-red-600"
-                      th:classappend="${showErrors && #fields.hasErrors('start') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
-                      th:text="#{time-entry.form.start.label}"
-                    >
-                      Von
-                    </label>
-                  </div>
-                  <div class="time-entry-cell time-entry-cell__to">
-                    <input
-                      type="time"
-                      id="input-entry-to"
-                      th:id="|${rnd}-input-entry-to|"
-                      name="end"
-                      th:value="${timeEntry.end}"
-                      placeholder="Bis"
-                      th:placeholder="#{time-entry.form.end.input.placeholder}"
-                      class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${showErrors && #fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
-                      th:disabled="${disabled}"
-                      data-testid="input-time-entry-end"
-                    />
-                    <label
-                      for="input-entry-to"
-                      th:for="|${rnd}-input-entry-to|"
-                      class="peer-invalid:text-red-600"
-                      th:classappend="${showErrors && #fields.hasErrors('end') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
-                      th:text="#{time-entry.form.end.label}"
-                    >
-                      Bis
-                    </label>
-                  </div>
-                  <div class="time-entry-cell time-entry-cell__duration">
-                    <input
-                      is="z-time-entry-duration-input"
-                      type="text"
-                      id="input-entry-duration"
-                      th:id="|${rnd}-input-entry-duration|"
-                      name="duration"
-                      th:value="${timeEntry.duration}"
-                      placeholder="hh:mm"
-                      th:placeholder="#{time-entry.form.duration.input.placeholder}"
-                      class="peer border border-gray-200 invalid:border-red-600"
-                      th:classappend="${showErrors && #fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'border-red-600' : ''}"
-                      th:disabled="${disabled}"
-                      data-testid="input-time-entry-duration"
-                    />
-                    <label
-                      for="input-entry-duration"
-                      th:for="|${rnd}-input-entry-duration|"
-                      class="peer-invalid:text-red-600"
-                      th:classappend="${showErrors && #fields.hasErrors('duration') && timeEntryErrorId == timeEntry.id ? 'text-red-600' : ''}"
-                      th:text="#{time-entry.form.duration.label}"
-                    >
-                      Dauer
-                    </label>
-                  </div>
-                  <div class="time-entry-cell time-entry-cell__break">
-                    <span class="checkbox-switch">
-                      <input
-                        type="checkbox"
-                        id="input-entry-is-break"
-                        th:id="|${rnd}-input-entry-is-break|"
-                        name="break"
-                        th:checked="${timeEntry.isBreak}"
-                        class="peer mt-0.5"
-                        th:disabled="${disabled}"
-                        data-testid="input-time-entry-break"
-                      />
-                    </span>
-                    <label
-                      for="input-entry-is-break"
-                      th:for="|${rnd}-input-entry-is-break|"
-                      th:text="#{time-entry.form.is-break.label}"
-                    >
-                      Pause
-                    </label>
-                  </div>
+                  </span>
+                  <label
+                    for="input-entry-is-break"
+                    th:for="|${rnd}-input-entry-is-break|"
+                    th:text="#{time-entry.form.is-break.label}"
+                  >
+                    Pause
+                  </label>
                 </div>
               </div>
             </div>

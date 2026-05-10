@@ -1,5 +1,10 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head>
     <title>Zeiterfassung - Personen</title>
   </head>
@@ -12,9 +17,8 @@
         th:object="${overtimeAccount}"
       >
         <div class="flex flex-col gap-8">
-          <fieldset class="border-t border-gray-100">
+          <fieldset>
             <legend
-              class="text-sm font-medium text-gray-400"
               th:text="#{usermanagement.overtime-account.overtime-regulation.title}"
             >
               Überstundenregelung

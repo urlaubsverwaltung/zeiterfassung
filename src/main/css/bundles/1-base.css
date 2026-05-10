@@ -3,11 +3,13 @@
 :root {
   /* tooltips shown on pointer hover should always be on top */
   --z-index-tooltip: 99999;
+  --z-index-overlay: 300;
   /* topbar above everything else */
   --z-index-topbar: 200;
   /* datepicker must be above sticky elements, at least on time-entries page */
   --z-index-duet-datepicker: 110;
   --z-index-sticky: 100;
+  --z-index-floating: 50;
 
   /* info-banner is optional and value is overridden by javascript with real height on runtime. as we don't know the content yet... */
   --info-banner-height: 0;
@@ -31,6 +33,46 @@
   --absence-color-PINK: #ec4899;
   --absence-color-RED: #991b1b; /* sick-note, red-800 */
 
+  --z-form-control-text-size: 0.875rem; /* TODO ios input require 1rem to not zoom in on focus I think */
+  --z-input-border-radius: 6px;
+  --z-input-border-color: var(--color-gray-300);
+  --z-placeholder-color: var(--color-gray-400);
+  --z-focus-ring-color: var(--color-blue-300);
+
+  --z-error-color: var(--color-red-800);
+  --z-error-border-color: var(--color-red-800);
+
+  /* 500 */
+  --absence-color-GRAY: #6b7280;
+  --absence-color-ORANGE: #f97316;
+  --absence-color-YELLOW: #eab308;
+  --absence-color-EMERALD: #10b981;
+  --absence-color-CYAN: #06b6d4;
+  --absence-color-BLUE: #3b82f6;
+  --absence-color-VIOLET: #8b5cf6;
+  --absence-color-PINK: #ec4899;
+  --absence-color-RED: #991b1b; /* sick-note, red-800 */
+
+  @variant dark {
+    --z-input-border-color: var(--color-zinc-600);
+    --z-placeholder-color: var(--color-zinc-400);
+
+    --z-error-color: var(--color-red-400);
+    --z-error-border-color: var(--color-red-400);
+
+    /* 400 */
+    --absence-color-GRAY: #9ca3af;
+    --absence-color-ORANGE: #fb923c;
+    --absence-color-YELLOW: #facc15;
+    --absence-color-EMERALD: #34d399;
+    --absence-color-CYAN: #22d3ee;
+    --absence-color-BLUE: #60a5fa;
+    --absence-color-VIOLET: #a78bfa;
+    --absence-color-PINK: #f472b6;
+    --sick-note-color: var(--color-red-800);
+    --sick-note-child-color: var(--color-red-950);
+  }
+
   @variant desktop {
     --search-bar-height: auto;
     --top-content-start: calc(var(--info-banner-height) + var(--topbar-height));
@@ -40,6 +82,17 @@
   &:not(:has(.user-search-container > *)) {
     --search-bar-height: 0px;
   }
+}
+
+@font-face {
+  font-family: "KaushanScript";
+  src:
+    local("KaushanScript"),
+    local("KaushanScript Regular"),
+    local("KaushanScript-Regular"),
+    url("/fonts/kaushanscript/KaushanScript-Regular.woff2") format("woff2"),
+    url("/fonts/kaushanscript/KaushanScript-Regular.woff") format("woff");
+  font-display: swap;
 }
 
 html {
@@ -59,6 +112,11 @@ body {
     "content content content content content";
   overflow: hidden;
   height: 100vh;
+
+  @variant dark {
+    background-color: var(--color-zinc-900);
+    color: var(--color-zinc-300);
+  }
 }
 
 @variant desktop {
@@ -76,15 +134,88 @@ body {
   [data-js-only] {
     display: none;
   }
-}
 
-@font-face {
-  font-family: "KaushanScript";
-  src:
-    local("KaushanScript"),
-    local("KaushanScript Regular"),
-    local("KaushanScript-Regular"),
-    url("/fonts/kaushanscript/KaushanScript-Regular.woff2") format("woff2"),
-    url("/fonts/kaushanscript/KaushanScript-Regular.woff") format("woff");
-  font-display: swap;
+  fieldset {
+    border-top: 1px solid var(--color-gray-100);
+
+    @variant dark {
+      border-color: var(--color-zinc-700);
+    }
+
+    legend {
+      font-size: var(--text-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-gray-400);
+
+      @variant dark {
+        color: var(--color-zinc-400);
+      }
+    }
+  }
+
+  input {
+    --input-line-height: 1.5;
+
+    display: block;
+    width: 100%;
+    line-height: var(--input-line-height);
+    appearance: none;
+
+    &:is([type="radio"], [type="checkbox"]) {
+      width: auto;
+      appearance: auto;
+    }
+
+    /* kudos @bootstrap, https://github.com/twbs/bootstrap/blob/ed36faae9dcd03f1fbf5bbbf859c706e63ae24c9/scss/forms/_form-control.scss */
+    &::-webkit-date-and-time-value {
+      min-width: 85px;
+      height: calc(var(--input-line-height) * 1em);
+      margin: 0;
+    }
+    &::-webkit-datetime-edit {
+      display: block;
+      padding: 0;
+      height: calc(var(--input-line-height) * 1em);
+    }
+
+    &::-webkit-datetime-edit-fields-wrapper {
+      padding: 0;
+    }
+  }
+
+  select,
+  textarea,
+  input:not(:is([type="radio"], [type="checkbox"])) {
+    padding: --spacing(1) --spacing(2);
+  }
+
+  select,
+  textarea,
+  input:not(:is([type="radio"], [type="checkbox"])) {
+    border-radius: var(--radius-sm);
+  }
+
+  select,
+  textarea,
+  input:not(:is([type="button"], [type="submit"])) {
+    color: var(--color-gray-950);
+    background-color: var(--color-white);
+    border: 1px solid var(--z-input-border-color);
+
+    &::placeholder {
+      color: var(--z-placeholder-color);
+    }
+
+    @variant dark {
+      color: var(--color-zinc-300);
+      background-color: var(--color-zinc-700);
+    }
+  }
+
+  button,
+  input:is([type="submit"], [type="button"]) {
+    &:not(:disabled) {
+      cursor: pointer;
+    }
+  }
 }

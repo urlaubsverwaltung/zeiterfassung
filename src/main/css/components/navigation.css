@@ -1,4 +1,10 @@
 .navigation-container {
+  --navigation-bg-color: var(--color-white);
+
+  @variant dark {
+    --navigation-bg-color: var(--color-zinc-950);
+  }
+
   grid-area: navigation;
   anchor-name: --navigation-container-anchor;
 
@@ -7,7 +13,7 @@
   }
 
   .navigation {
-    background-color: inherit;
+    background-color: var(--navigation-bg-color);
     width: 100dvw;
 
     /* prevent body scrolling with overscroll behaviour and full height */
@@ -15,7 +21,6 @@
     height: calc(100dvh - anchor-size(height) - var(--info-banner-height));
 
     .navigation-inner {
-      background-color: var(--color-white);
       padding: --spacing(8);
       padding-bottom: --spacing(4);
       min-height: 100%;
@@ -26,13 +31,17 @@
 
       .navigation-inner__bottom {
         margin-top: auto;
-        background: white;
+        background-color: var(--navigation-bg-color);
         padding: --spacing(2) 0;
         border-top: 1px solid transparent;
         transition: border-color 150ms;
 
         &.z-sticky--stuck {
           border-top-color: var(--color-gray-100);
+
+          @variant dark {
+            border-top-color: var(--color-zinc-800);
+          }
         }
       }
     }
@@ -43,21 +52,25 @@
       gap: calc(--spacing(1) / 2);
     }
 
-    .subnav-group {
-      margin-top: --spacing(1);
-      gap: --spacing(3);
-    }
-
-    .navigation-link,
-    .navigation-sublink {
-      display: block;
-      color: inherit;
-      text-decoration: none;
-    }
-
     .navigation-link {
+      --navigation-link-color: inherit;
+      --navigation-link-bg-color: inherit;
+      --navigation-link-hover-color: inherit;
+      --navigation-link-hover-bg-color: var(--color-blue-50);
+
+      @variant dark {
+        --navigation-link-color: var(--color-zinc-200);
+        --navigation-link-bg-color: inerit;
+        --navigation-link-hover-color: var(--color-zinc-100);
+        --navigation-link-hover-bg-color: var(--color-zinc-800);
+      }
+
+      display: block;
+      text-decoration: none;
       padding: --spacing(2);
-      @apply rounded;
+      border-radius: var(--radius);
+      color: var(--navigation-link-color);
+      background-color: var(--navigation-link-bg-color);
 
       --duration: 150ms;
       transition:
@@ -65,60 +78,20 @@
         background-color var(--duration);
 
       &:hover {
-        background-color: var(--color-blue-50);
-      }
-    }
-
-    .navigation-sublink {
-      --dot-size: 0.5rem;
-      --dot-color: var(--color-blue-300);
-      --color: var(--color-gray-900);
-
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: --spacing(2);
-
-      margin-left: --spacing(4);
-      /* two times dot-size because of loading spinner */
-      padding-left: calc(var(--dot-size) * 2 + --spacing(1));
-      padding-right: --spacing(1);
-
-      color: var(--color);
-
-      /* dot (+ ::after as spinner) */
-      &::before {
-        --duration: 300ms;
-        transition:
-          background-color var(--duration),
-          border-color var(--duration);
-
-        position: absolute;
-        top: calc(50% - (var(--dot-size) / 2));
-        left: calc(var(--dot-size) / 2);
-
-        content: "";
-        display: block;
-        width: var(--dot-size);
-        aspect-ratio: 1;
-        border-radius: 9999px;
-        border: 1px solid var(--dot-color);
-        background-color: transparent;
-      }
-
-      &:hover,
-      &.navigation-sublink--active {
-        &::before {
-          background-color: var(--dot-color);
-        }
+        color: var(--navigation-link-hover-color);
+        background-color: var(--navigation-link-hover-bg-color);
       }
     }
 
     .navigation-link--active {
-      background-color: var(--color-blue-50);
+      --navigation-link-bg-color: var(--color-blue-50);
+      --navigation-link-hover-bg-color: var(--color-blue-100);
 
-      &:hover {
-        background-color: var(--color-blue-100);
+      @variant dark {
+        --navigation-link-color: var(--color-zinc-300);
+        --navigation-link-bg-color: var(--color-zinc-800);
+        --navigation-link-hover-color: var(--color-zinc-50);
+        --navigation-link-hover-bg-color: var(--color-zinc-700);
       }
     }
 
@@ -135,48 +108,18 @@
       );
       background-size: 300% 100%;
       animation: linear-loading 1.2s infinite linear;
-    }
 
-    .navigation-sublink--loading {
-      /* spinner */
-      &::after {
-        --gradient-shift: calc((var(--dot-size) / 2) - 1px);
-
-        content: "";
-        position: absolute;
-        top: calc(50% - var(--dot-size));
-        left: 0;
-
-        display: block;
-        width: calc(var(--dot-size) * 2);
-        aspect-ratio: 1;
-        border-radius: 9999px;
-        background:
-          radial-gradient(farthest-side, var(--dot-color) 94%, #0000)
-            top/var(--gradient-shift) var(--gradient-shift) no-repeat,
-          conic-gradient(#0000 30%, var(--dot-color));
-        -webkit-mask: radial-gradient(
-          farthest-side,
-          #0000 calc(100% - var(--gradient-shift)),
-          #000 0
-        );
-        animation: rotate-loading 1s infinite linear;
+      @variant dark {
+        --from: var(--color-zinc-800);
+        --via: var(--color-zinc-700);
+        --to: var(--color-zinc-800);
       }
     }
-  }
-
-  .nav-group-label {
-    display: block;
-    margin-bottom: --spacing(2);
-    @apply font-mono;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--color-gray-400);
   }
 }
 
 .nav-popover-menu-container {
-  @apply rounded-2xl;
+  border-radius: var(--radius-2xl);
 
   .navigation-popover-menu-header {
     padding: --spacing(2) --spacing(4);
@@ -184,6 +127,12 @@
     @apply from-blue-50;
     @apply via-gray-100;
     @apply to-blue-100;
+
+    @variant dark {
+      @apply from-sky-800;
+      @apply via-slate-800;
+      @apply to-sky-900;
+    }
   }
 
   .navigation-popover-menu-content {
@@ -215,6 +164,16 @@
         &:focus-visible {
           color: var(--color-black);
           background-color: var(--color-blue-50);
+        }
+
+        @variant dark {
+          color: var(--color-zinc-200);
+
+          &:hover,
+          &:focus-visible {
+            color: var(--color-zinc-200);
+            background-color: var(--color-slate-800);
+          }
         }
       }
 
@@ -260,6 +219,11 @@
     margin: unset;
     @apply shadow-2xl;
     border: 1px solid var(--color-gray-200);
+
+    @variant dark {
+      @apply shadow-zinc-950;
+      border-color: var(--color-zinc-800);
+    }
   }
 }
 
@@ -291,21 +255,6 @@
 
         .navigation-link {
           padding: --spacing(1) --spacing(2);
-        }
-
-        .navigation-link ~ .subnav-group {
-          display: none;
-        }
-
-        .navigation-link--loading ~ .subnav-group,
-        .navigation-link--active ~ .subnav-group {
-          display: flex;
-        }
-
-        .subnav-group {
-          margin-top: --spacing(1);
-          margin-bottom: --spacing(1);
-          gap: --spacing(1);
         }
       }
     }

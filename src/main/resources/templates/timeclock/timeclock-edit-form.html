@@ -1,5 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head>
     <meta charset="UTF-8" />
     <title>Title</title>
@@ -44,20 +49,20 @@
           <div class="flex flex-col gap-0.5">
             <label
               for="input-clock-start-date"
-              class="text-xs text-gray-500 font-bold"
+              class="text-xs text-gray-500 font-bold dark:text-zinc-300"
               th:text="#{timeclock.edit.startAt.date.label}"
-              th:classappend="${hasDateError ? 'text-red-600' : ''}"
+              th:classappend="${hasDateError ? 'invalid' : ''}"
             >
               Datum
             </label>
             <input
               type="date"
               id="input-clock-start-date"
-              class="border border-gray-300 px-2 py-1 text-sm tabular-nums"
+              class="border border-gray-300 px-2 py-1 text-sm tabular-nums dark:border-zinc-600"
               name="date"
               th:min="${minValidTimeEntryDate eq null ? null : #temporals.format(minValidTimeEntryDate, 'yyyy-MM-dd')}"
               th:value="${timeClock.date}"
-              th:classappend="${hasDateError ? 'border-red-300' : ''}"
+              th:classappend="${hasDateError ? 'invalid' : ''}"
               th:aria-invalid="${hasDateError ?: 'true'}"
               th:aria-describedBy="${hasDateError ?: 'errors-time-clock-date'}"
               data-testid="time-clock-date-input"
@@ -66,19 +71,19 @@
           <div class="flex flex-col gap-0.5">
             <label
               for="input-clock-start-time"
-              class="text-xs text-gray-500 font-bold"
+              class="text-xs text-gray-500 font-bold dark:text-zinc-300"
               th:text="#{timeclock.edit.startAt.time.label}"
-              th:classappend="${hasTimeError ? 'text-red-600' : ''}"
+              th:classappend="${hasTimeError ? 'invalid' : ''}"
             >
               Uhrzeit
             </label>
             <input
               type="time"
               id="input-clock-start-time"
-              class="border border-gray-300 px-2 py-1 text-sm tabular-nums"
+              class="border border-gray-300 px-2 py-1 text-sm tabular-nums dark:border-zinc-600"
               name="time"
               th:value="${{timeClock.time}}"
-              th:classappend="${hasTimeError ? 'border-red-300' : ''}"
+              th:classappend="${hasTimeError ? 'invalid' : ''}"
               th:aria-invalid="${hasTimeError ?: 'true'}"
               th:aria-describedBy="${hasTimeError ?: 'errors-time-clock-time'}"
               data-testid="time-clock-time-input"
@@ -87,7 +92,7 @@
           <div class="flex flex-col gap-0.5 checkbox-switch">
             <label
               for="input-clock-is-break"
-              class="text-xs text-gray-500 font-bold"
+              class="text-xs text-gray-500 font-bold dark:text-zinc-300"
               th:text="#{timeclock.edit.isBreak.label}"
             >
               Pause
@@ -97,20 +102,19 @@
               id="input-clock-is-break"
               name="break"
               th:checked="${timeClock.isBreak}"
-              class="border border-gray-200"
               data-testid="time-clock-is-break-input"
             />
           </div>
         </div>
         <div th:if="${hasDateError or hasTimeError}">
-          <ul th:if="${hasDateError}" class="text-sm text-red-600">
+          <ul th:if="${hasDateError}" class="invalid text-sm">
             <li
               id="errors-time-clock-date"
               th:each="error : ${#fields.errors('date')}"
               th:text="${error}"
             ></li>
           </ul>
-          <ul th:if="${hasTimeError}" class="text-sm text-red-600">
+          <ul th:if="${hasTimeError}" class="invalid text-sm">
             <li
               id="errors-time-clock-time"
               th:each="error : ${#fields.errors('time')}"
@@ -121,8 +125,8 @@
         <div class="flex flex-col gap-0.5">
           <label
             for="input-clock-comment"
-            class="text-xs text-gray-500 font-bold"
-            th:classappend="${hasCommentError ? 'text-red-600' : ''}"
+            class="text-xs text-gray-500 font-bold dark:text-zinc-300"
+            th:classappend="${hasCommentError ? 'invalid' : ''}"
             th:text="#{timeclock.edit.comment.label}"
           >
             Kommentar
@@ -130,23 +134,23 @@
           <textarea
             rows="4"
             id="input-clock-comment"
-            class="border border-gray-300 p-2 text-sm"
+            class="border border-gray-300 p-2 text-sm dark:border-zinc-600"
             name="comment"
-            th:classappend="${hasCommentError ? 'border-red-300' : ''}"
+            th:classappend="${hasCommentError ? 'invalid' : ''}"
             th:text="${timeClock.comment}"
             data-testid="time-clock-comment-input"
           ></textarea>
           <p
             th:if="${hasCommentError}"
             th:text="#{timeclock.edit.comment.error}"
-            class="text-sm text-red-600"
+            class="invalid text-sm"
           ></p>
         </div>
       </div>
-      <div class="">
+      <div>
         <button
           type="submit"
-          class="w-full text-center bg-blue-600 text-blue-50 rounded-sm px-4 py-2 whitespace-nowrap border border-blue-600"
+          class="button-primary w-full flex justify-center items-center"
           th:text="#{timeclock.edit.submit}"
           data-testid="time-clock-update-button"
         >

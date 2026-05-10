@@ -104,7 +104,6 @@ public class TimeEntryViewHelper {
         }
 
         final ZoneId zoneId = userSettingsProvider.zoneId();
-        final Duration duration = toDuration(dto.getDuration());
         final ZonedDateTime start = dto.getStart() == null ? null : ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
         final ZonedDateTime end = getEndDate(dto, zoneId);
 
@@ -120,6 +119,7 @@ public class TimeEntryViewHelper {
         }
 
         try {
+            final Duration duration = toDuration(dto.getDuration());
             timeEntryService.updateTimeEntry(timeEntryId, dto.getComment(), start, end, duration, dto.isBreak());
         } catch (TimeEntryUpdateNotPlausibleException e) {
             LOG.debug("Could not update timeEntry.", e);

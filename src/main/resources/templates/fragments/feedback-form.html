@@ -30,7 +30,10 @@
           method="post"
           class="feedback-form p-8"
         >
-          <p class="text-gray-600" th:text="#{feedback.form.paragraph}">
+          <p
+            class="text-gray-600 dark:text-zinc-400"
+            th:text="#{feedback.form.paragraph}"
+          >
             Beschreibe und was dir gefällt oder was dir nicht gefällt. Hat etwas
             nicht so funktioniert wie du es dir wünschst?
           </p>
@@ -46,7 +49,7 @@
             required
             id="feedback-body"
             name="body"
-            class="mt-2 p-4 w-full border border-gray-300"
+            class="mt-2 p-4 w-full border border-gray-300 dark:border-zinc-600"
             rows="5"
           ></textarea>
           <div class="mt-4 flex items-center justify-between gap-4">

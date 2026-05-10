@@ -1,5 +1,10 @@
 <!doctype html>
-<html lang="de" th:lang="${lang}" xmlns:th="http://www.thymeleaf.org">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head
     th:fragment="head(title)"
     th:with="
@@ -48,6 +53,56 @@
         "[data-js-only]:not(:where(.inline, .block, .inline-block, .flex, .inline-flex, .grid, .inline-grid, .hidden)) { display: revert !important; }",
       ); // hidden without js, shown with js
       injectStyle("[data-js-hidden] { display: none; }");
+    </script>
+    <script th:if="${theme eq 'system'}">
+      (function () {
+        // note to put required meta elements above this script
+        // to avoid a flash when light theme is switched to dark because of system setting.
+        // (we don't have separate css files that could be included with a media query)
+        const htmlElement = document.querySelector("html");
+        const mediaQueryDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        );
+        if (mediaQueryDark.matches) {
+          setDarkStuff();
+        }
+        try {
+          mediaQueryDark.addEventListener("change", function () {
+            toggleStuff();
+          });
+        } catch (error) {
+          // safari (https://stackoverflow.com/a/60000747)
+          try {
+            mediaQueryDark.addListener(function () {
+              toggleStuff();
+            });
+          } catch (error2) {
+            console.info(
+              "could not add mediaQuery listener to toggle theme.",
+              error2,
+            );
+          }
+        }
+        function toggleStuff() {
+          if (htmlElement.classList.contains("theme-dark")) {
+            setLightStuff();
+          } else {
+            setDarkStuff();
+          }
+        }
+        function setDarkStuff() {
+          htmlElement.classList.add("theme-dark");
+          document
+            .querySelector("meta[name='theme-color']")
+            .setAttribute("content", "#18181b");
+        }
+        function setLightStuff() {
+          htmlElement.classList.remove("theme-dark");
+          document
+            .querySelector("meta[name='theme-color']")
+            .setAttribute("content", "#fafafa");
+        }
+      })();
     </script>
     <th:block th:replace="${scripts}"></th:block>
 
@@ -124,7 +179,7 @@
       <div th:replace="~{launchpad/launchpad::launchpad}"></div>
       <a
         href="/"
-        class="hidden desktop:block font-logo text-xl font-medium mr-8 md:mr-16 text-zinc-900 no-underline"
+        class="hidden desktop:block font-logo text-xl font-medium mr-8 md:mr-16 text-zinc-900 dark:text-zinc-100 no-underline"
         th:text="#{navigation.zeiterfassung}"
       >
         Zeiterfassung
@@ -155,7 +210,7 @@
 
     <div
       id="main"
-      class="grid overflow-y-scroll bg-linear-to-b from-white to-[#fafafa]"
+      class="grid overflow-y-scroll bg-linear-to-b from-white to-[#fafafa] dark:from-transparent dark:to-transparent"
       style="
         grid-area: content;
         grid-template-columns: 1fr;
