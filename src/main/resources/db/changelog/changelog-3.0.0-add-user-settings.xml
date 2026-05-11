@@ -1,0 +1,75 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <changeSet author="seber" id="add-user-settings">
+    <preConditions>
+      <not>
+        <tableExists tableName="user_settings" />
+      </not>
+    </preConditions>
+
+    <createTable tableName="user_settings">
+      <column name="tenant_id" type="VARCHAR(255) "/>
+      <column name="tenant_user_local_id" type="bigint">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="user_settings_pkey"/>
+      </column>
+      <column name="locale" type="text"/>
+      <column name="locale_browser_specific" type="text">
+        <constraints nullable="true"/>
+      </column>
+      <column name="theme" type="text">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint
+      constraintName="FK_USER_SETTINGS_TENANT_ID"
+      baseColumnNames="tenant_id"
+      baseTableName="user_settings"
+      referencedColumnNames="tenant_id"
+      referencedTableName="tenant"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+    />
+
+    <addForeignKeyConstraint
+      constraintName="FK_USER_SETTINGS_USER_ID"
+      baseColumnNames="tenant_user_local_id"
+      baseTableName="user_settings"
+      referencedColumnNames="id"
+      referencedTableName="tenant_user"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+    />
+
+    <addUniqueConstraint
+      tableName="user_settings"
+      columnNames="tenant_id,tenant_user_local_id"
+      constraintName="UC_USER_SETTINGS"
+    />
+
+    <createIndex tableName="user_settings" indexName="IDX_USER_SETTINGS_TENANT_USER_LOCAL_ID">
+      <column name="tenant_user_local_id" />
+    </createIndex>
+    <createIndex tableName="user_settings" indexName="IDX_USER_SETTINGS_TENANT_ID">
+      <column name="tenant_id" />
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="seber" id="enable-row-level-security-on-user_settings">
+    <sql dbms="postgresql">
+      ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+      DROP
+      POLICY IF EXISTS user_settings_tenant_isolation_policy ON user_settings;
+            CREATE
+      POLICY user_settings_tenant_isolation_policy ON user_settings
+                USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+    </sql>
+  </changeSet>
+</databaseChangeLog>

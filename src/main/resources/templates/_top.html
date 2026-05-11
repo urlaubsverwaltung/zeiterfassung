@@ -128,6 +128,16 @@
         </div>
         <div class="navigation-popover-menu-content">
           <ul class="navigation-popover-menu">
+            <li>
+              <a
+                th:replace="~{::nav-popup-menu-link(href=@{/personal-settings}, icon=~{::menu-user-settings-icon}, text=#{navigation.avatar-menu.personalisation.title})}"
+              >
+                <svg
+                  th:ref="menu-user-settings-icon"
+                  th:replace="~{icons/sliders::svg(className='w-6 h-6')}"
+                ></svg>
+              </a>
+            </li>
             <li
               role="separator"
               class="border-t border-t-gray-100 dark:border-t-zinc-700"

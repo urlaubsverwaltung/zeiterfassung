@@ -40,4 +40,5 @@
   <include relativeToChangelogFile="true" file="changelog-2.24.0-subtract-break-from-timeentry.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.25.0-add-company-vacation.xml"/>
   <include relativeToChangelogFile="true" file="changelog-2.25.2-remove-not-nullable-of-time-entry-aud.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-3.0.0-add-user-settings.xml"/>
 </databaseChangeLog>

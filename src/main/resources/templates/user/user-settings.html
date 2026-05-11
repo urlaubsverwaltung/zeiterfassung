@@ -1,0 +1,196 @@
+<!doctype html>
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
+  <head
+    th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{::scriptsDefer})}"
+  >
+    <title th:text="#{user-settings.header.title}"></title>
+    <th:block th:fragment="scriptsDefer">
+      <script
+        type="module"
+        src=""
+        th:src="@{/assets/user-settings.js}"
+      ></script>
+    </th:block>
+  </head>
+  <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
+    <th:block th:ref="search">
+      <div
+        th:replace="~{fragments/user-search::user-search(placeholder=#{user-search.input.placeholder})}"
+      ></div>
+    </th:block>
+
+    <th:block th:fragment="content">
+      <main class="content-container content--max-w flex flex-col">
+        <div
+          class="flex-1 flex flex-col mx-auto w-full max-w-7xl px-4 desktop:px-8"
+        >
+          <h1 class="text-xl font-bold" th:text="#{user-settings.title}">
+            Account settings
+          </h1>
+          <p class="mt-2 text-dimmed" th:text="#{user-settings.teaser}"></p>
+          <div class="mt-8">
+            <form
+              id="user-settings-form"
+              action="#"
+              th:action="@{/personal-settings}"
+              method="post"
+              th:object="${userSettings}"
+            >
+              <fieldset id="fieldset-language">
+                <legend
+                  id="language-description"
+                  class="mb-4 text-lg dark:text-zinc-300"
+                  th:text="#{user-settings.language.title}"
+                >
+                  Sprache
+                </legend>
+                <ul
+                  aria-describedby="language-description"
+                  class="flex flex-col gap-2 @3xl/main:grid @3xl/main:auto-cols-fr @3xl/main:grid-flow-col @3xl/main:gap-8"
+                >
+                  <li
+                    class="relative flex @3xl/main:block items-center gap-4 @3xl/main:flex-row @3xl/main:justify-center"
+                  >
+                    <input
+                      required
+                      type="radio"
+                      id="user-locale-system"
+                      th:id="${'user-locale-system'}"
+                      name="locale"
+                      value=""
+                      th:checked="${null eq userSettings.locale}"
+                      class="peer @3xl/main:absolute bottom-5 left-4"
+                    />
+                    <span
+                      class="block w-full h-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-zinc-700 peer-checked:border-blue-400 dark:peer-checked:border-sky-400"
+                    >
+                      <label
+                        for="user-locale-system"
+                        class="flex items-center gap-4 cursor-pointer @3xl/main:text-center @3xl/main:flex-col"
+                      >
+                        <svg
+                          th:replace="~{icons/globe-2::svg(className='w-9 h-9 @3xl/main:w-16 @3xl/main:h-16 stroke-1')}"
+                        ></svg>
+                        <span
+                          th:text="#{user-settings.language.locale.system}"
+                          class="min-w-0 @3xl/main:w-4/5 whitespace-nowrap text-ellipsis overflow-hidden @3xl/main:ml-5"
+                          th:data-title="#{user-settings.language.locale.system}"
+                        >
+                          Browsersprache
+                        </span>
+                      </label>
+                    </span>
+                  </li>
+                  <li
+                    th:each="supportedLocale : ${supportedLocales}"
+                    class="relative flex @3xl/main:block items-center gap-4 @3xl/main:flex-row @3xl/main:justify-center"
+                  >
+                    <input
+                      required
+                      type="radio"
+                      id="user-locale"
+                      th:id="${'user-locale-' + supportedLocale.locale}"
+                      name="locale"
+                      th:value="${supportedLocale.locale}"
+                      th:checked="${supportedLocale.locale eq userSettings.locale}"
+                      class="peer @3xl/main:absolute bottom-5 left-4"
+                    />
+                    <span
+                      class="block w-full h-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-zinc-700 peer-checked:border-blue-400 dark:peer-checked:border-sky-400"
+                    >
+                      <label
+                        for="user-locale"
+                        th:for="${'user-locale-' + supportedLocale.locale}"
+                        class="flex items-center gap-4 cursor-pointer @3xl/main:text-center @3xl/main:flex-col"
+                      >
+                        <span
+                          class="h-8 w-8 @3xl/main:h-16 @3xl/main:w-16 inline-block overflow-hidden rounded-full"
+                        >
+                          <img
+                            th:src="@{/images/flags/{locale}.svg (locale=${supportedLocale.locale})}"
+                            alt=""
+                            width="25"
+                            height="15"
+                            class="scale-[1.75] w-full h-full"
+                          />
+                        </span>
+                        <span
+                          th:text="${supportedLocale.displayName}"
+                          class="min-w-0 @3xl/main:w-4/5 whitespace-nowrap text-ellipsis overflow-hidden"
+                          th:data-title="${supportedLocale.displayName}"
+                        >
+                          Sprache
+                        </span>
+                      </label>
+                    </span>
+                  </li>
+                </ul>
+              </fieldset>
+              <fieldset class="mt-16">
+                <legend
+                  id="theme-description"
+                  th:text="#{user-settings.theme.title}"
+                  class="mb-4 text-lg dark:text-zinc-300"
+                >
+                  Theme
+                </legend>
+                <ul
+                  aria-describedby="theme-description"
+                  class="grid grid-cols-2 gap-4 @lg/main:grid-cols-3"
+                >
+                  <li th:each="selectableTheme : ${supportedThemes}">
+                    <label
+                      class="overflow-hidden flex flex-col cursor-pointer rounded-lg @3xl/main:rounded-xl border-2 border-gray-300 dark:border-zinc-700 [&:has(:checked)]:border-blue-400 dark:[&:has(:checked)]:border-sky-400"
+                    >
+                      <img
+                        src="#"
+                        th:src="|/images/user-settings-theme-${#strings.toLowerCase(selectableTheme.value)}.png|"
+                        width="323"
+                        height="200"
+                        class="w-full h-auto block"
+                        alt=""
+                      />
+                      <span class="inline-flex items-center gap-4 p-4">
+                        <input
+                          type="radio"
+                          name="theme"
+                          th:value="${selectableTheme.value}"
+                          th:checked="${userSettings.theme eq selectableTheme.value}"
+                        />
+                        <span
+                          th:text="${selectableTheme.label}"
+                          class="font-bold"
+                          >Theme Name</span
+                        >
+                      </span>
+                    </label>
+                  </li>
+                </ul>
+              </fieldset>
+              <noscript>
+                <div class="bottom-bar">
+                  <div
+                    class="bottom-bar-inner flex justify-between items-center mt-16"
+                  >
+                    <button
+                      type="submit"
+                      class="button-main-green w-56"
+                      th:text="#{user-settings.form.submit}"
+                    >
+                      Speichern
+                    </button>
+                  </div>
+                </div>
+              </noscript>
+            </form>
+          </div>
+        </div>
+      </main>
+    </th:block>
+  </body>
+</html>

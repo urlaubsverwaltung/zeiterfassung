@@ -24,6 +24,16 @@
     <th:block th:replace="${preconnect}"></th:block>
     <th:block th:replace="${scriptsAsync}"></th:block>
 
+    <meta name="msapplication-TileColor" content="#5bbad5" />
+    <meta th:if="${theme != 'dark'}" name="theme-color" content="#fafafa" />
+    <meta th:if="${theme == 'dark'}" name="theme-color" content="#18181b" />
+    <meta
+      th:if="${turboRefreshScroll}"
+      name="turbo-refresh-scroll"
+      content="reset"
+      th:content="${turboRefreshScroll}"
+    />
+
     <script th:inline="javascript">
       window.zeiterfassung = window.zeiterfassung || {};
       window.zeiterfassung.feedback = window.zeiterfassung.feedback || {};
@@ -128,14 +138,6 @@
       rel="mask-icon"
       th:href="@{/favicons/safari-pinned-tab.svg}"
       color="#5bbad5"
-    />
-    <meta name="msapplication-TileColor" content="#5bbad5" />
-    <meta name="theme-color" content="#ffffff" />
-    <meta
-      th:if="${turboRefreshScroll}"
-      name="turbo-refresh-scroll"
-      content="reset"
-      th:content="${turboRefreshScroll}"
     />
 
     <link rel="stylesheet" type="text/css" th:href="@{/css/1-base.css}" />
