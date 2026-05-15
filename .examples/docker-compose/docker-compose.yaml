@@ -38,7 +38,7 @@ services:
         condition: service_started
 
   postgres:
-    image: postgres:18.3
+    image: postgres:18.4
     ports:
       - '5432:5432'
     environment:
