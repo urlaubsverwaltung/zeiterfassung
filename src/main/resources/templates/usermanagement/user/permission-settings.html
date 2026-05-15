@@ -1,5 +1,10 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
   <head>
     <title>Zeiterfassung - Personen</title>
   </head>
@@ -12,11 +17,8 @@
         th:object="${permissions}"
       >
         <div class="flex flex-col gap-8">
-          <fieldset class="border-t border-gray-100">
-            <legend
-              class="text-sm font-medium text-gray-400"
-              th:text="#{usermanagement.permissions.reports.title}"
-            >
+          <fieldset>
+            <legend th:text="#{usermanagement.permissions.reports.title}">
               Berichte
             </legend>
             <div class="mt-2 sm:mt-4">
@@ -35,11 +37,8 @@
               </div>
             </div>
           </fieldset>
-          <fieldset class="border-t border-gray-100">
-            <legend
-              class="text-sm font-medium text-gray-400"
-              th:text="#{usermanagement.permissions.timeentries.title}"
-            >
+          <fieldset>
+            <legend th:text="#{usermanagement.permissions.timeentries.title}">
               Zeiteinträge
             </legend>
             <div class="mt-2 sm:mt-4">
@@ -58,11 +57,8 @@
               </div>
             </div>
           </fieldset>
-          <fieldset class="border-t border-gray-100">
-            <legend
-              class="text-sm font-medium text-gray-400"
-              th:text="#{usermanagement.permissions.working-time.title}"
-            >
+          <fieldset>
+            <legend th:text="#{usermanagement.permissions.working-time.title}">
               Arbeitszeiten
             </legend>
             <div class="mt-2 sm:mt-4">
@@ -81,11 +77,8 @@
               </div>
             </div>
           </fieldset>
-          <fieldset class="border-t border-gray-100">
-            <legend
-              class="text-sm font-medium text-gray-400"
-              th:text="#{usermanagement.permissions.overtime.title}"
-            >
+          <fieldset>
+            <legend th:text="#{usermanagement.permissions.overtime.title}">
               Überstundenregelung
             </legend>
             <div class="mt-2 sm:mt-4">
@@ -104,11 +97,8 @@
               </div>
             </div>
           </fieldset>
-          <fieldset class="border-t border-gray-100">
-            <legend
-              class="text-sm font-medium text-gray-400"
-              th:text="#{usermanagement.permissions.permissions.title}"
-            >
+          <fieldset>
+            <legend th:text="#{usermanagement.permissions.permissions.title}">
               Berechtigungen
             </legend>
             <div class="mt-2 sm:mt-4">
@@ -128,9 +118,8 @@
               </div>
             </div>
           </fieldset>
-          <fieldset class="border-t border-gray-100">
+          <fieldset>
             <legend
-              class="text-sm font-medium text-gray-400"
               th:text="#{usermanagement.permissions.global-settings.title}"
             >
               Globale Einstellungen

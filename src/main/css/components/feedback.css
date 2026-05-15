@@ -8,7 +8,7 @@
   position: fixed;
   right: --spacing(4);
   bottom: --spacing(4);
-  z-index: calc(var(--z-index-sticky) - 1); /* TODO +1 -1 or nothing? I think -1 is ok! */
+  z-index: var(--z-index-floating);
 }
 
 .feedback-popover {
@@ -21,8 +21,13 @@
 
   border: 1px solid var(--color-gray-300);
   background-color: var(--color-white);
-  @apply rounded-md;
+  border-radius: var(--radius-md);
   @apply shadow-xl;
+
+  @variant dark {
+    background-color: var(--color-zinc-950);
+    border-color: var(--color-zinc-800);
+  }
 
   .feedback-form {
     width: 100%;

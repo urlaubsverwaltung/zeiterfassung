@@ -1,0 +1,47 @@
+@reference "../../../css/config.css";
+
+duet-date-picker {
+  --duet-color-button: #eee;
+  --duet-color-border: #ccc;
+  --duet-radius: var(--z-input-border-radius);
+  --duet-color-placeholder: var(--z-placeholder-color);
+
+  @variant dark {
+    --duet-color-primary: var(--color-sky-600);
+    --duet-color-text: var(--color-zinc-50);
+    --duet-color-text-active: var(--color-zinc-50);
+    --duet-color-button: var(--color-zinc-800);
+    --duet-color-overlay: rgba(0, 0, 0, 0.8);
+    --duet-color-border: var(--color-zinc-600);
+  }
+}
+
+.duet-date__input-wrapper {
+  .duet-date__input {
+    @variant dark {
+      background-color: var(--color-zinc-700) !important;
+    }
+  }
+}
+
+.duet-date__dialog {
+  z-index: var(--z-index-overlay);
+
+  .duet-date__dialog-content {
+    @variant dark {
+      border-color: var(--color-zinc-600) !important;
+      background-color: var(--color-zinc-950) !important;
+    }
+  }
+}
+
+.duet-date__day {
+  &:hover,
+  .is-today {
+    @variant dark {
+      &::before {
+        opacity: 0.2 !important;
+      }
+    }
+  }
+}

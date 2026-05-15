@@ -10,6 +10,7 @@ import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserEntity;
 import de.focusshift.zeiterfassung.timeclock.TimeClockEntity;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryEntity;
+import de.focusshift.zeiterfassung.user.UserSettingsEntity;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccountEntity;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeEntity;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -46,7 +47,8 @@ import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
         WorkingTimeEntity.class,
         OvertimeAccountEntity.class,
         FederalStateSettingsEntity.class,
-        CompanyVacationEntity.class
+        CompanyVacationEntity.class,
+        UserSettingsEntity.class
         // SubtractBreakFromTimeEntrySettingsEntity.class, // disabled for now to prevent duplicated bean definitions
         // LockTimeEntriesSettingsEntity.class // disabled for now to prevent duplicated bean definitions
     },
@@ -101,7 +103,8 @@ class TenantAwareDatabaseConfiguration {
                 WorkingTimeEntity.class,
                 OvertimeAccountEntity.class,
                 FederalStateSettingsEntity.class,
-                CompanyVacationEntity.class
+                CompanyVacationEntity.class,
+                UserSettingsEntity.class
                 // SubtractBreakFromTimeEntrySettingsEntity.class, // disabled for now to prevent duplicated bean definitions
                 // LockTimeEntriesSettingsEntity.class // disabled for now to prevent duplicated bean definitions
             )

@@ -2,7 +2,7 @@
 <html
   lang="en"
   th:lang="${language}"
-  th:class="|${theme}|"
+  th:class="|theme-${theme}|"
   xmlns:th="http://www.thymeleaf.org"
 >
   <head th:replace="~{_layout::head(title=~{::title})}">

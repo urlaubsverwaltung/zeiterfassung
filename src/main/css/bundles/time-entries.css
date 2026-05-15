@@ -7,10 +7,46 @@
 }
 
 @layer components {
-  .time-entry-slot-form .ajax-loader.ajax-loader--loading {
-    @apply rounded-b-3xl;
-    @apply md:rounded-b-none;
-    @apply md:rounded-r-3xl;
+  :root {
+    --timeslot-form-datepicker-background-color: var(--color-gray-200);
+    --timeslot-form-day-color: var(--color-black);
+    --timeslot-form-day-background-color: var(--color-white);
+    --timeslot-form-border-color: var(--color-gray-200);
+
+    @variant dark {
+      --timeslot-form-datepicker-background-color: --alpha(
+        var(--color-zinc-950) / 90%
+      );
+      --timeslot-form-day-color: var(--color-zinc-300);
+      --timeslot-form-day-background-color: var(--color-zinc-300);
+      --timeslot-form-border-color: var(--color-zinc-700);
+    }
+  }
+
+  .time-entries-day {
+    padding-left: --spacing(4);
+    padding-right: --spacing(4);
+
+    .time-entries-day__head {
+      position: sticky;
+      top: 0;
+      z-index: var(--z-index-sticky);
+    }
+
+    .time-entries-day__absences,
+    .time-entries-day__entries {
+      display: flex;
+      flex-direction: column;
+      gap: --spacing(6);
+
+      @variant md {
+        gap: --spacing(2);
+
+        @variant dark {
+          gap: --spacing(0);
+        }
+      }
+    }
   }
 
   .time-entry-cell {
@@ -26,8 +62,8 @@
     }
 
     label {
-      @apply text-sm;
-      @apply cursor-pointer;
+      font-size: var(--text-sm);
+      cursor: pointer;
     }
 
     .checkbox-switch {
@@ -46,6 +82,15 @@
     gap: --spacing(2);
     width: 100%;
     padding: --spacing(4) --spacing(5);
+
+    border: 1px solid var(--timeslot-form-border-color);
+    border-bottom-left-radius: var(--radius-3xl);
+    border-bottom-right-radius: var(--radius-3xl);
+
+    @variant dark {
+      border-width: 0;
+      padding: --spacing(4) --spacing(3);
+    }
   }
 
   .time-entry-cell__comment {
@@ -108,15 +153,19 @@
 
   @variant md {
     .time-entry-cell {
-      /* text-sm applies line-height */
-      /* which we must not change on inputs (see components#input for more detail) */
       font-size: var(--text-sm);
     }
 
     .time-entry-cell-container {
       display: grid;
+      align-items: center;
       grid-template-columns: repeat(5, 1fr) max-content;
       gap: --spacing(2);
+
+      border-left-width: 0;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: var(--radius-3xl);
+      border-top-right-radius: var(--radius-3xl);
     }
 
     .time-entry-cell__comment {
@@ -181,73 +230,106 @@
   }
 
   .timeslot-form-new {
-    --timeslot-form-color: var(--color-blue-700);
     --timeslot-form-datepicker-background-color: var(--color-blue-700);
     --timeslot-form-day-color: var(--color-white);
     --timeslot-form-day-background-color: var(--color-blue-50);
     --timeslot-form-border-color: var(--color-blue-700);
+
+    [data-error-container]:has(ul) {
+      margin-top: --spacing(4);
+    }
+
+    @variant dark {
+      --timeslot-form-datepicker-background-color: var(--color-sky-800);
+      --timeslot-form-day-color: var(--color-zinc-300);
+      --timeslot-form-day-background-color: var(--color-sky-100);
+      --timeslot-form-border-color: var(--color-sky-800);
+
+      .time-entry-box__inputs {
+        border-radius: var(--radius-4xl);
+      }
+    }
   }
 
-  .timeslot-form-existing {
-    --timeslot-form-color: var(--color-gray-700);
-    --timeslot-form-datepicker-background-color: var(--color-gray-200);
-    --timeslot-form-day-color: var(--color-black);
-    --timeslot-form-day-background-color: var(--color-white);
-    --timeslot-form-border-color: var(--color-gray-200);
+  .timeslot-form {
+    .ajax-loader.ajax-loader--loading {
+      @apply rounded-b-3xl;
+      @apply md:rounded-b-none;
+      @apply md:rounded-r-3xl;
+    }
+
+    input.edited {
+      background-color: var(--color-blue-100);
+
+      @variant dark {
+        background-color: var(--color-sky-900);
+      }
+    }
+
+    [data-error-container]:has(ul) {
+      margin-top: --spacing(2);
+    }
   }
 
-  .time-entry-slot-form--disabled {
-    --timeslot-form-color: var(--color-gray-50);
+  .timeslot-form.edited {
+    .time-entry-box__inputs {
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        box-shadow: 0 0 3px var(--color-blue-700);
+        border-radius: 27px;
+      }
+
+      @variant dark {
+        &::after {
+          box-shadow: none;
+        }
+      }
+    }
+
+    /* highlight save button for edited timeslot. not the delete button. */
+    button[type="submit"]:not([name]) {
+      color: var(--color-gray-700);
+      background-color: var(--color-blue-100);
+
+      @variant dark {
+        color: var(--color-sky-100);
+        background-color: var(--color-sky-900);
+      }
+    }
+  }
+
+  .timeslot-form--disabled {
     --timeslot-form-datepicker-background-color: var(--color-gray-100);
     --timeslot-form-day-color: var(--color-gray-500);
     --timeslot-form-day-background-color: var(--color-gray-50);
     --timeslot-form-border-color: var(--color-gray-200);
-  }
 
-  .timeslot-form-existing input.edited {
-    background-color: var(--color-blue-100);
-  }
+    label {
+      cursor: default;
+    }
 
-  .timeslot-form-existing input[type="checkbox"].edited ~ svg {
-    @apply stroke-blue-800;
-    @apply bg-blue-100;
-    @apply transform scale-125;
-  }
+    @variant dark {
+      --timeslot-form-datepicker-background-color: var(--color-zinc-700);
+      --timeslot-form-day-color: var(--color-zinc-300);
+      --timeslot-form-day-background-color: var(--color-zinc-400);
+      --timeslot-form-border-color: var(--color-zinc-700);
 
-  .timeslot-form-existing.edited > div > div:nth-of-type(1) {
-    position: relative;
-  }
+      .time-entry-box__inputs {
+        border-radius: var(--radius-4xl);
+      }
 
-  .timeslot-form-existing.edited > div > div:nth-of-type(1)::after {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    box-shadow: 0 0 3px var(--color-blue-700);
-    border-radius: 27px;
-  }
-
-  /* highlight save button for edited timeslot. not the delete button. */
-  .timeslot-form-existing.edited button[type="submit"]:not([name]) {
-    color: var(--color-gray-700);
-    background-color: var(--color-blue-100);
-    padding: --spacing(1) --spacing(2);
-    border-radius: 99999px;
-  }
-
-  .timeslot-form-new [data-error-container]:not(:empty) {
-    margin-top: --spacing(4);
-  }
-
-  .timeslot-form-existing [data-error-container]:not(:empty) {
-    margin-top: --spacing(2);
-  }
-
-  .time-entry-slot-form--disabled label {
-    cursor: default;
+      @variant md {
+        --timeslot-form-datepicker-background-color: var(--color-zinc-800);
+      }
+    }
   }
 
   .time-entry-box,
@@ -256,20 +338,46 @@
     flex-direction: column;
   }
 
-  .time-entry-box__input__date {
-    padding: --spacing(6) --spacing(5);
-    border-top-left-radius: var(--time-entries-box-border-radius);
-    border-top-right-radius: var(--time-entries-box-border-radius);
-    border-right-color: var(--timeslot-form-border-color);
-    background-color: var(--timeslot-form-datepicker-background-color);
-    color: var(--timeslot-form-day-color);
+  .time-entry-box {
+    .time-entry-box__input__date {
+      padding: --spacing(5);
+      border-top-left-radius: var(--time-entries-box-border-radius);
+      border-top-right-radius: var(--time-entries-box-border-radius);
+      border-right-color: var(--timeslot-form-border-color);
+      background-color: var(--timeslot-form-datepicker-background-color);
+      color: var(--timeslot-form-day-color);
+    }
   }
 
-  .time-entry-box__input,
-  .time-entry-box-absence__input {
-    flex: 1 0 0;
-    display: flex;
-    flex-direction: column;
+  .time-entry-box-absence {
+    .time-entry-box__inputs {
+      flex: 1 0 0;
+      display: flex;
+      flex-direction: column;
+
+      .time-entry-box__input__date {
+        display: flex;
+        align-items: center;
+        background-color: var(--color-gray-200);
+        padding: --spacing(3) --spacing(5);
+        border-top-left-radius: var(--time-entries-box-border-radius);
+        border-top-right-radius: var(--time-entries-box-border-radius);
+
+        @variant dark {
+          background-color: var(--color-zinc-950);
+        }
+      }
+
+      .time-entry-box__input__fields {
+        border: 1px solid var(--color-gray-200);
+        border-bottom-left-radius: var(--time-entries-box-border-radius);
+        border-bottom-right-radius: var(--time-entries-box-border-radius);
+
+        @variant dark {
+          border: none;
+        }
+      }
+    }
   }
 
   .time-entry-box__input__fields {
@@ -278,45 +386,132 @@
     flex-direction: column;
   }
 
-  .time-entry-box-absence__input__date {
-    /* md:rounded-tr-none md:rounded-bl-[27px] md:bg-gray-100*/
-    display: flex;
-    align-items: center;
-    @apply bg-gray-200;
-    padding: --spacing(3) --spacing(5);
-    border-top-left-radius: var(--time-entries-box-border-radius);
-    border-top-right-radius: var(--time-entries-box-border-radius);
-  }
-
-  .time-entry-box-absence__input__fields {
-    flex: 1 0 0;
-    @apply border;
-    @apply border-gray-200;
-    border-bottom-left-radius: var(--time-entries-box-border-radius);
-    border-bottom-right-radius: var(--time-entries-box-border-radius);
-    display: flex;
-  }
-
   .time-entry-box__controls {
     margin-top: --spacing(2);
-  }
-
-  .time-entry-box__controls,
-  .time-entry-box-absence__controls {
     display: flex;
     align-items: center;
     justify-content: center;
+
+    .time-entry-box__controls__button {
+      color: var(--color-gray-500);
+
+      @variant dark {
+        color: var(--color-zinc-300);
+      }
+    }
+  }
+
+  .timeslot-form-new {
+    .time-entry-box__controls {
+      .time-entry-box__controls__button {
+        color: var(--color-blue-700);
+
+        @variant dark {
+          color: var(--color-sky-100);
+
+          @variant md {
+            background-color: var(--color-sky-800);
+
+            &:hover {
+              color: var(--color-white);
+              background-color: var(--color-sky-700);
+            }
+          }
+        }
+      }
+    }
   }
 
   .time-entry-box-absence__absence-color-box {
     display: inline-block;
     width: 1.5rem;
-    @apply bg-amber-200;
+    background-color: var(--color-amber-200);
     border-bottom-left-radius: var(--time-entries-box-border-radius);
   }
 
   .time-entry-box-absence__absence-text {
     padding: --spacing(6) --spacing(5);
+  }
+
+  @variant dark {
+    .time-entry-box__inputs {
+      padding: --spacing(1);
+      border: 1px solid var(--timeslot-form-border-color);
+      background-color: var(--color-zinc-800);
+    }
+
+    @variant md {
+      .time-entries-day__absences {
+        .time-entry-box-absence {
+          .time-entry-box__inputs {
+            background-color: var(--color-zinc-950);
+
+            .time-entry-box__input__date {
+              padding-top: 0;
+              padding-bottom: 0;
+            }
+          }
+
+          &:first-of-type {
+            .time-entry-box__inputs {
+              border-top-width: 1px;
+              border-top-color: var(--color-zinc-700);
+              border-top-left-radius: var(--radius-4xl);
+              border-top-right-radius: var(--radius-4xl);
+            }
+          }
+
+          &:not(:last-of-type) {
+            .time-entry-box__inputs {
+              border-bottom: 1px solid var(--color-zinc-800);
+            }
+          }
+
+          &:last-of-type {
+            .time-entry-box__inputs {
+              border-bottom-left-radius: var(--radius-4xl);
+              border-bottom-right-radius: var(--radius-4xl);
+            }
+          }
+        }
+      }
+    }
+
+    .time-entry-box-absence,
+    [is="z-time-entry-element"] {
+      .time-entry-box__inputs {
+        border-radius: var(--radius-4xl);
+      }
+
+      @variant md {
+        .time-entry-box__inputs {
+          border-radius: 0;
+          border-width: 0;
+        }
+
+        &:first-of-type {
+          .time-entry-box__inputs {
+            border-top-width: 1px;
+            border-top-color: var(--color-zinc-600);
+            border-top-left-radius: var(--radius-4xl);
+            border-top-right-radius: var(--radius-4xl);
+          }
+        }
+
+        &:not(:last-of-type) {
+          .time-entry-box__inputs {
+            border-bottom: 1px solid var(--timeslot-form-border-color);
+          }
+        }
+
+        &:last-of-type {
+          .time-entry-box__inputs {
+            border-bottom-left-radius: var(--radius-4xl);
+            border-bottom-right-radius: var(--radius-4xl);
+          }
+        }
+      }
+    }
   }
 
   @variant md {
@@ -325,62 +520,90 @@
       flex-direction: row;
     }
 
-    .time-entry-box__input,
-    .time-entry-box-absence__input {
-      flex-direction: row;
+    .time-entry-box-absence {
+      .time-entry-box__inputs {
+        flex-direction: row;
+
+        .time-entry-box__input__date {
+          border-top-right-radius: 0;
+          border-bottom-left-radius: var(--time-entries-box-border-radius);
+        }
+
+        .time-entry-box__input__fields {
+          border-bottom-left-radius: 0;
+          border-top-right-radius: var(--time-entries-box-border-radius);
+          background-color: var(--color-gray-100);
+          border-color: var(--color-gray-100);
+
+          @variant dark {
+            background-color: transparent;
+            border: none;
+          }
+        }
+      }
     }
 
-    .time-entry-box__input__date {
-      border-top-right-radius: 0;
-      border-top-left-radius: var(--time-entries-box-border-radius);
-      border-bottom-left-radius: var(--time-entries-box-border-radius);
-      width: 14rem;
-    }
-
-    .time-entry-box-absence__input__date {
-      @apply bg-gray-100;
-      border-top-right-radius: 0;
-      border-bottom-left-radius: var(--time-entries-box-border-radius);
+    .time-entry-box {
+      .time-entry-box__input__date {
+        border-top-right-radius: 0;
+        border-top-left-radius: var(--time-entries-box-border-radius);
+        border-bottom-left-radius: var(--time-entries-box-border-radius);
+        width: 14rem;
+      }
     }
 
     .time-entry-box__input__fields {
       flex-direction: row;
     }
 
-    .time-entry-box-absence__input__fields {
-      border-bottom-left-radius: 0;
-      border-top-right-radius: var(--time-entries-box-border-radius);
-      @apply bg-gray-100;
-      @apply border-gray-100;
-    }
-
     .time-entry-box__controls {
       margin-top: 0;
-    }
-
-    .time-entry-box__controls,
-    .time-entry-box-absence__controls {
       margin-left: --spacing(4);
       justify-content: flex-start;
       width: 20%;
+
+      .time-entry-box__controls__button {
+        width: --spacing(12);
+        height: --spacing(12);
+        border-radius: 999999px;
+        color: var(--color-gray-300);
+        transition:
+          color ease-in-out 200ms,
+          background-color ease-in-out 200ms;
+
+        &:hover {
+          color: var(--color-gray-700);
+          background-color: var(--color-blue-100);
+        }
+
+        @variant dark {
+          color: var(--color-zinc-500);
+          &:hover {
+            color: var(--color-sky-100);
+            background-color: var(--color-sky-800);
+          }
+        }
+      }
     }
 
     .time-entry-box-absence__absence-color-box {
-      margin-top: --spacing(2);
-      margin-bottom: --spacing(2);
+      margin-top: --spacing(1);
+      margin-bottom: --spacing(1);
+      height: 3rem;
       width: 0.75rem;
-      @apply rounded-lg;
+      border-radius: var(--radius-lg);
     }
 
     .time-entry-box-absence__absence-text {
-      @apply font-bold;
-      @apply text-sm;
+      font-weight: var(--font-weight-bold);
+      font-size: var(--text-sm);
+      padding-top: 0;
+      padding-bottom: 0;
     }
   }
 
   @variant lg {
-    .time-entry-box__controls,
-    .time-entry-box-absence__controls {
+    .time-entry-box__controls {
       width: 16.6666666667%;
     }
   }
@@ -403,6 +626,11 @@
 
       .time-entry-history-list__element__content {
         margin-top: --spacing(2);
+
+        @variant dark {
+          border-radius: var(--radius-3xl);
+          overflow: hidden;
+        }
       }
 
       .time-entry-history-list__element__details[open] {
@@ -417,7 +645,7 @@
     > li:not(:last-of-type) {
       .time-entry-history-list__element__details {
         .time-entry-history-list__element__content {
-          padding-bottom: --spacing(4);
+          margin-bottom: --spacing(4);
         }
       }
     }

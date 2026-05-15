@@ -1,14 +1,34 @@
 @reference "../config.css";
 
 @layer utilities {
-  input.invalid {
-    @apply border;
-    @apply border-red-400;
-    @apply text-red-600;
+  .invalid {
+    --invalid-color: var(--color-red-600);
+    --invalid-border-color: var(--color-red-600);
+
+    color: var(--invalid-color);
+
+    @variant dark {
+      --invalid-color: var(--color-red-600);
+      --invalid-border-color: var(--color-red-700);
+    }
   }
 
-  label.invalid,
-  p.invalid {
-    @apply text-red-600;
+  input.invalid {
+    color: unset;
+    border: 1px solid var(--invalid-border-color);
+  }
+
+  textarea.invalid {
+    color: unset;
+    border: 1px solid var(--invalid-border-color);
+  }
+
+  fieldset.invalid {
+    color: unset;
+    border: 1px solid var(--invalid-border-color);
+
+    legend {
+      color: var(--invalid-color);
+    }
   }
 }

@@ -18,25 +18,25 @@
             <th:block th:ref="modal-content">
               <div class="px-4 relative">
                 <div
-                  class="bg-linear-to-b from-gray-200 via-gray-50 to-white absolute left-0 right-0 top-0 h-3/5"
+                  class="bg-linear-to-b from-gray-200 via-gray-50 to-white absolute left-0 right-0 top-0 h-3/5 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-950"
                 ></div>
                 <div
                   class="px-4 py-1 relative rounded-t-xl flex flex-col items-center"
                 >
                   <h1
-                    class="text-sm font-bold text-gray-500"
+                    class="text-sm font-bold text-gray-500 dark:text-zinc-300"
                     th:text="#{time-entry.dialog.title}"
                   >
                     Zeiteintrag
                   </h1>
                   <div class="mt-4 flex flex-col items-center">
-                    <div class="text-blue-200">
+                    <div class="text-blue-200 dark:text-sky-800">
                       <svg
                         th:replace="~{fragments/avatar::avatar-bordered(initials=${timeEntryDialog.ownerInitials},fullName=${timeEntryDialog.owner},tooltip=false,width=54,height=54)}"
                       ></svg>
                     </div>
                     <div
-                      class="font-bold text-gray-500"
+                      class="font-bold text-gray-500 dark:text-zinc-300"
                       th:text="${timeEntryDialog.owner}"
                     >
                       Max Mustermann
@@ -53,7 +53,7 @@
                 >
                   <button
                     type="submit"
-                    class="rounded-full p-0.5 border border-gray-400 bg-gray-100 text-gray-500"
+                    class="rounded-full p-0.5 border border-gray-400 bg-gray-100 text-gray-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
                   >
                     <svg
                       th:replace="~{icons/plus::svg(className='w-4 h-4 rotate-45')}"
@@ -98,7 +98,7 @@
                 </th:block>
                 <div class="mt-8">
                   <div
-                    class="bg-gradient-to-r from-blue-200 to-blue-100 p-4 rounded-t-3xl"
+                    class="bg-linear-to-r from-blue-200 to-blue-100 p-4 rounded-t-3xl dark:from-sky-800 dark:to-sky-950"
                   >
                     <div class="flex justify-between items-end">
                       <div class="flex gap-2">
@@ -115,7 +115,7 @@
                     </div>
                   </div>
                   <div
-                    class="border border-t-0 border-gray-200 rounded-b-3xl p-4"
+                    class="border border-t-0 border-gray-200 rounded-b-3xl p-4 dark:border-zinc-800"
                     data-testid="time-entry-history"
                   >
                     <ul
@@ -132,10 +132,10 @@
                           class="details-unstyled time-entry-history-list__element__details"
                         >
                           <summary
-                            class="time-entry-history-list__element__summary"
+                            class="time-entry-history-list__element__summary dark:text-zinc-300"
                           >
                             <svg
-                              th:replace="~{icons/chevron-right::svg(className='details-summary-icon w-5 h-5 text-blue-400')}"
+                              th:replace="~{icons/chevron-right::svg(className='details-summary-icon w-5 h-5 text-blue-400 dark:text-sky-600')}"
                             ></svg>
                             <span
                               th:with="formattedDateTime=${#temporals.format(historyItem.date, 'dd. MMMM yyyy, HH:mm')}"
@@ -149,7 +149,7 @@
                             >
                               bearbeitet von
                             </span>
-                            <span class="text-blue-200">
+                            <span class="text-blue-200 dark:text-sky-800">
                               <svg
                                 th:replace="~{fragments/avatar::avatar(initials=${historyItem.initials},fullName=${historyItem.username},width=24,height=24,tooltip=false,className='inline-block')}"
                               ></svg>
@@ -163,7 +163,7 @@
                             class="time-entry-history-list__element__content"
                           >
                             <div
-                              th:replace="~{timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form-existing', disabled=true, showErrors=false)}"
+                              th:replace="~{timeentries/fragments/time-entry-form::timeentry-slot-form-content(timeEntry=${historyItem.timeEntry}, actions=null, class='timeslot-form', disabled=true, showErrors=false)}"
                             ></div>
                           </div>
                         </details>
