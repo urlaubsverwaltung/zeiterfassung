@@ -8,7 +8,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  */
 public class MultiTenantPostgreSQLContainer extends PostgreSQLContainer {
 
-    private static final String VERSION = "18.3";
+    private static final String VERSION = "18.4";
 
     public MultiTenantPostgreSQLContainer() {
         super(IMAGE + ":" + VERSION);
