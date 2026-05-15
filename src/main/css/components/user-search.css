@@ -5,11 +5,14 @@
   height: var(--search-bar-height);
   padding: var(--search-container-py) --spacing(4);
 
+  &:not(:has(*)) {
+    display: none;
+  }
+
   @variant desktop {
     padding: 0;
   }
 }
-
 
 .user-search {
   anchor-name: --user-search-anchor;

@@ -30,12 +30,15 @@
   --absence-color-VIOLET: #8b5cf6;
   --absence-color-PINK: #ec4899;
   --absence-color-RED: #991b1b; /* sick-note, red-800 */
-}
 
-@variant desktop {
-  :root {
+  @variant desktop {
     --search-bar-height: auto;
     --top-content-start: calc(var(--info-banner-height) + var(--topbar-height));
+  }
+
+  /* last to override above definitions! */
+  &:not(:has(.user-search-container > *)) {
+    --search-bar-height: 0px;
   }
 }
 
