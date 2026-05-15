@@ -1,26 +1,25 @@
 # Zeiterfassung [![Build](https://github.com/urlaubsverwaltung/zeiterfassung/actions/workflows/build.yml/badge.svg)](https://github.com/urlaubsverwaltung/zeiterfassung/actions/workflows/build.yml) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=urlaubsverwaltung_zeiterfassung&metric=coverage)](https://sonarcloud.io/summary/new_code?id=urlaubsverwaltung_zeiterfassung)
 
-Ist bei euch die Zeiterfassung auch gerade ein großes Thema? Das trifft sich gut!
+Is time tracking also a big topic for you right now? Perfect timing!
 
-Durchstarten mit der Zeiterfassung! Folgende Funktionen sind bereits enthalten:
+Get started with time tracking! The following features are already included:
 
-* Erfassen von Zeiten: Kommt-Geht Erfassung oder einzelne Zeitbuchungen
-* Stoppuhr-Modus
-* Visualisierung der geleisteten Stunden auf Wochen und Monatsebene
-* Berichte für eigene erfasste Stunden (CSV-Download)
-* Berichte für Vorgesetzte (CSV-Download)
+* Time recording: clock-in/clock-out tracking or individual time entries
+* Stopwatch mode
+* Visualization of recorded working hours on a weekly and monthly basis
+* Reports for personal recorded hours (CSV download)
+* Reports for supervisors/managers (CSV download)
 
-Unsere Entwicklung lebt von eurem Feedback. Wir freuen uns die Zeiterfassung mit euch zusammen voranzubringen.
+Our development thrives on your feedback. We’re excited to improve time tracking together with you.
 * [GitHub Issue](https://github.com/urlaubsverwaltung/zeiterfassung/issues/new/choose)
-* [E-Mail](mailto:info@urlaubsverwaltung.cloud?subject=Zeiterfassung%20-%20Nutzer%20Feedback)
+* [Email](mailto:info@urlaubsverwaltung.cloud?subject=Zeiterfassung%20-%20Nutzer%20Feedback)
 
-Wenn du mehr Informationen und Bilder über dieses Projekt sehen möchtest dann schaue auf unserer [Landingpage](https://urlaubsverwaltung.cloud/zeiterfassung/) vorbei.
+If you would like to see more information and screenshots of this project, take a look at our landing page:
+[Landingpage](https://urlaubsverwaltung.cloud/zeiterfassung/)
 
-*Hinweis*: Der `main`-Branch enthält die 3.x-Release-Reihe der Zeiterfassung. Der aktuelle 2.x-Branch, der die 2.x-Reihe fortführt, ist unter `v2.x` verfügbar.
+*Note*: The `main` branch contains the 3.x release series of the time tracking application. The current 2.x branch, which continues the 2.x release series, is available under `v2.x`.
 
-![Ein Bild der Zeiterfassung auf verschiedenen Endgeräten](docs/zeiterfassung-screens.png)
-
-⚠️ Die Dokumentationen zu Betrieb und Entwicklung sind aktuell nur in englischer Sprache verfügbar.
+![An image of the time tracking application on various devices](docs/zeiterfassung-screens.png)
 
 ## Operation
 
