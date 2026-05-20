@@ -5,7 +5,6 @@ import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
 import de.focusshift.zeiterfassung.TestKeycloakContainer;
 import de.focusshift.zeiterfassung.ui.extension.UiTest;
 import de.focusshift.zeiterfassung.ui.pages.LoginPage;
-import de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials;
 import de.focusshift.zeiterfassung.ui.pages.NavigationPage;
 import de.focusshift.zeiterfassung.ui.pages.ReportPage;
 import de.focusshift.zeiterfassung.ui.pages.TimeEntryPage;
@@ -19,6 +18,9 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.BOSS;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.OFFICE;
+import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.USER;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -42,27 +44,30 @@ class UserSearchUIIT {
 
     @Test
     void ensureUserSearch(Page page) {
+        final LoginPage loginPage = new LoginPage(page, port);
+        final NavigationPage navigationPage = new NavigationPage(page);
 
         // log in with different users first, otherwise they don't exist in the application
-        final Page bossPage = page.context().browser().newContext().newPage();
-        new LoginPage(bossPage, port).login(Credentials.BOSS);
+        loginPage.login(BOSS);
+        navigationPage.logout();
 
-        final Page userPage = page.context().browser().newContext().newPage();
-        new LoginPage(userPage, port).login(Credentials.USER);
+        loginPage.login(USER);
+        navigationPage.logout();
 
         // then ensure user search for OFFICE
-        new LoginPage(page, port).login(Credentials.OFFICE);
+        loginPage.login(OFFICE);
 
-        final NavigationPage navigationPage = new NavigationPage(page);
         final UserSearchPage userSearchPage = new UserSearchPage(page);
 
         ensureTimeEntriesUserSearch(page, navigationPage, userSearchPage);
         ensureReportsUserSearch(page, navigationPage, userSearchPage);
         ensureUserSettingsUserSearch(page, navigationPage, userSearchPage);
         ensureSettingsUserSearch(page, navigationPage, userSearchPage);
+        navigationPage.logout();
 
         // USER is not allowed to search for other users
-        new UserSearchPage(userPage).isNotPresent();
+        loginPage.login(USER);
+        userSearchPage.isNotPresent();
     }
 
     private void ensureTimeEntriesUserSearch(Page page, NavigationPage navigationPage, UserSearchPage userSearchPage) {

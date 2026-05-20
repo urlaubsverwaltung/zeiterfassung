@@ -70,7 +70,7 @@ public class NavigationPage {
             page.getByTestId("avatar").click();
             final Locator logout = page.getByTestId("logout");
             logout.waitFor(new Locator.WaitForOptions().setState(VISIBLE));
-            logout.click();
+            page.waitForResponse(Response::ok, logout::click);
 
             page.context().clearCookies();
             page.context().clearPermissions();
