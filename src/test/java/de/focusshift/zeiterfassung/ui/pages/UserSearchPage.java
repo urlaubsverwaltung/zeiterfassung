@@ -33,7 +33,9 @@ public class UserSearchPage {
     }
 
     public void selectSuggestion(String name) {
-        userSuggestionsLocator().getByRole(LINK, new Locator.GetByRoleOptions().setName(name)).click();
+        final Locator suggestion = userSuggestionsLocator().getByRole(LINK, new Locator.GetByRoleOptions().setName(name));
+        assertThat(suggestion).isVisible();
+        suggestion.click();
     }
 
     public void selectSuggestionTimeEntries(String name) {
