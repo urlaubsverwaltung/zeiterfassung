@@ -17,24 +17,27 @@ import static java.util.stream.StreamSupport.stream;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
-class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService {
+class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService, AutomaticBreakDeductionSettingsService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final FederalStateSettingsRepository federalStateSettingsRepository;
     private final LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
     private final SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
+    private final AutomaticBreakDeductionSettingsRepository automaticBreakDeductionSettingsRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     SettingsService(
         FederalStateSettingsRepository federalStateSettingsRepository,
         LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository,
         SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository,
+        AutomaticBreakDeductionSettingsRepository automaticBreakDeductionSettingsRepository,
         ApplicationEventPublisher applicationEventPublisher
     ) {
         this.federalStateSettingsRepository = federalStateSettingsRepository;
         this.lockTimeEntriesSettingsRepository = lockTimeEntriesSettingsRepository;
         this.subtractBreakFromTimeEntrySettingsRepository = subtractBreakFromTimeEntrySettingsRepository;
+        this.automaticBreakDeductionSettingsRepository = automaticBreakDeductionSettingsRepository;
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
@@ -56,6 +59,12 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
     public Optional<SubtractBreakFromTimeEntrySettings> getSubtractBreakFromTimeEntrySettings() {
         return getSubtractBreakFromTimeEntrySettingsEntity()
             .map(SettingsService::toSubtractBreakFromTimeEntrySettings);
+    }
+
+    @Override
+    public Optional<AutomaticBreakDeductionSettings> getAutomaticBreakDeductionSettings() {
+        return getAutomaticBreakDeductionSettingsEntity()
+            .map(SettingsService::toAutomaticBreakDeductionSettings);
     }
 
     /**
@@ -149,13 +158,6 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         return stream(settings.spliterator(), false).findFirst();
     }
 
-    private Optional<SubtractBreakFromTimeEntrySettingsEntity> getSubtractBreakFromTimeEntrySettingsEntity() {
-        // `findFirst` is sufficient as there exists only one FederalStateSettingsEntity per tenant.
-        // however, the tenantId is handled transparently in the background. and we only have the public API of `findAll`.
-        final Iterable<SubtractBreakFromTimeEntrySettingsEntity> settings = subtractBreakFromTimeEntrySettingsRepository.findAll();
-        return stream(settings.spliterator(), false).findFirst();
-    }
-
     private static FederalStateSettings toFederalStateSettings(FederalStateSettingsEntity federalStateSettingsEntity) {
         return new FederalStateSettings(
             federalStateSettingsEntity.getFederalState(),
@@ -170,10 +172,38 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         );
     }
 
+    AutomaticBreakDeductionSettings updateAutomaticBreakDeductionSettings(boolean active, Instant enabledTimestamp) {
+        final AutomaticBreakDeductionSettingsEntity entity = getAutomaticBreakDeductionSettingsEntity()
+            .orElseGet(AutomaticBreakDeductionSettingsEntity::new);
+
+        entity.setActive(active);
+        entity.setEnabledTimestamp(enabledTimestamp);
+
+        final AutomaticBreakDeductionSettingsEntity saved = automaticBreakDeductionSettingsRepository.save(entity);
+        return toAutomaticBreakDeductionSettings(saved);
+    }
+
+    private Optional<SubtractBreakFromTimeEntrySettingsEntity> getSubtractBreakFromTimeEntrySettingsEntity() {
+        final Iterable<SubtractBreakFromTimeEntrySettingsEntity> settings = subtractBreakFromTimeEntrySettingsRepository.findAll();
+        return stream(settings.spliterator(), false).findFirst();
+    }
+
+    private Optional<AutomaticBreakDeductionSettingsEntity> getAutomaticBreakDeductionSettingsEntity() {
+        final Iterable<AutomaticBreakDeductionSettingsEntity> settings = automaticBreakDeductionSettingsRepository.findAll();
+        return stream(settings.spliterator(), false).findFirst();
+    }
+
     private static SubtractBreakFromTimeEntrySettings toSubtractBreakFromTimeEntrySettings(SubtractBreakFromTimeEntrySettingsEntity entity) {
         return new SubtractBreakFromTimeEntrySettings(
             entity.isSubtractBreakFromTimeEntryIsActive(),
             Optional.ofNullable(entity.getSubtractBreakFromTimeEntryEnabledTimestamp())
+        );
+    }
+
+    private static AutomaticBreakDeductionSettings toAutomaticBreakDeductionSettings(AutomaticBreakDeductionSettingsEntity entity) {
+        return new AutomaticBreakDeductionSettings(
+            entity.isActive(),
+            Optional.ofNullable(entity.getEnabledTimestamp())
         );
     }
 }
