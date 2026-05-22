@@ -54,7 +54,7 @@
     flex-direction: column-reverse;
 
     > *:not(label) {
-      flex: 1 0 0;
+      flex-grow: 1;
     }
 
     input::-webkit-date-and-time-value {
