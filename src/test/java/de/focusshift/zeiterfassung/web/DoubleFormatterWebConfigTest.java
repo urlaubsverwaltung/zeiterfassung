@@ -11,10 +11,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class WebConfigurationTest {
+class DoubleFormatterWebConfigTest {
 
     @InjectMocks
-    private WebConfiguration sut;
+    private DoubleFormatterWebConfig sut;
 
     @Mock
     private DoubleFormatter doubleFormatter;

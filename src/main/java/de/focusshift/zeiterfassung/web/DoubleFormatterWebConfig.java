@@ -5,11 +5,11 @@ import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-class WebConfiguration implements WebMvcConfigurer {
+class DoubleFormatterWebConfig implements WebMvcConfigurer {
 
     private final DoubleFormatter doubleFormatter;
 
-    WebConfiguration(DoubleFormatter doubleFormatter) {
+    DoubleFormatterWebConfig(DoubleFormatter doubleFormatter) {
         this.doubleFormatter = doubleFormatter;
     }
 
