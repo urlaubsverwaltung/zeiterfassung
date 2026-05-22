@@ -1,60 +1,64 @@
 # Handoff: Automatischer Pausenabzug (Issue #94)
 
 **Datum:** 2026-05-23  
-**Branch:** `94-automatic-break-deduction`  
-**Repo:** `/Users/honnel/dev/zeiterfassung`
+**Branch:** `94-automatic-break-deduction`
 
 ---
 
-## Was in dieser Session passiert ist
+## Aktueller Stand
 
-Alle Planungsartefakte für Issue #94 wurden erstellt. Es gibt **keine Implementierung** auf dem Branch – nur Dokumentation:
+### Abgeschlossen
 
-| Artefakt | Pfad |
+| Issue | Was | Commit |
+|---|---|---|
+| 01 | `StatutoryBreakRule` – ArbZG §4 Staffellogik + Tests | `5b8b65ed` |
+| 02 (30%) | `AutomaticBreakDeductionSettings` – Record, Entity, Repository, Service, Liquibase-Migration | `c61f4755` |
+
+### Issue 02 – Offen (~70%)
+
+Noch fehlend für `docs/issues/02-automatic-break-deduction-settings.md`:
+
+1. **`SettingsDto`** – zwei neue Felder: `Boolean automaticBreakDeductionIsActive`, `LocalDate automaticBreakDeductionActiveDate`
+2. **`SettingsController`** – GET: Settings ins Model laden; POST: `updateAutomaticBreakDeductionSettings()` aufrufen
+3. **Validierung** – Aktivierungsdatum darf nicht in der Vergangenheit liegen (serverseitige Bean Validation oder manuelle Prüfung im Controller, analog zu `subtractBreakFromTimeEntryActiveDate`)
+4. **View** (`settings/settings.html`) – Toggle + Datumsfeld + BetrVG §87-Hinweis
+5. **Controller-Tests** – TDD-Zyklen 6–8 (GET mit Settings im Model, POST speichert, POST mit Datum in Vergangenheit schlägt fehl)
+
+---
+
+## Nächste Schritte (TDD-Zyklen 6–8)
+
+**Behavior 6 – Controller GET:** `AutomaticBreakDeductionSettings` erscheint im Model  
+**Behavior 7 – Controller POST:** Settings werden korrekt gespeichert  
+**Behavior 8 – Controller POST:** Validierungsfehler bei Datum in der Vergangenheit
+
+Danach: Issue 03 (`BreakViolationChecker`) – ist unabhängig und reine Logik, ideal für TDD.
+
+---
+
+## Wichtige Referenzen
+
+| Was | Wo |
 |---|---|
-| Ubiquitous Language | `CONTEXT.md` (inkl. `StatutoryBreakRule`-Mapping) |
 | PRD | `docs/prd-94-automatischer-pausenabzug.md` |
-| Issues (8 Slices) | `docs/issues/01-statutory-break-rule.md` bis `08-csv-export-breaking-change.md` |
-
----
-
-## Nächste Schritte: Implementierung
-
-Die Issues sind priorisiert und mit Abhängigkeiten versehen. Empfohlener Einstieg:
-
-**Parallel startbar (keine Blocker):**
-- `docs/issues/01-statutory-break-rule.md` – `StatutoryBreakRule` (reine Funktion, ideal für TDD)
-- `docs/issues/02-automatic-break-deduction-settings.md` – Mandantenkonfiguration + Settings-UI
-
-**Danach (jeweils abhängig):**
-- Issue 03 (BreakViolationChecker) ← blocked by 01
-- Issue 05 (MandatoryBreakDeductionCalculator) ← blocked by 01 + 02
-- Issues 04, 06, 07, 08 folgen darauf
-
-Vollständige Abhängigkeitsgrafik steht im PRD und in den einzelnen Issue-Dateien.
-
----
-
-## Wichtige Entscheidungen dieser Session
-
-- `PflichtpauseRule` heißt im Code **`StatutoryBreakRule`** (CONTEXT.md und alle Issues aktualisiert)
-- `WorkDurationCalculator`-Strategy-Pattern bleibt erhalten; neuer `MandatoryBreakDeductionCalculator` ist eine weitere Implementierung
-- Überstunden-Berechnung braucht **keine eigene Anpassung** – korrekte Netto-Arbeitszeit kommt implizit vom Calculator
-- CSV-Export ist ein **Breaking Change** (`workedHours` → `grossWorkingHours`)
-- BetrVG §87-Hinweis ist Pflicht im Settings-UI
+| Issue 02 | `docs/issues/02-automatic-break-deduction-settings.md` |
+| Vorlage Controller | `SettingsController.java` – `SubtractBreakFromTimeEntry`-Abschnitt |
+| Vorlage View | `settings/settings.html` – `subtractBreakFromTimeEntry`-Block |
+| Vorlage Controller-Tests | `SettingsControllerTest.java` |
+| Neue Service-Methode | `SettingsService.updateAutomaticBreakDeductionSettings(boolean, Instant)` |
 
 ---
 
 ## Suggested Skills
 
-- **`/tdd`** – Ideal für `StatutoryBreakRule` und `BreakViolationChecker` (reine Funktionen mit klaren Eingabe-/Ausgabe-Erwartungen)
-- **`/grill-with-docs`** – Falls beim Implementieren Unklarheiten entstehen, CONTEXT.md und PRD als Anker nutzen
-- **`/simplify`** – Nach der Implementierung eines Slices, um den Code zu reviewen
+- **`/tdd`** – Weiter mit Behaviors 6–8 (Controller-Tests), danach Issue 03
+- **`/simplify`** – Nach Abschluss von Issue 02 den Controller-Code reviewen
 
 ---
 
 ## Kontext für den nächsten Agenten
 
 - Kommunikationssprache: **Deutsch**
-- Codestruktur bereits erkundet: Strategy-Pattern mit `WorkDurationCalculator`, `SubtractBreakFromTimeEntrySettings` als Analogie für neue Settings, `TimeEntryDayServiceImpl` als Orchestrierungspunkt
-- Vor Implementierungsbeginn: Issue-Datei des gewählten Slices lesen, dann direkt starten
+- Handoff-Dokumente ins Repo-Root, nicht ins Temp-Verzeichnis
+- Das `SettingsController`-Pattern (GET/POST mit SettingsDto) ist gut etabliert – neue Settings analog zum `subtractBreakFromTimeEntry`-Block einbauen
+- BetrVG §87-Hinweis muss **prominent** sein (nicht nur Tooltip) – das ist eine explizite Anforderung aus Issue 02
