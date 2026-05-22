@@ -1,0 +1,56 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <changeSet author="honnel" id="automatic-break-deduction-settings">
+    <preConditions>
+      <not>
+        <tableExists tableName="settings_automatic_break_deduction"/>
+      </not>
+    </preConditions>
+
+    <createSequence sequenceName="settings_automatic_break_deduction_seq" incrementBy="1"/>
+
+    <createTable tableName="settings_automatic_break_deduction">
+      <column name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_AUTOMATIC_BREAK_DEDUCTION"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="enabled" type="BOOLEAN" defaultValue="false">
+        <constraints nullable="false"/>
+      </column>
+      <column name="enabled_timestamp" type="TIMESTAMP WITH TIME ZONE">
+        <constraints nullable="true"/>
+      </column>
+    </createTable>
+
+    <createIndex tableName="settings_automatic_break_deduction"
+                 indexName="IDX_AUTOMATIC_BREAK_DEDUCTION_TENANT_ID">
+      <column name="tenant_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="honnel" id="enable-row-level-security-on-settings_automatic_break_deduction">
+    <sql dbms="postgresql">
+      ALTER TABLE settings_automatic_break_deduction ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS settings_automatic_break_deduction_tenant_isolation_policy ON settings_automatic_break_deduction;
+      CREATE POLICY settings_automatic_break_deduction_tenant_isolation_policy ON settings_automatic_break_deduction
+        USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+    </sql>
+  </changeSet>
+
+  <changeSet author="honnel" id="insert-automatic-break-deduction-settings-for-tenants">
+    <sql>
+      INSERT INTO settings_automatic_break_deduction (id, tenant_id, enabled, enabled_timestamp)
+      SELECT nextval('settings_automatic_break_deduction_seq'),
+             tenant.tenant_id,
+             false,
+             NULL
+      FROM tenant;
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

@@ -46,4 +46,5 @@
   <include relativeToChangelogFile="true" file="changelog-3.2.0-relax-oidc-client-tenant-fk.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.3.0-delete-user-cascade.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.7.0-replace-alderney-with-guernsey.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-3.8.0-automatic-break-deduction-settings.xml"/>
 </databaseChangeLog>
