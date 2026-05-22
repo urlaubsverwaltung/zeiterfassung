@@ -34,6 +34,11 @@ class UserSettingsService {
         return userSettingsRepository.findByTenantUserLocalId(localId).map(UserSettingsEntity::getTheme);
     }
 
+    Optional<Locale> getLocale(UserIdComposite userIdComposite) {
+        final Long localId = userIdComposite.localId().value();
+        return userSettingsRepository.findByTenantUserLocalId(localId).map(UserSettingsEntity::getLocale);
+    }
+
     UserSettings getUserSettings(UserIdComposite userIdComposite) {
         final UserSettingsEntity entity = findOrGetDefault(userIdComposite);
         return toUserSettings(entity);
@@ -64,6 +69,30 @@ class UserSettingsService {
         setLocale(persistedEntity.getLocale());
 
         return toUserSettings(persistedEntity);
+    }
+
+    /**
+     * Sets the browser specific locale from the request.
+     * <p>
+     * Only saves the browser specific locale if the saved 'locale' is null.
+     * If the saved 'locale' is null, that means, that the localization is based on the browser,
+     * and therefore we save it to use it in e-mail templates e.g.
+     *
+     * @param userIdComposite       to save the browser specific locale
+     * @param localeBrowserSpecific browser specific locale
+     */
+    void updateLocaleBrowserSpecific(UserIdComposite userIdComposite, Locale localeBrowserSpecific) {
+        userSettingsRepository.findByTenantUserLocalId(userIdComposite.localId().value())
+            .ifPresentOrElse(userSettingsEntity -> {
+                if (userSettingsEntity.getLocale() == null) {
+                    userSettingsEntity.setLocaleBrowserSpecific(localeBrowserSpecific);
+                    userSettingsRepository.save(userSettingsEntity);
+                }
+            }, () -> {
+                final UserSettingsEntity defaultUserSettingsEntity = defaultUserSettingsEntity(userIdComposite);
+                defaultUserSettingsEntity.setLocaleBrowserSpecific(localeBrowserSpecific);
+                userSettingsRepository.save(defaultUserSettingsEntity);
+            });
     }
 
     private UserSettingsEntity findOrGetDefault(UserIdComposite userIdComposite) {

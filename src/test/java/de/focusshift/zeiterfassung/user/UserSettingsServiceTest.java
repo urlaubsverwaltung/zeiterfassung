@@ -20,6 +20,7 @@ import static de.focusshift.zeiterfassung.user.Theme.LIGHT;
 import static java.util.Locale.ENGLISH;
 import static java.util.Locale.GERMAN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -228,6 +229,111 @@ class UserSettingsServiceTest {
         }
     }
 
+    @Nested
+    class GetLocale {
+
+        @Test
+        void ensureGetLocaleReturnsEmptyOptionalWhenUserIdIsUnknown() {
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final Long localId = userIdComposite.localId().value();
+
+            when(userSettingsRepository.findByTenantUserLocalId(localId)).thenReturn(Optional.empty());
+
+            final Optional<java.util.Locale> actual = sut.getLocale(userIdComposite);
+            assertThat(actual).isEmpty();
+        }
+
+        @Test
+        void ensureGetLocaleReturnsEmptyOptionalWhenLocaleIsNull() {
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final Long localId = userIdComposite.localId().value();
+
+            final UserSettingsEntity entity = new UserSettingsEntity();
+            entity.setLocale(null);
+
+            when(userSettingsRepository.findByTenantUserLocalId(localId)).thenReturn(Optional.of(entity));
+
+            final Optional<java.util.Locale> actual = sut.getLocale(userIdComposite);
+            assertThat(actual).isEmpty();
+        }
+
+        @Test
+        void ensureGetLocaleReturnsLocale() {
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final Long localId = userIdComposite.localId().value();
+
+            final UserSettingsEntity entity = new UserSettingsEntity();
+            entity.setLocale(GERMAN);
+
+            when(userSettingsRepository.findByTenantUserLocalId(localId)).thenReturn(Optional.of(entity));
+
+            final Optional<java.util.Locale> actual = sut.getLocale(userIdComposite);
+            assertThat(actual).hasValue(GERMAN);
+        }
+    }
+
+    @Nested
+    class UpdateLocaleBrowserSpecific {
+
+        @Test
+        void ensureUpdateLocaleBrowserSpecificWhenLocaleIsNull() {
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final Long localId = userIdComposite.localId().value();
+
+            final UserSettingsEntity entity = new UserSettingsEntity();
+            entity.setTenantUserLocalId(localId);
+            entity.setLocale(null);
+            entity.setLocaleBrowserSpecific(null);
+
+            when(userSettingsRepository.findByTenantUserLocalId(localId)).thenReturn(Optional.of(entity));
+            when(userSettingsRepository.save(entity)).thenReturn(entity);
+
+            sut.updateLocaleBrowserSpecific(userIdComposite, GERMAN);
+
+            final ArgumentCaptor<UserSettingsEntity> entityArgumentCaptor = ArgumentCaptor.forClass(UserSettingsEntity.class);
+            verify(userSettingsRepository).save(entityArgumentCaptor.capture());
+            assertThat(entityArgumentCaptor.getValue())
+                .satisfies(userSettingsEntity -> {
+                    assertThat(userSettingsEntity.getLocaleBrowserSpecific()).isEqualTo(GERMAN);
+                });
+        }
+
+        @Test
+        void ensureUpdateLocaleBrowserSpecificDoesNotSaveWhenLocaleIsNotNull() {
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final Long localId = userIdComposite.localId().value();
+
+            final UserSettingsEntity entity = new UserSettingsEntity();
+            entity.setTenantUserLocalId(localId);
+            entity.setLocale(ENGLISH);
+            entity.setLocaleBrowserSpecific(null);
+
+            when(userSettingsRepository.findByTenantUserLocalId(localId)).thenReturn(Optional.of(entity));
+
+            sut.updateLocaleBrowserSpecific(userIdComposite, GERMAN);
+
+            verify(userSettingsRepository, never()).save(entity);
+        }
+
+        @Test
+        void ensureUpdateLocaleBrowserSpecificCreatesDefaultWhenNotFound() {
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final Long localId = userIdComposite.localId().value();
+
+            when(userSettingsRepository.findByTenantUserLocalId(localId)).thenReturn(Optional.empty());
+
+            sut.updateLocaleBrowserSpecific(userIdComposite, GERMAN);
+
+            final ArgumentCaptor<UserSettingsEntity> entityArgumentCaptor = ArgumentCaptor.forClass(UserSettingsEntity.class);
+            verify(userSettingsRepository).save(entityArgumentCaptor.capture());
+            assertThat(entityArgumentCaptor.getValue())
+                .satisfies(userSettingsEntity -> {
+                    assertThat(userSettingsEntity.getTheme()).isEqualTo(Theme.SYSTEM);
+                    assertThat(userSettingsEntity.getTenantUserLocalId()).isEqualTo(localId);
+                    assertThat(userSettingsEntity.getLocaleBrowserSpecific()).isEqualTo(GERMAN);
+                });
+        }
+    }
 
     private static UserIdComposite anyUserIdComposite() {
         return anyUserIdComposite(new UserId("uuid"));
