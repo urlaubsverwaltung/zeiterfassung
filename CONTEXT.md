@@ -21,8 +21,8 @@ Die Brutto-Arbeitszeit abzüglich des automatisch abgezogenen Anteils der Pflich
 
 Formel: `Netto-Arbeitszeit = Brutto-Arbeitszeit − max(0, Pflichtpause − erfasste Pausenzeit)`
 
-### Pflichtpause
-Die gesetzlich vorgeschriebene Mindestpause gemäß ArbZG §4, abhängig von der Brutto-Arbeitszeit:
+### Pflichtpause (`StatutoryBreakRule`)
+Die gesetzlich vorgeschriebene Mindestpause gemäß ArbZG §4, abhängig von der Brutto-Arbeitszeit. Im Code als `StatutoryBreakRule` implementiert:
 
 | Brutto-Arbeitszeit | Pflichtpause |
 |--------------------|--------------|
