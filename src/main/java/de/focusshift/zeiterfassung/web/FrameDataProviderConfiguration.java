@@ -9,12 +9,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 class FrameDataProviderConfiguration {
 
     @Bean
-    FrameDataProvider headerScriptControllerAdvice(MenuProperties menuProperties) {
+    FrameDataProvider frameDataProvider(MenuProperties menuProperties) {
         return new FrameDataProvider(menuProperties);
     }
 
     @Bean
-    WebMvcConfigurer headerScriptWebMvcConfigurer(FrameDataProvider frameDataProvider) {
+    WebMvcConfigurer frameDataProviderWebMvcConfigurer(FrameDataProvider frameDataProvider) {
         return new FrameDataProviderWebMvcConfigurer(frameDataProvider);
     }
 
