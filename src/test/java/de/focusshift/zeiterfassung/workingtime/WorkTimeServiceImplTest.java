@@ -503,6 +503,78 @@ class WorkTimeServiceImplTest {
         }
 
         @Test
+        void ensureGetWorkingTimeByUsersWithWorkingTimeEndingOnSameDayAsDateRangeReturningWorkingTime() {
+
+            final UUID workingTimeId1 = UUID.randomUUID();
+            final WorkingTimeEntity workingTimeEntity1 = anyWorkingTimeEntity(workingTimeId1, 1L, null);
+            workingTimeEntity1.setFederalState(FederalState.NONE);
+            workingTimeEntity1.setWorksOnPublicHoliday(false);
+            workingTimeEntity1.setMonday("PT1H");
+            workingTimeEntity1.setTuesday("PT2H");
+            workingTimeEntity1.setWednesday("PT3H");
+            workingTimeEntity1.setThursday("PT4H");
+            workingTimeEntity1.setFriday("PT5H");
+            workingTimeEntity1.setSaturday("PT6H");
+            workingTimeEntity1.setSunday("PT7H");
+
+            final UUID workingTimeId2 = UUID.randomUUID();
+            final WorkingTimeEntity workingTimeEntity2 = anyWorkingTimeEntity(workingTimeId2, 2L, null);
+
+            final UUID workingTimeId3 = UUID.randomUUID();
+            final WorkingTimeEntity workingTimeEntity3 = anyWorkingTimeEntity(workingTimeId3, 2L, LocalDate.parse("2026-01-01"));
+            workingTimeEntity3.setFederalState(GERMANY_BADEN_WUERTTEMBERG);
+            workingTimeEntity3.setWorksOnPublicHoliday(true);
+            workingTimeEntity3.setMonday("PT7H");
+            workingTimeEntity3.setTuesday("PT6H");
+            workingTimeEntity3.setWednesday("PT5H");
+            workingTimeEntity3.setThursday("PT4H");
+            workingTimeEntity3.setFriday("PT3H");
+            workingTimeEntity3.setSaturday("PT2H");
+            workingTimeEntity3.setSunday("PT1H");
+
+            final UUID workingTimeId4 = UUID.randomUUID();
+            final WorkingTimeEntity workingTimeEntity4 = anyWorkingTimeEntity(workingTimeId4, 2L, LocalDate.parse("2026-05-01"));
+            workingTimeEntity4.setFederalState(GERMANY_BADEN_WUERTTEMBERG);
+            workingTimeEntity4.setWorksOnPublicHoliday(true);
+            workingTimeEntity4.setMonday("PT7H");
+            workingTimeEntity4.setTuesday("PT6H");
+            workingTimeEntity4.setWednesday("PT5H");
+            workingTimeEntity4.setThursday("PT4H");
+            workingTimeEntity4.setFriday("PT3H");
+            workingTimeEntity4.setSaturday("PT2H");
+            workingTimeEntity4.setSunday("PT1H");
+
+            when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L, 2L))).thenReturn(List.of(workingTimeEntity1, workingTimeEntity2, workingTimeEntity3, workingTimeEntity4));
+
+            final UserId userId_1 = new UserId("uuid-1");
+            final UserLocalId userLocalId_1 = new UserLocalId(1L);
+            final UserIdComposite userIdComposite_1 = new UserIdComposite(userId_1, userLocalId_1);
+            final User user_1 = new User(userIdComposite_1, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+            final UserId userId_2 = new UserId("uuid-2");
+            final UserLocalId userLocalId_2 = new UserLocalId(2L);
+            final UserIdComposite userIdComposite_2 = new UserIdComposite(userId_2, userLocalId_2);
+            final User user_2 = new User(userIdComposite_2, "Clark", "Kent", new EMailAddress(""), Set.of());
+
+            when(userManagementService.findAllUsersByLocalIds(List.of(userLocalId_1, userLocalId_2)))
+                .thenReturn(List.of(user_1, user_2));
+
+            final LocalDate date = LocalDate.parse("2026-04-30");
+            final Map<UserIdComposite, List<WorkingTime>> actual = sut.getWorkingTimesByUsers(date, date, List.of(new UserLocalId(1L), new UserLocalId(2L)));
+
+            assertThat(actual)
+                .hasEntrySatisfying(userIdComposite_2, workingTimes -> {
+                    assertThat(workingTimes).hasSize(1);
+                    assertThat(workingTimes.getFirst()).satisfies(workingTime -> {
+                        assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_2);
+                        assertThat(workingTime.id()).isEqualTo(new WorkingTimeId(workingTimeId3));
+                        assertThat(workingTime.validFrom()).hasValue(LocalDate.parse("2026-01-01"));
+                        assertThat(workingTime.validTo()).hasValue(LocalDate.parse("2026-04-30"));
+                    });
+                });
+        }
+
+        @Test
         void ensureGetWorkingTimeByUsersAddsDefaultWorkingTimeForUsersWithoutExplicitOne() {
 
             when(workingTimeRepository.findAllByUserIdIsIn(List.of(1L))).thenReturn(List.of());
