@@ -69,8 +69,6 @@ class TimeClockUIIT {
         final LoginPage loginPage = new LoginPage(page, port);
         final TimeClockPage timeClockPage = new TimeClockPage(page);
 
-        final LocalDateTime now = LocalDateTime.now(clock.withZone(USER_ZONE_ID));
-
         loginPage.login(OFFICE);
 
         timeClockPage.ensureTimeClockNotRunning();
@@ -79,6 +77,8 @@ class TimeClockUIIT {
         timeClockPage.ensureTimeClockRunning();
 
         timeClockPage.openEditForm();
+
+        final LocalDateTime now = LocalDateTime.now(clock.withZone(USER_ZONE_ID));
         timeClockPage.hasDate(now.toLocalDate());
         timeClockPage.hasTime(now.toLocalTime());
 

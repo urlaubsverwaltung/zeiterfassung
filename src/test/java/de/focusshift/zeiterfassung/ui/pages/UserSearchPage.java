@@ -25,8 +25,7 @@ public class UserSearchPage {
 
         userSearchLocator().fill(query);
 
-        // wait for rerendered suggestions otherwise an old link outside the DOM could be tried to be clicked.
-        assertThat(userSuggestionsLocator()).isVisible();
+        assertThat(userSuggestionsLocator().first()).isVisible();
     }
 
     public void selectSuggestion(String name) {
