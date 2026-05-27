@@ -4,6 +4,8 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static com.microsoft.playwright.options.LoadState.DOMCONTENTLOADED;
+import static com.microsoft.playwright.options.LoadState.NETWORKIDLE;
 
 public class UserSearchPage {
 
@@ -24,6 +26,9 @@ public class UserSearchPage {
         assertThat(userSuggestionsLocator()).isVisible();
 
         userSearchLocator().fill(query);
+
+        page.waitForLoadState(NETWORKIDLE);
+        page.waitForLoadState(DOMCONTENTLOADED);
 
         assertThat(userSuggestionsLocator().first()).isVisible();
     }
