@@ -197,10 +197,10 @@ class WorkTimeServiceImpl implements WorkingTimeService {
                 final LocalDate validFrom = workingTime.validFrom().get();
                 return validFrom.isBefore(toExclusive);
             } else {
-                // not the very first working-time
+                // not the very first working-time and not the most recent working-time entry
                 final LocalDate validFrom = workingTime.validFrom().get();
                 final LocalDate validTo = workingTime.validTo().get();
-                return validFrom.isBefore(toExclusive) && validTo.isAfter(from);
+                return validFrom.isBefore(toExclusive) && (validTo.isEqual(from) || validTo.isAfter(from));
             }
         };
     }
