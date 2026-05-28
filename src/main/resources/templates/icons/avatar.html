@@ -16,8 +16,7 @@
       focusable="false"
       preserveAspectRatio="xMidYMid meet"
       th:classappend="${className}"
-      alt=""
-      th:alt="${tooltip ? tooltipText : null}"
+      th:aria-label="${tooltipText}"
     >
       <circle
         cx="32"
