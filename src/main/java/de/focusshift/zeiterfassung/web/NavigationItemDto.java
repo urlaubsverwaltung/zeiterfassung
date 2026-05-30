@@ -2,8 +2,10 @@ package de.focusshift.zeiterfassung.web;
 
 import de.focusshift.zeiterfassung.web.html.AriaCurrent;
 
+import java.util.List;
 import java.util.Objects;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNullElse;
 
 class NavigationItemDto {
@@ -11,25 +13,41 @@ class NavigationItemDto {
     private final String id;
     private final String href;
     private final String messageKey;
+    private final String iconName;
     private final String dataTestId;
     private final boolean active;
     private final AriaCurrent ariaCurrent;
+    private final List<NavigationItemDto> subItems;
 
     NavigationItemDto(String id, String href, String messageKey) {
         this(id, href, messageKey, false, null);
     }
 
-    NavigationItemDto(String id, String href, String messageKey, boolean active,  AriaCurrent ariaCurrent) {
+    NavigationItemDto(String id, String href, String messageKey, boolean active, AriaCurrent ariaCurrent) {
         this(id, href, messageKey, active, ariaCurrent, null);
     }
 
     NavigationItemDto(String id, String href, String messageKey, boolean active, AriaCurrent ariaCurrent, String dataTestId) {
+        this(id, href, messageKey, null, active, ariaCurrent, dataTestId, emptyList());
+    }
+
+    NavigationItemDto(String id, String href, String messageKey, String iconName, boolean active, AriaCurrent ariaCurrent, String dataTestId) {
+        this(id, href, messageKey, iconName, active, ariaCurrent, dataTestId, emptyList());
+    }
+
+    NavigationItemDto(String id, String href, String messageKey, String iconName, boolean active, AriaCurrent ariaCurrent, String dataTestId, List<NavigationItemDto> subItems) {
         this.id = id;
         this.href = href;
         this.messageKey = messageKey;
+        this.iconName = iconName;
         this.active = active;
         this.ariaCurrent = requireNonNullElse(ariaCurrent, AriaCurrent.FALSE);
         this.dataTestId = dataTestId;
+        this.subItems = requireNonNullElse(subItems, emptyList());
+    }
+
+    NavigationItemDto withSubItems(List<NavigationItemDto> subItems) {
+        return new NavigationItemDto(id, href, messageKey, iconName, active, ariaCurrent, dataTestId, subItems);
     }
 
     public String getId() {
@@ -44,6 +62,10 @@ class NavigationItemDto {
         return messageKey;
     }
 
+    public String getIconName() {
+        return iconName;
+    }
+
     public boolean isActive() {
         return active;
     }
@@ -54,6 +76,10 @@ class NavigationItemDto {
 
     public String getDataTestId() {
         return dataTestId;
+    }
+
+    public List<NavigationItemDto> getSubItems() {
+        return subItems;
     }
 
     @Override
@@ -68,14 +94,16 @@ class NavigationItemDto {
         return id.equals(that.id)
             && href.equals(that.href)
             && messageKey.equals(that.messageKey)
+            && Objects.equals(iconName, that.iconName)
             && Objects.equals(active, that.active)
             && Objects.equals(ariaCurrent, that.ariaCurrent)
-            && Objects.equals(dataTestId, that.dataTestId);
+            && Objects.equals(dataTestId, that.dataTestId)
+            && Objects.equals(subItems, that.subItems);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, href, messageKey, active, ariaCurrent, dataTestId);
+        return Objects.hash(id, href, messageKey, iconName, active, ariaCurrent, dataTestId, subItems);
     }
 
     @Override
@@ -84,9 +112,11 @@ class NavigationItemDto {
             "id='" + id + '\'' +
             ", href='" + href + '\'' +
             ", messageKey='" + messageKey + '\'' +
+            ", iconName='" + iconName + '\'' +
             ", active='" + active + '\'' +
             ", ariaCurrent='" + ariaCurrent + '\'' +
             ", dataTestId='" + dataTestId + '\'' +
+            ", subItems=" + subItems +
             '}';
     }
 }
