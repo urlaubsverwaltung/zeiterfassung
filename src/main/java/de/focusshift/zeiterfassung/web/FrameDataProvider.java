@@ -72,19 +72,21 @@ class FrameDataProvider extends DataProviderInterceptor {
         final boolean settingsActive = url.startsWith(settings);
         final AriaCurrent settingsCurrent = settingsActive ? AriaCurrent.PAGE : AriaCurrent.FALSE;
 
-        final List<NavigationItemDto> items = new ArrayList<>();
-        items.add(new NavigationItemDto("main-navigation-link-timeentries", timeentries, "navigation.main.timetrack", timeentriesActive, timeentriesCurrent, "navigation-link-timeentries"));
-        items.add(new NavigationItemDto("main-navigation-link-reports", report, "navigation.main.reports", reportActive, reportCurrent, "navigation-link-reports"));
+        final List<NavigationItemDto> basic = new ArrayList<>();
+        basic.add(new NavigationItemDto("main-navigation-link-timeentries", timeentries, "navigation.main.timetrack", "clock", timeentriesActive, timeentriesCurrent, "navigation-link-timeentries"));
+        basic.add(new NavigationItemDto("main-navigation-link-reports", report, "navigation.main.reports", "chart-pie", reportActive, reportCurrent, "navigation-link-reports"));
 
+        final List<NavigationItemDto> company = new ArrayList<>();
         if (currentUser.hasAnyRole(ZEITERFASSUNG_WORKING_TIME_EDIT_ALL, ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL, ZEITERFASSUNG_PERMISSIONS_EDIT_ALL)) {
-            items.add(new NavigationItemDto("main-navigation-link-users", users, "navigation.main.users", usersActive, usersCurrent, "navigation-link-users"));
+            company.add(new NavigationItemDto("main-navigation-link-users", users, "navigation.main.users", "users", usersActive, usersCurrent, "navigation-link-users"));
         }
 
+        final List<NavigationItemDto> settingsGroup = new ArrayList<>();
         if (currentUser.hasAnyRole(ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL, ZEITERFASSUNG_SETTINGS_GLOBAL)) {
-            items.add(new NavigationItemDto("main-navigation-link-settings", settings, "navigation.main.settings", settingsActive, settingsCurrent, "navigation-link-settings"));
+            settingsGroup.add(new NavigationItemDto("main-navigation-link-settings", settings, "navigation.main.settings", "sliders", settingsActive, settingsCurrent, "navigation-link-settings"));
         }
 
-        return new NavigationDto(items);
+        return new NavigationDto(List.of(), basic, company, settingsGroup);
     }
 
     private static SignedInUserDto oidcUserToSignedInUserDto(@NonNull CurrentOidcUser user) {

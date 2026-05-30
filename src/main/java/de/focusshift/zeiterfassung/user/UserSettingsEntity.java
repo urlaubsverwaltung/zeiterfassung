@@ -33,6 +33,9 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
     @Column(name = "locale_browser_specific")
     private Locale localeBrowserSpecific;
 
+    @Column(name = "navigation_collapsed", nullable = false)
+    private boolean navigationCollapsed;
+
     protected UserSettingsEntity() {
         super(null);
     }
@@ -77,11 +80,20 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
         this.localeBrowserSpecific = localeBrowserSpecific;
     }
 
+    public boolean isNavigationCollapsed() {
+        return navigationCollapsed;
+    }
+
+    public void setNavigationCollapsed(boolean navigationCollapsed) {
+        this.navigationCollapsed = navigationCollapsed;
+    }
+
     @Override
     public String toString() {
         return "UserSettingsEntity{" +
             "tenantUserLocalId=" + tenantUserLocalId +
             ", theme=" + theme +
+            ", navigationCollapsed=" + navigationCollapsed +
             ", locale=" + locale +
             ", localeBrowserSpecific=" + localeBrowserSpecific +
             '}';

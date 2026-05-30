@@ -1,24 +1,21 @@
 .navigation-container {
-  --navigation-bg-color: var(--color-white);
-
-  @variant dark {
-    --navigation-bg-color: var(--color-zinc-950);
-  }
-
   grid-area: navigation;
-  anchor-name: --navigation-container-anchor;
 
   .navigation-button {
     padding: --spacing(4);
   }
 
   .navigation {
-    background-color: var(--navigation-bg-color);
+    background-color: var(--color-white);
     width: 100dvw;
 
     /* prevent body scrolling with overscroll behaviour and full height */
     overscroll-behavior: none;
     height: calc(100dvh - anchor-size(height) - var(--info-banner-height));
+
+    @variant dark {
+      background-color: var(--color-zinc-950);
+    }
 
     .navigation-inner {
       padding: --spacing(8);
@@ -27,16 +24,20 @@
 
       display: flex;
       flex-direction: column;
-      gap: --spacing(8);
+      gap: --spacing(1);
 
       .navigation-inner__bottom {
         margin-top: auto;
-        background-color: var(--navigation-bg-color);
+        background: white;
         padding: --spacing(2) 0;
         border-top: 1px solid transparent;
         transition: border-color 150ms;
 
-        &.z-sticky--stuck {
+        @variant dark {
+          background-color: var(--color-zinc-950);
+        }
+
+        &.uv-sticky--stuck {
           border-top-color: var(--color-gray-100);
 
           @variant dark {
@@ -49,49 +50,119 @@
     ul {
       display: flex;
       flex-direction: column;
-      gap: calc(--spacing(1) / 2);
+      gap: --spacing(1);
+    }
+
+    .subnav-group {
+      margin-top: --spacing(1);
+      gap: --spacing(3);
+    }
+
+    .navigation-link,
+    .navigation-sublink {
+      display: block;
+      color: inherit;
+      text-decoration: none;
     }
 
     .navigation-link {
-      --navigation-link-color: inherit;
-      --navigation-link-bg-color: inherit;
-      --navigation-link-hover-color: inherit;
-      --navigation-link-hover-bg-color: var(--color-blue-50);
-
-      @variant dark {
-        --navigation-link-color: var(--color-zinc-200);
-        --navigation-link-bg-color: inerit;
-        --navigation-link-hover-color: var(--color-zinc-100);
-        --navigation-link-hover-bg-color: var(--color-zinc-800);
-      }
-
-      display: block;
-      text-decoration: none;
       padding: --spacing(2);
-      border-radius: var(--radius);
-      color: var(--navigation-link-color);
-      background-color: var(--navigation-link-bg-color);
+      @apply rounded;
+      background-color: transparent;
 
       --duration: 150ms;
       transition:
         color var(--duration),
         background-color var(--duration);
 
+      &:is(button) {
+        appearance: none;
+        border: none;
+        font: inherit;
+        cursor: pointer;
+        text-align: start;
+        width: 100%;
+      }
+
       &:hover {
-        color: var(--navigation-link-hover-color);
-        background-color: var(--navigation-link-hover-bg-color);
+        background-color: var(--color-blue-50);
+      }
+
+      @variant dark {
+        color: var(--color-zinc-200);
+
+        &:hover {
+          color: var(--color-zinc-100);
+          background-color: var(--color-zinc-800);
+        }
+      }
+    }
+
+    .navigation-sublink {
+      --dot-size: 0.5rem;
+      --dot-color: var(--color-blue-300);
+      --color: var(--color-gray-900);
+
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: --spacing(2);
+
+      margin-left: --spacing(4);
+      /* two times dot-size because of loading spinner */
+      padding-left: calc(var(--dot-size) * 2 + --spacing(1));
+      padding-right: --spacing(1);
+
+      color: var(--color);
+
+      /* dot (+ ::after as spinner) */
+      &::before {
+        --duration: 300ms;
+        transition:
+          background-color var(--duration),
+          border-color var(--duration);
+
+        position: absolute;
+        top: calc(50% - (var(--dot-size) / 2));
+        left: calc(var(--dot-size) / 2);
+
+        content: "";
+        display: block;
+        width: var(--dot-size);
+        aspect-ratio: 1;
+        border-radius: 9999px;
+        border: 1px solid var(--dot-color);
+        background-color: transparent;
+      }
+
+      &:hover,
+      &.navigation-sublink--active {
+        &::before {
+          background-color: var(--dot-color);
+        }
+      }
+
+      @variant dark {
+        --dot-color: var(--color-sky-600);
+        --color: var(--color-zinc-300);
       }
     }
 
     .navigation-link--active {
-      --navigation-link-bg-color: var(--color-blue-50);
-      --navigation-link-hover-bg-color: var(--color-blue-100);
+      background-color: var(--color-blue-50);
+
+      &:hover {
+        background-color: var(--color-blue-100);
+      }
 
       @variant dark {
-        --navigation-link-color: var(--color-zinc-300);
-        --navigation-link-bg-color: var(--color-zinc-800);
-        --navigation-link-hover-color: var(--color-zinc-50);
-        --navigation-link-hover-bg-color: var(--color-zinc-700);
+        color: var(--color-zinc-100);
+        background-color: var(--color-zinc-800);
+
+        &:hover {
+          color: var(--color-zinc-50);
+          background-color: var(--color-zinc-700);
+        }
       }
     }
 
@@ -115,11 +186,51 @@
         --to: var(--color-zinc-800);
       }
     }
+
+    .navigation-sublink--loading {
+      /* spinner */
+      &::after {
+        --gradient-shift: calc((var(--dot-size) / 2) - 1px);
+
+        content: "";
+        position: absolute;
+        top: calc(50% - var(--dot-size));
+        left: 0;
+
+        display: block;
+        width: calc(var(--dot-size) * 2);
+        aspect-ratio: 1;
+        border-radius: 9999px;
+        background:
+          radial-gradient(farthest-side, var(--dot-color) 94%, #0000)
+            top/var(--gradient-shift) var(--gradient-shift) no-repeat,
+          conic-gradient(#0000 30%, var(--dot-color));
+        -webkit-mask: radial-gradient(
+          farthest-side,
+          #0000 calc(100% - var(--gradient-shift)),
+          #000 0
+        );
+        animation: rotate-loading 1s infinite linear;
+      }
+    }
+  }
+
+  .nav-group-label {
+    display: block;
+    margin-bottom: --spacing(2);
+    @apply font-mono;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-gray-400);
+
+    @variant dark {
+      color: var(--color-zinc-500);
+    }
   }
 }
 
 .nav-popover-menu-container {
-  border-radius: var(--radius-2xl);
+  @apply rounded-2xl;
 
   .navigation-popover-menu-header {
     padding: --spacing(2) --spacing(4);
@@ -159,6 +270,7 @@
         padding: --spacing(3);
         padding-left: --spacing(6);
         padding-right: --spacing(10);
+        @apply rounded;
 
         &:hover,
         &:focus-visible {
@@ -179,10 +291,6 @@
 
       li:first-of-type .navigation-popover-menu__link {
         @apply rounded-t-2xl;
-      }
-
-      li:last-of-type .navigation-popover-menu__link {
-        @apply rounded-b-2xl;
       }
     }
   }
@@ -231,14 +339,79 @@
   }
 }
 
+.nav-link-badge:not(svg) {
+  display: none;
+}
+
+.nav-collapse-btn {
+  display: none;
+
+  @variant desktop {
+    display: flex;
+  }
+}
+
+.nav-resize-handle {
+  display: none;
+}
+
+html.nav-resizing {
+  transition: none;
+
+  &,
+  * {
+    user-select: none;
+    cursor: col-resize !important;
+  }
+
+  .nav-resize-handle::before {
+    opacity: 1;
+  }
+}
+
 @variant desktop {
   .navigation-container {
     display: flex;
     flex-direction: column;
     padding: 0;
+    /* anchor the absolutely positioned resize handle */
+    position: relative;
 
     .navigation-button {
       display: none;
+    }
+
+    .nav-resize-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: -4px;
+      width: 8px;
+      z-index: var(--z-index-topbar);
+      display: flex;
+      justify-content: center;
+      touch-action: none;
+
+      &::before {
+        content: "";
+        width: 2px;
+        height: 100%;
+        background-color: var(--color-blue-300);
+        opacity: 0;
+        transition: opacity 150ms;
+
+        @variant dark {
+          background-color: var(--color-sky-600);
+        }
+      }
+
+      &.nav-resize-handle--visible {
+        cursor: col-resize;
+
+        &::before {
+          opacity: 1;
+        }
+      }
     }
 
     .navigation {
@@ -254,11 +427,51 @@
       transform: unset;
 
       .navigation-inner {
-        padding: --spacing(4) --spacing(5);
+        padding: --spacing(8) --spacing(5);
         padding-bottom: --spacing(2);
+
+        .navigation-inner__bottom {
+          .uv-sticky--stuck {
+            @variant dark {
+              border-top-color: var(--color-zinc-900);
+            }
+          }
+        }
 
         .navigation-link {
           padding: --spacing(1) --spacing(2);
+          display: flex;
+          flex-direction: row;
+          gap: 0.5rem;
+          flex-wrap: nowrap;
+          white-space: nowrap;
+
+          .nav-link-badge {
+            flex-shrink: 0;
+          }
+        }
+
+        svg.nav-link-badge {
+          stroke: var(--color-gray-400);
+
+          @variant dark {
+            stroke: var(--color-zinc-500);
+          }
+        }
+
+        .navigation-link ~ .subnav-group {
+          display: none;
+        }
+
+        .navigation-link--loading ~ .subnav-group,
+        .navigation-link--active ~ .subnav-group {
+          display: flex;
+        }
+
+        .subnav-group {
+          margin-top: --spacing(1);
+          margin-bottom: --spacing(1);
+          gap: --spacing(1);
         }
       }
     }
@@ -267,5 +480,107 @@
   .nav-launchpad-popover {
     left: --spacing(2);
     right: auto;
+  }
+
+  html[data-nav-collapsed] .navigation-container {
+    .navigation-inner {
+      padding: --spacing(4) --spacing(2);
+      align-items: center;
+    }
+
+    /* while a subnav flyout is open, the resize-handle should do nothing */
+    &:has(li:hover .subnav-group),
+    &:has(li:focus-within .subnav-group) {
+      .nav-resize-handle {
+        pointer-events: none;
+      }
+    }
+
+    .nav-link-text,
+    .nav-group-label {
+      display: none;
+    }
+
+    .nav-link-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      flex-shrink: 0;
+
+      &:not(svg) {
+        background-color: var(--color-blue-100);
+        color: var(--color-blue-700);
+
+        @variant dark {
+          background-color: var(--color-blue-900);
+          color: var(--color-blue-100);
+        }
+      }
+    }
+
+    .navigation-inner {
+      svg.nav-link-badge {
+        stroke: var(--color-gray-950);
+
+        @variant dark {
+          stroke: var(--color-zinc-200);
+        }
+      }
+    }
+
+    .navigation-link--active .nav-link-badge:not(svg) {
+      background-color: var(--color-blue-200);
+
+      @variant dark {
+        background-color: var(--color-blue-800);
+      }
+    }
+
+    .navigation-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: --spacing(2) 0;
+    }
+
+    /* subnav: never visible inline in collapsed state, only as hover popover */
+    .navigation .navigation-inner {
+      .navigation-link ~ .subnav-group,
+      .navigation-link--active ~ .subnav-group,
+      .navigation-link--loading ~ .subnav-group {
+        display: none;
+      }
+
+      li:hover .navigation-link ~ .subnav-group,
+      li:focus-within .navigation-link ~ .subnav-group {
+        position: fixed;
+        inset-inline-start: calc(anchor(right) - 2px);
+        inset-block-start: anchor(top);
+        position-try-fallbacks: flip-block;
+        max-height: calc(100dvh - --spacing(4));
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: --spacing(3);
+        background: white;
+        border: 1px solid var(--color-gray-200);
+        border-radius: --spacing(2);
+        padding: --spacing(3) --spacing(3) --spacing(3) --spacing(1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        z-index: calc(var(--z-index-topbar) - 1);
+        min-width: 160px;
+
+        @variant dark {
+          background: var(--color-zinc-800);
+          border-color: var(--color-zinc-700);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+      }
+    }
   }
 }

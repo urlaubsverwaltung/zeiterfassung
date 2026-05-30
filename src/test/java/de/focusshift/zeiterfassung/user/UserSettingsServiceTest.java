@@ -66,6 +66,23 @@ class UserSettingsServiceTest {
         }
 
         @Test
+        void ensureUserSettingsExposesNavigationCollapsed() {
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final Long localId = userIdComposite.localId().value();
+
+            final UserSettingsEntity entity = new UserSettingsEntity();
+            entity.setTenantUserLocalId(localId);
+            entity.setTheme(Theme.DARK);
+            entity.setNavigationCollapsed(true);
+
+            when(userSettingsRepository.findById(localId)).thenReturn(Optional.of(entity));
+
+            final UserSettings actual = sut.getUserSettings(userIdComposite);
+
+            assertThat(actual.navigationCollapsed()).isTrue();
+        }
+
+        @Test
         void ensureUserSettingsForPersonReturnsDefault() {
             final UserIdComposite userIdComposite = anyUserIdComposite();
             final Long localId = userIdComposite.localId().value();
@@ -76,6 +93,7 @@ class UserSettingsServiceTest {
 
             assertThat(actual.theme()).isEqualTo(Theme.SYSTEM);
             assertThat(actual.locale()).isEmpty();
+            assertThat(actual.navigationCollapsed()).isFalse();
         }
     }
 
@@ -183,6 +201,73 @@ class UserSettingsServiceTest {
                     assertThat(userSettingsEntity.getLocale()).isEqualTo(GERMAN);
                     assertThat(userSettingsEntity.getLocaleBrowserSpecific()).isNull();
                 });
+        }
+    }
+
+    @Nested
+    class UpdateNavigationCollapsed {
+
+        @Test
+        void ensureUpdateNavigationCollapsedSavesFlag() {
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final Long localId = userIdComposite.localId().value();
+
+            final UserSettingsEntity entity = new UserSettingsEntity();
+            entity.setTenantUserLocalId(localId);
+            entity.setTheme(Theme.DARK);
+            entity.setNavigationCollapsed(false);
+
+            when(userSettingsRepository.findById(localId)).thenReturn(Optional.of(entity));
+            when(userSettingsRepository.save(entity)).thenReturn(entity);
+
+            sut.updateNavigationCollapsed(userIdComposite, true);
+
+            final ArgumentCaptor<UserSettingsEntity> captor = ArgumentCaptor.forClass(UserSettingsEntity.class);
+            verify(userSettingsRepository).save(captor.capture());
+            assertThat(captor.getValue().isNavigationCollapsed()).isTrue();
+        }
+
+        @Test
+        void ensureUpdateNavigationCollapsedPreservesThemeAndLocale() {
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final Long localId = userIdComposite.localId().value();
+
+            final UserSettingsEntity entity = new UserSettingsEntity();
+            entity.setTenantUserLocalId(localId);
+            entity.setTheme(Theme.DARK);
+            entity.setLocale(GERMAN);
+            entity.setLocaleBrowserSpecific(ENGLISH);
+
+            when(userSettingsRepository.findById(localId)).thenReturn(Optional.of(entity));
+            when(userSettingsRepository.save(entity)).thenReturn(entity);
+
+            sut.updateNavigationCollapsed(userIdComposite, true);
+
+            final ArgumentCaptor<UserSettingsEntity> captor = ArgumentCaptor.forClass(UserSettingsEntity.class);
+            verify(userSettingsRepository).save(captor.capture());
+            assertThat(captor.getValue()).satisfies(saved -> {
+                assertThat(saved.getTheme()).isEqualTo(Theme.DARK);
+                assertThat(saved.getLocale()).isEqualTo(GERMAN);
+                assertThat(saved.getLocaleBrowserSpecific()).isEqualTo(ENGLISH);
+            });
+        }
+
+        @Test
+        void ensureUpdateNavigationCollapsedCreatesDefaultWhenNotFound() {
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final Long localId = userIdComposite.localId().value();
+
+            when(userSettingsRepository.findById(localId)).thenReturn(Optional.empty());
+
+            sut.updateNavigationCollapsed(userIdComposite, true);
+
+            final ArgumentCaptor<UserSettingsEntity> captor = ArgumentCaptor.forClass(UserSettingsEntity.class);
+            verify(userSettingsRepository).save(captor.capture());
+            assertThat(captor.getValue()).satisfies(saved -> {
+                assertThat(saved.getTenantUserLocalId()).isEqualTo(localId);
+                assertThat(saved.getTheme()).isEqualTo(Theme.SYSTEM);
+                assertThat(saved.isNavigationCollapsed()).isTrue();
+            });
         }
     }
 

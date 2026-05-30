@@ -72,6 +72,20 @@ class UserSettingsService {
     }
 
     /**
+     * Updates the navigation-collapsed preference of the given user, leaving all other settings untouched.
+     *
+     * @param userIdComposite     to update the preference for
+     * @param navigationCollapsed whether the navigation should be rendered collapsed
+     */
+    void updateNavigationCollapsed(UserIdComposite userIdComposite, boolean navigationCollapsed) {
+        final UserSettingsEntity entity = findOrGetDefault(userIdComposite);
+        entity.setTenantUserLocalId(userIdComposite.localId().value());
+        entity.setNavigationCollapsed(navigationCollapsed);
+        userSettingsRepository.save(entity);
+        LOG.info("updated user={} navigation collapsed={}", userIdComposite, navigationCollapsed);
+    }
+
+    /**
      * Sets the browser specific locale from the request.
      * <p>
      * Only saves the browser specific locale if the saved 'locale' is null.
@@ -102,7 +116,8 @@ class UserSettingsService {
 
     private UserSettingsEntity defaultUserSettingsEntity(UserIdComposite userIdComposite) {
         final UserSettingsEntity userSettingsEntity = new UserSettingsEntity();
-        userSettingsEntity.setTheme(Theme.SYSTEM);
+        userSettingsEntity.setTheme(UserSettings.DEFAULT.theme());
+        userSettingsEntity.setNavigationCollapsed(UserSettings.DEFAULT.navigationCollapsed());
         userSettingsEntity.setTenantUserLocalId(userIdComposite.localId().value());
 
         LOG.debug("created (not persisted) default userSettingsEntity={}", userSettingsEntity);
@@ -113,6 +128,7 @@ class UserSettingsService {
     private static UserSettings toUserSettings(UserSettingsEntity userSettingsEntity) {
         return new UserSettings(
             userSettingsEntity.getTheme(),
+            userSettingsEntity.isNavigationCollapsed(),
             userSettingsEntity.getLocale(),
             userSettingsEntity.getLocaleBrowserSpecific()
         );

@@ -3,7 +3,7 @@ z-tooltip:not([data-show]) {
   @apply sr-only;
 }
 
-[role="tooltip"] {
+z-tooltip[role="tooltip"] {
   padding: --spacing(1) --spacing(2);
   @apply text-xs;
   @apply font-bold;

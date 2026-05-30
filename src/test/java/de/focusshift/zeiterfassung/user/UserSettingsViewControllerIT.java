@@ -64,7 +64,7 @@ class UserSettingsViewControllerTest implements ControllerTest {
 
         final UserIdComposite userIdComposite = anyUserIdComposite();
 
-        final UserSettings userSettings = new UserSettings(Theme.DARK, Locale.GERMAN, null);
+        final UserSettings userSettings = new UserSettings(Theme.DARK, false, Locale.GERMAN, null);
         when(userSettingsService.getUserSettings(userIdComposite)).thenReturn(userSettings);
 
         when(supportedLocaleService.getSupportedLocales()).thenReturn(Set.of(Locale.GERMAN, Locale.ENGLISH));
