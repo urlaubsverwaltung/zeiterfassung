@@ -100,6 +100,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         model.addAttribute("userLocalId", userLocalId);
         model.addAttribute("isLocked", timeEntryLockService.isLocked(selectedDate));
         model.addAttribute("syncConfigured", syncService.isConfigured());
+        model.addAttribute("syncMissingConfig", syncService.missingConfig());
         model.addAttribute("lastSyncedAt", eventRepository
             .findTopByGithubUsernameOrderByEventTimestampDesc(login)
             .map(GitHubRawEventEntity::getEventTimestamp)

@@ -51,7 +51,10 @@
           <div th:if="${!syncConfigured}"
                class="mb-4 flex items-center gap-2 px-4 py-2 rounded bg-blue-50 dark:bg-sky-950 border border-blue-200 dark:border-sky-800 text-sm text-blue-800 dark:text-sky-200">
             <span>ℹ️</span>
-            <span th:text="#{github-activity.sync-not-configured}">GitHub App sync is not configured. Ask your administrator to set up the GitHub App integration.</span>
+            <span>
+              <span th:text="#{github-activity.sync-not-configured}">GitHub App sync is not configured.</span>
+              <span class="font-mono ml-1" th:text="${syncMissingConfig}"></span>
+            </span>
           </div>
 
           <!-- Day locked notice -->

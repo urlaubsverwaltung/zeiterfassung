@@ -118,6 +118,15 @@ class GitHubSyncService {
         return !appId.isBlank() && !privateKeyPath.isBlank() && !orgName.isBlank();
     }
 
+    /** Returns a human-readable description of which env vars are still missing, or empty string if fully configured. */
+    String missingConfig() {
+        final List<String> missing = new java.util.ArrayList<>();
+        if (appId.isBlank())         missing.add("GITHUB_APP_ID");
+        if (privateKeyPath.isBlank()) missing.add("GITHUB_APP_PRIVATE_KEY");
+        if (orgName.isBlank())        missing.add("GITHUB_ORGANIZATION");
+        return String.join(", ", missing);
+    }
+
     @SuppressWarnings("unchecked")
     private void syncUser(String login, String token) {
         final List<Map<String, Object>> events = fetchEvents(login, token);
