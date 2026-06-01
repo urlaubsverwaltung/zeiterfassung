@@ -5,32 +5,24 @@
   th:class="|theme-${theme}|"
   xmlns:th="http://www.thymeleaf.org"
 >
-  <head
-    th:replace="~{_layout::head(title=~{::title})}"
-  >
+  <head th:replace="~{_layout::head(title=~{::title})}">
     <title th:text="#{settings.project-types.page.title}">Project Types</title>
   </head>
   <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
     <th:block th:ref="search">
-      <div
-        th:replace="~{fragments/user-search::user-search(placeholder=#{user-search.input.placeholder})}"
-      ></div>
+      <div th:replace="~{fragments/user-search::user-search(placeholder=#{user-search.input.placeholder})}"></div>
     </th:block>
 
     <th:block th:fragment="content">
       <main class="content-container content--max-w flex flex-col">
-        <div
-          class="flex-1 flex flex-col mx-auto w-full max-w-7xl px-4 desktop:px-8"
-        >
-          <div>
-            <h1 class="text-xl font-bold" th:text="#{settings.project-types.page.title}">
-              Project Types
-            </h1>
-          </div>
+        <div class="flex-1 flex flex-col mx-auto w-full max-w-3xl px-4 desktop:px-8">
 
-          <div class="mt-8">
-            <h2 class="font-bold mb-4" th:text="#{settings.project-types.add}">Add project type</h2>
-            <form action="#" th:action="@{/settings/project-types}" method="post" class="flex gap-2 items-end">
+          <h1 class="text-xl font-bold mb-8" th:text="#{settings.project-types.page.title}">Project Types</h1>
+
+          <!-- Add new project type -->
+          <section class="mb-8">
+            <h2 class="font-semibold mb-3" th:text="#{settings.project-types.add}">Add project type</h2>
+            <form th:action="@{/settings/project-types}" method="post" class="flex gap-2 items-end">
               <div class="flex flex-col gap-1">
                 <label for="new-project-type-name" class="text-sm font-medium" th:text="#{settings.project-types.name.label}">Name</label>
                 <input
@@ -38,59 +30,53 @@
                   id="new-project-type-name"
                   name="name"
                   required
-                  class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-1.5 text-sm dark:bg-zinc-800"
+                  class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 text-sm dark:bg-zinc-800 w-64"
                 />
               </div>
-              <button type="submit" class="button-primary text-sm" th:text="#{settings.project-types.add}">Add</button>
+              <button type="submit" class="button-main-green" th:text="#{settings.project-types.add}">Add</button>
             </form>
-          </div>
+          </section>
+
+          <!-- Project type list -->
+          <section th:if="${not #lists.isEmpty(projectTypes)}">
+            <div class="flex flex-col gap-3">
+              <div th:each="projectType : ${projectTypes}"
+                   class="flex items-center gap-3 p-3 border border-gray-200 dark:border-zinc-700 rounded-lg">
+                <!-- Edit form -->
+                <form th:action="@{/settings/project-types/{id}(id=${projectType.id().value()})}" method="post"
+                      class="flex items-center gap-3 flex-1">
+                  <input
+                    type="text"
+                    name="name"
+                    th:value="${projectType.name()}"
+                    required
+                    class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-1.5 text-sm dark:bg-zinc-800 flex-1"
+                  />
+                  <label class="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" name="active" th:checked="${projectType.active()}" />
+                    <span th:text="#{settings.project-types.active.label}">Active</span>
+                  </label>
+                  <button type="submit" class="button-secondary text-sm" th:text="#{settings.save}">Save</button>
+                </form>
+                <!-- Delete form -->
+                <form th:action="@{/settings/project-types/{id}/delete(id=${projectType.id().value()})}" method="post">
+                  <button type="submit"
+                          class="button-secondary text-sm text-red-600 dark:text-red-400"
+                          th:text="#{settings.project-types.delete}"
+                          th:onclick="|return confirm('Delete this project type?')|">Delete</button>
+                </form>
+              </div>
+            </div>
+          </section>
+
+          <p th:if="${#lists.isEmpty(projectTypes)}"
+             class="text-sm text-gray-500 dark:text-zinc-400 italic"
+             th:text="#{settings.project-types.empty}">No project types yet.</p>
 
           <div class="mt-8">
-            <table class="w-full text-sm border-collapse">
-              <thead>
-                <tr class="border-b border-gray-200 dark:border-zinc-700">
-                  <th class="text-left py-2 px-3 font-medium" th:text="#{settings.project-types.name.label}">Name</th>
-                  <th class="text-left py-2 px-3 font-medium" th:text="#{settings.project-types.active.label}">Active</th>
-                  <th class="py-2 px-3"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="projectType : ${projectTypes}" class="border-b border-gray-100 dark:border-zinc-800">
-                  <form th:action="@{/settings/project-types/{id}(id=${projectType.id().value()})}" method="post" class="contents">
-                    <td class="py-2 px-3">
-                      <input
-                        type="text"
-                        name="name"
-                        th:value="${projectType.name()}"
-                        required
-                        class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800 w-full"
-                      />
-                    </td>
-                    <td class="py-2 px-3">
-                      <input
-                        type="checkbox"
-                        name="active"
-                        th:checked="${projectType.active()}"
-                        th:title="#{settings.project-types.active.label}"
-                      />
-                    </td>
-                    <td class="py-2 px-3 flex gap-2 justify-end">
-                      <button type="submit" class="button-secondary text-xs" th:text="#{settings.save}">Save</button>
-                  </form>
-                  <form th:action="@{/settings/project-types/{id}/delete(id=${projectType.id().value()})}" method="post" class="inline">
-                      <button type="submit" class="button-secondary text-xs text-red-600 dark:text-red-400"
-                              th:text="#{settings.project-types.delete}"
-                              onclick="return confirm('Delete this project type?')">Delete</button>
-                  </form>
-                    </td>
-                </tr>
-              </tbody>
-            </table>
+            <a th:href="@{/settings}" class="button-secondary text-sm" th:text="#{settings.back}">← Back to Settings</a>
           </div>
 
-          <div class="mt-6">
-            <a href="/settings" class="button-secondary text-sm" th:text="#{settings.reset}">Back to settings</a>
-          </div>
         </div>
       </main>
     </th:block>
