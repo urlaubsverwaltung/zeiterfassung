@@ -38,6 +38,19 @@
     />
   </changeSet>
 
+  <changeSet author="slint" id="add-customer-active-column">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="customer" columnName="active"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="customer">
+      <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
   <changeSet author="slint" id="enable-row-level-security-on-customer">
     <sql dbms="postgresql">
       ALTER TABLE customer ENABLE ROW LEVEL SECURITY;
