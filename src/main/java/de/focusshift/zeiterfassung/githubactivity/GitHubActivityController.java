@@ -30,12 +30,18 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 
 @Controller
 @RequestMapping("/github-activity")
 class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch {
+
+    /** Cache GitHub events per username for 5 minutes to avoid hitting the 60 req/hr unauthenticated rate limit. */
+    private record CacheEntry(List<Map<String, Object>> events, Instant fetchedAt) {}
+    private static final long CACHE_TTL_SECONDS = 300; // 5 minutes
+    private final ConcurrentHashMap<String, CacheEntry> eventCache = new ConcurrentHashMap<>();
 
     private final UserSettingsService userSettingsService;
     private final TimeEntryService timeEntryService;
@@ -134,13 +140,20 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
 
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> fetchGitHubEvents(String login) {
+        final CacheEntry cached = eventCache.get(login);
+        if (cached != null && Instant.now().minusSeconds(CACHE_TTL_SECONDS).isBefore(cached.fetchedAt())) {
+            return cached.events();
+        }
         try {
-            return restClient.get()
+            final List<Map<String, Object>> events = restClient.get()
                 .uri("https://api.github.com/users/{login}/events?per_page=100", login)
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+            final List<Map<String, Object>> result = events != null ? events : List.of();
+            eventCache.put(login, new CacheEntry(result, Instant.now()));
+            return result;
         } catch (Exception e) {
-            return List.of();
+            return cached != null ? cached.events() : List.of();
         }
     }
 
@@ -166,7 +179,9 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
             final Map<String, Object> payload = (Map<String, Object>) raw.get("payload");
 
             final GitHubEvent event = parseEvent(type, repoName, payload, startTime);
-            byRepo.computeIfAbsent(repoName, k -> new ArrayList<>()).add(event);
+            if (event != null) {
+                byRepo.computeIfAbsent(repoName, k -> new ArrayList<>()).add(event);
+            }
         }
 
         return byRepo.entrySet().stream().map(entry -> {
@@ -185,18 +200,27 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
 
         return switch (type != null ? type : "") {
             case "PushEvent" -> {
+                // payload.size is the authoritative commit count — commits[] is capped at 20
+                // and is empty for bot/merge pushes even when actual commits were pushed.
+                // payload.distinct_size excludes merge commits; prefer it when > 0.
+                final int size = toInt(payload.get("size"));
+                final int distinctSize = toInt(payload.get("distinct_size"));
+                final int count = distinctSize > 0 ? distinctSize : size;
+
+                // Skip empty pushes (bot commits, force-pushes with no new content, etc.)
+                if (count == 0) yield null;
+
                 final List<Map<String, Object>> commits = (List<Map<String, Object>>) payload.get("commits");
-                if (commits == null || commits.isEmpty()) {
-                    yield new GitHubEvent(type, "📝", "Pushed 0 commits", "", repoName + ": Pushed 0 commits", startTime);
-                }
-                final int count = commits.size();
-                final String firstMsg = firstLine((String) commits.get(0).get("message"), 72);
-                final String title = "Pushed " + count + " commit" + (count > 1 ? "s" : "");
-                final String detail = commits.stream()
-                    .limit(2)
-                    .map(c -> firstLine((String) c.get("message"), 60))
-                    .collect(Collectors.joining(" · "));
-                final String prefilledComment = repoName + ": " + firstMsg + (count > 1 ? " (+" + (count - 1) + " more)" : "");
+                final boolean hasCommitDetails = commits != null && !commits.isEmpty();
+
+                final String title = "Pushed " + count + " commit" + (count != 1 ? "s" : "");
+                final String firstMsg = hasCommitDetails ? firstLine((String) commits.get(0).get("message"), 72) : "";
+                final String detail = hasCommitDetails
+                    ? commits.stream().limit(2).map(c -> firstLine((String) c.get("message"), 60)).collect(Collectors.joining(" · "))
+                    : "";
+                final String prefilledComment = hasCommitDetails
+                    ? repoName + ": " + firstMsg + (count > 1 ? " (+" + (count - 1) + " more)" : "")
+                    : repoName + ": " + title;
                 yield new GitHubEvent(type, "📝", title, detail, prefilledComment, startTime);
             }
             case "PullRequestEvent" -> {
