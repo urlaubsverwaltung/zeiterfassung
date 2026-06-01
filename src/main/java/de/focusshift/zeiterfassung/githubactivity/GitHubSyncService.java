@@ -74,7 +74,7 @@ class GitHubSyncService {
     @Scheduled(fixedDelay = 600_000)
     @SchedulerLock(name = "githubActivitySync", lockAtMostFor = "PT9M", lockAtLeastFor = "PT30S")
     void sync() {
-        if (appId.isBlank() || privateKeyPath.isBlank() || orgName.isBlank()) {
+        if (!isConfigured()) {
             LOG.debug("GitHub App not configured (github.app.id / github.app.private-key-path / github.organization), skipping sync");
             return;
         }
@@ -99,6 +99,23 @@ class GitHubSyncService {
                 LOG.error("Failed to sync GitHub activity for user {}", login, e);
             }
         }
+    }
+
+    /** Immediately syncs activity for a single user. Called on demand from the UI. */
+    void syncNow(String login) {
+        if (!isConfigured()) {
+            LOG.warn("GitHub App not configured, cannot sync now for user {}", login);
+            return;
+        }
+        try {
+            syncUser(login, getInstallationToken());
+        } catch (Exception e) {
+            LOG.error("On-demand sync failed for user {}", login, e);
+        }
+    }
+
+    boolean isConfigured() {
+        return !appId.isBlank() && !privateKeyPath.isBlank() && !orgName.isBlank();
     }
 
     @SuppressWarnings("unchecked")

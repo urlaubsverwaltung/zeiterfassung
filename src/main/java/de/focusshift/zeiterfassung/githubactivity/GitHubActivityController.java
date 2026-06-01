@@ -17,8 +17,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -49,6 +51,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     private final ActivityTypeService activityTypeService;
     private final TimeEntryLockService timeEntryLockService;
     private final GitHubRawEventRepository eventRepository;
+    private final GitHubSyncService syncService;
 
     GitHubActivityController(UserSettingsService userSettingsService,
                               UserSettingsProvider userSettingsProvider,
@@ -57,7 +60,8 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                               ProjectService projectService,
                               ActivityTypeService activityTypeService,
                               TimeEntryLockService timeEntryLockService,
-                              GitHubRawEventRepository eventRepository) {
+                              GitHubRawEventRepository eventRepository,
+                              GitHubSyncService syncService) {
         this.userSettingsService = userSettingsService;
         this.userSettingsProvider = userSettingsProvider;
         this.timeEntryService = timeEntryService;
@@ -66,6 +70,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         this.activityTypeService = activityTypeService;
         this.timeEntryLockService = timeEntryLockService;
         this.eventRepository = eventRepository;
+        this.syncService = syncService;
     }
 
     @GetMapping
@@ -101,6 +106,20 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         model.addAttribute("syncConfigured", isSyncConfigured());
 
         return "github-activity/index";
+    }
+
+    @PostMapping("/sync")
+    String syncNow(@CurrentUser CurrentOidcUser currentUser,
+                   @RequestParam(required = false) LocalDate date,
+                   RedirectAttributes redirectAttributes) {
+
+        final UserSettings userSettings = userSettingsService.getUserSettings(currentUser.getUserIdComposite());
+        if (userSettings.githubLoginVerified() && userSettings.githubLogin().isPresent()) {
+            syncService.syncNow(userSettings.githubLogin().get());
+        }
+
+        final String redirectDate = (date != null ? date : LocalDate.now()).toString();
+        return "redirect:/github-activity?date=" + redirectDate;
     }
 
     @GetMapping("/inline-form")

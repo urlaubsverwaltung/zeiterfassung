@@ -31,6 +31,10 @@
             <a th:href="@{/github-activity(date=${prevDate})}" class="button-secondary">&#9664;</a>
             <span th:text="${#temporals.format(date, 'EEEE, d MMMM yyyy')}">Monday, 2 June 2026</span>
             <a th:href="@{/github-activity(date=${nextDate})}" class="button-secondary">&#9654;</a>
+            <form th:if="${syncConfigured}" th:action="@{/github-activity/sync}" method="post" class="ml-auto">
+              <input type="hidden" name="date" th:value="${date}"/>
+              <button type="submit" class="button-secondary text-sm" th:text="#{github-activity.sync-now}">↻ Refresh</button>
+            </form>
           </div>
 
           <!-- Sync not configured notice -->
