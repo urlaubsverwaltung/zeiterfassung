@@ -31,10 +31,20 @@
             <a th:href="@{/github-activity(date=${prevDate})}" class="button-secondary">&#9664;</a>
             <span th:text="${#temporals.format(date, 'EEEE, d MMMM yyyy')}">Monday, 2 June 2026</span>
             <a th:href="@{/github-activity(date=${nextDate})}" class="button-secondary">&#9654;</a>
-            <form th:if="${syncConfigured}" th:action="@{/github-activity/sync}" method="post" class="ml-auto">
-              <input type="hidden" name="date" th:value="${date}"/>
-              <button type="submit" class="button-secondary text-sm" th:text="#{github-activity.sync-now}">↻ Refresh</button>
-            </form>
+            <div th:if="${syncConfigured}" class="ml-auto flex items-center gap-3">
+              <span th:if="${lastSyncedAt != null}"
+                    class="text-xs text-gray-400 dark:text-zinc-500">
+                <span th:text="#{github-activity.last-synced}">Last synced:</span>
+                <span th:text="${#temporals.format(#temporals.createFromInstant(lastSyncedAt, #locale), 'd MMM HH:mm')}"></span>
+              </span>
+              <span th:if="${lastSyncedAt == null}"
+                    class="text-xs text-gray-400 dark:text-zinc-500"
+                    th:text="#{github-activity.never-synced}">Never synced</span>
+              <form th:action="@{/github-activity/sync}" method="post">
+                <input type="hidden" name="date" th:value="${date}"/>
+                <button type="submit" class="button-secondary text-sm" th:text="#{github-activity.sync-now}">↻ Refresh</button>
+              </form>
+            </div>
           </div>
 
           <!-- Sync not configured notice -->

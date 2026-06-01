@@ -13,7 +13,6 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserSettings;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.UserSettingsService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,9 +38,6 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
 
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
     private static final long MIN_SUGGESTED_MINUTES = 15;
-
-    @Value("${github.app.id:}")
-    private String githubAppId;
 
     private final UserSettingsService userSettingsService;
     private final UserSettingsProvider userSettingsProvider;
@@ -103,7 +99,11 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         model.addAttribute("anchors", anchors);
         model.addAttribute("userLocalId", userLocalId);
         model.addAttribute("isLocked", timeEntryLockService.isLocked(selectedDate));
-        model.addAttribute("syncConfigured", isSyncConfigured());
+        model.addAttribute("syncConfigured", syncService.isConfigured());
+        model.addAttribute("lastSyncedAt", eventRepository
+            .findTopByGithubUsernameOrderByEventTimestampDesc(login)
+            .map(GitHubRawEventEntity::getEventTimestamp)
+            .orElse(null));
 
         return "github-activity/index";
     }
@@ -214,7 +214,4 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         };
     }
 
-    private boolean isSyncConfigured() {
-        return !githubAppId.isBlank();
-    }
 }

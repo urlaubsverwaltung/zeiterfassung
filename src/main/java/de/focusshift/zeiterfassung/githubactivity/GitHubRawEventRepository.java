@@ -13,4 +13,6 @@ interface GitHubRawEventRepository extends JpaRepository<GitHubRawEventEntity, L
 
     List<GitHubRawEventEntity> findByGithubUsernameAndEventTimestampBetweenOrderByEventTimestampAsc(
         String githubUsername, Instant from, Instant to);
+
+    java.util.Optional<GitHubRawEventEntity> findTopByGithubUsernameOrderByEventTimestampDesc(String githubUsername);
 }
