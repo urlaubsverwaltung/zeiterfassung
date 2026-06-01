@@ -43,6 +43,7 @@
   <include relativeToChangelogFile="true" file="changelog-3.0.0-add-user-settings.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.1.0-slint-add-github-login.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.1.0-slint-add-github-token.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-3.1.0-slint-add-notifications-setting.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.1.0-slint-add-customer.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.1.0-slint-add-project-type.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.1.0-slint-add-time-entry-categorisation.xml"/>

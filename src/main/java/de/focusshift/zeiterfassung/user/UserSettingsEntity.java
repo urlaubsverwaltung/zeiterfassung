@@ -47,6 +47,9 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
     @Nullable
     private String githubToken;
 
+    @Column(name = "notifications_enabled", nullable = false)
+    private boolean notificationsEnabled = true;
+
     protected UserSettingsEntity() {
         super(null);
     }
@@ -113,6 +116,14 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
 
     public void setGithubToken(@Nullable String githubToken) {
         this.githubToken = githubToken;
+    }
+
+    public boolean isNotificationsEnabled() {
+        return notificationsEnabled;
+    }
+
+    public void setNotificationsEnabled(boolean notificationsEnabled) {
+        this.notificationsEnabled = notificationsEnabled;
     }
 
     @Override

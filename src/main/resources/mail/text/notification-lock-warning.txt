@@ -1,0 +1,11 @@
+Hi [(${name})],
+
+this is a reminder that you have no time entries for [(${dayName})], [(${date})].
+
+This day will be locked in [(${daysUntilLock})] days and can no longer be edited afterwards.
+
+Please log your time before it is locked.
+
+---
+You are receiving this email because email notifications are enabled in your account settings.
+To disable: go to My Account → uncheck "Email notifications".

@@ -140,6 +140,21 @@
                     </p>
                   </div>
 
+                  <!-- Notification preferences -->
+                  <div class="flex flex-col gap-1 border-t border-gray-200 dark:border-zinc-700 pt-4">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                      <span class="checkbox-switch">
+                        <input type="checkbox" name="notificationsEnabled"
+                               th:checked="${notificationsEnabled}"
+                               class="peer mt-0.5"/>
+                      </span>
+                      <div class="flex flex-col">
+                        <span class="text-sm font-medium" th:text="#{account.notifications.label}">Email notifications</span>
+                        <span class="text-xs text-gray-500 dark:text-zinc-400" th:text="#{account.notifications.hint}">Lock warnings and weekly summary emails</span>
+                      </div>
+                    </label>
+                  </div>
+
                   <div>
                     <button
                       type="submit"

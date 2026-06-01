@@ -1,0 +1,20 @@
+Hi [(${name})],
+
+here is your time tracking summary for Week [(${weekNumber})] ([(${from})] – [(${to})]).
+
+  Logged:   [(${worked})]
+  Target:   [(${target})]
+  Delta:    [(${delta})]
+
+[# th:if="${allDaysCovered}"]
+All working days have time entries.
+[/]
+[# th:if="${!allDaysCovered}"]
+Days with no entries:
+[# th:each="day : ${missingDays}"]
+  - [(${day})]
+[/]
+[/]
+---
+You are receiving this email because email notifications are enabled in your account settings.
+To disable: go to My Account → uncheck "Email notifications".

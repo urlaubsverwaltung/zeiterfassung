@@ -128,6 +128,12 @@ public class UserSettingsService {
         return toUserSettings(persistedEntity);
     }
 
+    public UserSettings updateNotificationsEnabled(UserIdComposite userIdComposite, boolean enabled) {
+        final UserSettingsEntity entity = findOrGetDefault(userIdComposite);
+        entity.setNotificationsEnabled(enabled);
+        return toUserSettings(userSettingsRepository.save(entity));
+    }
+
     private static UserSettings toUserSettings(UserSettingsEntity userSettingsEntity) {
         return new UserSettings(
             userSettingsEntity.getTheme(),
@@ -135,7 +141,8 @@ public class UserSettingsService {
             userSettingsEntity.getLocaleBrowserSpecific(),
             userSettingsEntity.getGithubLogin(),
             userSettingsEntity.isGithubLoginVerified(),
-            userSettingsEntity.getGithubToken()
+            userSettingsEntity.getGithubToken(),
+            userSettingsEntity.isNotificationsEnabled()
         );
     }
 

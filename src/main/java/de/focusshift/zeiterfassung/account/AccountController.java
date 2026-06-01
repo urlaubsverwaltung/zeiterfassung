@@ -48,7 +48,7 @@ class AccountController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     @GetMapping
     ModelAndView account(Model model, @CurrentUser CurrentOidcUser currentOidcUser) {
         final UserSettings userSettings = userSettingsService.getUserSettings(currentOidcUser.getUserIdComposite());
-        populateModel(model, currentOidcUser, userSettings.githubLogin().orElse(""), userSettings.githubLoginVerified(), userSettings.githubToken().orElse(""), false);
+        populateModel(model, currentOidcUser, userSettings.githubLogin().orElse(""), userSettings.githubLoginVerified(), userSettings.githubToken().orElse(""), userSettings.notificationsEnabled(), false);
         return new ModelAndView("account/index", model.asMap());
     }
 
@@ -71,14 +71,16 @@ class AccountController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     ModelAndView saveAccount(@RequestParam(value = "githubLogin", required = false) String githubLogin,
                              @RequestParam(value = "githubLoginVerified", required = false, defaultValue = "false") boolean verified,
                              @RequestParam(value = "githubToken", required = false) String githubToken,
+                             @RequestParam(value = "notificationsEnabled", required = false, defaultValue = "false") boolean notificationsEnabled,
                              @CurrentUser CurrentOidcUser currentOidcUser, Model model) {
         final String trimmed = githubLogin != null ? githubLogin.trim() : null;
         final String toSave = trimmed != null && !trimmed.isEmpty() ? trimmed : null;
         final boolean saveVerified = toSave != null && verified;
         userSettingsService.updateGithubLogin(currentOidcUser.getUserIdComposite(), toSave, saveVerified);
         userSettingsService.updateGithubToken(currentOidcUser.getUserIdComposite(), githubToken);
+        userSettingsService.updateNotificationsEnabled(currentOidcUser.getUserIdComposite(), notificationsEnabled);
         final String savedToken = githubToken != null && !githubToken.isBlank() ? githubToken.trim() : "";
-        populateModel(model, currentOidcUser, toSave != null ? toSave : "", saveVerified, savedToken, true);
+        populateModel(model, currentOidcUser, toSave != null ? toSave : "", saveVerified, savedToken, notificationsEnabled, true);
         return new ModelAndView("account/index", model.asMap());
     }
 
@@ -125,7 +127,7 @@ class AccountController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     }
 
     private void populateModel(Model model, CurrentOidcUser currentOidcUser,
-                               String githubLogin, boolean githubLoginVerified, String githubToken, boolean savedSuccess) {
+                               String githubLogin, boolean githubLoginVerified, String githubToken, boolean notificationsEnabled, boolean savedSuccess) {
         final String fullName = currentOidcUser.getUserInfo() != null
             ? currentOidcUser.getUserInfo().getFullName()
             : currentOidcUser.getName();
@@ -138,6 +140,7 @@ class AccountController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         model.addAttribute("githubLogin", githubLogin);
         model.addAttribute("githubLoginVerified", githubLoginVerified);
         model.addAttribute("githubToken", githubToken);
+        model.addAttribute("notificationsEnabled", notificationsEnabled);
         model.addAttribute("savedSuccess", savedSuccess);
     }
 }

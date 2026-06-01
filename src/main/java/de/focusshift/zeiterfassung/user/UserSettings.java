@@ -15,14 +15,16 @@ public class UserSettings {
     private final boolean githubLoginVerified;
     @Nullable
     private final String githubToken;
+    private final boolean notificationsEnabled;
 
-    UserSettings(Theme theme, Locale locale, Locale localeBrowserSpecific, @Nullable String githubLogin, boolean githubLoginVerified, @Nullable String githubToken) {
+    UserSettings(Theme theme, Locale locale, Locale localeBrowserSpecific, @Nullable String githubLogin, boolean githubLoginVerified, @Nullable String githubToken, boolean notificationsEnabled) {
         this.theme = theme;
         this.locale = locale;
         this.localeBrowserSpecific = localeBrowserSpecific;
         this.githubLogin = githubLogin;
         this.githubLoginVerified = githubLoginVerified;
         this.githubToken = githubToken;
+        this.notificationsEnabled = notificationsEnabled;
     }
 
     public Theme theme() {
@@ -47,5 +49,9 @@ public class UserSettings {
 
     public Optional<String> githubToken() {
         return Optional.ofNullable(githubToken);
+    }
+
+    public boolean notificationsEnabled() {
+        return notificationsEnabled;
     }
 }
