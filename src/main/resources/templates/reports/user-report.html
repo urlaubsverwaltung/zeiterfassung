@@ -52,6 +52,17 @@
                     Monat
                   </a>
                 </li>
+                <li>
+                  <a
+                    href="#"
+                    th:href="${#lists.isEmpty(selectedUserIds)} ? @{/report/breakdown} : @{/report/breakdown (user=${selectedUserIds})}"
+                    class="report-view-selection-link"
+                    th:aria-current="${breakdownAriaCurrent}"
+                    th:text="#{report.view.select.breakdown}"
+                  >
+                    Breakdown
+                  </a>
+                </li>
               </ul>
             </div>
             <div
@@ -59,7 +70,12 @@
               th:insert="~{__${chartNavigationFragment}__}"
             ></div>
           </div>
-          <div
+          <!-- Breakdown override: renders full-width content instead of chart+entries grid -->
+          <div th:if="${overrideContentFragment != null}" class="px-4 desktop:px-8">
+            <div th:replace="~{__${overrideContentFragment}__}"></div>
+          </div>
+
+          <div th:if="${overrideContentFragment == null}"
             class="px-4 grid grid-cols-1 gap-8 @7xl/main:grid-cols-2 desktop:px-8"
           >
             <div class="@7xl/main:sticky @7xl/main:top-4 @7xl/main:self-start">

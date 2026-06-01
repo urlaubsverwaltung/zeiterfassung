@@ -1,0 +1,127 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<!-- Empty fragment used as placeholder for unused chart/navigation slots -->
+<th:block th:fragment="empty"></th:block>
+
+<!-- Main breakdown content, injected into user-report.html via overrideContentFragment -->
+<th:block th:fragment="content">
+
+  <!-- Date range selector -->
+  <form th:action="@{/report/breakdown}" method="get" class="mb-8">
+    <th:block th:if="${canViewAllUsers and not #lists.isEmpty(selectedUserIds)}">
+      <th:block th:each="uid : ${selectedUserIds}">
+        <input type="hidden" name="user" th:value="${uid}"/>
+      </th:block>
+    </th:block>
+
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="flex gap-2">
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="radio" name="preset" value="week"
+                 th:checked="${preset == 'week'}" onchange="this.form.submit()"/>
+          <span th:text="#{report.breakdown.preset.week}">This week</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="radio" name="preset" value="month"
+                 th:checked="${preset == 'month'}" onchange="this.form.submit()"/>
+          <span th:text="#{report.breakdown.preset.month}">This month</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="radio" name="preset" value="custom"
+                 th:checked="${preset == 'custom'}" id="preset-custom"/>
+          <span th:text="#{report.breakdown.preset.custom}">Custom</span>
+        </label>
+      </div>
+
+      <div class="flex items-end gap-2" th:classappend="${preset != 'custom'} ? 'opacity-40 pointer-events-none' : ''">
+        <div class="flex flex-col gap-1">
+          <label for="from" class="text-xs text-gray-500 dark:text-zinc-400" th:text="#{report.breakdown.from}">From</label>
+          <input type="date" id="from" name="from"
+                 th:value="${#temporals.format(from, 'yyyy-MM-dd')}"
+                 class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800"
+                 onclick="document.getElementById('preset-custom').checked=true"/>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="to" class="text-xs text-gray-500 dark:text-zinc-400" th:text="#{report.breakdown.to}">To</label>
+          <input type="date" id="to" name="to"
+                 th:value="${#temporals.format(to, 'yyyy-MM-dd')}"
+                 class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800"
+                 onclick="document.getElementById('preset-custom').checked=true"/>
+        </div>
+        <button type="submit" class="button-secondary text-sm" th:text="#{report.breakdown.apply}">Apply</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Empty state -->
+  <p th:if="${!breakdown.hasData()}"
+     class="text-gray-500 dark:text-zinc-400 italic"
+     th:text="#{report.breakdown.empty}">No time entries for this period.</p>
+
+  <th:block th:if="${breakdown.hasData()}">
+
+    <p class="text-sm text-gray-500 dark:text-zinc-400 mb-6">
+      <span th:text="#{report.breakdown.total}">Total:</span>
+      <span class="font-semibold tabular-nums" th:text="${breakdown.totalHours()}"></span>
+    </p>
+
+    <div class="grid grid-cols-1 gap-10 lg:grid-cols-2">
+
+      <!-- By Customer / Project -->
+      <section>
+        <h2 class="text-base font-semibold mb-4" th:text="#{report.breakdown.by-project}">By Customer &amp; Project</h2>
+        <div class="flex flex-col gap-3">
+          <div th:each="customer : ${breakdown.byCustomer()}"
+               class="rounded-lg border border-gray-200 dark:border-zinc-700 overflow-hidden">
+            <!-- Customer header -->
+            <div class="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-zinc-800">
+              <span class="font-medium text-sm" th:text="${customer.customerName()}"></span>
+              <span class="tabular-nums text-sm font-semibold" th:text="${customer.hours()}"></span>
+            </div>
+            <!-- Percentage bar -->
+            <div class="h-1 bg-gray-100 dark:bg-zinc-700">
+              <div class="h-1 bg-blue-500 dark:bg-sky-500"
+                   th:style="|width: ${customer.percent()}%|"></div>
+            </div>
+            <!-- Projects -->
+            <div th:each="project : ${customer.projects()}"
+                 class="flex items-center justify-between px-4 py-2 border-t border-gray-100 dark:border-zinc-800">
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="w-20 h-1.5 rounded-full bg-gray-100 dark:bg-zinc-700 shrink-0">
+                  <div class="h-1.5 rounded-full bg-blue-300 dark:bg-sky-700"
+                       th:style="|width: ${project.percent()}%|"></div>
+                </div>
+                <span class="text-sm text-gray-700 dark:text-zinc-300 truncate" th:text="${project.projectName()}"></span>
+              </div>
+              <span class="tabular-nums text-sm text-gray-500 dark:text-zinc-400 ml-4 shrink-0" th:text="${project.hours()}"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- By Activity Type -->
+      <section>
+        <h2 class="text-base font-semibold mb-4" th:text="#{report.breakdown.by-activity}">By Activity Type</h2>
+        <div class="flex flex-col gap-2">
+          <div th:each="activity : ${breakdown.byActivityType()}"
+               class="rounded-lg border border-gray-200 dark:border-zinc-700 overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-zinc-800">
+              <span class="font-medium text-sm" th:text="${activity.name()}"></span>
+              <span class="tabular-nums text-sm font-semibold" th:text="${activity.hours()}"></span>
+            </div>
+            <div class="h-1 bg-gray-100 dark:bg-zinc-700">
+              <div class="h-1 bg-emerald-500 dark:bg-emerald-600"
+                   th:style="|width: ${activity.percent()}%|"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </th:block>
+</th:block>
+
+</body>
+</html>

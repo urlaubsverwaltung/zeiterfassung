@@ -124,6 +124,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad, HasUserSearch
         model.addAttribute("entriesFragment", "reports/user-report-month::entries");
         model.addAttribute("weekAriaCurrent", "false");
         model.addAttribute("monthAriaCurrent", "location");
+        model.addAttribute("breakdownAriaCurrent", "false");
 
         final int previousYear = month == 1 ? year - 1 : year;
         final int previousMonth = month == 1 ? 12 : month - 1;

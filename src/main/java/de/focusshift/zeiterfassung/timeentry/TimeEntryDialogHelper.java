@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
 import de.focusshift.zeiterfassung.data.history.EntityRevisionMetadata;
+import de.focusshift.zeiterfassung.project.ProjectService;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.user.HasUserIdComposite;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -46,19 +48,25 @@ public class TimeEntryDialogHelper {
     private final TimeEntryViewHelper timeEntryViewHelper;
     private final UserSettingsProvider userSettingsProvider;
     private final UserManagementService userManagementService;
+    private final ProjectService projectService;
+    private final ActivityTypeService activityTypeService;
 
     public TimeEntryDialogHelper(
         TimeEntryService timeEntryService,
         TimeEntryLockService timeEntryLockService,
         TimeEntryViewHelper timeEntryViewHelper,
         UserSettingsProvider userSettingsProvider,
-        UserManagementService userManagementService
+        UserManagementService userManagementService,
+        ProjectService projectService,
+        ActivityTypeService activityTypeService
     ) {
         this.timeEntryService = timeEntryService;
         this.timeEntryLockService = timeEntryLockService;
         this.timeEntryViewHelper = timeEntryViewHelper;
         this.userSettingsProvider = userSettingsProvider;
         this.userManagementService = userManagementService;
+        this.projectService = projectService;
+        this.activityTypeService = activityTypeService;
     }
 
     public void addTimeEntryEditToModel(Model model, CurrentOidcUser currentUser, Long timeEntryIdValue, String editFormAction, String cancelFormAction) {
@@ -82,6 +90,8 @@ public class TimeEntryDialogHelper {
             final TimeEntryDTO timeEntryDto = timeEntryViewHelper.toTimeEntryDto(timeEntry);
             model.addAttribute(TIME_ENTRY_MODEL_NAME, timeEntryDto);
         }
+        model.addAttribute("projects", projectService.findAllActive());
+        model.addAttribute("activityTypes", activityTypeService.findAllActive());
     }
 
     private void addTimeEntryDialog(Model model, CurrentOidcUser currentUser, TimeEntry timeEntry, String editFormAction, String cancelFormAction) {

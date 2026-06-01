@@ -119,6 +119,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch 
         model.addAttribute("entriesFragment", "reports/user-report-week::entries");
         model.addAttribute("weekAriaCurrent", "location");
         model.addAttribute("monthAriaCurrent", "false");
+        model.addAttribute("breakdownAriaCurrent", "false");
 
         final int previousYear = reportYearWeek.minusWeeks(1).getYear();
         final int previousWeek = reportYearWeek.minusWeeks(1).getWeek();
