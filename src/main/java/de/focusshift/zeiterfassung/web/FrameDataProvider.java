@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.web;
 
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.user.UserSettings;
+import de.focusshift.zeiterfassung.user.UserSettingsService;
 import de.focusshift.zeiterfassung.web.html.AriaCurrent;
 import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.NonNull;
@@ -27,9 +29,11 @@ import static de.focusshift.zeiterfassung.usermanagement.User.generateInitials;
 class FrameDataProvider extends DataProviderInterceptor {
 
     private final MenuProperties menuProperties;
+    private final UserSettingsService userSettingsService;
 
-    FrameDataProvider(MenuProperties menuProperties) {
+    FrameDataProvider(MenuProperties menuProperties, UserSettingsService userSettingsService) {
         this.menuProperties = menuProperties;
+        this.userSettingsService = userSettingsService;
     }
 
     @Override
@@ -82,6 +86,16 @@ class FrameDataProvider extends DataProviderInterceptor {
 
         if (currentUser.hasAnyRole(ZEITERFASSUNG_WORKING_TIME_EDIT_GLOBAL, ZEITERFASSUNG_SETTINGS_GLOBAL)) {
             items.add(new NavigationItemDto("main-navigation-link-settings", settings, "navigation.main.settings", settingsActive, settingsCurrent, "navigation-link-settings"));
+        }
+
+        final UserSettings userSettings = userSettingsService.getUserSettings(currentUser.getUserIdComposite());
+        if (userSettings.githubLoginVerified()) {
+            final String githubActivity = "/github-activity";
+            final boolean githubActivityActive = url.startsWith(githubActivity);
+            final AriaCurrent githubActivityCurrent = githubActivityActive ? AriaCurrent.PAGE : AriaCurrent.FALSE;
+            items.add(new NavigationItemDto("main-navigation-link-github-activity", githubActivity,
+                "navigation.main.github-activity", githubActivityActive, githubActivityCurrent,
+                "navigation-link-github-activity"));
         }
 
         return new NavigationDto(items);

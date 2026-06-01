@@ -1,0 +1,128 @@
+<!doctype html>
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
+  <head
+    th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{})}"
+  >
+    <title th:text="#{github-activity.page.title}">GitHub Activity</title>
+  </head>
+  <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
+    <th:block th:ref="search">
+      <div
+        th:replace="~{fragments/user-search::user-search(placeholder=#{user-search.input.placeholder})}"
+      ></div>
+    </th:block>
+
+    <th:block th:fragment="content">
+      <main class="content-container content--max-w flex flex-col">
+        <div class="flex-1 flex flex-col mx-auto w-full max-w-7xl px-4 desktop:px-8">
+
+          <h1 class="text-xl font-bold mb-6" th:text="#{github-activity.page.title}">GitHub Activity</h1>
+
+          <!-- Date navigation -->
+          <div class="flex items-center gap-4 mb-6">
+            <a th:href="@{/github-activity(date=${prevDate})}" class="button-secondary">&#9664;</a>
+            <span th:text="${#temporals.format(date, 'EEEE, d MMMM yyyy')}">Monday, 2 June 2026</span>
+            <a th:href="@{/github-activity(date=${nextDate})}" class="button-secondary">&#9654;</a>
+          </div>
+
+          <!-- Empty state -->
+          <p th:if="${#lists.isEmpty(groups)}" class="text-gray-500 dark:text-zinc-400" th:text="#{github-activity.empty}">
+            No GitHub activity found for this day.
+          </p>
+
+          <!-- Groups -->
+          <div th:each="group, groupStat : ${groups}" class="mb-6 border border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+
+            <!-- Group header -->
+            <div class="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700">
+              <span class="font-semibold text-blue-700 dark:text-sky-400" th:text="${group.repoName()}"></span>
+              <div class="flex gap-2">
+                <!-- Add all individually -->
+                <form th:action="@{/github-activity/create-entries}" method="post">
+                  <input type="hidden" name="date" th:value="${date}"/>
+                  <input type="hidden" name="userLocalId" th:value="${userLocalId}"/>
+                  <th:block th:each="ev : ${group.events()}">
+                    <input type="hidden" name="comment" th:value="${ev.prefilledComment()}"/>
+                    <input type="hidden" name="startTime" th:value="${ev.startTime()}"/>
+                  </th:block>
+                  <button type="submit" class="button-secondary text-sm" th:text="#{github-activity.add-all-individually}">Add all individually</button>
+                </form>
+                <!-- Add as one combined entry -->
+                <form th:action="@{/github-activity/create-entries}" method="post">
+                  <input type="hidden" name="date" th:value="${date}"/>
+                  <input type="hidden" name="userLocalId" th:value="${userLocalId}"/>
+                  <input type="hidden" name="comment" th:value="${group.combinedComment()}"/>
+                  <button type="submit" class="button-secondary text-sm" th:text="#{github-activity.add-as-one-entry}">Add as one entry</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Events -->
+            <div th:each="event, iterStat : ${group.events()}"
+                 class="px-4 py-3"
+                 th:classappend="${!iterStat.last ? 'border-b border-gray-100 dark:border-zinc-800' : ''}">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex items-start gap-3 flex-1 min-w-0">
+                  <span class="text-xl shrink-0 mt-0.5" th:text="${event.icon()}"></span>
+                  <div class="flex flex-col min-w-0">
+                    <span class="font-medium" th:text="${event.title()}"></span>
+                    <span class="text-sm text-gray-500 dark:text-zinc-400 truncate"
+                          th:if="${!#strings.isEmpty(event.detail())}"
+                          th:text="${event.detail()}"></span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 shrink-0">
+                  <span class="text-sm text-gray-400 dark:text-zinc-500" th:text="${event.startTime()}"></span>
+                  <button
+                    type="button"
+                    class="button-secondary text-sm"
+                    th:data-comment="${event.prefilledComment()}"
+                    th:data-date="${date}"
+                    th:data-start="${event.startTime()}"
+                    th:data-user-local-id="${userLocalId}"
+                    th:data-frame-id="|frame-${groupStat.index}-${iterStat.index}|"
+                    onclick="toggleInlineForm(this)"
+                    th:text="#{github-activity.add-time-entry}"
+                  >+ Add time entry</button>
+                </div>
+              </div>
+              <!-- Inline Turbo Frame -->
+              <turbo-frame
+                th:id="|frame-${groupStat.index}-${iterStat.index}|"
+                class="block mt-3"
+              ></turbo-frame>
+            </div>
+
+          </div>
+
+        </div>
+
+        <script>
+          function toggleInlineForm(btn) {
+            const frameId = btn.dataset.frameId;
+            const frame = document.getElementById(frameId);
+            if (frame.src) {
+              frame.src = '';
+              frame.innerHTML = '';
+              return;
+            }
+            const params = new URLSearchParams({
+              comment: btn.dataset.comment,
+              date: btn.dataset.date,
+              startTime: btn.dataset.start || '',
+              userLocalId: btn.dataset.userLocalId,
+              frameId: frameId
+            });
+            frame.src = '/github-activity/inline-form?' + params.toString();
+          }
+        </script>
+      </main>
+    </th:block>
+
+  </body>
+</html>

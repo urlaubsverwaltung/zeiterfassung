@@ -1,0 +1,39 @@
+<!doctype html>
+<html
+  lang="en"
+  th:lang="${language}"
+  th:class="|theme-${theme}|"
+  xmlns:th="http://www.thymeleaf.org"
+>
+  <head
+    th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{})}"
+  >
+    <title th:text="#{github-activity.page.title}">GitHub Activity</title>
+  </head>
+  <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
+    <th:block th:ref="search">
+      <div
+        th:replace="~{fragments/user-search::user-search(placeholder=#{user-search.input.placeholder})}"
+      ></div>
+    </th:block>
+
+    <th:block th:fragment="content">
+      <main class="content-container content--max-w flex flex-col">
+        <div class="flex-1 flex flex-col mx-auto w-full max-w-7xl px-4 desktop:px-8">
+
+          <h1 class="text-xl font-bold mb-6" th:text="#{github-activity.page.title}">GitHub Activity</h1>
+
+          <div class="p-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg max-w-lg">
+            <h2 class="text-lg font-semibold mb-2" th:text="#{github-activity.no-github-login.title}">No GitHub username set</h2>
+            <p class="text-gray-600 dark:text-zinc-300 mb-4" th:text="#{github-activity.no-github-login.message}">
+              Set your verified GitHub username in My Account to see your activity here.
+            </p>
+            <a th:href="${accountUrl}" class="button-main" th:text="#{github-activity.no-github-login.link}">Go to My Account</a>
+          </div>
+
+        </div>
+      </main>
+    </th:block>
+
+  </body>
+</html>

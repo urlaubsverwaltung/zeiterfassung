@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.web;
 
+import de.focusshift.zeiterfassung.user.UserSettingsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -9,8 +10,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 class FrameDataProviderConfiguration {
 
     @Bean
-    FrameDataProvider frameDataProvider(MenuProperties menuProperties) {
-        return new FrameDataProvider(menuProperties);
+    FrameDataProvider frameDataProvider(MenuProperties menuProperties, UserSettingsService userSettingsService) {
+        return new FrameDataProvider(menuProperties, userSettingsService);
     }
 
     @Bean

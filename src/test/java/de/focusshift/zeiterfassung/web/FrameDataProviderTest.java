@@ -2,6 +2,8 @@ package de.focusshift.zeiterfassung.web;
 
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.security.SecurityRole;
+import de.focusshift.zeiterfassung.user.UserSettings;
+import de.focusshift.zeiterfassung.user.UserSettingsService;
 import de.focusshift.zeiterfassung.web.html.AriaCurrent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
@@ -44,6 +47,9 @@ class FrameDataProviderTest implements ControllerTest {
         }
     }
 
+    @Mock
+    private UserSettingsService userSettingsService;
+
     private FrameDataProvider sut;
 
     @BeforeEach
@@ -54,7 +60,11 @@ class FrameDataProviderTest implements ControllerTest {
         final MenuProperties menuProperties = new MenuProperties();
         menuProperties.setHelp(help);
 
-        sut = new FrameDataProvider(menuProperties);
+        final UserSettings defaultUserSettings = org.mockito.Mockito.mock(UserSettings.class);
+        org.mockito.Mockito.when(defaultUserSettings.githubLoginVerified()).thenReturn(false);
+        org.mockito.Mockito.when(userSettingsService.getUserSettings(org.mockito.ArgumentMatchers.any())).thenReturn(defaultUserSettings);
+
+        sut = new FrameDataProvider(menuProperties, userSettingsService);
     }
 
     @Test
