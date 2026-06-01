@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.githubactivity;
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
 import de.focusshift.zeiterfassung.project.ProjectService;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.CurrentUser;
@@ -11,22 +12,17 @@ import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserSettings;
 import de.focusshift.zeiterfassung.user.UserSettingsService;
-import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.servlet.view.RedirectView;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -50,18 +46,21 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     private final UserSearchViewHelper userSearchViewHelper;
     private final ProjectService projectService;
     private final ActivityTypeService activityTypeService;
+    private final TimeEntryLockService timeEntryLockService;
     private final RestClient restClient;
 
     GitHubActivityController(UserSettingsService userSettingsService,
                               TimeEntryService timeEntryService,
                               UserSearchViewHelper userSearchViewHelper,
                               ProjectService projectService,
-                              ActivityTypeService activityTypeService) {
+                              ActivityTypeService activityTypeService,
+                              TimeEntryLockService timeEntryLockService) {
         this.userSettingsService = userSettingsService;
         this.timeEntryService = timeEntryService;
         this.userSearchViewHelper = userSearchViewHelper;
         this.projectService = projectService;
         this.activityTypeService = activityTypeService;
+        this.timeEntryLockService = timeEntryLockService;
         this.restClient = RestClient.builder()
             .defaultHeader("User-Agent", "zeiterfassung")
             .defaultHeader("Accept", "application/vnd.github+json")
@@ -92,6 +91,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         model.addAttribute("nextDate", selectedDate.plusDays(1));
         model.addAttribute("groups", groups);
         model.addAttribute("userLocalId", userLocalId);
+        model.addAttribute("isLocked", timeEntryLockService.isLocked(selectedDate));
 
         return "github-activity/index";
     }
@@ -126,39 +126,6 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         }
 
         return "github-activity/inline-form";
-    }
-
-    @PostMapping("/create-entries")
-    RedirectView createEntries(@RequestParam List<String> comment,
-                               @RequestParam(required = false) List<String> startTime,
-                               @RequestParam String date,
-                               @RequestParam Long userLocalId,
-                               @CurrentUser CurrentOidcUser currentUser) {
-
-        final LocalDate entryDate = LocalDate.parse(date);
-        final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
-        final ZoneId zone = ZoneId.systemDefault();
-
-        for (int i = 0; i < comment.size(); i++) {
-            final String c = comment.get(i);
-            if (c == null || c.isBlank()) continue;
-
-            ZonedDateTime start;
-            if (startTime != null && i < startTime.size() && startTime.get(i) != null && !startTime.get(i).isBlank()) {
-                try {
-                    final LocalTime lt = LocalTime.parse(startTime.get(i), DateTimeFormatter.ofPattern("HH:mm"));
-                    start = ZonedDateTime.of(entryDate, lt, zone);
-                } catch (Exception e) {
-                    start = ZonedDateTime.of(entryDate, LocalTime.NOON, zone);
-                }
-            } else {
-                start = ZonedDateTime.of(entryDate, LocalTime.NOON, zone);
-            }
-            final ZonedDateTime end = start.plusMinutes(30);
-            timeEntryService.createTimeEntry(currentUserLocalId, c, start, end, false, null, null);
-        }
-
-        return new RedirectView("/github-activity?date=" + date);
     }
 
     @SuppressWarnings("unchecked")
@@ -211,14 +178,9 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
             }
         }
 
-        return byRepo.entrySet().stream().map(entry -> {
-            final String repoName = entry.getKey();
-            final List<GitHubEvent> events = entry.getValue();
-            final String combined = repoName + ": " + events.stream()
-                .map(GitHubEvent::title)
-                .collect(Collectors.joining("; "));
-            return new GitHubActivityGroup(repoName, events, combined);
-        }).toList();
+        return byRepo.entrySet().stream()
+            .map(entry -> new GitHubActivityGroup(entry.getKey(), entry.getValue()))
+            .toList();
     }
 
     @SuppressWarnings("unchecked")
