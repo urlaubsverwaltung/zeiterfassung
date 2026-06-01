@@ -10,7 +10,9 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.LocaleResolver;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
@@ -108,6 +110,14 @@ public class UserSettingsService {
         LOG.debug("created (not persisted) default userSettingsEntity={}", userSettingsEntity);
 
         return userSettingsEntity;
+    }
+
+    public List<String> findAllVerifiedGithubLogins() {
+        return userSettingsRepository.findByGithubLoginVerifiedTrue().stream()
+            .map(UserSettingsEntity::getGithubLogin)
+            .filter(Objects::nonNull)
+            .filter(login -> !login.isBlank())
+            .toList();
     }
 
     public UserSettings updateGithubLogin(UserIdComposite userIdComposite, @Nullable String githubLogin, boolean verified) {

@@ -13,34 +13,33 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserSettings;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.UserSettingsService;
-import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
 
 @Controller
 @RequestMapping("/github-activity")
 class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
-    /** Cache GitHub events per username for 5 minutes to avoid hitting the 60 req/hr unauthenticated rate limit. */
-    private record CacheEntry(List<Map<String, Object>> events, Instant fetchedAt) {}
-    private static final long CACHE_TTL_SECONDS = 300; // 5 minutes
-    private final ConcurrentHashMap<String, CacheEntry> eventCache = new ConcurrentHashMap<>();
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final long MIN_SUGGESTED_MINUTES = 15;
+
+    @Value("${github.app.id:}")
+    private String githubAppId;
 
     private final UserSettingsService userSettingsService;
     private final UserSettingsProvider userSettingsProvider;
@@ -49,7 +48,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     private final ProjectService projectService;
     private final ActivityTypeService activityTypeService;
     private final TimeEntryLockService timeEntryLockService;
-    private final RestClient restClient;
+    private final GitHubRawEventRepository eventRepository;
 
     GitHubActivityController(UserSettingsService userSettingsService,
                               UserSettingsProvider userSettingsProvider,
@@ -57,7 +56,8 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                               UserSearchViewHelper userSearchViewHelper,
                               ProjectService projectService,
                               ActivityTypeService activityTypeService,
-                              TimeEntryLockService timeEntryLockService) {
+                              TimeEntryLockService timeEntryLockService,
+                              GitHubRawEventRepository eventRepository) {
         this.userSettingsService = userSettingsService;
         this.userSettingsProvider = userSettingsProvider;
         this.timeEntryService = timeEntryService;
@@ -65,10 +65,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         this.projectService = projectService;
         this.activityTypeService = activityTypeService;
         this.timeEntryLockService = timeEntryLockService;
-        this.restClient = RestClient.builder()
-            .defaultHeader("User-Agent", "zeiterfassung")
-            .defaultHeader("Accept", "application/vnd.github+json")
-            .build();
+        this.eventRepository = eventRepository;
     }
 
     @GetMapping
@@ -85,18 +82,23 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         }
 
         final String login = userSettings.githubLogin().get();
-        final String token = userSettings.githubToken().orElse(null);
         final ZoneId zone = userSettingsProvider.zoneId();
-        final List<Map<String, Object>> events = fetchGitHubEvents(login, token);
-        final List<GitHubActivityGroup> groups = parseAndGroupEvents(events, selectedDate, zone);
 
+        final Instant dayStart = selectedDate.atStartOfDay(zone).toInstant();
+        final Instant dayEnd = selectedDate.plusDays(1).atStartOfDay(zone).toInstant();
+        final List<GitHubRawEventEntity> rawEvents =
+            eventRepository.findByGithubUsernameAndEventTimestampBetweenOrderByEventTimestampAsc(login, dayStart, dayEnd);
+
+        final List<ActivityAnchor> anchors = toAnchors(rawEvents, zone);
         final Long userLocalId = currentUser.getUserIdComposite().localId().value();
+
         model.addAttribute("date", selectedDate);
         model.addAttribute("prevDate", selectedDate.minusDays(1));
         model.addAttribute("nextDate", selectedDate.plusDays(1));
-        model.addAttribute("groups", groups);
+        model.addAttribute("anchors", anchors);
         model.addAttribute("userLocalId", userLocalId);
         model.addAttribute("isLocked", timeEntryLockService.isLocked(selectedDate));
+        model.addAttribute("syncConfigured", isSyncConfigured());
 
         return "github-activity/index";
     }
@@ -105,6 +107,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     String inlineForm(@RequestParam String comment,
                       @RequestParam String date,
                       @RequestParam(required = false) String startTime,
+                      @RequestParam(required = false) String duration,
                       @RequestParam Long userLocalId,
                       @RequestParam(required = false) String frameId,
                       Model model) {
@@ -112,215 +115,87 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         model.addAttribute("comment", comment);
         model.addAttribute("date", date);
         model.addAttribute("startTime", startTime != null ? startTime : "");
+        model.addAttribute("duration", duration != null ? duration : "");
         model.addAttribute("userLocalId", userLocalId);
-        model.addAttribute("formAction", "/timeentries");
         model.addAttribute("frameId", frameId != null ? frameId : "inline-form-frame");
 
-        // Load projects / activity types defensively — if the table query fails the inline form still works.
         try {
             model.addAttribute("projects", projectService.findAllActive());
         } catch (Exception e) {
-            java.util.logging.Logger.getLogger(getClass().getName()).warning("Could not load projects: " + e.getMessage());
-            model.addAttribute("projects", java.util.List.of());
+            model.addAttribute("projects", List.of());
         }
         try {
             model.addAttribute("activityTypes", activityTypeService.findAllActive());
         } catch (Exception e) {
-            java.util.logging.Logger.getLogger(getClass().getName()).warning("Could not load activityTypes: " + e.getMessage());
-            model.addAttribute("activityTypes", java.util.List.of());
+            model.addAttribute("activityTypes", List.of());
         }
 
         return "github-activity/inline-form";
     }
 
-    @SuppressWarnings("unchecked")
-    private List<Map<String, Object>> fetchGitHubEvents(String login, @jakarta.annotation.Nullable String token) {
-        final String cacheKey = login + (token != null ? ":auth" : ":pub");
-        final CacheEntry cached = eventCache.get(cacheKey);
-        if (cached != null && Instant.now().minusSeconds(CACHE_TTL_SECONDS).isBefore(cached.fetchedAt())) {
-            return cached.events();
+    private List<ActivityAnchor> toAnchors(List<GitHubRawEventEntity> entities, ZoneId zone) {
+        if (entities.isEmpty()) return List.of();
+
+        // Group by repo + anchorType + anchorId — preserving chronological order of first event
+        final Map<String, List<GitHubRawEventEntity>> grouped = new LinkedHashMap<>();
+        for (GitHubRawEventEntity e : entities) {
+            final String key = e.getRepoName() + "|" + e.getAnchorType() + "|"
+                + (e.getAnchorId() != null ? e.getAnchorId() : "");
+            grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(e);
         }
-        try {
-            final var request = restClient.get()
-                .uri("https://api.github.com/users/{login}/events?per_page=100", login);
-            if (token != null && !token.isBlank()) {
-                request.header("Authorization", "Bearer " + token);
-            }
-            final List<Map<String, Object>> events = request.retrieve()
-                .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
-            final List<Map<String, Object>> result = events != null ? events : List.of();
-            eventCache.put(cacheKey, new CacheEntry(result, Instant.now()));
-            return result;
-        } catch (Exception e) {
-            return cached != null ? cached.events() : List.of();
-        }
+
+        return grouped.values().stream().map(group -> {
+            final GitHubRawEventEntity first = group.get(0);
+
+            final Instant minTs = group.stream().map(GitHubRawEventEntity::getEventTimestamp)
+                .min(Comparator.naturalOrder()).orElseThrow();
+            final Instant maxTs = group.stream().map(GitHubRawEventEntity::getEventTimestamp)
+                .max(Comparator.naturalOrder()).orElseThrow();
+
+            final String windowStart = TIME_FMT.withZone(zone).format(minTs);
+            final String windowEnd = minTs.equals(maxTs) ? null : TIME_FMT.withZone(zone).format(maxTs);
+
+            final long windowMinutes = Duration.between(minTs, maxTs).toMinutes();
+            final long suggested = Math.max(MIN_SUGGESTED_MINUTES, windowMinutes);
+            final String suggestedDuration = String.format("%02d:%02d", suggested / 60, suggested % 60);
+
+            final List<AnchorEvent> events = group.stream()
+                .map(e -> new AnchorEvent(
+                    e.getEventIcon(),
+                    e.getEventSummary(),
+                    TIME_FMT.withZone(zone).format(e.getEventTimestamp())))
+                .toList();
+
+            final String anchorLabel = first.getAnchorTitle() != null && !first.getAnchorTitle().isBlank()
+                ? first.getAnchorTitle()
+                : (first.getAnchorId() != null ? first.getAnchorId() : "");
+            final String anchorRef = buildAnchorRef(first);
+            final String prefilledComment = first.getRepoName() + (anchorRef.isEmpty() ? "" : " " + anchorRef)
+                + (anchorLabel.isEmpty() ? "" : ": " + anchorLabel);
+
+            return new ActivityAnchor(
+                first.getRepoName(),
+                first.getAnchorType(),
+                first.getAnchorId(),
+                first.getAnchorTitle(),
+                events,
+                windowStart,
+                windowEnd,
+                suggestedDuration,
+                prefilledComment
+            );
+        }).toList();
     }
 
-    @SuppressWarnings("unchecked")
-    private List<GitHubActivityGroup> parseAndGroupEvents(List<Map<String, Object>> rawEvents, LocalDate date, ZoneId zone) {
-        if (rawEvents == null) return List.of();
-        final Map<String, List<GitHubEvent>> byRepo = new LinkedHashMap<>();
-
-        for (Map<String, Object> raw : rawEvents) {
-            final String createdAt = (String) raw.get("created_at");
-            if (createdAt == null) continue;
-
-            final Instant instant = Instant.parse(createdAt);
-            final LocalDate eventDate = instant.atZone(zone).toLocalDate();
-            if (!eventDate.equals(date)) continue;
-
-            final String startTime = instant.atZone(zone).format(DateTimeFormatter.ofPattern("HH:mm"));
-            final String type = (String) raw.get("type");
-            final Map<String, Object> repoMap = (Map<String, Object>) raw.get("repo");
-            final String repoName = repoMap != null ? (String) repoMap.get("name") : "unknown";
-            final Map<String, Object> payload = (Map<String, Object>) raw.get("payload");
-
-            final GitHubEvent event = parseEvent(type, repoName, payload, startTime);
-            if (event != null) {
-                byRepo.computeIfAbsent(repoName, k -> new ArrayList<>()).add(event);
-            }
-        }
-
-        return byRepo.entrySet().stream()
-            .map(entry -> new GitHubActivityGroup(entry.getKey(), entry.getValue()))
-            .toList();
-    }
-
-    @SuppressWarnings("unchecked")
-    private GitHubEvent parseEvent(String type, String repoName, Map<String, Object> payload, String startTime) {
-        if (payload == null) payload = Map.of();
-
-        return switch (type != null ? type : "") {
-            case "PushEvent" -> {
-                // payload.size is the authoritative commit count — commits[] is capped at 20
-                // and is empty for bot/merge pushes even when actual commits were pushed.
-                // payload.distinct_size excludes merge commits; prefer it when > 0.
-                final int size = toInt(payload.get("size"));
-                final int distinctSize = toInt(payload.get("distinct_size"));
-                final int count = distinctSize > 0 ? distinctSize : size;
-
-                // Skip empty pushes (bot commits, force-pushes with no new content, etc.)
-                if (count == 0) yield null;
-
-                final List<Map<String, Object>> commits = (List<Map<String, Object>>) payload.get("commits");
-                final boolean hasCommitDetails = commits != null && !commits.isEmpty();
-
-                final String title = "Pushed " + count + " commit" + (count != 1 ? "s" : "");
-                final String firstMsg = hasCommitDetails ? firstLine((String) commits.get(0).get("message"), 72) : "";
-                final String detail = hasCommitDetails
-                    ? commits.stream().limit(3).map(c -> {
-                        final String sha = shortSha((String) c.get("sha"));
-                        final String msg = firstLine((String) c.get("message"), 55);
-                        return sha.isEmpty() ? msg : sha + " " + msg;
-                      }).collect(Collectors.joining(" · "))
-                    : "";
-                final String prefilledComment = hasCommitDetails
-                    ? repoName + ": " + firstMsg + (count > 1 ? " (+" + (count - 1) + " more)" : "")
-                    : repoName + ": " + title;
-                yield new GitHubEvent(type, "📝", title, detail, prefilledComment, startTime);
-            }
-            case "PullRequestEvent" -> {
-                final String action = (String) payload.get("action");
-                final Map<String, Object> pr = (Map<String, Object>) payload.get("pull_request");
-                final int number = pr != null ? toInt(pr.get("number")) : 0;
-                final String prTitle = pr != null ? (String) pr.get("title") : "";
-                final boolean merged = pr != null && Boolean.TRUE.equals(pr.get("merged"));
-                final String displayAction = merged ? "Merged" : capitalize(action);
-                final String title = displayAction + " PR #" + number;
-                final String prefilledComment = displayAction + " PR #" + number + ": " + prTitle + " (" + repoName + ")";
-                yield new GitHubEvent(type, "🔀", title, prTitle, prefilledComment, startTime);
-            }
-            case "PullRequestReviewEvent" -> {
-                final Map<String, Object> pr = (Map<String, Object>) payload.get("pull_request");
-                final int number = pr != null ? toInt(pr.get("number")) : 0;
-                final String prTitle = pr != null ? (String) pr.get("title") : "";
-                final String title = "Reviewed PR #" + number;
-                final String prefilledComment = "Reviewed PR #" + number + ": " + prTitle + " (" + repoName + ")";
-                yield new GitHubEvent(type, "👁", title, prTitle, prefilledComment, startTime);
-            }
-            case "IssuesEvent" -> {
-                final String action = (String) payload.get("action");
-                final Map<String, Object> issue = (Map<String, Object>) payload.get("issue");
-                final int number = issue != null ? toInt(issue.get("number")) : 0;
-                final String issueTitle = issue != null ? (String) issue.get("title") : "";
-                final String title = capitalize(action) + " issue #" + number;
-                final String prefilledComment = capitalize(action) + " issue #" + number + ": " + issueTitle + " (" + repoName + ")";
-                yield new GitHubEvent(type, "🐛", title, issueTitle, prefilledComment, startTime);
-            }
-            case "IssueCommentEvent" -> {
-                final Map<String, Object> issue = (Map<String, Object>) payload.get("issue");
-                final Map<String, Object> comment = (Map<String, Object>) payload.get("comment");
-                final int number = issue != null ? toInt(issue.get("number")) : 0;
-                final String issueTitle = issue != null ? (String) issue.get("title") : "";
-                final String body = comment != null ? (String) comment.get("body") : "";
-                final String detail = body != null && body.length() > 100 ? body.substring(0, 100) : body;
-                final String prefilledComment = "Commented on #" + number + ": " + issueTitle + " (" + repoName + ")";
-                yield new GitHubEvent(type, "💬", "Commented on #" + number, detail != null ? detail : "", prefilledComment, startTime);
-            }
-            case "CreateEvent" -> {
-                final String refType = (String) payload.get("ref_type"); // "branch", "tag", "repository"
-                final String ref = (String) payload.get("ref");
-                final String what = ref != null && !ref.isEmpty() ? refType + " " + ref : refType;
-                final String title = "Created " + what;
-                yield new GitHubEvent(type, "🌿", title, "", repoName + ": " + title, startTime);
-            }
-            case "DeleteEvent" -> {
-                final String refType = (String) payload.get("ref_type");
-                final String ref = (String) payload.get("ref");
-                final String what = ref != null && !ref.isEmpty() ? refType + " " + ref : refType;
-                final String title = "Deleted " + what;
-                yield new GitHubEvent(type, "🗑", title, "", repoName + ": " + title, startTime);
-            }
-            case "ForkEvent" -> {
-                final Map<String, Object> forkee = (Map<String, Object>) payload.get("forkee");
-                final String forkName = forkee != null ? (String) forkee.get("full_name") : repoName;
-                final String title = "Forked to " + forkName;
-                yield new GitHubEvent(type, "🍴", title, "", title, startTime);
-            }
-            case "WatchEvent" -> {
-                final String title = "Starred " + repoName;
-                yield new GitHubEvent(type, "⭐", title, "", title, startTime);
-            }
-            case "ReleaseEvent" -> {
-                final Map<String, Object> release = (Map<String, Object>) payload.get("release");
-                final String tagName = release != null ? (String) release.get("tag_name") : "";
-                final String releaseName = release != null && release.get("name") != null ? (String) release.get("name") : tagName;
-                final String action = capitalize((String) payload.get("action"));
-                final String title = action + " release " + tagName;
-                yield new GitHubEvent(type, "🚀", title, releaseName, repoName + ": " + title, startTime);
-            }
-            case "CommitCommentEvent" -> {
-                final Map<String, Object> comment = (Map<String, Object>) payload.get("comment");
-                final String body = comment != null ? firstLine((String) comment.get("body"), 80) : "";
-                final String title = "Commented on commit";
-                yield new GitHubEvent(type, "💬", title, body, repoName + ": " + title, startTime);
-            }
-            default -> {
-                final String displayType = type != null ? type.replaceAll("Event$", "") : "Unknown";
-                final String prefilledComment = repoName + ": " + displayType;
-                yield new GitHubEvent(type, "⚡", displayType, "", prefilledComment, startTime);
-            }
+    private static String buildAnchorRef(GitHubRawEventEntity e) {
+        return switch (e.getAnchorType()) {
+            case "PR" -> e.getAnchorId() != null ? "PR #" + e.getAnchorId() : "";
+            case "ISSUE" -> e.getAnchorId() != null ? "Issue #" + e.getAnchorId() : "";
+            default -> "";
         };
     }
 
-    private static String firstLine(String s, int maxLen) {
-        if (s == null) return "";
-        final String first = s.split("\n")[0].trim();
-        return first.length() > maxLen ? first.substring(0, maxLen) : first;
-    }
-
-    private static String shortSha(String sha) {
-        if (sha == null || sha.length() < 7) return "";
-        return sha.substring(0, 7);
-    }
-
-    private static String capitalize(String s) {
-        if (s == null || s.isEmpty()) return "";
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
-    }
-
-    private static int toInt(Object o) {
-        if (o instanceof Number n) return n.intValue();
-        return 0;
+    private boolean isSyncConfigured() {
+        return !githubAppId.isBlank();
     }
 }

@@ -13,20 +13,18 @@
   </head>
   <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
     <th:block th:ref="search">
-      <div
-        th:replace="~{fragments/user-search::user-search(placeholder=#{user-search.input.placeholder})}"
-      ></div>
+      <div th:replace="~{fragments/user-search::user-search(placeholder=#{user-search.input.placeholder})}"></div>
     </th:block>
 
     <th:block th:fragment="content">
-      <!-- Hidden day context (read by JS) -->
-      <input type="hidden" id="gh-date" th:value="${date}"/>
-      <input type="hidden" id="gh-user-local-id" th:value="${userLocalId}"/>
 
       <main class="content-container content--max-w flex flex-col">
         <div class="flex-1 flex flex-col mx-auto w-full max-w-7xl px-4 desktop:px-8 pb-24">
 
-          <h1 class="text-xl font-bold mb-6" th:text="#{github-activity.page.title}">GitHub Activity</h1>
+          <h1 class="text-xl font-bold mb-1" th:text="#{github-activity.page.title}">GitHub Activity</h1>
+          <p class="text-sm text-gray-500 dark:text-zinc-400 mb-6" th:text="#{github-activity.tip}">
+            Review your GitHub work items below. Adjust the suggested time and click "Log it" to create a time entry.
+          </p>
 
           <!-- Date navigation -->
           <div class="flex items-center gap-4 mb-6">
@@ -35,7 +33,14 @@
             <a th:href="@{/github-activity(date=${nextDate})}" class="button-secondary">&#9654;</a>
           </div>
 
-          <!-- Locked notice -->
+          <!-- Sync not configured notice -->
+          <div th:if="${!syncConfigured}"
+               class="mb-4 flex items-center gap-2 px-4 py-2 rounded bg-blue-50 dark:bg-sky-950 border border-blue-200 dark:border-sky-800 text-sm text-blue-800 dark:text-sky-200">
+            <span>ℹ️</span>
+            <span th:text="#{github-activity.sync-not-configured}">GitHub App sync is not configured. Ask your administrator to set up the GitHub App integration.</span>
+          </div>
+
+          <!-- Day locked notice -->
           <div th:if="${isLocked}"
                class="mb-4 flex items-center gap-2 px-4 py-2 rounded bg-amber-50 dark:bg-amber-950 border border-amber-300 dark:border-amber-700 text-sm text-amber-800 dark:text-amber-200">
             <span>🔒</span>
@@ -43,132 +48,96 @@
           </div>
 
           <!-- Empty state -->
-          <p th:if="${#lists.isEmpty(groups)}" class="text-gray-500 dark:text-zinc-400" th:text="#{github-activity.empty}">
+          <p th:if="${#lists.isEmpty(anchors)}" class="text-gray-500 dark:text-zinc-400"
+             th:text="${syncConfigured} ? #{github-activity.empty} : #{github-activity.empty-no-sync}">
             No GitHub activity found for this day.
           </p>
 
-          <!-- Groups -->
-          <div th:each="group, groupStat : ${groups}" class="mb-4 border border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+          <!-- Anchor cards -->
+          <div th:each="anchor, anchorStat : ${anchors}"
+               class="mb-4 border border-gray-200 dark:border-zinc-700 rounded-lg overflow-hidden">
 
-            <!-- Group header (repo name only, no bulk buttons) -->
+            <!-- Card header: repo + anchor badge + title -->
             <div class="px-4 py-3 bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-700">
-              <span class="font-semibold text-blue-700 dark:text-sky-400" th:text="${group.repoName()}"></span>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-mono text-gray-500 dark:text-zinc-400" th:text="${anchor.repoName()}"></span>
+                <!-- PR badge -->
+                <span th:if="${anchor.anchorType() == 'PR' and anchor.anchorId() != null}"
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                  PR #<span th:text="${anchor.anchorId()}"></span>
+                </span>
+                <!-- Issue badge -->
+                <span th:if="${anchor.anchorType() == 'ISSUE' and anchor.anchorId() != null}"
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                  Issue #<span th:text="${anchor.anchorId()}"></span>
+                </span>
+                <!-- Anchor title -->
+                <span th:if="${anchor.anchorTitle() != null and !#strings.isEmpty(anchor.anchorTitle())}"
+                      class="font-semibold text-gray-800 dark:text-zinc-100 truncate"
+                      th:text="${anchor.anchorTitle()}"></span>
+              </div>
             </div>
 
-            <!-- Events -->
-            <div th:each="event, iterStat : ${group.events()}"
-                 class="px-4 py-3"
-                 th:classappend="${!iterStat.last ? 'border-b border-gray-100 dark:border-zinc-800' : ''}">
-              <div class="flex items-start gap-3">
+            <!-- Sub-events list -->
+            <div class="px-4 pt-3 pb-2">
+              <div th:each="event : ${anchor.events()}"
+                   class="flex items-baseline gap-2 text-sm py-0.5">
+                <span class="shrink-0" th:text="${event.icon()}"></span>
+                <span class="flex-1 text-gray-700 dark:text-zinc-300" th:text="${event.summary()}"></span>
+                <span class="shrink-0 text-xs text-gray-400 dark:text-zinc-500" th:text="${event.time()}"></span>
+              </div>
+            </div>
 
-                <!-- Checkbox (unlocked only) -->
-                <input th:if="${!isLocked}"
-                       type="checkbox"
-                       class="gh-event-checkbox mt-1.5 shrink-0 cursor-pointer"
-                       th:data-repo="${group.repoName()}"
-                       th:data-title="${event.title()}"
-                       onchange="ghUpdateBar()"/>
-                <!-- Spacer when locked so layout stays consistent -->
-                <span th:if="${isLocked}" class="w-4 shrink-0"></span>
+            <!-- Time window + Log it row -->
+            <div th:if="${!isLocked}"
+                 class="px-4 py-3 border-t border-gray-100 dark:border-zinc-800 flex flex-wrap items-center gap-3">
 
-                <!-- Icon + text -->
-                <div class="flex items-start gap-3 flex-1 min-w-0">
-                  <span class="text-xl shrink-0 mt-0.5" th:text="${event.icon()}"></span>
-                  <div class="flex flex-col min-w-0">
-                    <span class="font-medium" th:text="${event.title()}"></span>
-                    <span class="text-sm text-gray-500 dark:text-zinc-400 truncate"
-                          th:if="${!#strings.isEmpty(event.detail())}"
-                          th:text="${event.detail()}"></span>
-                  </div>
-                </div>
+              <!-- Window label -->
+              <span class="text-sm text-gray-500 dark:text-zinc-400">
+                <th:block th:if="${anchor.windowEnd() != null}">
+                  <span th:text="${anchor.windowStart()}"></span>
+                  <span>–</span>
+                  <span th:text="${anchor.windowEnd()}"></span>
+                </th:block>
+                <th:block th:if="${anchor.windowEnd() == null}">
+                  <span th:text="#{github-activity.at}">at</span>
+                  <span th:text="${anchor.windowStart()}"></span>
+                </th:block>
+              </span>
 
-                <!-- Timestamp + per-event button -->
-                <div class="flex items-center gap-3 shrink-0">
-                  <span class="text-sm text-gray-400 dark:text-zinc-500" th:text="${event.startTime()}"></span>
-                  <button th:if="${!isLocked}"
-                    type="button"
-                    class="button-secondary text-sm whitespace-nowrap"
-                    th:data-comment="${event.prefilledComment()}"
-                    th:data-date="${date}"
-                    th:data-start="${event.startTime()}"
-                    th:data-user-local-id="${userLocalId}"
-                    th:data-frame-id="|frame-${groupStat.index}-${iterStat.index}|"
-                    onclick="ghToggleInline(this)"
-                    th:text="#{github-activity.add-time-entry}"
-                  >+ Add time entry</button>
-                </div>
+              <!-- Suggested duration (editable) -->
+              <div class="flex items-center gap-1">
+                <label class="text-xs text-gray-400 dark:text-zinc-500" th:text="#{github-activity.suggested-duration}">Suggested:</label>
+                <input type="text"
+                       th:id="|duration-${anchorStat.index}|"
+                       th:value="${anchor.suggestedDuration()}"
+                       placeholder="hh:mm"
+                       class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-0.5 text-sm w-20 dark:bg-zinc-900 dark:text-zinc-100"/>
               </div>
 
-              <!-- Per-event inline form frame -->
-              <turbo-frame
-                th:id="|frame-${groupStat.index}-${iterStat.index}|"
-                class="block mt-3"
-              ></turbo-frame>
+              <!-- Log it button -->
+              <button type="button"
+                      class="button-main-green text-sm"
+                      th:data-comment="${anchor.prefilledComment()}"
+                      th:data-date="${date}"
+                      th:data-start="${anchor.windowStart()}"
+                      th:data-duration-id="|duration-${anchorStat.index}|"
+                      th:data-user-local-id="${userLocalId}"
+                      th:data-frame-id="|frame-${anchorStat.index}|"
+                      onclick="ghLogAnchor(this)"
+                      th:text="#{github-activity.log-it}">Log it ↓</button>
             </div>
 
-          </div>
+            <!-- Inline form frame (expanded when Log it is clicked) -->
+            <turbo-frame th:id="|frame-${anchorStat.index}|" class="block"></turbo-frame>
 
-          <!-- Day-level inline form (opened by sticky bar) -->
-          <turbo-frame id="frame-day-entry" class="block mt-2"></turbo-frame>
+          </div>
 
         </div>
       </main>
 
-      <!-- Sticky selection bar (hidden until events are checked) -->
-      <div id="gh-selection-bar"
-           class="hidden fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg px-6 py-4 flex items-center justify-between gap-4">
-        <span id="gh-selection-label" class="text-sm font-medium text-gray-700 dark:text-zinc-300"></span>
-        <button
-          type="button"
-          class="button-main-green text-sm"
-          onclick="ghAddSelected()"
-          th:text="#{github-activity.add-as-one-entry}"
-        >Add as one entry</button>
-      </div>
-
       <script>
-        function ghUpdateBar() {
-          const checked = document.querySelectorAll('.gh-event-checkbox:checked');
-          const bar = document.getElementById('gh-selection-bar');
-          const label = document.getElementById('gh-selection-label');
-          if (checked.length === 0) {
-            bar.classList.add('hidden');
-          } else {
-            bar.classList.remove('hidden');
-            label.textContent = checked.length + ' event' + (checked.length !== 1 ? 's' : '') + ' selected';
-          }
-        }
-
-        function ghAddSelected() {
-          const checked = document.querySelectorAll('.gh-event-checkbox:checked');
-          const date = document.getElementById('gh-date').value;
-          const userLocalId = document.getElementById('gh-user-local-id').value;
-
-          // Group titles by repo, preserving selection order
-          const byRepo = new Map();
-          checked.forEach(cb => {
-            const repo = cb.dataset.repo;
-            const title = cb.dataset.title;
-            if (!byRepo.has(repo)) byRepo.set(repo, []);
-            byRepo.get(repo).push(title);
-          });
-
-          const combined = [...byRepo.entries()]
-            .map(([repo, titles]) => repo + ': ' + titles.join('; '))
-            .join(' · ');
-
-          const frame = document.getElementById('frame-day-entry');
-          const params = new URLSearchParams({
-            comment: combined,
-            date: date,
-            userLocalId: userLocalId,
-            frameId: 'frame-day-entry'
-          });
-          frame.src = '/github-activity/inline-form?' + params.toString();
-          frame.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        function ghToggleInline(btn) {
+        function ghLogAnchor(btn) {
           const frameId = btn.dataset.frameId;
           const frame = document.getElementById(frameId);
           if (frame.src) {
@@ -176,14 +145,17 @@
             frame.innerHTML = '';
             return;
           }
+          const durationInput = document.getElementById(btn.dataset.durationId);
           const params = new URLSearchParams({
-            comment: btn.dataset.comment,
-            date: btn.dataset.date,
-            startTime: btn.dataset.start || '',
+            comment:     btn.dataset.comment,
+            date:        btn.dataset.date,
+            startTime:   btn.dataset.start,
+            duration:    durationInput ? durationInput.value : '',
             userLocalId: btn.dataset.userLocalId,
-            frameId: frameId
+            frameId:     frameId
           });
           frame.src = '/github-activity/inline-form?' + params.toString();
+          frame.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
       </script>
     </th:block>

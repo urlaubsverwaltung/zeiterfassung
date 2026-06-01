@@ -19,7 +19,7 @@
       </div>
       <div class="flex flex-col gap-1">
         <label class="text-xs font-medium text-gray-500 dark:text-zinc-400" th:text="#{github-activity.inline-form.duration}">Duration</label>
-        <input type="text" name="duration" placeholder="hh:mm"
+        <input type="text" name="duration" placeholder="hh:mm" th:value="${duration}"
                class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-900 dark:text-zinc-100 w-24" />
       </div>
       <div th:if="${projects != null and not #lists.isEmpty(projects)}"
