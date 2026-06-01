@@ -225,7 +225,7 @@ class TimeClockServiceTest {
 
         sut.stopTimeClock(userIdComposite);
 
-        verify(timeEntryService).createTimeEntry(userLocalId, "awesome comment", startedAt, stoppedAt, true);
+        verify(timeEntryService).createTimeEntry(userLocalId, "awesome comment", startedAt, stoppedAt, true, null, null);
     }
 
     @Test

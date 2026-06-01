@@ -158,7 +158,7 @@ class TenantImporterComponentTest {
         );
 
         verify(timeEntryService).createTimeEntry(
-            userLocalId, "lala", ZonedDateTime.parse("2024-06-01T08:00:00.123+02:00[Europe/Berlin]"), ZonedDateTime.parse("2024-06-01T12:00:00.123+02:00[Europe/Berlin]"), false
+            userLocalId, "lala", ZonedDateTime.parse("2024-06-01T08:00:00.123+02:00[Europe/Berlin]"), ZonedDateTime.parse("2024-06-01T12:00:00.123+02:00[Europe/Berlin]"), false, null, null
         );
 
     }

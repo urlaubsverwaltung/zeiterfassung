@@ -86,7 +86,7 @@ class TimeEntryDayServiceImplTest {
 
             final ZonedDateTime timeEntryStart = ZonedDateTime.parse("2025-10-26T09:00:00.00Z");
             final ZonedDateTime timeEntryEnd = ZonedDateTime.parse("2025-10-26T10:00:00.00Z");
-            final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "", timeEntryStart, timeEntryEnd, false);
+            final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "", timeEntryStart, timeEntryEnd, false, null, null);
             when(timeEntryService.getEntries(from, toExclusive, userLocalId)).thenReturn(List.of(timeEntry));
 
             when(workingTimeCalendarService.getWorkingTimeCalender(from, toExclusive, userLocalId)).thenReturn(
@@ -145,11 +145,11 @@ class TimeEntryDayServiceImplTest {
 
             final ZonedDateTime timeEntry1Start = ZonedDateTime.parse("2025-10-26T09:00:00.00Z");
             final ZonedDateTime timeEntry1End = ZonedDateTime.parse("2025-10-26T10:00:00.00Z");
-            final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(1L), userIdComposite1, "", timeEntry1Start, timeEntry1End, false);
+            final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(1L), userIdComposite1, "", timeEntry1Start, timeEntry1End, false, null, null);
 
             final ZonedDateTime timeEntry2Start = ZonedDateTime.parse("2025-10-26T15:00:00.00Z");
             final ZonedDateTime timeEntry2End = ZonedDateTime.parse("2025-10-26T17:00:00.00Z");
-            final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite2, "", timeEntry2Start, timeEntry2End, false);
+            final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite2, "", timeEntry2Start, timeEntry2End, false, null, null);
 
             when(timeEntryService.getEntries(from, toExclusive, List.of(userLocalId1, userLocalId2)))
                 .thenReturn(Map.of(
@@ -186,7 +186,7 @@ class TimeEntryDayServiceImplTest {
 
             final ZonedDateTime timeEntryStart = ZonedDateTime.parse("2025-10-26T09:00:00.00Z");
             final ZonedDateTime timeEntryEnd = ZonedDateTime.parse("2025-10-26T10:00:00.00Z");
-            final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "", timeEntryStart, timeEntryEnd, false);
+            final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "", timeEntryStart, timeEntryEnd, false, null, null);
 
             when(timeEntryService.getEntries(from, toExclusive, List.of(userLocalId)))
                 .thenReturn(Map.of(userIdComposite, List.of(timeEntry)));
@@ -227,11 +227,11 @@ class TimeEntryDayServiceImplTest {
 
             final ZonedDateTime timeEntry1Start = ZonedDateTime.parse("2025-10-26T09:00:00.00Z");
             final ZonedDateTime timeEntry1End = ZonedDateTime.parse("2025-10-26T10:00:00.00Z");
-            final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(1L), userIdComposite1, "", timeEntry1Start, timeEntry1End, false);
+            final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(1L), userIdComposite1, "", timeEntry1Start, timeEntry1End, false, null, null);
 
             final ZonedDateTime timeEntry2Start = ZonedDateTime.parse("2025-10-26T15:00:00.00Z");
             final ZonedDateTime timeEntry2End = ZonedDateTime.parse("2025-10-26T17:00:00.00Z");
-            final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite2, "", timeEntry2Start, timeEntry2End, false);
+            final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite2, "", timeEntry2Start, timeEntry2End, false, null, null);
 
             when(timeEntryService.getEntriesForAllUsers(from, toExclusive))
                 .thenReturn(Map.of(
@@ -268,7 +268,7 @@ class TimeEntryDayServiceImplTest {
 
             final ZonedDateTime timeEntryStart = ZonedDateTime.parse("2025-10-26T09:00:00.00Z");
             final ZonedDateTime timeEntryEnd = ZonedDateTime.parse("2025-10-26T10:00:00.00Z");
-            final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "", timeEntryStart, timeEntryEnd, false);
+            final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "", timeEntryStart, timeEntryEnd, false, null, null);
 
             when(timeEntryService.getEntriesForAllUsers(from, toExclusive))
                 .thenReturn(Map.of(userIdComposite, List.of(timeEntry)));
@@ -314,8 +314,8 @@ class TimeEntryDayServiceImplTest {
             final ZonedDateTime timeEntryBreakStart = ZonedDateTime.of(2022, 1, 4, 12, 0, 0, 0, userZoneId);
             final ZonedDateTime timeEntryBreakEnd = ZonedDateTime.of(2022, 1, 4, 13, 0, 0, 0, userZoneId);
 
-            final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", timeEntryStart, timeEntryEnd, false);
-            final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true);
+            final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", timeEntryStart, timeEntryEnd, false, null, null);
+            final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite, "deserved break", timeEntryBreakStart, timeEntryBreakEnd, true, null, null);
 
             when(timeEntryService.getEntries(firstDayOfWeek, lastDayOfWeek.plusDays(1), userLocalId))
                 .thenReturn(List.of(timeEntry1, timeEntry2));
@@ -431,8 +431,8 @@ class TimeEntryDayServiceImplTest {
             final ZonedDateTime lastDayOfWeekTimeEntryStart = ZonedDateTime.of(2023, 2, 5, 9, 0, 0, 0, userZoneId);
             final ZonedDateTime lastDayOfWeekTimeEntryEnd = ZonedDateTime.of(2023, 2, 5, 12, 0, 0, 0, userZoneId);
 
-            final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false);
-            final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false);
+            final TimeEntry timeEntry1 = new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet, second time!", lastDayOfWeekTimeEntryStart, lastDayOfWeekTimeEntryEnd, false, null, null);
+            final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet!", firstDayOfWeekTimeEntryStart, firstDayOfWeekTimeEntryEnd, false, null, null);
 
             when(timeEntryService.getEntries(firstDateOfWeek, lastDateOfWeek.plusDays(1), userLocalId))
                 .thenReturn(List.of(timeEntry1, timeEntry2));

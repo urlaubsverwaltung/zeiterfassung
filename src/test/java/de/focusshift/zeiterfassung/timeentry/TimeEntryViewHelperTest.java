@@ -74,7 +74,7 @@ class TimeEntryViewHelperTest {
         final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
         final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
 
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "comment", start, end, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "comment", start, end, false, null, null);
 
         final TimeEntryDTO actual = sut.toTimeEntryDto(timeEntry);
 
@@ -232,7 +232,7 @@ class TimeEntryViewHelperTest {
             verify(bindingResult).hasErrors();
             verifyNoMoreInteractions(bindingResult);
 
-            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false);
+            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false, null, null);
         }
 
         @Test
@@ -258,7 +258,7 @@ class TimeEntryViewHelperTest {
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
-            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false);
+            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false, null, null);
         }
 
         @ParameterizedTest
@@ -284,7 +284,7 @@ class TimeEntryViewHelperTest {
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
-            verify(timeEntryService).createTimeEntry(userLocalId, null, start, end, false);
+            verify(timeEntryService).createTimeEntry(userLocalId, null, start, end, false, null, null);
         }
 
         @ParameterizedTest
@@ -310,7 +310,7 @@ class TimeEntryViewHelperTest {
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
-            verify(timeEntryService).createTimeEntry(userLocalId, null, start, end, false);
+            verify(timeEntryService).createTimeEntry(userLocalId, null, start, end, false, null, null);
         }
     }
 
@@ -550,7 +550,7 @@ class TimeEntryViewHelperTest {
             final ZonedDateTime expectedStart = ZonedDateTime.parse("2025-02-14T12:15:00Z");
             final ZonedDateTime expectedEnd = ZonedDateTime.parse("2025-02-14T18:30:00Z");
             final Duration expectedDuration = Duration.ZERO;
-            verify(timeEntryService).updateTimeEntry(timeEntryId, "comment-new", expectedStart, expectedEnd, expectedDuration, false);
+            verify(timeEntryService).updateTimeEntry(timeEntryId, "comment-new", expectedStart, expectedEnd, expectedDuration, false, null, null);
         }
 
         @Test
@@ -588,7 +588,7 @@ class TimeEntryViewHelperTest {
             final ZonedDateTime expectedStart = ZonedDateTime.parse("2025-02-14T12:15:00Z");
             final ZonedDateTime expectedEnd = ZonedDateTime.parse("2025-02-14T18:30:00Z");
             final Duration expectedDuration = Duration.ZERO;
-            verify(timeEntryService).updateTimeEntry(timeEntryId, "comment-new", expectedStart, expectedEnd, expectedDuration, false);
+            verify(timeEntryService).updateTimeEntry(timeEntryId, "comment-new", expectedStart, expectedEnd, expectedDuration, false, null, null);
         }
 
         @Test
@@ -609,7 +609,7 @@ class TimeEntryViewHelperTest {
             when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
-            when(timeEntryService.updateTimeEntry(any(TimeEntryId.class), anyString(), any(ZonedDateTime.class), any(ZonedDateTime.class), any(Duration.class), anyBoolean()))
+            when(timeEntryService.updateTimeEntry(any(TimeEntryId.class), anyString(), any(ZonedDateTime.class), any(ZonedDateTime.class), any(Duration.class), anyBoolean(), any(), any()))
                 .thenThrow(new TimeEntryUpdateNotPlausibleException("message"));
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -709,7 +709,7 @@ class TimeEntryViewHelperTest {
             sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(bindingResult);
-            verify(timeEntryService).updateTimeEntry(new TimeEntryId(1L), "comment-new", start, end, Duration.ZERO, false);
+            verify(timeEntryService).updateTimeEntry(new TimeEntryId(1L), "comment-new", start, end, Duration.ZERO, false, null, null);
         }
     }
 
@@ -730,6 +730,6 @@ class TimeEntryViewHelperTest {
         final TimeEntryId timeEntryId = new TimeEntryId(1L);
         final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
         final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
-        return new TimeEntry(timeEntryId, userIdComposite, "comment", start, end, false);
+        return new TimeEntry(timeEntryId, userIdComposite, "comment", start, end, false, null, null);
     }
 }

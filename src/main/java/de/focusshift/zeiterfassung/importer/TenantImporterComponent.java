@@ -149,7 +149,7 @@ class TenantImporterComponent {
         final UserLocalId userLocalId = userIdComposite.localId();
 
         LOG.info("creating {} timeEntries of user={} of tenantId={}", timeEntryDTOS.size(), userId.value(), tenantId.tenantId());
-        timeEntryDTOS.forEach(timeEntry -> timeEntryService.createTimeEntry(userLocalId, timeEntry.comment(), adjustWithDefaultTimeZone(timeEntry.start()), adjustWithDefaultTimeZone(timeEntry.end()), timeEntry.isBreak()));
+        timeEntryDTOS.forEach(timeEntry -> timeEntryService.createTimeEntry(userLocalId, timeEntry.comment(), adjustWithDefaultTimeZone(timeEntry.start()), adjustWithDefaultTimeZone(timeEntry.end()), timeEntry.isBreak(), null, null));
         LOG.info("created timeEntries of user={} of tenantId={}", userId.value(), tenantId.tenantId());
     }
 

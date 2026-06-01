@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.ZeitDuration;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -20,6 +21,8 @@ import java.time.ZonedDateTime;
  * @param start start timestamp
  * @param end end timestamp, never {@code null} ({@linkplain de.focusshift.zeiterfassung.timeclock.TimeClock} is something with start but without end)
  * @param isBreak whether time entry is a break or not
+ * @param customerId optional customer id
+ * @param projectTypeId optional project type id
  */
 public record TimeEntry(
     TimeEntryId id,
@@ -27,7 +30,9 @@ public record TimeEntry(
     String comment,
     ZonedDateTime start,
     ZonedDateTime end,
-    boolean isBreak
+    boolean isBreak,
+    @Nullable Long customerId,
+    @Nullable Long projectTypeId
 ) {
 
     /**

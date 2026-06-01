@@ -114,7 +114,7 @@ class WorkDurationCalculationServiceTest {
     }
 
     private static TimeEntry workEntry(String start, String end) {
-        return new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "", ZonedDateTime.parse(start), ZonedDateTime.parse(end), false);
+        return new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "", ZonedDateTime.parse(start), ZonedDateTime.parse(end), false, null, null);
     }
 
     private static UserIdComposite anyUserIdComposite() {

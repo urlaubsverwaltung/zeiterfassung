@@ -124,11 +124,11 @@ class ReportServiceRawTest {
 
         final ZonedDateTime firstFrom = dateTime(2021, 1, 4, 10, 0);
         final ZonedDateTime firstTo = dateTime(2021, 1, 4, 11, 0);
-        final TimeEntry firstTimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work", firstFrom, firstTo, false);
+        final TimeEntry firstTimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work", firstFrom, firstTo, false, null, null);
 
         final ZonedDateTime secondFrom = dateTime(2021, 1, 7, 8, 0);
         final ZonedDateTime secondTo = dateTime(2021, 1, 7, 11, 0);
-        final TimeEntry secondTimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work", secondFrom, secondTo, false);
+        final TimeEntry secondTimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work", secondFrom, secondTo, false, null, null);
 
         final TimeEntryDay timeEntryDay1 = timeEntryDay(LocalDate.of(2021, 1, 4), WORK_1H, List.of(firstTimeEntry));
         final TimeEntryDay timeEntryDay2 = timeEntryDay(LocalDate.of(2021, 1, 5));
@@ -165,11 +165,11 @@ class ReportServiceRawTest {
 
         final ZonedDateTime morningFrom = dateTime(2021, 1, 5, 10, 0);
         final ZonedDateTime morningTo = dateTime(2021, 1, 5, 11, 0);
-        final TimeEntry morningTimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work in the morning", morningFrom, morningTo, false);
+        final TimeEntry morningTimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work in the morning", morningFrom, morningTo, false, null, null);
 
         final ZonedDateTime noonFrom = dateTime(2021, 1, 5, 15, 0);
         final ZonedDateTime noonTo = dateTime(2021, 1, 5, 19, 0);
-        final TimeEntry noonTimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work in the noon", noonFrom, noonTo, false);
+        final TimeEntry noonTimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work in the noon", noonFrom, noonTo, false, null, null);
 
         final TimeEntryDay timeEntryDay1 = timeEntryDay(LocalDate.of(2021, 1, 4));
         final TimeEntryDay timeEntryDay2 = timeEntryDay(LocalDate.of(2021, 1, 5), WORK_5H, List.of(morningTimeEntry, noonTimeEntry));
@@ -206,7 +206,7 @@ class ReportServiceRawTest {
 
         final ZonedDateTime from = dateTime(2021, 1, 4, 22, 0);
         final ZonedDateTime to = dateTime(2021, 1, 5, 3, 0);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work in the night", from, to, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work in the night", from, to, false, null, null);
 
         final TimeEntryDay timeEntryDay1 = timeEntryDay(LocalDate.of(2021, 1, 4), WORK_5H, List.of(timeEntry));
         final TimeEntryDay timeEntryDay2 = timeEntryDay(LocalDate.of(2021, 1, 5));
@@ -391,31 +391,31 @@ class ReportServiceRawTest {
 
         final ZonedDateTime w1_d1_From = dateTime(2021, 1, 4, 1, 0);
         final ZonedDateTime w1_d1_To = dateTime(2021, 1, 4, 2, 0);
-        final TimeEntry w1_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w1_d1", w1_d1_From, w1_d1_To, false);
+        final TimeEntry w1_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w1_d1", w1_d1_From, w1_d1_To, false, null, null);
         final ZonedDateTime w1_d2_From = dateTime(2021, 1, 5, 3, 0);
         final ZonedDateTime w1_d2_To = dateTime(2021, 1, 5, 4, 0);
-        final TimeEntry w1_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w1_d2", w1_d2_From, w1_d2_To, false);
+        final TimeEntry w1_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w1_d2", w1_d2_From, w1_d2_To, false, null, null);
 
         final ZonedDateTime w2_d1_From = dateTime(2021, 1, 11, 1, 0);
         final ZonedDateTime w2_d1_To = dateTime(2021, 1, 11, 3, 0);
-        final TimeEntry w2_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w2_d1", w2_d1_From, w2_d1_To, false);
+        final TimeEntry w2_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w2_d1", w2_d1_From, w2_d1_To, false, null, null);
         final ZonedDateTime w2_d2_From = dateTime(2021, 1, 12, 4, 0);
         final ZonedDateTime w2_d2_To = dateTime(2021, 1, 12, 6, 0);
-        final TimeEntry w2_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w2_d2", w2_d2_From, w2_d2_To, false);
+        final TimeEntry w2_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w2_d2", w2_d2_From, w2_d2_To, false, null, null);
 
         final ZonedDateTime w3_d1_From = dateTime(2021, 1, 18, 1, 0);
         final ZonedDateTime w3_d1_To = dateTime(2021, 1, 18, 4, 0);
-        final TimeEntry w3_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w3_d1", w3_d1_From, w3_d1_To, false);
+        final TimeEntry w3_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w3_d1", w3_d1_From, w3_d1_To, false, null, null);
         final ZonedDateTime w3_d2_From = dateTime(2021, 1, 19, 5, 0);
         final ZonedDateTime w3_d2_To = dateTime(2021, 1, 19, 8, 0);
-        final TimeEntry w3_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w3_d2", w3_d2_From, w3_d2_To, false);
+        final TimeEntry w3_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w3_d2", w3_d2_From, w3_d2_To, false, null, null);
 
         final ZonedDateTime w4_d1_From = dateTime(2021, 1, 25, 1, 0);
         final ZonedDateTime w4_d1_To = dateTime(2021, 1, 25, 5, 0);
-        final TimeEntry w4_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w4_d1", w4_d1_From, w4_d1_To, false);
+        final TimeEntry w4_d1_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w4_d1", w4_d1_From, w4_d1_To, false, null, null);
         final ZonedDateTime w4_d2_From = dateTime(2021, 1, 26, 6, 0);
         final ZonedDateTime w4_d2_To = dateTime(2021, 1, 26, 10, 0);
-        final TimeEntry w4_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w4_d2", w4_d2_From, w4_d2_To, false);
+        final TimeEntry w4_d2_TimeEntry = new TimeEntry(new TimeEntryId(1L), user.userIdComposite(), "hard work w4_d2", w4_d2_From, w4_d2_To, false, null, null);
 
         final TimeEntryDay d1 = timeEntryDay(LocalDate.of(2021, 1, 1));
         final TimeEntryDay d2 = timeEntryDay(LocalDate.of(2021, 1, 2));

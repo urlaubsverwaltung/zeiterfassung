@@ -209,6 +209,50 @@
                     Pause
                   </label>
                 </div>
+                <div th:if="${customers != null and not #lists.isEmpty(customers)}" class="time-entry-cell time-entry-cell__customer">
+                  <select
+                    name="customerId"
+                    th:id="|${rnd}-input-entry-customer|"
+                    th:disabled="${disabled}"
+                    class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800"
+                  >
+                    <option value="" th:text="#{time-entry.customer.none}">— No customer —</option>
+                    <option
+                      th:each="c : ${customers}"
+                      th:value="${c.id().value()}"
+                      th:text="${c.name()}"
+                      th:selected="${timeEntry.customerId != null and timeEntry.customerId == c.id().value()}"
+                    ></option>
+                  </select>
+                  <label
+                    th:for="|${rnd}-input-entry-customer|"
+                    th:text="#{time-entry.customer.label}"
+                  >
+                    Customer
+                  </label>
+                </div>
+                <div th:if="${projectTypes != null and not #lists.isEmpty(projectTypes)}" class="time-entry-cell time-entry-cell__project-type">
+                  <select
+                    name="projectTypeId"
+                    th:id="|${rnd}-input-entry-project-type|"
+                    th:disabled="${disabled}"
+                    class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800"
+                  >
+                    <option value="" th:text="#{time-entry.project-type.none}">— No type —</option>
+                    <option
+                      th:each="pt : ${projectTypes}"
+                      th:value="${pt.id().value()}"
+                      th:text="${pt.name()}"
+                      th:selected="${timeEntry.projectTypeId != null and timeEntry.projectTypeId == pt.id().value()}"
+                    ></option>
+                  </select>
+                  <label
+                    th:for="|${rnd}-input-entry-project-type|"
+                    th:text="#{time-entry.project-type.label}"
+                  >
+                    Project type
+                  </label>
+                </div>
               </div>
             </div>
           </div>

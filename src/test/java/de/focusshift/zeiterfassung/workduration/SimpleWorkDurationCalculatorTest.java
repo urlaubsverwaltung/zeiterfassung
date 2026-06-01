@@ -199,7 +199,7 @@ class SimpleWorkDurationCalculatorTest {
     }
 
     private static TimeEntry entry(String start, String end, boolean isBreak) {
-        return new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "", ZonedDateTime.parse(start), ZonedDateTime.parse(end), isBreak);
+        return new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "", ZonedDateTime.parse(start), ZonedDateTime.parse(end), isBreak, null, null);
     }
 
     private static UserIdComposite anyUserIdComposite() {

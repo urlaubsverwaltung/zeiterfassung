@@ -75,7 +75,7 @@ class DemoDataCreationService {
                 final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(actualDate, startTime), zoneId);
                 final ZonedDateTime end = ZonedDateTime.of(LocalDateTime.of(actualDate, endTime), zoneId);
 
-                timeEntryService.createTimeEntry(userLocalId, getRandomComment(), start, end, false);
+                timeEntryService.createTimeEntry(userLocalId, getRandomComment(), start, end, false, null, null);
 
                 startTime = endTime;
                 endTime = randomTimeBetween(startTime, END_OF_WORK_DAY).plusMinutes(30);

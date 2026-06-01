@@ -289,6 +289,13 @@
               </div>
             </form>
           </turbo-frame>
+          <div class="mt-12">
+            <h2 class="font-bold" th:text="#{settings.categorisation.heading}">Categorisation</h2>
+            <div class="mt-4 flex flex-col gap-2 sm:flex-row">
+              <a href="/settings/customers" class="button-secondary" th:text="#{settings.customers.page.title}">Customers</a>
+              <a href="/settings/project-types" class="button-secondary" th:text="#{settings.project-types.page.title}">Project Types</a>
+            </div>
+          </div>
         </div>
       </main>
     </th:block>

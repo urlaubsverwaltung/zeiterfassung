@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.githubactivity;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
+import de.focusshift.zeiterfassung.customer.CustomerService;
+import de.focusshift.zeiterfassung.projecttype.ProjectTypeService;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.CurrentUser;
@@ -46,14 +48,20 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     private final UserSettingsService userSettingsService;
     private final TimeEntryService timeEntryService;
     private final UserSearchViewHelper userSearchViewHelper;
+    private final CustomerService customerService;
+    private final ProjectTypeService projectTypeService;
     private final RestClient restClient;
 
     GitHubActivityController(UserSettingsService userSettingsService,
                               TimeEntryService timeEntryService,
-                              UserSearchViewHelper userSearchViewHelper) {
+                              UserSearchViewHelper userSearchViewHelper,
+                              CustomerService customerService,
+                              ProjectTypeService projectTypeService) {
         this.userSettingsService = userSettingsService;
         this.timeEntryService = timeEntryService;
         this.userSearchViewHelper = userSearchViewHelper;
+        this.customerService = customerService;
+        this.projectTypeService = projectTypeService;
         this.restClient = RestClient.builder()
             .defaultHeader("User-Agent", "zeiterfassung")
             .defaultHeader("Accept", "application/vnd.github+json")
@@ -101,6 +109,8 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         model.addAttribute("userLocalId", userLocalId);
         model.addAttribute("formAction", "/timeentries");
         model.addAttribute("frameId", frameId != null ? frameId : "inline-form-frame");
+        model.addAttribute("customers", customerService.findAllActive());
+        model.addAttribute("projectTypes", projectTypeService.findAllActive());
 
         return "github-activity/inline-form";
     }
@@ -132,7 +142,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                 start = ZonedDateTime.of(entryDate, LocalTime.NOON, zone);
             }
             final ZonedDateTime end = start.plusMinutes(30);
-            timeEntryService.createTimeEntry(currentUserLocalId, c, start, end, false);
+            timeEntryService.createTimeEntry(currentUserLocalId, c, start, end, false, null, null);
         }
 
         return new RedirectView("/github-activity?date=" + date);

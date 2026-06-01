@@ -3,6 +3,8 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
+import de.focusshift.zeiterfassung.customer.CustomerService;
+import de.focusshift.zeiterfassung.projecttype.ProjectTypeService;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.user.DateFormatter;
@@ -96,13 +98,17 @@ class TimeEntryControllerTest implements ControllerTest {
     private TimeEntryViewHelper timeEntryViewHelper;
     @Mock
     private UserSearchViewHelper userSearchViewHelper;
+    @Mock
+    private CustomerService customerService;
+    @Mock
+    private ProjectTypeService projectTypeService;
 
     private Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, clock);
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, customerService, projectTypeService, clock);
     }
 
     @ParameterizedTest
@@ -131,7 +137,7 @@ class TimeEntryControllerTest implements ControllerTest {
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, customerService, projectTypeService, clock);
 
         mockUserSettings(ZoneOffset.UTC);
 
@@ -141,7 +147,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final ZonedDateTime expectedStart = ZonedDateTime.parse("2025-02-28T14:30:00.00Z");
         final ZonedDateTime expectedEnd = ZonedDateTime.parse("2025-02-28T15:00:00.00Z");
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false, null, null);
 
         final LocalDate timeEntryDate = LocalDate.parse("2025-02-28");
         final LocalDate firstDateOfWeek = LocalDate.parse("2025-02-24");
@@ -217,7 +223,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         final ZonedDateTime expectedStart = ZonedDateTime.of(2024, 12, 31, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2024, 12, 31, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false, null, null);
         final Instant absenceStart = ZonedDateTime.of(2025, 1, 3, 14, 30, 0, 0, zoneIdBerlin).toInstant();
         final Instant absenceEnd = ZonedDateTime.of(2025, 1, 3, 15, 0, 0, 0, zoneIdBerlin).toInstant();
         final Absence absence = new Absence(userId, absenceStart, absenceEnd, DayLength.FULL, locale -> "", YELLOW, HOLIDAY);
@@ -311,7 +317,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
         final ZonedDateTime expectedStart = ZonedDateTime.of(2024, 12, 31, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2024, 12, 31, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false, null, null);
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), new WorkDuration(Duration.ofMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
@@ -509,7 +515,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         clock = Clock.fixed(Instant.parse("2025-03-18T10:04:00.00Z"), ZoneOffset.UTC);
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, clock);
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, customerService, projectTypeService, clock);
 
         final int year = 2025;
         final int weekOfYear = 12;
@@ -775,11 +781,11 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
         final TimeEntryId timeEntryId = new TimeEntryId(1337L);
-        final TimeEntry timeEntryToEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work extended", start, end, false);
+        final TimeEntry timeEntryToEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work extended", start, end, false, null, null);
 
         final ZonedDateTime startOtherDay = ZonedDateTime.of(2022, 9, 29, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime endOtherDay = ZonedDateTime.of(2022, 9, 29, 15, 0, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntryOtherDay = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", startOtherDay, endOtherDay, false);
+        final TimeEntry timeEntryOtherDay = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", startOtherDay, endOtherDay, false, null, null);
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(
             LocalDate.of(2022, 9, 26),
@@ -845,7 +851,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime expectedStart = ZonedDateTime.of(2022, 9, 22, 14, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2022, 9, 22, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntryId timeEntryId = new TimeEntryId(1337L);
-        final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
+        final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "hack the planet", expectedStart, expectedEnd, false, null, null);
 
         final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2022, 9, 19), new WorkDuration(Duration.ofMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
@@ -996,7 +1002,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryId timeEntryToDeleteId = new TimeEntryId(1337L);
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry = new TimeEntry(timeEntryToDeleteId, userIdComposite, "hard work extended", start, end, false);
+        final TimeEntry timeEntry = new TimeEntry(timeEntryToDeleteId, userIdComposite, "hard work extended", start, end, false, null, null);
 
         when(timeEntryService.findTimeEntry(timeEntryToDeleteId)).thenReturn(Optional.of(timeEntry));
 
@@ -1022,11 +1028,11 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryId timeEntryToDeleteId = new TimeEntryId(1L);
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntryToDelete = new TimeEntry(timeEntryToDeleteId, userIdComposite, "hard work", start, end, false);
+        final TimeEntry timeEntryToDelete = new TimeEntry(timeEntryToDeleteId, userIdComposite, "hard work", start, end, false, null, null);
 
         final ZonedDateTime start2 = ZonedDateTime.of(2022, 9, 28, 16, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end2 = ZonedDateTime.of(2022, 9, 28, 17, 30, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet", start2, end2, false);
+        final TimeEntry timeEntry2 = new TimeEntry(new TimeEntryId(2L), userIdComposite, "hack the planet", start2, end2, false, null, null);
 
         when(timeEntryService.findTimeEntry(timeEntryToDeleteId)).thenReturn(Optional.of(timeEntryToDelete));
 
@@ -1110,7 +1116,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryId timeEntryToDeleteId = new TimeEntryId(1L);
         final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
         final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
-        final TimeEntry timeEntryToDelete = new TimeEntry(timeEntryToDeleteId, userIdComposite, "hard work", start, end, false);
+        final TimeEntry timeEntryToDelete = new TimeEntry(timeEntryToDeleteId, userIdComposite, "hard work", start, end, false, null, null);
 
         when(timeEntryService.findTimeEntry(timeEntryToDeleteId)).thenReturn(Optional.of(timeEntryToDelete));
 
@@ -1195,7 +1201,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryId timeEntryId = new TimeEntryId(42L);
         final ZonedDateTime start = ZonedDateTime.parse("2025-03-17T09:00:00Z");
         final ZonedDateTime end = ZonedDateTime.parse("2025-03-17T17:00:00Z");
-        final TimeEntry timeEntry = new TimeEntry(timeEntryId, ownerIdComposite, "", start, end, false);
+        final TimeEntry timeEntry = new TimeEntry(timeEntryId, ownerIdComposite, "", start, end, false, null, null);
 
         when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(timeEntry));
 
@@ -1214,7 +1220,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime start = ZonedDateTime.now(clock).minusHours(1);
         final ZonedDateTime end = ZonedDateTime.now(clock);
 
-        return new TimeEntry(id, userIdComposite, "", start, end, false);
+        return new TimeEntry(id, userIdComposite, "", start, end, false, null, null);
     }
 
     private void mockUserSettings(ZoneId zoneId) {

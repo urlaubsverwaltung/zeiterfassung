@@ -68,15 +68,17 @@ public interface TimeEntryService {
      * Note that this method does not check if it is allowed to create a new {@link TimeEntry} for the given timespan.
      * You have to check yourself whether these days are locked or not!
      *
-     * @param userLocalId id of the linked user
-     * @param comment     optional comment
-     * @param start       start of the time entry.
-     * @param end         end of the time entry.
-     * @param isBreak     whether it is a break or not.
+     * @param userLocalId   id of the linked user
+     * @param comment       optional comment
+     * @param start         start of the time entry.
+     * @param end           end of the time entry.
+     * @param isBreak       whether it is a break or not.
+     * @param customerId    optional customer id
+     * @param projectTypeId optional project type id
      * @return the created {@linkplain TimeEntry} with an id.
      * @throws IllegalArgumentException when given timeEntry already has an id.
      */
-    TimeEntry createTimeEntry(UserLocalId userLocalId, @Nullable String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak);
+    TimeEntry createTimeEntry(UserLocalId userLocalId, @Nullable String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak, @Nullable Long customerId, @Nullable Long projectTypeId);
 
     /**
      * Updates the existing {@linkplain TimeEntry}
@@ -85,17 +87,19 @@ public interface TimeEntryService {
      * Note that this method does not check if it is allowed to update the {@link TimeEntry}.
      * You have to check yourself whether the {@link TimeEntry#start()} is locked or not!
      *
-     * @param id       of the {@linkplain TimeEntry} to update
-     * @param comment  optional comment. not that {@code null} overrides the existing comment.
-     * @param start    new start. may be {@code null} when end and duration is given.
-     * @param end      new end. may be {@code null} when start and duration is given.
-     * @param duration new value. may be {@code null} when start and end is given.
-     * @param isBreak  new isBreak
+     * @param id            of the {@linkplain TimeEntry} to update
+     * @param comment       optional comment. not that {@code null} overrides the existing comment.
+     * @param start         new start. may be {@code null} when end and duration is given.
+     * @param end           new end. may be {@code null} when start and duration is given.
+     * @param duration      new value. may be {@code null} when start and end is given.
+     * @param isBreak       new isBreak
+     * @param customerId    optional customer id
+     * @param projectTypeId optional project type id
      * @return the updated {@linkplain TimeEntry}.
      * @throws IllegalStateException                when there is no {@linkplain TimeEntry} with the given id.
      * @throws TimeEntryUpdateNotPlausibleException when {@code start}, {@code end} and {@code duration} has been changed. only a selection of two is possible.
      */
-    TimeEntry updateTimeEntry(TimeEntryId id, @Nullable String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end, @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateNotPlausibleException;
+    TimeEntry updateTimeEntry(TimeEntryId id, @Nullable String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end, @Nullable Duration duration, boolean isBreak, @Nullable Long customerId, @Nullable Long projectTypeId) throws TimeEntryUpdateNotPlausibleException;
 
     /**
      * Deletes the {@link TimeEntry} with the given id.

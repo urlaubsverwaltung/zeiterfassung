@@ -299,7 +299,7 @@ class TimeEntryDialogHelperTest {
     private TimeEntry anyTimeEntry() {
         final TimeEntryId id = new TimeEntryId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(new UserId("abcdefg"), new UserLocalId(42L));
-        return new TimeEntry(id, userIdComposite, "hack the planet", ZonedDateTime.now(), ZonedDateTime.now(), false);
+        return new TimeEntry(id, userIdComposite, "hack the planet", ZonedDateTime.now(), ZonedDateTime.now(), false, null, null);
     }
 
     private TimeEntry anyTimeEntry(UserIdComposite userIdComposite) {
@@ -308,6 +308,6 @@ class TimeEntryDialogHelperTest {
 
     private TimeEntry anyTimeEntry(UserIdComposite userIdComposite, String comment) {
         final TimeEntryId id = new TimeEntryId(1L);
-        return new TimeEntry(id, userIdComposite, comment, ZonedDateTime.now(), ZonedDateTime.now(), false);
+        return new TimeEntry(id, userIdComposite, comment, ZonedDateTime.now(), ZonedDateTime.now(), false, null, null);
     }
 }

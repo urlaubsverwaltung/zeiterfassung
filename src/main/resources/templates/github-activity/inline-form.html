@@ -18,14 +18,25 @@
                class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-900 dark:text-zinc-100 w-28" />
       </div>
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-gray-500 dark:text-zinc-400" th:text="#{github-activity.inline-form.end}">End</label>
-        <input type="time" name="end"
-               class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-900 dark:text-zinc-100 w-28" />
-      </div>
-      <div class="flex flex-col gap-1">
         <label class="text-xs font-medium text-gray-500 dark:text-zinc-400" th:text="#{github-activity.inline-form.duration}">Duration</label>
         <input type="text" name="duration" placeholder="hh:mm"
                class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-900 dark:text-zinc-100 w-24" />
+      </div>
+      <div th:if="${customers != null and not #lists.isEmpty(customers)}" class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-gray-500 dark:text-zinc-400" th:text="#{time-entry.customer.label}">Customer</label>
+        <select name="customerId"
+                class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800">
+          <option value="" th:text="#{time-entry.customer.none}">— No customer —</option>
+          <option th:each="c : ${customers}" th:value="${c.id().value()}" th:text="${c.name()}"></option>
+        </select>
+      </div>
+      <div th:if="${projectTypes != null and not #lists.isEmpty(projectTypes)}" class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-gray-500 dark:text-zinc-400" th:text="#{time-entry.project-type.label}">Project type</label>
+        <select name="projectTypeId"
+                class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800">
+          <option value="" th:text="#{time-entry.project-type.none}">— No type —</option>
+          <option th:each="pt : ${projectTypes}" th:value="${pt.id().value()}" th:text="${pt.name()}"></option>
+        </select>
       </div>
       <div class="flex gap-2">
         <button type="submit" class="button-main-green text-sm" th:text="#{github-activity.inline-form.save}">Save</button>

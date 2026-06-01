@@ -1,0 +1,52 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <changeSet author="slint" id="add-customer-table">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="customer" />
+      </not>
+    </preConditions>
+
+    <createSequence sequenceName="customer_seq" startValue="1" incrementBy="50"/>
+
+    <createTable tableName="customer">
+      <column name="tenant_id" type="VARCHAR(255)"/>
+      <column name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="customer_pkey"/>
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint
+      constraintName="FK_CUSTOMER_TENANT_ID"
+      baseColumnNames="tenant_id"
+      baseTableName="customer"
+      referencedColumnNames="tenant_id"
+      referencedTableName="tenant"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+    />
+  </changeSet>
+
+  <changeSet author="slint" id="enable-row-level-security-on-customer">
+    <sql dbms="postgresql">
+      ALTER TABLE customer ENABLE ROW LEVEL SECURITY;
+      DROP
+      POLICY IF EXISTS customer_tenant_isolation_policy ON customer;
+            CREATE
+      POLICY customer_tenant_isolation_policy ON customer
+                USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

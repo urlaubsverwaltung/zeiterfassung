@@ -48,19 +48,19 @@ class TimeEntryServiceIT extends SingleTenantTestContainersBase {
 
         final ZonedDateTime start1 = ZonedDateTime.parse("2025-06-04T23:00:00+00:00[UTC]");
         final ZonedDateTime end1 = ZonedDateTime.parse("2025-06-05T01:00:00+00:00[UTC]");
-        final TimeEntry timeEntry1Valid = timeEntryService.createTimeEntry(user.userLocalId(), "comment", start1, end1, false);
+        final TimeEntry timeEntry1Valid = timeEntryService.createTimeEntry(user.userLocalId(), "comment", start1, end1, false, null, null);
 
         final ZonedDateTime start2 = ZonedDateTime.parse("2025-06-05T23:00:00+00:00[UTC]");
         final ZonedDateTime end2 = ZonedDateTime.parse("2025-06-06T03:00:00+00:00[UTC]");
-        final TimeEntry timeEntry2Valid = timeEntryService.createTimeEntry(user.userLocalId(), "comment", start2, end2, false);
+        final TimeEntry timeEntry2Valid = timeEntryService.createTimeEntry(user.userLocalId(), "comment", start2, end2, false, null, null);
 
         final ZonedDateTime startUtc = ZonedDateTime.parse("2025-06-06T21:10:00+00:00[UTC]");
         final ZonedDateTime endUtc = ZonedDateTime.parse("2025-06-06T23:40:00+00:00[UTC]");
-        final TimeEntry timeEntry3ValidUtc = timeEntryService.createTimeEntry(user.userLocalId(), "comment", startUtc, endUtc, false);
+        final TimeEntry timeEntry3ValidUtc = timeEntryService.createTimeEntry(user.userLocalId(), "comment", startUtc, endUtc, false, null, null);
 
         final ZonedDateTime startInvalid = ZonedDateTime.parse("2025-06-06T23:00:00+00:00[UTC]");
         final ZonedDateTime endInvalid = ZonedDateTime.parse("2025-06-07T01:00:00+00:00[UTC]");
-        timeEntryService.createTimeEntry(user.userLocalId(), "comment", startInvalid, endInvalid, false);
+        timeEntryService.createTimeEntry(user.userLocalId(), "comment", startInvalid, endInvalid, false, null, null);
 
         // timeEntryService uses the Clock from configuration which is UTC.
         // and it has to return the created Europe/Berlin since it touches the requested date.

@@ -1,0 +1,58 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <changeSet author="slint" id="add-customer-id-to-time-entry">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="time_entry" columnName="customer_id"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="time_entry">
+      <column name="customer_id" type="BIGINT">
+        <constraints nullable="true"/>
+      </column>
+    </addColumn>
+
+    <addForeignKeyConstraint
+      constraintName="FK_TIME_ENTRY_CUSTOMER_ID"
+      baseColumnNames="customer_id"
+      baseTableName="time_entry"
+      referencedColumnNames="id"
+      referencedTableName="customer"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="SET NULL"
+      onUpdate="NO ACTION"
+    />
+  </changeSet>
+
+  <changeSet author="slint" id="add-project-type-id-to-time-entry">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="time_entry" columnName="project_type_id"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="time_entry">
+      <column name="project_type_id" type="BIGINT">
+        <constraints nullable="true"/>
+      </column>
+    </addColumn>
+
+    <addForeignKeyConstraint
+      constraintName="FK_TIME_ENTRY_PROJECT_TYPE_ID"
+      baseColumnNames="project_type_id"
+      baseTableName="time_entry"
+      referencedColumnNames="id"
+      referencedTableName="project_type"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="SET NULL"
+      onUpdate="NO ACTION"
+    />
+  </changeSet>
+
+</databaseChangeLog>

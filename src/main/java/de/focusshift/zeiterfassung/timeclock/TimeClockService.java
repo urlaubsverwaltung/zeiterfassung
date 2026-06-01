@@ -95,7 +95,7 @@ public class TimeClockService {
 
                 applicationEventPublisher.publishEvent(new TimeClockStoppedEvent(userIdComposite.id(), start, end, timeClock.comment(), timeClock.isBreak()));
 
-                timeEntryService.createTimeEntry(userIdComposite.localId(), timeClock.comment(), start, end, timeClock.isBreak());
+                timeEntryService.createTimeEntry(userIdComposite.localId(), timeClock.comment(), start, end, timeClock.isBreak(), null, null);
             });
     }
 
