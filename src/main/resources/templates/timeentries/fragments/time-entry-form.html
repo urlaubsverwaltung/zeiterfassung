@@ -209,22 +209,28 @@
                     Pause
                   </label>
                 </div>
-                <div th:if="${projects != null and not #lists.isEmpty(projects)}" class="time-entry-cell time-entry-cell__project">
+                <div th:if="${projects != null and not #lists.isEmpty(projects)}"
+                     is="z-time-entry-project-select"
+                     class="time-entry-cell time-entry-cell__project"
+                     th:attr="data-customer-label=#{time-entry.customer.label},data-customer-none=#{time-entry.customer.filter.none}">
                   <select
                     name="projectId"
                     th:id="|${rnd}-input-entry-project|"
                     th:disabled="${disabled}"
+                    data-project-select
                     class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800"
                   >
                     <option value="" th:text="#{time-entry.project.none}">— No project —</option>
                     <option
                       th:each="p : ${projects}"
                       th:value="${p.id().value()}"
-                      th:text="${p.customerName + ' / ' + p.name()}"
+                      th:text="${p.name()}"
+                      th:attr="data-customer-id=${p.customerId().value()},data-customer-name=${p.customerName()}"
                       th:selected="${timeEntry.projectId != null and timeEntry.projectId == p.id().value()}"
                     ></option>
                   </select>
                   <label
+                    data-project-label
                     th:for="|${rnd}-input-entry-project|"
                     th:text="#{time-entry.project.label}"
                   >
