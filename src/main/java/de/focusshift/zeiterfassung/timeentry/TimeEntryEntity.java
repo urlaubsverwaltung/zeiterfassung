@@ -62,10 +62,12 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
     @Column(name = "is_break", nullable = false)
     private boolean isBreak;
 
+    @NotAudited
     @Column(name = "customer_id")
     @Nullable
     private Long customerId;
 
+    @NotAudited
     @Column(name = "project_type_id")
     @Nullable
     private Long projectTypeId;

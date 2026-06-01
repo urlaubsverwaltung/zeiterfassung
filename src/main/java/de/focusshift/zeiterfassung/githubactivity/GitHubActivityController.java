@@ -109,8 +109,21 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         model.addAttribute("userLocalId", userLocalId);
         model.addAttribute("formAction", "/timeentries");
         model.addAttribute("frameId", frameId != null ? frameId : "inline-form-frame");
-        model.addAttribute("customers", customerService.findAllActive());
-        model.addAttribute("projectTypes", projectTypeService.findAllActive());
+
+        // Load customers / project types defensively — if the table query fails for any reason
+        // (e.g. missing audit columns, RLS issue) the inline form still works, just without dropdowns.
+        try {
+            model.addAttribute("customers", customerService.findAllActive());
+        } catch (Exception e) {
+            java.util.logging.Logger.getLogger(getClass().getName()).warning("Could not load customers: " + e.getMessage());
+            model.addAttribute("customers", java.util.List.of());
+        }
+        try {
+            model.addAttribute("projectTypes", projectTypeService.findAllActive());
+        } catch (Exception e) {
+            java.util.logging.Logger.getLogger(getClass().getName()).warning("Could not load projectTypes: " + e.getMessage());
+            model.addAttribute("projectTypes", java.util.List.of());
+        }
 
         return "github-activity/inline-form";
     }

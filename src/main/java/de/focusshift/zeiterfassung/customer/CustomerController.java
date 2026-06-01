@@ -6,6 +6,8 @@ import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,6 +25,8 @@ import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARC
 @PreAuthorize("hasAuthority('ZEITERFASSUNG_SETTINGS_GLOBAL')")
 class CustomerController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
+    private static final Logger LOG = LoggerFactory.getLogger(CustomerController.class);
+
     private final CustomerService customerService;
     private final UserSearchViewHelper userSearchViewHelper;
 
@@ -33,7 +37,13 @@ class CustomerController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
     @GetMapping
     String list(Model model) {
-        model.addAttribute("customers", customerService.findAll());
+        try {
+            model.addAttribute("customers", customerService.findAll());
+        } catch (Exception e) {
+            LOG.error("Failed to load customers — {}: {}", e.getClass().getSimpleName(), e.getMessage(), e);
+            model.addAttribute("customers", java.util.List.of());
+            model.addAttribute("loadError", e.getMessage());
+        }
         return "settings/customers";
     }
 
