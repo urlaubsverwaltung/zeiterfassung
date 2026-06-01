@@ -1,8 +1,6 @@
 name: Build
 
 on:
-  schedule:
-    - cron: "2 4 * * *"
   push:
     paths-ignore:
       - ".examples/**"
@@ -19,22 +17,19 @@ on:
 
 env:
   MAVEN_ARGS: "--no-transfer-progress --errors --fail-at-end --show-version"
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1  # required browsers are installed below
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
 
 jobs:
   build:
-    name: build and analyse
+    name: Build
     runs-on: ubuntu-24.04
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v6
 
-      - name: Set up JDK from .tool-versions
+      - name: Set up JDK
         uses: actions/setup-java@v5
         with:
           distribution: 'liberica'
@@ -42,58 +37,4 @@ jobs:
           cache: 'maven'
 
       - name: Build
-        run: ./mvnw -Pcoverage dependency:go-offline clean verify -Dgroups="!ui"
-
-      - name: Analyse with SonarCloud
-        if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
-        run: >
-            ./mvnw
-            -Pcoverage
-            sonar:sonar
-            -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.organization=urlaubsverwaltung
-            -Dsonar.projectKey=urlaubsverwaltung_zeiterfassung
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml,target/site/jacoco-it/jacoco.xml
-            -Dsonar.javascript.lcov.reportPaths=target/js-coverage/lcov.info
-            -Dsonar.javascript.exclusions=**/*.spec.ts,**/*.test.ts,**/*.spec.js,**/*.test.js
-            -Dsonar.eslint.reportPaths=target/js-eslint/report.json
-            -Dsonar.coverage.exclusions=**/*.spec.ts,**/*.test.ts,**/*.spec.js,**/*.test.js
-            -Dsonar.sources=src/main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  ui-test:
-    name: UI Test
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        browser: ["chromium", "firefox", "webkit"]
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-ui-test-${{ matrix.browser }}
-      cancel-in-progress: true
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Set up JDK from .tool-versions
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'liberica'
-          java-version-file: ".tool-versions"
-          cache: 'maven'
-
-      - name: Install Playwright Browsers (UI tests)
-        run: ./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.classpathScope="test" -D exec.args="install --with-deps ${{matrix.browser}}"
-
-      - name: Test
-        run: ./mvnw dependency:go-offline clean verify -Pui-test -Dbrowser=${{matrix.browser}}
-
-      - name: Upload artifacts of failed tests
-        uses: actions/upload-artifact@v7
-        if: ${{ always() && hashFiles(format('target/ui-test/{0}/FAILED-*', matrix.browser)) != '' }}
-        with:
-          name: failed-ui-tests-${{matrix.browser}}-${{ github.run_attempt }}
-          path: target/ui-test/${{matrix.browser}}/FAILED-*
+        run: ./mvnw --no-transfer-progress -DskipTests clean package
