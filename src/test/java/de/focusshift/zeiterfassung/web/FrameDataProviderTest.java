@@ -61,8 +61,8 @@ class FrameDataProviderTest implements ControllerTest {
         menuProperties.setHelp(help);
 
         final UserSettings defaultUserSettings = org.mockito.Mockito.mock(UserSettings.class);
-        org.mockito.Mockito.when(defaultUserSettings.githubLoginVerified()).thenReturn(false);
-        org.mockito.Mockito.when(userSettingsService.getUserSettings(org.mockito.ArgumentMatchers.any())).thenReturn(defaultUserSettings);
+        org.mockito.Mockito.lenient().when(defaultUserSettings.githubLoginVerified()).thenReturn(false);
+        org.mockito.Mockito.lenient().when(userSettingsService.getUserSettings(org.mockito.ArgumentMatchers.any())).thenReturn(defaultUserSettings);
 
         sut = new FrameDataProvider(menuProperties, userSettingsService);
     }
