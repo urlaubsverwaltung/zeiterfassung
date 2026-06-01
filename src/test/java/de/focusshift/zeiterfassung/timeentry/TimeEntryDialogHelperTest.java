@@ -10,6 +10,8 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
+import de.focusshift.zeiterfassung.project.ProjectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -54,10 +56,14 @@ class TimeEntryDialogHelperTest {
     private UserSettingsProvider userSettingsProvider;
     @Mock
     private UserManagementService userManagementService;
+    @Mock
+    private ProjectService projectService;       
+    @Mock
+    private ActivityTypeService activityTypeService; 
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService, projectService, activityTypeService);
     }
 
     @Nested

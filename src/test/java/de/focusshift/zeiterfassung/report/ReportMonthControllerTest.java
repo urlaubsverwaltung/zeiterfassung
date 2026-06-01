@@ -3,6 +3,8 @@ package de.focusshift.zeiterfassung.report;
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
+import de.focusshift.zeiterfassung.project.ProjectService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
@@ -96,6 +98,10 @@ class ReportMonthControllerTest implements ControllerTest {
     private UserSearchViewHelper userSearchViewHelper;
     @Mock
     private MessageSource messageSource;
+    @Mock
+    private ProjectService projectService;       
+    @Mock
+    private ActivityTypeService activityTypeService; 
 
     private DateFormatterImpl dateFormatter;
     private DateRangeFormatter dateRangeFormatter;
@@ -111,7 +117,7 @@ class ReportMonthControllerTest implements ControllerTest {
         dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
         reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
         timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
-        timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService, projectService, activityTypeService);
         sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper, timeEntryDialogHelper, userSearchViewHelper, clock);
     }
 
