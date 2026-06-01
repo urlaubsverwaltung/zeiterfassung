@@ -205,7 +205,11 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                 final String title = "Pushed " + count + " commit" + (count != 1 ? "s" : "");
                 final String firstMsg = hasCommitDetails ? firstLine((String) commits.get(0).get("message"), 72) : "";
                 final String detail = hasCommitDetails
-                    ? commits.stream().limit(2).map(c -> firstLine((String) c.get("message"), 60)).collect(Collectors.joining(" · "))
+                    ? commits.stream().limit(3).map(c -> {
+                        final String sha = shortSha((String) c.get("sha"));
+                        final String msg = firstLine((String) c.get("message"), 55);
+                        return sha.isEmpty() ? msg : sha + " " + msg;
+                      }).collect(Collectors.joining(" · "))
                     : "";
                 final String prefilledComment = hasCommitDetails
                     ? repoName + ": " + firstMsg + (count > 1 ? " (+" + (count - 1) + " more)" : "")
@@ -300,6 +304,11 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         if (s == null) return "";
         final String first = s.split("\n")[0].trim();
         return first.length() > maxLen ? first.substring(0, maxLen) : first;
+    }
+
+    private static String shortSha(String sha) {
+        if (sha == null || sha.length() < 7) return "";
+        return sha.substring(0, 7);
     }
 
     private static String capitalize(String s) {

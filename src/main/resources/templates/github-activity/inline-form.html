@@ -22,13 +22,22 @@
         <input type="text" name="duration" placeholder="hh:mm"
                class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-900 dark:text-zinc-100 w-24" />
       </div>
-      <div th:if="${projects != null and not #lists.isEmpty(projects)}" class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-gray-500 dark:text-zinc-400" th:text="#{time-entry.project.label}">Project</label>
+      <div th:if="${projects != null and not #lists.isEmpty(projects)}"
+           is="z-time-entry-project-select"
+           class="flex flex-col gap-1"
+           th:attr="data-customer-label=#{time-entry.customer.label},data-customer-none=#{time-entry.customer.filter.none}">
         <select name="projectId"
+                data-project-select
                 class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800">
           <option value="" th:text="#{time-entry.project.none}">— No project —</option>
-          <option th:each="p : ${projects}" th:value="${p.id().value()}" th:text="${p.customerName + ' / ' + p.name()}"></option>
+          <option th:each="p : ${projects}"
+                  th:value="${p.id().value()}"
+                  th:text="${p.name()}"
+                  th:attr="data-customer-id=${p.customerId().value()},data-customer-name=${p.customerName()}"></option>
         </select>
+        <label data-project-label
+               class="text-xs font-medium text-gray-500 dark:text-zinc-400"
+               th:text="#{time-entry.project.label}">Project</label>
       </div>
       <div th:if="${activityTypes != null and not #lists.isEmpty(activityTypes)}" class="flex flex-col gap-1">
         <label class="text-xs font-medium text-gray-500 dark:text-zinc-400" th:text="#{time-entry.activity-type.label}">Activity</label>
