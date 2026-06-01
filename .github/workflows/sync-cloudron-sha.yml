@@ -8,7 +8,7 @@ jobs:
   update-sha:
     runs-on: ubuntu-latest
     steps:
-      - name: Update ZE_REF in zeiterfassung-cloudron-app
+      - name: Update ZE_SHA in zeiterfassung-cloudron-app
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.CLOUDRON_APP_PAT }}
@@ -25,10 +25,10 @@ jobs:
             });
 
             const current = Buffer.from(file.content, 'base64').toString('utf8');
-            const updated = current.replace(/^ARG ZE_REF=\S+/m, `ARG ZE_REF=${sha}`);
+            const updated = current.replace(/^ARG ZE_SHA=\S+/m, `ARG ZE_SHA=${sha}`);
 
             if (current === updated) {
-              core.info('ZE_REF already up to date, skipping.');
+              core.info('ZE_SHA already up to date, skipping.');
               return;
             }
 
@@ -36,10 +36,10 @@ jobs:
               owner: 'slint-ui',
               repo: 'zeiterfassung-cloudron-app',
               path: 'Dockerfile',
-              message: `chore: pin ZE_REF to ${short}\n\nTriggered by slint-ui/zeiterfassung@${sha}`,
+              message: `chore: bump ZE_SHA to ${short}\n\nTriggered by slint-ui/zeiterfassung@${sha}`,
               content: Buffer.from(updated).toString('base64'),
               sha: file.sha,
               branch: 'master',
             });
 
-            core.info(`Updated ZE_REF to ${sha}`);
+            core.info(`Updated ZE_SHA to ${sha}`);
