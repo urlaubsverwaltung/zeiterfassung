@@ -120,6 +120,26 @@
                     </div>
                   </turbo-frame>
 
+                  <!-- GitHub Personal Access Token (optional, for private repos) -->
+                  <div class="flex flex-col gap-1">
+                    <label for="githubToken" class="text-sm font-medium" th:text="#{account.github-token.label}">
+                      Personal Access Token
+                    </label>
+                    <input
+                      type="password"
+                      id="githubToken"
+                      name="githubToken"
+                      th:value="${githubToken}"
+                      th:placeholder="#{account.github-token.placeholder}"
+                      class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 dark:bg-zinc-800 dark:text-zinc-100"
+                      maxlength="255"
+                      autocomplete="off"
+                    />
+                    <p class="text-sm text-gray-500 dark:text-zinc-400" th:text="#{account.github-token.hint}">
+                      Optional. Required to see activity from private repositories.
+                    </p>
+                  </div>
+
                   <div>
                     <button
                       type="submit"

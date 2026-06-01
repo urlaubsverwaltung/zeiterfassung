@@ -48,7 +48,7 @@ class AccountController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     @GetMapping
     ModelAndView account(Model model, @CurrentUser CurrentOidcUser currentOidcUser) {
         final UserSettings userSettings = userSettingsService.getUserSettings(currentOidcUser.getUserIdComposite());
-        populateModel(model, currentOidcUser, userSettings.githubLogin().orElse(""), userSettings.githubLoginVerified(), false);
+        populateModel(model, currentOidcUser, userSettings.githubLogin().orElse(""), userSettings.githubLoginVerified(), userSettings.githubToken().orElse(""), false);
         return new ModelAndView("account/index", model.asMap());
     }
 
@@ -70,13 +70,15 @@ class AccountController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     @PostMapping
     ModelAndView saveAccount(@RequestParam(value = "githubLogin", required = false) String githubLogin,
                              @RequestParam(value = "githubLoginVerified", required = false, defaultValue = "false") boolean verified,
+                             @RequestParam(value = "githubToken", required = false) String githubToken,
                              @CurrentUser CurrentOidcUser currentOidcUser, Model model) {
         final String trimmed = githubLogin != null ? githubLogin.trim() : null;
         final String toSave = trimmed != null && !trimmed.isEmpty() ? trimmed : null;
-        // Only mark as verified if the hidden field confirms it; clear it if username was removed
         final boolean saveVerified = toSave != null && verified;
         userSettingsService.updateGithubLogin(currentOidcUser.getUserIdComposite(), toSave, saveVerified);
-        populateModel(model, currentOidcUser, toSave != null ? toSave : "", saveVerified, true);
+        userSettingsService.updateGithubToken(currentOidcUser.getUserIdComposite(), githubToken);
+        final String savedToken = githubToken != null && !githubToken.isBlank() ? githubToken.trim() : "";
+        populateModel(model, currentOidcUser, toSave != null ? toSave : "", saveVerified, savedToken, true);
         return new ModelAndView("account/index", model.asMap());
     }
 
@@ -123,7 +125,7 @@ class AccountController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     }
 
     private void populateModel(Model model, CurrentOidcUser currentOidcUser,
-                               String githubLogin, boolean githubLoginVerified, boolean savedSuccess) {
+                               String githubLogin, boolean githubLoginVerified, String githubToken, boolean savedSuccess) {
         final String fullName = currentOidcUser.getUserInfo() != null
             ? currentOidcUser.getUserInfo().getFullName()
             : currentOidcUser.getName();
@@ -135,6 +137,7 @@ class AccountController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         model.addAttribute("email", email);
         model.addAttribute("githubLogin", githubLogin);
         model.addAttribute("githubLoginVerified", githubLoginVerified);
+        model.addAttribute("githubToken", githubToken);
         model.addAttribute("savedSuccess", savedSuccess);
     }
 }

@@ -73,7 +73,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                  @CurrentUser CurrentOidcUser currentUser,
                  Model model) {
 
-        final LocalDate selectedDate = date != null ? date : LocalDate.now().minusDays(1);
+        final LocalDate selectedDate = date != null ? date : LocalDate.now();
         final UserSettings userSettings = userSettingsService.getUserSettings(currentUser.getUserIdComposite());
 
         if (!userSettings.githubLoginVerified() || userSettings.githubLogin().isEmpty()) {
@@ -82,7 +82,8 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         }
 
         final String login = userSettings.githubLogin().get();
-        final List<Map<String, Object>> events = fetchGitHubEvents(login);
+        final String token = userSettings.githubToken().orElse(null);
+        final List<Map<String, Object>> events = fetchGitHubEvents(login, token);
         final List<GitHubActivityGroup> groups = parseAndGroupEvents(events, selectedDate);
 
         final Long userLocalId = currentUser.getUserIdComposite().localId().value();
@@ -161,18 +162,22 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     }
 
     @SuppressWarnings("unchecked")
-    private List<Map<String, Object>> fetchGitHubEvents(String login) {
-        final CacheEntry cached = eventCache.get(login);
+    private List<Map<String, Object>> fetchGitHubEvents(String login, @jakarta.annotation.Nullable String token) {
+        final String cacheKey = login + (token != null ? ":auth" : ":pub");
+        final CacheEntry cached = eventCache.get(cacheKey);
         if (cached != null && Instant.now().minusSeconds(CACHE_TTL_SECONDS).isBefore(cached.fetchedAt())) {
             return cached.events();
         }
         try {
-            final List<Map<String, Object>> events = restClient.get()
-                .uri("https://api.github.com/users/{login}/events?per_page=100", login)
-                .retrieve()
+            final var request = restClient.get()
+                .uri("https://api.github.com/users/{login}/events?per_page=100", login);
+            if (token != null && !token.isBlank()) {
+                request.header("Authorization", "Bearer " + token);
+            }
+            final List<Map<String, Object>> events = request.retrieve()
                 .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
             final List<Map<String, Object>> result = events != null ? events : List.of();
-            eventCache.put(login, new CacheEntry(result, Instant.now()));
+            eventCache.put(cacheKey, new CacheEntry(result, Instant.now()));
             return result;
         } catch (Exception e) {
             return cached != null ? cached.events() : List.of();
@@ -282,6 +287,44 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                 final String detail = body != null && body.length() > 100 ? body.substring(0, 100) : body;
                 final String prefilledComment = "Commented on #" + number + ": " + issueTitle + " (" + repoName + ")";
                 yield new GitHubEvent(type, "💬", "Commented on #" + number, detail != null ? detail : "", prefilledComment, startTime);
+            }
+            case "CreateEvent" -> {
+                final String refType = (String) payload.get("ref_type"); // "branch", "tag", "repository"
+                final String ref = (String) payload.get("ref");
+                final String what = ref != null && !ref.isEmpty() ? refType + " " + ref : refType;
+                final String title = "Created " + what;
+                yield new GitHubEvent(type, "🌿", title, "", repoName + ": " + title, startTime);
+            }
+            case "DeleteEvent" -> {
+                final String refType = (String) payload.get("ref_type");
+                final String ref = (String) payload.get("ref");
+                final String what = ref != null && !ref.isEmpty() ? refType + " " + ref : refType;
+                final String title = "Deleted " + what;
+                yield new GitHubEvent(type, "🗑", title, "", repoName + ": " + title, startTime);
+            }
+            case "ForkEvent" -> {
+                final Map<String, Object> forkee = (Map<String, Object>) payload.get("forkee");
+                final String forkName = forkee != null ? (String) forkee.get("full_name") : repoName;
+                final String title = "Forked to " + forkName;
+                yield new GitHubEvent(type, "🍴", title, "", title, startTime);
+            }
+            case "WatchEvent" -> {
+                final String title = "Starred " + repoName;
+                yield new GitHubEvent(type, "⭐", title, "", title, startTime);
+            }
+            case "ReleaseEvent" -> {
+                final Map<String, Object> release = (Map<String, Object>) payload.get("release");
+                final String tagName = release != null ? (String) release.get("tag_name") : "";
+                final String releaseName = release != null && release.get("name") != null ? (String) release.get("name") : tagName;
+                final String action = capitalize((String) payload.get("action"));
+                final String title = action + " release " + tagName;
+                yield new GitHubEvent(type, "🚀", title, releaseName, repoName + ": " + title, startTime);
+            }
+            case "CommitCommentEvent" -> {
+                final Map<String, Object> comment = (Map<String, Object>) payload.get("comment");
+                final String body = comment != null ? firstLine((String) comment.get("body"), 80) : "";
+                final String title = "Commented on commit";
+                yield new GitHubEvent(type, "💬", title, body, repoName + ": " + title, startTime);
             }
             default -> {
                 final String displayType = type != null ? type.replaceAll("Event$", "") : "Unknown";

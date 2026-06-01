@@ -119,13 +119,23 @@ public class UserSettingsService {
         return toUserSettings(persistedEntity);
     }
 
+    public UserSettings updateGithubToken(UserIdComposite userIdComposite, @Nullable String githubToken) {
+        final UserSettingsEntity entity = findOrGetDefault(userIdComposite);
+        final String trimmed = githubToken != null && !githubToken.isBlank() ? githubToken.trim() : null;
+        entity.setGithubToken(trimmed);
+        final UserSettingsEntity persistedEntity = userSettingsRepository.save(entity);
+        LOG.info("Updated github token for user {}", userIdComposite.localId().value());
+        return toUserSettings(persistedEntity);
+    }
+
     private static UserSettings toUserSettings(UserSettingsEntity userSettingsEntity) {
         return new UserSettings(
             userSettingsEntity.getTheme(),
             userSettingsEntity.getLocale(),
             userSettingsEntity.getLocaleBrowserSpecific(),
             userSettingsEntity.getGithubLogin(),
-            userSettingsEntity.isGithubLoginVerified()
+            userSettingsEntity.isGithubLoginVerified(),
+            userSettingsEntity.getGithubToken()
         );
     }
 
