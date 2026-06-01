@@ -6,7 +6,7 @@
   xmlns:th="http://www.thymeleaf.org"
 >
   <head th:replace="~{_layout::head(title=~{::title})}">
-    <title th:text="#{settings.customers.page.title}">Customers</title>
+    <title th:text="#{settings.activity-types.page.title}">Activity Types</title>
   </head>
   <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
     <th:block th:ref="search">
@@ -17,65 +17,61 @@
       <main class="content-container content--max-w flex flex-col">
         <div class="flex-1 flex flex-col mx-auto w-full max-w-3xl px-4 desktop:px-8">
 
-          <h1 class="text-xl font-bold mb-8" th:text="#{settings.customers.page.title}">Customers</h1>
+          <h1 class="text-xl font-bold mb-8" th:text="#{settings.activity-types.page.title}">Activity Types</h1>
 
-          <!-- Add new customer -->
+          <!-- Add new activity type -->
           <section class="mb-8">
-            <h2 class="font-semibold mb-3" th:text="#{settings.customers.add}">Add customer</h2>
-            <form th:action="@{/settings/customers}" method="post" class="flex gap-2 items-end">
+            <h2 class="font-semibold mb-3" th:text="#{settings.activity-types.add}">Add activity type</h2>
+            <form th:action="@{/settings/activity-types}" method="post" class="flex gap-2 items-end">
               <div class="flex flex-col gap-1">
-                <label for="new-customer-name" class="text-sm font-medium" th:text="#{settings.customers.name.label}">Name</label>
+                <label for="new-activity-type-name" class="text-sm font-medium" th:text="#{settings.activity-types.name.label}">Name</label>
                 <input
                   type="text"
-                  id="new-customer-name"
+                  id="new-activity-type-name"
                   name="name"
                   required
                   class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 text-sm dark:bg-zinc-800 w-64"
                 />
               </div>
-              <button type="submit" class="button-main-green" th:text="#{settings.customers.add}">Add</button>
+              <button type="submit" class="button-main-green" th:text="#{settings.activity-types.add}">Add</button>
             </form>
           </section>
 
-          <!-- Customer list -->
-          <section th:if="${not #lists.isEmpty(customers)}">
+          <!-- Activity type list -->
+          <section th:if="${not #lists.isEmpty(activityTypes)}">
             <div class="flex flex-col gap-3">
-              <div th:each="customer : ${customers}"
+              <div th:each="activityType : ${activityTypes}"
                    class="flex items-center gap-3 p-3 border border-gray-200 dark:border-zinc-700 rounded-lg">
                 <!-- Edit form -->
-                <form th:action="@{/settings/customers/{id}(id=${customer.id().value()})}" method="post"
+                <form th:action="@{/settings/activity-types/{id}(id=${activityType.id().value()})}" method="post"
                       class="flex items-center gap-3 flex-1">
                   <input
                     type="text"
                     name="name"
-                    th:value="${customer.name()}"
+                    th:value="${activityType.name()}"
                     required
                     class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-1.5 text-sm dark:bg-zinc-800 flex-1"
                   />
                   <label class="flex items-center gap-2 text-sm cursor-pointer">
-                    <input type="checkbox" name="active" th:checked="${customer.active()}" />
-                    <span th:text="#{settings.customers.active.label}">Active</span>
+                    <input type="checkbox" name="active" th:checked="${activityType.active()}" />
+                    <span th:text="#{settings.activity-types.active.label}">Active</span>
                   </label>
                   <button type="submit" class="button-secondary text-sm" th:text="#{settings.save}">Save</button>
                 </form>
-                <!-- Projects link -->
-                <a th:href="@{/settings/customers/{id}/projects(id=${customer.id().value()})}"
-                   class="button-secondary text-sm whitespace-nowrap"
-                   th:text="#{settings.customers.projects}">Projects</a>
                 <!-- Delete form -->
-                <form th:action="@{/settings/customers/{id}/delete(id=${customer.id().value()})}" method="post">
+                <form th:action="@{/settings/activity-types/{id}/delete(id=${activityType.id().value()})}" method="post">
                   <button type="submit"
                           class="button-secondary text-sm text-red-600 dark:text-red-400"
-                          th:text="#{settings.customers.delete}"
-                          th:onclick="|return confirm('Delete this customer?')|">Delete</button>
+                          th:text="#{settings.activity-types.delete}"
+                          th:onclick="|return confirm('Delete this activity type?')|">Delete</button>
                 </form>
               </div>
             </div>
           </section>
 
-          <p th:if="${#lists.isEmpty(customers)}"
+          <p th:if="${#lists.isEmpty(activityTypes)}"
              class="text-sm text-gray-500 dark:text-zinc-400 italic"
-             th:text="#{settings.customers.empty}">No customers yet.</p>
+             th:text="#{settings.activity-types.empty}">No activity types yet.</p>
 
           <div class="mt-8">
             <a th:href="@{/settings}" class="button-secondary text-sm" th:text="#{settings.back}">← Back to Settings</a>

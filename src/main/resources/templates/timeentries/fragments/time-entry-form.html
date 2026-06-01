@@ -209,48 +209,48 @@
                     Pause
                   </label>
                 </div>
-                <div th:if="${customers != null and not #lists.isEmpty(customers)}" class="time-entry-cell time-entry-cell__customer">
+                <div th:if="${projects != null and not #lists.isEmpty(projects)}" class="time-entry-cell time-entry-cell__project">
                   <select
-                    name="customerId"
-                    th:id="|${rnd}-input-entry-customer|"
+                    name="projectId"
+                    th:id="|${rnd}-input-entry-project|"
                     th:disabled="${disabled}"
                     class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800"
                   >
-                    <option value="" th:text="#{time-entry.customer.none}">— No customer —</option>
+                    <option value="" th:text="#{time-entry.project.none}">— No project —</option>
                     <option
-                      th:each="c : ${customers}"
-                      th:value="${c.id().value()}"
-                      th:text="${c.name()}"
-                      th:selected="${timeEntry.customerId != null and timeEntry.customerId == c.id().value()}"
+                      th:each="p : ${projects}"
+                      th:value="${p.id().value()}"
+                      th:text="${p.customerName + ' / ' + p.name()}"
+                      th:selected="${timeEntry.projectId != null and timeEntry.projectId == p.id().value()}"
                     ></option>
                   </select>
                   <label
-                    th:for="|${rnd}-input-entry-customer|"
-                    th:text="#{time-entry.customer.label}"
+                    th:for="|${rnd}-input-entry-project|"
+                    th:text="#{time-entry.project.label}"
                   >
-                    Customer
+                    Project
                   </label>
                 </div>
-                <div th:if="${projectTypes != null and not #lists.isEmpty(projectTypes)}" class="time-entry-cell time-entry-cell__project-type">
+                <div th:if="${activityTypes != null and not #lists.isEmpty(activityTypes)}" class="time-entry-cell time-entry-cell__activity-type">
                   <select
-                    name="projectTypeId"
-                    th:id="|${rnd}-input-entry-project-type|"
+                    name="activityTypeId"
+                    th:id="|${rnd}-input-entry-activity-type|"
                     th:disabled="${disabled}"
                     class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800"
                   >
-                    <option value="" th:text="#{time-entry.project-type.none}">— No type —</option>
+                    <option value="" th:text="#{time-entry.activity-type.none}">— No activity —</option>
                     <option
-                      th:each="pt : ${projectTypes}"
-                      th:value="${pt.id().value()}"
-                      th:text="${pt.name()}"
-                      th:selected="${timeEntry.projectTypeId != null and timeEntry.projectTypeId == pt.id().value()}"
+                      th:each="at : ${activityTypes}"
+                      th:value="${at.id().value()}"
+                      th:text="${at.name()}"
+                      th:selected="${timeEntry.activityTypeId != null and timeEntry.activityTypeId == at.id().value()}"
                     ></option>
                   </select>
                   <label
-                    th:for="|${rnd}-input-entry-project-type|"
-                    th:text="#{time-entry.project-type.label}"
+                    th:for="|${rnd}-input-entry-activity-type|"
+                    th:text="#{time-entry.activity-type.label}"
                   >
-                    Project type
+                    Activity
                   </label>
                 </div>
               </div>

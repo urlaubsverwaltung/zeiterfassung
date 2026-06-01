@@ -64,8 +64,8 @@ public class TimeEntryViewHelper {
             .duration(durationString)
             .comment(timeEntry.comment())
             .isBreak(timeEntry.isBreak())
-            .customerId(timeEntry.customerId())
-            .projectTypeId(timeEntry.projectTypeId())
+            .projectId(timeEntry.projectId())
+            .activityTypeId(timeEntry.activityTypeId())
             .build();
     }
 
@@ -122,7 +122,7 @@ public class TimeEntryViewHelper {
 
         try {
             final Duration duration = toDuration(dto.getDuration());
-            timeEntryService.updateTimeEntry(timeEntryId, dto.getComment(), start, end, duration, dto.isBreak(), dto.getCustomerId(), dto.getProjectTypeId());
+            timeEntryService.updateTimeEntry(timeEntryId, dto.getComment(), start, end, duration, dto.isBreak(), dto.getProjectId(), dto.getActivityTypeId());
         } catch (TimeEntryUpdateNotPlausibleException e) {
             LOG.debug("Could not update timeEntry.", e);
 
@@ -210,7 +210,7 @@ public class TimeEntryViewHelper {
             bindingResult.reject("time-entry.validation.timespan.locked");
         } else {
             final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
-            timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak(), timeEntryDto.getCustomerId(), timeEntryDto.getProjectTypeId());
+            timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak(), timeEntryDto.getProjectId(), timeEntryDto.getActivityTypeId());
         }
     }
 

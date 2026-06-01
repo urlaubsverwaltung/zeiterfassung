@@ -3,8 +3,8 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
-import de.focusshift.zeiterfassung.customer.CustomerService;
-import de.focusshift.zeiterfassung.projecttype.ProjectTypeService;
+import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
+import de.focusshift.zeiterfassung.project.ProjectService;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.user.DateFormatter;
@@ -99,16 +99,16 @@ class TimeEntryControllerTest implements ControllerTest {
     @Mock
     private UserSearchViewHelper userSearchViewHelper;
     @Mock
-    private CustomerService customerService;
+    private ProjectService projectService;
     @Mock
-    private ProjectTypeService projectTypeService;
+    private ActivityTypeService activityTypeService;
 
     private Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, customerService, projectTypeService, clock);
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, projectService, activityTypeService, clock);
     }
 
     @ParameterizedTest
@@ -137,7 +137,7 @@ class TimeEntryControllerTest implements ControllerTest {
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, customerService, projectTypeService, clock);
+        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, projectService, activityTypeService, clock);
 
         mockUserSettings(ZoneOffset.UTC);
 
@@ -515,7 +515,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         clock = Clock.fixed(Instant.parse("2025-03-18T10:04:00.00Z"), ZoneOffset.UTC);
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, customerService, projectTypeService, clock);
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, projectService, activityTypeService, clock);
 
         final int year = 2025;
         final int weekOfYear = 12;

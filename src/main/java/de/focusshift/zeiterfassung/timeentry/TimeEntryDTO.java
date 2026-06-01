@@ -54,15 +54,15 @@ public class TimeEntryDTO {
 
     private boolean isBreak;
 
-    private Long customerId;
+    private Long projectId;
 
-    private Long projectTypeId;
+    private Long activityTypeId;
 
     public TimeEntryDTO() {
         date = LocalDate.now();
     }
 
-    private TimeEntryDTO(Long id, Long userLocalId, LocalDate date, LocalTime start, LocalTime end, String duration, String comment, boolean isBreak, Long customerId, Long projectTypeId) {
+    private TimeEntryDTO(Long id, Long userLocalId, LocalDate date, LocalTime start, LocalTime end, String duration, String comment, boolean isBreak, Long projectId, Long activityTypeId) {
         this.id = id;
         this.userLocalId = userLocalId;
         this.date = date;
@@ -71,8 +71,8 @@ public class TimeEntryDTO {
         this.duration = duration;
         this.comment = comment;
         this.isBreak = isBreak;
-        this.customerId = customerId;
-        this.projectTypeId = projectTypeId;
+        this.projectId = projectId;
+        this.activityTypeId = activityTypeId;
     }
 
     public Long getId() {
@@ -144,20 +144,20 @@ public class TimeEntryDTO {
         return isBreak;
     }
 
-    public Long getCustomerId() {
-        return customerId;
+    public Long getProjectId() {
+        return projectId;
     }
 
-    public void setCustomerId(Long customerId) {
-        this.customerId = customerId;
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
     }
 
-    public Long getProjectTypeId() {
-        return projectTypeId;
+    public Long getActivityTypeId() {
+        return activityTypeId;
     }
 
-    public void setProjectTypeId(Long projectTypeId) {
-        this.projectTypeId = projectTypeId;
+    public void setActivityTypeId(Long activityTypeId) {
+        this.activityTypeId = activityTypeId;
     }
 
     public static Builder builder() {
@@ -206,8 +206,8 @@ public class TimeEntryDTO {
         private String duration;
         private String comment;
         private boolean isBreak;
-        private Long customerId;
-        private Long projectTypeId;
+        private Long projectId;
+        private Long activityTypeId;
 
         private Builder() {
         }
@@ -252,18 +252,18 @@ public class TimeEntryDTO {
             return this;
         }
 
-        public Builder customerId(Long customerId) {
-            this.customerId = customerId;
+        public Builder projectId(Long projectId) {
+            this.projectId = projectId;
             return this;
         }
 
-        public Builder projectTypeId(Long projectTypeId) {
-            this.projectTypeId = projectTypeId;
+        public Builder activityTypeId(Long activityTypeId) {
+            this.activityTypeId = activityTypeId;
             return this;
         }
 
         public TimeEntryDTO build() {
-            return new TimeEntryDTO(id, userLocalId, date, start, end, duration, comment, isBreak, customerId, projectTypeId);
+            return new TimeEntryDTO(id, userLocalId, date, start, end, duration, comment, isBreak, projectId, activityTypeId);
         }
     }
 }

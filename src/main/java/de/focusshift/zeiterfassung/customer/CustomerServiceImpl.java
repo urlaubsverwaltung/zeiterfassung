@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.customer;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 class CustomerServiceImpl implements CustomerService {
@@ -25,6 +26,11 @@ class CustomerServiceImpl implements CustomerService {
         return customerRepository.findAllByOrderByNameAsc().stream()
             .map(this::toCustomer)
             .toList();
+    }
+
+    @Override
+    public Optional<Customer> findById(CustomerId id) {
+        return customerRepository.findById(id.value()).map(this::toCustomer);
     }
 
     @Override

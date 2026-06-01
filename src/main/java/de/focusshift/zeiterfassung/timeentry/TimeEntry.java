@@ -21,8 +21,8 @@ import java.time.ZonedDateTime;
  * @param start start timestamp
  * @param end end timestamp, never {@code null} ({@linkplain de.focusshift.zeiterfassung.timeclock.TimeClock} is something with start but without end)
  * @param isBreak whether time entry is a break or not
- * @param customerId optional customer id
- * @param projectTypeId optional project type id
+ * @param projectId optional project id (project is scoped to a customer)
+ * @param activityTypeId optional activity type id
  */
 public record TimeEntry(
     TimeEntryId id,
@@ -31,8 +31,8 @@ public record TimeEntry(
     ZonedDateTime start,
     ZonedDateTime end,
     boolean isBreak,
-    @Nullable Long customerId,
-    @Nullable Long projectTypeId
+    @Nullable Long projectId,
+    @Nullable Long activityTypeId
 ) {
 
     /**

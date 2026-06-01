@@ -63,14 +63,14 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
     private boolean isBreak;
 
     @NotAudited
-    @Column(name = "customer_id")
+    @Column(name = "project_id")
     @Nullable
-    private Long customerId;
+    private Long projectId;
 
     @NotAudited
-    @Column(name = "project_type_id")
+    @Column(name = "activity_type_id")
     @Nullable
-    private Long projectTypeId;
+    private Long activityTypeId;
 
     protected TimeEntryEntity(String tenantId, Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt, boolean isBreak) {
         super(tenantId);
@@ -165,20 +165,20 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
         isBreak = aBreak;
     }
 
-    public @Nullable Long getCustomerId() {
-        return customerId;
+    public @Nullable Long getProjectId() {
+        return projectId;
     }
 
-    public void setCustomerId(@Nullable Long customerId) {
-        this.customerId = customerId;
+    public void setProjectId(@Nullable Long projectId) {
+        this.projectId = projectId;
     }
 
-    public @Nullable Long getProjectTypeId() {
-        return projectTypeId;
+    public @Nullable Long getActivityTypeId() {
+        return activityTypeId;
     }
 
-    public void setProjectTypeId(@Nullable Long projectTypeId) {
-        this.projectTypeId = projectTypeId;
+    public void setActivityTypeId(@Nullable Long activityTypeId) {
+        this.activityTypeId = activityTypeId;
     }
 
     @Override

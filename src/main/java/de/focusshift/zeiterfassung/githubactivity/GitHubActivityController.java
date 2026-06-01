@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.githubactivity;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
-import de.focusshift.zeiterfassung.customer.CustomerService;
-import de.focusshift.zeiterfassung.projecttype.ProjectTypeService;
+import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
+import de.focusshift.zeiterfassung.project.ProjectService;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.CurrentUser;
@@ -48,20 +48,20 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     private final UserSettingsService userSettingsService;
     private final TimeEntryService timeEntryService;
     private final UserSearchViewHelper userSearchViewHelper;
-    private final CustomerService customerService;
-    private final ProjectTypeService projectTypeService;
+    private final ProjectService projectService;
+    private final ActivityTypeService activityTypeService;
     private final RestClient restClient;
 
     GitHubActivityController(UserSettingsService userSettingsService,
                               TimeEntryService timeEntryService,
                               UserSearchViewHelper userSearchViewHelper,
-                              CustomerService customerService,
-                              ProjectTypeService projectTypeService) {
+                              ProjectService projectService,
+                              ActivityTypeService activityTypeService) {
         this.userSettingsService = userSettingsService;
         this.timeEntryService = timeEntryService;
         this.userSearchViewHelper = userSearchViewHelper;
-        this.customerService = customerService;
-        this.projectTypeService = projectTypeService;
+        this.projectService = projectService;
+        this.activityTypeService = activityTypeService;
         this.restClient = RestClient.builder()
             .defaultHeader("User-Agent", "zeiterfassung")
             .defaultHeader("Accept", "application/vnd.github+json")
@@ -110,19 +110,18 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         model.addAttribute("formAction", "/timeentries");
         model.addAttribute("frameId", frameId != null ? frameId : "inline-form-frame");
 
-        // Load customers / project types defensively — if the table query fails for any reason
-        // (e.g. missing audit columns, RLS issue) the inline form still works, just without dropdowns.
+        // Load projects / activity types defensively — if the table query fails the inline form still works.
         try {
-            model.addAttribute("customers", customerService.findAllActive());
+            model.addAttribute("projects", projectService.findAllActive());
         } catch (Exception e) {
-            java.util.logging.Logger.getLogger(getClass().getName()).warning("Could not load customers: " + e.getMessage());
-            model.addAttribute("customers", java.util.List.of());
+            java.util.logging.Logger.getLogger(getClass().getName()).warning("Could not load projects: " + e.getMessage());
+            model.addAttribute("projects", java.util.List.of());
         }
         try {
-            model.addAttribute("projectTypes", projectTypeService.findAllActive());
+            model.addAttribute("activityTypes", activityTypeService.findAllActive());
         } catch (Exception e) {
-            java.util.logging.Logger.getLogger(getClass().getName()).warning("Could not load projectTypes: " + e.getMessage());
-            model.addAttribute("projectTypes", java.util.List.of());
+            java.util.logging.Logger.getLogger(getClass().getName()).warning("Could not load activityTypes: " + e.getMessage());
+            model.addAttribute("activityTypes", java.util.List.of());
         }
 
         return "github-activity/inline-form";

@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.projecttype;
+package de.focusshift.zeiterfassung.project;
 
 import de.focusshift.zeiterfassung.tenancy.tenant.AbstractTenantAwareEntity;
 import jakarta.persistence.Column;
@@ -14,13 +14,13 @@ import jakarta.validation.constraints.Size;
 import java.util.Objects;
 
 @Entity
-@Table(name = "project_type")
-class ProjectTypeEntity extends AbstractTenantAwareEntity {
+@Table(name = "project")
+class ProjectEntity extends AbstractTenantAwareEntity {
 
     @Id
     @Column(name = "id", unique = true, nullable = false, updatable = false)
-    @SequenceGenerator(name = "project_type_seq", sequenceName = "project_type_seq")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "project_type_seq")
+    @SequenceGenerator(name = "project_seq", sequenceName = "project_seq")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "project_seq")
     private Long id;
 
     @Column(name = "name", nullable = false)
@@ -31,7 +31,11 @@ class ProjectTypeEntity extends AbstractTenantAwareEntity {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    protected ProjectTypeEntity() {
+    @Column(name = "customer_id", nullable = false)
+    @NotNull
+    private Long customerId;
+
+    protected ProjectEntity() {
         super(null);
     }
 
@@ -59,11 +63,19 @@ class ProjectTypeEntity extends AbstractTenantAwareEntity {
         this.active = active;
     }
 
+    public Long getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ProjectTypeEntity that = (ProjectTypeEntity) o;
+        ProjectEntity that = (ProjectEntity) o;
         return Objects.equals(id, that.id);
     }
 
@@ -74,9 +86,6 @@ class ProjectTypeEntity extends AbstractTenantAwareEntity {
 
     @Override
     public String toString() {
-        return "ProjectTypeEntity{" +
-            "id=" + id +
-            ", name='" + name + '\'' +
-            '}';
+        return "ProjectEntity{id=" + id + ", name='" + name + "', customerId=" + customerId + "}";
     }
 }

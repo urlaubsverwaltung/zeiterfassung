@@ -1,8 +1,8 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
-import de.focusshift.zeiterfassung.customer.CustomerService;
-import de.focusshift.zeiterfassung.projecttype.ProjectTypeService;
+import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
+import de.focusshift.zeiterfassung.project.ProjectService;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.CurrentUser;
@@ -76,8 +76,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     private final DateFormatter dateFormatter;
     private final TimeEntryViewHelper viewHelper;
     private final UserSearchViewHelper userSearchViewHelper;
-    private final CustomerService customerService;
-    private final ProjectTypeService projectTypeService;
+    private final ProjectService projectService;
+    private final ActivityTypeService activityTypeService;
     private final Clock clock;
 
     TimeEntryController(
@@ -89,8 +89,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         DateFormatter dateFormatter,
         TimeEntryViewHelper viewHelper,
         UserSearchViewHelper userSearchViewHelper,
-        CustomerService customerService,
-        ProjectTypeService projectTypeService,
+        ProjectService projectService,
+        ActivityTypeService activityTypeService,
         Clock clock
     ) {
         this.timeEntryService = timeEntryService;
@@ -101,8 +101,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         this.dateFormatter = dateFormatter;
         this.viewHelper = viewHelper;
         this.userSearchViewHelper = userSearchViewHelper;
-        this.customerService = customerService;
-        this.projectTypeService = projectTypeService;
+        this.projectService = projectService;
+        this.activityTypeService = activityTypeService;
         this.clock = clock;
     }
 
@@ -151,8 +151,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         viewHelper.addTimeEntryToModel(model, timeEntryDTO);
         addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale, currentUser);
-        model.addAttribute("customers", customerService.findAllActive());
-        model.addAttribute("projectTypes", projectTypeService.findAllActive());
+        model.addAttribute("projects", projectService.findAllActive());
+        model.addAttribute("activityTypes", activityTypeService.findAllActive());
 
         return new ModelAndView("timeentries/index");
     }
@@ -234,8 +234,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
             final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
             final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
             addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale, currentUser);
-            model.addAttribute("customers", customerService.findAllActive());
-            model.addAttribute("projectTypes", projectTypeService.findAllActive());
+            model.addAttribute("projects", projectService.findAllActive());
+            model.addAttribute("activityTypes", activityTypeService.findAllActive());
             viewHelper.handleCrudTimeEntryErrors(timeEntryDto, bindingResult, model, redirectAttributes);
         }
     }
@@ -334,8 +334,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
             if (bindingResult.hasErrors()) {
                 final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
                 addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale, currentUser);
-                model.addAttribute("customers", customerService.findAllActive());
-                model.addAttribute("projectTypes", projectTypeService.findAllActive());
+                model.addAttribute("projects", projectService.findAllActive());
+                model.addAttribute("activityTypes", activityTypeService.findAllActive());
                 LOG.info("Could not update timeEntry {} due to constraint violoation errors. Rendering timeentries page.", timeEntryId);
                 return new ModelAndView("timeentries/index");
             } else {
