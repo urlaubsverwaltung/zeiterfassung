@@ -11,6 +11,7 @@ import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserSettings;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.UserSettingsService;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Controller;
@@ -42,6 +43,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     private final ConcurrentHashMap<String, CacheEntry> eventCache = new ConcurrentHashMap<>();
 
     private final UserSettingsService userSettingsService;
+    private final UserSettingsProvider userSettingsProvider;
     private final TimeEntryService timeEntryService;
     private final UserSearchViewHelper userSearchViewHelper;
     private final ProjectService projectService;
@@ -50,12 +52,14 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     private final RestClient restClient;
 
     GitHubActivityController(UserSettingsService userSettingsService,
+                              UserSettingsProvider userSettingsProvider,
                               TimeEntryService timeEntryService,
                               UserSearchViewHelper userSearchViewHelper,
                               ProjectService projectService,
                               ActivityTypeService activityTypeService,
                               TimeEntryLockService timeEntryLockService) {
         this.userSettingsService = userSettingsService;
+        this.userSettingsProvider = userSettingsProvider;
         this.timeEntryService = timeEntryService;
         this.userSearchViewHelper = userSearchViewHelper;
         this.projectService = projectService;
@@ -82,8 +86,9 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
 
         final String login = userSettings.githubLogin().get();
         final String token = userSettings.githubToken().orElse(null);
+        final ZoneId zone = userSettingsProvider.zoneId();
         final List<Map<String, Object>> events = fetchGitHubEvents(login, token);
-        final List<GitHubActivityGroup> groups = parseAndGroupEvents(events, selectedDate);
+        final List<GitHubActivityGroup> groups = parseAndGroupEvents(events, selectedDate, zone);
 
         final Long userLocalId = currentUser.getUserIdComposite().localId().value();
         model.addAttribute("date", selectedDate);
@@ -152,10 +157,8 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     }
 
     @SuppressWarnings("unchecked")
-    private List<GitHubActivityGroup> parseAndGroupEvents(List<Map<String, Object>> rawEvents, LocalDate date) {
+    private List<GitHubActivityGroup> parseAndGroupEvents(List<Map<String, Object>> rawEvents, LocalDate date, ZoneId zone) {
         if (rawEvents == null) return List.of();
-
-        final ZoneId zone = ZoneId.systemDefault();
         final Map<String, List<GitHubEvent>> byRepo = new LinkedHashMap<>();
 
         for (Map<String, Object> raw : rawEvents) {
