@@ -103,7 +103,7 @@
         <div class="navigation-popover-menu-header">
           <a
             href="#"
-            th:href="@{/web/person/{userId}/overview(userId=${signedInUser.id})}"
+            th:href="@{/account}"
             class="flex items-center gap-4 no-underline"
           >
             <span class="text-blue-200 dark:text-sky-800">
@@ -128,6 +128,16 @@
         </div>
         <div class="navigation-popover-menu-content">
           <ul class="navigation-popover-menu">
+            <li>
+              <a
+                th:replace="~{::nav-popup-menu-link(href=@{/account}, icon=~{::menu-account-icon}, text=#{navigation.avatar-menu.account.title})}"
+              >
+                <svg
+                  th:ref="menu-account-icon"
+                  th:replace="~{icons/user-circle::svg(className='w-6 h-6')}"
+                ></svg>
+              </a>
+            </li>
             <li>
               <a
                 th:replace="~{::nav-popup-menu-link(href=@{/personal-settings}, icon=~{::menu-user-settings-icon}, text=#{navigation.avatar-menu.personalisation.title})}"

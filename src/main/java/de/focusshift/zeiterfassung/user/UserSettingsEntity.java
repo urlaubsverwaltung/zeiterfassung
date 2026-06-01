@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
@@ -32,6 +33,11 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
 
     @Column(name = "locale_browser_specific")
     private Locale localeBrowserSpecific;
+
+    @Column(name = "github_login")
+    @Size(max = 255)
+    @Nullable
+    private String githubLogin;
 
     protected UserSettingsEntity() {
         super(null);
@@ -77,6 +83,14 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
         this.localeBrowserSpecific = localeBrowserSpecific;
     }
 
+    public @Nullable String getGithubLogin() {
+        return githubLogin;
+    }
+
+    public void setGithubLogin(@Nullable String githubLogin) {
+        this.githubLogin = githubLogin;
+    }
+
     @Override
     public String toString() {
         return "UserSettingsEntity{" +
@@ -84,6 +98,7 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
             ", theme=" + theme +
             ", locale=" + locale +
             ", localeBrowserSpecific=" + localeBrowserSpecific +
+            ", githubLogin=" + githubLogin +
             '}';
     }
 

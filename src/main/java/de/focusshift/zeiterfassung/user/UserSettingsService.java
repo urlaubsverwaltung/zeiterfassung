@@ -110,11 +110,20 @@ class UserSettingsService {
         return userSettingsEntity;
     }
 
+    UserSettings updateGithubLogin(UserIdComposite userIdComposite, @Nullable String githubLogin) {
+        final UserSettingsEntity entity = findOrGetDefault(userIdComposite);
+        entity.setGithubLogin(githubLogin);
+        final UserSettingsEntity persistedEntity = userSettingsRepository.save(entity);
+        LOG.info("Updated github login for user {}", userIdComposite.localId().value());
+        return toUserSettings(persistedEntity);
+    }
+
     private static UserSettings toUserSettings(UserSettingsEntity userSettingsEntity) {
         return new UserSettings(
             userSettingsEntity.getTheme(),
             userSettingsEntity.getLocale(),
-            userSettingsEntity.getLocaleBrowserSpecific()
+            userSettingsEntity.getLocaleBrowserSpecific(),
+            userSettingsEntity.getGithubLogin()
         );
     }
 
