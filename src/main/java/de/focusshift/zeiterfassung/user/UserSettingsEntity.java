@@ -39,6 +39,9 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
     @Nullable
     private String githubLogin;
 
+    @Column(name = "github_login_verified", nullable = false)
+    private boolean githubLoginVerified = false;
+
     protected UserSettingsEntity() {
         super(null);
     }
@@ -89,6 +92,14 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
 
     public void setGithubLogin(@Nullable String githubLogin) {
         this.githubLogin = githubLogin;
+    }
+
+    public boolean isGithubLoginVerified() {
+        return githubLoginVerified;
+    }
+
+    public void setGithubLoginVerified(boolean githubLoginVerified) {
+        this.githubLoginVerified = githubLoginVerified;
     }
 
     @Override

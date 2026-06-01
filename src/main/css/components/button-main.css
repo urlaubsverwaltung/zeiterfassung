@@ -1,0 +1,28 @@
+.button-main-green {
+  display: inline-block;
+  white-space: nowrap;
+  background-color: var(--color-green-600);
+  color: var(--color-white);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  padding: 0.5rem 1.5rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-green-700);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  @variant dark {
+    background-color: var(--color-green-700);
+
+    &:hover:not(:disabled) {
+      background-color: var(--color-green-600);
+    }
+  }
+}

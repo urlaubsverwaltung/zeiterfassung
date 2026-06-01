@@ -110,11 +110,12 @@ public class UserSettingsService {
         return userSettingsEntity;
     }
 
-    public UserSettings updateGithubLogin(UserIdComposite userIdComposite, @Nullable String githubLogin) {
+    public UserSettings updateGithubLogin(UserIdComposite userIdComposite, @Nullable String githubLogin, boolean verified) {
         final UserSettingsEntity entity = findOrGetDefault(userIdComposite);
         entity.setGithubLogin(githubLogin);
+        entity.setGithubLoginVerified(verified);
         final UserSettingsEntity persistedEntity = userSettingsRepository.save(entity);
-        LOG.info("Updated github login for user {}", userIdComposite.localId().value());
+        LOG.info("Updated github login for user {} verified={}", userIdComposite.localId().value(), verified);
         return toUserSettings(persistedEntity);
     }
 
@@ -123,7 +124,8 @@ public class UserSettingsService {
             userSettingsEntity.getTheme(),
             userSettingsEntity.getLocale(),
             userSettingsEntity.getLocaleBrowserSpecific(),
-            userSettingsEntity.getGithubLogin()
+            userSettingsEntity.getGithubLogin(),
+            userSettingsEntity.isGithubLoginVerified()
         );
     }
 

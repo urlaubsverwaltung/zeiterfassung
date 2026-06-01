@@ -12,12 +12,14 @@ public class UserSettings {
     private final Locale localeBrowserSpecific;
     @Nullable
     private final String githubLogin;
+    private final boolean githubLoginVerified;
 
-    UserSettings(Theme theme, Locale locale, Locale localeBrowserSpecific, @Nullable String githubLogin) {
+    UserSettings(Theme theme, Locale locale, Locale localeBrowserSpecific, @Nullable String githubLogin, boolean githubLoginVerified) {
         this.theme = theme;
         this.locale = locale;
         this.localeBrowserSpecific = localeBrowserSpecific;
         this.githubLogin = githubLogin;
+        this.githubLoginVerified = githubLoginVerified;
     }
 
     public Theme theme() {
@@ -34,5 +36,9 @@ public class UserSettings {
 
     public Optional<String> githubLogin() {
         return Optional.ofNullable(githubLogin);
+    }
+
+    public boolean githubLoginVerified() {
+        return githubLoginVerified;
     }
 }

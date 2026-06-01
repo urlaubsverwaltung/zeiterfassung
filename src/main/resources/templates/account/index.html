@@ -6,11 +6,9 @@
   xmlns:th="http://www.thymeleaf.org"
 >
   <head
-    th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{::scriptsDefer})}"
+    th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{})}"
   >
-    <title th:text="#{account.page.title}"></title>
-    <th:block th:fragment="scriptsDefer">
-    </th:block>
+    <title th:text="#{account.page.title}">My Account</title>
   </head>
   <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
     <th:block th:ref="search">
@@ -22,28 +20,31 @@
     <th:block th:fragment="content">
       <main class="content-container content--max-w flex flex-col">
         <div class="flex-1 flex flex-col mx-auto w-full max-w-7xl px-4 desktop:px-8">
-          <h1 class="text-xl font-bold" th:text="#{account.page.title}">
-            My Account
-          </h1>
 
-          <div th:if="${savedSuccess}" class="mt-4 p-4 bg-green-100 dark:bg-green-900 rounded-lg text-green-800 dark:text-green-200" th:text="#{account.save.success}">
-            Settings saved.
-          </div>
+          <h1 class="text-xl font-bold mb-6" th:text="#{account.page.title}">My Account</h1>
 
-          <div class="mt-8 flex flex-col gap-10">
-            <!-- Identity section -->
+          <!-- Success banner -->
+          <div
+            th:if="${savedSuccess}"
+            class="mb-6 p-4 bg-green-100 dark:bg-green-900 rounded-lg text-green-800 dark:text-green-200"
+            th:text="#{account.save.success}"
+          >Settings saved.</div>
+
+          <div class="flex flex-col gap-10">
+
+            <!-- Identity section (read-only) -->
             <section>
-              <h2 class="text-lg font-semibold dark:text-zinc-300 mb-2" th:text="#{account.identity.section.title}">Identity</h2>
-              <p class="text-sm text-dimmed mb-4" th:text="#{account.identity.managed-by-cloudron}">
+              <h2 class="text-lg font-semibold dark:text-zinc-300 mb-1" th:text="#{account.identity.section.title}">Identity</h2>
+              <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4" th:text="#{account.identity.managed-by-cloudron}">
                 Identity is managed by Cloudron.
               </p>
-              <div class="flex flex-col gap-2">
-                <div class="flex flex-col gap-1">
-                  <span class="text-sm font-medium text-gray-600 dark:text-zinc-400">Name</span>
+              <div class="flex flex-col gap-3">
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-sm font-medium text-gray-500 dark:text-zinc-400">Name</span>
                   <span class="text-base" th:text="${fullName}">Max Mustermann</span>
                 </div>
-                <div class="flex flex-col gap-1" th:if="${email}">
-                  <span class="text-sm font-medium text-gray-600 dark:text-zinc-400">E-Mail</span>
+                <div class="flex flex-col gap-0.5" th:if="${email}">
+                  <span class="text-sm font-medium text-gray-500 dark:text-zinc-400">E-Mail</span>
                   <span class="text-base" th:text="${email}">max@example.com</span>
                 </div>
               </div>
@@ -51,8 +52,13 @@
 
             <!-- GitHub section -->
             <section>
-              <h2 class="text-lg font-semibold dark:text-zinc-300 mb-2" th:text="#{account.github.section.title}">GitHub</h2>
-              <form action="#" th:action="@{/account}" method="post">
+              <h2 class="text-lg font-semibold dark:text-zinc-300 mb-1" th:text="#{account.github.section.title}">GitHub</h2>
+
+              <form action="#" th:action="@{/account}" method="post" id="account-form">
+                <!-- Hidden: tracks whether the current input has been verified -->
+                <input type="hidden" name="githubLoginVerified" id="githubLoginVerifiedField"
+                       th:value="${githubLoginVerified}" />
+
                 <div class="flex flex-col gap-4 max-w-md">
                   <div class="flex flex-col gap-1">
                     <label for="githubLogin" class="text-sm font-medium" th:text="#{account.github-login.label}">
@@ -67,43 +73,92 @@
                         th:placeholder="#{account.github-login.placeholder}"
                         class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 dark:bg-zinc-800 dark:text-zinc-100 flex-1"
                         maxlength="255"
+                        autocomplete="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        oninput="document.getElementById('githubLoginVerifiedField').value='false'; updateSaveButton();"
                       />
                       <button
                         type="button"
                         class="button-secondary whitespace-nowrap"
                         th:text="#{account.github-login.verify.button}"
                         onclick="
-                          const username = document.getElementById('githubLogin').value;
+                          const username = document.getElementById('githubLogin').value.trim();
+                          if (!username) return;
                           const frame = document.getElementById('github-verify-result');
                           frame.src = '/account/github-verify?username=' + encodeURIComponent(username);
                         "
-                      >
-                        Verify
-                      </button>
+                      >Verify</button>
                     </div>
-                    <p class="text-sm text-dimmed" th:text="#{account.github-login.hint}">
-                      Used to show your GitHub activity.
+                    <p class="text-sm text-gray-500 dark:text-zinc-400" th:text="#{account.github-login.hint}">
+                      Used to show your GitHub activity alongside the time entry form.
                     </p>
                   </div>
 
-                  <turbo-frame id="github-verify-result" class="block min-h-0">
+                  <!-- Turbo Frame: GitHub verification result appears here -->
+                  <turbo-frame id="github-verify-result" class="block">
+                    <!-- Show badge if already verified -->
+                    <div th:if="${githubLoginVerified and !#strings.isEmpty(githubLogin)}"
+                         class="flex items-center gap-3 p-2 rounded border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-950">
+                      <img
+                        th:src="|https://github.com/${githubLogin}.png?size=48|"
+                        th:alt="${githubLogin}"
+                        width="48" height="48"
+                        class="rounded-full w-12 h-12"
+                      />
+                      <div class="flex flex-col">
+                        <span class="font-medium text-green-800 dark:text-green-200" th:text="${githubLogin}">username</span>
+                        <a
+                          th:href="|https://github.com/${githubLogin}|"
+                          th:text="|@${githubLogin}|"
+                          class="text-sm text-blue-600 dark:text-sky-400"
+                          target="_blank" rel="noopener noreferrer"
+                        >@username</a>
+                      </div>
+                      <span class="ml-auto text-xs font-medium text-green-700 dark:text-green-400"
+                            th:text="#{account.github-login.verified.badge}">✓ Verified</span>
+                    </div>
                   </turbo-frame>
 
                   <div>
                     <button
                       type="submit"
+                      id="saveButton"
                       class="button-main-green"
+                      th:disabled="${!githubLoginVerified and !#strings.isEmpty(githubLogin)}"
                       th:text="#{account.save.button}"
-                    >
-                      Save
-                    </button>
+                    >Save</button>
                   </div>
                 </div>
               </form>
             </section>
+
           </div>
         </div>
       </main>
+
+      <script>
+        function updateSaveButton() {
+          const verified = document.getElementById('githubLoginVerifiedField').value === 'true';
+          const username = document.getElementById('githubLogin').value.trim();
+          const btn = document.getElementById('saveButton');
+          // Allow save if: verified, or field is empty (clearing the value)
+          btn.disabled = username !== '' && !verified;
+        }
+
+        // When Turbo Frame loads the verify result, update the verified field
+        document.addEventListener('turbo:frame-load', function(e) {
+          if (e.target.id === 'github-verify-result') {
+            const verifiedEl = e.target.querySelector('[data-verified]');
+            const isVerified = verifiedEl !== null;
+            document.getElementById('githubLoginVerifiedField').value = isVerified ? 'true' : 'false';
+            if (isVerified) {
+              document.getElementById('githubLogin').value = verifiedEl.dataset.login;
+            }
+            updateSaveButton();
+          }
+        });
+      </script>
     </th:block>
   </body>
 </html>

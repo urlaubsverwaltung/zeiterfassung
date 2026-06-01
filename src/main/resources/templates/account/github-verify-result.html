@@ -2,28 +2,40 @@
 <html xmlns:th="http://www.thymeleaf.org">
   <body>
     <turbo-frame id="github-verify-result">
-      <div th:if="${error}" class="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 p-2 rounded bg-red-50 dark:bg-red-950">
+
+      <!-- Error state -->
+      <div th:if="${error}"
+           class="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 p-2 rounded bg-red-50 dark:bg-red-950">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
         <span th:text="#{__${error}__}">Error</span>
       </div>
-      <div th:if="${avatarUrl}" class="flex items-center gap-3 p-2 rounded border border-gray-200 dark:border-zinc-700">
+
+      <!-- Success state — data-verified and data-login are read by JS to update the form -->
+      <div th:if="${verified}"
+           class="flex items-center gap-3 p-2 rounded border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-950"
+           data-verified="true"
+           th:attr="data-login=${username}">
         <img
           th:src="${avatarUrl}"
           th:alt="${username}"
-          width="48"
-          height="48"
+          width="48" height="48"
           class="rounded-full w-12 h-12"
         />
         <div class="flex flex-col">
-          <span class="font-medium" th:text="${displayName}">Display Name</span>
+          <span class="font-medium text-green-800 dark:text-green-200" th:text="${displayName}">Display Name</span>
           <a
             th:href="|https://github.com/${username}|"
             th:text="|@${username}|"
             class="text-sm text-blue-600 dark:text-sky-400"
-            target="_blank"
-            rel="noopener noreferrer"
+            target="_blank" rel="noopener noreferrer"
           >@username</a>
         </div>
+        <span class="ml-auto text-xs font-medium text-green-700 dark:text-green-400"
+              th:text="#{account.github-login.verified.badge}">✓ Verified</span>
       </div>
+
     </turbo-frame>
   </body>
 </html>
