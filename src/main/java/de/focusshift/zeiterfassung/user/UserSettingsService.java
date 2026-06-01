@@ -17,7 +17,7 @@ import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
-class UserSettingsService {
+public class UserSettingsService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
@@ -39,7 +39,7 @@ class UserSettingsService {
         return userSettingsRepository.findByTenantUserLocalId(localId).map(UserSettingsEntity::getLocale);
     }
 
-    UserSettings getUserSettings(UserIdComposite userIdComposite) {
+    public UserSettings getUserSettings(UserIdComposite userIdComposite) {
         final UserSettingsEntity entity = findOrGetDefault(userIdComposite);
         return toUserSettings(entity);
     }
@@ -110,7 +110,7 @@ class UserSettingsService {
         return userSettingsEntity;
     }
 
-    UserSettings updateGithubLogin(UserIdComposite userIdComposite, @Nullable String githubLogin) {
+    public UserSettings updateGithubLogin(UserIdComposite userIdComposite, @Nullable String githubLogin) {
         final UserSettingsEntity entity = findOrGetDefault(userIdComposite);
         entity.setGithubLogin(githubLogin);
         final UserSettingsEntity persistedEntity = userSettingsRepository.save(entity);
