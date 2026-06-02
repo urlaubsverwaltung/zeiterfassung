@@ -110,6 +110,8 @@
                            th:id="|ev-cb-${anchorStat.index}-${evStat.index}|"
                            class="gh-cb shrink-0 mt-0.5 cursor-pointer"
                            th:data-anchor="${anchorStat.index}"
+                           th:data-event-id="${event.eventId()}"
+                           th:data-row-id="|ev-row-${anchorStat.index}-${evStat.index}|"
                            th:data-comment="${event.prefilledComment()}"
                            th:data-time="${event.time()}"
                            th:data-date="${date}"
@@ -276,27 +278,51 @@
           if (frame) {
             frame.src = '/github-activity/inline-form?' + params.toString();
             frame.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Capture selected entries before listener fires
+            const selected = checked.map(cb => ({ eventId: cb.dataset.eventId, rowId: cb.dataset.rowId }));
+            frame.addEventListener('turbo:submit-end', function handler(e) {
+              if (e.detail.success) {
+                selected.forEach(({ eventId, rowId }) => ghMarkRowLogged(rowId, eventId));
+                // Hide the selection bar and uncheck all boxes
+                const bar = document.getElementById('sel-bar-' + anchorIdx);
+                if (bar) bar.classList.add('hidden');
+                document.querySelectorAll(`.gh-cb[data-anchor="${anchorIdx}"]`).forEach(cb => { cb.checked = false; });
+                frame.removeEventListener('turbo:submit-end', handler);
+              }
+            });
           }
         }
 
-        // ── Mark as logged ────────────────────────────────────────────────────
-        function ghMarkLogged(btn, frame, eventId) {
-          // Visual update
-          btn.disabled = true;
-          btn.textContent = '✓ Logged';
-          btn.classList.remove('button-main-green');
-          btn.classList.add('button-secondary', 'opacity-60', 'cursor-default');
-          // Hide the dismiss button and checkbox on this row
-          const row = btn.closest('[id^="ev-row-"]');
+        // ── Mark as logged (shared helper) ────────────────────────────────────
+        function ghMarkRowLogged(rowId, eventId) {
+          const row = document.getElementById(rowId);
           if (row) {
-            row.querySelectorAll('input[type=checkbox], form button[type=submit]').forEach(el => el.closest('form,label,span') ? null : el.classList.add('hidden'));
-            row.querySelector('input[type=checkbox]')?.closest('div')?.querySelector('input[type=checkbox]')?.classList.add('hidden');
-            row.classList.add('opacity-60');
+            row.classList.add('opacity-50');
+            // Hide checkbox
+            row.querySelector('input.gh-cb')?.classList.add('hidden');
+            // Hide dismiss form
+            row.querySelector('form')?.classList.add('hidden');
+            // Replace Log it button with "✓ Logged" text
+            const logBtn = row.querySelector('button.button-main-green');
+            if (logBtn) {
+              const span = document.createElement('span');
+              span.className = 'shrink-0 text-xs text-green-600 dark:text-green-400 font-medium';
+              span.textContent = '✓ Logged';
+              logBtn.replaceWith(span);
+            }
           }
-          // Persist to backend
-          fetch('/github-activity/mark-logged?eventId=' + encodeURIComponent(eventId), { method: 'POST',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]')?.content || '' }
-          });
+          if (eventId) {
+            fetch('/github-activity/mark-logged?eventId=' + encodeURIComponent(eventId), {
+              method: 'POST',
+              headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]')?.content || '' }
+            });
+          }
+        }
+
+        // ── Mark as logged (single Log it flow) ───────────────────────────────
+        function ghMarkLogged(btn, frame, eventId) {
+          const row = btn.closest('[id^="ev-row-"]');
+          ghMarkRowLogged(row?.id, eventId);
         }
 
         // Restore CSRF meta tag support (Spring adds it to forms, not meta — read from hidden input)
