@@ -287,6 +287,29 @@
                   Zurücksetzen
                 </a>
               </div>
+
+              <!-- Urlaubsverwaltung (ooo) integration -->
+              <div class="mt-8 lg:mt-12">
+                <h2 class="font-bold">Urlaubsverwaltung (ooo) Integration</h2>
+                <p class="mt-2 text-dimmed">
+                  Paste the company iCal feed URL from <strong>ooo.slint.dev → Settings → Calendar</strong>.
+                  When configured, users will see a vacation reminder on their time-entry page for days they are absent.
+                </p>
+                <div class="mt-4">
+                  <label for="oooCalendarUrl" class="block text-sm font-medium mb-1">
+                    Company calendar URL (iCal)
+                  </label>
+                  <input
+                    type="url"
+                    id="oooCalendarUrl"
+                    name="oooCalendarUrl"
+                    th:value="${settings.oooCalendarUrl()}"
+                    placeholder="https://ooo.slint.dev/web/company/persons/.../calendar?secret=..."
+                    class="w-full rounded border border-gray-300 dark:border-zinc-600 px-3 py-2 text-sm dark:bg-zinc-800"
+                  />
+                </div>
+              </div>
+
             </form>
           </turbo-frame>
           <div class="mt-12">

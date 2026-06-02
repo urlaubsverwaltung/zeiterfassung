@@ -67,7 +67,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
         final FederalStateSettings federalStateSettings = settingsService.getFederalStateSettings();
         final LockTimeEntriesSettings lockTimeEntriesSettings = settingsService.getLockTimeEntriesSettings();
         final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings = settingsService.getSubtractBreakFromTimeEntrySettings();
-        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings.orElse(null));
+        final OooCalendarSettings oooCalendarSettings = settingsService.getOooCalendarSettings();
+        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings.orElse(null), oooCalendarSettings);
 
         prepareModel(model, locale, settingsDto);
 
@@ -101,6 +102,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
 
         final int lockTimeEntriesDaysInPast = requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1);
         settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), lockTimeEntriesDaysInPast);
+
+        settingsService.updateOooCalendarSettings(settingsDto.oooCalendarUrl());
 
         if (subtractBreakFromTimeEntryIsActive != null) {
             final LocalDate date = settingsDto.subtractBreakFromTimeEntryActiveDate();
@@ -141,7 +144,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
     private SettingsDto toSettingsDto(
         FederalStateSettings federalStateSettings,
         LockTimeEntriesSettings lockTimeEntriesSettings,
-        @Nullable SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings
+        @Nullable SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings,
+        OooCalendarSettings oooCalendarSettings
     ) {
 
         final ZoneId userZoneId = userSettingsProvider.zoneId();
@@ -162,7 +166,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
             lockTimeEntriesSettings.lockingIsActive(),
             lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null,
             subtractBreakFromTimeEntryIsActive,
-            subtractBreakFromTimeEntryIsActiveDate
+            subtractBreakFromTimeEntryIsActiveDate,
+            oooCalendarSettings.calendarUrl()
         );
     }
 

@@ -17,24 +17,27 @@ import static java.util.stream.StreamSupport.stream;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
-class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService {
+class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService, OooCalendarSettingsService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final FederalStateSettingsRepository federalStateSettingsRepository;
     private final LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
     private final SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
+    private final OooCalendarSettingsRepository oooCalendarSettingsRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     SettingsService(
         FederalStateSettingsRepository federalStateSettingsRepository,
         LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository,
         SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository,
+        OooCalendarSettingsRepository oooCalendarSettingsRepository,
         ApplicationEventPublisher applicationEventPublisher
     ) {
         this.federalStateSettingsRepository = federalStateSettingsRepository;
         this.lockTimeEntriesSettingsRepository = lockTimeEntriesSettingsRepository;
         this.subtractBreakFromTimeEntrySettingsRepository = subtractBreakFromTimeEntrySettingsRepository;
+        this.oooCalendarSettingsRepository = oooCalendarSettingsRepository;
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
@@ -154,6 +157,23 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         // however, the tenantId is handled transparently in the background. and we only have the public API of `findAll`.
         final Iterable<SubtractBreakFromTimeEntrySettingsEntity> settings = subtractBreakFromTimeEntrySettingsRepository.findAll();
         return stream(settings.spliterator(), false).findFirst();
+    }
+
+    @Override
+    public OooCalendarSettings getOooCalendarSettings() {
+        return stream(oooCalendarSettingsRepository.findAll().spliterator(), false)
+            .findFirst()
+            .map(e -> new OooCalendarSettings(e.getCalendarUrl()))
+            .orElse(OooCalendarSettings.DEFAULT);
+    }
+
+    OooCalendarSettings updateOooCalendarSettings(String calendarUrl) {
+        final OooCalendarSettingsEntity entity = stream(oooCalendarSettingsRepository.findAll().spliterator(), false)
+            .findFirst()
+            .orElseGet(OooCalendarSettingsEntity::new);
+        entity.setCalendarUrl(calendarUrl == null || calendarUrl.isBlank() ? null : calendarUrl.strip());
+        final OooCalendarSettingsEntity saved = oooCalendarSettingsRepository.save(entity);
+        return new OooCalendarSettings(saved.getCalendarUrl());
     }
 
     private static FederalStateSettings toFederalStateSettings(FederalStateSettingsEntity federalStateSettingsEntity) {

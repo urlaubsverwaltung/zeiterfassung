@@ -51,3 +51,39 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+
+  app:
+    build: .
+    ports:
+      - '8060:8060'
+    environment:
+      SPRING_PROFILES_ACTIVE: dev-singletenant
+      SERVER_PORT: 8060
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/zeiterfassung
+      SPRING_DATASOURCE_USERNAME: admin_user
+      SPRING_DATASOURCE_PASSWORD: admin_password
+      # Mail
+      SPRING_MAIL_HOST: mailpit
+      SPRING_MAIL_PORT: 1025
+      # OIDC — Keycloak running in Docker network (use service name, not localhost)
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT_ID: zeiterfassung
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_CLIENT_SECRET: zeiterfassung-secret
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_SCOPE: "openid,profile,email,roles"
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_PROVIDER: default
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEFAULT_REDIRECT_URI: "http://localhost:8060/login/oauth2/code/{registrationId}"
+      # Internal: app→keycloak (token validation, JWK, userinfo)
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_ISSUER_URI: http://keycloak:8090/realms/zeiterfassung-realm
+      # External: browser redirect — use localhost since port 8090 is exposed
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_DEFAULT_AUTHORIZATION_URI: http://localhost:8090/realms/zeiterfassung-realm/protocol/openid-connect/auth
+      # Disable RabbitMQ autoconfigure (not needed for basic use)
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration
+      # Tenant
+      ZEITERFASSUNG_TENANT_MODE: single
+      ZEITERFASSUNG_TENANT_SINGLE_DEFAULT_TENANT_ID: default
+      ZEITERFASSUNG_DEVELOPMENT_DEMODATA_CREATE: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started

@@ -36,6 +36,8 @@ class SettingsServiceTest {
     @Mock
     private SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
     @Mock
+    private OooCalendarSettingsRepository oooCalendarSettingsRepository;
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
 
@@ -45,6 +47,7 @@ class SettingsServiceTest {
             federalStateSettingsRepository,
             lockTimeEntriesSettingsRepository,
             subtractBreakFromTimeEntrySettingsRepository,
+            oooCalendarSettingsRepository,
             applicationEventPublisher
         );
     }

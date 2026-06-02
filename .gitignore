@@ -14,3 +14,4 @@
 
 # maven wrapper
 !.mvn/wrapper/maven-wrapper.jar
+.DS_Store

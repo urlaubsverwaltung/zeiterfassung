@@ -49,4 +49,5 @@
   <include relativeToChangelogFile="true" file="changelog-3.1.0-slint-add-time-entry-categorisation.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.1.0-slint-add-project-and-activity-type.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.1.0-slint-add-github-activity.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-3.2.0-slint-add-ooo-calendar-settings.xml"/>
 </databaseChangeLog>

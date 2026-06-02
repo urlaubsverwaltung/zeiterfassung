@@ -77,6 +77,7 @@ class SettingsControllerTest implements ControllerTest {
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.of(subtractBreakFromTimeEntrySettings));
+        when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
@@ -86,7 +87,8 @@ class SettingsControllerTest implements ControllerTest {
             true,
             "42",
             true,
-            subtractBreakFeatureDate
+            subtractBreakFeatureDate,
+            null
         );
 
         perform(get("/settings"))
@@ -105,6 +107,7 @@ class SettingsControllerTest implements ControllerTest {
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
+        when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
@@ -121,12 +124,14 @@ class SettingsControllerTest implements ControllerTest {
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
+        when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
         final SettingsDto expectedSettingsDto = new SettingsDto(
             FederalState.NONE,
             false,
             false,
+            null,
             null,
             null,
             null
@@ -146,6 +151,7 @@ class SettingsControllerTest implements ControllerTest {
             true,
             "-1",
             false,
+            null,
             null
         );
 
@@ -181,7 +187,8 @@ class SettingsControllerTest implements ControllerTest {
             true,
             "42",
             true,
-            LocalDate.parse("2025-05-30")
+            LocalDate.parse("2025-05-30"),
+            null
         );
 
         perform(post("/settings")
