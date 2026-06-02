@@ -35,7 +35,7 @@
               <span th:if="${lastSyncedAt != null}"
                     class="text-xs text-gray-400 dark:text-zinc-500">
                 <span th:text="#{github-activity.last-synced}">Last synced:</span>
-                <span th:text="${#temporals.format(#temporals.createFromInstant(lastSyncedAt, #locale), 'd MMM HH:mm')}"></span>
+                <span th:text="${#temporals.format(lastSyncedAt, 'd MMM HH:mm')}"></span>
               </span>
               <span th:if="${lastSyncedAt == null}"
                     class="text-xs text-gray-400 dark:text-zinc-500"

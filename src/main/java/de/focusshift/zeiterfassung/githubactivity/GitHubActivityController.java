@@ -104,6 +104,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         model.addAttribute("lastSyncedAt", eventRepository
             .findTopByGithubUsernameOrderByEventTimestampDesc(login)
             .map(GitHubRawEventEntity::getEventTimestamp)
+            .map(instant -> instant.atZone(zone))
             .orElse(null));
 
         return "github-activity/index";

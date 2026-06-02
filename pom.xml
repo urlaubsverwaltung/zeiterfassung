@@ -246,6 +246,13 @@
       <artifactId>ical4j</artifactId>
       <version>3.2.14</version>
     </dependency>
+
+    <!-- BouncyCastle: required by nimbus-jose-jwt for PEM private key parsing (GitHub App JWT signing) -->
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk18on</artifactId>
+      <version>1.80</version>
+    </dependency>
   </dependencies>
 
   <build>

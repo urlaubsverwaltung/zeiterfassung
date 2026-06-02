@@ -17,9 +17,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -133,17 +135,134 @@ class GitHubSyncService {
         int saved = 0;
         for (Map<String, Object> raw : events) {
             final String eventId = (String) raw.get("id");
-            if (eventId == null || repository.existsByGithubEventId(eventId)) {
-                continue;
-            }
-            final GitHubRawEventEntity entity = parseToEntity(raw, login);
-            if (entity != null) {
-                repository.save(entity);
-                saved++;
+            final String type = (String) raw.get("type");
+            if (eventId == null || type == null) continue;
+
+            if ("PushEvent".equals(type)) {
+                for (GitHubRawEventEntity e : parsePushToEntities(raw, login, token)) {
+                    if (!repository.existsByGithubEventId(e.getGithubEventId())) {
+                        repository.save(e);
+                        saved++;
+                    }
+                }
+            } else {
+                if (repository.existsByGithubEventId(eventId)) continue;
+                final GitHubRawEventEntity entity = parseToEntity(raw, login);
+                if (entity != null) {
+                    repository.save(entity);
+                    saved++;
+                }
             }
         }
         if (saved > 0) {
             LOG.info("Synced {} new GitHub event(s) for user {}", saved, login);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<GitHubRawEventEntity> parsePushToEntities(Map<String, Object> raw, String login, String token) {
+        final String eventId = (String) raw.get("id");
+        final String createdAt = (String) raw.get("created_at");
+        if (createdAt == null) return List.of();
+
+        final Map<String, Object> repoMap = (Map<String, Object>) raw.get("repo");
+        final String repoName = repoMap != null ? (String) repoMap.get("name") : null;
+        if (repoName == null) return List.of();
+
+        final Map<String, Object> payload = raw.get("payload") instanceof Map<?, ?> m
+            ? (Map<String, Object>) m : Map.of();
+
+        final String ref = strOrEmpty(payload.get("ref"));
+        final String branch = !ref.isEmpty() ? ref.replaceFirst("^refs/heads/", "") : "";
+        final String head = strOrEmpty(payload.get("head"));
+        final String before = strOrEmpty(payload.get("before"));
+        final Instant pushTime = Instant.parse(createdAt);
+
+        if (head.isEmpty()) return List.of();
+
+        // GitHub App tokens strip commit details from the Events API payload.
+        // Use the Compare API to recover the actual commit messages.
+        final List<Map<String, Object>> commits = fetchCommitsInPush(repoName, before, head, token);
+
+        final List<GitHubRawEventEntity> result = new ArrayList<>();
+        for (Map<String, Object> commit : commits) {
+            final String sha = strOrEmpty(commit.get("sha"));
+            if (sha.isEmpty()) continue;
+            final String shortSha = sha.substring(0, Math.min(7, sha.length()));
+
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> commitData = (Map<String, Object>) commit.get("commit");
+            if (commitData == null) continue;
+
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> authorData = (Map<String, Object>) commitData.get("author");
+            final String dateStr = authorData != null ? (String) authorData.get("date") : null;
+            final Instant ts = dateStr != null ? Instant.parse(dateStr) : pushTime;
+            final String message = firstLine(strOrEmpty(commitData.get("message")), 200);
+
+            final GitHubRawEventEntity e = new GitHubRawEventEntity();
+            e.setGithubEventId(eventId + "_" + shortSha);
+            e.setGithubUsername(login);
+            e.setEventType("PushEvent");
+            e.setRepoName(repoName);
+            e.setAnchorType("REPO");
+            e.setAnchorId(branch.isEmpty() ? null : branch);
+            e.setAnchorTitle(branch.isEmpty() ? null : branch);
+            e.setEventIcon("📝");
+            e.setEventSummary(message.isEmpty() ? shortSha : message);
+            e.setEventTimestamp(ts);
+            result.add(e);
+        }
+
+        // Fallback: compare API returned nothing — store a single placeholder using HEAD sha
+        if (result.isEmpty()) {
+            final String shortHead = head.substring(0, Math.min(7, head.length()));
+            final GitHubRawEventEntity e = new GitHubRawEventEntity();
+            e.setGithubEventId(eventId + "_" + shortHead);
+            e.setGithubUsername(login);
+            e.setEventType("PushEvent");
+            e.setRepoName(repoName);
+            e.setAnchorType("REPO");
+            e.setAnchorId(branch.isEmpty() ? null : branch);
+            e.setAnchorTitle(branch.isEmpty() ? null : branch);
+            e.setEventIcon("📝");
+            e.setEventSummary("Pushed to " + (branch.isEmpty() ? repoName : branch));
+            e.setEventTimestamp(pushTime);
+            result.add(e);
+        }
+
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> fetchCommitsInPush(String repoName, String before, String head, String token) {
+        // Build URLs without URI template expansion to avoid %2F encoding of the slash in "owner/repo"
+        try {
+            if (before.isEmpty() || before.matches("0+")) {
+                // Initial push to a new branch — fetch just the HEAD commit
+                final String url = "https://api.github.com/repos/" + repoName + "/commits/" + head;
+                final Map<String, Object> commit = restClient.get()
+                    .uri(URI.create(url))
+                    .header("Authorization", "Bearer " + token)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+                return commit != null ? List.of(commit) : List.of();
+            }
+
+            // Compare API returns all commits between before and head in chronological order
+            final String url = "https://api.github.com/repos/" + repoName + "/compare/" + before + "..." + head;
+            final Map<String, Object> comparison = restClient.get()
+                .uri(URI.create(url))
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+
+            if (comparison == null) return List.of();
+            final Object commits = comparison.get("commits");
+            return commits instanceof List<?> l ? (List<Map<String, Object>>) (List<?>) l : List.of();
+        } catch (Exception ex) {
+            LOG.warn("Could not fetch commits for {} ({} -> {}): {}", repoName, before, head, ex.getMessage());
+            return List.of();
         }
     }
 
@@ -192,20 +311,11 @@ class GitHubSyncService {
 
     /**
      * Returns [anchorType, anchorId, anchorTitle, icon, summary], or null to skip the event.
+     * PushEvent is handled separately in parsePushToEntities and must not reach this method.
      */
     @SuppressWarnings("unchecked")
     private String[] parseAnchorInfo(String type, Map<String, Object> payload) {
         return switch (type) {
-            case "PushEvent" -> {
-                final int size = toInt(payload.get("size"));
-                final int distinctSize = toInt(payload.get("distinct_size"));
-                final int count = distinctSize > 0 ? distinctSize : size;
-                if (count == 0) yield null;
-                final String ref = (String) payload.get("ref");
-                final String branch = ref != null ? ref.replaceFirst("^refs/heads/", "") : "unknown";
-                final String summary = "Pushed " + count + " commit" + (count != 1 ? "s" : "") + " to " + branch;
-                yield new String[]{"REPO", branch, branch, "📝", summary};
-            }
             case "PullRequestEvent" -> {
                 final Map<String, Object> pr = (Map<String, Object>) payload.get("pull_request");
                 final String action = (String) payload.get("action");
@@ -213,62 +323,87 @@ class GitHubSyncService {
                 final String title = pr != null ? strOrEmpty(pr.get("title")) : "";
                 final boolean merged = pr != null && Boolean.TRUE.equals(pr.get("merged"));
                 final String verb = merged ? "Merged" : capitalize(action);
-                yield new String[]{"PR", String.valueOf(number), title, "🔀", verb + " PR #" + number};
+                yield new String[]{"PR", String.valueOf(number), title, "🔀", verb + " PR #" + number + (title.isEmpty() ? "" : ": " + title)};
             }
             case "PullRequestReviewEvent" -> {
                 final Map<String, Object> pr = (Map<String, Object>) payload.get("pull_request");
                 final Map<String, Object> review = (Map<String, Object>) payload.get("review");
                 final int number = pr != null ? toInt(pr.get("number")) : 0;
                 final String title = pr != null ? strOrEmpty(pr.get("title")) : "";
+                final String body = review != null ? firstLine(strOrEmpty(review.get("body")), 100) : "";
                 final String state = review != null ? strOrEmpty(review.get("state")) : "";
                 final String verb = switch (state) {
                     case "approved" -> "Approved";
                     case "changes_requested" -> "Requested changes on";
-                    default -> "Commented on";
+                    default -> "Reviewed";
                 };
-                yield new String[]{"PR", String.valueOf(number), title, "👁", verb + " PR #" + number};
+                final String summary = verb + " PR #" + number + (title.isEmpty() ? "" : ": " + title)
+                    + (body.isEmpty() ? "" : " — " + body);
+                yield new String[]{"PR", String.valueOf(number), title, "👁", summary};
             }
             case "PullRequestReviewCommentEvent" -> {
                 final Map<String, Object> pr = (Map<String, Object>) payload.get("pull_request");
+                final Map<String, Object> comment = (Map<String, Object>) payload.get("comment");
                 final int number = pr != null ? toInt(pr.get("number")) : 0;
                 final String title = pr != null ? strOrEmpty(pr.get("title")) : "";
-                yield new String[]{"PR", String.valueOf(number), title, "💬", "Commented on PR #" + number};
+                final String body = comment != null ? firstLine(strOrEmpty(comment.get("body")), 100) : "";
+                final String summary = "Commented on PR #" + number + (title.isEmpty() ? "" : ": " + title)
+                    + (body.isEmpty() ? "" : " — " + body);
+                yield new String[]{"PR", String.valueOf(number), title, "💬", summary};
             }
             case "IssuesEvent" -> {
                 final Map<String, Object> issue = (Map<String, Object>) payload.get("issue");
                 final String action = (String) payload.get("action");
                 final int number = issue != null ? toInt(issue.get("number")) : 0;
                 final String title = issue != null ? strOrEmpty(issue.get("title")) : "";
-                yield new String[]{"ISSUE", String.valueOf(number), title, "🐛", capitalize(action) + " issue #" + number};
+                yield new String[]{"ISSUE", String.valueOf(number), title, "🐛",
+                    capitalize(action) + " issue #" + number + (title.isEmpty() ? "" : ": " + title)};
             }
             case "IssueCommentEvent" -> {
                 final Map<String, Object> issue = (Map<String, Object>) payload.get("issue");
+                final Map<String, Object> comment = (Map<String, Object>) payload.get("comment");
                 final int number = issue != null ? toInt(issue.get("number")) : 0;
                 final String title = issue != null ? strOrEmpty(issue.get("title")) : "";
-                yield new String[]{"ISSUE", String.valueOf(number), title, "💬", "Commented on issue #" + number};
+                final String body = comment != null ? firstLine(strOrEmpty(comment.get("body")), 120) : "";
+                final String summary = "Commented on issue #" + number + (title.isEmpty() ? "" : ": " + title)
+                    + (body.isEmpty() ? "" : " — " + body);
+                yield new String[]{"ISSUE", String.valueOf(number), title, "💬", summary};
             }
             case "CreateEvent" -> {
                 final String refType = strOrEmpty(payload.get("ref_type"));
                 final String ref = strOrEmpty(payload.get("ref"));
                 final String label = !ref.isEmpty() ? ref : refType;
-                yield new String[]{"REPO", label, label, "🌿", "Created " + refType + " " + label};
+                yield new String[]{"REPO", label, label, "🌿", "Created " + refType + (label.isEmpty() ? "" : " " + label)};
             }
             case "DeleteEvent" -> {
                 final String refType = strOrEmpty(payload.get("ref_type"));
                 final String ref = strOrEmpty(payload.get("ref"));
                 final String label = !ref.isEmpty() ? ref : refType;
-                yield new String[]{"REPO", null, null, "🗑", "Deleted " + refType + " " + label};
+                yield new String[]{"REPO", null, null, "🗑", "Deleted " + refType + (label.isEmpty() ? "" : " " + label)};
             }
             case "ReleaseEvent" -> {
                 final Map<String, Object> release = (Map<String, Object>) payload.get("release");
                 final String tag = release != null ? strOrEmpty(release.get("tag_name")) : "";
                 final String name = release != null && release.get("name") != null ? strOrEmpty(release.get("name")) : tag;
-                yield new String[]{"REPO", tag, name, "🚀", "Released " + tag};
+                yield new String[]{"REPO", tag, name, "🚀", "Released " + (name.isEmpty() ? tag : name + " (" + tag + ")")};
             }
             case "CommitCommentEvent" -> {
                 final Map<String, Object> comment = (Map<String, Object>) payload.get("comment");
-                final String body = comment != null ? firstLine(strOrEmpty(comment.get("body")), 80) : "";
-                yield new String[]{"REPO", null, null, "💬", "Commented on commit: " + body};
+                final String body = comment != null ? firstLine(strOrEmpty(comment.get("body")), 120) : "";
+                yield new String[]{"REPO", null, null, "💬", "Commit comment" + (body.isEmpty() ? "" : ": " + body)};
+            }
+            case "ForkEvent" -> {
+                final Map<String, Object> forkee = (Map<String, Object>) payload.get("forkee");
+                final String forkName = forkee != null ? strOrEmpty(forkee.get("full_name")) : "";
+                yield new String[]{"REPO", null, null, "🍴", "Forked" + (forkName.isEmpty() ? " repository" : " to " + forkName)};
+            }
+            case "WatchEvent" -> {
+                yield new String[]{"REPO", null, null, "⭐", "Starred repository"};
+            }
+            case "GollumEvent" -> {
+                final Object pages = payload.get("pages");
+                final int count = pages instanceof List<?> l ? l.size() : 0;
+                yield new String[]{"REPO", null, null, "📖", "Updated " + count + " wiki page" + (count != 1 ? "s" : "")};
             }
             default -> {
                 final String displayType = type.replaceAll("Event$", "");
