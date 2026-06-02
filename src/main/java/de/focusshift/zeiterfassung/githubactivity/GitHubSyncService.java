@@ -63,6 +63,12 @@ class GitHubSyncService {
     private volatile String cachedInstallationToken;
     private volatile Instant tokenExpiry = Instant.MIN;
 
+    private final java.util.concurrent.ConcurrentHashMap<String, Instant> lastSyncTimes = new java.util.concurrent.ConcurrentHashMap<>();
+
+    Instant getLastSyncTime(String login) {
+        return lastSyncTimes.get(login);
+    }
+
     GitHubSyncService(GitHubRawEventRepository repository, UserSettingsService userSettingsService) {
         this.repository = repository;
         this.userSettingsService = userSettingsService;
@@ -154,6 +160,7 @@ class GitHubSyncService {
                 }
             }
         }
+        lastSyncTimes.put(login, Instant.now());
         if (saved > 0) {
             LOG.info("Synced {} new GitHub event(s) for user {}", saved, login);
         }

@@ -97,56 +97,123 @@
 
             <!-- Sub-events list -->
             <div class="px-4 pt-3 pb-2">
-              <div th:each="event : ${anchor.events()}"
-                   class="flex items-baseline gap-2 text-sm py-0.5">
-                <span class="shrink-0" th:text="${event.icon()}"></span>
-                <span class="flex-1 text-gray-700 dark:text-zinc-300" th:text="${event.summary()}"></span>
-                <span class="shrink-0 text-xs text-gray-400 dark:text-zinc-500" th:text="${event.time()}"></span>
+              <div th:each="event, evStat : ${anchor.events()}">
+
+                <!-- Commit row (REPO anchor): checkbox + icon + message + time + dismiss + Log it -->
+                <div th:if="${anchor.anchorType() == 'REPO'}"
+                     th:id="|ev-row-${anchorStat.index}-${evStat.index}|"
+                     th:class="${event.logged()} ? 'flex items-baseline gap-2 text-sm py-1 opacity-50' : 'flex items-baseline gap-2 text-sm py-1'">
+
+                  <!-- Multi-select checkbox -->
+                  <th:block th:if="${!isLocked and !event.logged()}">
+                    <input type="checkbox"
+                           th:id="|ev-cb-${anchorStat.index}-${evStat.index}|"
+                           class="gh-cb shrink-0 mt-0.5 cursor-pointer"
+                           th:data-anchor="${anchorStat.index}"
+                           th:data-comment="${event.prefilledComment()}"
+                           th:data-time="${event.time()}"
+                           th:data-date="${date}"
+                           th:data-user-id="${userLocalId}"
+                           onchange="ghUpdateSelectBar(this.dataset.anchor)"/>
+                  </th:block>
+
+                  <span class="shrink-0" th:text="${event.icon()}"></span>
+                  <span class="flex-1 text-gray-700 dark:text-zinc-300" th:text="${event.summary()}"></span>
+                  <span class="shrink-0 text-xs text-gray-400 dark:text-zinc-500" th:text="${event.time()}"></span>
+
+                  <!-- Dismiss button -->
+                  <th:block th:if="${!isLocked and !event.logged()}">
+                    <form th:action="@{/github-activity/dismiss}" method="post" class="shrink-0">
+                      <input type="hidden" name="eventId" th:value="${event.eventId()}"/>
+                      <input type="hidden" name="date" th:value="${date}"/>
+                      <button type="submit"
+                              class="text-gray-300 dark:text-zinc-600 hover:text-red-400 dark:hover:text-red-400 text-xs px-1 leading-none"
+                              title="Hide this commit">✕</button>
+                    </form>
+                  </th:block>
+
+                  <!-- Log it / Logged state -->
+                  <th:block th:if="${!isLocked}">
+                    <input type="text" th:id="|ev-dur-${anchorStat.index}-${evStat.index}|" value="00:15" class="hidden"/>
+                    <!-- Already logged -->
+                    <span th:if="${event.logged()}"
+                          class="shrink-0 text-xs text-green-600 dark:text-green-400 font-medium">✓ Logged</span>
+                    <!-- Log it button -->
+                    <button th:if="${!event.logged()}"
+                            type="button"
+                            th:id="|ev-btn-${anchorStat.index}-${evStat.index}|"
+                            class="button-main-green text-xs shrink-0"
+                            th:data-event-id="${event.eventId()}"
+                            th:data-comment="${event.prefilledComment()}"
+                            th:data-date="${date}"
+                            th:data-start="${event.time()}"
+                            th:data-duration-id="|ev-dur-${anchorStat.index}-${evStat.index}|"
+                            th:data-user-local-id="${userLocalId}"
+                            th:data-frame-id="|ev-frame-${anchorStat.index}-${evStat.index}|"
+                            onclick="ghLogAnchor(this)"
+                            th:text="#{github-activity.log-it}">Log it ↓</button>
+                  </th:block>
+                </div>
+
+                <!-- Per-commit inline form frame -->
+                <turbo-frame th:if="${anchor.anchorType() == 'REPO' and !isLocked and !event.logged()}"
+                             th:id="|ev-frame-${anchorStat.index}-${evStat.index}|"
+                             class="block"></turbo-frame>
+
+                <!-- PR/Issue event row: plain, group Log it below -->
+                <div th:if="${anchor.anchorType() != 'REPO'}"
+                     class="flex items-baseline gap-2 text-sm py-0.5">
+                  <span class="shrink-0" th:text="${event.icon()}"></span>
+                  <span class="flex-1 text-gray-700 dark:text-zinc-300" th:text="${event.summary()}"></span>
+                  <span class="shrink-0 text-xs text-gray-400 dark:text-zinc-500" th:text="${event.time()}"></span>
+                </div>
               </div>
             </div>
 
-            <!-- Time window + Log it row -->
-            <div th:if="${!isLocked}"
-                 class="px-4 py-3 border-t border-gray-100 dark:border-zinc-800 flex flex-wrap items-center gap-3">
+            <!-- Multi-select bar (REPO): hidden until ≥1 checkbox checked -->
+            <div th:if="${!isLocked and anchor.anchorType() == 'REPO'}"
+                 th:id="|sel-bar-${anchorStat.index}|"
+                 class="hidden px-4 py-2 border-t border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-950 flex items-center gap-3">
+              <span class="text-xs text-blue-600 dark:text-blue-300 flex-1" th:id="|sel-label-${anchorStat.index}|">0 selected</span>
+              <input type="text" th:id="|sel-dur-${anchorStat.index}|" value="00:15" placeholder="hh:mm"
+                     class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-0.5 text-sm w-20 dark:bg-zinc-900 dark:text-zinc-100"/>
+              <button type="button"
+                      class="button-main-green text-sm"
+                      th:data-anchor="${anchorStat.index}"
+                      th:data-user-local-id="${userLocalId}"
+                      th:data-date="${date}"
+                      th:data-frame-id="|sel-frame-${anchorStat.index}|"
+                      th:data-duration-id="|sel-dur-${anchorStat.index}|"
+                      onclick="ghLogSelected(this)">Log selected ↓</button>
+            </div>
+            <turbo-frame th:if="${!isLocked and anchor.anchorType() == 'REPO'}"
+                         th:id="|sel-frame-${anchorStat.index}|" class="block"></turbo-frame>
 
-              <!-- Window label -->
+            <!-- Group-level Log it: only for PR/Issue anchors -->
+            <div th:if="${!isLocked and anchor.anchorType() != 'REPO'}"
+                 class="px-4 py-3 border-t border-gray-100 dark:border-zinc-800 flex flex-wrap items-center gap-3">
               <span class="text-sm text-gray-500 dark:text-zinc-400">
                 <th:block th:if="${anchor.windowEnd() != null}">
-                  <span th:text="${anchor.windowStart()}"></span>
-                  <span>–</span>
-                  <span th:text="${anchor.windowEnd()}"></span>
+                  <span th:text="${anchor.windowStart()}"></span><span>–</span><span th:text="${anchor.windowEnd()}"></span>
                 </th:block>
                 <th:block th:if="${anchor.windowEnd() == null}">
-                  <span th:text="#{github-activity.at}">at</span>
-                  <span th:text="${anchor.windowStart()}"></span>
+                  <span th:text="#{github-activity.at}">at</span> <span th:text="${anchor.windowStart()}"></span>
                 </th:block>
               </span>
-
-              <!-- Suggested duration (editable) -->
               <div class="flex items-center gap-1">
                 <label class="text-xs text-gray-400 dark:text-zinc-500" th:text="#{github-activity.suggested-duration}">Suggested:</label>
-                <input type="text"
-                       th:id="|duration-${anchorStat.index}|"
-                       th:value="${anchor.suggestedDuration()}"
+                <input type="text" th:id="|duration-${anchorStat.index}|" th:value="${anchor.suggestedDuration()}"
                        placeholder="hh:mm"
                        class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-0.5 text-sm w-20 dark:bg-zinc-900 dark:text-zinc-100"/>
               </div>
-
-              <!-- Log it button -->
-              <button type="button"
-                      class="button-main-green text-sm"
-                      th:data-comment="${anchor.prefilledComment()}"
-                      th:data-date="${date}"
-                      th:data-start="${anchor.windowStart()}"
-                      th:data-duration-id="|duration-${anchorStat.index}|"
-                      th:data-user-local-id="${userLocalId}"
-                      th:data-frame-id="|frame-${anchorStat.index}|"
-                      onclick="ghLogAnchor(this)"
-                      th:text="#{github-activity.log-it}">Log it ↓</button>
+              <button type="button" class="button-main-green text-sm"
+                      th:data-comment="${anchor.prefilledComment()}" th:data-date="${date}"
+                      th:data-start="${anchor.windowStart()}" th:data-duration-id="|duration-${anchorStat.index}|"
+                      th:data-user-local-id="${userLocalId}" th:data-frame-id="|frame-${anchorStat.index}|"
+                      onclick="ghLogAnchor(this)" th:text="#{github-activity.log-it}">Log it ↓</button>
             </div>
-
-            <!-- Inline form frame (expanded when Log it is clicked) -->
-            <turbo-frame th:id="|frame-${anchorStat.index}|" class="block"></turbo-frame>
+            <turbo-frame th:if="${anchor.anchorType() != 'REPO'}"
+                         th:id="|frame-${anchorStat.index}|" class="block"></turbo-frame>
 
           </div>
 
@@ -154,26 +221,93 @@
       </main>
 
       <script>
+        // ── Single "Log it" ──────────────────────────────────────────────────
         function ghLogAnchor(btn) {
           const frameId = btn.dataset.frameId;
           const frame = document.getElementById(frameId);
-          if (frame.src) {
-            frame.src = '';
-            frame.innerHTML = '';
-            return;
-          }
-          const durationInput = document.getElementById(btn.dataset.durationId);
+          if (frame && frame.src) { frame.src = ''; frame.innerHTML = ''; return; }
+          const dur = document.getElementById(btn.dataset.durationId);
           const params = new URLSearchParams({
-            comment:     btn.dataset.comment,
-            date:        btn.dataset.date,
-            startTime:   btn.dataset.start,
-            duration:    durationInput ? durationInput.value : '',
-            userLocalId: btn.dataset.userLocalId,
-            frameId:     frameId
+            comment: btn.dataset.comment, date: btn.dataset.date,
+            startTime: btn.dataset.start || '', duration: dur ? dur.value : '',
+            userLocalId: btn.dataset.userLocalId, frameId: frameId
           });
-          frame.src = '/github-activity/inline-form?' + params.toString();
-          frame.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          if (frame) {
+            frame.src = '/github-activity/inline-form?' + params.toString();
+            frame.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Mark logged after successful form submission
+            const eventId = btn.dataset.eventId;
+            if (eventId) {
+              frame.addEventListener('turbo:submit-end', function handler(e) {
+                if (e.detail.success) {
+                  ghMarkLogged(btn, frame, eventId);
+                  frame.removeEventListener('turbo:submit-end', handler);
+                }
+              });
+            }
+          }
         }
+
+        // ── Multi-select bar ─────────────────────────────────────────────────
+        function ghUpdateSelectBar(anchorIdx) {
+          const checked = [...document.querySelectorAll(`.gh-cb[data-anchor="${anchorIdx}"]:checked`)];
+          const bar   = document.getElementById('sel-bar-' + anchorIdx);
+          const label = document.getElementById('sel-label-' + anchorIdx);
+          if (!bar) return;
+          bar.classList.toggle('hidden', checked.length === 0);
+          if (label) label.textContent = checked.length + ' commit' + (checked.length !== 1 ? 's' : '') + ' selected';
+        }
+
+        function ghLogSelected(btn) {
+          const anchorIdx = btn.dataset.anchor;
+          const checked   = [...document.querySelectorAll(`.gh-cb[data-anchor="${anchorIdx}"]:checked`)];
+          if (checked.length === 0) return;
+          const comments  = checked.map(cb => cb.dataset.comment).join('\n');
+          const times     = checked.map(cb => cb.dataset.time).sort();
+          const frameId   = btn.dataset.frameId;
+          const frame     = document.getElementById(frameId);
+          if (frame && frame.src) { frame.src = ''; frame.innerHTML = ''; return; }
+          const dur = document.getElementById(btn.dataset.durationId);
+          const params = new URLSearchParams({
+            comment: comments, date: btn.dataset.date,
+            startTime: times[0] || '', duration: dur ? dur.value : '00:15',
+            userLocalId: btn.dataset.userLocalId, frameId: frameId
+          });
+          if (frame) {
+            frame.src = '/github-activity/inline-form?' + params.toString();
+            frame.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }
+
+        // ── Mark as logged ────────────────────────────────────────────────────
+        function ghMarkLogged(btn, frame, eventId) {
+          // Visual update
+          btn.disabled = true;
+          btn.textContent = '✓ Logged';
+          btn.classList.remove('button-main-green');
+          btn.classList.add('button-secondary', 'opacity-60', 'cursor-default');
+          // Hide the dismiss button and checkbox on this row
+          const row = btn.closest('[id^="ev-row-"]');
+          if (row) {
+            row.querySelectorAll('input[type=checkbox], form button[type=submit]').forEach(el => el.closest('form,label,span') ? null : el.classList.add('hidden'));
+            row.querySelector('input[type=checkbox]')?.closest('div')?.querySelector('input[type=checkbox]')?.classList.add('hidden');
+            row.classList.add('opacity-60');
+          }
+          // Persist to backend
+          fetch('/github-activity/mark-logged?eventId=' + encodeURIComponent(eventId), { method: 'POST',
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]')?.content || '' }
+          });
+        }
+
+        // Restore CSRF meta tag support (Spring adds it to forms, not meta — read from hidden input)
+        document.addEventListener('DOMContentLoaded', function() {
+          const csrfInput = document.querySelector('input[name="_csrf"]');
+          if (csrfInput) {
+            const meta = document.createElement('meta');
+            meta.name = '_csrf'; meta.content = csrfInput.value;
+            document.head.appendChild(meta);
+          }
+        });
       </script>
     </th:block>
 

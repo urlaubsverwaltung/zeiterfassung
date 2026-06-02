@@ -57,6 +57,12 @@ class GitHubRawEventEntity {
     @Column(name = "event_timestamp", nullable = false)
     private Instant eventTimestamp;
 
+    @Column(name = "dismissed", nullable = false)
+    private boolean dismissed = false;
+
+    @Column(name = "logged_at")
+    private Instant loggedAt;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -89,6 +95,12 @@ class GitHubRawEventEntity {
 
     public Instant getEventTimestamp() { return eventTimestamp; }
     public void setEventTimestamp(Instant eventTimestamp) { this.eventTimestamp = eventTimestamp; }
+
+    public boolean isDismissed() { return dismissed; }
+    public void setDismissed(boolean dismissed) { this.dismissed = dismissed; }
+
+    public Instant getLoggedAt() { return loggedAt; }
+    public void setLoggedAt(Instant loggedAt) { this.loggedAt = loggedAt; }
 
     @Override
     public boolean equals(Object o) {

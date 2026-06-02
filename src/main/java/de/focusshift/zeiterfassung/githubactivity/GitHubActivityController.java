@@ -88,7 +88,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         final Instant dayStart = selectedDate.atStartOfDay(zone).toInstant();
         final Instant dayEnd = selectedDate.plusDays(1).atStartOfDay(zone).toInstant();
         final List<GitHubRawEventEntity> rawEvents =
-            eventRepository.findByGithubUsernameAndEventTimestampBetweenOrderByEventTimestampAsc(login, dayStart, dayEnd);
+            eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(login, dayStart, dayEnd);
 
         final List<ActivityAnchor> anchors = toAnchors(rawEvents, zone);
         final Long userLocalId = currentUser.getUserIdComposite().localId().value();
@@ -101,11 +101,8 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         model.addAttribute("isLocked", timeEntryLockService.isLocked(selectedDate));
         model.addAttribute("syncConfigured", syncService.isConfigured());
         model.addAttribute("syncMissingConfig", syncService.missingConfig());
-        model.addAttribute("lastSyncedAt", eventRepository
-            .findTopByGithubUsernameOrderByEventTimestampDesc(login)
-            .map(GitHubRawEventEntity::getEventTimestamp)
-            .map(instant -> instant.atZone(zone))
-            .orElse(null));
+        final Instant lastSync = syncService.getLastSyncTime(login);
+        model.addAttribute("lastSyncedAt", lastSync != null ? lastSync.atZone(zone) : null);
 
         return "github-activity/index";
     }
@@ -122,6 +119,26 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
 
         final String redirectDate = (date != null ? date : LocalDate.now()).toString();
         return "redirect:/github-activity?date=" + redirectDate;
+    }
+
+    @PostMapping("/dismiss")
+    String dismiss(@RequestParam String eventId,
+                   @RequestParam(required = false) LocalDate date) {
+        eventRepository.findByGithubEventId(eventId).ifPresent(e -> {
+            e.setDismissed(true);
+            eventRepository.save(e);
+        });
+        final String redirectDate = (date != null ? date : LocalDate.now()).toString();
+        return "redirect:/github-activity?date=" + redirectDate;
+    }
+
+    @PostMapping("/mark-logged")
+    org.springframework.http.ResponseEntity<Void> markLogged(@RequestParam String eventId) {
+        eventRepository.findByGithubEventId(eventId).ifPresent(e -> {
+            e.setLoggedAt(java.time.Instant.now());
+            eventRepository.save(e);
+        });
+        return org.springframework.http.ResponseEntity.ok().build();
     }
 
     @GetMapping("/inline-form")
@@ -184,7 +201,10 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                 .map(e -> new AnchorEvent(
                     e.getEventIcon(),
                     e.getEventSummary(),
-                    TIME_FMT.withZone(zone).format(e.getEventTimestamp())))
+                    TIME_FMT.withZone(zone).format(e.getEventTimestamp()),
+                    buildEventComment(e),
+                    e.getGithubEventId(),
+                    e.getLoggedAt() != null))
                 .toList();
 
             final String anchorLabel = first.getAnchorTitle() != null && !first.getAnchorTitle().isBlank()
@@ -206,6 +226,13 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                 prefilledComment
             );
         }).toList();
+    }
+
+    private static String buildEventComment(GitHubRawEventEntity e) {
+        final String shortRepo = e.getRepoName().contains("/")
+            ? e.getRepoName().substring(e.getRepoName().lastIndexOf('/') + 1)
+            : e.getRepoName();
+        return shortRepo + ": " + e.getEventSummary();
     }
 
     private static String buildAnchorRef(GitHubRawEventEntity e) {
