@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.workingtime;
 
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.AbsenceService;
+import de.focusshift.zeiterfassung.ooo.OooCalendarAbsenceService;
 import de.focusshift.zeiterfassung.publicholiday.PublicHoliday;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidayCalendar;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidaysService;
@@ -56,10 +57,14 @@ class WorkingTimeCalendarServiceImplTest {
     private PublicHolidaysService publicHolidaysService;
     @Mock
     private AbsenceService absenceService;
+    @Mock
+    private OooCalendarAbsenceService oooCalendarAbsenceService;
 
     @BeforeEach
     void setUp() {
-        sut = new WorkingTimeCalendarServiceImpl(workingTimeService, publicHolidaysService, absenceService);
+        sut = new WorkingTimeCalendarServiceImpl(workingTimeService, publicHolidaysService, absenceService, oooCalendarAbsenceService);
+        lenient().when(oooCalendarAbsenceService.getAbsencesForAllUsers(any(), any())).thenReturn(Map.of());
+        lenient().when(oooCalendarAbsenceService.getAbsencesByUserIds(any(), any(), any())).thenReturn(Map.of());
     }
 
     @Nested

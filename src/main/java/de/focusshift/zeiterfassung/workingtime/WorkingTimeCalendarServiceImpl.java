@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.workingtime;
 import de.focusshift.zeiterfassung.DateRange;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.AbsenceService;
+import de.focusshift.zeiterfassung.ooo.OooCalendarAbsenceService;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidayCalendar;
 import de.focusshift.zeiterfassung.publicholiday.PublicHolidaysService;
@@ -34,15 +35,18 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
     private final WorkingTimeService workingTimeService;
     private final PublicHolidaysService publicHolidaysService;
     private final AbsenceService absenceService;
+    private final OooCalendarAbsenceService oooCalendarAbsenceService;
 
     WorkingTimeCalendarServiceImpl(
         WorkingTimeService workingTimeService,
         PublicHolidaysService publicHolidaysService,
-        AbsenceService absenceService
+        AbsenceService absenceService,
+        OooCalendarAbsenceService oooCalendarAbsenceService
     ) {
         this.workingTimeService = workingTimeService;
         this.publicHolidaysService = publicHolidaysService;
         this.absenceService = absenceService;
+        this.oooCalendarAbsenceService = oooCalendarAbsenceService;
     }
 
     @Override
@@ -58,7 +62,8 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
             toExclusive,
             absenceService::getAbsencesForAllUsers
         );
-        return toWorkingTimeCalendar(from, toExclusive, absences, workingTimeService::getAllWorkingTimes);
+        final Map<UserIdComposite, List<Absence>> merged = merge(absences, oooCalendarAbsenceService.getAbsencesForAllUsers(from, toExclusive));
+        return toWorkingTimeCalendar(from, toExclusive, merged, workingTimeService::getAllWorkingTimes);
     }
 
     @Override
@@ -68,7 +73,8 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
             toExclusive,
             (start, end) -> absenceService.getAbsencesByUserIds(userLocalIds.stream().toList(), start, end)
         );
-        return toWorkingTimeCalendar(from, toExclusive, absences, (start, endExclusive) -> workingTimeService.getWorkingTimesByUsers(start, endExclusive, userLocalIds));
+        final Map<UserIdComposite, List<Absence>> merged = merge(absences, oooCalendarAbsenceService.getAbsencesByUserIds(userLocalIds, from, toExclusive));
+        return toWorkingTimeCalendar(from, toExclusive, merged, (start, endExclusive) -> workingTimeService.getWorkingTimesByUsers(start, endExclusive, userLocalIds));
     }
 
     /**
@@ -220,5 +226,20 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
         } else {
             return new DateRange(validFrom, nextEnd);
         }
+    }
+
+    private static Map<UserIdComposite, List<Absence>> merge(Map<UserIdComposite, List<Absence>> base, Map<UserIdComposite, List<Absence>> additional) {
+        if (additional.isEmpty()) {
+            return base;
+        }
+        final Map<UserIdComposite, List<Absence>> result = new HashMap<>(base);
+        additional.forEach((userId, absences) ->
+            result.merge(userId, absences, (existing, extra) -> {
+                final List<Absence> combined = new ArrayList<>(existing);
+                combined.addAll(extra);
+                return combined;
+            })
+        );
+        return result;
     }
 }

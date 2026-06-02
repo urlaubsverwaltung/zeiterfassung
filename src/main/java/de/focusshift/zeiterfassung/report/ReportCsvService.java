@@ -15,6 +15,8 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Locale;
 
+import static java.util.stream.Collectors.joining;
+
 @Service
 class ReportCsvService {
 
@@ -79,8 +81,9 @@ class ReportCsvService {
         final String workedHours = messageSource.getMessage("report.csv.header.workedHours", new Object[]{}, locale);
         final String comment = messageSource.getMessage("report.csv.header.comment", new Object[]{}, locale);
         final String isBreak = messageSource.getMessage("report.csv.header.break", new Object[]{}, locale);
+        final String absence = messageSource.getMessage("report.csv.header.absence", new Object[]{}, locale);
 
-        writer.println(String.format("%s;%s;%s;%s;%s;%s;%s;%s", date, givenName, familyName, start, end, workedHours, comment, isBreak));
+        writer.println(String.format("%s;%s;%s;%s;%s;%s;%s;%s;%s", date, givenName, familyName, start, end, workedHours, comment, isBreak, absence));
     }
 
     private void writeWeek(ReportWeek reportWeek, Locale locale, PrintWriter writer) {
@@ -89,15 +92,19 @@ class ReportCsvService {
         numberFormat.setMaximumFractionDigits(FRACTION_DIGITS);
         numberFormat.setMinimumFractionDigits(FRACTION_DIGITS);
 
-        reportWeek.reportDays()
-            .stream()
-            .map(ReportDay::reportDayEntries)
-            .flatMap(List::stream)
-            .map(reportDayEntry -> reportDayEntryToCsvLine(reportDayEntry, numberFormat))
-            .forEach(writer::println);
+        for (ReportDay day : reportWeek.reportDays()) {
+            for (ReportDayEntry entry : day.reportDayEntries()) {
+                final String absenceName = day.detailDayAbsencesByUser()
+                    .getOrDefault(entry.user().userIdComposite(), List.of())
+                    .stream()
+                    .map(a -> a.absence().label(locale))
+                    .collect(joining(", "));
+                writer.println(reportDayEntryToCsvLine(entry, absenceName, numberFormat));
+            }
+        }
     }
 
-    private String reportDayEntryToCsvLine(ReportDayEntry reportDayEntry, NumberFormat numberFormat) {
+    private String reportDayEntryToCsvLine(ReportDayEntry reportDayEntry, String absence, NumberFormat numberFormat) {
         final String date = dateFormatter.formatDate(reportDayEntry.start().toLocalDate());
         final String givenName = reportDayEntry.user().givenName();
         final String familyName = reportDayEntry.user().familyName();
@@ -107,6 +114,6 @@ class ReportCsvService {
         final String comment = reportDayEntry.comment();
         final boolean isBreak = reportDayEntry.isBreak();
 
-        return String.format("%s;%s;%s;%s;%s;%s;%s;%s", date, givenName, familyName, start, end, hoursWorked, comment, isBreak);
+        return String.format("%s;%s;%s;%s;%s;%s;%s;%s;%s", date, givenName, familyName, start, end, hoursWorked, comment, isBreak, absence);
     }
 }
