@@ -31,13 +31,17 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Controller
 @RequestMapping("/github-activity")
 class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter OPENED_DATE_FMT = DateTimeFormatter.ofPattern("MMM d");
     private static final long MIN_SUGGESTED_MINUTES = 15;
+    private static final Set<String> REVIEW_EVENT_TYPES = Set.of(
+        "PullRequestReviewEvent", "PullRequestReviewCommentEvent");
 
     private final UserSettingsService userSettingsService;
     private final UserSettingsProvider userSettingsProvider;
@@ -90,13 +94,39 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         final List<GitHubRawEventEntity> rawEvents =
             eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(login, dayStart, dayEnd);
 
-        final List<ActivityAnchor> anchors = toAnchors(rawEvents, zone);
+        final List<ActivityAnchor> allAnchors = toAnchors(rawEvents, zone, login, selectedDate);
         final Long userLocalId = currentUser.getUserIdComposite().localId().value();
+
+        final List<ActivityAnchor> prAnchors = allAnchors.stream()
+            .filter(a -> "PR".equals(a.anchorType()) && a.prStatus() != null)
+            .toList();
+        final List<ActivityAnchor> reviewAnchors = allAnchors.stream()
+            .filter(a -> "PR".equals(a.anchorType()) && a.reviewOutcome() != null)
+            .toList();
+        final List<ActivityAnchor> issueAnchors = allAnchors.stream()
+            .filter(a -> "ISSUE".equals(a.anchorType()))
+            .toList();
+        // Build a set of "repo|branch" keys for all branches known to be PR heads,
+        // so we can exclude those commits from the Standalone section.
+        final Set<String> prHeadKeys = eventRepository.findDistinctRepoAndHeadBranchesByUsername(login);
+
+        final List<ActivityAnchor> standaloneAnchors = allAnchors.stream()
+            .filter(a -> "REPO".equals(a.anchorType()))
+            // Exclude commits on branches that are the head of a known PR
+            .filter(a -> a.anchorId() == null || !prHeadKeys.contains(a.repoName() + "|" + a.anchorId()))
+            // Exclude groups that contain only branch create/delete events
+            .filter(a -> a.events().stream().anyMatch(
+                e -> !e.summary().startsWith("Created ") && !e.summary().startsWith("Deleted ")))
+            .toList();
 
         model.addAttribute("date", selectedDate);
         model.addAttribute("prevDate", selectedDate.minusDays(1));
         model.addAttribute("nextDate", selectedDate.plusDays(1));
-        model.addAttribute("anchors", anchors);
+        model.addAttribute("prAnchors", prAnchors);
+        model.addAttribute("reviewAnchors", reviewAnchors);
+        model.addAttribute("issueAnchors", issueAnchors);
+        model.addAttribute("standaloneAnchors", standaloneAnchors);
+        model.addAttribute("hasActivity", !allAnchors.isEmpty());
         model.addAttribute("userLocalId", userLocalId);
         model.addAttribute("isLocked", timeEntryLockService.isLocked(selectedDate));
         model.addAttribute("syncConfigured", syncService.isConfigured());
@@ -141,6 +171,23 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         return org.springframework.http.ResponseEntity.ok().build();
     }
 
+    @PostMapping("/mark-anchor-logged")
+    org.springframework.http.ResponseEntity<Void> markAnchorLogged(
+            @RequestParam String repoName,
+            @RequestParam String anchorType,
+            @RequestParam String anchorId,
+            @RequestParam LocalDate date,
+            @CurrentUser CurrentOidcUser currentUser) {
+        final UserSettings userSettings = userSettingsService.getUserSettings(currentUser.getUserIdComposite());
+        final String login = userSettings.githubLogin().orElse(null);
+        if (login == null) return org.springframework.http.ResponseEntity.ok().build();
+        final ZoneId zone = userSettingsProvider.zoneId();
+        final Instant from = date.atStartOfDay(zone).toInstant();
+        final Instant to = date.plusDays(1).atStartOfDay(zone).toInstant();
+        eventRepository.markAnchorLogged(login, repoName, anchorType, anchorId, from, to, Instant.now());
+        return org.springframework.http.ResponseEntity.ok().build();
+    }
+
     @GetMapping("/inline-form")
     String inlineForm(@RequestParam String comment,
                       @RequestParam String date,
@@ -171,10 +218,10 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         return "github-activity/inline-form";
     }
 
-    private List<ActivityAnchor> toAnchors(List<GitHubRawEventEntity> entities, ZoneId zone) {
+    private List<ActivityAnchor> toAnchors(List<GitHubRawEventEntity> entities, ZoneId zone,
+                                           String login, LocalDate selectedDate) {
         if (entities.isEmpty()) return List.of();
 
-        // Group by repo + anchorType + anchorId — preserving chronological order of first event
         final Map<String, List<GitHubRawEventEntity>> grouped = new LinkedHashMap<>();
         for (GitHubRawEventEntity e : entities) {
             final String key = e.getRepoName() + "|" + e.getAnchorType() + "|"
@@ -182,7 +229,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
             grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(e);
         }
 
-        return grouped.values().stream().map(group -> {
+        return grouped.values().stream().<ActivityAnchor>map(group -> {
             final GitHubRawEventEntity first = group.get(0);
 
             final Instant minTs = group.stream().map(GitHubRawEventEntity::getEventTimestamp)
@@ -197,35 +244,129 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
             final long suggested = Math.max(MIN_SUGGESTED_MINUTES, windowMinutes);
             final String suggestedDuration = String.format("%02d:%02d", suggested / 60, suggested % 60);
 
+            final boolean isRepo = "REPO".equals(first.getAnchorType());
             final List<AnchorEvent> events = group.stream()
+                // Deduplicate by summary: same commit message from multiple push events
+                // (e.g. old-format event IDs before the login_commit_sha change)
+                .collect(java.util.stream.Collectors.toMap(
+                    GitHubRawEventEntity::getEventSummary,
+                    e -> e,
+                    (a, b) -> a,           // keep first occurrence
+                    java.util.LinkedHashMap::new))
+                .values().stream()
                 .map(e -> new AnchorEvent(
                     e.getEventIcon(),
                     e.getEventSummary(),
                     TIME_FMT.withZone(zone).format(e.getEventTimestamp()),
                     buildEventComment(e),
                     e.getGithubEventId(),
-                    e.getLoggedAt() != null))
+                    e.getLoggedAt() != null,
+                    isRepo ? buildCommitUrl(e) : null))
                 .toList();
 
-            final String anchorLabel = first.getAnchorTitle() != null && !first.getAnchorTitle().isBlank()
-                ? first.getAnchorTitle()
+            // anchorTitle may be blank when the GitHub App token strips PR payload fields;
+            // fall back to extracting the title from the stored event summary (e.g. "Merged PR #X: Title")
+            final String anchorTitle = resolveAnchorTitle(first, group);
+            final String anchorLabel = !anchorTitle.isBlank()
+                ? anchorTitle
                 : (first.getAnchorId() != null ? first.getAnchorId() : "");
             final String anchorRef = buildAnchorRef(first);
             final String prefilledComment = first.getRepoName() + (anchorRef.isEmpty() ? "" : " " + anchorRef)
                 + (anchorLabel.isEmpty() ? "" : ": " + anchorLabel);
 
+            // Categorise PR anchors into own PRs vs. reviews
+            final boolean isOwnPr = "PR".equals(first.getAnchorType())
+                && group.stream().anyMatch(e -> "PullRequestEvent".equals(e.getEventType()));
+            final boolean isReview = "PR".equals(first.getAnchorType()) && !isOwnPr
+                && group.stream().anyMatch(e -> REVIEW_EVENT_TYPES.contains(e.getEventType()));
+
+            final String prStatus = isOwnPr ? derivePrStatus(group) : null;
+            final String openedDate = isOwnPr ? derivePrOpenedDate(login, first, zone, selectedDate) : null;
+            final String reviewOutcome = isReview ? deriveReviewOutcome(group) : null;
+            final String issueAction = "ISSUE".equals(first.getAnchorType()) ? deriveIssueAction(group) : null;
+
+            final boolean anchorLogged = events.stream().anyMatch(AnchorEvent::logged);
+
             return new ActivityAnchor(
                 first.getRepoName(),
                 first.getAnchorType(),
                 first.getAnchorId(),
-                first.getAnchorTitle(),
+                anchorTitle,
                 events,
                 windowStart,
                 windowEnd,
                 suggestedDuration,
-                prefilledComment
+                prefilledComment,
+                openedDate,
+                prStatus,
+                reviewOutcome,
+                issueAction,
+                anchorLogged
             );
         }).toList();
+    }
+
+    private static String resolveAnchorTitle(GitHubRawEventEntity first, List<GitHubRawEventEntity> group) {
+        if (first.getAnchorTitle() != null && !first.getAnchorTitle().isBlank()) {
+            return first.getAnchorTitle();
+        }
+        // Fall back: extract title from "Verb PR/Issue #N: Title" stored in eventSummary
+        for (GitHubRawEventEntity e : group) {
+            final int colonIdx = e.getEventSummary().indexOf(": ");
+            if (colonIdx >= 0) {
+                final String candidate = e.getEventSummary().substring(colonIdx + 2).trim();
+                if (!candidate.isBlank()) return candidate;
+            }
+        }
+        return first.getAnchorTitle() != null ? first.getAnchorTitle() : "";
+    }
+
+    private String derivePrStatus(List<GitHubRawEventEntity> group) {
+        for (GitHubRawEventEntity e : group) {
+            if (e.getEventSummary().startsWith("Merged")) return "Merged";
+            if (e.getEventSummary().startsWith("Closed")) return "Closed";
+        }
+        return "Open";
+    }
+
+    private String derivePrOpenedDate(String login, GitHubRawEventEntity first, ZoneId zone, LocalDate selectedDate) {
+        return eventRepository
+            .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                login, first.getRepoName(), "PR", first.getAnchorId())
+            .map(oldest -> {
+                final LocalDate openedDay = oldest.getEventTimestamp().atZone(zone).toLocalDate();
+                return openedDay.isBefore(selectedDate)
+                    ? OPENED_DATE_FMT.withZone(zone).format(oldest.getEventTimestamp())
+                    : null;
+            })
+            .orElse(null);
+    }
+
+    private String deriveReviewOutcome(List<GitHubRawEventEntity> group) {
+        boolean approved = false, changesRequested = false;
+        for (GitHubRawEventEntity e : group) {
+            if (e.getEventSummary().startsWith("Approved")) approved = true;
+            if (e.getEventSummary().startsWith("Requested changes")) changesRequested = true;
+        }
+        return approved ? "Approved" : changesRequested ? "Changes requested" : "Commented";
+    }
+
+    private String deriveIssueAction(List<GitHubRawEventEntity> group) {
+        boolean closed = false, opened = false, commented = false;
+        for (GitHubRawEventEntity e : group) {
+            if (e.getEventSummary().startsWith("Closed")) closed = true;
+            else if (e.getEventSummary().startsWith("Opened")) opened = true;
+            else if (e.getEventSummary().startsWith("Commented")) commented = true;
+        }
+        return closed ? "Closed" : opened ? "Opened" : commented ? "Commented" : "Updated";
+    }
+
+    private static String buildCommitUrl(GitHubRawEventEntity e) {
+        // Event ID format: {login}_commit_{fullSha}
+        final String id = e.getGithubEventId();
+        final int shaStart = id.lastIndexOf('_') + 1;
+        if (shaStart <= 0 || shaStart >= id.length()) return null;
+        return "https://github.com/" + e.getRepoName() + "/commit/" + id.substring(shaStart);
     }
 
     private static String buildEventComment(GitHubRawEventEntity e) {

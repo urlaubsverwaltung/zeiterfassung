@@ -16,7 +16,7 @@ import java.util.Objects;
 @Table(name = "github_raw_event", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"github_event_id"})
 })
-class GitHubRawEventEntity {
+public class GitHubRawEventEntity {
 
     @Id
     @Column(name = "id", unique = true, nullable = false, updatable = false)
@@ -47,6 +47,10 @@ class GitHubRawEventEntity {
     /** PR title, issue title, or branch/tag name captured at sync time */
     @Column(name = "anchor_title")
     private String anchorTitle;
+
+    /** For PullRequestEvent: the head branch (pull_request.head.ref). Null for all other event types. */
+    @Column(name = "head_branch")
+    private String headBranch;
 
     @Column(name = "event_icon", nullable = false)
     private String eventIcon;
@@ -98,6 +102,9 @@ class GitHubRawEventEntity {
 
     public boolean isDismissed() { return dismissed; }
     public void setDismissed(boolean dismissed) { this.dismissed = dismissed; }
+
+    public String getHeadBranch() { return headBranch; }
+    public void setHeadBranch(String headBranch) { this.headBranch = headBranch; }
 
     public Instant getLoggedAt() { return loggedAt; }
     public void setLoggedAt(Instant loggedAt) { this.loggedAt = loggedAt; }

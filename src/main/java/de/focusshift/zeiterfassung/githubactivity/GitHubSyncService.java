@@ -43,7 +43,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  *   github.organization      — organization login name (e.g. "slint-ui")
  */
 @Service
-class GitHubSyncService {
+public class GitHubSyncService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
@@ -65,10 +65,11 @@ class GitHubSyncService {
 
     private final java.util.concurrent.ConcurrentHashMap<String, Instant> lastSyncTimes = new java.util.concurrent.ConcurrentHashMap<>();
 
-    Instant getLastSyncTime(String login) {
+    public Instant getLastSyncTime(String login) {
         return lastSyncTimes.get(login);
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     GitHubSyncService(GitHubRawEventRepository repository, UserSettingsService userSettingsService) {
         this.repository = repository;
         this.userSettingsService = userSettingsService;
@@ -77,6 +78,13 @@ class GitHubSyncService {
             .defaultHeader("Accept", "application/vnd.github+json")
             .defaultHeader("X-GitHub-Api-Version", "2022-11-28")
             .build();
+    }
+
+    // package-private for testing — allows injecting a mock RestClient
+    GitHubSyncService(GitHubRawEventRepository repository, UserSettingsService userSettingsService, RestClient restClient) {
+        this.repository = repository;
+        this.userSettingsService = userSettingsService;
+        this.restClient = restClient;
     }
 
     @Scheduled(fixedDelay = 600_000)
@@ -122,12 +130,12 @@ class GitHubSyncService {
         }
     }
 
-    boolean isConfigured() {
+    public boolean isConfigured() {
         return !appId.isBlank() && !privateKeyPath.isBlank() && !orgName.isBlank();
     }
 
     /** Returns a human-readable description of which env vars are still missing, or empty string if fully configured. */
-    String missingConfig() {
+    public String missingConfig() {
         final List<String> missing = new java.util.ArrayList<>();
         if (appId.isBlank())         missing.add("GITHUB_APP_ID");
         if (privateKeyPath.isBlank()) missing.add("GITHUB_APP_PRIVATE_KEY");
@@ -136,7 +144,15 @@ class GitHubSyncService {
     }
 
     @SuppressWarnings("unchecked")
-    private void syncUser(String login, String token) {
+    void syncUser(String login, String token) {
+        // Remove any commit entities stored in the old format ({pushEventId}_{shortSha}).
+        // They will be re-synced immediately below using the new login_commit_sha format,
+        // which also applies the author filter so commits from other users are excluded.
+        final int removed = repository.deleteOldFormatCommits(login, login + "_commit_%");
+        if (removed > 0) {
+            LOG.info("Removed {} old-format commit entities for {} — will re-sync with author filter", removed, login);
+        }
+
         final List<Map<String, Object>> events = fetchEvents(login, token);
         int saved = 0;
         for (Map<String, Object> raw : events) {
@@ -152,9 +168,22 @@ class GitHubSyncService {
                     }
                 }
             } else {
-                if (repository.existsByGithubEventId(eventId)) continue;
+                final java.util.Optional<GitHubRawEventEntity> existing = repository.findByGithubEventId(eventId);
+                if (existing.isPresent()) {
+                    // Backfill title and/or headBranch for already-stored events that are missing them
+                    final GitHubRawEventEntity e = existing.get();
+                    final boolean missingTitle = e.getAnchorTitle() == null || e.getAnchorTitle().isBlank();
+                    final boolean missingHeadBranch = "PR".equals(e.getAnchorType())
+                        && (e.getHeadBranch() == null || e.getHeadBranch().isBlank());
+                    if (missingTitle || missingHeadBranch) {
+                        enrichPrDetails(e, token);
+                        repository.save(e);
+                    }
+                    continue;
+                }
                 final GitHubRawEventEntity entity = parseToEntity(raw, login);
                 if (entity != null) {
+                    enrichPrDetails(entity, token);
                     repository.save(entity);
                     saved++;
                 }
@@ -190,12 +219,20 @@ class GitHubSyncService {
         // GitHub App tokens strip commit details from the Events API payload.
         // Use the Compare API to recover the actual commit messages.
         final List<Map<String, Object>> commits = fetchCommitsInPush(repoName, before, head, token);
+        final boolean compareApiReturnedCommits = !commits.isEmpty();
 
         final List<GitHubRawEventEntity> result = new ArrayList<>();
         for (Map<String, Object> commit : commits) {
             final String sha = strOrEmpty(commit.get("sha"));
             if (sha.isEmpty()) continue;
             final String shortSha = sha.substring(0, Math.min(7, sha.length()));
+
+            // Skip commits authored by other users — the Compare API can return merge commits
+            // from master or rebased history that were written by someone else.
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> githubAuthor = (Map<String, Object>) commit.get("author");
+            final String authorLogin = githubAuthor != null ? strOrEmpty(githubAuthor.get("login")) : "";
+            if (!authorLogin.isEmpty() && !authorLogin.equals(login)) continue;
 
             @SuppressWarnings("unchecked")
             final Map<String, Object> commitData = (Map<String, Object>) commit.get("commit");
@@ -207,8 +244,10 @@ class GitHubSyncService {
             final Instant ts = dateStr != null ? Instant.parse(dateStr) : pushTime;
             final String message = firstLine(strOrEmpty(commitData.get("message")), 200);
 
+            // Use login+sha as the event ID so the same commit is stored only once,
+            // even if it appears in multiple push events (e.g. after a force-push or rebase).
             final GitHubRawEventEntity e = new GitHubRawEventEntity();
-            e.setGithubEventId(eventId + "_" + shortSha);
+            e.setGithubEventId(login + "_commit_" + sha);
             e.setGithubUsername(login);
             e.setEventType("PushEvent");
             e.setRepoName(repoName);
@@ -221,8 +260,10 @@ class GitHubSyncService {
             result.add(e);
         }
 
-        // Fallback: compare API returned nothing — store a single placeholder using HEAD sha
-        if (result.isEmpty()) {
+        // Fallback: compare API returned nothing — store a single placeholder using HEAD sha.
+        // Only trigger when the API genuinely returned no commits; if commits were returned but
+        // all filtered by the author check, there is nothing to record for this user.
+        if (result.isEmpty() && !compareApiReturnedCommits) {
             final String shortHead = head.substring(0, Math.min(7, head.length()));
             final GitHubRawEventEntity e = new GitHubRawEventEntity();
             e.setGithubEventId(eventId + "_" + shortHead);
@@ -312,12 +353,14 @@ class GitHubSyncService {
         entity.setAnchorTitle(parsed[2]);
         entity.setEventIcon(parsed[3]);
         entity.setEventSummary(parsed[4]);
+        entity.setHeadBranch(parsed.length > 5 && !parsed[5].isEmpty() ? parsed[5] : null);
         entity.setEventTimestamp(Instant.parse(createdAt));
         return entity;
     }
 
     /**
-     * Returns [anchorType, anchorId, anchorTitle, icon, summary], or null to skip the event.
+     * Returns [anchorType, anchorId, anchorTitle, icon, summary, headBranch?], or null to skip the event.
+     * PullRequestEvent returns 6 elements (headBranch at index 5); all others return 5.
      * PushEvent is handled separately in parsePushToEntities and must not reach this method.
      */
     @SuppressWarnings("unchecked")
@@ -330,7 +373,12 @@ class GitHubSyncService {
                 final String title = pr != null ? strOrEmpty(pr.get("title")) : "";
                 final boolean merged = pr != null && Boolean.TRUE.equals(pr.get("merged"));
                 final String verb = merged ? "Merged" : capitalize(action);
-                yield new String[]{"PR", String.valueOf(number), title, "🔀", verb + " PR #" + number + (title.isEmpty() ? "" : ": " + title)};
+                @SuppressWarnings("unchecked")
+                final Map<String, Object> head = pr != null ? (Map<String, Object>) pr.get("head") : null;
+                final String headBranch = head != null ? strOrEmpty(head.get("ref")) : "";
+                yield new String[]{"PR", String.valueOf(number), title, "🔀",
+                    verb + " PR #" + number + (title.isEmpty() ? "" : ": " + title),
+                    headBranch};
             }
             case "PullRequestReviewEvent" -> {
                 final Map<String, Object> pr = (Map<String, Object>) payload.get("pull_request");
@@ -473,6 +521,56 @@ class GitHubSyncService {
         final SignedJWT jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.RS256), claims);
         jwt.sign(signer);
         return jwt.serialize();
+    }
+
+    // --- Title enrichment ---
+
+    /**
+     * Fetches PR or issue details from the GitHub API to backfill fields that the
+     * GitHub App token strips from the Events API payload (title, and for PRs, head branch).
+     */
+    @SuppressWarnings("unchecked")
+    private void enrichPrDetails(GitHubRawEventEntity entity, String token) {
+        if (entity.getAnchorId() == null) return;
+
+        final String apiSegment = switch (entity.getAnchorType()) {
+            case "PR"    -> "pulls";
+            case "ISSUE" -> "issues";
+            default      -> null;
+        };
+        if (apiSegment == null) return;
+
+        try {
+            final String url = "https://api.github.com/repos/" + entity.getRepoName()
+                + "/" + apiSegment + "/" + entity.getAnchorId();
+            final Map<String, Object> response = restClient.get()
+                .uri(URI.create(url))
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+            if (response == null) return;
+
+            final String title = strOrEmpty(response.get("title"));
+            if (!title.isBlank()) {
+                entity.setAnchorTitle(title);
+                final String summary = entity.getEventSummary();
+                if (!summary.contains(": ")) {
+                    entity.setEventSummary(summary + ": " + title);
+                }
+            }
+
+            // For PRs, also capture the head branch so we can exclude these commits from Standalone
+            if ("pulls".equals(apiSegment) && (entity.getHeadBranch() == null || entity.getHeadBranch().isBlank())) {
+                final Map<String, Object> head = (Map<String, Object>) response.get("head");
+                final String headBranch = head != null ? strOrEmpty(head.get("ref")) : "";
+                if (!headBranch.isBlank()) {
+                    entity.setHeadBranch(headBranch);
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("Could not fetch details for {}/{}/{}: {}",
+                entity.getRepoName(), apiSegment, entity.getAnchorId(), e.getMessage());
+        }
     }
 
     // --- Utilities ---

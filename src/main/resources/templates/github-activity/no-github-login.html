@@ -23,7 +23,7 @@
 
           <h1 class="text-xl font-bold mb-6" th:text="#{github-activity.page.title}">GitHub Activity</h1>
 
-          <div class="p-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg max-w-lg">
+          <div data-testid="github-activity-no-login" class="p-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg max-w-lg">
             <h2 class="text-lg font-semibold mb-2" th:text="#{github-activity.no-github-login.title}">No GitHub username set</h2>
             <p class="text-gray-600 dark:text-zinc-300 mb-4" th:text="#{github-activity.no-github-login.message}">
               Set your verified GitHub username in My Account to see your activity here.

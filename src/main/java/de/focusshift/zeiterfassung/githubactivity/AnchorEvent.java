@@ -6,5 +6,6 @@ public record AnchorEvent(
     String time,
     String prefilledComment,
     String eventId,
-    boolean logged
+    boolean logged,
+    String commitUrl   // nullable; only set for standalone commits
 ) {}
