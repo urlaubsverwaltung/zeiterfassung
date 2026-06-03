@@ -31,7 +31,7 @@
     "@vitest/coverage-v8": "4.1.7",
     "concurrently": "10.0.3",
     "cssnano": "7.1.7",
-    "date-fns": "3.6.0",
+    "date-fns": "4.3.0",
     "esbuild": "0.28.0",
     "eslint": "10.4.0",
     "eslint-config-prettier": "10.1.8",
