@@ -162,7 +162,17 @@ public class GitHubSyncService {
 
             if ("PushEvent".equals(type)) {
                 for (GitHubRawEventEntity e : parsePushToEntities(raw, login, token)) {
-                    if (!repository.existsByGithubEventId(e.getGithubEventId())) {
+                    final java.util.Optional<GitHubRawEventEntity> existingCommit =
+                        repository.findByGithubEventId(e.getGithubEventId());
+                    if (existingCommit.isPresent()) {
+                        // Re-timestamp if the committer date changed (force-push / rebase).
+                        // This ensures the activity appears on the day the rebase actually happened.
+                        final GitHubRawEventEntity ex = existingCommit.get();
+                        if (!ex.getEventTimestamp().equals(e.getEventTimestamp())) {
+                            ex.setEventTimestamp(e.getEventTimestamp());
+                            repository.save(ex);
+                        }
+                    } else {
                         repository.save(e);
                         saved++;
                     }
@@ -238,9 +248,18 @@ public class GitHubSyncService {
             final Map<String, Object> commitData = (Map<String, Object>) commit.get("commit");
             if (commitData == null) continue;
 
+            // Use committer.date rather than author.date for the entity timestamp.
+            // For rebased / force-pushed commits the committer date reflects when
+            // the rebase actually happened (the real day of work), whereas author.date
+            // stays frozen at the original commit time and would make the activity
+            // invisible on the day the developer actually worked on it.
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> committerData = (Map<String, Object>) commitData.get("committer");
             @SuppressWarnings("unchecked")
             final Map<String, Object> authorData = (Map<String, Object>) commitData.get("author");
-            final String dateStr = authorData != null ? (String) authorData.get("date") : null;
+            final String dateStr = committerData != null && committerData.get("date") != null
+                ? (String) committerData.get("date")
+                : authorData != null ? (String) authorData.get("date") : null;
             final Instant ts = dateStr != null ? Instant.parse(dateStr) : pushTime;
             final String message = firstLine(strOrEmpty(commitData.get("message")), 200);
 

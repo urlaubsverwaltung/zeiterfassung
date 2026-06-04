@@ -75,12 +75,19 @@ class GitHubSyncServiceTest {
     }
 
     private Map<String, Object> commit(String sha, String authorLogin, String message) {
+        return commitWithDates(sha, authorLogin, message, "2026-06-02T14:00:00Z", "2026-06-02T14:00:00Z");
+    }
+
+    /** Build a commit where author date ≠ committer date (simulating a rebase / force-push). */
+    private Map<String, Object> commitWithDates(String sha, String authorLogin, String message,
+                                                 String authorDate, String committerDate) {
         final Map<String, Object> authorGh = authorLogin != null ? Map.of("login", authorLogin) : Map.of();
         return Map.of(
             "sha", sha,
             "author", authorGh,
             "commit", Map.of(
-                "author", Map.of("date", "2026-06-02T14:00:00Z"),
+                "author",    Map.of("date", authorDate),
+                "committer", Map.of("date", committerDate),
                 "message", message
             ),
             "parents", List.of(Map.of("sha", "aaa"))
@@ -279,6 +286,81 @@ class GitHubSyncServiceTest {
             final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getEventSummary()).startsWith("Merged PR #11950");
+        }
+    }
+
+    // ── Committer date for force-push / rebase tracking ──────────────────────
+
+    @Nested
+    class CommitterDateTracking {
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureCommitterDateIsUsedAsTimestampNotAuthorDate() {
+            final String sha = "abc1234567890abcdef1234567890abcdef123456";
+            // Author date = Jun 2, committer date = Jun 3 (rebased on Jun 3)
+            final var rebased = commitWithDates(sha, LOGIN, "Implement DragIcon",
+                "2026-06-02T20:06:46Z", "2026-06-03T19:25:03Z");
+            final var push = pushEvent("evt1", "slint-ui/winit", "simon/win32-drag", "head123", "prev456");
+
+            when(restClient.get()).thenReturn(requestHeadersUriSpec);
+            when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersUriSpec.uri(any(java.net.URI.class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            when(responseSpec.body(any(ParameterizedTypeReference.class)))
+                .thenReturn(List.of(push))
+                .thenReturn(Map.of("commits", List.of(rebased)));
+            when(repository.existsByGithubEventId(LOGIN + "_commit_" + sha)).thenReturn(false);
+            when(repository.findByGithubEventId(LOGIN + "_commit_" + sha)).thenReturn(java.util.Optional.empty());
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            verify(repository).save(captor.capture());
+            // Must use committer date (Jun 3), not author date (Jun 2)
+            assertThat(captor.getValue().getEventTimestamp())
+                .isEqualTo(java.time.Instant.parse("2026-06-03T19:25:03Z"));
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureExistingEntityTimestampUpdatedWhenCommitterDateChanges() {
+            final String sha = "abc1234567890abcdef1234567890abcdef123456";
+            // Simulate entity already stored with the old author date (Jun 2)
+            final GitHubRawEventEntity existing = new GitHubRawEventEntity();
+            existing.setGithubEventId(LOGIN + "_commit_" + sha);
+            existing.setGithubUsername(LOGIN);
+            existing.setEventType("PushEvent");
+            existing.setRepoName("slint-ui/winit");
+            existing.setAnchorType("REPO");
+            existing.setEventIcon("📝");
+            existing.setEventSummary("Implement DragIcon");
+            existing.setEventTimestamp(java.time.Instant.parse("2026-06-02T20:06:46Z")); // old: Jun 2
+
+            // Force-push: same SHA, committer date now Jun 3
+            final var rebased = commitWithDates(sha, LOGIN, "Implement DragIcon",
+                "2026-06-02T20:06:46Z", "2026-06-03T19:25:03Z");
+            final var push = pushEvent("evt1", "slint-ui/winit", "simon/win32-drag", "head123", "prev456");
+
+            when(restClient.get()).thenReturn(requestHeadersUriSpec);
+            when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersUriSpec.uri(any(java.net.URI.class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            when(responseSpec.body(any(ParameterizedTypeReference.class)))
+                .thenReturn(List.of(push))
+                .thenReturn(Map.of("commits", List.of(rebased)));
+            when(repository.findByGithubEventId(LOGIN + "_commit_" + sha))
+                .thenReturn(java.util.Optional.of(existing));
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            // Existing entity must be updated to Jun 3 committer date
+            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            verify(repository).save(captor.capture());
+            assertThat(captor.getValue().getEventTimestamp())
+                .isEqualTo(java.time.Instant.parse("2026-06-03T19:25:03Z"));
         }
     }
 
