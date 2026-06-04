@@ -117,6 +117,53 @@ public class GitHubActivityPage {
         return prTableRows().nth(rowIndex).locator("td:nth-child(5) span").textContent().trim();
     }
 
+    // ── Log-it / Logged locators (PR) ────────────────────────────────────────
+
+    public Locator prLogItButton(int rowIndex) {
+        return page.getByTestId("pr-log-it-" + rowIndex);
+    }
+
+    public Locator prLoggedLabel(int rowIndex) {
+        return page.getByTestId("pr-logged-" + rowIndex);
+    }
+
+    // ── Log-it / Logged locators (Reviews) ───────────────────────────────────
+
+    public Locator reviewLogItButton(int rowIndex) {
+        return page.getByTestId("rev-log-it-" + rowIndex);
+    }
+
+    public Locator reviewLoggedLabel(int rowIndex) {
+        return page.getByTestId("rev-logged-" + rowIndex);
+    }
+
+    // ── Log-it / Logged locators (Issues) ────────────────────────────────────
+
+    public Locator issueLogItButton(int rowIndex) {
+        return page.getByTestId("iss-log-it-" + rowIndex);
+    }
+
+    public Locator issueLoggedLabel(int rowIndex) {
+        return page.getByTestId("iss-logged-" + rowIndex);
+    }
+
+    // ── Log-it / Logged locators (Standalone commits) ─────────────────────────
+
+    public Locator standaloneLogItButton(int anchorIndex, int eventIndex) {
+        return page.getByTestId("ev-log-it-" + anchorIndex + "-" + eventIndex);
+    }
+
+    public Locator standaloneLoggedLabel(int anchorIndex, int eventIndex) {
+        return page.getByTestId("ev-logged-" + anchorIndex + "-" + eventIndex);
+    }
+
+    // ── Inline form ───────────────────────────────────────────────────────────
+
+    /** The Save button inside the inline form (loaded into a turbo-frame after clicking Log it). */
+    public Locator inlineFormSaveButton() {
+        return page.locator("turbo-frame form button[type=submit]");
+    }
+
     // ── Standalone commit row locators ────────────────────────────────────────
 
     public Locator standaloneCommitLinks() {

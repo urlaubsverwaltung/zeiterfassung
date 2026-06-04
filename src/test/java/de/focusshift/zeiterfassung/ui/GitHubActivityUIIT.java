@@ -10,7 +10,6 @@ import de.focusshift.zeiterfassung.user.UserSettingsService;
 import de.focusshift.zeiterfassung.ui.extension.UiTest;
 import de.focusshift.zeiterfassung.ui.pages.GitHubActivityPage;
 import de.focusshift.zeiterfassung.ui.pages.LoginPage;
-import de.focusshift.zeiterfassung.ui.pages.NavigationPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -380,6 +379,324 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
             final var titleLink = activityPage.issuesSection().locator("td:nth-child(3) a");
             assertThat(titleLink).hasAttribute("href",
                 "https://github.com/slint-ui/slint/issues/11949");
+        }
+    }
+
+    // ── Log it / Logged state ─────────────────────────────────────────────────
+
+    /**
+     * Tests for the "Log it" → "✓ Logged" feature across all activity types.
+     *
+     * <p>Covers two scenarios per type:
+     * <ol>
+     *   <li>Server-side: the page renders "✓ Logged" (instead of a Log it button) when the
+     *       entity already has a {@code loggedAt} timestamp.</li>
+     *   <li>Client-side: clicking "Log it", submitting the inline form, and verifying
+     *       the button is replaced by "✓ Logged" without a page reload.</li>
+     * </ol>
+     */
+    @Nested
+    class LoggedState {
+
+        @BeforeEach
+        void setUp() {
+            when(userSettingsService.getUserSettings(any())).thenReturn(userSettingsWithLogin("tronical"));
+        }
+
+        // ── Pull Requests ──────────────────────────────────────────────────
+
+        @Nested
+        class PullRequests {
+
+            @Test
+            void ensureLogItButtonIsVisibleForUnloggedPR(Page page) {
+                final var pr = prEntity("e1", "slint-ui/slint", "200", "Fix bug", "Merged PR #200: Fix bug");
+                stubPrEvents(pr);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                assertThat(activityPage.prLogItButton(0)).isVisible();
+                assertThat(activityPage.prLoggedLabel(0)).not().isVisible();
+            }
+
+            @Test
+            void ensureLoggedLabelIsRenderedServerSideWhenPRAlreadyLogged(Page page) {
+                final var pr = prEntity("e1", "slint-ui/slint", "200", "Fix bug", "Merged PR #200: Fix bug");
+                pr.setLoggedAt(Instant.now());
+                stubPrEvents(pr);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                assertThat(activityPage.prLoggedLabel(0)).isVisible();
+                assertThat(activityPage.prLogItButton(0)).not().isVisible();
+            }
+
+            @Test
+            void ensureClickingLogItOpensPRInlineForm(Page page) {
+                final var pr = prEntity("e1", "slint-ui/slint", "200", "Fix bug", "Merged PR #200: Fix bug");
+                stubPrEvents(pr);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                activityPage.prLogItButton(0).click();
+
+                assertThat(activityPage.inlineFormSaveButton()).isVisible();
+            }
+
+            @Test
+            void ensureLoggedLabelAppearsClientSideAfterSubmittingPRForm(Page page) {
+                final var pr = prEntity("e1", "slint-ui/slint", "200", "Fix bug", "Merged PR #200: Fix bug");
+                stubPrEvents(pr);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                activityPage.prLogItButton(0).click();
+                activityPage.inlineFormSaveButton().click();
+
+                assertThat(activityPage.prSection().getByText("✓ Logged")).isVisible();
+            }
+
+            private void stubPrEvents(GitHubRawEventEntity pr) {
+                when(gitHubRawEventRepository
+                    .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                        anyString(), any(), any()))
+                    .thenReturn(List.of(pr));
+                when(gitHubRawEventRepository
+                    .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                        anyString(), anyString(), anyString(), anyString()))
+                    .thenReturn(Optional.of(pr));
+            }
+        }
+
+        // ── Reviews ────────────────────────────────────────────────────────
+
+        @Nested
+        class Reviews {
+
+            @Test
+            void ensureLogItButtonIsVisibleForUnloggedReview(Page page) {
+                final var review = reviewEntity("e2", "slint-ui/slint", "201", "Add feature", "Approved PR #201: Add feature");
+                stubReviewEvents(review);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                assertThat(activityPage.reviewLogItButton(0)).isVisible();
+                assertThat(activityPage.reviewLoggedLabel(0)).not().isVisible();
+            }
+
+            @Test
+            void ensureLoggedLabelIsRenderedServerSideWhenReviewAlreadyLogged(Page page) {
+                final var review = reviewEntity("e2", "slint-ui/slint", "201", "Add feature", "Approved PR #201: Add feature");
+                review.setLoggedAt(Instant.now());
+                stubReviewEvents(review);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                assertThat(activityPage.reviewLoggedLabel(0)).isVisible();
+                assertThat(activityPage.reviewLogItButton(0)).not().isVisible();
+            }
+
+            @Test
+            void ensureClickingLogItOpensReviewInlineForm(Page page) {
+                final var review = reviewEntity("e2", "slint-ui/slint", "201", "Add feature", "Approved PR #201: Add feature");
+                stubReviewEvents(review);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                activityPage.reviewLogItButton(0).click();
+
+                assertThat(activityPage.inlineFormSaveButton()).isVisible();
+            }
+
+            @Test
+            void ensureLoggedLabelAppearsClientSideAfterSubmittingReviewForm(Page page) {
+                final var review = reviewEntity("e2", "slint-ui/slint", "201", "Add feature", "Approved PR #201: Add feature");
+                stubReviewEvents(review);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                activityPage.reviewLogItButton(0).click();
+                activityPage.inlineFormSaveButton().click();
+
+                assertThat(activityPage.reviewsSection().getByText("✓ Logged")).isVisible();
+            }
+
+            private void stubReviewEvents(GitHubRawEventEntity review) {
+                when(gitHubRawEventRepository
+                    .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                        anyString(), any(), any()))
+                    .thenReturn(List.of(review));
+            }
+        }
+
+        // ── Issues ─────────────────────────────────────────────────────────
+
+        @Nested
+        class Issues {
+
+            @Test
+            void ensureLogItButtonIsVisibleForUnloggedIssue(Page page) {
+                final var issue = issueEntity("e3", "slint-ui/slint", "202", "Crash on startup", "Opened issue #202: Crash on startup");
+                stubIssueEvents(issue);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                assertThat(activityPage.issueLogItButton(0)).isVisible();
+                assertThat(activityPage.issueLoggedLabel(0)).not().isVisible();
+            }
+
+            @Test
+            void ensureLoggedLabelIsRenderedServerSideWhenIssueAlreadyLogged(Page page) {
+                final var issue = issueEntity("e3", "slint-ui/slint", "202", "Crash on startup", "Opened issue #202: Crash on startup");
+                issue.setLoggedAt(Instant.now());
+                stubIssueEvents(issue);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                assertThat(activityPage.issueLoggedLabel(0)).isVisible();
+                assertThat(activityPage.issueLogItButton(0)).not().isVisible();
+            }
+
+            @Test
+            void ensureClickingLogItOpensIssueInlineForm(Page page) {
+                final var issue = issueEntity("e3", "slint-ui/slint", "202", "Crash on startup", "Opened issue #202: Crash on startup");
+                stubIssueEvents(issue);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                activityPage.issueLogItButton(0).click();
+
+                assertThat(activityPage.inlineFormSaveButton()).isVisible();
+            }
+
+            @Test
+            void ensureLoggedLabelAppearsClientSideAfterSubmittingIssueForm(Page page) {
+                final var issue = issueEntity("e3", "slint-ui/slint", "202", "Crash on startup", "Opened issue #202: Crash on startup");
+                stubIssueEvents(issue);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                activityPage.issueLogItButton(0).click();
+                activityPage.inlineFormSaveButton().click();
+
+                assertThat(activityPage.issuesSection().getByText("✓ Logged")).isVisible();
+            }
+
+            private void stubIssueEvents(GitHubRawEventEntity issue) {
+                when(gitHubRawEventRepository
+                    .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                        anyString(), any(), any()))
+                    .thenReturn(List.of(issue));
+            }
+        }
+
+        // ── Standalone commits ─────────────────────────────────────────────
+
+        @Nested
+        class StandaloneCommits {
+
+            @Test
+            void ensureLogItButtonIsVisibleForUnloggedCommit(Page page) {
+                final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix typo in docs");
+                stubCommitEvents(commit);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                assertThat(activityPage.standaloneLogItButton(0, 0)).isVisible();
+                assertThat(activityPage.standaloneLoggedLabel(0, 0)).not().isVisible();
+            }
+
+            @Test
+            void ensureLoggedLabelIsRenderedServerSideWhenCommitAlreadyLogged(Page page) {
+                final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix typo in docs");
+                commit.setLoggedAt(Instant.now());
+                stubCommitEvents(commit);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                assertThat(activityPage.standaloneLoggedLabel(0, 0)).isVisible();
+                assertThat(activityPage.standaloneLogItButton(0, 0)).not().isVisible();
+            }
+
+            @Test
+            void ensureClickingLogItOpensCommitInlineForm(Page page) {
+                final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix typo in docs");
+                stubCommitEvents(commit);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                activityPage.standaloneLogItButton(0, 0).click();
+
+                assertThat(activityPage.inlineFormSaveButton()).isVisible();
+            }
+
+            @Test
+            void ensureLoggedLabelAppearsClientSideAfterSubmittingCommitForm(Page page) {
+                final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix typo in docs");
+                stubCommitEvents(commit);
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                activityPage.standaloneLogItButton(0, 0).click();
+                activityPage.inlineFormSaveButton().click();
+
+                assertThat(activityPage.standaloneSection().getByText("✓ Logged")).isVisible();
+            }
+
+            private void stubCommitEvents(GitHubRawEventEntity commit) {
+                when(gitHubRawEventRepository
+                    .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                        anyString(), any(), any()))
+                    .thenReturn(List.of(commit));
+            }
         }
     }
 

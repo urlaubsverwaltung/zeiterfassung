@@ -131,11 +131,13 @@
                               <span th:text="${anchor.windowStart()}"></span><span th:if="${anchor.windowEnd() != null}">–<span th:text="${anchor.windowEnd()}"></span></span>
                             </span>
                             <span th:if="${anchor.logged()}"
+                                  th:data-testid="|pr-logged-${stat.index}|"
                                   class="shrink-0 text-xs text-green-600 dark:text-green-400 font-medium">✓ Logged</span>
                             <th:block th:if="${!anchor.logged()}">
                               <input type="text" th:id="|pr-dur-${stat.index}|" th:value="${anchor.suggestedDuration()}"
                                      class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-0.5 text-xs w-16 dark:bg-zinc-900 dark:text-zinc-100"/>
                               <button type="button" class="button-main-green text-xs"
+                                      th:data-testid="|pr-log-it-${stat.index}|"
                                       th:data-comment="${anchor.prefilledComment()}"
                                       th:data-date="${date}"
                                       th:data-start="${anchor.windowStart()}"
@@ -218,11 +220,13 @@
                               <span th:text="${anchor.windowStart()}"></span><span th:if="${anchor.windowEnd() != null}">–<span th:text="${anchor.windowEnd()}"></span></span>
                             </span>
                             <span th:if="${anchor.logged()}"
+                                  th:data-testid="|rev-logged-${stat.index}|"
                                   class="shrink-0 text-xs text-green-600 dark:text-green-400 font-medium">✓ Logged</span>
                             <th:block th:if="${!anchor.logged()}">
                               <input type="text" th:id="|rev-dur-${stat.index}|" th:value="${anchor.suggestedDuration()}"
                                      class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-0.5 text-xs w-16 dark:bg-zinc-900 dark:text-zinc-100"/>
                               <button type="button" class="button-main-green text-xs"
+                                      th:data-testid="|rev-log-it-${stat.index}|"
                                       th:data-comment="${anchor.prefilledComment()}"
                                       th:data-date="${date}"
                                       th:data-start="${anchor.windowStart()}"
@@ -309,11 +313,13 @@
                               <span th:text="${anchor.windowStart()}"></span><span th:if="${anchor.windowEnd() != null}">–<span th:text="${anchor.windowEnd()}"></span></span>
                             </span>
                             <span th:if="${anchor.logged()}"
+                                  th:data-testid="|iss-logged-${stat.index}|"
                                   class="shrink-0 text-xs text-green-600 dark:text-green-400 font-medium">✓ Logged</span>
                             <th:block th:if="${!anchor.logged()}">
                               <input type="text" th:id="|iss-dur-${stat.index}|" th:value="${anchor.suggestedDuration()}"
                                      class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-0.5 text-xs w-16 dark:bg-zinc-900 dark:text-zinc-100"/>
                               <button type="button" class="button-main-green text-xs"
+                                      th:data-testid="|iss-log-it-${stat.index}|"
                                       th:data-comment="${anchor.prefilledComment()}"
                                       th:data-date="${date}"
                                       th:data-start="${anchor.windowStart()}"
@@ -397,10 +403,12 @@
                   <th:block th:if="${!isLocked}">
                     <input type="text" th:id="|ev-dur-${anchorStat.index}-${evStat.index}|" value="00:15" class="hidden"/>
                     <span th:if="${event.logged()}"
+                          th:data-testid="|ev-logged-${anchorStat.index}-${evStat.index}|"
                           class="shrink-0 text-xs text-green-600 dark:text-green-400 font-medium">✓ Logged</span>
                     <button th:if="${!event.logged()}"
                             type="button"
                             th:id="|ev-btn-${anchorStat.index}-${evStat.index}|"
+                            th:data-testid="|ev-log-it-${anchorStat.index}-${evStat.index}|"
                             class="button-main-green text-xs shrink-0"
                             th:data-event-id="${event.eventId()}"
                             th:data-comment="${event.prefilledComment()}"
