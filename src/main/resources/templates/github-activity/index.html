@@ -31,6 +31,17 @@
             <a th:href="@{/github-activity(date=${prevDate})}" class="button-secondary">&#9664;</a>
             <span th:text="${#temporals.format(date, 'EEEE, d MMMM yyyy')}">Monday, 2 June 2026</span>
             <a th:href="@{/github-activity(date=${nextDate})}" class="button-secondary">&#9654;</a>
+            <!-- Search trigger -->
+            <button type="button"
+                    data-testid="gh-search-trigger"
+                    class="button-secondary text-sm flex items-center gap-1.5"
+                    onclick="ghSearchOpen()">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 text-gray-500 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+              </svg>
+              <span class="hidden xs:inline text-gray-500 dark:text-zinc-400">Search...</span>
+              <kbd class="hidden desktop:inline-flex items-center px-1 py-0.5 text-xs font-mono rounded border border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500">⌘K</kbd>
+            </button>
             <div th:if="${syncConfigured}" class="ml-auto flex items-center gap-3">
               <span th:if="${lastSyncedAt != null}"
                     class="text-xs text-gray-400 dark:text-zinc-500">
@@ -117,7 +128,8 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
                   <th:block th:each="anchor, stat : ${prAnchors}">
-                    <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50"
+                        th:attr="data-gh-type='PR',data-gh-repo=${anchor.repoName()},data-gh-title=${anchor.anchorTitle() ?: ''},data-gh-badge=${anchor.anchorId() ?: ''},data-gh-meta=${anchor.prStatus() ?: ''},data-gh-window=${anchor.windowStart() + (anchor.windowEnd() != null ? '–' + anchor.windowEnd() : '')},data-gh-logged=${anchor.logged()},data-gh-log-id=${'pr-log-it-' + stat.index}">
                       <td class="px-4 py-3 font-mono text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap" th:text="${anchor.repoName()}"></td>
                       <td class="px-4 py-3 whitespace-nowrap">
                         <a th:href="|https://github.com/${anchor.repoName()}/pull/${anchor.anchorId()}|"
@@ -210,7 +222,8 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
                   <th:block th:each="anchor, stat : ${reviewAnchors}">
-                    <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50"
+                        th:attr="data-gh-type='Review',data-gh-repo=${anchor.repoName()},data-gh-title=${anchor.anchorTitle() ?: ''},data-gh-badge=${anchor.anchorId() ?: ''},data-gh-meta=${anchor.reviewOutcome() ?: ''},data-gh-window=${anchor.windowStart() + (anchor.windowEnd() != null ? '–' + anchor.windowEnd() : '')},data-gh-logged=${anchor.logged()},data-gh-log-id=${'rev-log-it-' + stat.index}">
                       <td class="px-4 py-3 font-mono text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap" th:text="${anchor.repoName()}"></td>
                       <td class="px-4 py-3 whitespace-nowrap">
                         <a th:href="|https://github.com/${anchor.repoName()}/pull/${anchor.anchorId()}|"
@@ -299,7 +312,8 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
                   <th:block th:each="anchor, stat : ${issueAnchors}">
-                    <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50"
+                        th:attr="data-gh-type='Issue',data-gh-repo=${anchor.repoName()},data-gh-title=${anchor.anchorTitle() ?: ''},data-gh-badge=${anchor.anchorId() ?: ''},data-gh-meta=${anchor.issueAction() ?: ''},data-gh-window=${anchor.windowStart() + (anchor.windowEnd() != null ? '–' + anchor.windowEnd() : '')},data-gh-logged=${anchor.logged()},data-gh-log-id=${'iss-log-it-' + stat.index}">
                       <td class="px-4 py-3 font-mono text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap" th:text="${anchor.repoName()}"></td>
                       <td class="px-4 py-3 whitespace-nowrap">
                         <a th:href="|https://github.com/${anchor.repoName()}/issues/${anchor.anchorId()}|"
@@ -393,7 +407,8 @@
               <div class="px-4 pt-3 pb-2">
                 <div th:each="event, evStat : ${anchor.events()}"
                      th:id="|ev-row-${anchorStat.index}-${evStat.index}|"
-                     th:class="${event.logged()} ? 'flex items-baseline gap-2 text-sm py-1 opacity-50' : 'flex items-baseline gap-2 text-sm py-1'">
+                     th:class="${event.logged()} ? 'flex items-baseline gap-2 text-sm py-1 opacity-50' : 'flex items-baseline gap-2 text-sm py-1'"
+                     th:attr="data-gh-type='Commit',data-gh-repo=${anchor.repoName()},data-gh-title=${event.summary()},data-gh-badge='',data-gh-meta='',data-gh-window=${event.time()},data-gh-logged=${event.logged()},data-gh-log-id=${'ev-log-it-' + anchorStat.index + '-' + evStat.index}">
 
                   <th:block th:if="${!isLocked and !event.logged()}">
                     <input type="checkbox"
@@ -480,6 +495,61 @@
 
         </div>
       </main>
+
+      <!-- ── Search Modal ─────────────────────────────────────────────────── -->
+      <div id="gh-search-modal"
+           data-testid="gh-search-modal"
+           class="hidden fixed inset-0 z-[300]"
+           role="dialog" aria-modal="true" aria-label="Search GitHub activity">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/60" onclick="ghSearchClose()"></div>
+        <!-- Modal card -->
+        <div class="relative mx-auto mt-20 max-w-2xl w-full px-4">
+          <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-gray-200 dark:border-zinc-700 flex flex-col overflow-hidden" style="max-height: 70vh">
+            <!-- Input row -->
+            <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-zinc-700 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 text-gray-400 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+              </svg>
+              <input id="gh-search-input"
+                     data-testid="gh-search-input"
+                     type="search"
+                     autocomplete="off"
+                     placeholder="Search GitHub activity..."
+                     class="flex-1 bg-transparent outline-none text-sm text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
+                     oninput="ghSearchFilter(this.value)"
+                     onkeydown="ghSearchKeyDown(event)"/>
+              <kbd class="hidden desktop:inline-flex items-center px-1.5 py-0.5 text-xs font-mono rounded border border-gray-200 dark:border-zinc-700 text-gray-400 dark:text-zinc-500 shrink-0">Esc</kbd>
+            </div>
+            <!-- Scope tabs -->
+            <div class="flex gap-2 px-4 py-2 border-b border-gray-200 dark:border-zinc-700 shrink-0">
+              <button id="gh-search-tab-day" data-testid="gh-search-tab-day" type="button"
+                      class="text-xs px-3 py-1 rounded-full border border-blue-300 dark:border-blue-700 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                      onclick="ghSearchSetTab('day')">This day</button>
+              <button id="gh-search-tab-all" data-testid="gh-search-tab-all" type="button"
+                      class="text-xs px-3 py-1 rounded-full border border-gray-200 dark:border-zinc-600 bg-white text-gray-600 dark:bg-zinc-800 dark:text-zinc-300"
+                      onclick="ghSearchSetTab('all')">All dates</button>
+            </div>
+            <!-- Results area -->
+            <div id="gh-search-results" data-testid="gh-search-results"
+                 class="overflow-y-auto flex-1 py-2">
+              <p id="gh-search-empty"
+                 data-testid="gh-search-empty"
+                 class="px-4 py-6 text-sm text-center text-gray-400 dark:text-zinc-500">
+                Start typing to filter this day's activity
+              </p>
+              <turbo-frame id="gh-search-frame" class="block"></turbo-frame>
+            </div>
+            <!-- Footer -->
+            <div class="flex items-center justify-between px-4 py-2 border-t border-gray-200 dark:border-zinc-700 shrink-0">
+              <span class="text-xs text-gray-400 dark:text-zinc-500">↑↓ navigate · Enter log · Esc close</span>
+              <button id="gh-search-all-link" data-testid="gh-search-all-link" type="button"
+                      class="hidden text-xs text-blue-500 dark:text-blue-400 hover:underline"
+                      onclick="ghSearchSetTab('all')">Search all dates →</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <script>
         function ghLogAnchor(btn) {
@@ -596,6 +666,206 @@
             const meta = document.createElement('meta');
             meta.name = '_csrf'; meta.content = csrfInput.value;
             document.head.appendChild(meta);
+          }
+        });
+
+        // ── Search Modal ─────────────────────────────────────────────────────
+
+        let ghSearchItems = [];
+        let ghSearchFocusIdx = -1;
+        let ghSearchTab = 'day';
+
+        function ghSearchOpen() {
+          const modal = document.getElementById('gh-search-modal');
+          modal.classList.remove('hidden');
+          ghSearchItems = [];
+          ghSearchFocusIdx = -1;
+          ghSearchTab = 'day';
+          ghSearchUpdateTabUI();
+          ghSearchCollectItems();
+          const input = document.getElementById('gh-search-input');
+          input.value = '';
+          ghSearchRenderEmpty('Start typing to filter this day\'s activity');
+          document.getElementById('gh-search-all-link').classList.add('hidden');
+          document.getElementById('gh-search-frame').src = '';
+          document.getElementById('gh-search-frame').innerHTML = '';
+          setTimeout(() => input.focus(), 50);
+        }
+
+        function ghSearchClose() {
+          document.getElementById('gh-search-modal').classList.add('hidden');
+          document.getElementById('gh-search-trigger')?.focus();
+        }
+
+        function ghSearchCollectItems() {
+          ghSearchItems = [];
+          document.querySelectorAll('[data-gh-type]').forEach(el => {
+            ghSearchItems.push({
+              type:    el.dataset.ghType,
+              repo:    el.dataset.ghRepo    || '',
+              title:   el.dataset.ghTitle   || '',
+              badge:   el.dataset.ghBadge   || '',
+              meta:    el.dataset.ghMeta    || '',
+              window:  el.dataset.ghWindow  || '',
+              logged:  el.dataset.ghLogged === 'true',
+              logId:   el.dataset.ghLogId   || '',
+              text:    ((el.dataset.ghRepo || '') + ' ' + (el.dataset.ghTitle || '') + ' ' + (el.dataset.ghBadge || '')).toLowerCase()
+            });
+          });
+        }
+
+        function ghSearchFilter(query) {
+          if (ghSearchTab !== 'day') return;
+          const q = query.trim().toLowerCase();
+          const allLink = document.getElementById('gh-search-all-link');
+          allLink.classList.toggle('hidden', q === '');
+          ghSearchClearResults();
+          if (q === '') { ghSearchRenderEmpty('Start typing to filter this day\'s activity'); return; }
+          const matched = ghSearchItems.filter(item => item.text.includes(q));
+          if (matched.length === 0) { ghSearchRenderEmpty('No matches on this day'); return; }
+          document.getElementById('gh-search-empty').classList.add('hidden');
+          ghSearchFocusIdx = -1;
+          const byType = {};
+          matched.forEach(item => { (byType[item.type] = byType[item.type] || []).push(item); });
+          const typeLabels = { PR: 'Pull Requests', Review: 'Reviews', Issue: 'Issues', Commit: 'Commits' };
+          const typeOrder  = ['PR', 'Review', 'Issue', 'Commit'];
+          const anchor = document.getElementById('gh-search-empty');
+          typeOrder.forEach(type => {
+            if (!byType[type] || byType[type].length === 0) return;
+            const header = document.createElement('div');
+            header.className = 'gh-result-item px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-zinc-500';
+            header.textContent = typeLabels[type] + ' (' + byType[type].length + ')';
+            anchor.before(header);
+            byType[type].forEach(item => {
+              const card = document.createElement('div');
+              card.className = 'gh-result-item flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800/50' + (item.logged ? ' opacity-60' : '');
+              card.dataset.ghResultLogId = item.logId;
+              card.setAttribute('role', 'option');
+              card.setAttribute('data-testid', 'gh-search-result');
+              const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+              const hi = s => q ? esc(s).replace(new RegExp('(' + esc(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'), '<strong class="text-blue-600 dark:text-blue-400">$1</strong>') : esc(s);
+              const badgeClasses = { PR: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200', Review: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', Issue: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', Commit: 'bg-gray-100 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300' };
+              const logBtn = !item.logged
+                ? `<button type="button" class="button-main-green text-xs shrink-0" data-testid="gh-search-log-it" onclick="ghSearchLogItem(event,'${item.logId}')">Log it</button>`
+                : `<span class="text-xs text-green-600 dark:text-green-400 font-medium shrink-0">✓</span>`;
+              card.innerHTML = `
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-zinc-400 mb-0.5">
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${badgeClasses[type] || ''}">${type}</span>
+                    <span class="font-mono truncate">${hi(item.repo)}</span>
+                    ${item.badge ? `<span class="text-gray-400 dark:text-zinc-500">#${esc(item.badge)}</span>` : ''}
+                  </div>
+                  <div class="text-sm text-gray-800 dark:text-zinc-100 truncate">${item.title ? hi(item.title) : `<em class="text-gray-400 dark:text-zinc-500">No title</em>`}</div>
+                </div>
+                <div class="shrink-0 text-right">
+                  <div class="text-xs text-gray-400 dark:text-zinc-500">${esc(item.window)}</div>
+                  ${item.meta ? `<div class="text-xs text-gray-500 dark:text-zinc-400">${esc(item.meta)}</div>` : ''}
+                </div>
+                ${logBtn}`;
+              anchor.before(card);
+            });
+          });
+        }
+
+        function ghSearchLogItem(e, logId) {
+          e.stopPropagation();
+          const btn = document.querySelector('[data-testid="' + logId + '"]');
+          if (!btn) return;
+          ghSearchClose();
+          btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          btn.click();
+        }
+
+        function ghSearchKeyDown(e) {
+          const results = [...document.querySelectorAll('.gh-result-item[role="option"]')];
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            ghSearchFocusIdx = Math.min(ghSearchFocusIdx + 1, results.length - 1);
+            ghSearchUpdateFocus(results);
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            ghSearchFocusIdx = Math.max(ghSearchFocusIdx - 1, 0);
+            ghSearchUpdateFocus(results);
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (ghSearchFocusIdx >= 0 && results[ghSearchFocusIdx]) {
+              const logId = results[ghSearchFocusIdx].dataset.ghResultLogId;
+              if (logId) ghSearchLogItem(e, logId);
+            } else if (ghSearchTab === 'day') {
+              const q = document.getElementById('gh-search-input').value.trim();
+              if (q) ghSearchSetTab('all');
+            }
+          } else if (e.key === 'Escape') {
+            ghSearchClose();
+          }
+        }
+
+        function ghSearchUpdateFocus(results) {
+          results.forEach((el, i) => {
+            el.classList.toggle('bg-blue-50', i === ghSearchFocusIdx);
+            el.classList.toggle('dark:bg-blue-900/30', i === ghSearchFocusIdx);
+            el.classList.toggle('ring-1', i === ghSearchFocusIdx);
+            el.classList.toggle('ring-inset', i === ghSearchFocusIdx);
+            el.classList.toggle('ring-blue-300', i === ghSearchFocusIdx);
+          });
+          if (ghSearchFocusIdx >= 0 && results[ghSearchFocusIdx]) {
+            results[ghSearchFocusIdx].scrollIntoView({ block: 'nearest' });
+          }
+        }
+
+        function ghSearchSetTab(tab) {
+          ghSearchTab = tab;
+          ghSearchFocusIdx = -1;
+          ghSearchUpdateTabUI();
+          ghSearchClearResults();
+          if (tab === 'all') {
+            const q = document.getElementById('gh-search-input').value.trim();
+            if (q) {
+              ghSearchRenderEmpty('');
+              const frame = document.getElementById('gh-search-frame');
+              frame.src = '/github-activity/search?q=' + encodeURIComponent(q);
+            } else {
+              ghSearchRenderEmpty('Type to search across all synced dates');
+            }
+          } else {
+            document.getElementById('gh-search-frame').src = '';
+            document.getElementById('gh-search-frame').innerHTML = '';
+            ghSearchFilter(document.getElementById('gh-search-input').value);
+          }
+        }
+
+        function ghSearchUpdateTabUI() {
+          const dayBtn = document.getElementById('gh-search-tab-day');
+          const allBtn = document.getElementById('gh-search-tab-all');
+          const active   = 'border-blue-300 dark:border-blue-700 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+          const inactive = 'border-gray-200 dark:border-zinc-600 bg-white text-gray-600 dark:bg-zinc-800 dark:text-zinc-300';
+          if (ghSearchTab === 'day') {
+            dayBtn.className = 'text-xs px-3 py-1 rounded-full border ' + active;
+            allBtn.className = 'text-xs px-3 py-1 rounded-full border ' + inactive;
+          } else {
+            dayBtn.className = 'text-xs px-3 py-1 rounded-full border ' + inactive;
+            allBtn.className = 'text-xs px-3 py-1 rounded-full border ' + active;
+          }
+        }
+
+        function ghSearchClearResults() {
+          document.querySelectorAll('.gh-result-item').forEach(el => el.remove());
+        }
+
+        function ghSearchRenderEmpty(msg) {
+          const el = document.getElementById('gh-search-empty');
+          el.textContent = msg;
+          el.classList.toggle('hidden', msg === '');
+        }
+
+        document.addEventListener('keydown', function(e) {
+          if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            const modal = document.getElementById('gh-search-modal');
+            if (modal.classList.contains('hidden')) ghSearchOpen(); else ghSearchClose();
+          } else if (e.key === 'Escape') {
+            const modal = document.getElementById('gh-search-modal');
+            if (!modal.classList.contains('hidden')) ghSearchClose();
           }
         });
       </script>

@@ -756,4 +756,165 @@ class GitHubActivityControllerTest implements ControllerTest {
             assertThat(standalone.get(0).suggestedDuration()).isEqualTo("00:30");
         }
     }
+
+    // ── search endpoint ───────────────────────────────────────────────────────
+
+    @Nested
+    class Search {
+
+        @Test
+        void ensureSearchReturnsEmptyResultsForBlankQuery() throws Exception {
+            stubCommonDependencies("tronical");
+
+            perform(get("/github-activity/search").param("q", "  ").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("github-activity/search-results"))
+                .andExpect(model().attribute("searchResultGroups", List.of()))
+                .andExpect(model().attribute("searchQuery", ""));
+        }
+
+        @Test
+        void ensureSearchReturnsEmptyResultsWhenNoGithubLogin() throws Exception {
+            final var noLogin = mock(de.focusshift.zeiterfassung.user.UserSettings.class);
+            when(noLogin.githubLoginVerified()).thenReturn(false);
+            when(noLogin.githubLogin()).thenReturn(java.util.Optional.empty());
+            when(userSettingsService.getUserSettings(any())).thenReturn(noLogin);
+            when(userSettingsProvider.zoneId()).thenReturn(ZoneOffset.UTC);
+
+            perform(get("/github-activity/search").param("q", "slint").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("github-activity/search-results"))
+                .andExpect(model().attribute("searchResultGroups", List.of()));
+        }
+
+        @Test
+        void ensureSearchReturnsEmptyResultsWhenRepositoryReturnsNothing() throws Exception {
+            stubCommonDependencies("tronical");
+            when(eventRepository.searchEvents(anyString(), anyString(), any(), any()))
+                .thenReturn(List.of());
+
+            perform(get("/github-activity/search").param("q", "nomatch").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("github-activity/search-results"))
+                .andExpect(model().attribute("searchResultGroups", List.of()))
+                .andExpect(model().attribute("searchQuery", "nomatch"));
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureSearchGroupsResultsByDate() throws Exception {
+            stubCommonDependencies("tronical");
+            final var pr1 = prEntity("e1", "slint-ui/slint", "100",
+                "Fix layout", "Merged PR #100: Fix layout");
+            pr1.setEventTimestamp(Instant.parse("2026-06-03T10:00:00Z"));
+            final var pr2 = prEntity("e2", "slint-ui/slint", "101",
+                "Fix layout too", "Opened PR #101: Fix layout too");
+            pr2.setEventTimestamp(Instant.parse("2026-06-02T09:00:00Z"));
+            when(eventRepository.searchEvents(anyString(), eq("layout"), any(), any()))
+                .thenReturn(List.of(pr1, pr2));
+
+            final var result = perform(get("/github-activity/search").param("q", "layout").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andReturn();
+
+            final var groups = (List<?>) result.getModelAndView().getModel().get("searchResultGroups");
+            assertThat(groups).hasSize(2);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureSearchMapsEventTypesToCorrectSearchType() throws Exception {
+            stubCommonDependencies("tronical");
+            final var pr    = prEntity("e1", "slint-ui/slint", "100", "Fix slint", "Merged PR #100: Fix slint");
+            final var review = reviewEntity("e2", "slint-ui/slint", "101", "Slint review", "Approved PR #101: Slint review");
+            final var issue  = issueEntity("e3", "slint-ui/slint", "202", "Slint issue", "Opened issue #202: Slint issue");
+            final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix slint widget");
+            when(eventRepository.searchEvents(anyString(), eq("slint"), any(), any()))
+                .thenReturn(List.of(pr, review, issue, commit));
+
+            final var result = perform(get("/github-activity/search").param("q", "slint").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andReturn();
+
+            final var groups = (List<GitHubActivityController.GitHubSearchResultGroup>)
+                result.getModelAndView().getModel().get("searchResultGroups");
+            // All on the same date → one group
+            assertThat(groups).hasSize(1);
+            final var items = groups.get(0).items();
+            assertThat(items).extracting(GitHubActivityController.GitHubSearchResultItem::type)
+                .containsExactlyInAnyOrder("PR", "Review", "Issue", "Commit");
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureSearchUsesDefaultDateRangeOfLast30DaysWhenNoneProvided() throws Exception {
+            stubCommonDependencies("tronical");
+            when(eventRepository.searchEvents(anyString(), anyString(), any(), any()))
+                .thenReturn(List.of());
+
+            perform(get("/github-activity/search").param("q", "slint").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk());
+
+            final var fromCaptor = org.mockito.ArgumentCaptor.forClass(java.time.Instant.class);
+            final var toCaptor   = org.mockito.ArgumentCaptor.forClass(java.time.Instant.class);
+            org.mockito.Mockito.verify(eventRepository).searchEvents(anyString(), anyString(), fromCaptor.capture(), toCaptor.capture());
+
+            final java.time.Duration range = java.time.Duration.between(fromCaptor.getValue(), toCaptor.getValue());
+            // from = today-30, to = today+1 → ~31 days
+            assertThat(range.toDays()).isBetween(30L, 32L);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureSearchRespectsExplicitDateRangeParameters() throws Exception {
+            stubCommonDependencies("tronical");
+            when(eventRepository.searchEvents(anyString(), anyString(), any(), any()))
+                .thenReturn(List.of());
+
+            perform(get("/github-activity/search")
+                .param("q", "slint")
+                .param("from", "2026-05-01")
+                .param("to", "2026-05-07")
+                .with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk());
+
+            final var fromCaptor = org.mockito.ArgumentCaptor.forClass(java.time.Instant.class);
+            final var toCaptor   = org.mockito.ArgumentCaptor.forClass(java.time.Instant.class);
+            org.mockito.Mockito.verify(eventRepository).searchEvents(anyString(), anyString(), fromCaptor.capture(), toCaptor.capture());
+
+            // from=2026-05-01 UTC, to=2026-05-08 UTC (exclusive end)
+            assertThat(fromCaptor.getValue()).isEqualTo(Instant.parse("2026-05-01T00:00:00Z"));
+            assertThat(toCaptor.getValue()).isEqualTo(Instant.parse("2026-05-08T00:00:00Z"));
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureSearchStripsWhitespaceFromQuery() throws Exception {
+            stubCommonDependencies("tronical");
+            when(eventRepository.searchEvents(anyString(), eq("slint"), any(), any()))
+                .thenReturn(List.of());
+
+            perform(get("/github-activity/search").param("q", "  slint  ").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("searchQuery", "slint"));
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureSearchResultItemContainsLoggedState() throws Exception {
+            stubCommonDependencies("tronical");
+            final var pr = prEntity("e1", "slint-ui/slint", "100", "Fix bug", "Merged PR #100: Fix bug");
+            pr.setLoggedAt(Instant.parse("2026-06-03T12:00:00Z"));
+            when(eventRepository.searchEvents(anyString(), anyString(), any(), any()))
+                .thenReturn(List.of(pr));
+
+            final var result = perform(get("/github-activity/search").param("q", "slint").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andReturn();
+
+            final var groups = (List<GitHubActivityController.GitHubSearchResultGroup>)
+                result.getModelAndView().getModel().get("searchResultGroups");
+            assertThat(groups.get(0).items().get(0).logged()).isTrue();
+        }
+    }
 }

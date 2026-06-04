@@ -465,4 +465,78 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         };
     }
 
+    @GetMapping("/search")
+    String search(@RequestParam(required = false) String q,
+                  @RequestParam(required = false) LocalDate from,
+                  @RequestParam(required = false) LocalDate to,
+                  @CurrentUser CurrentOidcUser currentUser,
+                  Model model) {
+
+        final String query = q != null ? q.strip() : "";
+        model.addAttribute("searchQuery", query);
+
+        if (query.isBlank()) {
+            model.addAttribute("searchResultGroups", List.of());
+            return "github-activity/search-results";
+        }
+
+        final UserSettings userSettings = userSettingsService.getUserSettings(currentUser.getUserIdComposite());
+        if (!userSettings.githubLoginVerified() || userSettings.githubLogin().isEmpty()) {
+            model.addAttribute("searchResultGroups", List.of());
+            return "github-activity/search-results";
+        }
+
+        final String login = userSettings.githubLogin().get();
+        final ZoneId zone = userSettingsProvider.zoneId();
+
+        final LocalDate effectiveTo = to != null ? to : LocalDate.now();
+        final LocalDate effectiveFrom = from != null ? from : effectiveTo.minusDays(30);
+
+        final Instant fromInstant = effectiveFrom.atStartOfDay(zone).toInstant();
+        final Instant toInstant = effectiveTo.plusDays(1).atStartOfDay(zone).toInstant();
+
+        final List<GitHubRawEventEntity> raw = eventRepository.searchEvents(login, query, fromInstant, toInstant);
+
+        final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("EEE d MMM yyyy");
+        final DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
+
+        final Map<LocalDate, List<GitHubRawEventEntity>> byDate = new LinkedHashMap<>();
+        for (GitHubRawEventEntity e : raw) {
+            byDate.computeIfAbsent(e.getEventTimestamp().atZone(zone).toLocalDate(),
+                k -> new ArrayList<>()).add(e);
+        }
+
+        final List<GitHubSearchResultGroup> groups = byDate.entrySet().stream()
+            .map(entry -> new GitHubSearchResultGroup(
+                dateFmt.withZone(zone).format(entry.getKey().atStartOfDay(zone).toInstant()),
+                entry.getKey(),
+                entry.getValue().stream()
+                    .map(e -> new GitHubSearchResultItem(
+                        deriveSearchType(e),
+                        e.getRepoName(),
+                        e.getAnchorId(),
+                        resolveAnchorTitle(e, List.of(e)),
+                        timeFmt.withZone(zone).format(e.getEventTimestamp()),
+                        e.getLoggedAt() != null))
+                    .toList()))
+            .toList();
+
+        model.addAttribute("searchResultGroups", groups);
+        return "github-activity/search-results";
+    }
+
+    private String deriveSearchType(GitHubRawEventEntity e) {
+        if ("ISSUE".equals(e.getAnchorType())) return "Issue";
+        if ("PR".equals(e.getAnchorType()) && REVIEW_EVENT_TYPES.contains(e.getEventType())) return "Review";
+        if ("PR".equals(e.getAnchorType())) return "PR";
+        return "Commit";
+    }
+
+    record GitHubSearchResultItem(
+        String type, String repoName, String anchorId,
+        String title, String time, boolean logged) {}
+
+    record GitHubSearchResultGroup(
+        String dateLabel, LocalDate date, List<GitHubSearchResultItem> items) {}
+
 }

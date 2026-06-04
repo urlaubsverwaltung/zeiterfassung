@@ -44,6 +44,22 @@ public interface GitHubRawEventRepository extends JpaRepository<GitHubRawEventEn
     java.util.List<GitHubRawEventEntity> findByGithubUsernameAndAnchorTypeAndEventType(
         String githubUsername, String anchorType, String eventType);
 
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT e FROM GitHubRawEventEntity e " +
+        "WHERE e.githubUsername = :username " +
+        "AND e.dismissed = false " +
+        "AND e.eventTimestamp >= :from " +
+        "AND e.eventTimestamp < :to " +
+        "AND (LOWER(e.repoName) LIKE LOWER(CONCAT('%', :query, '%')) " +
+        "  OR LOWER(COALESCE(e.anchorTitle, '')) LIKE LOWER(CONCAT('%', :query, '%')) " +
+        "  OR LOWER(e.eventSummary) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+        "ORDER BY e.eventTimestamp DESC")
+    List<GitHubRawEventEntity> searchEvents(
+        @org.springframework.data.repository.query.Param("username") String username,
+        @org.springframework.data.repository.query.Param("query") String query,
+        @org.springframework.data.repository.query.Param("from") java.time.Instant from,
+        @org.springframework.data.repository.query.Param("to") java.time.Instant to);
+
     @org.springframework.transaction.annotation.Transactional
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query(

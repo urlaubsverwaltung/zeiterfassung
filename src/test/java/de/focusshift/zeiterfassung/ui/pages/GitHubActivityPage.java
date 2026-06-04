@@ -169,4 +169,54 @@ public class GitHubActivityPage {
     public Locator standaloneCommitLinks() {
         return standaloneSection().locator("a[href*='/commit/']");
     }
+
+    // ── Search modal ──────────────────────────────────────────────────────────
+
+    public Locator searchTrigger() {
+        return page.getByTestId("gh-search-trigger");
+    }
+
+    public Locator searchModal() {
+        return page.getByTestId("gh-search-modal");
+    }
+
+    public Locator searchInput() {
+        return page.getByTestId("gh-search-input");
+    }
+
+    public Locator searchTabDay() {
+        return page.getByTestId("gh-search-tab-day");
+    }
+
+    public Locator searchTabAll() {
+        return page.getByTestId("gh-search-tab-all");
+    }
+
+    public Locator searchResults() {
+        return page.getByTestId("gh-search-results");
+    }
+
+    public Locator searchResultItems() {
+        return page.getByTestId("gh-search-result");
+    }
+
+    public Locator searchEmptyState() {
+        return page.getByTestId("gh-search-empty");
+    }
+
+    public Locator searchAllDatesLink() {
+        return page.getByTestId("gh-search-all-link");
+    }
+
+    public Locator searchLogItButtons() {
+        return page.getByTestId("gh-search-log-it");
+    }
+
+    public void openSearchModal() {
+        searchTrigger().click();
+    }
+
+    public void typeInSearch(String text) {
+        searchInput().fill(text);
+    }
 }

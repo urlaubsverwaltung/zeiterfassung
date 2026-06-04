@@ -1,0 +1,57 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<turbo-frame id="gh-search-frame">
+
+  <div th:if="${#lists.isEmpty(searchResultGroups)}"
+       class="px-4 py-8 text-sm text-center text-gray-400 dark:text-zinc-500">
+    <span th:if="${#strings.isEmpty(searchQuery)}">Type to search across all synced dates</span>
+    <span th:if="${!#strings.isEmpty(searchQuery)}"
+          th:text="|No results for &quot;${searchQuery}&quot;|"></span>
+  </div>
+
+  <div th:each="group : ${searchResultGroups}" class="mb-2">
+
+    <div class="flex items-center px-4 py-1.5">
+      <span class="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-zinc-500"
+            th:text="${group.dateLabel()}"></span>
+      <a th:href="@{/github-activity(date=${group.date()})}"
+         class="ml-auto text-xs text-blue-500 dark:text-blue-400 hover:underline">Open this day →</a>
+    </div>
+
+    <div th:each="item : ${group.items()}"
+         data-testid="gh-search-result"
+         class="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800/50">
+
+      <span th:if="${item.type() == 'PR'}"
+            class="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">PR</span>
+      <span th:if="${item.type() == 'Review'}"
+            class="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Review</span>
+      <span th:if="${item.type() == 'Issue'}"
+            class="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Issue</span>
+      <span th:if="${item.type() == 'Commit'}"
+            class="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300">Commit</span>
+
+      <div class="flex-1 min-w-0">
+        <div class="text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-1.5 mb-0.5">
+          <span class="font-mono truncate" th:text="${item.repoName()}"></span>
+          <span th:if="${item.anchorId() != null}"
+                class="text-gray-400">#<span th:text="${item.anchorId()}"></span></span>
+        </div>
+        <div class="text-sm text-gray-800 dark:text-zinc-100 truncate"
+             th:text="${!#strings.isEmpty(item.title())} ? ${item.title()} : ${item.time()}"></div>
+      </div>
+
+      <div class="shrink-0 text-right">
+        <div class="text-xs text-gray-400 dark:text-zinc-500" th:text="${item.time()}"></div>
+        <span th:if="${item.logged()}" class="text-xs text-green-600 dark:text-green-400 font-medium">✓</span>
+      </div>
+
+    </div>
+  </div>
+
+</turbo-frame>
+
+</body>
+</html>

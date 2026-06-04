@@ -725,6 +725,340 @@ class GitHubActivityUIIT {
         }
     }
 
+    // ── Search modal ──────────────────────────────────────────────────────────
+
+    @Nested
+    class SearchModal {
+
+        // ── trigger & open/close ──────────────────────────────────────────────
+
+        @Test
+        void ensureSearchTriggerButtonIsVisible(Page page) {
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            assertThat(activityPage.searchTrigger()).isVisible();
+        }
+
+        @Test
+        void ensureSearchModalOpensByClickingTrigger(Page page) {
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+
+            assertThat(activityPage.searchModal()).isVisible();
+            assertThat(activityPage.searchInput()).isVisible();
+            assertThat(activityPage.searchTabDay()).isVisible();
+            assertThat(activityPage.searchTabAll()).isVisible();
+        }
+
+        @Test
+        void ensureSearchModalOpensWithKeyboardShortcut(Page page) {
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            page.keyboard().press("Meta+k");
+
+            assertThat(activityPage.searchModal()).isVisible();
+        }
+
+        @Test
+        void ensureSearchModalClosesOnEscapeKey(Page page) {
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+            assertThat(activityPage.searchModal()).isVisible();
+
+            page.keyboard().press("Escape");
+
+            assertThat(activityPage.searchModal()).isHidden();
+        }
+
+        @Test
+        void ensureSearchModalClosesOnBackdropClick(Page page) {
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+            // Click the backdrop element directly (first child of the modal overlay)
+            page.locator("#gh-search-modal > div").first().click();
+
+            assertThat(activityPage.searchModal()).isHidden();
+        }
+
+        // ── This day filter ───────────────────────────────────────────────────
+
+        @Test
+        void ensureSearchFilterShowsMatchingPrInThisDayMode(Page page) {
+            final var pr1 = prEntity("e1", "slint-ui/slint", "100",
+                "Fix layout bug", "Merged PR #100: Fix layout bug");
+            final var pr2 = prEntity("e2", "slint-ui/slint", "101",
+                "Add dark mode", "Opened PR #101: Add dark mode");
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of(pr1, pr2));
+            when(gitHubRawEventRepository
+                .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                    anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(Optional.empty());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+            activityPage.typeInSearch("layout");
+
+            assertThat(activityPage.searchResultItems()).hasCount(1);
+            assertThat(activityPage.searchResultItems().first()).containsText("Fix layout bug");
+        }
+
+        @Test
+        void ensureSearchFilterShowsResultsFromAllSections(Page page) {
+            final var pr     = prEntity("e1", "slint-ui/slint", "100", "Fix renderer", "Merged PR #100: Fix renderer");
+            final var review = reviewEntity("e2", "slint-ui/slint", "101", "Renderer review", "Approved PR #101: Renderer review");
+            final var issue  = issueEntity("e3", "slint-ui/slint", "202", "Renderer crash", "Opened issue #202: Renderer crash");
+            final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix renderer path");
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of(pr, review, issue, commit));
+            when(gitHubRawEventRepository
+                .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                    anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(Optional.empty());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+            activityPage.typeInSearch("renderer");
+
+            assertThat(activityPage.searchResultItems()).hasCount(4);
+        }
+
+        @Test
+        void ensureSearchFilterShowsNoMatchStateWhenNothingMatches(Page page) {
+            final var pr = prEntity("e1", "slint-ui/slint", "100", "Fix layout", "Merged PR #100: Fix layout");
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of(pr));
+            when(gitHubRawEventRepository
+                .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                    anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(Optional.empty());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+            activityPage.typeInSearch("zzznomatch");
+
+            assertThat(activityPage.searchEmptyState()).isVisible();
+            assertThat(activityPage.searchEmptyState()).containsText("No matches");
+            assertThat(activityPage.searchResultItems()).hasCount(0);
+        }
+
+        @Test
+        void ensureSearchFilterIsCaseInsensitive(Page page) {
+            final var pr = prEntity("e1", "slint-ui/slint", "100",
+                "Fix Layout Bug", "Merged PR #100: Fix Layout Bug");
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of(pr));
+            when(gitHubRawEventRepository
+                .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                    anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(Optional.empty());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+            activityPage.typeInSearch("LAYOUT");
+
+            assertThat(activityPage.searchResultItems()).hasCount(1);
+        }
+
+        @Test
+        void ensureSearchAllDatesLinkAppearsAfterTyping(Page page) {
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+            assertThat(activityPage.searchAllDatesLink()).isHidden();
+
+            activityPage.typeInSearch("slint");
+
+            assertThat(activityPage.searchAllDatesLink()).isVisible();
+        }
+
+        // ── All dates tab ─────────────────────────────────────────────────────
+
+        @Test
+        void ensureClickingAllDatesTabSwitchesMode(Page page) {
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of());
+            when(gitHubRawEventRepository.searchEvents(anyString(), anyString(), any(), any()))
+                .thenReturn(List.of());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+            activityPage.typeInSearch("slint");
+            activityPage.searchTabAll().click();
+
+            // "All dates" tab should now appear active (contains active colour class)
+            assertThat(activityPage.searchTabAll()).hasClass(java.util.regex.Pattern.compile("bg-blue-100|bg-blue-900"));
+        }
+
+        @Test
+        void ensureAllDatesSearchShowsServerResults(Page page) {
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of());
+            final var pr = prEntity("e1", "slint-ui/slint", "200",
+                "Fix rendering pipeline", "Merged PR #200: Fix rendering pipeline");
+            pr.setEventTimestamp(Instant.parse("2026-05-20T10:00:00Z"));
+            when(gitHubRawEventRepository.searchEvents(anyString(), anyString(), any(), any()))
+                .thenReturn(List.of(pr));
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+            activityPage.typeInSearch("rendering");
+            activityPage.searchTabAll().click();
+
+            assertThat(activityPage.searchResultItems()).hasCount(1);
+            assertThat(activityPage.searchResultItems().first()).containsText("Fix rendering pipeline");
+        }
+
+        @Test
+        void ensureAllDatesSearchShowsEmptyStateWhenNoResults(Page page) {
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of());
+            when(gitHubRawEventRepository.searchEvents(anyString(), anyString(), any(), any()))
+                .thenReturn(List.of());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+            activityPage.typeInSearch("zzznomatch");
+            activityPage.searchTabAll().click();
+
+            assertThat(page.getByTestId("gh-search-result")).hasCount(0);
+        }
+
+        // ── Log it from modal ─────────────────────────────────────────────────
+
+        @Test
+        void ensureClickingLogItInModalClosesModalAndOpensInlineForm(Page page) {
+            final var pr = prEntity("e1", "slint-ui/slint", "100", "Fix bug", "Merged PR #100: Fix bug");
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of(pr));
+            when(gitHubRawEventRepository
+                .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                    anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(Optional.empty());
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            activityPage.openSearchModal();
+            activityPage.typeInSearch("fix");
+            activityPage.searchLogItButtons().first().click();
+
+            assertThat(activityPage.searchModal()).isHidden();
+            assertThat(activityPage.inlineFormSaveButton()).isVisible();
+        }
+    }
+
     // ── Standalone commits section ────────────────────────────────────────────
 
     @Nested
