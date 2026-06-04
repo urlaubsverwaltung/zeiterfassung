@@ -19,10 +19,26 @@ public interface GitHubRawEventRepository extends JpaRepository<GitHubRawEventEn
     java.util.Optional<GitHubRawEventEntity> findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
         String githubUsername, String repoName, String anchorType, String anchorId);
 
+    /**
+     * Returns "repo|branch" keys for all PR head branches whose PullRequestEvent
+     * was stored on or before {@code upTo}. Used to scope the PR-branch filter to
+     * the selected day, preventing retroactive hiding of standalone commits that
+     * were pushed before the PR was opened.
+     */
     @org.springframework.data.jpa.repository.Query(
         "SELECT DISTINCT e.repoName || '|' || e.headBranch FROM GitHubRawEventEntity e " +
-        "WHERE e.githubUsername = :username AND e.headBranch IS NOT NULL AND e.headBranch <> ''")
-    java.util.Set<String> findDistinctRepoAndHeadBranchesByUsername(@org.springframework.data.repository.query.Param("username") String username);
+        "WHERE e.githubUsername = :username AND e.headBranch IS NOT NULL AND e.headBranch <> '' " +
+        "AND e.eventTimestamp <= :upTo")
+    java.util.Set<String> findDistinctRepoAndHeadBranchesByUsernameUpToDate(
+        @org.springframework.data.repository.query.Param("username") String username,
+        @org.springframework.data.repository.query.Param("upTo") java.time.Instant upTo);
+
+    /**
+     * Returns the most recent PR entity for the given user/repo/branch combination.
+     * Used to synthesize a PR anchor on days where only commits were pushed (no PullRequestEvent).
+     */
+    java.util.Optional<GitHubRawEventEntity> findFirstByGithubUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
+        String githubUsername, String repoName, String headBranch);
 
     @org.springframework.transaction.annotation.Transactional
     @org.springframework.data.jpa.repository.Modifying

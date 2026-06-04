@@ -53,7 +53,7 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
         when(gitHubSyncService.isConfigured()).thenReturn(true);
         when(gitHubSyncService.missingConfig()).thenReturn("");
         when(gitHubSyncService.getLastSyncTime(anyString())).thenReturn(null);
-        when(gitHubRawEventRepository.findDistinctRepoAndHeadBranchesByUsername(anyString()))
+        when(gitHubRawEventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
             .thenReturn(Set.of());
     }
 

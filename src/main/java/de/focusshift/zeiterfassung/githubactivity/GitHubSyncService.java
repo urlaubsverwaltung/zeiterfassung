@@ -420,9 +420,18 @@ public class GitHubSyncService {
                 final int number = issue != null ? toInt(issue.get("number")) : 0;
                 final String title = issue != null ? strOrEmpty(issue.get("title")) : "";
                 final String body = comment != null ? firstLine(strOrEmpty(comment.get("body")), 120) : "";
-                final String summary = "Commented on issue #" + number + (title.isEmpty() ? "" : ": " + title)
-                    + (body.isEmpty() ? "" : " — " + body);
-                yield new String[]{"ISSUE", String.valueOf(number), title, "💬", summary};
+                // GitHub fires IssueCommentEvent for PR thread comments too — detect via
+                // the "pull_request" key that GitHub adds to the issue object for PRs.
+                final boolean isPrComment = issue != null && issue.containsKey("pull_request");
+                if (isPrComment) {
+                    final String summary = "Commented on PR #" + number + (title.isEmpty() ? "" : ": " + title)
+                        + (body.isEmpty() ? "" : " — " + body);
+                    yield new String[]{"PR", String.valueOf(number), title, "💬", summary};
+                } else {
+                    final String summary = "Commented on issue #" + number + (title.isEmpty() ? "" : ": " + title)
+                        + (body.isEmpty() ? "" : " — " + body);
+                    yield new String[]{"ISSUE", String.valueOf(number), title, "💬", summary};
+                }
             }
             case "CreateEvent" -> {
                 final String refType = strOrEmpty(payload.get("ref_type"));

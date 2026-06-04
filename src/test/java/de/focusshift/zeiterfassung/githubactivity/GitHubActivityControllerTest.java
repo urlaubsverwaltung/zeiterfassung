@@ -32,6 +32,7 @@ import static org.mockito.Mockito.mock;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -82,7 +83,7 @@ class GitHubActivityControllerTest implements ControllerTest {
         when(timeEntryLockService.isLocked(any(LocalDate.class))).thenReturn(false);
         when(syncService.isConfigured()).thenReturn(true);
         when(syncService.getLastSyncTime(anyString())).thenReturn(null);
-        when(eventRepository.findDistinctRepoAndHeadBranchesByUsername(anyString())).thenReturn(Set.of());
+        when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any())).thenReturn(Set.of());
     }
 
     private GitHubRawEventEntity entity(String eventId, String type, String repo,
@@ -382,8 +383,8 @@ class GitHubActivityControllerTest implements ControllerTest {
                 "slint-ui/slint", "nigel/my-feature", "Very simple screen");
             when(eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                 anyString(), any(), any())).thenReturn(List.of(commit));
-            // The branch is a known PR head branch
-            when(eventRepository.findDistinctRepoAndHeadBranchesByUsername(anyString()))
+            // The branch is a known PR head branch (opened on or before the selected date)
+            when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
                 .thenReturn(Set.of("slint-ui/slint|nigel/my-feature"));
 
             final var result = perform(get("/github-activity").with(oidcSubject("user-uuid")))
@@ -410,6 +411,99 @@ class GitHubActivityControllerTest implements ControllerTest {
             final List<ActivityAnchor> standalone = (List<ActivityAnchor>)
                 result.getModelAndView().getModel().get("standaloneAnchors");
             assertThat(standalone).isEmpty();
+        }
+    }
+
+    // ── synthetic PR anchors (commit-only days) ───────────────────────────────
+
+    @Nested
+    class SyntheticPrAnchors {
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensurePrAppearsInPrSectionOnCommitOnlyDay() throws Exception {
+            stubCommonDependencies("tronical");
+            final var commit = commitEntity("abc123def456abc123def456abc123def456abc1",
+                "slint-ui/slint", "nigel/my-feature", "Fix crash");
+            when(eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(commit));
+            when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
+                .thenReturn(Set.of("slint-ui/slint|nigel/my-feature"));
+
+            // The PR entity for that branch
+            final var prEntity = prEntity("e-pr", "slint-ui/slint", "11940",
+                "Simple remote viewer", "Opened PR #11940: Simple remote viewer");
+            prEntity.setHeadBranch("nigel/my-feature");
+            when(eventRepository.findFirstByGithubUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
+                anyString(), eq("slint-ui/slint"), eq("nigel/my-feature")))
+                .thenReturn(java.util.Optional.of(prEntity));
+            when(eventRepository.findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(java.util.Optional.of(prEntity));
+
+            final var result = perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andReturn();
+
+            final List<ActivityAnchor> prAnchors = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("prAnchors");
+            final List<ActivityAnchor> standalone = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("standaloneAnchors");
+            assertThat(prAnchors).hasSize(1);
+            assertThat(prAnchors.get(0).anchorId()).isEqualTo("11940");
+            assertThat(prAnchors.get(0).anchorTitle()).isEqualTo("Simple remote viewer");
+            assertThat(standalone).isEmpty();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureCommitsBeforePrOpenedShowAsStandalone() throws Exception {
+            stubCommonDependencies("tronical");
+            final var commit = commitEntity("abc123", "slint-ui/slint", "nigel/my-feature", "Initial commit");
+            when(eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(commit));
+            // On this selected day, the PR was NOT yet opened (empty prHeadKeys)
+            when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
+                .thenReturn(Set.of());
+
+            final var result = perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andReturn();
+
+            final List<ActivityAnchor> standalone = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("standaloneAnchors");
+            final List<ActivityAnchor> prAnchors = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("prAnchors");
+            assertThat(standalone).hasSize(1); // shows as standalone — PR not opened yet
+            assertThat(prAnchors).isEmpty();
+        }
+    }
+
+    // ── IssueCommentEvent on PRs ──────────────────────────────────────────────
+
+    @Nested
+    class IssueCommentOnPr {
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureIssueCommentEventOnPrAppearsInReviewAnchors() throws Exception {
+            stubCommonDependencies("tronical");
+            // IssueCommentEvent where the issue object has a "pull_request" key → stored as PR type
+            final var prComment = entity("e-prcomment", "IssueCommentEvent", "slint-ui/slint",
+                "PR", "11952", "Expose Keys API",
+                "💬", "Commented on PR #11952: Expose Keys API — Still missing from docs",
+                Instant.parse("2026-06-03T14:00:00Z"));
+            when(eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(prComment));
+
+            final var result = perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andReturn();
+
+            final List<ActivityAnchor> reviewAnchors = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("reviewAnchors");
+            final List<ActivityAnchor> issueAnchors = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("issueAnchors");
+            assertThat(reviewAnchors).hasSize(1);
+            assertThat(reviewAnchors.get(0).anchorId()).isEqualTo("11952");
+            assertThat(issueAnchors).isEmpty();
         }
     }
 

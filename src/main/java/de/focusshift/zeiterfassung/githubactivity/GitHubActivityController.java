@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @Controller
 @RequestMapping("/github-activity")
@@ -41,7 +42,8 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     private static final DateTimeFormatter OPENED_DATE_FMT = DateTimeFormatter.ofPattern("MMM d");
     private static final long MIN_SUGGESTED_MINUTES = 15;
     private static final Set<String> REVIEW_EVENT_TYPES = Set.of(
-        "PullRequestReviewEvent", "PullRequestReviewCommentEvent");
+        "PullRequestReviewEvent", "PullRequestReviewCommentEvent",
+        "IssueCommentEvent"); // IssueCommentEvent on PRs is routed to anchorType=PR by the sync service
 
     private final UserSettingsService userSettingsService;
     private final UserSettingsProvider userSettingsProvider;
@@ -106,9 +108,11 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         final List<ActivityAnchor> issueAnchors = allAnchors.stream()
             .filter(a -> "ISSUE".equals(a.anchorType()))
             .toList();
-        // Build a set of "repo|branch" keys for all branches known to be PR heads,
-        // so we can exclude those commits from the Standalone section.
-        final Set<String> prHeadKeys = eventRepository.findDistinctRepoAndHeadBranchesByUsername(login);
+
+        // Scope to PRs opened on or before the selected day — prevents retroactively hiding
+        // standalone commits that were pushed before a PR was opened for that branch.
+        final Set<String> prHeadKeys = eventRepository
+            .findDistinctRepoAndHeadBranchesByUsernameUpToDate(login, dayEnd);
 
         final List<ActivityAnchor> standaloneAnchors = allAnchors.stream()
             .filter(a -> "REPO".equals(a.anchorType()))
@@ -119,14 +123,31 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                 e -> !e.summary().startsWith("Created ") && !e.summary().startsWith("Deleted ")))
             .toList();
 
+        // Synthesize PR anchors for days where only commits were pushed (no PullRequestEvent).
+        // Without this, a day with push-only activity on a PR branch would show nothing at all.
+        final Set<String> existingPrKeys = prAnchors.stream()
+            .map(a -> a.repoName() + "|" + a.anchorId())
+            .collect(java.util.stream.Collectors.toSet());
+        final List<ActivityAnchor> syntheticPrAnchors = allAnchors.stream()
+            .filter(a -> "REPO".equals(a.anchorType()))
+            .filter(a -> a.anchorId() != null && prHeadKeys.contains(a.repoName() + "|" + a.anchorId()))
+            .filter(a -> a.events().stream().anyMatch(
+                e -> !e.summary().startsWith("Created ") && !e.summary().startsWith("Deleted ")))
+            .flatMap(repoAnchor -> buildSyntheticPrAnchor(repoAnchor, existingPrKeys, login, zone, selectedDate))
+            .toList();
+        final List<ActivityAnchor> allPrAnchors = Stream.concat(
+            prAnchors.stream(), syntheticPrAnchors.stream()).toList();
+
         model.addAttribute("date", selectedDate);
         model.addAttribute("prevDate", selectedDate.minusDays(1));
         model.addAttribute("nextDate", selectedDate.plusDays(1));
-        model.addAttribute("prAnchors", prAnchors);
+        model.addAttribute("prAnchors", allPrAnchors);
         model.addAttribute("reviewAnchors", reviewAnchors);
         model.addAttribute("issueAnchors", issueAnchors);
         model.addAttribute("standaloneAnchors", standaloneAnchors);
-        model.addAttribute("hasActivity", !allAnchors.isEmpty());
+        model.addAttribute("hasActivity",
+            !allPrAnchors.isEmpty() || !reviewAnchors.isEmpty()
+            || !issueAnchors.isEmpty() || !standaloneAnchors.isEmpty());
         model.addAttribute("userLocalId", userLocalId);
         model.addAttribute("isLocked", timeEntryLockService.isLocked(selectedDate));
         model.addAttribute("syncConfigured", syncService.isConfigured());
@@ -304,6 +325,44 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                 anchorLogged
             );
         }).toList();
+    }
+
+    /**
+     * For a REPO anchor (commits on a PR branch) that has no PullRequestEvent on the selected day,
+     * look up the PR entity and produce a synthetic PR anchor so the PR appears in the PR section.
+     * Returns an empty stream if the PR is already present or cannot be found.
+     */
+    private Stream<ActivityAnchor> buildSyntheticPrAnchor(ActivityAnchor repoAnchor,
+                                                           Set<String> existingPrKeys,
+                                                           String login, ZoneId zone,
+                                                           LocalDate selectedDate) {
+        return eventRepository
+            .findFirstByGithubUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
+                login, repoAnchor.repoName(), repoAnchor.anchorId())
+            .filter(pr -> !existingPrKeys.contains(pr.getRepoName() + "|" + pr.getAnchorId()))
+            .map(pr -> {
+                final String anchorTitle = resolveAnchorTitle(pr, List.of(pr));
+                final String anchorRef = "PR #" + pr.getAnchorId();
+                final String prefilledComment = pr.getRepoName() + " " + anchorRef
+                    + (anchorTitle.isBlank() ? "" : ": " + anchorTitle);
+                return new ActivityAnchor(
+                    pr.getRepoName(),
+                    "PR",
+                    pr.getAnchorId(),
+                    anchorTitle,
+                    repoAnchor.events(),           // commit events → drive the time window
+                    repoAnchor.windowStart(),
+                    repoAnchor.windowEnd(),
+                    repoAnchor.suggestedDuration(),
+                    prefilledComment,
+                    derivePrOpenedDate(login, pr, zone, selectedDate),
+                    derivePrStatus(List.of(pr)),   // Open / Merged / Closed from the PR entity
+                    null,
+                    null,
+                    repoAnchor.logged()
+                );
+            })
+            .stream();
     }
 
     private static String resolveAnchorTitle(GitHubRawEventEntity first, List<GitHubRawEventEntity> group) {

@@ -282,6 +282,81 @@ class GitHubSyncServiceTest {
         }
     }
 
+    // ── IssueCommentEvent routing ─────────────────────────────────────────────
+
+    @Nested
+    class IssueCommentEventRouting {
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureIssueCommentOnPrStoredWithPrAnchorType() {
+            final var event = Map.of(
+                "id", "evt-ic-pr",
+                "type", "IssueCommentEvent",
+                "created_at", "2026-06-03T14:00:00Z",
+                "repo", Map.of("name", "slint-ui/slint"),
+                "payload", Map.of(
+                    "action", "created",
+                    "issue", Map.of(
+                        "number", 11952,
+                        "title", "Expose Keys API",
+                        "pull_request", Map.of("url", "https://api.github.com/repos/slint-ui/slint/pulls/11952")
+                    ),
+                    "comment", Map.of("body", "Still missing from docs")
+                )
+            );
+
+            when(restClient.get()).thenReturn(requestHeadersUriSpec);
+            when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(event));
+            when(repository.existsByGithubEventId("evt-ic-pr")).thenReturn(false);
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            verify(repository).save(captor.capture());
+            assertThat(captor.getValue().getAnchorType()).isEqualTo("PR");
+            assertThat(captor.getValue().getAnchorId()).isEqualTo("11952");
+            assertThat(captor.getValue().getEventSummary()).startsWith("Commented on PR #11952");
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureIssueCommentOnPlainIssueStoredWithIssueAnchorType() {
+            final var event = Map.of(
+                "id", "evt-ic-issue",
+                "type", "IssueCommentEvent",
+                "created_at", "2026-06-03T14:00:00Z",
+                "repo", Map.of("name", "slint-ui/slint"),
+                "payload", Map.of(
+                    "action", "created",
+                    "issue", Map.of(
+                        "number", 11876,
+                        "title", "Skia Vulkan error"
+                        // no "pull_request" key → plain issue
+                    ),
+                    "comment", Map.of("body", "Works for me on Windows")
+                )
+            );
+
+            when(restClient.get()).thenReturn(requestHeadersUriSpec);
+            when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(event));
+            when(repository.existsByGithubEventId("evt-ic-issue")).thenReturn(false);
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            verify(repository).save(captor.capture());
+            assertThat(captor.getValue().getAnchorType()).isEqualTo("ISSUE");
+            assertThat(captor.getValue().getEventSummary()).startsWith("Commented on issue #11876");
+        }
+    }
+
     // ── backfill for existing entities ────────────────────────────────────────
 
     @Nested
