@@ -23,6 +23,7 @@ import static de.focusshift.zeiterfassung.publicholiday.FederalState.FINLAND_ALA
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GLOBAL;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.NONE;
+import static de.focusshift.zeiterfassung.publicholiday.FederalState.ROMANIA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -40,7 +41,8 @@ class PublicHolidaysServiceTest {
         sut = new PublicHolidaysServiceImpl(
             Map.of(
                 "de", getHolidayManager("de"),
-                "fi", getHolidayManager("fi")
+                "fi", getHolidayManager("fi"),
+                "ro", getHolidayManager("ro")
             ),
             federalStateSettingsService
         );
@@ -117,6 +119,39 @@ class PublicHolidaysServiceTest {
                 assertThat(map).hasSize(16); // 15 national + Self-Governance Day (9 June)
                 assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 6, 9), anyDescription())));
             });
+        });
+    }
+
+    @Test
+    void ensureGetPublicHolidaysForRomania() {
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+        final LocalDate toExclusive = LocalDate.of(2024, 1, 1);
+
+        final Map<FederalState, PublicHolidayCalendar> actual = sut.getPublicHolidays(from, toExclusive, List.of(ROMANIA));
+
+        assertThat(actual).hasSize(1).hasEntrySatisfying(ROMANIA, this::assertRomania);
+    }
+
+    private void assertRomania(PublicHolidayCalendar publicHolidayCalendar) {
+        // Orthodox Easter 2023 = April 16 (Julian calendar)
+        assertThat(publicHolidayCalendar.federalState()).isEqualTo(ROMANIA);
+        assertThat(publicHolidayCalendar.publicHolidays()).satisfies(map -> {
+            assertThat(map).hasSize(15);
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 1, 1), anyDescription())));  // New Year
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 1, 2), anyDescription())));  // New Year (day 2)
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 1, 24), anyDescription()))); // Unification Day
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 4, 14), anyDescription()))); // Orthodox Good Friday
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 4, 16), anyDescription()))); // Orthodox Easter
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 4, 17), anyDescription()))); // Orthodox Easter Monday
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 5, 1), anyDescription())));  // Labour Day
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 6, 1), anyDescription())));  // Children's Day
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 6, 4), anyDescription())));  // Orthodox Pentecost
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 6, 5), anyDescription())));  // Orthodox Whit Monday
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 8, 15), anyDescription()))); // Assumption (Navy Day)
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 11, 30), anyDescription()))); // St. Andrew
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 12, 1), anyDescription())));  // National Day
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 12, 25), anyDescription()))); // Christmas
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 12, 26), anyDescription()))); // Christmas (day 2)
         });
     }
 
