@@ -1,12 +1,15 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.settings.CategorisationSettings;
+import de.focusshift.zeiterfassung.settings.CategorisationSettingsService;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.slf4j.Logger;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -32,15 +35,24 @@ public class TimeEntryViewHelper {
     private final TimeEntryService timeEntryService;
     private final TimeEntryLockService timeEntryLockService;
     private final UserSettingsProvider userSettingsProvider;
+    private final CategorisationSettingsService categorisationSettingsService;
 
-    public TimeEntryViewHelper(TimeEntryService timeEntryService, TimeEntryLockService timeEntryLockService, UserSettingsProvider userSettingsProvider) {
+    public TimeEntryViewHelper(TimeEntryService timeEntryService, TimeEntryLockService timeEntryLockService,
+                                UserSettingsProvider userSettingsProvider,
+                                CategorisationSettingsService categorisationSettingsService) {
         this.timeEntryService = timeEntryService;
         this.timeEntryLockService = timeEntryLockService;
         this.userSettingsProvider = userSettingsProvider;
+        this.categorisationSettingsService = categorisationSettingsService;
     }
 
     public void addTimeEntryToModel(Model model, TimeEntryDTO timeEntryDTO) {
         model.addAttribute(TIME_ENTRY_MODEL_NAME, timeEntryDTO);
+        // Thymeleaf #fields.hasFieldErrors() / hasGlobalErrors() throw without a BindingResult.
+        if (!model.containsAttribute(BindingResult.MODEL_KEY_PREFIX + TIME_ENTRY_MODEL_NAME)) {
+            model.addAttribute(BindingResult.MODEL_KEY_PREFIX + TIME_ENTRY_MODEL_NAME,
+                new BeanPropertyBindingResult(timeEntryDTO, TIME_ENTRY_MODEL_NAME));
+        }
     }
 
     public TimeEntryDTO toTimeEntryDto(TimeEntry timeEntry) {
@@ -108,6 +120,8 @@ public class TimeEntryViewHelper {
         final ZoneId zoneId = userSettingsProvider.zoneId();
         final ZonedDateTime start = dto.getStart() == null ? null : ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
         final ZonedDateTime end = getEndDate(dto, zoneId);
+
+        validateCategorisationRequirements(dto, bindingResult);
 
         final boolean timespanLocked = timeEntryLockService.isTimespanLocked(start, end);
         if (timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
@@ -179,6 +193,8 @@ public class TimeEntryViewHelper {
      */
     void createTimeEntry(TimeEntryDTO timeEntryDto, BindingResult bindingResult, CurrentOidcUser currentUser) {
 
+        validateCategorisationRequirements(timeEntryDto, bindingResult);
+
         if (bindingResult.hasErrors()) {
             // nothing to do here if there are input errors already
             return;
@@ -240,5 +256,15 @@ public class TimeEntryViewHelper {
             return "00:00";
         }
         return String.format("%02d:%02d", duration.toHours(), duration.toMinutes() % 60);
+    }
+
+    private void validateCategorisationRequirements(TimeEntryDTO dto, BindingResult bindingResult) {
+        final CategorisationSettings settings = categorisationSettingsService.getCategorisationSettings();
+        if (settings.projectRequired() && dto.getProjectId() == null) {
+            bindingResult.rejectValue("projectId", "time-entry.validation.project.required");
+        }
+        if (settings.activityTypeRequired() && dto.getActivityTypeId() == null) {
+            bindingResult.rejectValue("activityTypeId", "time-entry.validation.activity-type.required");
+        }
     }
 }

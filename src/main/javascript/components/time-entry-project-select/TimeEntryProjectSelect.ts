@@ -1,23 +1,20 @@
 /**
- * Customized built-in <div> that wraps the Customer + Project cascading selects
- * in the time-entry form.
+ * Customized built-in <div> that wraps the Project select in the time-entry form.
  *
  * Markup contract (set by Thymeleaf):
- *   <div is="z-time-entry-project-select"
- *        data-customer-label="Customer"
- *        data-customer-none="— All customers —">
+ *   <div is="z-time-entry-project-select">
  *     <select name="projectId" data-project-select>
  *       <option value="">— No project —</option>
- *       <option value="1" data-customer-id="10" data-customer-name="Acme Corp">Widget Redesign</option>
+ *       <option value="1" data-customer-id="10" data-customer-name="Acme Corp">Widget</option>
  *       ...
  *     </select>
  *     <label data-project-label>Project</label>
  *   </div>
  *
- * The component inserts a Customer filter <select> above the project select.
- * Selecting a customer shows only that customer's project options.
- * The customer select is never submitted (no `name` attribute).
- * When editing an existing entry the component pre-selects the matching customer.
+ * When more than one customer is present the component reorganises the flat
+ * option list into <optgroup> elements (one per customer) so that same-named
+ * projects from different customers are always unambiguous.
+ * Single-customer setups are left as-is (no redundant grouping).
  */
 class TimeEntryProjectSelect extends HTMLDivElement {
   connectedCallback() {
@@ -26,8 +23,7 @@ class TimeEntryProjectSelect extends HTMLDivElement {
     );
     if (!projectSelect) return;
 
-    // Stamp data-customer-id / data-customer-name onto every project option
-    // (they come from Thymeleaf th:attr, just ensure they're there)
+    const blankOption = [...projectSelect.options].find((o) => o.value === "");
     const projectOptions = [...projectSelect.options].filter(
       (o) => o.value !== "",
     );
@@ -44,75 +40,28 @@ class TimeEntryProjectSelect extends HTMLDivElement {
       }
     }
 
-    // Only add the filter when there is more than one customer
+    // Nothing to group
     if (customers.length === 0) return;
 
-    const customerLabel = this.dataset.customerLabel ?? "Customer";
-    const customerNone = this.dataset.customerNone ?? "— All customers —";
+    const selectedValue = projectSelect.value;
 
-    // Build customer select (not submitted)
-    const customerSelect = document.createElement("select");
-    customerSelect.className = projectSelect.className;
-    customerSelect.dataset.customerFilter = "";
-    if (projectSelect.disabled) customerSelect.disabled = true;
+    // Rebuild the select with optgroups
+    projectSelect.innerHTML = "";
+    if (blankOption) projectSelect.append(blankOption);
 
-    const blankOpt = document.createElement("option");
-    blankOpt.value = "";
-    blankOpt.textContent = customerNone;
-    customerSelect.append(blankOpt);
-
-    for (const c of customers) {
-      const o = document.createElement("option");
-      o.value = c.id;
-      o.textContent = c.name;
-      customerSelect.append(o);
-    }
-
-    // Build customer label element, mirroring the project label's classes
-    const projectLabel = this.querySelector<HTMLElement>(
-      "[data-project-label]",
-    );
-    const customerLabelElement = document.createElement("label");
-    customerLabelElement.textContent = customerLabel;
-    if (projectLabel) {
-      customerLabelElement.className = projectLabel.className;
-    }
-
-    // Insert a new cell above (before) this component in the container
-    const cell = document.createElement("div");
-    cell.className = this.className; // same "time-entry-cell" classes
-    cell.append(customerSelect);
-    cell.append(customerLabelElement);
-    this.insertAdjacentElement("beforebegin", cell);
-
-    // --- Filtering logic ---
-    const applyFilter = (customerId: string) => {
+    for (const customer of customers) {
+      const group = document.createElement("optgroup");
+      group.label = customer.name;
       for (const opt of projectOptions) {
-        const matches = !customerId || opt.dataset.customerId === customerId;
-        opt.hidden = !matches;
-        opt.disabled = !matches;
+        if (opt.dataset.customerId === customer.id) {
+          group.append(opt);
+        }
       }
-      // If the selected project no longer belongs to the chosen customer, clear it
-      const currentOpt = projectOptions.find(
-        (o) => o.value === projectSelect.value,
-      );
-      if (currentOpt && currentOpt.hidden) {
-        projectSelect.value = "";
-      }
-    };
-
-    // Pre-select customer when editing an existing entry
-    const preselectedProject = projectOptions.find(
-      (o) => o.value === projectSelect.value,
-    );
-    if (preselectedProject?.dataset.customerId) {
-      customerSelect.value = preselectedProject.dataset.customerId;
-      applyFilter(preselectedProject.dataset.customerId);
+      projectSelect.append(group);
     }
 
-    customerSelect.addEventListener("change", () => {
-      applyFilter(customerSelect.value);
-    });
+    // Restore selection (editing an existing entry)
+    projectSelect.value = selectedValue;
   }
 }
 

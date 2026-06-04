@@ -81,6 +81,7 @@ class SettingsControllerTest implements ControllerTest {
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
+        when(settingsService.getCategorisationSettings()).thenReturn(de.focusshift.zeiterfassung.settings.CategorisationSettings.DEFAULT);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.of(subtractBreakFromTimeEntrySettings));
         when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);
@@ -94,6 +95,8 @@ class SettingsControllerTest implements ControllerTest {
             8.0,
             5,
             15,
+            false,
+            false,
             true,
             "42",
             true,
@@ -116,6 +119,7 @@ class SettingsControllerTest implements ControllerTest {
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
+        when(settingsService.getCategorisationSettings()).thenReturn(de.focusshift.zeiterfassung.settings.CategorisationSettings.DEFAULT);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
         when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);
@@ -134,6 +138,7 @@ class SettingsControllerTest implements ControllerTest {
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
+        when(settingsService.getCategorisationSettings()).thenReturn(de.focusshift.zeiterfassung.settings.CategorisationSettings.DEFAULT);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
         when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);
@@ -146,6 +151,8 @@ class SettingsControllerTest implements ControllerTest {
             8.0,
             5,
             15,
+            false,
+            false,
             false,
             null,
             null,
@@ -164,6 +171,8 @@ class SettingsControllerTest implements ControllerTest {
         final SettingsDto dto = new SettingsDto(
             FederalState.NONE,
             false,
+            null,
+            null,
             null,
             null,
             null,
@@ -204,6 +213,8 @@ class SettingsControllerTest implements ControllerTest {
         final SettingsDto expectedSettingsDto = new SettingsDto(
             FederalState.NONE,
             false,
+            null,
+            null,
             null,
             null,
             null,
@@ -284,6 +295,7 @@ class SettingsControllerTest implements ControllerTest {
         customDays.put(DayOfWeek.SUNDAY,    Duration.ZERO);
         when(settingsService.getFederalStateSettings()).thenReturn(new FederalStateSettings(FederalState.NONE, false));
         when(settingsService.getWorkingTimeSettings()).thenReturn(new WorkingTimeSettings(customDays, 5, 15));
+        when(settingsService.getCategorisationSettings()).thenReturn(de.focusshift.zeiterfassung.settings.CategorisationSettings.DEFAULT);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(new LockTimeEntriesSettings(false, -1));
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
         when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);

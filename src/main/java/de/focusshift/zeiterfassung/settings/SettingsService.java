@@ -28,7 +28,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
 class SettingsService implements FederalStateSettingsService, WorkingTimeSettingsService,
-    LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService, OooCalendarSettingsService {
+    LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService, OooCalendarSettingsService,
+    CategorisationSettingsService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
@@ -37,6 +38,7 @@ class SettingsService implements FederalStateSettingsService, WorkingTimeSetting
     private final LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
     private final SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
     private final OooCalendarSettingsRepository oooCalendarSettingsRepository;
+    private final CategorisationSettingsRepository categorisationSettingsRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     SettingsService(
@@ -45,6 +47,7 @@ class SettingsService implements FederalStateSettingsService, WorkingTimeSetting
         LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository,
         SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository,
         OooCalendarSettingsRepository oooCalendarSettingsRepository,
+        CategorisationSettingsRepository categorisationSettingsRepository,
         ApplicationEventPublisher applicationEventPublisher
     ) {
         this.federalStateSettingsRepository = federalStateSettingsRepository;
@@ -52,6 +55,7 @@ class SettingsService implements FederalStateSettingsService, WorkingTimeSetting
         this.lockTimeEntriesSettingsRepository = lockTimeEntriesSettingsRepository;
         this.subtractBreakFromTimeEntrySettingsRepository = subtractBreakFromTimeEntrySettingsRepository;
         this.oooCalendarSettingsRepository = oooCalendarSettingsRepository;
+        this.categorisationSettingsRepository = categorisationSettingsRepository;
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
@@ -135,6 +139,22 @@ class SettingsService implements FederalStateSettingsService, WorkingTimeSetting
         return findFirstEntity(oooCalendarSettingsRepository.findAll())
             .map(e -> new OooCalendarSettings(e.getCalendarUrl()))
             .orElse(OooCalendarSettings.DEFAULT);
+    }
+
+    @Override
+    public CategorisationSettings getCategorisationSettings() {
+        return findFirstEntity(categorisationSettingsRepository.findAll())
+            .map(e -> new CategorisationSettings(e.isProjectRequired(), e.isActivityTypeRequired()))
+            .orElse(CategorisationSettings.DEFAULT);
+    }
+
+    CategorisationSettings updateCategorisationSettings(boolean projectRequired, boolean activityTypeRequired) {
+        final CategorisationSettingsEntity entity = findFirstEntity(categorisationSettingsRepository.findAll())
+            .orElseGet(CategorisationSettingsEntity::new);
+        entity.setProjectRequired(projectRequired);
+        entity.setActivityTypeRequired(activityTypeRequired);
+        final CategorisationSettingsEntity saved = categorisationSettingsRepository.save(entity);
+        return new CategorisationSettings(saved.isProjectRequired(), saved.isActivityTypeRequired());
     }
 
     OooCalendarSettings updateOooCalendarSettings(String calendarUrl) {

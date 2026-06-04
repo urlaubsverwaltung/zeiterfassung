@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.settings;
 
+import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
+import de.focusshift.zeiterfassung.project.ProjectService;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -10,6 +12,14 @@ import static java.lang.Boolean.TRUE;
 
 @Component
 class SettingsDtoValidator implements Validator {
+
+    private final ProjectService projectService;
+    private final ActivityTypeService activityTypeService;
+
+    SettingsDtoValidator(ProjectService projectService, ActivityTypeService activityTypeService) {
+        this.projectService = projectService;
+        this.activityTypeService = activityTypeService;
+    }
 
     @Override
     public boolean supports(Class<?> clazz) {
@@ -25,6 +35,8 @@ class SettingsDtoValidator implements Validator {
         validateMinSuggestedMinutes(settingsDto, errors);
         validateLockTimeEntriesDaysInPast(settingsDto, errors);
         validateSubtractBreak(settingsDto, errors);
+        validateProjectRequired(settingsDto, errors);
+        validateActivityTypeRequired(settingsDto, errors);
     }
 
     private void validateWorkingTime(SettingsDto settingsDto, Errors errors) {
@@ -70,6 +82,18 @@ class SettingsDtoValidator implements Validator {
             if (date == null) {
                 errors.rejectValue("subtractBreakFromTimeEntryActiveDate", "settings.work-duration.calculation.subtract-breaks.date.validation.NotNull");
             }
+        }
+    }
+
+    private void validateProjectRequired(SettingsDto settingsDto, Errors errors) {
+        if (TRUE.equals(settingsDto.projectRequired()) && projectService.findAllActive().isEmpty()) {
+            errors.rejectValue("projectRequired", "settings.categorisation.project-required.validation.no-active-projects");
+        }
+    }
+
+    private void validateActivityTypeRequired(SettingsDto settingsDto, Errors errors) {
+        if (TRUE.equals(settingsDto.activityTypeRequired()) && activityTypeService.findAllActive().isEmpty()) {
+            errors.rejectValue("activityTypeRequired", "settings.categorisation.activity-type-required.validation.no-active-activity-types");
         }
     }
 }

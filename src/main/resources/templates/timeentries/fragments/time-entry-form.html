@@ -211,13 +211,13 @@
                 </div>
                 <div th:if="${projects != null and not #lists.isEmpty(projects)}"
                      is="z-time-entry-project-select"
-                     class="time-entry-cell time-entry-cell__project"
-                     th:attr="data-customer-label=#{time-entry.customer.label},data-customer-none=#{time-entry.customer.filter.none}">
+                     class="time-entry-cell time-entry-cell__project">
                   <select
                     name="projectId"
                     th:id="|${rnd}-input-entry-project|"
                     th:disabled="${disabled}"
                     data-project-select
+                    th:classappend="${showErrors && timeEntry.id eq timeEntryErrorId && #fields.hasErrors('projectId') ? ' invalid' : ''}"
                     class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800"
                   >
                     <option value="" th:text="#{time-entry.project.none}">— No project —</option>
@@ -232,16 +232,21 @@
                   <label
                     data-project-label
                     th:for="|${rnd}-input-entry-project|"
-                    th:text="#{time-entry.project.label}"
                   >
-                    Project
+                    <span th:text="#{time-entry.project.label}">Project</span>
+                    <span th:if="${categorisationSettings != null and categorisationSettings.projectRequired()}"
+                          class="text-red-500" aria-hidden="true"> *</span>
                   </label>
+                  <p th:if="${showErrors && timeEntry.id eq timeEntryErrorId && #fields.hasErrors('projectId')}"
+                     th:text="${#fields.errors('projectId')[0]}"
+                     class="invalid text-xs mt-1"></p>
                 </div>
                 <div th:if="${activityTypes != null and not #lists.isEmpty(activityTypes)}" class="time-entry-cell time-entry-cell__activity-type">
                   <select
                     name="activityTypeId"
                     th:id="|${rnd}-input-entry-activity-type|"
                     th:disabled="${disabled}"
+                    th:classappend="${showErrors && timeEntry.id eq timeEntryErrorId && #fields.hasErrors('activityTypeId') ? ' invalid' : ''}"
                     class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800"
                   >
                     <option value="" th:text="#{time-entry.activity-type.none}">— No activity —</option>
@@ -252,12 +257,14 @@
                       th:selected="${timeEntry.activityTypeId != null and timeEntry.activityTypeId == at.id().value()}"
                     ></option>
                   </select>
-                  <label
-                    th:for="|${rnd}-input-entry-activity-type|"
-                    th:text="#{time-entry.activity-type.label}"
-                  >
-                    Activity
+                  <label th:for="|${rnd}-input-entry-activity-type|">
+                    <span th:text="#{time-entry.activity-type.label}">Activity</span>
+                    <span th:if="${categorisationSettings != null and categorisationSettings.activityTypeRequired()}"
+                          class="text-red-500" aria-hidden="true"> *</span>
                   </label>
+                  <p th:if="${showErrors && timeEntry.id eq timeEntryErrorId && #fields.hasErrors('activityTypeId')}"
+                     th:text="${#fields.errors('activityTypeId')[0]}"
+                     class="invalid text-xs mt-1"></p>
                 </div>
               </div>
             </div>

@@ -4,7 +4,7 @@
 <turbo-frame th:id="${frameId}">
   <form th:action="@{/timeentries}" method="post"
         class="mt-2 p-3 bg-gray-50 dark:bg-zinc-800 rounded border border-gray-200 dark:border-zinc-700">
-    <div class="flex flex-wrap gap-3 items-end">
+    <div class="flex flex-wrap gap-3 items-start">
       <div class="flex flex-col gap-1 flex-1 min-w-0" style="min-width: 200px">
         <label class="text-xs font-medium text-gray-500 dark:text-zinc-400" th:text="#{github-activity.inline-form.comment}">Comment</label>
         <input type="text" name="comment" th:value="${comment}"
@@ -13,41 +13,65 @@
       <input type="hidden" name="date" th:value="${date}" />
       <input type="hidden" name="userLocalId" th:value="${userLocalId}" />
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-gray-500 dark:text-zinc-400" th:text="#{github-activity.inline-form.start}">Start</label>
+        <label class="text-xs font-medium text-gray-500 dark:text-zinc-400">
+          <span th:text="#{github-activity.inline-form.start}">Start</span>
+          <span class="text-red-500" aria-hidden="true"> *</span>
+        </label>
         <input type="time" name="start" th:value="${startTime}"
+               th:classappend="${startHasError} ? ' border-red-500 dark:border-red-400' : ''"
                class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-900 dark:text-zinc-100 w-28" />
+        <p th:if="${startHasError}" class="text-red-500 text-xs" th:text="#{time-entry.validation.start.required}"></p>
       </div>
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-gray-500 dark:text-zinc-400" th:text="#{github-activity.inline-form.duration}">Duration</label>
-        <input type="text" name="duration" placeholder="hh:mm" th:value="${duration}"
+        <label class="text-xs font-medium text-gray-500 dark:text-zinc-400">
+          <span th:text="#{github-activity.inline-form.duration}">Duration</span>
+          <span class="text-red-500" aria-hidden="true"> *</span>
+        </label>
+        <input is="z-time-entry-duration-input"
+               type="text" name="duration" placeholder="hh:mm" th:value="${duration}"
+               th:classappend="${durationHasError} ? ' border-red-500 dark:border-red-400' : ''"
                class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-900 dark:text-zinc-100 w-24" />
+        <p th:if="${durationHasError}" class="text-red-500 text-xs" th:text="#{time-entry.validation.duration.required}"></p>
       </div>
       <div th:if="${projects != null and not #lists.isEmpty(projects)}"
            is="z-time-entry-project-select"
-           class="flex flex-col gap-1"
-           th:attr="data-customer-label=#{time-entry.customer.label},data-customer-none=#{time-entry.customer.filter.none}">
+           class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-gray-500 dark:text-zinc-400">
+          <span th:text="#{time-entry.project.label}">Project</span>
+          <span th:if="${categorisationSettings != null and categorisationSettings.projectRequired()}"
+                class="text-red-500" aria-hidden="true"> *</span>
+        </label>
         <select name="projectId"
                 data-project-select
+                th:classappend="${projectIdHasError} ? ' border-red-500 dark:border-red-400' : ''"
                 class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800">
           <option value="" th:text="#{time-entry.project.none}">— No project —</option>
           <option th:each="p : ${projects}"
                   th:value="${p.id().value()}"
                   th:text="${p.name()}"
+                  th:selected="${selectedProjectId != null and selectedProjectId == p.id().value()}"
                   th:attr="data-customer-id=${p.customerId().value()},data-customer-name=${p.customerName()}"></option>
         </select>
-        <label data-project-label
-               class="text-xs font-medium text-gray-500 dark:text-zinc-400"
-               th:text="#{time-entry.project.label}">Project</label>
+        <p th:if="${projectIdHasError}" class="text-red-500 text-xs" th:text="#{time-entry.validation.project.required}"></p>
       </div>
       <div th:if="${activityTypes != null and not #lists.isEmpty(activityTypes)}" class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-gray-500 dark:text-zinc-400" th:text="#{time-entry.activity-type.label}">Activity</label>
+        <label class="text-xs font-medium text-gray-500 dark:text-zinc-400">
+          <span th:text="#{time-entry.activity-type.label}">Activity</span>
+          <span th:if="${categorisationSettings != null and categorisationSettings.activityTypeRequired()}"
+                class="text-red-500" aria-hidden="true"> *</span>
+        </label>
         <select name="activityTypeId"
+                th:classappend="${activityTypeIdHasError} ? ' border-red-500 dark:border-red-400' : ''"
                 class="border border-gray-300 dark:border-zinc-600 rounded px-2 py-1 text-sm dark:bg-zinc-800">
           <option value="" th:text="#{time-entry.activity-type.none}">— No activity —</option>
-          <option th:each="at : ${activityTypes}" th:value="${at.id().value()}" th:text="${at.name()}"></option>
+          <option th:each="at : ${activityTypes}"
+                  th:value="${at.id().value()}"
+                  th:text="${at.name()}"
+                  th:selected="${selectedActivityTypeId != null and selectedActivityTypeId == at.id().value()}"></option>
         </select>
+        <p th:if="${activityTypeIdHasError}" class="text-red-500 text-xs" th:text="#{time-entry.validation.activity-type.required}"></p>
       </div>
-      <div class="flex gap-2">
+      <div class="flex gap-2 mt-auto">
         <button type="submit" class="button-main-green text-sm" th:text="#{github-activity.inline-form.save}">Save</button>
         <button type="button" class="button-secondary text-sm"
                 th:attr="onclick=|document.getElementById('${frameId}').innerHTML=''; document.getElementById('${frameId}').src=''|"

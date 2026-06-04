@@ -56,6 +56,7 @@ class GitHubActivityControllerTest implements ControllerTest {
     @Mock private GitHubRawEventRepository eventRepository;
     @Mock private GitHubSyncService syncService;
     @Mock private WorkingTimeSettingsService workingTimeSettingsService;
+    @Mock private de.focusshift.zeiterfassung.settings.CategorisationSettingsService categorisationSettingsService;
 
     private GitHubActivityController sut;
 
@@ -65,7 +66,7 @@ class GitHubActivityControllerTest implements ControllerTest {
             userSettingsService, userSettingsProvider, timeEntryService,
             userSearchViewHelper, projectService, activityTypeService,
             timeEntryLockService, eventRepository, syncService,
-            workingTimeSettingsService
+            workingTimeSettingsService, categorisationSettingsService
         );
     }
 
@@ -975,6 +976,29 @@ class GitHubActivityControllerTest implements ControllerTest {
             final var groups = (List<GitHubActivityController.GitHubSearchResultGroup>)
                 result.getModelAndView().getModel().get("searchResultGroups");
             assertThat(groups.get(0).items().get(0).logged()).isTrue();
+        }
+    }
+
+    @Nested
+    class InlineForm {
+
+        @Test
+        void ensureInlineFormIncludesCategorisationSettings() throws Exception {
+            final de.focusshift.zeiterfassung.settings.CategorisationSettings settings =
+                new de.focusshift.zeiterfassung.settings.CategorisationSettings(true, false);
+            when(categorisationSettingsService.getCategorisationSettings()).thenReturn(settings);
+            when(projectService.findAllActive()).thenReturn(List.of());
+            when(activityTypeService.findAllActive()).thenReturn(List.of());
+
+            perform(get("/github-activity/inline-form")
+                .with(oidcSubject("any-user"))
+                .param("comment", "slint-ui/slint PR #42: Fix bug")
+                .param("date", "2026-06-04")
+                .param("userLocalId", "1")
+            )
+                .andExpect(status().isOk())
+                .andExpect(view().name("github-activity/inline-form"))
+                .andExpect(model().attribute("categorisationSettings", settings));
         }
     }
 }

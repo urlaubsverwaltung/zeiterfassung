@@ -76,7 +76,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
         final LockTimeEntriesSettings lockTimeEntriesSettings = settingsService.getLockTimeEntriesSettings();
         final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings = settingsService.getSubtractBreakFromTimeEntrySettings();
         final OooCalendarSettings oooCalendarSettings = settingsService.getOooCalendarSettings();
-        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, workingTimeSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings.orElse(null), oooCalendarSettings);
+        final CategorisationSettings categorisationSettings = settingsService.getCategorisationSettings();
+        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, workingTimeSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings.orElse(null), oooCalendarSettings, categorisationSettings);
 
         prepareModel(model, locale, settingsDto);
 
@@ -117,6 +118,10 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
         settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), lockTimeEntriesDaysInPast);
 
         settingsService.updateOooCalendarSettings(settingsDto.oooCalendarUrl());
+        settingsService.updateCategorisationSettings(
+            Boolean.TRUE.equals(settingsDto.projectRequired()),
+            Boolean.TRUE.equals(settingsDto.activityTypeRequired())
+        );
 
         if (subtractBreakFromTimeEntryIsActive != null) {
             final LocalDate date = settingsDto.subtractBreakFromTimeEntryActiveDate();
@@ -159,7 +164,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
         WorkingTimeSettings workingTimeSettings,
         LockTimeEntriesSettings lockTimeEntriesSettings,
         @Nullable SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings,
-        OooCalendarSettings oooCalendarSettings
+        OooCalendarSettings oooCalendarSettings,
+        CategorisationSettings categorisationSettings
     ) {
         final ZoneId userZoneId = userSettingsProvider.zoneId();
         final int lockTimeEntriesDaysInPast = lockTimeEntriesSettings.lockTimeEntriesDaysInPast();
@@ -185,6 +191,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
             workingTimeHours == 0 ? null : workingTimeHours,
             workingTimeSettings.timeRoundingMinutes(),
             workingTimeSettings.minSuggestedMinutes(),
+            categorisationSettings.projectRequired() ? Boolean.TRUE : Boolean.FALSE,
+            categorisationSettings.activityTypeRequired() ? Boolean.TRUE : Boolean.FALSE,
             lockTimeEntriesSettings.lockingIsActive(),
             lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null,
             subtractBreakFromTimeEntryIsActive,

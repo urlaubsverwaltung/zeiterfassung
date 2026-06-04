@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
 import de.focusshift.zeiterfassung.project.ProjectService;
+import de.focusshift.zeiterfassung.settings.CategorisationSettingsService;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.CurrentUser;
@@ -78,6 +79,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     private final UserSearchViewHelper userSearchViewHelper;
     private final ProjectService projectService;
     private final ActivityTypeService activityTypeService;
+    private final CategorisationSettingsService categorisationSettingsService;
     private final Clock clock;
 
     TimeEntryController(
@@ -91,6 +93,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         UserSearchViewHelper userSearchViewHelper,
         ProjectService projectService,
         ActivityTypeService activityTypeService,
+        CategorisationSettingsService categorisationSettingsService,
         Clock clock
     ) {
         this.timeEntryService = timeEntryService;
@@ -103,6 +106,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         this.userSearchViewHelper = userSearchViewHelper;
         this.projectService = projectService;
         this.activityTypeService = activityTypeService;
+        this.categorisationSettingsService = categorisationSettingsService;
         this.clock = clock;
     }
 
@@ -153,6 +157,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale, currentUser);
         model.addAttribute("projects", projectService.findAllActive());
         model.addAttribute("activityTypes", activityTypeService.findAllActive());
+        model.addAttribute("categorisationSettings", categorisationSettingsService.getCategorisationSettings());
 
         return new ModelAndView("timeentries/index");
     }
@@ -164,16 +169,50 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         Model model, Locale locale,
         RedirectAttributes redirectAttributes,
         @CurrentUser CurrentOidcUser currentUser,
-        HttpServletRequest request
+        HttpServletRequest request,
+        jakarta.servlet.http.HttpServletResponse response
     ) throws InvalidTimeEntryException {
 
         final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
         LOG.info("User {} wants to create a new timeEntry.", currentUserLocalId);
 
+        final String turboFrame = request.getHeader("Turbo-Frame");
+        final boolean isInlineForm = hasText(turboFrame);
+
+        // Inline form requires start and duration explicitly (no end field exists there)
+        if (isInlineForm) {
+            if (timeEntryDTO.getStart() == null) {
+                bindingResult.rejectValue("start", "time-entry.validation.start.required");
+            }
+            if (!hasText(timeEntryDTO.getDuration())) {
+                bindingResult.rejectValue("duration", "time-entry.validation.duration.required");
+            }
+        }
+
         handleCreateTimeEntry(timeEntryDTO, bindingResult, currentUser, model, locale, redirectAttributes);
 
         if (bindingResult.hasErrors()) {
-            LOG.info("Could not create timeEntry due to errors. Rendering timeentries page.");
+            LOG.info("Could not create timeEntry due to errors.");
+            response.setStatus(422);
+            if (isInlineForm) {
+                model.addAttribute("frameId", turboFrame);
+                model.addAttribute("comment", timeEntryDTO.getComment());
+                model.addAttribute("date", timeEntryDTO.getDate() != null ? timeEntryDTO.getDate().toString() : "");
+                model.addAttribute("startTime", timeEntryDTO.getStart() != null
+                    ? timeEntryDTO.getStart().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")) : "");
+                model.addAttribute("duration", hasText(timeEntryDTO.getDuration()) ? timeEntryDTO.getDuration() : "");
+                model.addAttribute("userLocalId", timeEntryDTO.getUserLocalId());
+                model.addAttribute("projects", projectService.findAllActive());
+                model.addAttribute("selectedProjectId", timeEntryDTO.getProjectId());
+                model.addAttribute("activityTypes", activityTypeService.findAllActive());
+                model.addAttribute("selectedActivityTypeId", timeEntryDTO.getActivityTypeId());
+                model.addAttribute("categorisationSettings", categorisationSettingsService.getCategorisationSettings());
+                model.addAttribute("startHasError", bindingResult.hasFieldErrors("start"));
+                model.addAttribute("durationHasError", bindingResult.hasFieldErrors("duration"));
+                model.addAttribute("projectIdHasError", bindingResult.hasFieldErrors("projectId"));
+                model.addAttribute("activityTypeIdHasError", bindingResult.hasFieldErrors("activityTypeId"));
+                return "github-activity/inline-form";
+            }
             return "timeentries/index";
         }
 

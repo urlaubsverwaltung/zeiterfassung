@@ -58,10 +58,12 @@ class TimeEntryViewHelperTest {
     private TimeEntryLockService timeEntryLockService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
+    @Mock
+    private de.focusshift.zeiterfassung.settings.CategorisationSettingsService categorisationSettingsService;
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
+        sut = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider, categorisationSettingsService);
     }
 
     @Test
@@ -166,6 +168,12 @@ class TimeEntryViewHelperTest {
 
     @Nested
     class CreateTimeEntry {
+
+        @BeforeEach
+        void stubCategorisationDefaults() {
+            when(categorisationSettingsService.getCategorisationSettings())
+                .thenReturn(de.focusshift.zeiterfassung.settings.CategorisationSettings.DEFAULT);
+        }
 
         @Test
         void ensureCreateValidationErrorWhenTimespanIsLocked() {
@@ -316,6 +324,15 @@ class TimeEntryViewHelperTest {
 
     @Nested
     class UpdateTimeEntry {
+
+        @BeforeEach
+        void stubCategorisationDefaults() {
+            // lenient: three tests in this class throw early (null ID / not-found / unauthorized)
+            // before reaching validateCategorisationRequirements; the stub is still needed by
+            // the majority of tests that do execute the full update path.
+            org.mockito.Mockito.lenient().when(categorisationSettingsService.getCategorisationSettings())
+                .thenReturn(de.focusshift.zeiterfassung.settings.CategorisationSettings.DEFAULT);
+        }
 
         @Test
         void ensureUpdateTimeEntryThrowsWhenThereIsNoTimeEntryId() {
@@ -731,5 +748,143 @@ class TimeEntryViewHelperTest {
         final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
         final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
         return new TimeEntry(timeEntryId, userIdComposite, "comment", start, end, false, null, null);
+    }
+
+    // ── categorisation requirements ───────────────────────────────────────────
+
+    @Nested
+    class CategorisationRequirements {
+
+        @Test
+        void ensureProjectRequiredRejectsCreateWhenProjectIdIsNull() {
+            when(categorisationSettingsService.getCategorisationSettings())
+                .thenReturn(new de.focusshift.zeiterfassung.settings.CategorisationSettings(true, false));
+
+            final TimeEntryDTO dto = new TimeEntryDTO();
+            dto.setDate(java.time.LocalDate.parse("2025-02-16"));
+            dto.setStart(java.time.LocalTime.of(9, 0));
+            dto.setEnd(java.time.LocalTime.of(17, 0));
+            dto.setUserLocalId(1L);
+            // projectId is null
+
+            final org.springframework.validation.BindingResult bindingResult =
+                new org.springframework.validation.BeanPropertyBindingResult(dto, "timeEntry");
+
+            sut.createTimeEntry(dto, bindingResult, mockCurrentOidcUser());
+
+            assertThat(bindingResult.hasFieldErrors("projectId")).isTrue();
+            assertThat(bindingResult.getFieldError("projectId").getCode())
+                .isEqualTo("time-entry.validation.project.required");
+        }
+
+        @Test
+        void ensureActivityTypeRequiredRejectsCreateWhenActivityTypeIdIsNull() {
+            when(categorisationSettingsService.getCategorisationSettings())
+                .thenReturn(new de.focusshift.zeiterfassung.settings.CategorisationSettings(false, true));
+
+            final TimeEntryDTO dto = new TimeEntryDTO();
+            dto.setDate(java.time.LocalDate.parse("2025-02-16"));
+            dto.setStart(java.time.LocalTime.of(9, 0));
+            dto.setEnd(java.time.LocalTime.of(17, 0));
+            dto.setUserLocalId(1L);
+            // activityTypeId is null
+
+            final org.springframework.validation.BindingResult bindingResult =
+                new org.springframework.validation.BeanPropertyBindingResult(dto, "timeEntry");
+
+            sut.createTimeEntry(dto, bindingResult, mockCurrentOidcUser());
+
+            assertThat(bindingResult.hasFieldErrors("activityTypeId")).isTrue();
+            assertThat(bindingResult.getFieldError("activityTypeId").getCode())
+                .isEqualTo("time-entry.validation.activity-type.required");
+        }
+
+        @Test
+        void ensureCreatePassesWhenProjectAndActivityTypeAreNotRequired() {
+            when(categorisationSettingsService.getCategorisationSettings())
+                .thenReturn(de.focusshift.zeiterfassung.settings.CategorisationSettings.DEFAULT);
+
+            final TimeEntryDTO dto = new TimeEntryDTO();
+            dto.setDate(java.time.LocalDate.parse("2025-02-16"));
+            dto.setStart(java.time.LocalTime.of(9, 0));
+            dto.setEnd(java.time.LocalTime.of(17, 0));
+            dto.setUserLocalId(1L);
+            // both null — but not required
+
+            final org.springframework.validation.BindingResult bindingResult =
+                new org.springframework.validation.BeanPropertyBindingResult(dto, "timeEntry");
+
+            when(timeEntryLockService.isTimespanLocked(any(), any())).thenReturn(false);
+            when(userSettingsProvider.zoneId()).thenReturn(java.time.ZoneOffset.UTC);
+            sut.createTimeEntry(dto, bindingResult, mockCurrentOidcUser());
+
+            assertThat(bindingResult.hasFieldErrors("projectId")).isFalse();
+            assertThat(bindingResult.hasFieldErrors("activityTypeId")).isFalse();
+        }
+
+        @Test
+        void ensureCreatePassesWhenProjectRequiredAndProjectIdIsSet() {
+            when(categorisationSettingsService.getCategorisationSettings())
+                .thenReturn(new de.focusshift.zeiterfassung.settings.CategorisationSettings(true, true));
+
+            final TimeEntryDTO dto = new TimeEntryDTO();
+            dto.setDate(java.time.LocalDate.parse("2025-02-16"));
+            dto.setStart(java.time.LocalTime.of(9, 0));
+            dto.setEnd(java.time.LocalTime.of(17, 0));
+            dto.setUserLocalId(1L);
+            dto.setProjectId(42L);
+            dto.setActivityTypeId(7L);
+
+            final org.springframework.validation.BindingResult bindingResult =
+                new org.springframework.validation.BeanPropertyBindingResult(dto, "timeEntry");
+
+            when(timeEntryLockService.isTimespanLocked(any(), any())).thenReturn(false);
+            when(userSettingsProvider.zoneId()).thenReturn(java.time.ZoneOffset.UTC);
+            sut.createTimeEntry(dto, bindingResult, mockCurrentOidcUser());
+
+            assertThat(bindingResult.hasFieldErrors("projectId")).isFalse();
+            assertThat(bindingResult.hasFieldErrors("activityTypeId")).isFalse();
+        }
+
+        private CurrentOidcUser mockCurrentOidcUser() {
+            final org.mockito.Mockito mock = null; // just to use static import below
+            return org.mockito.Mockito.mock(CurrentOidcUser.class);
+        }
+    }
+
+    @Nested
+    class AddTimeEntryToModel {
+
+        @Test
+        void ensureAddsEmptyBindingResultWhenNonePresent() {
+            final TimeEntryDTO dto = new TimeEntryDTO();
+            final Model model = new ConcurrentModel();
+
+            sut.addTimeEntryToModel(model, dto);
+
+            assertThat(model.containsAttribute(TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME)).isTrue();
+            assertThat(model.containsAttribute(
+                org.springframework.validation.BindingResult.MODEL_KEY_PREFIX + TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME))
+                .isTrue();
+            final var bindingResult = (org.springframework.validation.BindingResult)
+                model.asMap().get(org.springframework.validation.BindingResult.MODEL_KEY_PREFIX + TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME);
+            assertThat(bindingResult.hasErrors()).isFalse();
+        }
+
+        @Test
+        void ensureDoesNotOverwriteExistingBindingResult() {
+            final TimeEntryDTO dto = new TimeEntryDTO();
+            final Model model = new ConcurrentModel();
+            final org.springframework.validation.BindingResult existing =
+                new org.springframework.validation.BeanPropertyBindingResult(dto, TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME);
+            existing.rejectValue("comment", "some-error");
+            model.addAttribute(org.springframework.validation.BindingResult.MODEL_KEY_PREFIX + TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME, existing);
+
+            sut.addTimeEntryToModel(model, dto);
+
+            final var result = (org.springframework.validation.BindingResult)
+                model.asMap().get(org.springframework.validation.BindingResult.MODEL_KEY_PREFIX + TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME);
+            assertThat(result.hasErrors()).isTrue();
+        }
     }
 }

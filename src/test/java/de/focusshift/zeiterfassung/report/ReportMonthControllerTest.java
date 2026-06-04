@@ -99,9 +99,11 @@ class ReportMonthControllerTest implements ControllerTest {
     @Mock
     private MessageSource messageSource;
     @Mock
-    private ProjectService projectService;       
+    private ProjectService projectService;
     @Mock
-    private ActivityTypeService activityTypeService; 
+    private ActivityTypeService activityTypeService;
+    @Mock
+    private de.focusshift.zeiterfassung.settings.CategorisationSettingsService categorisationSettingsService;
 
     private DateFormatterImpl dateFormatter;
     private DateRangeFormatter dateRangeFormatter;
@@ -113,10 +115,12 @@ class ReportMonthControllerTest implements ControllerTest {
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient().when(categorisationSettingsService.getCategorisationSettings())
+            .thenReturn(de.focusshift.zeiterfassung.settings.CategorisationSettings.DEFAULT);
         dateFormatter = new DateFormatterImpl();
         dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
         reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
-        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
+        timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider, categorisationSettingsService);
         timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService, projectService, activityTypeService);
         sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper, timeEntryDialogHelper, userSearchViewHelper, clock);
     }

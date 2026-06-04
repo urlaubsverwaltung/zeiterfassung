@@ -21,6 +21,11 @@ record SettingsDto(
     /** Minimum floor for the GitHub Activity time suggestion in minutes (1–480). */
     @Nullable Integer minSuggestedMinutes,
 
+    /** When {@code true} users must select a project on every time entry. */
+    @Nullable Boolean projectRequired,
+    /** When {@code true} users must select an activity type on every time entry. */
+    @Nullable Boolean activityTypeRequired,
+
     boolean lockingIsActive,
     @Nullable
     String lockTimeEntriesDaysInPast,

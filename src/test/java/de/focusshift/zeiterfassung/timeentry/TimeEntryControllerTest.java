@@ -20,6 +20,7 @@ import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -59,6 +60,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
@@ -102,13 +104,15 @@ class TimeEntryControllerTest implements ControllerTest {
     private ProjectService projectService;
     @Mock
     private ActivityTypeService activityTypeService;
+    @Mock
+    private de.focusshift.zeiterfassung.settings.CategorisationSettingsService categorisationSettingsService;
 
     private Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, projectService, activityTypeService, clock);
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, projectService, activityTypeService, categorisationSettingsService, clock);
     }
 
     @ParameterizedTest
@@ -137,7 +141,7 @@ class TimeEntryControllerTest implements ControllerTest {
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, projectService, activityTypeService, clock);
+        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, projectService, activityTypeService, categorisationSettingsService, clock);
 
         mockUserSettings(ZoneOffset.UTC);
 
@@ -515,7 +519,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         clock = Clock.fixed(Instant.parse("2025-03-18T10:04:00.00Z"), ZoneOffset.UTC);
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, projectService, activityTypeService, clock);
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, projectService, activityTypeService, categorisationSettingsService, clock);
 
         final int year = 2025;
         final int weekOfYear = 12;
@@ -1229,6 +1233,100 @@ class TimeEntryControllerTest implements ControllerTest {
 
     private void mockUserSettings(DayOfWeek dayOfWeek) {
         when(userSettingsProvider.firstDayOfWeek()).thenReturn(dayOfWeek);
+    }
+
+    @Nested
+    @org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
+    class InlineFormCreation {
+
+        private final UserId userId = new UserId("batman");
+        private final UserLocalId userLocalId = new UserLocalId(1L);
+        private final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        @BeforeEach
+        void setUp() {
+            mockUserSettings(DayOfWeek.MONDAY);
+            when(categorisationSettingsService.getCategorisationSettings())
+                .thenReturn(de.focusshift.zeiterfassung.settings.CategorisationSettings.DEFAULT);
+            // handleCreateTimeEntry loads week data on error even for inline-form path
+            final TimeEntryWeek week = new TimeEntryWeek(LocalDate.of(2021, 12, 27), PlannedWorkingHours.EIGHT, List.of());
+            when(timeEntryDayService.getEntryWeekPage(any(UserLocalId.class), anyInt(), anyInt()))
+                .thenReturn(new TimeEntryWeekPage(week, 0));
+            when(dateFormatter.formatDate(any(), any(), any())).thenReturn("27. December 2021");
+        }
+
+        @Test
+        void ensureInlineFormWithMissingStartReturns422AndInlineFormView() throws Exception {
+            perform(post(TIME_ENTRIES_URL_TEMPLATE)
+                .header("Turbo-Frame", "pr-frame-0")
+                .header("Referer", "/github-activity?date=2022-01-02")
+                .with(oidcSubject(userIdComposite))
+                .param("userLocalId", userLocalId.value().toString())
+                .param("date", "2022-01-02")
+                .param("duration", "01:00")
+                // start intentionally omitted
+            )
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(view().name("github-activity/inline-form"))
+                .andExpect(model().attribute("startHasError", true))
+                .andExpect(model().attribute("frameId", "pr-frame-0"));
+        }
+
+        @Test
+        void ensureInlineFormWithMissingDurationReturns422AndInlineFormView() throws Exception {
+            perform(post(TIME_ENTRIES_URL_TEMPLATE)
+                .header("Turbo-Frame", "pr-frame-0")
+                .header("Referer", "/github-activity?date=2022-01-02")
+                .with(oidcSubject(userIdComposite))
+                .param("userLocalId", userLocalId.value().toString())
+                .param("date", "2022-01-02")
+                .param("start", "09:00")
+                // duration intentionally omitted
+            )
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(view().name("github-activity/inline-form"))
+                .andExpect(model().attribute("durationHasError", true))
+                .andExpect(model().attribute("frameId", "pr-frame-0"));
+        }
+
+        @Test
+        void ensureInlineFormWithValidDataRedirects() throws Exception {
+            perform(post(TIME_ENTRIES_URL_TEMPLATE)
+                .header("Turbo-Frame", "pr-frame-0")
+                .header("Referer", "/github-activity?date=2022-01-02")
+                .with(oidcSubject(userIdComposite))
+                .param("userLocalId", userLocalId.value().toString())
+                .param("date", "2022-01-02")
+                .param("start", "09:00")
+                .param("duration", "01:00")
+            )
+                .andExpect(redirectedUrl("/github-activity?date=2022-01-02"));
+        }
+    }
+
+    @Test
+    void ensureTimeEntryCreationErrorReturns422() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of());
+        when(timeEntryDayService.getEntryWeekPage(eq(userLocalId), eq(2021), eq(52))).thenReturn(new TimeEntryWeekPage(timeEntryWeek, 0));
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+
+        perform(post(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
+            .param("userLocalId", userLocalId.value().toString())
+            .param("date", "2022-01-02")
+            .param("comment", "hard work")
+            .param("duration", "08:00")
+            // missing start/end
+        )
+            .andExpect(status().isUnprocessableEntity())
+            .andExpect(view().name("timeentries/index"));
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {

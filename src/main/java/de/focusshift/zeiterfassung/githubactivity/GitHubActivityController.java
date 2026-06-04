@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.githubactivity;
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
 import de.focusshift.zeiterfassung.project.ProjectService;
+import de.focusshift.zeiterfassung.settings.CategorisationSettingsService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
@@ -56,6 +57,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     private final GitHubRawEventRepository eventRepository;
     private final GitHubSyncService syncService;
     private final WorkingTimeSettingsService workingTimeSettingsService;
+    private final CategorisationSettingsService categorisationSettingsService;
 
     GitHubActivityController(UserSettingsService userSettingsService,
                               UserSettingsProvider userSettingsProvider,
@@ -66,7 +68,8 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                               TimeEntryLockService timeEntryLockService,
                               GitHubRawEventRepository eventRepository,
                               GitHubSyncService syncService,
-                              WorkingTimeSettingsService workingTimeSettingsService) {
+                              WorkingTimeSettingsService workingTimeSettingsService,
+                              CategorisationSettingsService categorisationSettingsService) {
         this.userSettingsService = userSettingsService;
         this.userSettingsProvider = userSettingsProvider;
         this.timeEntryService = timeEntryService;
@@ -77,6 +80,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         this.eventRepository = eventRepository;
         this.syncService = syncService;
         this.workingTimeSettingsService = workingTimeSettingsService;
+        this.categorisationSettingsService = categorisationSettingsService;
     }
 
     @GetMapping
@@ -253,6 +257,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         } catch (Exception e) {
             model.addAttribute("activityTypes", List.of());
         }
+        model.addAttribute("categorisationSettings", categorisationSettingsService.getCategorisationSettings());
 
         return "github-activity/inline-form";
     }

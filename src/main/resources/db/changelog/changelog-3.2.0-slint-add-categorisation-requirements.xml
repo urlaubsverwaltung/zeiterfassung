@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+  <changeSet id="create-settings-categorisation-table" author="slint">
+    <createTable tableName="settings_categorisation">
+      <column name="id" type="BIGINT" autoIncrement="false">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="project_required" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+      <column name="activity_type_required" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+    <createSequence sequenceName="settings_categorisation_seq" startValue="1" incrementBy="1"/>
+  </changeSet>
+
+  <changeSet id="alter-settings-categorisation-seq-increment" author="slint">
+    <!-- Hibernate default allocationSize is 50; sequence must match -->
+    <sql>ALTER SEQUENCE settings_categorisation_seq INCREMENT BY 50</sql>
+  </changeSet>
+
+</databaseChangeLog>

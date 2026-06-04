@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.settings.CategorisationSettingsRepository;
 import de.focusshift.zeiterfassung.settings.WorkingTimeSettings;
 import de.focusshift.zeiterfassung.settings.WorkingTimeSettingsEntity;
 import de.focusshift.zeiterfassung.settings.WorkingTimeSettingsRepository;
@@ -55,6 +56,8 @@ class SettingsServiceTest {
     @Mock
     private OooCalendarSettingsRepository oooCalendarSettingsRepository;
     @Mock
+    private CategorisationSettingsRepository categorisationSettingsRepository;
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
 
@@ -66,6 +69,7 @@ class SettingsServiceTest {
             lockTimeEntriesSettingsRepository,
             subtractBreakFromTimeEntrySettingsRepository,
             oooCalendarSettingsRepository,
+            categorisationSettingsRepository,
             applicationEventPublisher
         );
     }
@@ -285,6 +289,51 @@ class SettingsServiceTest {
             final WorkingTimeSettings result = sut.getWorkingTimeSettings();
             assertThat(result.timeRoundingMinutes()).isEqualTo(10);
             assertThat(result.minSuggestedMinutes()).isEqualTo(30);
+        }
+    }
+
+    @Nested
+    class CategorisationSettingsTests {
+
+        @Test
+        void ensureGetCategorisationSettingsReturnsDefaultWhenNoneConfigured() {
+            when(categorisationSettingsRepository.findAll()).thenReturn(List.of());
+
+            final de.focusshift.zeiterfassung.settings.CategorisationSettings result = sut.getCategorisationSettings();
+            assertThat(result.projectRequired()).isFalse();
+            assertThat(result.activityTypeRequired()).isFalse();
+        }
+
+        @Test
+        void ensureGetCategorisationSettingsReadsEntityFields() {
+            final de.focusshift.zeiterfassung.settings.CategorisationSettingsEntity entity =
+                new de.focusshift.zeiterfassung.settings.CategorisationSettingsEntity();
+            entity.setProjectRequired(true);
+            entity.setActivityTypeRequired(false);
+            when(categorisationSettingsRepository.findAll()).thenReturn(List.of(entity));
+
+            final de.focusshift.zeiterfassung.settings.CategorisationSettings result = sut.getCategorisationSettings();
+            assertThat(result.projectRequired()).isTrue();
+            assertThat(result.activityTypeRequired()).isFalse();
+        }
+
+        @Test
+        void ensureUpdateCategorisationSettingsPersistsAndReturns() {
+            when(categorisationSettingsRepository.findAll()).thenReturn(List.of());
+            when(categorisationSettingsRepository.save(any(de.focusshift.zeiterfassung.settings.CategorisationSettingsEntity.class)))
+                .thenAnswer(returnsFirstArg());
+
+            final de.focusshift.zeiterfassung.settings.CategorisationSettings result =
+                sut.updateCategorisationSettings(true, true);
+
+            assertThat(result.projectRequired()).isTrue();
+            assertThat(result.activityTypeRequired()).isTrue();
+
+            final ArgumentCaptor<de.focusshift.zeiterfassung.settings.CategorisationSettingsEntity> captor =
+                ArgumentCaptor.forClass(de.focusshift.zeiterfassung.settings.CategorisationSettingsEntity.class);
+            verify(categorisationSettingsRepository).save(captor.capture());
+            assertThat(captor.getValue().isProjectRequired()).isTrue();
+            assertThat(captor.getValue().isActivityTypeRequired()).isTrue();
         }
     }
 
