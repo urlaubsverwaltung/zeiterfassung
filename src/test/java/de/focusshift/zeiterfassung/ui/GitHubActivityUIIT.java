@@ -1,7 +1,8 @@
 package de.focusshift.zeiterfassung.ui;
 
 import com.microsoft.playwright.Page;
-import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
+import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
+import de.focusshift.zeiterfassung.TestKeycloakContainer;
 import de.focusshift.zeiterfassung.githubactivity.GitHubRawEventEntity;
 import de.focusshift.zeiterfassung.githubactivity.GitHubRawEventRepository;
 import de.focusshift.zeiterfassung.githubactivity.GitHubSyncService;
@@ -13,10 +14,14 @@ import de.focusshift.zeiterfassung.ui.pages.LoginPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.DynamicPropertyRegistry;
+
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -33,8 +38,20 @@ import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
+@Testcontainers(parallel = true)
 @UiTest
-class GitHubActivityUIIT extends SingleTenantTestContainersBase {
+class GitHubActivityUIIT {
+
+    @Container
+    private static final SingleTenantPostgreSQLContainer postgre = new SingleTenantPostgreSQLContainer();
+    @Container
+    private static final TestKeycloakContainer keycloak = new TestKeycloakContainer();
+
+    @DynamicPropertySource
+    static void containerProperties(DynamicPropertyRegistry registry) {
+        postgre.configureSpringDataSource(registry);
+        keycloak.configureSpringDataSource(registry);
+    }
 
     @LocalServerPort
     private int port;
@@ -53,8 +70,13 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
         when(gitHubSyncService.isConfigured()).thenReturn(true);
         when(gitHubSyncService.missingConfig()).thenReturn("");
         when(gitHubSyncService.getLastSyncTime(anyString())).thenReturn(null);
+        when(gitHubSyncService.isRateLimitSafe()).thenReturn(true);
+        when(gitHubSyncService.getRateLimitReset()).thenReturn(java.time.Instant.MIN);
         when(gitHubRawEventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
             .thenReturn(Set.of());
+        // Default user settings — extracted before thenReturn() to avoid UnfinishedStubbingException
+        final UserSettings defaultSettings = userSettingsWithLogin("tronical");
+        when(userSettingsService.getUserSettings(any())).thenReturn(defaultSettings);
     }
 
     private UserSettings userSettingsWithLogin(String login) {
@@ -162,7 +184,7 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
 
         @Test
         void ensureEmptyStateIsShownWhenNoEvents(Page page) {
-            when(userSettingsService.getUserSettings(any())).thenReturn(userSettingsWithLogin("tronical"));
+            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             when(gitHubRawEventRepository
                 .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
@@ -189,7 +211,7 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
 
         @Test
         void ensureSyncNotConfiguredBannerIsShown(Page page) {
-            when(userSettingsService.getUserSettings(any())).thenReturn(userSettingsWithLogin("tronical"));
+            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             when(gitHubSyncService.isConfigured()).thenReturn(false);
             when(gitHubSyncService.missingConfig()).thenReturn("GITHUB_APP_ID, GITHUB_APP_PRIVATE_KEY");
             when(gitHubRawEventRepository
@@ -214,7 +236,7 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
 
         @BeforeEach
         void setUp() {
-            when(userSettingsService.getUserSettings(any())).thenReturn(userSettingsWithLogin("tronical"));
+            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final var pr = prEntity("e1", "slint-ui/slint", "11950",
                 "Upgrade fontique and parley", "Merged PR #11950: Upgrade fontique and parley");
             when(gitHubRawEventRepository
@@ -295,7 +317,7 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
 
         @Test
         void ensureReviewsSectionHasCorrectColumns(Page page) {
-            when(userSettingsService.getUserSettings(any())).thenReturn(userSettingsWithLogin("tronical"));
+            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final var review = reviewEntity("e2", "slint-ui/slint", "11958",
                 "Accessibility enhancements", "Approved PR #11958: Accessibility enhancements");
             when(gitHubRawEventRepository
@@ -316,7 +338,7 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
 
         @Test
         void ensureApprovedReviewShowsApprovedBadge(Page page) {
-            when(userSettingsService.getUserSettings(any())).thenReturn(userSettingsWithLogin("tronical"));
+            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final var review = reviewEntity("e2", "slint-ui/slint", "11958",
                 "Accessibility enhancements", "Approved PR #11958: Accessibility enhancements");
             when(gitHubRawEventRepository
@@ -341,7 +363,7 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
 
         @Test
         void ensureIssuesSectionHasCorrectColumns(Page page) {
-            when(userSettingsService.getUserSettings(any())).thenReturn(userSettingsWithLogin("tronical"));
+            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final var issue = issueEntity("e3", "slint-ui/slint", "11949",
                 "Keys is anonymous type", "Opened issue #11949: Keys is anonymous type");
             when(gitHubRawEventRepository
@@ -362,7 +384,7 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
 
         @Test
         void ensureIssueTitleIsALinkToGitHub(Page page) {
-            when(userSettingsService.getUserSettings(any())).thenReturn(userSettingsWithLogin("tronical"));
+            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final var issue = issueEntity("e3", "slint-ui/slint", "11949",
                 "Keys is anonymous type", "Opened issue #11949: Keys is anonymous type");
             when(gitHubRawEventRepository
@@ -400,7 +422,7 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
 
         @BeforeEach
         void setUp() {
-            when(userSettingsService.getUserSettings(any())).thenReturn(userSettingsWithLogin("tronical"));
+            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
         }
 
         // ── Pull Requests ──────────────────────────────────────────────────
@@ -707,7 +729,7 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
 
         @Test
         void ensureStandaloneCommitMessageIsALinkToGitHubCommit(Page page) {
-            when(userSettingsService.getUserSettings(any())).thenReturn(userSettingsWithLogin("tronical"));
+            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final String sha = "abc1234567890abcdef1234567890abcdef123456";
             final var commit = commitEntity(sha, "slint-ui/slint", "simon/license",
                 "Replace cargo-about with a self-contained xtask");
@@ -729,7 +751,7 @@ class GitHubActivityUIIT extends SingleTenantTestContainersBase {
 
         @Test
         void ensureStandaloneCommitShowsBranchName(Page page) {
-            when(userSettingsService.getUserSettings(any())).thenReturn(userSettingsWithLogin("tronical"));
+            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final var commit = commitEntity("abc123", "slint-ui/slint", "simon/license",
                 "Replace cargo-about");
             when(gitHubRawEventRepository
