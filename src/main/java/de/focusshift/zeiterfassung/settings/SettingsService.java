@@ -77,9 +77,12 @@ class SettingsService implements FederalStateSettingsService, WorkingTimeSetting
             .orElse(WorkingTimeSettings.DEFAULT);
     }
 
-    WorkingTimeSettings updateWorkingTimeSettings(EnumMap<DayOfWeek, Duration> workdays) {
+    WorkingTimeSettings updateWorkingTimeSettings(EnumMap<DayOfWeek, Duration> workdays,
+                                                   int timeRoundingMinutes, int minSuggestedMinutes) {
         final WorkingTimeSettingsEntity entity = findFirstEntity(workingTimeSettingsRepository.findAll())
             .orElseGet(WorkingTimeSettingsEntity::new);
+        entity.setTimeRoundingMinutes(timeRoundingMinutes);
+        entity.setMinSuggestedMinutes(minSuggestedMinutes);
         entity.setMonday(durationToString(workdays.get(MONDAY)));
         entity.setTuesday(durationToString(workdays.get(TUESDAY)));
         entity.setWednesday(durationToString(workdays.get(WEDNESDAY)));
@@ -173,7 +176,7 @@ class SettingsService implements FederalStateSettingsService, WorkingTimeSetting
         workdays.put(FRIDAY,    Duration.parse(e.getFriday()));
         workdays.put(SATURDAY,  Duration.parse(e.getSaturday()));
         workdays.put(SUNDAY,    Duration.parse(e.getSunday()));
-        return new WorkingTimeSettings(workdays);
+        return new WorkingTimeSettings(workdays, e.getTimeRoundingMinutes(), e.getMinSuggestedMinutes());
     }
 
     private static LockTimeEntriesSettings toLockTimeEntriesSettings(LockTimeEntriesSettingsEntity e) {

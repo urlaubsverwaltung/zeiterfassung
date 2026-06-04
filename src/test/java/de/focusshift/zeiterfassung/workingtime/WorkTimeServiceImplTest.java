@@ -190,6 +190,8 @@ class WorkTimeServiceImplTest {
 
             when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of());
             when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+            when(workingTimeSettingsService.getWorkingTimeSettings())
+                .thenReturn(de.focusshift.zeiterfassung.settings.WorkingTimeSettings.DEFAULT);
 
             final UUID workingTimeId = UUID.randomUUID();
             when(workingTimeRepository.save(any())).thenAnswer(invocation -> {
@@ -252,10 +254,8 @@ class WorkTimeServiceImplTest {
             customDays.put(java.time.DayOfWeek.FRIDAY,    Duration.ofHours(6));
             customDays.put(java.time.DayOfWeek.SATURDAY,  Duration.ZERO);
             customDays.put(java.time.DayOfWeek.SUNDAY,    Duration.ZERO);
-            when(federalStateSettingsService.getFederalStateSettings())
-                .thenReturn(new de.focusshift.zeiterfassung.settings.FederalStateSettings(GERMANY_BERLIN, false));
             when(workingTimeSettingsService.getWorkingTimeSettings())
-                .thenReturn(new de.focusshift.zeiterfassung.settings.WorkingTimeSettings(customDays));
+                .thenReturn(new de.focusshift.zeiterfassung.settings.WorkingTimeSettings(customDays, 5, 15));
 
             when(workingTimeRepository.save(any())).thenAnswer(invocation -> {
                 final WorkingTimeEntity entity = cloneEntity(invocation.getArgument(0));
@@ -628,6 +628,8 @@ class WorkTimeServiceImplTest {
                 .thenReturn(List.of(user_1));
 
             when(federalStateSettingsService.getFederalStateSettings()).thenReturn(federalStateSettings(GERMANY_BERLIN));
+            when(workingTimeSettingsService.getWorkingTimeSettings())
+                .thenReturn(de.focusshift.zeiterfassung.settings.WorkingTimeSettings.DEFAULT);
 
             final LocalDate from = LocalDate.now(clockFixed);
             final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
@@ -641,11 +643,11 @@ class WorkTimeServiceImplTest {
                         assertThat(workingTime.individualFederalState()).isEqualTo(GLOBAL);
                         assertThat(workingTime.federalState()).isEqualTo(GERMANY_BERLIN);
                         assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
-                        assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(0));
-                        assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(0));
-                        assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(0));
-                        assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(0));
-                        assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(8));
+                        assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(8));
+                        assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(8));
+                        assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(8));
+                        assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(8));
                         assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(0));
                         assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(0));
                     });
@@ -749,6 +751,8 @@ class WorkTimeServiceImplTest {
 
             when(userManagementService.findAllUsers()).thenReturn(List.of(user_1));
             when(workingTimeRepository.findAllByUserIdIsIn(List.of(userLocalId_1.value()))).thenReturn(List.of());
+            when(workingTimeSettingsService.getWorkingTimeSettings())
+                .thenReturn(de.focusshift.zeiterfassung.settings.WorkingTimeSettings.DEFAULT);
 
             final LocalDate from = LocalDate.now(clockFixed);
             final LocalDate toExclusive = LocalDate.now(clockFixed).plusWeeks(1);
@@ -761,11 +765,11 @@ class WorkTimeServiceImplTest {
                         assertThat(workingTime.userIdComposite()).isEqualTo(userIdComposite_1);
                         assertThat(workingTime.individualFederalState()).isEqualTo(GLOBAL);
                         assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
-                        assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(0));
-                        assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(0));
-                        assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(0));
-                        assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(0));
-                        assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(0));
+                        assertThat(workingTime.getMonday().duration()).isEqualTo(Duration.ofHours(8));
+                        assertThat(workingTime.getTuesday().duration()).isEqualTo(Duration.ofHours(8));
+                        assertThat(workingTime.getWednesday().duration()).isEqualTo(Duration.ofHours(8));
+                        assertThat(workingTime.getThursday().duration()).isEqualTo(Duration.ofHours(8));
+                        assertThat(workingTime.getFriday().duration()).isEqualTo(Duration.ofHours(8));
                         assertThat(workingTime.getSaturday().duration()).isEqualTo(Duration.ofHours(0));
                         assertThat(workingTime.getSunday().duration()).isEqualTo(Duration.ofHours(0));
                     });

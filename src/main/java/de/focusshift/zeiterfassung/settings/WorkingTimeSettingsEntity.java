@@ -19,6 +19,9 @@ class WorkingTimeSettingsEntity extends AbstractTenantAwareEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "settings_working_time_seq")
     protected Long id;
 
+    @Column(name = "time_rounding_minutes", nullable = false) private int timeRoundingMinutes = 5;
+    @Column(name = "min_suggested_minutes", nullable = false) private int minSuggestedMinutes = 15;
+
     @Column(name = "monday",    nullable = false) private String monday    = "PT8H";
     @Column(name = "tuesday",   nullable = false) private String tuesday   = "PT8H";
     @Column(name = "wednesday", nullable = false) private String wednesday = "PT8H";
@@ -32,6 +35,12 @@ class WorkingTimeSettingsEntity extends AbstractTenantAwareEntity {
     }
 
     public Long getId() { return id; }
+
+    public int getTimeRoundingMinutes() { return timeRoundingMinutes; }
+    public void setTimeRoundingMinutes(int timeRoundingMinutes) { this.timeRoundingMinutes = timeRoundingMinutes; }
+
+    public int getMinSuggestedMinutes() { return minSuggestedMinutes; }
+    public void setMinSuggestedMinutes(int minSuggestedMinutes) { this.minSuggestedMinutes = minSuggestedMinutes; }
 
     public String getMonday()    { return monday; }
     public void setMonday(String monday)       { this.monday    = monday; }

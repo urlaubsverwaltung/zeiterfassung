@@ -92,6 +92,8 @@ class SettingsControllerTest implements ControllerTest {
             false,
             List.of("monday", "tuesday", "wednesday", "thursday", "friday"),
             8.0,
+            5,
+            15,
             true,
             "42",
             true,
@@ -142,6 +144,8 @@ class SettingsControllerTest implements ControllerTest {
             false,
             List.of("monday", "tuesday", "wednesday", "thursday", "friday"),
             8.0,
+            5,
+            15,
             false,
             null,
             null,
@@ -160,6 +164,8 @@ class SettingsControllerTest implements ControllerTest {
         final SettingsDto dto = new SettingsDto(
             FederalState.NONE,
             false,
+            null,
+            null,
             null,
             null,
             true,
@@ -198,6 +204,8 @@ class SettingsControllerTest implements ControllerTest {
         final SettingsDto expectedSettingsDto = new SettingsDto(
             FederalState.NONE,
             false,
+            null,
+            null,
             null,
             null,
             true,
@@ -241,7 +249,7 @@ class SettingsControllerTest implements ControllerTest {
             .andExpect(redirectedUrl("/settings"));
 
         verify(settingsService).updateFederalStateSettings(FederalState.NONE, false);
-        verify(settingsService).updateWorkingTimeSettings(any(EnumMap.class));
+        verify(settingsService).updateWorkingTimeSettings(any(EnumMap.class), eq(WorkingTimeSettings.DEFAULT_TIME_ROUNDING_MINUTES), eq(WorkingTimeSettings.DEFAULT_MIN_SUGGESTED_MINUTES));
         verify(settingsService).updateLockTimeEntriesSettings(true, 42);
         verify(settingsService).updateSubtractBreakFromTimeEntrySettings(true, LocalDate.parse("2025-05-30").atStartOfDay().toInstant(UTC));
     }
@@ -275,7 +283,7 @@ class SettingsControllerTest implements ControllerTest {
         customDays.put(DayOfWeek.SATURDAY,  Duration.ZERO);
         customDays.put(DayOfWeek.SUNDAY,    Duration.ZERO);
         when(settingsService.getFederalStateSettings()).thenReturn(new FederalStateSettings(FederalState.NONE, false));
-        when(settingsService.getWorkingTimeSettings()).thenReturn(new WorkingTimeSettings(customDays));
+        when(settingsService.getWorkingTimeSettings()).thenReturn(new WorkingTimeSettings(customDays, 5, 15));
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(new LockTimeEntriesSettings(false, -1));
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
         when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);
@@ -295,7 +303,6 @@ class SettingsControllerTest implements ControllerTest {
     @Test
     void ensurePostSettingsSavesWorkingDays() throws Exception {
 
-        when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
         perform(post("/settings")
             .param("federalState", "NONE")
@@ -312,14 +319,15 @@ class SettingsControllerTest implements ControllerTest {
             org.mockito.ArgumentMatchers.assertArg(workdays -> {
                 org.assertj.core.api.Assertions.assertThat(workdays.get(DayOfWeek.MONDAY)).isEqualTo(Duration.ofHours(8));
                 org.assertj.core.api.Assertions.assertThat(workdays.get(DayOfWeek.SATURDAY)).isEqualTo(Duration.ZERO);
-            })
+            }),
+            eq(WorkingTimeSettings.DEFAULT_TIME_ROUNDING_MINUTES),
+            eq(WorkingTimeSettings.DEFAULT_MIN_SUGGESTED_MINUTES)
         );
     }
 
     @Test
     void ensurePostSettingsWithNoDaysCheckedSavesAllZero() throws Exception {
 
-        when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
         perform(post("/settings")
             .param("federalState", "NONE")
@@ -335,7 +343,9 @@ class SettingsControllerTest implements ControllerTest {
             org.mockito.ArgumentMatchers.assertArg(workdays ->
                 org.assertj.core.api.Assertions.assertThat(workdays.values())
                     .allMatch(Duration::isZero)
-            )
+            ),
+            eq(WorkingTimeSettings.DEFAULT_TIME_ROUNDING_MINUTES),
+            eq(WorkingTimeSettings.DEFAULT_MIN_SUGGESTED_MINUTES)
         );
     }
 

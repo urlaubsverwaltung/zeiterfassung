@@ -21,6 +21,8 @@ class SettingsDtoValidator implements Validator {
         final SettingsDto settingsDto = (SettingsDto) target;
         validateFederalState(settingsDto, errors);
         validateWorkingTime(settingsDto, errors);
+        validateTimeRoundingMinutes(settingsDto, errors);
+        validateMinSuggestedMinutes(settingsDto, errors);
         validateLockTimeEntriesDaysInPast(settingsDto, errors);
         validateSubtractBreak(settingsDto, errors);
     }
@@ -29,6 +31,20 @@ class SettingsDtoValidator implements Validator {
         final Double hours = settingsDto.workingTime();
         if (hours != null && (hours < 0 || hours > 24)) {
             errors.rejectValue("workingTime", "settings.working-time.validation.range");
+        }
+    }
+
+    private void validateTimeRoundingMinutes(SettingsDto settingsDto, Errors errors) {
+        final Integer rounding = settingsDto.timeRoundingMinutes();
+        if (rounding != null && (rounding < 1 || rounding > 60)) {
+            errors.rejectValue("timeRoundingMinutes", "settings.time-rounding-minutes.validation.range");
+        }
+    }
+
+    private void validateMinSuggestedMinutes(SettingsDto settingsDto, Errors errors) {
+        final Integer min = settingsDto.minSuggestedMinutes();
+        if (min != null && (min < 1 || min > 480)) {
+            errors.rejectValue("minSuggestedMinutes", "settings.min-suggested-minutes.validation.range");
         }
     }
 

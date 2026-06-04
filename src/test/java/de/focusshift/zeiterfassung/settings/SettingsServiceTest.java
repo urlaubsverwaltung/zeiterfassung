@@ -259,7 +259,7 @@ class SettingsServiceTest {
             workdays.put(SATURDAY,  Duration.ZERO);
             workdays.put(SUNDAY,    Duration.ZERO);
 
-            final WorkingTimeSettings result = sut.updateWorkingTimeSettings(workdays);
+            final WorkingTimeSettings result = sut.updateWorkingTimeSettings(workdays, 10, 20);
 
             final ArgumentCaptor<WorkingTimeSettingsEntity> captor = ArgumentCaptor.forClass(WorkingTimeSettingsEntity.class);
             verify(workingTimeSettingsRepository).save(captor.capture());
@@ -267,8 +267,24 @@ class SettingsServiceTest {
             assertThat(saved.getMonday()).isEqualTo("PT8H");
             assertThat(saved.getFriday()).isEqualTo("PT7H30M");
             assertThat(saved.getSaturday()).isEqualTo("PT0S");
+            assertThat(saved.getTimeRoundingMinutes()).isEqualTo(10);
+            assertThat(saved.getMinSuggestedMinutes()).isEqualTo(20);
 
             assertThat(result.workdays()).containsEntry(FRIDAY, Duration.ofMinutes(450));
+            assertThat(result.timeRoundingMinutes()).isEqualTo(10);
+            assertThat(result.minSuggestedMinutes()).isEqualTo(20);
+        }
+
+        @Test
+        void ensureGetWorkingTimeSettingsReadsTimeSuggestionFields() {
+            final WorkingTimeSettingsEntity entity = new WorkingTimeSettingsEntity();
+            entity.setTimeRoundingMinutes(10);
+            entity.setMinSuggestedMinutes(30);
+            when(workingTimeSettingsRepository.findAll()).thenReturn(List.of(entity));
+
+            final WorkingTimeSettings result = sut.getWorkingTimeSettings();
+            assertThat(result.timeRoundingMinutes()).isEqualTo(10);
+            assertThat(result.minSuggestedMinutes()).isEqualTo(30);
         }
     }
 

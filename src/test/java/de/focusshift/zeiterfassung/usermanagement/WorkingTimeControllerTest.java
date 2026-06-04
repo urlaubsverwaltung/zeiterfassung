@@ -104,6 +104,8 @@ class WorkingTimeControllerTest implements ControllerTest {
 
         when(federalStateSettingsService.getFederalStateSettings())
             .thenReturn(new FederalStateSettings(GERMANY_BERLIN, true));
+        when(workingTimeSettingsService.getWorkingTimeSettings())
+            .thenReturn(de.focusshift.zeiterfassung.settings.WorkingTimeSettings.DEFAULT);
 
         perform(get(WORKING_TIME_CREATE_URL_TEMPLATE, userLocalId.value())
             .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
@@ -131,6 +133,8 @@ class WorkingTimeControllerTest implements ControllerTest {
 
         when(federalStateSettingsService.getFederalStateSettings())
             .thenReturn(new FederalStateSettings(GERMANY_BERLIN, worksOnPublicHoliday));
+        when(workingTimeSettingsService.getWorkingTimeSettings())
+            .thenReturn(de.focusshift.zeiterfassung.settings.WorkingTimeSettings.DEFAULT);
 
         perform(get(WORKING_TIME_CREATE_URL_TEMPLATE, userLocalId.value())
             .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
@@ -158,7 +162,7 @@ class WorkingTimeControllerTest implements ControllerTest {
         when(federalStateSettingsService.getFederalStateSettings())
             .thenReturn(new FederalStateSettings(GERMANY_BERLIN, false));
         when(workingTimeSettingsService.getWorkingTimeSettings())
-            .thenReturn(new de.focusshift.zeiterfassung.settings.WorkingTimeSettings(customDays));
+            .thenReturn(new de.focusshift.zeiterfassung.settings.WorkingTimeSettings(customDays, 5, 15));
 
         perform(get(WORKING_TIME_CREATE_URL_TEMPLATE, userLocalId.value())
             .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))

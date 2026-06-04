@@ -146,6 +146,47 @@
                      th:text="${#fields.errors('workingTime')[0]}"
                      class="mt-2 invalid"></p>
                 </div>
+
+                <!-- GitHub Activity time suggestion settings -->
+                <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:gap-8">
+                  <div th:with="hasError=${#fields.hasErrors('timeRoundingMinutes')}">
+                    <label for="settings-time-rounding"
+                           class="block text-sm font-medium"
+                           th:text="#{settings.time-rounding-minutes.label}">
+                      Time rounding (minutes)
+                    </label>
+                    <p class="mt-1 text-dimmed text-sm"
+                       th:text="#{settings.time-rounding-minutes.teaser-text}"></p>
+                    <input type="number" id="settings-time-rounding"
+                           data-testid="settings-time-rounding-minutes"
+                           name="timeRoundingMinutes" min="1" max="60"
+                           class="mt-2 xs:w-24"
+                           th:classappend="${hasError ? ' invalid' : ''}"
+                           th:value="${settings.timeRoundingMinutes}"/>
+                    <p th:if="${hasError}"
+                       th:text="${#fields.errors('timeRoundingMinutes')[0]}"
+                       class="mt-1 invalid"></p>
+                  </div>
+
+                  <div th:with="hasError=${#fields.hasErrors('minSuggestedMinutes')}">
+                    <label for="settings-min-suggested"
+                           class="block text-sm font-medium"
+                           th:text="#{settings.min-suggested-minutes.label}">
+                      Minimum suggested time (minutes)
+                    </label>
+                    <p class="mt-1 text-dimmed text-sm"
+                       th:text="#{settings.min-suggested-minutes.teaser-text}"></p>
+                    <input type="number" id="settings-min-suggested"
+                           data-testid="settings-min-suggested-minutes"
+                           name="minSuggestedMinutes" min="1" max="480"
+                           class="mt-2 xs:w-24"
+                           th:classappend="${hasError ? ' invalid' : ''}"
+                           th:value="${settings.minSuggestedMinutes}"/>
+                    <p th:if="${hasError}"
+                       th:text="${#fields.errors('minSuggestedMinutes')[0]}"
+                       class="mt-1 invalid"></p>
+                  </div>
+                </div>
               </div>
 
               <div class="mt-8 lg:mt-12">

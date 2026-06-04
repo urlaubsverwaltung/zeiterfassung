@@ -16,6 +16,10 @@ record SettingsDto(
     @Nullable List<String> workday,
     /** Common hours per working day (decimal, e.g. 8.0 or 7.5). */
     @Nullable Double workingTime,
+    /** Round suggested GitHub Activity time up to the nearest multiple of this many minutes (1–60). */
+    @Nullable Integer timeRoundingMinutes,
+    /** Minimum floor for the GitHub Activity time suggestion in minutes (1–480). */
+    @Nullable Integer minSuggestedMinutes,
 
     boolean lockingIsActive,
     @Nullable

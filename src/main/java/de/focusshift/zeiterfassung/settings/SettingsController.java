@@ -36,6 +36,8 @@ import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARC
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.util.Objects.requireNonNullElse;
+import static de.focusshift.zeiterfassung.settings.WorkingTimeSettings.DEFAULT_TIME_ROUNDING_MINUTES;
+import static de.focusshift.zeiterfassung.settings.WorkingTimeSettings.DEFAULT_MIN_SUGGESTED_MINUTES;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 
@@ -105,7 +107,11 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
         }
 
         settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
-        settingsService.updateWorkingTimeSettings(dtoToWorkdays(settingsDto));
+        settingsService.updateWorkingTimeSettings(
+            dtoToWorkdays(settingsDto),
+            requireNonNullElse(settingsDto.timeRoundingMinutes(), DEFAULT_TIME_ROUNDING_MINUTES),
+            requireNonNullElse(settingsDto.minSuggestedMinutes(),  DEFAULT_MIN_SUGGESTED_MINUTES)
+        );
 
         final int lockTimeEntriesDaysInPast = requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1);
         settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), lockTimeEntriesDaysInPast);
@@ -177,6 +183,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
             federalStateSettings.worksOnPublicHoliday(),
             checkedWorkdays,
             workingTimeHours == 0 ? null : workingTimeHours,
+            workingTimeSettings.timeRoundingMinutes(),
+            workingTimeSettings.minSuggestedMinutes(),
             lockTimeEntriesSettings.lockingIsActive(),
             lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null,
             subtractBreakFromTimeEntryIsActive,

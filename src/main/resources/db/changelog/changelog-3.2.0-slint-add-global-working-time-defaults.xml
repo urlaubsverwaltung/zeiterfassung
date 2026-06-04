@@ -43,6 +43,17 @@
     </createIndex>
   </changeSet>
 
+  <changeSet author="ajana" id="add-time-suggestion-settings-to-working-time">
+    <preConditions>
+      <tableExists tableName="settings_working_time"/>
+      <not><columnExists tableName="settings_working_time" columnName="time_rounding_minutes"/></not>
+    </preConditions>
+    <addColumn tableName="settings_working_time">
+      <column name="time_rounding_minutes" type="INT" defaultValueNumeric="5"><constraints nullable="false"/></column>
+      <column name="min_suggested_minutes" type="INT" defaultValueNumeric="15"><constraints nullable="false"/></column>
+    </addColumn>
+  </changeSet>
+
   <changeSet author="ajana" id="enable-row-level-security-on-working-time-settings">
     <sql dbms="postgresql">
       ALTER TABLE settings_working_time ENABLE ROW LEVEL SECURITY;

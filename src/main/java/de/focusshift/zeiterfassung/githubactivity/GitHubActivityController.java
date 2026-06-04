@@ -10,6 +10,8 @@ import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
+import de.focusshift.zeiterfassung.settings.WorkingTimeSettings;
+import de.focusshift.zeiterfassung.settings.WorkingTimeSettingsService;
 import de.focusshift.zeiterfassung.user.UserSettings;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.UserSettingsService;
@@ -40,7 +42,6 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
 
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter OPENED_DATE_FMT = DateTimeFormatter.ofPattern("MMM d");
-    private static final long MIN_SUGGESTED_MINUTES = 15;
     private static final Set<String> REVIEW_EVENT_TYPES = Set.of(
         "PullRequestReviewEvent", "PullRequestReviewCommentEvent",
         "IssueCommentEvent"); // IssueCommentEvent on PRs is routed to anchorType=PR by the sync service
@@ -54,6 +55,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     private final TimeEntryLockService timeEntryLockService;
     private final GitHubRawEventRepository eventRepository;
     private final GitHubSyncService syncService;
+    private final WorkingTimeSettingsService workingTimeSettingsService;
 
     GitHubActivityController(UserSettingsService userSettingsService,
                               UserSettingsProvider userSettingsProvider,
@@ -63,7 +65,8 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                               ActivityTypeService activityTypeService,
                               TimeEntryLockService timeEntryLockService,
                               GitHubRawEventRepository eventRepository,
-                              GitHubSyncService syncService) {
+                              GitHubSyncService syncService,
+                              WorkingTimeSettingsService workingTimeSettingsService) {
         this.userSettingsService = userSettingsService;
         this.userSettingsProvider = userSettingsProvider;
         this.timeEntryService = timeEntryService;
@@ -73,6 +76,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         this.timeEntryLockService = timeEntryLockService;
         this.eventRepository = eventRepository;
         this.syncService = syncService;
+        this.workingTimeSettingsService = workingTimeSettingsService;
     }
 
     @GetMapping
@@ -275,8 +279,12 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
             final String windowStart = TIME_FMT.withZone(zone).format(minTs);
             final String windowEnd = minTs.equals(maxTs) ? null : TIME_FMT.withZone(zone).format(maxTs);
 
+            final WorkingTimeSettings wtSettings = workingTimeSettingsService.getWorkingTimeSettings();
+            final long rounding = wtSettings.timeRoundingMinutes();
+            final long minSuggested = wtSettings.minSuggestedMinutes();
             final long windowMinutes = Duration.between(minTs, maxTs).toMinutes();
-            final long suggested = Math.max(MIN_SUGGESTED_MINUTES, windowMinutes);
+            final long rounded = ((Math.max(1, windowMinutes) + rounding - 1) / rounding) * rounding;
+            final long suggested = Math.max(minSuggested, rounded);
             final String suggestedDuration = String.format("%02d:%02d", suggested / 60, suggested % 60);
 
             final boolean isRepo = "REPO".equals(first.getAnchorType());

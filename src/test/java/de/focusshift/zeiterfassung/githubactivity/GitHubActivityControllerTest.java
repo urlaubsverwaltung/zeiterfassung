@@ -4,6 +4,8 @@ import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
 import de.focusshift.zeiterfassung.project.ProjectService;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.settings.WorkingTimeSettings;
+import de.focusshift.zeiterfassung.settings.WorkingTimeSettingsService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserSettings;
@@ -53,6 +55,7 @@ class GitHubActivityControllerTest implements ControllerTest {
     @Mock private TimeEntryLockService timeEntryLockService;
     @Mock private GitHubRawEventRepository eventRepository;
     @Mock private GitHubSyncService syncService;
+    @Mock private WorkingTimeSettingsService workingTimeSettingsService;
 
     private GitHubActivityController sut;
 
@@ -61,7 +64,8 @@ class GitHubActivityControllerTest implements ControllerTest {
         sut = new GitHubActivityController(
             userSettingsService, userSettingsProvider, timeEntryService,
             userSearchViewHelper, projectService, activityTypeService,
-            timeEntryLockService, eventRepository, syncService
+            timeEntryLockService, eventRepository, syncService,
+            workingTimeSettingsService
         );
     }
 
@@ -89,6 +93,7 @@ class GitHubActivityControllerTest implements ControllerTest {
         when(syncService.getRateLimitRemaining()).thenReturn(5000);
         when(syncService.getRateLimitTotal()).thenReturn(5000);
         when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any())).thenReturn(Set.of());
+        when(workingTimeSettingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
     }
 
     private GitHubRawEventEntity entity(String eventId, String type, String repo,
@@ -653,5 +658,102 @@ class GitHubActivityControllerTest implements ControllerTest {
         perform(get("/github-activity").with(oidcSubject("user-uuid")))
             .andExpect(status().isOk())
             .andExpect(model().attribute("hasActivity", true));
+    }
+
+    // ── time suggestion (suggestedDuration) ──────────────────────────────────
+
+    @Nested
+    class TimeSuggestion {
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureSingleEventUsesMinSuggestedFloor() throws Exception {
+            stubCommonDependencies("tronical");
+            // Single event → window = 0 min; rounding=5 → ceil(1/5)*5=5; max(15,5)=15
+            final var commit = commitEntity("sha1", "slint-ui/slint", "simon/license", "Single commit");
+            when(eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(commit));
+
+            final var result = perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andReturn();
+
+            final List<ActivityAnchor> standalone = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("standaloneAnchors");
+            assertThat(standalone).hasSize(1);
+            assertThat(standalone.get(0).suggestedDuration()).isEqualTo("00:15");
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureWindowLargerThanMinUsesRoundedWindow() throws Exception {
+            stubCommonDependencies("tronical");
+            // Two commits 60 minutes apart; rounding=5 → 60 is already a multiple; max(15,60)=60
+            final var c1 = entity("tronical_commit_sha1", "PushEvent", "slint-ui/slint",
+                "REPO", "simon/license", "simon/license",
+                "📝", "Commit A", Instant.parse("2026-06-03T14:00:00Z"));
+            final var c2 = entity("tronical_commit_sha2", "PushEvent", "slint-ui/slint",
+                "REPO", "simon/license", "simon/license",
+                "📝", "Commit B", Instant.parse("2026-06-03T15:00:00Z"));
+            when(eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(c1, c2));
+
+            final var result = perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andReturn();
+
+            final List<ActivityAnchor> standalone = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("standaloneAnchors");
+            assertThat(standalone).hasSize(1);
+            assertThat(standalone.get(0).suggestedDuration()).isEqualTo("01:00");
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureWindowRoundedUpToNearestMultiple() throws Exception {
+            stubCommonDependencies("tronical");
+            // Two commits 22 minutes apart; rounding=5 → ceil(22/5)*5=25; max(15,25)=25
+            final var c1 = entity("tronical_commit_sha1", "PushEvent", "slint-ui/slint",
+                "REPO", "simon/license", "simon/license",
+                "📝", "Commit A", Instant.parse("2026-06-03T14:00:00Z"));
+            final var c2 = entity("tronical_commit_sha2", "PushEvent", "slint-ui/slint",
+                "REPO", "simon/license", "simon/license",
+                "📝", "Commit B", Instant.parse("2026-06-03T14:22:00Z"));
+            when(eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(c1, c2));
+
+            final var result = perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andReturn();
+
+            final List<ActivityAnchor> standalone = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("standaloneAnchors");
+            assertThat(standalone).hasSize(1);
+            assertThat(standalone.get(0).suggestedDuration()).isEqualTo("00:25");
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureCustomRoundingAndMinAreRespected() throws Exception {
+            stubCommonDependencies("tronical");
+            // Override settings: rounding=15, min=30
+            // Two commits 20 minutes apart; ceil(20/15)*15=30; max(30,30)=30
+            when(workingTimeSettingsService.getWorkingTimeSettings())
+                .thenReturn(new WorkingTimeSettings(WorkingTimeSettings.defaultWorkdays(), 15, 30));
+            final var c1 = entity("tronical_commit_sha1", "PushEvent", "slint-ui/slint",
+                "REPO", "simon/license", "simon/license",
+                "📝", "Commit A", Instant.parse("2026-06-03T14:00:00Z"));
+            final var c2 = entity("tronical_commit_sha2", "PushEvent", "slint-ui/slint",
+                "REPO", "simon/license", "simon/license",
+                "📝", "Commit B", Instant.parse("2026-06-03T14:20:00Z"));
+            when(eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(c1, c2));
+
+            final var result = perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andReturn();
+
+            final List<ActivityAnchor> standalone = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("standaloneAnchors");
+            assertThat(standalone).hasSize(1);
+            assertThat(standalone.get(0).suggestedDuration()).isEqualTo("00:30");
+        }
     }
 }
