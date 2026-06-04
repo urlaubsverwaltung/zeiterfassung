@@ -72,12 +72,21 @@ public class GitHubSyncService {
     // Rate limit state — updated from response headers on every API call
     private final java.util.concurrent.atomic.AtomicInteger rateLimitRemaining =
         new java.util.concurrent.atomic.AtomicInteger(5000);
+    private final java.util.concurrent.atomic.AtomicInteger rateLimitTotal =
+        new java.util.concurrent.atomic.AtomicInteger(5000);
     private volatile Instant rateLimitReset = Instant.MIN;
 
     public Instant getLastSyncTime(String login) { return lastSyncTimes.get(login); }
     public int getRateLimitRemaining() { return rateLimitRemaining.get(); }
+    public int getRateLimitTotal() { return rateLimitTotal.get(); }
     public Instant getRateLimitReset() { return rateLimitReset; }
     public boolean isRateLimitSafe() { return rateLimitRemaining.get() > rateLimitSafetyThreshold; }
+
+    /** Returns remaining requests as a percentage of the total limit (0–100). */
+    public int getRateLimitPercent() {
+        final int total = rateLimitTotal.get();
+        return total > 0 ? Math.min(100, (int) (rateLimitRemaining.get() * 100.0 / total)) : 100;
+    }
 
     // package-private for testing
     void setRateLimitRemaining(int remaining) { this.rateLimitRemaining.set(remaining); }
@@ -109,6 +118,8 @@ public class GitHubSyncService {
         try {
             final String remaining = headers.getFirst("X-RateLimit-Remaining");
             if (remaining != null) rateLimitRemaining.set(Integer.parseInt(remaining));
+            final String limit = headers.getFirst("X-RateLimit-Limit");
+            if (limit != null) rateLimitTotal.set(Integer.parseInt(limit));
             final String reset = headers.getFirst("X-RateLimit-Reset");
             if (reset != null) rateLimitReset = Instant.ofEpochSecond(Long.parseLong(reset));
         } catch (NumberFormatException ignored) {}

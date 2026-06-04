@@ -40,26 +40,39 @@
               <span th:if="${lastSyncedAt == null}"
                     class="text-xs text-gray-400 dark:text-zinc-500"
                     th:text="#{github-activity.never-synced}">Never synced</span>
-              <!-- Refresh button — disabled when GitHub API rate limit is low -->
-              <th:block th:if="${rateLimitSafe != false}">
-                <form th:action="@{/github-activity/sync}" method="post">
+              <!-- Refresh button with battery-style fill indicator.
+                   A thin bar drains left-to-right as the API rate limit is consumed,
+                   shifting colour from green → amber → red. Disabled when limit is low. -->
+              <div class="flex items-center gap-2">
+                <form th:if="${rateLimitSafe != false}" th:action="@{/github-activity/sync}" method="post">
                   <input type="hidden" name="date" th:value="${date}"/>
-                  <button type="submit" class="button-secondary text-sm" th:text="#{github-activity.sync-now}">↻ Refresh</button>
+                  <button type="submit"
+                          class="button-secondary text-sm relative overflow-hidden"
+                          th:title="|${rateLimitRemaining} / ${rateLimitTotal} #{github-activity.rate-limit-requests-remaining}|">
+                    <!-- Draining fill bar at the bottom of the button -->
+                    <span class="pointer-events-none absolute bottom-0 left-0 h-0.5 transition-all duration-700 ease-out rounded-full"
+                          th:style="|width:${rateLimitPercent}%;background-color:${rateLimitFillColor}|">
+                    </span>
+                    <span class="relative" th:text="#{github-activity.sync-now}">↻ Refresh</span>
+                  </button>
                 </form>
-              </th:block>
-              <th:block th:if="${rateLimitSafe == false}">
-                <div class="flex items-center gap-2">
+                <th:block th:if="${rateLimitSafe == false}">
                   <button type="button" disabled
-                          class="button-secondary text-sm opacity-40 cursor-not-allowed"
-                          th:text="#{github-activity.sync-now}">↻ Refresh</button>
+                          class="button-secondary text-sm opacity-40 cursor-not-allowed relative overflow-hidden"
+                          th:title="#{github-activity.rate-limited}">
+                    <span class="pointer-events-none absolute bottom-0 left-0 h-0.5 rounded-full"
+                          style="width:0%;background-color:#ef4444">
+                    </span>
+                    <span class="relative" th:text="#{github-activity.sync-now}">↻ Refresh</span>
+                  </button>
                   <span class="text-xs text-amber-500 dark:text-amber-400">
                     <span th:if="${rateLimitResetAt != null}"
                           th:text="#{github-activity.rate-limit-resets-at(${rateLimitResetAt})}">Available at HH:mm</span>
                     <span th:if="${rateLimitResetAt == null}"
                           th:text="#{github-activity.rate-limited}">Rate limited</span>
                   </span>
-                </div>
-              </th:block>
+                </th:block>
+              </div>
             </div>
           </div>
 

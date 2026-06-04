@@ -72,6 +72,9 @@ class GitHubActivityUIIT {
         when(gitHubSyncService.getLastSyncTime(anyString())).thenReturn(null);
         when(gitHubSyncService.isRateLimitSafe()).thenReturn(true);
         when(gitHubSyncService.getRateLimitReset()).thenReturn(java.time.Instant.MIN);
+        when(gitHubSyncService.getRateLimitPercent()).thenReturn(100);
+        when(gitHubSyncService.getRateLimitRemaining()).thenReturn(5000);
+        when(gitHubSyncService.getRateLimitTotal()).thenReturn(5000);
         when(gitHubRawEventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
             .thenReturn(Set.of());
         // Default user settings — extracted before thenReturn() to avoid UnfinishedStubbingException
