@@ -518,6 +518,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                 dateFmt.withZone(zone).format(entry.getKey().atStartOfDay(zone).toInstant()),
                 entry.getKey(),
                 entry.getValue().stream()
+                    .filter(e -> !"Commit".equals(deriveSearchType(e)))
                     .map(e -> new GitHubSearchResultItem(
                         deriveSearchType(e),
                         e.getRepoName(),
@@ -526,6 +527,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                         timeFmt.withZone(zone).format(e.getEventTimestamp()),
                         e.getLoggedAt() != null))
                     .toList()))
+            .filter(g -> !g.items().isEmpty())
             .toList();
 
         model.addAttribute("searchResultGroups", groups);

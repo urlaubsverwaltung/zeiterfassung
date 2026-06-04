@@ -902,7 +902,7 @@ class GitHubActivityControllerTest implements ControllerTest {
             assertThat(groups).hasSize(1);
             final var items = groups.get(0).items();
             assertThat(items).extracting(GitHubActivityController.GitHubSearchResultItem::type)
-                .containsExactlyInAnyOrder("PR", "Review", "Issue", "Commit");
+                .containsExactlyInAnyOrder("PR", "Review", "Issue");
         }
 
         @SuppressWarnings("unchecked")
