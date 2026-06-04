@@ -23,7 +23,7 @@
     <th:block th:fragment="content">
       <main class="content-container content--max-w flex flex-col">
         <div
-          class="flex-1 flex flex-col mx-auto w-full max-w-7xl px-4 desktop:px-8"
+          class="flex-1 flex flex-col mx-auto w-full max-w-7xl px-4 desktop:px-8 pb-24"
         >
           <div>
             <h1 class="text-xl font-bold" th:text="#{settings.heading}">
@@ -353,29 +353,6 @@
                   </div>
                 </div>
               </div>
-              <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
-                <button
-                  type="submit"
-                  class="button-primary button-primary-icon"
-                  data-testid="settings-submit-button"
-                  data-turbo-frame="_top"
-                >
-                  <svg
-                    th:replace="~{icons/save::svg(className='w-5 h-5')}"
-                  ></svg>
-                  <th:block th:text="#{settings.save}"> Speichern </th:block>
-                </button>
-                <a
-                  id="settings-reset-button"
-                  href="#"
-                  th:href="@{/settings}"
-                  class="button-secondary"
-                  th:text="#{settings.reset}"
-                >
-                  Zurücksetzen
-                </a>
-              </div>
-
               <!-- Categorisation requirements -->
               <div class="mt-8 lg:mt-12" data-testid="categorisation-requirements-section">
                 <h2 class="font-bold" th:text="#{settings.categorisation-requirements.heading}">Categorisation requirements</h2>
@@ -431,6 +408,29 @@
                     placeholder="https://ooo.slint.dev/web/company/persons/.../calendar?secret=..."
                     class="w-full rounded border border-gray-300 dark:border-zinc-600 px-3 py-2 text-sm dark:bg-zinc-800"
                   />
+                </div>
+              </div>
+
+              <!-- Sticky save bar — matches urlaubsverwaltung uv-sticky pattern -->
+              <div style="position:sticky;bottom:-1px;z-index:999999;padding:8px 0;"
+                   class="bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-700 mt-8">
+                <div class="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    class="button-primary button-primary-icon"
+                    data-testid="settings-submit-button"
+                    data-turbo-frame="_top"
+                  >
+                    <svg th:replace="~{icons/save::svg(className='w-5 h-5')}"></svg>
+                    <th:block th:text="#{settings.save}">Speichern</th:block>
+                  </button>
+                  <a
+                    id="settings-reset-button"
+                    href="#"
+                    th:href="@{/settings}"
+                    class="button-secondary"
+                    th:text="#{settings.reset}"
+                  >Zurücksetzen</a>
                 </div>
               </div>
 
