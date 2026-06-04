@@ -657,70 +657,19 @@ class GitHubActivityUIIT {
         class StandaloneCommits {
 
             @Test
-            void ensureLogItButtonIsVisibleForUnloggedCommit(Page page) {
+            void ensureStandaloneSectionIsNotVisible(Page page) {
                 final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix typo in docs");
-                stubCommitEvents(commit);
-                final var loginPage = new LoginPage(page, port);
-                final var activityPage = new GitHubActivityPage(page, port);
-
-                loginPage.login(LoginPage.Credentials.USER);
-                activityPage.navigate();
-
-                assertThat(activityPage.standaloneLogItButton(0, 0)).isVisible();
-                assertThat(activityPage.standaloneLoggedLabel(0, 0)).not().isVisible();
-            }
-
-            @Test
-            void ensureLoggedLabelIsRenderedServerSideWhenCommitAlreadyLogged(Page page) {
-                final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix typo in docs");
-                commit.setLoggedAt(Instant.now());
-                stubCommitEvents(commit);
-                final var loginPage = new LoginPage(page, port);
-                final var activityPage = new GitHubActivityPage(page, port);
-
-                loginPage.login(LoginPage.Credentials.USER);
-                activityPage.navigate();
-
-                assertThat(activityPage.standaloneLoggedLabel(0, 0)).isVisible();
-                assertThat(activityPage.standaloneLogItButton(0, 0)).not().isVisible();
-            }
-
-            @Test
-            void ensureClickingLogItOpensCommitInlineForm(Page page) {
-                final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix typo in docs");
-                stubCommitEvents(commit);
-                final var loginPage = new LoginPage(page, port);
-                final var activityPage = new GitHubActivityPage(page, port);
-
-                loginPage.login(LoginPage.Credentials.USER);
-                activityPage.navigate();
-
-                activityPage.standaloneLogItButton(0, 0).click();
-
-                assertThat(activityPage.inlineFormSaveButton()).isVisible();
-            }
-
-            @Test
-            void ensureLoggedLabelAppearsClientSideAfterSubmittingCommitForm(Page page) {
-                final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix typo in docs");
-                stubCommitEvents(commit);
-                final var loginPage = new LoginPage(page, port);
-                final var activityPage = new GitHubActivityPage(page, port);
-
-                loginPage.login(LoginPage.Credentials.USER);
-                activityPage.navigate();
-
-                activityPage.standaloneLogItButton(0, 0).click();
-                activityPage.inlineFormSaveButton().click();
-
-                assertThat(activityPage.standaloneSection().getByText("✓ Logged")).isVisible();
-            }
-
-            private void stubCommitEvents(GitHubRawEventEntity commit) {
                 when(gitHubRawEventRepository
                     .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                         anyString(), any(), any()))
                     .thenReturn(List.of(commit));
+                final var loginPage = new LoginPage(page, port);
+                final var activityPage = new GitHubActivityPage(page, port);
+
+                loginPage.login(LoginPage.Credentials.USER);
+                activityPage.navigate();
+
+                assertThat(activityPage.standaloneSection()).not().isVisible();
             }
         }
     }
@@ -882,7 +831,8 @@ class GitHubActivityUIIT {
             activityPage.openSearchModal();
             activityPage.typeInSearch("renderer");
 
-            assertThat(activityPage.searchResultItems()).hasCount(4);
+            // Standalone commits are excluded from the search modal
+            assertThat(activityPage.searchResultItems()).hasCount(3);
         }
 
         @Test
@@ -1065,30 +1015,7 @@ class GitHubActivityUIIT {
     class StandaloneCommitsSection {
 
         @Test
-        void ensureStandaloneCommitMessageIsALinkToGitHubCommit(Page page) {
-            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
-            final String sha = "abc1234567890abcdef1234567890abcdef123456";
-            final var commit = commitEntity(sha, "slint-ui/slint", "simon/license",
-                "Replace cargo-about with a self-contained xtask");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
-                    anyString(), any(), any()))
-                .thenReturn(List.of(commit));
-
-            final var loginPage = new LoginPage(page, port);
-            final var activityPage = new GitHubActivityPage(page, port);
-
-            loginPage.login(LoginPage.Credentials.USER);
-            activityPage.navigate();
-
-            assertThat(activityPage.standaloneSection()).isVisible();
-            assertThat(activityPage.standaloneCommitLinks().first())
-                .hasAttribute("href", "https://github.com/slint-ui/slint/commit/" + sha);
-        }
-
-        @Test
-        void ensureStandaloneCommitShowsBranchName(Page page) {
-            // userSettingsService default stub set in setUpDefaultMocks() — no override needed
+        void ensureStandaloneSectionIsHiddenEvenWhenCommitsExist(Page page) {
             final var commit = commitEntity("abc123", "slint-ui/slint", "simon/license",
                 "Replace cargo-about");
             when(gitHubRawEventRepository
@@ -1102,7 +1029,7 @@ class GitHubActivityUIIT {
             loginPage.login(LoginPage.Credentials.USER);
             activityPage.navigate();
 
-            assertThat(activityPage.standaloneSection().getByText("simon/license")).isVisible();
+            assertThat(activityPage.standaloneSection()).not().isVisible();
         }
     }
 
