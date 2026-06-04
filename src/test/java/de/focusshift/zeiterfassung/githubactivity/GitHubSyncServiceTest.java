@@ -364,6 +364,105 @@ class GitHubSyncServiceTest {
         }
     }
 
+    // ── Open PR daily commit sync ─────────────────────────────────────────────
+
+    @Nested
+    class OpenPrCommitSync {
+
+        private GitHubRawEventEntity openPrEntity(String repoName, String prNumber, String headBranch) {
+            final GitHubRawEventEntity e = new GitHubRawEventEntity();
+            e.setGithubEventId("evt-pr-" + prNumber);
+            e.setGithubUsername(LOGIN);
+            e.setEventType("PullRequestEvent");
+            e.setRepoName(repoName);
+            e.setAnchorType("PR");
+            e.setAnchorId(prNumber);
+            e.setAnchorTitle("My PR");
+            e.setHeadBranch(headBranch);
+            e.setEventIcon("🔀");
+            e.setEventSummary("Opened PR #" + prNumber + ": My PR");
+            e.setEventTimestamp(Instant.parse("2026-06-01T10:00:00Z"));
+            return e;
+        }
+
+        private GitHubRawEventEntity mergedPrEntity(String repoName, String prNumber) {
+            final GitHubRawEventEntity e = openPrEntity(repoName, prNumber, "feature/x");
+            e.setEventSummary("Merged PR #" + prNumber + ": My PR");
+            return e;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureCommitsAreFetchedForOpenPr() {
+            final String sha = "abc1234567890abcdef1234567890abcdef123456";
+            final var prEntity = openPrEntity("slint-ui/slint", "11940", "nigel/my-feature");
+            when(repository.findByGithubUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
+                .thenReturn(List.of(prEntity));
+            when(repository.findByGithubEventId(LOGIN + "_commit_" + sha)).thenReturn(java.util.Optional.empty());
+
+            // fetchEvents returns empty; fetchAndStorePrCommits returns one commit
+            when(restClient.get()).thenReturn(requestHeadersUriSpec);
+            when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersUriSpec.uri(any(java.net.URI.class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            when(responseSpec.body(any(ParameterizedTypeReference.class)))
+                .thenReturn(List.of())   // fetchEvents → no events
+                .thenReturn(List.of(commitWithDates(sha, LOGIN, "Fix crash",
+                    "2026-06-02T14:00:00Z", "2026-06-03T19:25:00Z")));  // fetchAndStorePrCommits
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            verify(repository).save(captor.capture());
+            final GitHubRawEventEntity saved = captor.getValue();
+            assertThat(saved.getAnchorId()).isEqualTo("nigel/my-feature");
+            assertThat(saved.getEventSummary()).isEqualTo("Fix crash");
+            assertThat(saved.getEventTimestamp()).isEqualTo(Instant.parse("2026-06-03T19:25:00Z"));
+        }
+
+        @Test
+        void ensureCommitsAreNotFetchedForMergedPr() {
+            final var prEntity = mergedPrEntity("slint-ui/slint", "11950");
+            when(repository.findByGithubUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
+                .thenReturn(List.of(prEntity));
+            stubRestGet(List.of()); // fetchEvents returns empty
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            // save should never be called — merged PR commits are not fetched
+            verify(repository, never()).save(any(GitHubRawEventEntity.class));
+        }
+
+        @Test
+        void ensureCommitsAreNotFetchedWhenRateLimitLow() {
+            final var prEntity = openPrEntity("slint-ui/slint", "11940", "nigel/my-feature");
+            when(repository.findByGithubUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
+                .thenReturn(List.of(prEntity));
+            stubRestGet(List.of()); // fetchEvents returns empty
+
+            // Simulate rate limit too low
+            sut.setRateLimitRemaining(50);
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            // Only the deleteOldFormatCommits call expected — no PR commit fetch
+            verify(repository, never()).save(any(GitHubRawEventEntity.class));
+        }
+
+        @Test
+        void ensureCommitsAreSkippedWhenHeadBranchNotSet() {
+            final var prEntity = openPrEntity("slint-ui/slint", "11940", null); // no headBranch
+            when(repository.findByGithubUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
+                .thenReturn(List.of(prEntity));
+            stubRestGet(List.of());
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            verify(repository, never()).save(any(GitHubRawEventEntity.class));
+        }
+    }
+
     // ── IssueCommentEvent routing ─────────────────────────────────────────────
 
     @Nested

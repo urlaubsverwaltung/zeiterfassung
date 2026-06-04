@@ -40,6 +40,10 @@ public interface GitHubRawEventRepository extends JpaRepository<GitHubRawEventEn
     java.util.Optional<GitHubRawEventEntity> findFirstByGithubUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
         String githubUsername, String repoName, String headBranch);
 
+    /** Returns all PullRequestEvent entities for a user — used to determine which PRs are currently open. */
+    java.util.List<GitHubRawEventEntity> findByGithubUsernameAndAnchorTypeAndEventType(
+        String githubUsername, String anchorType, String eventType);
+
     @org.springframework.transaction.annotation.Transactional
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query(

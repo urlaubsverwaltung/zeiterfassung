@@ -40,10 +40,26 @@
               <span th:if="${lastSyncedAt == null}"
                     class="text-xs text-gray-400 dark:text-zinc-500"
                     th:text="#{github-activity.never-synced}">Never synced</span>
-              <form th:action="@{/github-activity/sync}" method="post">
-                <input type="hidden" name="date" th:value="${date}"/>
-                <button type="submit" class="button-secondary text-sm" th:text="#{github-activity.sync-now}">↻ Refresh</button>
-              </form>
+              <!-- Refresh button — disabled when GitHub API rate limit is low -->
+              <th:block th:if="${rateLimitSafe != false}">
+                <form th:action="@{/github-activity/sync}" method="post">
+                  <input type="hidden" name="date" th:value="${date}"/>
+                  <button type="submit" class="button-secondary text-sm" th:text="#{github-activity.sync-now}">↻ Refresh</button>
+                </form>
+              </th:block>
+              <th:block th:if="${rateLimitSafe == false}">
+                <div class="flex items-center gap-2">
+                  <button type="button" disabled
+                          class="button-secondary text-sm opacity-40 cursor-not-allowed"
+                          th:text="#{github-activity.sync-now}">↻ Refresh</button>
+                  <span class="text-xs text-amber-500 dark:text-amber-400">
+                    <span th:if="${rateLimitResetAt != null}"
+                          th:text="#{github-activity.rate-limit-resets-at(${rateLimitResetAt})}">Available at HH:mm</span>
+                    <span th:if="${rateLimitResetAt == null}"
+                          th:text="#{github-activity.rate-limited}">Rate limited</span>
+                  </span>
+                </div>
+              </th:block>
             </div>
           </div>
 

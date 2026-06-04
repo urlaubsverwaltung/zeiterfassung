@@ -56,6 +56,10 @@ public class GitHubSyncService {
     @Value("${github.organization:}")
     private String orgName;
 
+    /** Stop making extra API calls when fewer than this many requests remain in the current window. */
+    @Value("${github.rate-limit.safety-threshold:200}")
+    private int rateLimitSafetyThreshold;
+
     private final GitHubRawEventRepository repository;
     private final UserSettingsService userSettingsService;
     private final RestClient restClient;
@@ -65,9 +69,18 @@ public class GitHubSyncService {
 
     private final java.util.concurrent.ConcurrentHashMap<String, Instant> lastSyncTimes = new java.util.concurrent.ConcurrentHashMap<>();
 
-    public Instant getLastSyncTime(String login) {
-        return lastSyncTimes.get(login);
-    }
+    // Rate limit state — updated from response headers on every API call
+    private final java.util.concurrent.atomic.AtomicInteger rateLimitRemaining =
+        new java.util.concurrent.atomic.AtomicInteger(5000);
+    private volatile Instant rateLimitReset = Instant.MIN;
+
+    public Instant getLastSyncTime(String login) { return lastSyncTimes.get(login); }
+    public int getRateLimitRemaining() { return rateLimitRemaining.get(); }
+    public Instant getRateLimitReset() { return rateLimitReset; }
+    public boolean isRateLimitSafe() { return rateLimitRemaining.get() > rateLimitSafetyThreshold; }
+
+    // package-private for testing
+    void setRateLimitRemaining(int remaining) { this.rateLimitRemaining.set(remaining); }
 
     @org.springframework.beans.factory.annotation.Autowired
     GitHubSyncService(GitHubRawEventRepository repository, UserSettingsService userSettingsService) {
@@ -77,6 +90,11 @@ public class GitHubSyncService {
             .defaultHeader("User-Agent", "zeiterfassung-github-sync")
             .defaultHeader("Accept", "application/vnd.github+json")
             .defaultHeader("X-GitHub-Api-Version", "2022-11-28")
+            .requestInterceptor((request, body, execution) -> {
+                final org.springframework.http.client.ClientHttpResponse response = execution.execute(request, body);
+                updateRateLimitFromHeaders(response.getHeaders());
+                return response;
+            })
             .build();
     }
 
@@ -85,6 +103,15 @@ public class GitHubSyncService {
         this.repository = repository;
         this.userSettingsService = userSettingsService;
         this.restClient = restClient;
+    }
+
+    private void updateRateLimitFromHeaders(org.springframework.http.HttpHeaders headers) {
+        try {
+            final String remaining = headers.getFirst("X-RateLimit-Remaining");
+            if (remaining != null) rateLimitRemaining.set(Integer.parseInt(remaining));
+            final String reset = headers.getFirst("X-RateLimit-Reset");
+            if (reset != null) rateLimitReset = Instant.ofEpochSecond(Long.parseLong(reset));
+        } catch (NumberFormatException ignored) {}
     }
 
     @Scheduled(fixedDelay = 600_000)
@@ -202,6 +229,120 @@ public class GitHubSyncService {
         lastSyncTimes.put(login, Instant.now());
         if (saved > 0) {
             LOG.info("Synced {} new GitHub event(s) for user {}", saved, login);
+        }
+
+        // After processing the Events API feed, ensure every open PR's commits are stored.
+        // This covers days where the user only pushed (no PullRequestEvent in the feed),
+        // force-push re-datings, and history predating the sync setup.
+        syncOpenPrCommits(login, token);
+    }
+
+    /**
+     * For each currently open PR known in the DB, fetches its full commit list and stores
+     * any commits by {@code login} that are not yet recorded — using committer date so that
+     * force-push days are attributed correctly.
+     */
+    @SuppressWarnings("unchecked")
+    private void syncOpenPrCommits(String login, String token) {
+        // Load all PullRequestEvent entities for this user, then group by repo+PR number
+        // keeping the most recent event per PR to determine open/closed status.
+        final List<GitHubRawEventEntity> allPrEvents = repository
+            .findByGithubUsernameAndAnchorTypeAndEventType(login, "PR", "PullRequestEvent");
+
+        final Map<String, GitHubRawEventEntity> latestPerPr = new java.util.LinkedHashMap<>();
+        for (GitHubRawEventEntity e : allPrEvents) {
+            final String key = e.getRepoName() + "|" + e.getAnchorId();
+            final GitHubRawEventEntity existing = latestPerPr.get(key);
+            if (existing == null || e.getEventTimestamp().isAfter(existing.getEventTimestamp())) {
+                latestPerPr.put(key, e);
+            }
+        }
+
+        for (GitHubRawEventEntity pr : latestPerPr.values()) {
+            // Skip closed / merged PRs — their history is done
+            final String summary = pr.getEventSummary();
+            if (summary.startsWith("Merged") || summary.startsWith("Closed")) continue;
+
+            // Skip if we don't know which branch to attach commits to
+            final String headBranch = pr.getHeadBranch();
+            if (headBranch == null || headBranch.isBlank()) {
+                LOG.debug("Skipping open PR commit sync for {}/{} — headBranch not set yet",
+                    pr.getRepoName(), pr.getAnchorId());
+                continue;
+            }
+
+            if (!isRateLimitSafe()) {
+                LOG.warn("Rate limit low ({} remaining) — stopping open PR commit sync", rateLimitRemaining.get());
+                break;
+            }
+
+            fetchAndStorePrCommits(login, pr.getRepoName(), pr.getAnchorId(), headBranch, token);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void fetchAndStorePrCommits(String login, String repoName,
+                                         String prNumber, String headBranch, String token) {
+        try {
+            final String url = "https://api.github.com/repos/" + repoName
+                + "/pulls/" + prNumber + "/commits?per_page=100";
+            final List<Map<String, Object>> commits = restClient.get()
+                .uri(URI.create(url))
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+            if (commits == null) return;
+
+            for (Map<String, Object> commit : commits) {
+                final String sha = strOrEmpty(commit.get("sha"));
+                if (sha.isEmpty()) continue;
+
+                // Author filter — skip commits by other contributors
+                final Map<String, Object> authorGh = (Map<String, Object>) commit.get("author");
+                final String authorLogin = authorGh != null ? strOrEmpty(authorGh.get("login")) : "";
+                if (!authorLogin.isEmpty() && !authorLogin.equals(login)) continue;
+
+                final Map<String, Object> commitData = (Map<String, Object>) commit.get("commit");
+                if (commitData == null) continue;
+
+                // Use committer date so force-push days are correctly attributed
+                final Map<String, Object> committerData = (Map<String, Object>) commitData.get("committer");
+                final Map<String, Object> authorData = (Map<String, Object>) commitData.get("author");
+                final String dateStr = committerData != null && committerData.get("date") != null
+                    ? (String) committerData.get("date")
+                    : authorData != null ? (String) authorData.get("date") : null;
+                if (dateStr == null) continue;
+
+                final Instant ts = Instant.parse(dateStr);
+                final String eventId = login + "_commit_" + sha;
+                final java.util.Optional<GitHubRawEventEntity> existing = repository.findByGithubEventId(eventId);
+
+                if (existing.isPresent()) {
+                    // Re-timestamp if committer date changed (force push)
+                    final GitHubRawEventEntity ex = existing.get();
+                    if (!ex.getEventTimestamp().equals(ts)) {
+                        ex.setEventTimestamp(ts);
+                        repository.save(ex);
+                    }
+                } else {
+                    final String message = firstLine(strOrEmpty(commitData.get("message")), 200);
+                    final String shortSha = sha.substring(0, Math.min(7, sha.length()));
+                    final GitHubRawEventEntity e = new GitHubRawEventEntity();
+                    e.setGithubEventId(eventId);
+                    e.setGithubUsername(login);
+                    e.setEventType("PushEvent");
+                    e.setRepoName(repoName);
+                    e.setAnchorType("REPO");
+                    e.setAnchorId(headBranch);
+                    e.setAnchorTitle(headBranch);
+                    e.setEventIcon("📝");
+                    e.setEventSummary(message.isEmpty() ? shortSha : message);
+                    e.setEventTimestamp(ts);
+                    repository.save(e);
+                }
+            }
+        } catch (Exception ex) {
+            LOG.warn("Could not fetch commits for open PR {}/{}: {}", repoName, prNumber, ex.getMessage());
         }
     }
 

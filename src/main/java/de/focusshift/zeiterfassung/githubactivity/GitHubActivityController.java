@@ -154,6 +154,13 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         model.addAttribute("syncMissingConfig", syncService.missingConfig());
         final Instant lastSync = syncService.getLastSyncTime(login);
         model.addAttribute("lastSyncedAt", lastSync != null ? lastSync.atZone(zone) : null);
+        final boolean rateLimitSafe = syncService.isRateLimitSafe();
+        model.addAttribute("rateLimitSafe", rateLimitSafe);
+        if (!rateLimitSafe && syncService.getRateLimitReset().isAfter(Instant.MIN)) {
+            model.addAttribute("rateLimitResetAt",
+                syncService.getRateLimitReset().atZone(zone)
+                    .format(DateTimeFormatter.ofPattern("HH:mm")));
+        }
 
         return "github-activity/index";
     }
