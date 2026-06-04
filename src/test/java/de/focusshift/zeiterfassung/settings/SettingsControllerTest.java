@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.settings;
 
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.settings.WorkingTimeSettings;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,9 +20,13 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.validation.BindingResult;
 
 import java.time.Clock;
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.EnumMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -75,6 +80,7 @@ class SettingsControllerTest implements ControllerTest {
             new SubtractBreakFromTimeEntrySettings(true, Optional.of(subtractBreakFeatureTimestamp));
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
+        when(settingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.of(subtractBreakFromTimeEntrySettings));
         when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);
@@ -84,6 +90,8 @@ class SettingsControllerTest implements ControllerTest {
         final SettingsDto expectedSettingsDto = new SettingsDto(
             FederalState.NONE,
             false,
+            List.of("monday", "tuesday", "wednesday", "thursday", "friday"),
+            8.0,
             true,
             "42",
             true,
@@ -105,6 +113,7 @@ class SettingsControllerTest implements ControllerTest {
         final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(true, 3);
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
+        when(settingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
         when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);
@@ -122,6 +131,7 @@ class SettingsControllerTest implements ControllerTest {
         final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(false, -1);
 
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
+        when(settingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
         when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);
@@ -130,6 +140,8 @@ class SettingsControllerTest implements ControllerTest {
         final SettingsDto expectedSettingsDto = new SettingsDto(
             FederalState.NONE,
             false,
+            List.of("monday", "tuesday", "wednesday", "thursday", "friday"),
+            8.0,
             false,
             null,
             null,
@@ -148,6 +160,8 @@ class SettingsControllerTest implements ControllerTest {
         final SettingsDto dto = new SettingsDto(
             FederalState.NONE,
             false,
+            null,
+            null,
             true,
             "-1",
             false,
@@ -184,6 +198,8 @@ class SettingsControllerTest implements ControllerTest {
         final SettingsDto expectedSettingsDto = new SettingsDto(
             FederalState.NONE,
             false,
+            null,
+            null,
             true,
             "42",
             true,
@@ -225,6 +241,7 @@ class SettingsControllerTest implements ControllerTest {
             .andExpect(redirectedUrl("/settings"));
 
         verify(settingsService).updateFederalStateSettings(FederalState.NONE, false);
+        verify(settingsService).updateWorkingTimeSettings(any(EnumMap.class));
         verify(settingsService).updateLockTimeEntriesSettings(true, 42);
         verify(settingsService).updateSubtractBreakFromTimeEntrySettings(true, LocalDate.parse("2025-05-30").atStartOfDay().toInstant(UTC));
     }
@@ -244,6 +261,82 @@ class SettingsControllerTest implements ControllerTest {
             .andExpect(redirectedUrl("/settings"));
 
         verify(settingsService).updateLockTimeEntriesSettings(false, Integer.parseInt(daysInPast));
+    }
+
+    @Test
+    void ensureGetSettingsIncludesGlobalWorkingDays() throws Exception {
+
+        final EnumMap<DayOfWeek, Duration> customDays = new EnumMap<>(DayOfWeek.class);
+        customDays.put(DayOfWeek.MONDAY,    Duration.ofHours(8));
+        customDays.put(DayOfWeek.TUESDAY,   Duration.ofHours(8));
+        customDays.put(DayOfWeek.WEDNESDAY, Duration.ofHours(8));
+        customDays.put(DayOfWeek.THURSDAY,  Duration.ofHours(8));
+        customDays.put(DayOfWeek.FRIDAY,    Duration.ofHours(8));
+        customDays.put(DayOfWeek.SATURDAY,  Duration.ZERO);
+        customDays.put(DayOfWeek.SUNDAY,    Duration.ZERO);
+        when(settingsService.getFederalStateSettings()).thenReturn(new FederalStateSettings(FederalState.NONE, false));
+        when(settingsService.getWorkingTimeSettings()).thenReturn(new WorkingTimeSettings(customDays));
+        when(settingsService.getLockTimeEntriesSettings()).thenReturn(new LockTimeEntriesSettings(false, -1));
+        when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
+        when(settingsService.getOooCalendarSettings()).thenReturn(OooCalendarSettings.DEFAULT);
+        when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+        perform(get("/settings"))
+            .andExpect(status().isOk())
+            .andExpect(model().attributeExists("settings"))
+            .andExpect(result -> {
+                final SettingsDto dto = (SettingsDto) result.getModelAndView().getModel().get("settings");
+                org.assertj.core.api.Assertions.assertThat(dto.workday())
+                    .containsExactly("monday", "tuesday", "wednesday", "thursday", "friday");
+                org.assertj.core.api.Assertions.assertThat(dto.workingTime()).isEqualTo(8.0);
+            });
+    }
+
+    @Test
+    void ensurePostSettingsSavesWorkingDays() throws Exception {
+
+        when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+        perform(post("/settings")
+            .param("federalState", "NONE")
+            .param("worksOnPublicHoliday", "false")
+            .param("workday", "monday", "tuesday", "wednesday", "thursday", "friday")
+            .param("workingTime", "8.0")
+            .param("lockingIsActive", "false")
+            .param("lockTimeEntriesDaysInPast", "0")
+        )
+            .andExpect(status().is3xxRedirection());
+
+        verify(settingsService).updateFederalStateSettings(FederalState.NONE, false);
+        verify(settingsService).updateWorkingTimeSettings(
+            org.mockito.ArgumentMatchers.assertArg(workdays -> {
+                org.assertj.core.api.Assertions.assertThat(workdays.get(DayOfWeek.MONDAY)).isEqualTo(Duration.ofHours(8));
+                org.assertj.core.api.Assertions.assertThat(workdays.get(DayOfWeek.SATURDAY)).isEqualTo(Duration.ZERO);
+            })
+        );
+    }
+
+    @Test
+    void ensurePostSettingsWithNoDaysCheckedSavesAllZero() throws Exception {
+
+        when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+        perform(post("/settings")
+            .param("federalState", "NONE")
+            .param("worksOnPublicHoliday", "false")
+            .param("lockingIsActive", "false")
+            .param("lockTimeEntriesDaysInPast", "0")
+            // no workday params → all unchecked
+        )
+            .andExpect(status().is3xxRedirection());
+
+        verify(settingsService).updateFederalStateSettings(FederalState.NONE, false);
+        verify(settingsService).updateWorkingTimeSettings(
+            org.mockito.ArgumentMatchers.assertArg(workdays ->
+                org.assertj.core.api.Assertions.assertThat(workdays.values())
+                    .allMatch(Duration::isZero)
+            )
+        );
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder builder) throws Exception {

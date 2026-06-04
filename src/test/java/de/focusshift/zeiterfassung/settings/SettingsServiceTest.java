@@ -1,5 +1,9 @@
 package de.focusshift.zeiterfassung.settings;
 
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.settings.WorkingTimeSettings;
+import de.focusshift.zeiterfassung.settings.WorkingTimeSettingsEntity;
+import de.focusshift.zeiterfassung.settings.WorkingTimeSettingsRepository;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -10,11 +14,22 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
+
+import static java.time.DayOfWeek.FRIDAY;
+import static java.time.DayOfWeek.MONDAY;
+import static java.time.DayOfWeek.SATURDAY;
+import static java.time.DayOfWeek.SUNDAY;
+import static java.time.DayOfWeek.THURSDAY;
+import static java.time.DayOfWeek.TUESDAY;
+import static java.time.DayOfWeek.WEDNESDAY;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
@@ -32,6 +47,8 @@ class SettingsServiceTest {
     @Mock
     private FederalStateSettingsRepository federalStateSettingsRepository;
     @Mock
+    private WorkingTimeSettingsRepository workingTimeSettingsRepository;
+    @Mock
     private LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
     @Mock
     private SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
@@ -45,6 +62,7 @@ class SettingsServiceTest {
     void setUp() {
         sut = new SettingsService(
             federalStateSettingsRepository,
+            workingTimeSettingsRepository,
             lockTimeEntriesSettingsRepository,
             subtractBreakFromTimeEntrySettingsRepository,
             oooCalendarSettingsRepository,
@@ -206,6 +224,51 @@ class SettingsServiceTest {
             assertThat(actual.lockTimeEntriesDaysInPast()).isEqualTo(2);
 
             verifyNoInteractions(applicationEventPublisher);
+        }
+    }
+
+    @Nested
+    class WorkingTimeSettingsTests {
+
+        @Test
+        void ensureGetWorkingTimeSettingsReturnsDefaultWhenNoneConfigured() {
+            when(workingTimeSettingsRepository.findAll()).thenReturn(List.of());
+
+            final WorkingTimeSettings result = sut.getWorkingTimeSettings();
+
+            assertThat(result.workdays()).containsEntry(MONDAY,    Duration.ofHours(8));
+            assertThat(result.workdays()).containsEntry(TUESDAY,   Duration.ofHours(8));
+            assertThat(result.workdays()).containsEntry(WEDNESDAY, Duration.ofHours(8));
+            assertThat(result.workdays()).containsEntry(THURSDAY,  Duration.ofHours(8));
+            assertThat(result.workdays()).containsEntry(FRIDAY,    Duration.ofHours(8));
+            assertThat(result.workdays()).containsEntry(SATURDAY,  Duration.ZERO);
+            assertThat(result.workdays()).containsEntry(SUNDAY,    Duration.ZERO);
+        }
+
+        @Test
+        void ensureUpdateWorkingTimeSettingsPersistsWorkdays() {
+            when(workingTimeSettingsRepository.findAll()).thenReturn(List.of());
+            when(workingTimeSettingsRepository.save(any(WorkingTimeSettingsEntity.class))).thenAnswer(returnsFirstArg());
+
+            final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(DayOfWeek.class);
+            workdays.put(MONDAY,    Duration.ofHours(8));
+            workdays.put(TUESDAY,   Duration.ofHours(8));
+            workdays.put(WEDNESDAY, Duration.ofHours(8));
+            workdays.put(THURSDAY,  Duration.ofHours(8));
+            workdays.put(FRIDAY,    Duration.ofMinutes(450)); // 7.5h
+            workdays.put(SATURDAY,  Duration.ZERO);
+            workdays.put(SUNDAY,    Duration.ZERO);
+
+            final WorkingTimeSettings result = sut.updateWorkingTimeSettings(workdays);
+
+            final ArgumentCaptor<WorkingTimeSettingsEntity> captor = ArgumentCaptor.forClass(WorkingTimeSettingsEntity.class);
+            verify(workingTimeSettingsRepository).save(captor.capture());
+            final WorkingTimeSettingsEntity saved = captor.getValue();
+            assertThat(saved.getMonday()).isEqualTo("PT8H");
+            assertThat(saved.getFriday()).isEqualTo("PT7H30M");
+            assertThat(saved.getSaturday()).isEqualTo("PT0S");
+
+            assertThat(result.workdays()).containsEntry(FRIDAY, Duration.ofMinutes(450));
         }
     }
 

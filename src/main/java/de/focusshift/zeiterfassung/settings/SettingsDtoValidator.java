@@ -20,8 +20,16 @@ class SettingsDtoValidator implements Validator {
     public void validate(Object target, Errors errors) {
         final SettingsDto settingsDto = (SettingsDto) target;
         validateFederalState(settingsDto, errors);
+        validateWorkingTime(settingsDto, errors);
         validateLockTimeEntriesDaysInPast(settingsDto, errors);
         validateSubtractBreak(settingsDto, errors);
+    }
+
+    private void validateWorkingTime(SettingsDto settingsDto, Errors errors) {
+        final Double hours = settingsDto.workingTime();
+        if (hours != null && (hours < 0 || hours > 24)) {
+            errors.rejectValue("workingTime", "settings.working-time.validation.range");
+        }
     }
 
     private void validateFederalState(SettingsDto settingsDto, Errors errors) {

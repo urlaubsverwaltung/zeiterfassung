@@ -64,13 +64,16 @@ class WorkTimeServiceImplTest {
     @Mock
     private FederalStateSettingsService federalStateSettingsService;
     @Mock
+    private de.focusshift.zeiterfassung.settings.WorkingTimeSettingsService workingTimeSettingsService;
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
     private static final Clock clockFixed = Clock.fixed(Clock.systemUTC().instant(), UTC);
 
     @BeforeEach
     void setUp() {
-        sut = new WorkTimeServiceImpl(workingTimeRepository, userManagementService, federalStateSettingsService, clockFixed, applicationEventPublisher);
+        sut = new WorkTimeServiceImpl(workingTimeRepository, userManagementService, federalStateSettingsService,
+            workingTimeSettingsService, clockFixed, applicationEventPublisher);
     }
 
     @Nested
@@ -204,11 +207,12 @@ class WorkTimeServiceImplTest {
                 assertThat(workingTime.individualFederalState()).isEqualTo(GLOBAL);
                 assertThat(workingTime.federalState()).isEqualTo(GERMANY_BERLIN);
                 assertThat(workingTime.individualWorksOnPublicHoliday()).isEqualTo(WorksOnPublicHoliday.GLOBAL);
-                assertThat(workingTime.getMonday()).isEqualTo(PlannedWorkingHours.ZERO);
-                assertThat(workingTime.getTuesday()).isEqualTo(PlannedWorkingHours.ZERO);
-                assertThat(workingTime.getWednesday()).isEqualTo(PlannedWorkingHours.ZERO);
-                assertThat(workingTime.getThursday()).isEqualTo(PlannedWorkingHours.ZERO);
-                assertThat(workingTime.getFriday()).isEqualTo(PlannedWorkingHours.ZERO);
+                // seeded from global defaults: Mon–Fri 8h, Sat–Sun 0h
+                assertThat(workingTime.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(8)));
+                assertThat(workingTime.getTuesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(8)));
+                assertThat(workingTime.getWednesday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(8)));
+                assertThat(workingTime.getThursday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(8)));
+                assertThat(workingTime.getFriday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(8)));
                 assertThat(workingTime.getSaturday()).isEqualTo(PlannedWorkingHours.ZERO);
                 assertThat(workingTime.getSunday()).isEqualTo(PlannedWorkingHours.ZERO);
                 assertThat(workingTime.isDefaultWorkingTime()).isTrue();
@@ -223,13 +227,49 @@ class WorkTimeServiceImplTest {
             assertThat(persistedEntity.getValidFrom()).isNull();
             assertThat(persistedEntity.getFederalState()).isEqualTo(GLOBAL);
             assertThat(persistedEntity.isWorksOnPublicHoliday()).isNull();
-            assertThat(persistedEntity.getMonday()).isEqualTo("PT0S");
-            assertThat(persistedEntity.getTuesday()).isEqualTo("PT0S");
-            assertThat(persistedEntity.getWednesday()).isEqualTo("PT0S");
-            assertThat(persistedEntity.getThursday()).isEqualTo("PT0S");
-            assertThat(persistedEntity.getFriday()).isEqualTo("PT0S");
+            assertThat(persistedEntity.getMonday()).isEqualTo("PT8H");
+            assertThat(persistedEntity.getTuesday()).isEqualTo("PT8H");
+            assertThat(persistedEntity.getWednesday()).isEqualTo("PT8H");
+            assertThat(persistedEntity.getThursday()).isEqualTo("PT8H");
+            assertThat(persistedEntity.getFriday()).isEqualTo("PT8H");
             assertThat(persistedEntity.getSaturday()).isEqualTo("PT0S");
             assertThat(persistedEntity.getSunday()).isEqualTo("PT0S");
+        }
+
+        @Test
+        void ensureDefaultWorkingTimeUsesCustomGlobalWorkdaysWhenConfigured() {
+
+            final User user = anyUser();
+            when(userManagementService.findUserByLocalId(user.userLocalId())).thenReturn(Optional.of(user));
+            when(workingTimeRepository.findAllByUserId(user.userLocalId().value())).thenReturn(List.of());
+
+            // Custom global: Mon–Thu 7.5h, Fri 6h, Sat–Sun off
+            final java.util.EnumMap<java.time.DayOfWeek, Duration> customDays = new java.util.EnumMap<>(java.time.DayOfWeek.class);
+            customDays.put(java.time.DayOfWeek.MONDAY,    Duration.ofMinutes(450));
+            customDays.put(java.time.DayOfWeek.TUESDAY,   Duration.ofMinutes(450));
+            customDays.put(java.time.DayOfWeek.WEDNESDAY, Duration.ofMinutes(450));
+            customDays.put(java.time.DayOfWeek.THURSDAY,  Duration.ofMinutes(450));
+            customDays.put(java.time.DayOfWeek.FRIDAY,    Duration.ofHours(6));
+            customDays.put(java.time.DayOfWeek.SATURDAY,  Duration.ZERO);
+            customDays.put(java.time.DayOfWeek.SUNDAY,    Duration.ZERO);
+            when(federalStateSettingsService.getFederalStateSettings())
+                .thenReturn(new de.focusshift.zeiterfassung.settings.FederalStateSettings(GERMANY_BERLIN, false));
+            when(workingTimeSettingsService.getWorkingTimeSettings())
+                .thenReturn(new de.focusshift.zeiterfassung.settings.WorkingTimeSettings(customDays));
+
+            when(workingTimeRepository.save(any())).thenAnswer(invocation -> {
+                final WorkingTimeEntity entity = cloneEntity(invocation.getArgument(0));
+                entity.setId(UUID.randomUUID());
+                return entity;
+            });
+
+            final List<WorkingTime> actual = sut.getAllWorkingTimesByUser(user.userLocalId());
+
+            assertThat(actual.getFirst()).satisfies(wt -> {
+                assertThat(wt.getMonday()).isEqualTo(new PlannedWorkingHours(Duration.ofMinutes(450)));
+                assertThat(wt.getFriday()).isEqualTo(new PlannedWorkingHours(Duration.ofHours(6)));
+                assertThat(wt.getSaturday()).isEqualTo(PlannedWorkingHours.ZERO);
+            });
         }
 
         @Test

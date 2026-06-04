@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.Errors;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
 import static org.mockito.Mockito.verify;
@@ -33,7 +34,7 @@ class SettingsDtoValidatorTest {
     @Test
     void ensureFederalStateMustNotBeNull() {
 
-        final SettingsDto settingsDto = new SettingsDto(null, false, false, null, false, null, null);
+        final SettingsDto settingsDto = new SettingsDto(null, false, null, null, false, null, false, null, null);
         sut.validate(settingsDto, errors);
 
         verify(errors).rejectValue("federalState", "jakarta.validation.constraints.NotNull.message");
@@ -42,7 +43,7 @@ class SettingsDtoValidatorTest {
     @Test
     void ensureFederalStateValid() {
 
-        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, false, null, false, null, null);
+        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, null, null, false, null, false, null, null);
         sut.validate(settingsDto, errors);
 
         verifyNoInteractions(errors);
@@ -53,7 +54,7 @@ class SettingsDtoValidatorTest {
     @NullSource
     void ensureLockTimeEntriesInPastMustBePositiveWhenFeatureIsEnabled(String input) {
 
-        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, true, input, false, null, null);
+        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, null, null, true, input, false, null, null);
         sut.validate(settingsDto, errors);
 
         verify(errors).rejectValue("lockTimeEntriesDaysInPast", "settings.lock-timeentries-days-in-past.validation.positiveOrZero");
@@ -64,7 +65,7 @@ class SettingsDtoValidatorTest {
     @NullSource
     void ensureLockTimeEntriesValidWhenFeatureDisabled(String input) {
 
-        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, false, input, false, null, null);
+        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, null, null, false, input, false, null, null);
         sut.validate(settingsDto, errors);
 
         verifyNoInteractions(errors);
@@ -76,15 +77,8 @@ class SettingsDtoValidatorTest {
         @Test
         void ensureValidWhenFeatureDisabled() {
             final SettingsDto settingsDto = new SettingsDto(
-                GERMANY_BADEN_WUERTTEMBERG,
-                false,
-                false,
-                "30",
-                false,
-                null,
-                null
+                GERMANY_BADEN_WUERTTEMBERG, false, null, null, false, "30", false, null, null
             );
-
             sut.validate(settingsDto, errors);
             verifyNoInteractions(errors);
         }
@@ -92,34 +86,52 @@ class SettingsDtoValidatorTest {
         @Test
         void ensureInvalidWhenEnabledButNoDateProvided() {
             final SettingsDto settingsDto = new SettingsDto(
-                GERMANY_BADEN_WUERTTEMBERG,
-                false,
-                false,
-                "30",
-                true,
-                null,
-                null
+                GERMANY_BADEN_WUERTTEMBERG, false, null, null, false, "30", true, null, null
             );
-
             sut.validate(settingsDto, errors);
             verify(errors).rejectValue("subtractBreakFromTimeEntryActiveDate", "settings.work-duration.calculation.subtract-breaks.date.validation.NotNull");
         }
 
         @Test
         void ensureValidWhenEnabledWithDate() {
-
             final SettingsDto settingsDto = new SettingsDto(
-                GERMANY_BADEN_WUERTTEMBERG,
-                false,
-                false,
-                "30",
-                true,
-                LocalDate.now(),
-                null
+                GERMANY_BADEN_WUERTTEMBERG, false, null, null, false, "30", true, LocalDate.now(), null
             );
-
             sut.validate(settingsDto, errors);
             verifyNoInteractions(errors);
+        }
+    }
+
+    @Nested
+    class WorkingTimeHours {
+
+        @Test
+        void ensureWorkingTimeIsValidWhenNull() {
+            final SettingsDto settingsDto = new SettingsDto(
+                GERMANY_BADEN_WUERTTEMBERG, false, List.of("monday"), null, false, null, false, null, null
+            );
+            sut.validate(settingsDto, errors);
+            verifyNoInteractions(errors);
+        }
+
+        @ParameterizedTest
+        @ValueSource(doubles = {0.0, 0.5, 8.0, 7.5, 24.0})
+        void ensureWorkingTimeIsValidWithinRange(double hours) {
+            final SettingsDto settingsDto = new SettingsDto(
+                GERMANY_BADEN_WUERTTEMBERG, false, List.of("monday"), hours, false, null, false, null, null
+            );
+            sut.validate(settingsDto, errors);
+            verifyNoInteractions(errors);
+        }
+
+        @ParameterizedTest
+        @ValueSource(doubles = {-0.1, -1.0, 24.1, 25.0})
+        void ensureWorkingTimeIsInvalidOutsideRange(double hours) {
+            final SettingsDto settingsDto = new SettingsDto(
+                GERMANY_BADEN_WUERTTEMBERG, false, List.of("monday"), hours, false, null, false, null, null
+            );
+            sut.validate(settingsDto, errors);
+            verify(errors).rejectValue("workingTime", "settings.working-time.validation.range");
         }
     }
 }

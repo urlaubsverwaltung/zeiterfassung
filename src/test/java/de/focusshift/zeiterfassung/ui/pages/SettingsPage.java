@@ -5,6 +5,8 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 
+import java.time.DayOfWeek;
+
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static com.microsoft.playwright.options.LoadState.DOMCONTENTLOADED;
 import static de.focusshift.zeiterfassung.ui.pages.FederalStateSelect.federalStateSelectValue;
@@ -50,6 +52,40 @@ public class SettingsPage {
         executeUserAction(() -> {
             lockTimEntriesDaysInPastInput().fill(daysInPast);
         });
+    }
+
+    // ── Working days ──────────────────────────────────────────────────────────
+
+    public void checkWorkday(DayOfWeek day) {
+        executeUserAction(() -> workdayCheckbox(day).check());
+    }
+
+    public void uncheckWorkday(DayOfWeek day) {
+        executeUserAction(() -> workdayCheckbox(day).uncheck());
+    }
+
+    public void setWorkingHours(double hours) {
+        executeUserAction(() -> workingHoursInput().fill(String.valueOf(hours)));
+    }
+
+    public void assertWorkdayChecked(DayOfWeek day) {
+        assertThat(workdayCheckbox(day)).isChecked();
+    }
+
+    public void assertWorkdayUnchecked(DayOfWeek day) {
+        assertThat(workdayCheckbox(day)).not().isChecked();
+    }
+
+    public void assertWorkingHours(double hours) {
+        assertThat(workingHoursInput()).hasValue(String.valueOf(hours));
+    }
+
+    private Locator workdayCheckbox(DayOfWeek day) {
+        return page.getByTestId("settings-workday-" + day.name().toLowerCase());
+    }
+
+    private Locator workingHoursInput() {
+        return page.getByTestId("settings-working-time-input");
     }
 
     public void submit() {

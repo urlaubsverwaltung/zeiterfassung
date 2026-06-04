@@ -19,11 +19,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.EnumMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -65,10 +70,11 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
     String getSettings(Model model, Locale locale) {
 
         final FederalStateSettings federalStateSettings = settingsService.getFederalStateSettings();
+        final WorkingTimeSettings workingTimeSettings = settingsService.getWorkingTimeSettings();
         final LockTimeEntriesSettings lockTimeEntriesSettings = settingsService.getLockTimeEntriesSettings();
         final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings = settingsService.getSubtractBreakFromTimeEntrySettings();
         final OooCalendarSettings oooCalendarSettings = settingsService.getOooCalendarSettings();
-        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings.orElse(null), oooCalendarSettings);
+        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, workingTimeSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings.orElse(null), oooCalendarSettings);
 
         prepareModel(model, locale, settingsDto);
 
@@ -99,6 +105,7 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
         }
 
         settingsService.updateFederalStateSettings(settingsDto.federalState(), settingsDto.worksOnPublicHoliday());
+        settingsService.updateWorkingTimeSettings(dtoToWorkdays(settingsDto));
 
         final int lockTimeEntriesDaysInPast = requireNonNullElse(settingsDto.lockTimeEntriesDaysInPastAsNumber(), -1);
         settingsService.updateLockTimeEntriesSettings(settingsDto.lockingIsActive(), lockTimeEntriesDaysInPast);
@@ -143,32 +150,57 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
 
     private SettingsDto toSettingsDto(
         FederalStateSettings federalStateSettings,
+        WorkingTimeSettings workingTimeSettings,
         LockTimeEntriesSettings lockTimeEntriesSettings,
         @Nullable SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings,
         OooCalendarSettings oooCalendarSettings
     ) {
-
         final ZoneId userZoneId = userSettingsProvider.zoneId();
-
         final int lockTimeEntriesDaysInPast = lockTimeEntriesSettings.lockTimeEntriesDaysInPast();
-
         final Boolean subtractBreakFromTimeEntryIsActive = subtractBreakFromTimeEntrySettings == null
-            ? null
-            : subtractBreakFromTimeEntrySettings.subtractBreakFromTimeEntryIsActive();
-
+            ? null : subtractBreakFromTimeEntrySettings.subtractBreakFromTimeEntryIsActive();
         final LocalDate subtractBreakFromTimeEntryIsActiveDate = subtractBreakFromTimeEntrySettings == null
-            ? null
-            : subtractBreakFromTimeEntrySettings.timestampAsLocalDate(userZoneId).orElse(null);
+            ? null : subtractBreakFromTimeEntrySettings.timestampAsLocalDate(userZoneId).orElse(null);
+
+        final List<String> checkedWorkdays = workingTimeSettings.workdays().entrySet().stream()
+            .filter(e -> !e.getValue().isZero())
+            .map(e -> e.getKey().name().toLowerCase())
+            .toList();
+        final double workingTimeHours = workingTimeSettings.workdays().values().stream()
+            .filter(d -> !d.isZero())
+            .mapToDouble(d -> d.toMinutes() / 60.0)
+            .findFirst()
+            .orElse(0.0);
 
         return new SettingsDto(
             federalStateSettings.federalState(),
             federalStateSettings.worksOnPublicHoliday(),
+            checkedWorkdays,
+            workingTimeHours == 0 ? null : workingTimeHours,
             lockTimeEntriesSettings.lockingIsActive(),
             lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null,
             subtractBreakFromTimeEntryIsActive,
             subtractBreakFromTimeEntryIsActiveDate,
             oooCalendarSettings.calendarUrl()
         );
+    }
+
+    private static EnumMap<DayOfWeek, Duration> dtoToWorkdays(SettingsDto dto) {
+        final List<String> checked = dto.workday() != null ? dto.workday() : List.of();
+        final Double hours = dto.workingTime();
+        final Duration dayDuration = hours != null && hours > 0
+            ? hoursToDuration(BigDecimal.valueOf(hours))
+            : Duration.ZERO;
+        final EnumMap<DayOfWeek, Duration> map = new EnumMap<>(DayOfWeek.class);
+        for (DayOfWeek day : DayOfWeek.values()) {
+            map.put(day, checked.contains(day.name().toLowerCase()) ? dayDuration : Duration.ZERO);
+        }
+        return map;
+    }
+
+    private static Duration hoursToDuration(BigDecimal hours) {
+        final long totalMinutes = hours.multiply(BigDecimal.valueOf(60)).longValue();
+        return Duration.ofMinutes(totalMinutes);
     }
 
     private String getTimeslotLockedExampleDate(SettingsDto settingsDto, Locale locale) {

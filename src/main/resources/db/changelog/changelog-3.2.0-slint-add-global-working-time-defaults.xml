@@ -1,0 +1,55 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+  <changeSet author="ajana" id="add-global-working-time-settings-table">
+    <preConditions>
+      <not><tableExists tableName="settings_working_time"/></not>
+    </preConditions>
+
+    <createSequence sequenceName="settings_working_time_seq" incrementBy="50"/>
+
+    <createTable tableName="settings_working_time">
+      <column name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_SETTINGS_WORKING_TIME"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="monday"    type="VARCHAR" defaultValue="PT8H"><constraints nullable="false"/></column>
+      <column name="tuesday"   type="VARCHAR" defaultValue="PT8H"><constraints nullable="false"/></column>
+      <column name="wednesday" type="VARCHAR" defaultValue="PT8H"><constraints nullable="false"/></column>
+      <column name="thursday"  type="VARCHAR" defaultValue="PT8H"><constraints nullable="false"/></column>
+      <column name="friday"    type="VARCHAR" defaultValue="PT8H"><constraints nullable="false"/></column>
+      <column name="saturday"  type="VARCHAR" defaultValue="PT0S"><constraints nullable="false"/></column>
+      <column name="sunday"    type="VARCHAR" defaultValue="PT0S"><constraints nullable="false"/></column>
+    </createTable>
+
+    <addForeignKeyConstraint
+      constraintName="FK_SETTINGS_WORKING_TIME_TENANT_ID__TENANT_ID"
+      baseColumnNames="tenant_id"
+      baseTableName="settings_working_time"
+      referencedColumnNames="tenant_id"
+      referencedTableName="tenant"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+    />
+
+    <createIndex tableName="settings_working_time" indexName="IDX_WORKING_TIME_SETTINGS_TENANT_ID">
+      <column name="tenant_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="ajana" id="enable-row-level-security-on-working-time-settings">
+    <sql dbms="postgresql">
+      ALTER TABLE settings_working_time ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS settings_working_time_tenant_isolation_policy ON settings_working_time;
+      CREATE POLICY settings_working_time_tenant_isolation_policy ON settings_working_time
+        USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

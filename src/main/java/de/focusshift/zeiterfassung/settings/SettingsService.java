@@ -6,22 +6,34 @@ import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.EnumMap;
 import java.util.Optional;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.time.DayOfWeek.FRIDAY;
+import static java.time.DayOfWeek.MONDAY;
+import static java.time.DayOfWeek.SATURDAY;
+import static java.time.DayOfWeek.SUNDAY;
+import static java.time.DayOfWeek.THURSDAY;
+import static java.time.DayOfWeek.TUESDAY;
+import static java.time.DayOfWeek.WEDNESDAY;
 import static java.util.stream.Stream.iterate;
 import static java.util.stream.StreamSupport.stream;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
-class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService, OooCalendarSettingsService {
+class SettingsService implements FederalStateSettingsService, WorkingTimeSettingsService,
+    LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService, OooCalendarSettingsService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final FederalStateSettingsRepository federalStateSettingsRepository;
+    private final WorkingTimeSettingsRepository workingTimeSettingsRepository;
     private final LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
     private final SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
     private final OooCalendarSettingsRepository oooCalendarSettingsRepository;
@@ -29,12 +41,14 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
 
     SettingsService(
         FederalStateSettingsRepository federalStateSettingsRepository,
+        WorkingTimeSettingsRepository workingTimeSettingsRepository,
         LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository,
         SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository,
         OooCalendarSettingsRepository oooCalendarSettingsRepository,
         ApplicationEventPublisher applicationEventPublisher
     ) {
         this.federalStateSettingsRepository = federalStateSettingsRepository;
+        this.workingTimeSettingsRepository = workingTimeSettingsRepository;
         this.lockTimeEntriesSettingsRepository = lockTimeEntriesSettingsRepository;
         this.subtractBreakFromTimeEntrySettingsRepository = subtractBreakFromTimeEntrySettingsRepository;
         this.oooCalendarSettingsRepository = oooCalendarSettingsRepository;
@@ -43,96 +57,88 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
 
     @Override
     public FederalStateSettings getFederalStateSettings() {
-        return getFederalStateEntity()
+        return findFirstEntity(federalStateSettingsRepository.findAll())
             .map(SettingsService::toFederalStateSettings)
             .orElse(FederalStateSettings.DEFAULT);
     }
 
+    FederalStateSettings updateFederalStateSettings(FederalState federalState, boolean worksOnPublicHoliday) {
+        final FederalStateSettingsEntity entity = findFirstEntity(federalStateSettingsRepository.findAll())
+            .orElseGet(FederalStateSettingsEntity::new);
+        entity.setFederalState(federalState);
+        entity.setWorksOnPublicHoliday(worksOnPublicHoliday);
+        return toFederalStateSettings(federalStateSettingsRepository.save(entity));
+    }
+
+    @Override
+    public WorkingTimeSettings getWorkingTimeSettings() {
+        return findFirstEntity(workingTimeSettingsRepository.findAll())
+            .map(SettingsService::toWorkingTimeSettings)
+            .orElse(WorkingTimeSettings.DEFAULT);
+    }
+
+    WorkingTimeSettings updateWorkingTimeSettings(EnumMap<DayOfWeek, Duration> workdays) {
+        final WorkingTimeSettingsEntity entity = findFirstEntity(workingTimeSettingsRepository.findAll())
+            .orElseGet(WorkingTimeSettingsEntity::new);
+        entity.setMonday(durationToString(workdays.get(MONDAY)));
+        entity.setTuesday(durationToString(workdays.get(TUESDAY)));
+        entity.setWednesday(durationToString(workdays.get(WEDNESDAY)));
+        entity.setThursday(durationToString(workdays.get(THURSDAY)));
+        entity.setFriday(durationToString(workdays.get(FRIDAY)));
+        entity.setSaturday(durationToString(workdays.get(SATURDAY)));
+        entity.setSunday(durationToString(workdays.get(SUNDAY)));
+        return toWorkingTimeSettings(workingTimeSettingsRepository.save(entity));
+    }
+
     @Override
     public LockTimeEntriesSettings getLockTimeEntriesSettings() {
-        return getLockTimeEntriesSettingsEntity()
+        return findFirstEntity(lockTimeEntriesSettingsRepository.findAll())
             .map(SettingsService::toLockTimeEntriesSettings)
             .orElse(LockTimeEntriesSettings.DEFAULT);
     }
 
-    @Override
-    public Optional<SubtractBreakFromTimeEntrySettings> getSubtractBreakFromTimeEntrySettings() {
-        return getSubtractBreakFromTimeEntrySettingsEntity()
-            .map(SettingsService::toSubtractBreakFromTimeEntrySettings);
-    }
-
-    /**
-     * Updates {@link FederalStateSettings}.
-     *
-     * @param federalState         {@link FederalState} used for every person if not overridden
-     * @param worksOnPublicHoliday whether persons have to work or not on public holidays
-     * @return the updated {@link FederalStateSettings}
-     */
-    FederalStateSettings updateFederalStateSettings(FederalState federalState, boolean worksOnPublicHoliday) {
-
-        final FederalStateSettingsEntity entity = getFederalStateEntity().orElseGet(FederalStateSettingsEntity::new);
-        entity.setFederalState(federalState);
-        entity.setWorksOnPublicHoliday(worksOnPublicHoliday);
-
-        final FederalStateSettingsEntity saved = federalStateSettingsRepository.save(entity);
-
-        return toFederalStateSettings(saved);
-    }
-
-    /**
-     * Update {@link LockTimeEntriesSettings}.
-     *
-     * @param lockingIsActive           whether locking is active or not
-     * @param lockTimeEntriesDaysInPast number of days time entries in past get locked, zero based (0 -> yesterday is locked)
-     * @return the updated {@link LockTimeEntriesSettings}
-     */
     LockTimeEntriesSettings updateLockTimeEntriesSettings(boolean lockingIsActive, int lockTimeEntriesDaysInPast) {
-
-        final LockTimeEntriesSettingsEntity entity = getLockTimeEntriesSettingsEntity().orElseGet(LockTimeEntriesSettingsEntity::new);
+        final LockTimeEntriesSettingsEntity entity = findFirstEntity(lockTimeEntriesSettingsRepository.findAll())
+            .orElseGet(LockTimeEntriesSettingsEntity::new);
         final int previousLockTimeEntriesDaysInPast = entity.getLockTimeEntriesDaysInPast();
-
-        // set new values
         entity.setLockingIsActive(lockingIsActive);
         entity.setLockTimeEntriesDaysInPast(lockTimeEntriesDaysInPast);
-
         final LockTimeEntriesSettingsEntity saved = lockTimeEntriesSettingsRepository.save(entity);
-
         if (saved.isLockingIsActive()) {
             LOG.info("LockTimeEntriesSettings updated: locking is active. Looking for updated DayLocked events now (previousLockTimeEntriesDaysInPast={} lockTimeEntriesDaysInPast={})", previousLockTimeEntriesDaysInPast, lockTimeEntriesDaysInPast);
             publishedDayLockedEvents(previousLockTimeEntriesDaysInPast, lockTimeEntriesDaysInPast);
         } else {
             LOG.info("LockTimeEntriesSettings updated: locking is disabled.");
         }
-
         return toLockTimeEntriesSettings(saved);
     }
 
-    /**
-     * Updates {@link SubtractBreakFromTimeEntrySettings}.
-     *
-     * @param featureActive whether the feature is active or not
-     * @param featureActiveTimestamp timestamp from which the feature is active
-     */
-    SubtractBreakFromTimeEntrySettings updateSubtractBreakFromTimeEntrySettings(
-        boolean featureActive,
-        Instant featureActiveTimestamp
-    ) {
-
-        final SubtractBreakFromTimeEntrySettingsEntity entity = getSubtractBreakFromTimeEntrySettingsEntity()
-            .orElseGet(SubtractBreakFromTimeEntrySettingsEntity::new);
-
-        entity.setSubtractBreakFromTimeEntryIsActive(featureActive);
-        entity.setSubtractBreakFromTimeEntryEnabledTimestamp(featureActiveTimestamp);
-
-        final SubtractBreakFromTimeEntrySettingsEntity saved = subtractBreakFromTimeEntrySettingsRepository.save(entity);
-        return toSubtractBreakFromTimeEntrySettings(saved);
+    @Override
+    public Optional<SubtractBreakFromTimeEntrySettings> getSubtractBreakFromTimeEntrySettings() {
+        return findFirstEntity(subtractBreakFromTimeEntrySettingsRepository.findAll())
+            .map(SettingsService::toSubtractBreakFromTimeEntrySettings);
     }
 
-    private Optional<FederalStateSettingsEntity> getFederalStateEntity() {
-        // `findFirst` is sufficient as there exists only one FederalStateSettingsEntity per tenant.
-        // however, the tenantId is handled transparently in the background. and we only have the public API of `findAll`.
-        final Iterable<FederalStateSettingsEntity> settings = federalStateSettingsRepository.findAll();
-        return stream(settings.spliterator(), false).findFirst();
+    SubtractBreakFromTimeEntrySettings updateSubtractBreakFromTimeEntrySettings(boolean featureActive, Instant featureActiveTimestamp) {
+        final SubtractBreakFromTimeEntrySettingsEntity entity = findFirstEntity(subtractBreakFromTimeEntrySettingsRepository.findAll())
+            .orElseGet(SubtractBreakFromTimeEntrySettingsEntity::new);
+        entity.setSubtractBreakFromTimeEntryIsActive(featureActive);
+        entity.setSubtractBreakFromTimeEntryEnabledTimestamp(featureActiveTimestamp);
+        return toSubtractBreakFromTimeEntrySettings(subtractBreakFromTimeEntrySettingsRepository.save(entity));
+    }
+
+    @Override
+    public OooCalendarSettings getOooCalendarSettings() {
+        return findFirstEntity(oooCalendarSettingsRepository.findAll())
+            .map(e -> new OooCalendarSettings(e.getCalendarUrl()))
+            .orElse(OooCalendarSettings.DEFAULT);
+    }
+
+    OooCalendarSettings updateOooCalendarSettings(String calendarUrl) {
+        final OooCalendarSettingsEntity entity = findFirstEntity(oooCalendarSettingsRepository.findAll())
+            .orElseGet(OooCalendarSettingsEntity::new);
+        entity.setCalendarUrl(calendarUrl == null || calendarUrl.isBlank() ? null : calendarUrl.strip());
+        return new OooCalendarSettings(oooCalendarSettingsRepository.save(entity).getCalendarUrl());
     }
 
     private void publishedDayLockedEvents(final int previousLockTimeEntriesDaysInPast, final int actualLockTimeEntriesDaysInPast) {
@@ -140,60 +146,44 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         final LocalDate today = LocalDate.now(zoneId);
         final LocalDate oldLockTimeEntryDate = today.minusDays(previousLockTimeEntriesDaysInPast).minusDays(1);
         final LocalDate actualLockTimeEntryDate = today.minusDays(actualLockTimeEntriesDaysInPast).minusDays(1);
-
         iterate(oldLockTimeEntryDate, date -> !date.isAfter(actualLockTimeEntryDate), date -> date.plusDays(1))
             .forEach(lockedDate -> applicationEventPublisher.publishEvent(new DayLockedEvent(lockedDate, zoneId)));
     }
 
-    private Optional<LockTimeEntriesSettingsEntity> getLockTimeEntriesSettingsEntity() {
-        // `findFirst` is sufficient as there exists only one FederalStateSettingsEntity per tenant.
-        // however, the tenantId is handled transparently in the background. and we only have the public API of `findAll`.
-        final Iterable<LockTimeEntriesSettingsEntity> settings = lockTimeEntriesSettingsRepository.findAll();
-        return stream(settings.spliterator(), false).findFirst();
+    private static <T> Optional<T> findFirstEntity(Iterable<T> entities) {
+        // `findFirst` is sufficient as there exists only one settings entity per tenant;
+        // tenantId is handled transparently, and we only have the public API of `findAll`.
+        return stream(entities.spliterator(), false).findFirst();
     }
 
-    private Optional<SubtractBreakFromTimeEntrySettingsEntity> getSubtractBreakFromTimeEntrySettingsEntity() {
-        // `findFirst` is sufficient as there exists only one FederalStateSettingsEntity per tenant.
-        // however, the tenantId is handled transparently in the background. and we only have the public API of `findAll`.
-        final Iterable<SubtractBreakFromTimeEntrySettingsEntity> settings = subtractBreakFromTimeEntrySettingsRepository.findAll();
-        return stream(settings.spliterator(), false).findFirst();
+    private static String durationToString(Duration duration) {
+        return duration == null ? Duration.ZERO.toString() : duration.toString();
     }
 
-    @Override
-    public OooCalendarSettings getOooCalendarSettings() {
-        return stream(oooCalendarSettingsRepository.findAll().spliterator(), false)
-            .findFirst()
-            .map(e -> new OooCalendarSettings(e.getCalendarUrl()))
-            .orElse(OooCalendarSettings.DEFAULT);
+    private static FederalStateSettings toFederalStateSettings(FederalStateSettingsEntity e) {
+        return new FederalStateSettings(e.getFederalState(), e.isWorksOnPublicHoliday());
     }
 
-    OooCalendarSettings updateOooCalendarSettings(String calendarUrl) {
-        final OooCalendarSettingsEntity entity = stream(oooCalendarSettingsRepository.findAll().spliterator(), false)
-            .findFirst()
-            .orElseGet(OooCalendarSettingsEntity::new);
-        entity.setCalendarUrl(calendarUrl == null || calendarUrl.isBlank() ? null : calendarUrl.strip());
-        final OooCalendarSettingsEntity saved = oooCalendarSettingsRepository.save(entity);
-        return new OooCalendarSettings(saved.getCalendarUrl());
+    private static WorkingTimeSettings toWorkingTimeSettings(WorkingTimeSettingsEntity e) {
+        final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(DayOfWeek.class);
+        workdays.put(MONDAY,    Duration.parse(e.getMonday()));
+        workdays.put(TUESDAY,   Duration.parse(e.getTuesday()));
+        workdays.put(WEDNESDAY, Duration.parse(e.getWednesday()));
+        workdays.put(THURSDAY,  Duration.parse(e.getThursday()));
+        workdays.put(FRIDAY,    Duration.parse(e.getFriday()));
+        workdays.put(SATURDAY,  Duration.parse(e.getSaturday()));
+        workdays.put(SUNDAY,    Duration.parse(e.getSunday()));
+        return new WorkingTimeSettings(workdays);
     }
 
-    private static FederalStateSettings toFederalStateSettings(FederalStateSettingsEntity federalStateSettingsEntity) {
-        return new FederalStateSettings(
-            federalStateSettingsEntity.getFederalState(),
-            federalStateSettingsEntity.isWorksOnPublicHoliday()
-        );
+    private static LockTimeEntriesSettings toLockTimeEntriesSettings(LockTimeEntriesSettingsEntity e) {
+        return new LockTimeEntriesSettings(e.isLockingIsActive(), e.getLockTimeEntriesDaysInPast());
     }
 
-    private static LockTimeEntriesSettings toLockTimeEntriesSettings(LockTimeEntriesSettingsEntity lockTimeEntriesSettingsEntity) {
-        return new LockTimeEntriesSettings(
-            lockTimeEntriesSettingsEntity.isLockingIsActive(),
-            lockTimeEntriesSettingsEntity.getLockTimeEntriesDaysInPast()
-        );
-    }
-
-    private static SubtractBreakFromTimeEntrySettings toSubtractBreakFromTimeEntrySettings(SubtractBreakFromTimeEntrySettingsEntity entity) {
+    private static SubtractBreakFromTimeEntrySettings toSubtractBreakFromTimeEntrySettings(SubtractBreakFromTimeEntrySettingsEntity e) {
         return new SubtractBreakFromTimeEntrySettings(
-            entity.isSubtractBreakFromTimeEntryIsActive(),
-            Optional.ofNullable(entity.getSubtractBreakFromTimeEntryEnabledTimestamp())
+            e.isSubtractBreakFromTimeEntryIsActive(),
+            Optional.ofNullable(e.getSubtractBreakFromTimeEntryEnabledTimestamp())
         );
     }
 }

@@ -82,11 +82,14 @@ class WorkingTimeControllerTest implements ControllerTest {
     @Mock
     private FederalStateSettingsService federalStateSettingsService;
     @Mock
+    private de.focusshift.zeiterfassung.settings.WorkingTimeSettingsService workingTimeSettingsService;
+    @Mock
     private UserSearchViewHelper userSearchViewHelper;
 
     @BeforeEach
     void setUp() {
-        sut = new WorkingTimeController(userManagementService, workingTimeService, workingTimeDtoValidator, federalStateSettingsService, userSearchViewHelper);
+        sut = new WorkingTimeController(userManagementService, workingTimeService, workingTimeDtoValidator,
+            federalStateSettingsService, workingTimeSettingsService, userSearchViewHelper);
     }
 
     @Test
@@ -133,6 +136,40 @@ class WorkingTimeControllerTest implements ControllerTest {
             .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
         )
             .andExpect(model().attribute("globalWorksOnPublicHoliday", expectedValue));
+    }
+
+    @Test
+    void ensureGetCreatePagePrefillsWorkingDaysFromGlobalSettings() throws Exception {
+
+        final UserId userId = new UserId("uuid");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+        when(userManagementService.findAllUsers("")).thenReturn(List.of(user));
+
+        final java.util.EnumMap<java.time.DayOfWeek, java.time.Duration> customDays = new java.util.EnumMap<>(java.time.DayOfWeek.class);
+        for (java.time.DayOfWeek d : java.time.DayOfWeek.values()) {
+            customDays.put(d, java.time.Duration.ZERO);
+        }
+        customDays.put(java.time.DayOfWeek.MONDAY,    java.time.Duration.ofHours(7));
+        customDays.put(java.time.DayOfWeek.TUESDAY,   java.time.Duration.ofHours(7));
+        customDays.put(java.time.DayOfWeek.WEDNESDAY, java.time.Duration.ofHours(7));
+        when(federalStateSettingsService.getFederalStateSettings())
+            .thenReturn(new FederalStateSettings(GERMANY_BERLIN, false));
+        when(workingTimeSettingsService.getWorkingTimeSettings())
+            .thenReturn(new de.focusshift.zeiterfassung.settings.WorkingTimeSettings(customDays));
+
+        perform(get(WORKING_TIME_CREATE_URL_TEMPLATE, userLocalId.value())
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL)))
+        )
+            .andExpect(status().isOk())
+            .andExpect(result -> {
+                final WorkingTimeDto dto = (WorkingTimeDto) result.getModelAndView().getModel().get("workingTime");
+                org.assertj.core.api.Assertions.assertThat(dto.getWorkday())
+                    .containsExactlyInAnyOrder("monday", "tuesday", "wednesday");
+                org.assertj.core.api.Assertions.assertThat(dto.getWorkingTime()).isEqualTo(7.0);
+            });
     }
 
     @Test

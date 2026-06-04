@@ -101,6 +101,53 @@
                   </div>
                 </div>
               </div>
+              <!-- ── Global working days ─────────────────────────────── -->
+              <div class="mt-8 lg:mt-12" data-testid="global-working-days-section">
+                <h2 class="font-bold" th:text="#{settings.working-days.heading}">Arbeitstage</h2>
+                <p class="mt-2 text-dimmed" th:text="#{settings.working-days.teaser-text}">
+                  Standard-Arbeitstage und Stunden für neue Mitarbeitende.
+                </p>
+                <div class="mt-4">
+                  <fieldset>
+                    <legend class="sr-only" th:text="#{settings.working-days.heading}">Arbeitstage</legend>
+                    <ul class="flex flex-wrap gap-4">
+                      <li th:each="dayName : ${ {'monday','tuesday','wednesday','thursday','friday','saturday','sunday'} }"
+                          class="flex items-center gap-1">
+                        <input
+                          type="checkbox"
+                          name="workday"
+                          th:value="${dayName}"
+                          th:id="${'settings-workday-' + dayName}"
+                          th:attr="data-testid=${'settings-workday-' + dayName}"
+                          th:checked="${settings.workday != null and #lists.contains(settings.workday, dayName)}"
+                        />
+                        <label
+                          th:for="${'settings-workday-' + dayName}"
+                          th:text="${#messages.msg(dayName.toUpperCase())}"
+                        >Montag</label>
+                      </li>
+                    </ul>
+                  </fieldset>
+                  <div class="mt-4 flex items-center gap-2">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      id="settings-working-time"
+                      name="workingTime"
+                      class="w-14"
+                      data-testid="settings-working-time-input"
+                      th:value="${settings.workingTime}"
+                    />
+                    <label for="settings-working-time" th:text="#{settings.working-days.hours.label}">
+                      Stunden am Tag
+                    </label>
+                  </div>
+                  <p th:if="${#fields.hasErrors('workingTime')}"
+                     th:text="${#fields.errors('workingTime')[0]}"
+                     class="mt-2 invalid"></p>
+                </div>
+              </div>
+
               <div class="mt-8 lg:mt-12">
                 <h2
                   class="font-bold"

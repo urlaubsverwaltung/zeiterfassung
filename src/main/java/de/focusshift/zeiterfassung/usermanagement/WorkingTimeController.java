@@ -73,6 +73,7 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad, HasUserSearch
     private final WorkingTimeService workingTimeService;
     private final WorkingTimeDtoValidator validator;
     private final FederalStateSettingsService federalStateSettingsService;
+    private final de.focusshift.zeiterfassung.settings.WorkingTimeSettingsService workingTimeSettingsService;
     private final UserSearchViewHelper userSearchViewHelper;
 
     WorkingTimeController(
@@ -80,12 +81,14 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad, HasUserSearch
         WorkingTimeService workingTimeService,
         WorkingTimeDtoValidator validator,
         FederalStateSettingsService federalStateSettingsService,
+        de.focusshift.zeiterfassung.settings.WorkingTimeSettingsService workingTimeSettingsService,
         UserSearchViewHelper userSearchViewHelper
     ) {
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
         this.validator = validator;
         this.federalStateSettingsService = federalStateSettingsService;
+        this.workingTimeSettingsService = workingTimeSettingsService;
         this.userSearchViewHelper = userSearchViewHelper;
     }
 
@@ -96,9 +99,27 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad, HasUserSearch
         @CurrentUser CurrentOidcUser currentUser
     ) {
 
+        final de.focusshift.zeiterfassung.settings.WorkingTimeSettings globalWorkingTime =
+            workingTimeSettingsService.getWorkingTimeSettings();
+
         final WorkingTimeDto workingTimeDto = new WorkingTimeDto();
         workingTimeDto.setFederalState(FederalState.GLOBAL);
         workingTimeDto.setWorksOnPublicHoliday(null);
+
+        // Pre-fill working days and hours from global defaults
+        final java.util.List<String> checkedDays = globalWorkingTime.workdays().entrySet().stream()
+            .filter(e -> !e.getValue().isZero())
+            .map(e -> e.getKey().name().toLowerCase())
+            .toList();
+        workingTimeDto.setWorkday(new java.util.ArrayList<>(checkedDays));
+        final double defaultHours = globalWorkingTime.workdays().values().stream()
+            .filter(d -> !d.isZero())
+            .mapToDouble(d -> d.toMinutes() / 60.0)
+            .findFirst()
+            .orElse(0.0);
+        if (defaultHours > 0) {
+            workingTimeDto.setWorkingTime(defaultHours);
+        }
 
         prepareWorkingTimeCreateOrEditModel(model, query, userId, workingTimeDto, currentUser);
         model.addAttribute("createMode", true);

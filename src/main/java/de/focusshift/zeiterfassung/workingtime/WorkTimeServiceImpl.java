@@ -4,6 +4,8 @@ import de.focusshift.zeiterfassung.CachedSupplier;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.settings.FederalStateSettings;
 import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
+import de.focusshift.zeiterfassung.settings.WorkingTimeSettings;
+import de.focusshift.zeiterfassung.settings.WorkingTimeSettingsService;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
@@ -49,15 +51,18 @@ class WorkTimeServiceImpl implements WorkingTimeService {
     private final WorkingTimeRepository repository;
     private final UserManagementService userManagementService;
     private final FederalStateSettingsService federalStateSettingsService;
+    private final WorkingTimeSettingsService workingTimeSettingsService;
     private final Clock clock;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     WorkTimeServiceImpl(WorkingTimeRepository repository, UserManagementService userManagementService,
-                        FederalStateSettingsService federalStateSettingsService, Clock clock,
-                        ApplicationEventPublisher applicationEventPublisher) {
+                        FederalStateSettingsService federalStateSettingsService,
+                        WorkingTimeSettingsService workingTimeSettingsService,
+                        Clock clock, ApplicationEventPublisher applicationEventPublisher) {
         this.repository = repository;
         this.userManagementService = userManagementService;
         this.federalStateSettingsService = federalStateSettingsService;
+        this.workingTimeSettingsService = workingTimeSettingsService;
         this.clock = clock;
         this.applicationEventPublisher = applicationEventPublisher;
     }
@@ -369,20 +374,21 @@ class WorkTimeServiceImpl implements WorkingTimeService {
 
     @SuppressWarnings("java:S4276") // we need Supplier because we don't have a CachedBooleanSupplier
     private WorkingTime defaultWorkingTime(UserIdComposite userIdComposite, Supplier<FederalStateSettings> federalStateSettingsSupplier) {
-        final Duration zeroWorkingTime = PlannedWorkingHours.ZERO.duration();
+        final WorkingTimeSettings workingTimeSettings = workingTimeSettingsService.getWorkingTimeSettings();
+        final EnumMap<DayOfWeek, Duration> workdays = workingTimeSettings.workdays();
         return WorkingTime.builder(userIdComposite, null)
             .current(true)
             .defaultWorkingTime(true)
             .federalState(FederalState.GLOBAL)
             .federalStateSettingsSupplier(new CachedSupplier<>(federalStateSettingsSupplier))
             .worksOnPublicHoliday(WorksOnPublicHoliday.GLOBAL)
-            .monday(zeroWorkingTime)
-            .tuesday(zeroWorkingTime)
-            .wednesday(zeroWorkingTime)
-            .thursday(zeroWorkingTime)
-            .friday(zeroWorkingTime)
-            .saturday(zeroWorkingTime)
-            .sunday(zeroWorkingTime)
+            .monday(workdays.get(MONDAY))
+            .tuesday(workdays.get(TUESDAY))
+            .wednesday(workdays.get(WEDNESDAY))
+            .thursday(workdays.get(THURSDAY))
+            .friday(workdays.get(FRIDAY))
+            .saturday(workdays.get(SATURDAY))
+            .sunday(workdays.get(SUNDAY))
             .build();
     }
 

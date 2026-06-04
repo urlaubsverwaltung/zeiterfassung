@@ -15,9 +15,12 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
+
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.OFFICE;
@@ -70,5 +73,28 @@ class SettingsUIIT {
 
         settingsPage.assertLockTimeEntriesDaysInPastInputValue("5");
         assertThat(page.getByText(Pattern.compile(expectedDatePreviewText))).isVisible();
+    }
+
+    @Test
+    void ensureGlobalWorkingDaysCanBeSavedAndReloaded(Page page) {
+
+        final NavigationPage navigationPage = new NavigationPage(page);
+        final SettingsPage settingsPage = new SettingsPage(page);
+        final LoginPage loginPage = new LoginPage(page, port);
+
+        loginPage.login(OFFICE);
+        navigationPage.goToSettingsPage();
+
+        // Check Mon–Thu, uncheck Fri (default is Mon–Fri), set 7h
+        settingsPage.uncheckWorkday(DayOfWeek.FRIDAY);
+        settingsPage.setWorkingHours(7.0);
+        settingsPage.submit();
+
+        // After redirect the page reloads — assert the saved values persist
+        settingsPage.assertWorkdayChecked(DayOfWeek.MONDAY);
+        settingsPage.assertWorkdayChecked(DayOfWeek.THURSDAY);
+        settingsPage.assertWorkdayUnchecked(DayOfWeek.FRIDAY);
+        settingsPage.assertWorkdayUnchecked(DayOfWeek.SATURDAY);
+        settingsPage.assertWorkingHours(7.0);
     }
 }

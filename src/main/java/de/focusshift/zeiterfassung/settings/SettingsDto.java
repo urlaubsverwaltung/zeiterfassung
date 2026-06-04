@@ -5,11 +5,17 @@ import jakarta.annotation.Nullable;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.List;
 
 record SettingsDto(
 
     FederalState federalState,
     boolean worksOnPublicHoliday,
+
+    /** Checked day names: "monday", "tuesday", … */
+    @Nullable List<String> workday,
+    /** Common hours per working day (decimal, e.g. 8.0 or 7.5). */
+    @Nullable Double workingTime,
 
     boolean lockingIsActive,
     @Nullable
