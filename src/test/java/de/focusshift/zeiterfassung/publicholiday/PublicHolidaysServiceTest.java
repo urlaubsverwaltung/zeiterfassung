@@ -18,6 +18,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
+import static de.focusshift.zeiterfassung.publicholiday.FederalState.FINLAND;
+import static de.focusshift.zeiterfassung.publicholiday.FederalState.FINLAND_ALAND;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GLOBAL;
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.NONE;
@@ -35,7 +37,13 @@ class PublicHolidaysServiceTest {
 
     @BeforeEach
     void setUp() {
-        sut = new PublicHolidaysServiceImpl(Map.of("de", getHolidayManager("de")), federalStateSettingsService);
+        sut = new PublicHolidaysServiceImpl(
+            Map.of(
+                "de", getHolidayManager("de"),
+                "fi", getHolidayManager("fi")
+            ),
+            federalStateSettingsService
+        );
     }
 
     @Test
@@ -84,6 +92,55 @@ class PublicHolidaysServiceTest {
         assertThat(actual)
             .hasSize(1)
             .hasEntrySatisfying(GERMANY_BADEN_WUERTTEMBERG, this::assertBadenWuerttemberg);
+    }
+
+    @Test
+    void ensureGetPublicHolidaysForFinland() {
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+        final LocalDate toExclusive = LocalDate.of(2024, 1, 1);
+
+        final Map<FederalState, PublicHolidayCalendar> actual = sut.getPublicHolidays(from, toExclusive, List.of(FINLAND));
+
+        assertThat(actual).hasSize(1).hasEntrySatisfying(FINLAND, this::assertFinland);
+    }
+
+    @Test
+    void ensureGetPublicHolidaysForFinlandAland() {
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+        final LocalDate toExclusive = LocalDate.of(2024, 1, 1);
+
+        final Map<FederalState, PublicHolidayCalendar> actual = sut.getPublicHolidays(from, toExclusive, List.of(FINLAND_ALAND));
+
+        assertThat(actual).hasSize(1).hasEntrySatisfying(FINLAND_ALAND, calendar -> {
+            assertThat(calendar.federalState()).isEqualTo(FINLAND_ALAND);
+            assertThat(calendar.publicHolidays()).satisfies(map -> {
+                assertThat(map).hasSize(16); // 15 national + Self-Governance Day (9 June)
+                assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 6, 9), anyDescription())));
+            });
+        });
+    }
+
+    private void assertFinland(PublicHolidayCalendar publicHolidayCalendar) {
+        // Easter 2023 = April 9 (Gregorian)
+        assertThat(publicHolidayCalendar.federalState()).isEqualTo(FINLAND);
+        assertThat(publicHolidayCalendar.publicHolidays()).satisfies(map -> {
+            assertThat(map).hasSize(15);
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 1, 1), anyDescription())));  // New Year
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 1, 6), anyDescription())));  // Epiphany
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 4, 7), anyDescription())));  // Good Friday
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 4, 9), anyDescription())));  // Easter
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 4, 10), anyDescription()))); // Easter Monday
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 5, 1), anyDescription())));  // Labour Day
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 5, 18), anyDescription()))); // Ascension Day
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 5, 28), anyDescription()))); // Whit Sunday
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 6, 23), anyDescription()))); // Midsummer Eve (Fri between 19-25 Jun)
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 6, 24), anyDescription()))); // Midsummer Day (Sat between 20-26 Jun)
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 11, 4), anyDescription()))); // All Saints (Sat between 31 Oct-6 Nov)
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 12, 6), anyDescription())));  // Independence Day
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 12, 24), anyDescription()))); // Christmas Eve
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 12, 25), anyDescription()))); // Christmas Day
+            assertThat(map).containsValue(List.of(new PublicHoliday(LocalDate.of(2023, 12, 26), anyDescription()))); // St. Stephen's Day
+        });
     }
 
     private void assertNone(PublicHolidayCalendar publicHolidayCalendar) {
