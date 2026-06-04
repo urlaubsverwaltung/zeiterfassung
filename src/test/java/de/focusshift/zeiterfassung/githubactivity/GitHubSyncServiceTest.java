@@ -113,6 +113,25 @@ class GitHubSyncServiceTest {
         );
     }
 
+    private Map<String, Object> crossForkPrEvent(String eventId, String baseRepo, int prNumber,
+                                                  String title, String headBranch, String forkRepo) {
+        return Map.of(
+            "id", eventId,
+            "type", "PullRequestEvent",
+            "created_at", "2026-06-02T14:00:00Z",
+            "repo", Map.of("name", baseRepo),
+            "payload", Map.of(
+                "action", "opened",
+                "pull_request", Map.of(
+                    "number", prNumber,
+                    "title", title,
+                    "merged", false,
+                    "head", Map.of("ref", headBranch, "repo", Map.of("full_name", forkRepo))
+                )
+            )
+        );
+    }
+
     private GitHubRawEventEntity existingPrEntity(String eventId, String repo, String prNumber,
                                                    String title, String headBranch) {
         final GitHubRawEventEntity e = new GitHubRawEventEntity();
@@ -286,6 +305,71 @@ class GitHubSyncServiceTest {
             final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getEventSummary()).startsWith("Merged PR #11950");
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureHeadRepoNameStoredForCrossForkPR() {
+            final var pr = crossForkPrEvent("evt-pr-fork", "slint-ui/tree-sitter-slint", 1,
+                "Fix grammar", "fix-tree-sitter-grammar", "LeonMatthes/slint");
+
+            when(restClient.get()).thenReturn(requestHeadersUriSpec);
+            when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(pr));
+            when(repository.existsByGithubEventId("evt-pr-fork")).thenReturn(false);
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            verify(repository).save(captor.capture());
+            final GitHubRawEventEntity saved = captor.getValue();
+            assertThat(saved.getRepoName()).isEqualTo("slint-ui/tree-sitter-slint");
+            assertThat(saved.getHeadBranch()).isEqualTo("fix-tree-sitter-grammar");
+            assertThat(saved.getHeadRepoName()).isEqualTo("LeonMatthes/slint");
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureHeadRepoNameNullForSameRepoPR() {
+            // head.repo.full_name == repo.name → same-repo, headRepoName must be null
+            final var pr = crossForkPrEvent("evt-pr-same", "slint-ui/slint", 11940,
+                "My feature", "nigel/my-feature", "slint-ui/slint");
+
+            when(restClient.get()).thenReturn(requestHeadersUriSpec);
+            when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(pr));
+            when(repository.existsByGithubEventId("evt-pr-same")).thenReturn(false);
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            verify(repository).save(captor.capture());
+            assertThat(captor.getValue().getHeadRepoName()).isNull();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureHeadRepoNameNullWhenHeadRepoAbsentFromPayload() {
+            // payload has no head.repo — headRepoName must stay null, no NPE
+            final var pr = prEvent("evt-pr-noheadrepo", "slint-ui/slint", 11940,
+                "My feature", "nigel/my-feature", "opened");
+
+            when(restClient.get()).thenReturn(requestHeadersUriSpec);
+            when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(pr));
+            when(repository.existsByGithubEventId("evt-pr-noheadrepo")).thenReturn(false);
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            verify(repository).save(captor.capture());
+            assertThat(captor.getValue().getHeadRepoName()).isNull();
         }
     }
 
@@ -623,6 +707,49 @@ class GitHubSyncServiceTest {
             final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getHeadBranch()).isEqualTo("nigel/feature");
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureHeadRepoNameBackfilledDuringEnrichmentForCrossForkPR() {
+            final var existing = existingPrEntity("evt-pr-fork-old", "slint-ui/tree-sitter-slint", "1", "", null);
+            final var events = List.of(Map.of(
+                "id", "evt-pr-fork-old", "type", "PullRequestEvent",
+                "created_at", "2026-06-02T14:00:00Z",
+                "repo", Map.of("name", "slint-ui/tree-sitter-slint"),
+                "payload", Map.of(
+                    "action", "opened",
+                    "pull_request", Map.of(
+                        "number", 1, "title", "", "merged", false,
+                        "head", Map.of("ref", "fix-tree-sitter-grammar")
+                    )
+                )
+            ));
+            final Map<String, Object> prDetails = Map.of(
+                "title", "Fix grammar",
+                "head", Map.of(
+                    "ref", "fix-tree-sitter-grammar",
+                    "repo", Map.of("full_name", "LeonMatthes/slint")
+                )
+            );
+
+            when(restClient.get()).thenReturn(requestHeadersUriSpec);
+            when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersUriSpec.uri(any(java.net.URI.class))).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+            when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+            when(responseSpec.body(any(ParameterizedTypeReference.class)))
+                .thenReturn(events)
+                .thenReturn(prDetails);
+
+            when(repository.findByGithubEventId("evt-pr-fork-old")).thenReturn(Optional.of(existing));
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            verify(repository).save(captor.capture());
+            assertThat(captor.getValue().getHeadBranch()).isEqualTo("fix-tree-sitter-grammar");
+            assertThat(captor.getValue().getHeadRepoName()).isEqualTo("LeonMatthes/slint");
         }
     }
 }

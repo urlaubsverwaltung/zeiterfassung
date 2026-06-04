@@ -11,4 +11,15 @@
     </addColumn>
   </changeSet>
 
+  <changeSet author="slint" id="add-github-raw-event-head-repo-name">
+    <preConditions onFail="MARK_RAN">
+      <not><columnExists tableName="github_raw_event" columnName="head_repo_name"/></not>
+    </preConditions>
+    <addColumn tableName="github_raw_event">
+      <column name="head_repo_name" type="VARCHAR(500)">
+        <constraints nullable="true"/>
+      </column>
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>

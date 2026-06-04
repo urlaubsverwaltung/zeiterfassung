@@ -525,13 +525,15 @@ public class GitHubSyncService {
         entity.setEventIcon(parsed[3]);
         entity.setEventSummary(parsed[4]);
         entity.setHeadBranch(parsed.length > 5 && !parsed[5].isEmpty() ? parsed[5] : null);
+        final String parsedHeadRepo = parsed.length > 6 ? parsed[6] : "";
+        entity.setHeadRepoName(!parsedHeadRepo.isEmpty() && !parsedHeadRepo.equals(repoName) ? parsedHeadRepo : null);
         entity.setEventTimestamp(Instant.parse(createdAt));
         return entity;
     }
 
     /**
-     * Returns [anchorType, anchorId, anchorTitle, icon, summary, headBranch?], or null to skip the event.
-     * PullRequestEvent returns 6 elements (headBranch at index 5); all others return 5.
+     * Returns [anchorType, anchorId, anchorTitle, icon, summary, headBranch?, headRepoName?], or null to skip the event.
+     * PullRequestEvent returns 7 elements (headBranch at index 5, headRepoName at index 6); all others return 5.
      * PushEvent is handled separately in parsePushToEntities and must not reach this method.
      */
     @SuppressWarnings("unchecked")
@@ -547,9 +549,12 @@ public class GitHubSyncService {
                 @SuppressWarnings("unchecked")
                 final Map<String, Object> head = pr != null ? (Map<String, Object>) pr.get("head") : null;
                 final String headBranch = head != null ? strOrEmpty(head.get("ref")) : "";
+                @SuppressWarnings("unchecked")
+                final Map<String, Object> headRepo = head != null ? (Map<String, Object>) head.get("repo") : null;
+                final String headRepoName = headRepo != null ? strOrEmpty(headRepo.get("full_name")) : "";
                 yield new String[]{"PR", String.valueOf(number), title, "🔀",
                     verb + " PR #" + number + (title.isEmpty() ? "" : ": " + title),
-                    headBranch};
+                    headBranch, headRepoName};
             }
             case "PullRequestReviewEvent" -> {
                 final Map<String, Object> pr = (Map<String, Object>) payload.get("pull_request");
@@ -739,12 +744,23 @@ public class GitHubSyncService {
                 }
             }
 
-            // For PRs, also capture the head branch so we can exclude these commits from Standalone
-            if ("pulls".equals(apiSegment) && (entity.getHeadBranch() == null || entity.getHeadBranch().isBlank())) {
+            // For PRs, also capture the head branch and fork repo so we can exclude commits from Standalone
+            if ("pulls".equals(apiSegment)) {
+                @SuppressWarnings("unchecked")
                 final Map<String, Object> head = (Map<String, Object>) response.get("head");
-                final String headBranch = head != null ? strOrEmpty(head.get("ref")) : "";
-                if (!headBranch.isBlank()) {
-                    entity.setHeadBranch(headBranch);
+                if (entity.getHeadBranch() == null || entity.getHeadBranch().isBlank()) {
+                    final String headBranch = head != null ? strOrEmpty(head.get("ref")) : "";
+                    if (!headBranch.isBlank()) {
+                        entity.setHeadBranch(headBranch);
+                    }
+                }
+                if (entity.getHeadRepoName() == null) {
+                    @SuppressWarnings("unchecked")
+                    final Map<String, Object> headRepo = head != null ? (Map<String, Object>) head.get("repo") : null;
+                    final String headRepoName = headRepo != null ? strOrEmpty(headRepo.get("full_name")) : "";
+                    if (!headRepoName.isBlank() && !headRepoName.equals(entity.getRepoName())) {
+                        entity.setHeadRepoName(headRepoName);
+                    }
                 }
             }
         } catch (Exception e) {

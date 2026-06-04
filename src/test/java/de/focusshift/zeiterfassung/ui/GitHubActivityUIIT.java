@@ -1105,4 +1105,71 @@ class GitHubActivityUIIT {
             assertThat(activityPage.standaloneSection().getByText("simon/license")).isVisible();
         }
     }
+
+    // ── cross-fork PR filtering ───────────────────────────────────────────────
+
+    @Nested
+    class CrossForkPrSection {
+
+        @Test
+        void ensureCommitsOnCrossForkBranchDoNotAppearAsStandalone(Page page) {
+            // Commits in the fork (LeonMatthes/slint) on the PR head branch must not
+            // appear as standalone once the COALESCE query returns the fork repo|branch key.
+            final var commit = commitEntity("abc123def456abc123def456abc123def456abc1",
+                "LeonMatthes/slint", "fix-tree-sitter-grammar", "Setup improved tree-sitter harness");
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of(commit));
+            when(gitHubRawEventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
+                .thenReturn(Set.of("LeonMatthes/slint|fix-tree-sitter-grammar"));
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            assertThat(activityPage.standaloneSection()).not().isVisible();
+        }
+
+        @Test
+        void ensureCrossForkCommitsAppearUnderSyntheticPrAnchor(Page page) {
+            // Same fork commit — but now the cross-fork repo query returns a PR entity,
+            // so the commit should appear in the PR section, not standalone.
+            final var commit = commitEntity("abc123def456abc123def456abc123def456abc1",
+                "LeonMatthes/slint", "fix-tree-sitter-grammar", "Setup improved tree-sitter harness");
+            when(gitHubRawEventRepository
+                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                    anyString(), any(), any()))
+                .thenReturn(List.of(commit));
+            when(gitHubRawEventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
+                .thenReturn(Set.of("LeonMatthes/slint|fix-tree-sitter-grammar"));
+
+            // Standard same-repo lookup returns nothing
+            when(gitHubRawEventRepository.findFirstByGithubUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
+                anyString(), anyString(), anyString()))
+                .thenReturn(Optional.empty());
+
+            // Cross-fork lookup returns the upstream PR
+            final var prEntity = prEntity("e-pr-fork", "slint-ui/tree-sitter-slint", "1",
+                "Fix tree-sitter grammar", "Opened PR #1: Fix tree-sitter grammar");
+            prEntity.setHeadBranch("fix-tree-sitter-grammar");
+            when(gitHubRawEventRepository.findFirstByGithubUsernameAndHeadRepoNameAndHeadBranchOrderByEventTimestampDesc(
+                anyString(), anyString(), anyString()))
+                .thenReturn(Optional.of(prEntity));
+            when(gitHubRawEventRepository.findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(Optional.of(prEntity));
+
+            final var loginPage = new LoginPage(page, port);
+            final var activityPage = new GitHubActivityPage(page, port);
+
+            loginPage.login(LoginPage.Credentials.USER);
+            activityPage.navigate();
+
+            assertThat(activityPage.prSection()).isVisible();
+            assertThat(activityPage.standaloneSection()).not().isVisible();
+        }
+    }
 }

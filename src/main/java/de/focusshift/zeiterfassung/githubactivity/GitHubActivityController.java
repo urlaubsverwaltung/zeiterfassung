@@ -358,9 +358,16 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                                                            Set<String> existingPrKeys,
                                                            String login, ZoneId zone,
                                                            LocalDate selectedDate) {
-        return eventRepository
+        // Same-repo lookup first; fall back to cross-fork lookup (commit repo == PR headRepoName)
+        java.util.Optional<GitHubRawEventEntity> prOpt = eventRepository
             .findFirstByGithubUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
-                login, repoAnchor.repoName(), repoAnchor.anchorId())
+                login, repoAnchor.repoName(), repoAnchor.anchorId());
+        if (prOpt.isEmpty()) {
+            prOpt = eventRepository
+                .findFirstByGithubUsernameAndHeadRepoNameAndHeadBranchOrderByEventTimestampDesc(
+                    login, repoAnchor.repoName(), repoAnchor.anchorId());
+        }
+        return prOpt
             .filter(pr -> !existingPrKeys.contains(pr.getRepoName() + "|" + pr.getAnchorId()))
             .map(pr -> {
                 final String anchorTitle = resolveAnchorTitle(pr, List.of(pr));

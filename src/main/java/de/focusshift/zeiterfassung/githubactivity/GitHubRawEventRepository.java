@@ -21,12 +21,13 @@ public interface GitHubRawEventRepository extends JpaRepository<GitHubRawEventEn
 
     /**
      * Returns "repo|branch" keys for all PR head branches whose PullRequestEvent
-     * was stored on or before {@code upTo}. Used to scope the PR-branch filter to
-     * the selected day, preventing retroactive hiding of standalone commits that
-     * were pushed before the PR was opened.
+     * was stored on or before {@code upTo}. For cross-fork PRs the fork repo is used
+     * (COALESCE falls back to repoName for same-repo PRs where headRepoName is null).
+     * Used to scope the PR-branch filter to the selected day, preventing retroactive
+     * hiding of standalone commits that were pushed before the PR was opened.
      */
     @org.springframework.data.jpa.repository.Query(
-        "SELECT DISTINCT e.repoName || '|' || e.headBranch FROM GitHubRawEventEntity e " +
+        "SELECT DISTINCT COALESCE(e.headRepoName, e.repoName) || '|' || e.headBranch FROM GitHubRawEventEntity e " +
         "WHERE e.githubUsername = :username AND e.headBranch IS NOT NULL AND e.headBranch <> '' " +
         "AND e.eventTimestamp <= :upTo")
     java.util.Set<String> findDistinctRepoAndHeadBranchesByUsernameUpToDate(
@@ -39,6 +40,13 @@ public interface GitHubRawEventRepository extends JpaRepository<GitHubRawEventEn
      */
     java.util.Optional<GitHubRawEventEntity> findFirstByGithubUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
         String githubUsername, String repoName, String headBranch);
+
+    /**
+     * Cross-fork variant: finds the PR entity by the fork repo (headRepoName) and branch.
+     * Used as a fallback in synthetic PR anchor building when commits live in a fork.
+     */
+    java.util.Optional<GitHubRawEventEntity> findFirstByGithubUsernameAndHeadRepoNameAndHeadBranchOrderByEventTimestampDesc(
+        String githubUsername, String headRepoName, String headBranch);
 
     /** Returns all PullRequestEvent entities for a user — used to determine which PRs are currently open. */
     java.util.List<GitHubRawEventEntity> findByGithubUsernameAndAnchorTypeAndEventType(

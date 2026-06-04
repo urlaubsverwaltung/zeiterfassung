@@ -422,6 +422,27 @@ class GitHubActivityControllerTest implements ControllerTest {
                 result.getModelAndView().getModel().get("standaloneAnchors");
             assertThat(standalone).isEmpty();
         }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureCommitsOnCrossForkBranchAreExcludedFromStandalone() throws Exception {
+            stubCommonDependencies("tronical");
+            // Commit lives in the fork (LeonMatthes/slint), not in the upstream PR repo
+            final var commit = commitEntity("abc123def456abc123def456abc123def456abc1",
+                "LeonMatthes/slint", "fix-tree-sitter-grammar", "Setup harness");
+            when(eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(commit));
+            // Query returns fork-repo|branch (COALESCE of headRepoName)
+            when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
+                .thenReturn(Set.of("LeonMatthes/slint|fix-tree-sitter-grammar"));
+
+            final var result = perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andReturn();
+
+            final List<ActivityAnchor> standalone = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("standaloneAnchors");
+            assertThat(standalone).isEmpty();
+        }
     }
 
     // ── synthetic PR anchors (commit-only days) ───────────────────────────────
@@ -484,6 +505,45 @@ class GitHubActivityControllerTest implements ControllerTest {
                 result.getModelAndView().getModel().get("prAnchors");
             assertThat(standalone).hasSize(1); // shows as standalone — PR not opened yet
             assertThat(prAnchors).isEmpty();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureCrossForkCommitsPromoteToSyntheticPrAnchor() throws Exception {
+            stubCommonDependencies("tronical");
+            // Commit in the fork (LeonMatthes/slint), PR in the upstream (slint-ui/tree-sitter-slint)
+            final var commit = commitEntity("abc123def456abc123def456abc123def456abc1",
+                "LeonMatthes/slint", "fix-tree-sitter-grammar", "Setup harness");
+            when(eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(commit));
+            when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
+                .thenReturn(Set.of("LeonMatthes/slint|fix-tree-sitter-grammar"));
+
+            // Standard same-repo lookup returns nothing; cross-fork lookup finds the upstream PR
+            when(eventRepository.findFirstByGithubUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
+                anyString(), eq("LeonMatthes/slint"), eq("fix-tree-sitter-grammar")))
+                .thenReturn(java.util.Optional.empty());
+            final var prEntity = prEntity("e-pr", "slint-ui/tree-sitter-slint", "1",
+                "Fix tree-sitter grammar", "Opened PR #1: Fix tree-sitter grammar");
+            prEntity.setHeadBranch("fix-tree-sitter-grammar");
+            when(eventRepository.findFirstByGithubUsernameAndHeadRepoNameAndHeadBranchOrderByEventTimestampDesc(
+                anyString(), eq("LeonMatthes/slint"), eq("fix-tree-sitter-grammar")))
+                .thenReturn(java.util.Optional.of(prEntity));
+            when(eventRepository.findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(java.util.Optional.of(prEntity));
+
+            final var result = perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andReturn();
+
+            final List<ActivityAnchor> prAnchors = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("prAnchors");
+            final List<ActivityAnchor> standalone = (List<ActivityAnchor>)
+                result.getModelAndView().getModel().get("standaloneAnchors");
+            assertThat(prAnchors).hasSize(1);
+            assertThat(prAnchors.get(0).repoName()).isEqualTo("slint-ui/tree-sitter-slint");
+            assertThat(prAnchors.get(0).anchorId()).isEqualTo("1");
+            assertThat(standalone).isEmpty();
         }
     }
 

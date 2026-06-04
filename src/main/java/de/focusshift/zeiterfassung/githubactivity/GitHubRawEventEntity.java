@@ -52,6 +52,10 @@ public class GitHubRawEventEntity {
     @Column(name = "head_branch")
     private String headBranch;
 
+    /** For cross-fork PullRequestEvents: the fork repo (pull_request.head.repo.full_name). Null for same-repo PRs and all other event types. */
+    @Column(name = "head_repo_name")
+    private String headRepoName;
+
     @Column(name = "event_icon", nullable = false)
     private String eventIcon;
 
@@ -105,6 +109,9 @@ public class GitHubRawEventEntity {
 
     public String getHeadBranch() { return headBranch; }
     public void setHeadBranch(String headBranch) { this.headBranch = headBranch; }
+
+    public String getHeadRepoName() { return headRepoName; }
+    public void setHeadRepoName(String headRepoName) { this.headRepoName = headRepoName; }
 
     public Instant getLoggedAt() { return loggedAt; }
     public void setLoggedAt(Instant loggedAt) { this.loggedAt = loggedAt; }
