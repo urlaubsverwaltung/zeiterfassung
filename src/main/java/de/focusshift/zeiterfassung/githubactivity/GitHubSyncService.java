@@ -486,16 +486,50 @@ public class GitHubSyncService {
     }
 
     @SuppressWarnings("unchecked")
+    /**
+     * Fetches new GitHub events for {@code login}, paginating up to 3 pages (300 events max).
+     *
+     * <p>Pagination stops early as soon as an already-stored event ID is encountered — since
+     * the Events API returns events newest-first, everything from that point onward is already
+     * in the database. A page with fewer than 100 results also terminates the loop (last page).
+     *
+     * <p>On first sync (empty database for this user) all three pages are fetched, giving up
+     * to 300 events of history. On every subsequent sync only the events since the last run
+     * are collected, typically a fraction of a single page.
+     */
     private List<Map<String, Object>> fetchEvents(String login, String token) {
+        final List<Map<String, Object>> result = new ArrayList<>();
+        for (int page = 1; page <= 3; page++) {
+            final List<Map<String, Object>> pageEvents = fetchEventsPage(login, token, page);
+            if (pageEvents.isEmpty()) break;
+
+            boolean hitKnown = false;
+            for (Map<String, Object> event : pageEvents) {
+                final String id = (String) event.get("id");
+                if (id != null && repository.existsByGithubEventId(id)) {
+                    hitKnown = true;
+                    break; // everything older is already stored
+                }
+                result.add(event);
+            }
+            if (hitKnown || pageEvents.size() < 100) break; // caught up or last page
+        }
+        if (!result.isEmpty()) {
+            LOG.debug("Fetched {} new event(s) for {} across up to 3 pages", result.size(), login);
+        }
+        return result;
+    }
+
+    private List<Map<String, Object>> fetchEventsPage(String login, String token, int page) {
         try {
             final List<Map<String, Object>> events = restClient.get()
-                .uri("https://api.github.com/users/{login}/events?per_page=100", login)
+                .uri("https://api.github.com/users/{login}/events?per_page=100&page={page}", login, page)
                 .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {});
             return events != null ? events : List.of();
         } catch (Exception e) {
-            LOG.error("Failed to fetch events from GitHub for user {}", login, e);
+            LOG.error("Failed to fetch GitHub events page {} for user {}", page, login, e);
             return List.of();
         }
     }

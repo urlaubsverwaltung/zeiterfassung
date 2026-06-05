@@ -12,6 +12,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +23,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -147,6 +149,145 @@ class GitHubSyncServiceTest {
         e.setEventSummary("Opened PR #" + prNumber + (title.isEmpty() ? "" : ": " + title));
         e.setEventTimestamp(Instant.parse("2026-06-01T10:00:00Z"));
         return e;
+    }
+
+    // ── helpers ───────────────────────────────────────────────────────────────
+
+    /** A page of {@code count} stub events with sequential IDs starting at {@code firstId}. */
+    private List<Map<String, Object>> mockEventPage(int count, int firstId) {
+        final List<Map<String, Object>> page = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            page.add(Map.of(
+                "id", "evt-" + (firstId + i),
+                "type", "UnknownEvent",   // parseToEntity returns null → no save, no enrich calls
+                "created_at", "2026-06-02T14:00:00Z",
+                "repo", Map.of("name", "slint-ui/slint"),
+                "payload", Map.of()
+            ));
+        }
+        return page;
+    }
+
+    /** Stubs the RestClient chain so that successive body() calls return the given pages. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void stubPages(List<Map<String, Object>>... pages) {
+        when(restClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        var stub = when(responseSpec.body(any(ParameterizedTypeReference.class)));
+        for (List<Map<String, Object>> page : pages) {
+            stub = stub.thenReturn(page);
+        }
+    }
+
+    // ── events pagination ─────────────────────────────────────────────────────
+
+    @Nested
+    class EventsPagination {
+
+        @Test
+        void ensureSinglePageFetchedWhenFewerThan100Events() {
+            stubPages(mockEventPage(3, 0)); // 3 events < 100 → last page
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            verify(restClient, times(1)).get();
+        }
+
+        @Test
+        void ensureSinglePageFetchedWhenPageIsEmpty() {
+            stubPages(List.of()); // empty → stop immediately
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            verify(restClient, times(1)).get();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureSecondPageFetchedWhenFirstPageIsFull() {
+            stubPages(
+                mockEventPage(100, 0),   // page 1: full → continue
+                mockEventPage(30, 100)   // page 2: partial → stop
+            );
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            verify(restClient, times(2)).get();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureAllThreePagesFetchedOnFirstSync() {
+            stubPages(
+                mockEventPage(100, 0),   // page 1: full
+                mockEventPage(100, 100), // page 2: full
+                mockEventPage(50, 200)   // page 3: partial → stop
+            );
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            verify(restClient, times(3)).get();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureAtMostThreePagesEvenWhenAllFull() {
+            // All pages return 100 events; loop must cap at 3
+            stubPages(
+                mockEventPage(100, 0),
+                mockEventPage(100, 100),
+                mockEventPage(100, 200)
+            );
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            verify(restClient, times(3)).get();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensurePaginationStopsAtFirstKnownEventId() {
+            // Page 1: 3 new events, then 1 already-known, then older events — fill to 100
+            final List<Map<String, Object>> page1 = new ArrayList<>(mockEventPage(3, 0));
+            page1.add(Map.of("id", "known-evt", "type", "UnknownEvent",
+                "created_at", "2026-06-01T09:00:00Z", "repo", Map.of("name", "r"), "payload", Map.of()));
+            page1.addAll(mockEventPage(96, 4)); // fill to 100 so size-check doesn't fire first
+
+            when(repository.existsByGithubEventId("known-evt")).thenReturn(true);
+            stubPages(page1);
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            // Must stop at page 1 — page 2 never fetched
+            verify(restClient, times(1)).get();
+        }
+
+        @Test
+        void ensureEventsAfterKnownIdAreNotExamined() {
+            // Page: new-1, new-2, known-evt (stop here), old-1 (must never be checked)
+            // Page has < 100 items but known-evt fires first anyway
+            final var new1  = Map.of("id", "new-1",    "type", "UnknownEvent",
+                "created_at", "2026-06-02T12:00:00Z", "repo", Map.of("name", "r"), "payload", Map.of());
+            final var new2  = Map.of("id", "new-2",    "type", "UnknownEvent",
+                "created_at", "2026-06-02T11:00:00Z", "repo", Map.of("name", "r"), "payload", Map.of());
+            final var known = Map.of("id", "known-evt", "type", "UnknownEvent",
+                "created_at", "2026-06-01T10:00:00Z", "repo", Map.of("name", "r"), "payload", Map.of());
+            final var old1  = Map.of("id", "old-1",    "type", "UnknownEvent",
+                "created_at", "2026-06-01T09:00:00Z", "repo", Map.of("name", "r"), "payload", Map.of());
+
+            when(repository.existsByGithubEventId("known-evt")).thenReturn(true);
+            stubPages(List.of(new1, new2, known, old1));
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            // new-1 and new-2 examined, known-evt triggers stop, old-1 never reached
+            verify(repository).existsByGithubEventId("new-1");
+            verify(repository).existsByGithubEventId("new-2");
+            verify(repository).existsByGithubEventId("known-evt");
+            verify(repository, never()).existsByGithubEventId("old-1");
+        }
     }
 
     // ── old-format commit cleanup ─────────────────────────────────────────────
