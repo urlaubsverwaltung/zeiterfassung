@@ -91,7 +91,7 @@
                 th:with="action=@{/timeentries}"
               >
                 <th:block
-                  th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, disabled=false, class='timeslot-form-new')}"
+                  th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, disabled=false, class='timeslot-form-new', showReadRow=${false})}"
                 ></th:block>
               </th:block>
 
@@ -101,7 +101,7 @@
                 th:with="action=@{/timeentries/users/{id} (id=${viewedUser.localId()})}"
               >
                 <th:block
-                  th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, disabled=false, class='timeslot-form-new')}"
+                  th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-new}, disabled=false, class='timeslot-form-new', showReadRow=${false})}"
                 ></th:block>
               </th:block>
             </div>
@@ -445,7 +445,7 @@
                             data-turbo="true"
                           >
                             <th:block
-                              th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, disabled=${!allowedToEdit}, class='timeslot-form')}"
+                              th:insert="~{timeentries/fragments/time-entry-form::timeentry-slot-form(formAction=${action}, timeEntry=${timeEntry}, actions=~{::timeentry-slot-form-actions-existing(${timeEntry})}, disabled=${!allowedToEdit}, class='timeslot-form', showReadRow=${true})}"
                             ></th:block>
                           </div>
                         </th:block>
