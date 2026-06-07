@@ -4,12 +4,15 @@ import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+
+import java.security.Principal;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -36,6 +39,26 @@ public class AuthenticationFacade {
     public UserIdComposite getCurrentUserIdComposite() {
         final Authentication authentication = getCurrentAuthentication();
         return userIdCompositeFromAuth(authentication);
+    }
+
+    /**
+     * Returns the {@link CurrentOidcUser} doing the request, throws when there is none.
+     *
+     * @param request http request
+     * @return {@link CurrentOidcUser} user making the request
+     * @throws IllegalStateException when there is no {@link CurrentOidcUser} doing the request
+     */
+    public CurrentOidcUser getCurrentUser(HttpServletRequest request) {
+
+        final Principal principal = request.getUserPrincipal();
+        if (principal instanceof OAuth2AuthenticationToken oauthToken) {
+            final OAuth2User oauthUser = oauthToken.getPrincipal();
+            if (oauthUser instanceof CurrentOidcUser user) {
+                return user;
+            }
+        }
+
+        throw new IllegalStateException("unexpected authentication token: " + principal);
     }
 
     /**

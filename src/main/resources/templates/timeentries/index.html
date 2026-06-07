@@ -41,13 +41,7 @@
       <script type="module" src="" th:src="@{/assets/time-entries.js}"></script>
     </th:block>
   </head>
-  <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
-    <th:block th:ref="search">
-      <div
-        th:replace="~{fragments/user-search::user-search(placeholder=#{timeentries.usersearch.placeholder})}"
-      ></div>
-    </th:block>
-
+  <body th:replace="~{_layout::body(content=~{::content})}">
     <th:block
       th:fragment="content"
       th:with="noTimeEntriesYet=${timeEntryWeeksPage.totalTimeEntryElements eq 0}"

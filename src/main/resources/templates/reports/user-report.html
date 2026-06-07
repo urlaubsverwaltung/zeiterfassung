@@ -16,13 +16,7 @@
       <script type="module" src="" th:src="@{/assets/reports.js}"></script>
     </th:block>
   </head>
-  <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
-    <th:block th:ref="search">
-      <div
-        th:replace="~{fragments/user-search::user-search(placeholder=#{user-search.input.placeholder})}"
-      ></div>
-    </th:block>
-
+  <body th:replace="~{_layout::body(content=~{::content})}">
     <th:block th:fragment="content">
       <main class="content-container">
         <div class="mx-auto space-y-8 w-full max-w-4xl @7xl/main:max-w-400">

@@ -3,7 +3,6 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.absence.Absence;
 import de.focusshift.zeiterfassung.absence.DayLength;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
@@ -20,8 +19,6 @@ import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
@@ -33,7 +30,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Clock;
@@ -51,8 +47,6 @@ import java.util.Optional;
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.YELLOW;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
-import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
-import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -61,7 +55,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -95,43 +88,22 @@ class TimeEntryControllerTest implements ControllerTest {
     @Mock
     private TimeEntryViewHelper timeEntryViewHelper;
     @Mock
-    private UserSearchViewHelper userSearchViewHelper;
+    private TimeEntryUserSuggestionUrlStrategy userSuggestionUrlStrategy;
 
     private Clock clock = Clock.systemUTC();
 
     @BeforeEach
     void setUp() {
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, clock);
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {TIME_ENTRIES_URL_TEMPLATE, "/timeentries/users/42"})
-    void ensureUserSearchReturnsSuggestionsFrameWithJavaScript(String url) throws Exception {
-
-        final UserId userId = new UserId("uuid");
-        final UserLocalId userLocalId = new UserLocalId(42L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-
-        final CurrentOidcUser oidcUser = currentOidcUser(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL));
-
-        when(userSearchViewHelper.getSuggestionFragment(eq("super"), eq(oidcUser), any(Model.class), any(java.util.function.Function.class)))
-            .thenReturn(new ModelAndView("user-search-view"));
-
-        perform(get(url)
-            .with(oidcLogin().oidcUser(oidcUser))
-            .header("Turbo-Frame", "frame-users-suggestions")
-            .param("query", "super")
-        )
-            .andExpect(status().isOk())
-            .andExpect(view().name("user-search-view"));
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSuggestionUrlStrategy, clock);
     }
 
     @Test
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider,
+            timeEntryLockService, dateFormatter, timeEntryViewHelper, userSuggestionUrlStrategy, clock);
 
         mockUserSettings(ZoneOffset.UTC);
 
@@ -508,8 +480,8 @@ class TimeEntryControllerTest implements ControllerTest {
     void ensureTimeEntriesForOtherUser() throws Exception {
 
         clock = Clock.fixed(Instant.parse("2025-03-18T10:04:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, clock);
+        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider,
+            timeEntryLockService, dateFormatter, timeEntryViewHelper, userSuggestionUrlStrategy, clock);
 
         final int year = 2025;
         final int weekOfYear = 12;

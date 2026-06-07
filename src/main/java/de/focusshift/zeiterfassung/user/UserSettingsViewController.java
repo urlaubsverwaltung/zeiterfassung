@@ -2,7 +2,8 @@ package de.focusshift.zeiterfassung.user;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.search.UserSearchUiFragmentSupplier;
+import de.focusshift.zeiterfassung.search.UserSuggestionUrlStrategy;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
@@ -16,15 +17,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 import java.util.Locale;
 
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
-import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Comparator.comparing;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -37,22 +35,39 @@ class UserSettingsViewController implements HasTimeClock, HasLaunchpad, HasUserS
 
     private final UserSettingsService userSettingsService;
     private final SupportedLocaleService supportedLocaleService;
-    private final MessageSource messageSource;
     private final UserSettingsDtoValidator userSettingsDtoValidator;
-    private final UserSearchViewHelper userSearchViewHelper;
+    private final UserSearchUiFragmentSupplier defaultUserSearchUiFragmentSupplier;
+    private final MessageSource messageSource;
 
     UserSettingsViewController(
         UserSettingsService userSettingsService,
         SupportedLocaleService supportedLocaleService,
-        MessageSource messageSource,
         UserSettingsDtoValidator userSettingsDtoValidator,
-        UserSearchViewHelper userSearchViewHelper
+        UserSearchUiFragmentSupplier defaultUserSearchUiFragmentSupplier,
+        MessageSource messageSource
     ) {
         this.userSettingsService = userSettingsService;
         this.supportedLocaleService = supportedLocaleService;
-        this.messageSource = messageSource;
         this.userSettingsDtoValidator = userSettingsDtoValidator;
-        this.userSearchViewHelper = userSearchViewHelper;
+        this.defaultUserSearchUiFragmentSupplier = defaultUserSearchUiFragmentSupplier;
+        this.messageSource = messageSource;
+    }
+
+    @Override
+    public UserSuggestionUrlStrategy userSuggestionUrlStrategy() {
+        return (suggestion, context) -> {
+            final CurrentOidcUser user = context.getUser();
+            if (suggestion.userIdComposite().equals(user.getUserIdComposite())) {
+                return "/timeentries";
+            } else {
+                return "/timeentries/users/%s".formatted(suggestion.userLocalId().value());
+            }
+        };
+    }
+
+    @Override
+    public UserSearchUiFragmentSupplier userSearchUiFragmentSupplier() {
+        return defaultUserSearchUiFragmentSupplier;
     }
 
     @GetMapping
@@ -64,19 +79,6 @@ class UserSettingsViewController implements HasTimeClock, HasLaunchpad, HasUserS
         model.addAttribute("supportedThemes", getAvailableThemeDtos(locale));
 
         return new ModelAndView("user/user-settings", model.asMap());
-    }
-
-    @GetMapping(params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
-    ModelAndView userSearchFragment(@RequestParam(USER_SEARCH_QUERY_PARAM) String query, @CurrentUser CurrentOidcUser currentUser, Model model) {
-        return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
-            suggestion -> {
-                if (suggestion.userIdComposite().equals(currentUser.getUserIdComposite())) {
-                    return "/timeentries";
-                } else {
-                    return "/timeentries/users/%s".formatted(suggestion.userLocalId().value());
-                }
-            }
-        );
     }
 
     @PostMapping

@@ -2,7 +2,8 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.search.UserSearchUiFragmentSupplier;
+import de.focusshift.zeiterfassung.search.UserSuggestionUrlStrategy;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.security.SessionService;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
@@ -28,17 +28,14 @@ import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.FRAME_USERS_SUGGESTION;
 import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.usermanagement.UserManagementController.userToDto;
-import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 
 @Controller
 @RequestMapping("/users/{userId}/permissions")
@@ -49,13 +46,26 @@ class PermissionsController implements HasLaunchpad, HasTimeClock, HasUserSearch
 
     private final UserManagementService userManagementService;
     private final SessionService sessionService;
-    private final UserSearchViewHelper userSearchViewHelper;
+    private final UserManagementSearchUiFragmentSupplier searchUiFragmentSupplier;
 
-    PermissionsController(UserManagementService userManagementService, SessionService sessionService,
-                          UserSearchViewHelper userSearchViewHelper) {
+    PermissionsController(
+        UserManagementService userManagementService,
+        SessionService sessionService,
+        UserManagementSearchUiFragmentSupplier searchUiFragmentSupplier
+    ) {
         this.userManagementService = userManagementService;
         this.sessionService = sessionService;
-        this.userSearchViewHelper = userSearchViewHelper;
+        this.searchUiFragmentSupplier = searchUiFragmentSupplier;
+    }
+
+    @Override
+    public UserSuggestionUrlStrategy userSuggestionUrlStrategy() {
+        return (suggestion, context) -> "/users/%s/permissions".formatted(suggestion.userLocalId().value());
+    }
+
+    @Override
+    public UserSearchUiFragmentSupplier userSearchUiFragmentSupplier() {
+        return searchUiFragmentSupplier;
     }
 
     @GetMapping
@@ -65,24 +75,6 @@ class PermissionsController implements HasLaunchpad, HasTimeClock, HasUserSearch
 
         prepareGetRequestModel(model, query, userId, this::userToPermissionsDto, currentUser);
         return new ModelAndView("usermanagement/users");
-    }
-
-    @GetMapping(params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
-    ModelAndView userSearchFragment(@RequestParam(USER_SEARCH_QUERY_PARAM) String query,
-                                    @PathVariable(required = false) Long userId,
-                                    @RequestHeader(TURBO_FRAME_HEADER) String turboFrame,
-                                    @CurrentUser CurrentOidcUser currentUser, Model model) {
-
-        if (FRAME_USERS_SUGGESTION.equals(turboFrame)) {
-            return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
-                suggestion -> "/users/%s/permissions".formatted(suggestion.userLocalId().value())
-            );
-        } else if ("person-frame".equals(turboFrame) && userId != null) {
-            return get(userId, model, query, currentUser);
-        } else {
-            LOG.error("unknown turbo-frame requested or person-frame but without userId");
-            return new ModelAndView("error/404", UNPROCESSABLE_CONTENT);
-        }
     }
 
     @PostMapping

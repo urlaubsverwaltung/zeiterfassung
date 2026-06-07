@@ -158,11 +158,7 @@
     <th:block th:replace="${additional}"></th:block>
     <th:block th:replace="~{_header-script::script}"></th:block>
   </head>
-  <body
-    th:fragment="body(content)"
-    th:with="search=${search ?: null}"
-    class="flex flex-col"
-  >
+  <body th:fragment="body(content)" class="flex flex-col">
     <noscript th:if="${showFeedbackKudo}">
       <p th:text="#{feedback.kudos}">Vielen Dank für dein Feedback.</p>
     </noscript>
@@ -205,8 +201,8 @@
     </div>
 
     <div class="user-search-container" style="grid-area: search">
-      <th:block th:if="${search}">
-        <div th:replace="${search}"></div>
+      <th:block th:if="${userSearchFragment}">
+        <div th:replace="~{__${userSearchFragment}__}"></div>
       </th:block>
     </div>
 

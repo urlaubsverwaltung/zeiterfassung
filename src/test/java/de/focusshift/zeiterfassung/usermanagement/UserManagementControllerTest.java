@@ -1,8 +1,6 @@
 package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.ControllerTest;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
-import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -17,12 +15,9 @@ import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.ui.Model;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
@@ -31,10 +26,7 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WO
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -52,11 +44,11 @@ class UserManagementControllerTest implements ControllerTest {
     @Mock
     private UserManagementService userManagementService;
     @Mock
-    private UserSearchViewHelper userSearchViewHelper;
+    private UserManagementSearchUiFragmentSupplier userManagementSearchUiFragmentSupplier;
 
     @BeforeEach
     void setUp() {
-        sut = new UserManagementController(userManagementService, userSearchViewHelper);
+        sut = new UserManagementController(userManagementService, userManagementSearchUiFragmentSupplier);
     }
 
     @Test
@@ -114,27 +106,6 @@ class UserManagementControllerTest implements ControllerTest {
                 new UserDto(42, "Clark", "Kent", "Clark Kent", "CK", "superman@example.org")
             )))
             .andExpect(model().attribute("selectedUser", nullValue()));
-    }
-
-    @Test
-    void ensureUserSearchReturnsSuggestionsFrameWithJavaScript() throws Exception {
-
-        final UserId userId = new UserId("uuid");
-        final UserLocalId userLocalId = new UserLocalId(42L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-
-        final CurrentOidcUser oidcUser = currentOidcUser(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL));
-
-        when(userSearchViewHelper.getSuggestionFragment(eq("super"), eq(oidcUser), any(Model.class), any(Function.class)))
-            .thenReturn(new ModelAndView("user-search-view"));
-
-        perform(get(USERS_ALL_URL_TEMPLATE)
-            .with(oidcLogin().oidcUser(oidcUser))
-            .header("Turbo-Frame", "frame-users-suggestions")
-            .param("query", "super")
-        )
-            .andExpect(status().isOk())
-            .andExpect(view().name("user-search-view"));
     }
 
     @Nested

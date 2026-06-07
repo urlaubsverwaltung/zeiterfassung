@@ -2,7 +2,8 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.search.UserSearchUiFragmentSupplier;
+import de.focusshift.zeiterfassung.search.UserSuggestionUrlStrategy;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
@@ -18,9 +19,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -39,13 +40,13 @@ import java.time.Duration;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.ScrollPreservation.PRESERVE;
-import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_REFRESH_SCROLL_ATTRIBUTE;
+import static java.lang.Integer.parseInt;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.fromMethodCall;
@@ -56,29 +57,63 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad, HasUserSearch
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
-    private final ReportService reportService;
+    private static final String REPORT_MONTH_PATH = "/report/month";
+    private static final String REPORT_YEAR_MONTH_PATH_TEMPLATE = "/report/year/{year}/month/{month}";
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
+    private final ReportService reportService;
     private final DateFormatter dateFormatter;
     private final ReportViewHelper viewHelper;
     private final TimeEntryDialogHelper timeEntryDialogHelper;
-    private final UserSearchViewHelper userSearchViewHelper;
     private final ReportPermissionService reportPermissionService;
+    private final UserSearchUiFragmentSupplier defaultUserSearchUiFragmentSupplier;
     private final Clock clock;
 
-    ReportMonthController(ReportService reportService, ReportPermissionService reportPermissionService,
-                          DateFormatter dateFormatter, ReportViewHelper viewHelper,
-                          TimeEntryDialogHelper timeEntryDialogHelper, UserSearchViewHelper userSearchViewHelper,
-                          Clock clock) {
+    ReportMonthController(
+        ReportService reportService,
+        ReportPermissionService reportPermissionService,
+        DateFormatter dateFormatter,
+        ReportViewHelper viewHelper,
+        TimeEntryDialogHelper timeEntryDialogHelper,
+        UserSearchUiFragmentSupplier defaultUserSearchUiFragmentSupplier,
+        Clock clock
+    ) {
         this.reportService = reportService;
         this.dateFormatter = dateFormatter;
         this.viewHelper = viewHelper;
         this.timeEntryDialogHelper = timeEntryDialogHelper;
         this.reportPermissionService = reportPermissionService;
-        this.userSearchViewHelper = userSearchViewHelper;
+        this.defaultUserSearchUiFragmentSupplier = defaultUserSearchUiFragmentSupplier;
         this.clock = clock;
     }
 
-    @GetMapping("/report/month")
+    @Override
+    public UserSuggestionUrlStrategy userSuggestionUrlStrategy() {
+        return (suggestion, context) -> {
+            final String path;
+            final String requestPath = context.getRequestPath();
+            if (requestPath.equals(REPORT_MONTH_PATH)) {
+                path = REPORT_MONTH_PATH;
+            } else {
+                final Map<String, String> variables = PATH_MATCHER.extractUriTemplateVariables(REPORT_YEAR_MONTH_PATH_TEMPLATE, requestPath);
+                path = reportYearMonthPath(parseInt(variables.get("year")), parseInt(variables.get("month")));
+            }
+
+            final boolean isUser = suggestion.userIdComposite().equals(context.getUser().getUserIdComposite());
+            if (isUser) {
+                return path;
+            } else {
+                return path + "?user=" + suggestion.userLocalId().value();
+            }
+        };
+    }
+
+    @Override
+    public UserSearchUiFragmentSupplier userSearchUiFragmentSupplier() {
+        return defaultUserSearchUiFragmentSupplier;
+    }
+
+    @GetMapping(REPORT_MONTH_PATH)
     public String monthlyUserReportToday(RedirectAttributes redirectAttributes, HttpServletRequest request) {
 
         redirectAttributes.mergeAttributes(request.getParameterMap());
@@ -88,7 +123,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad, HasUserSearch
         return String.format("forward:/report/year/%s/month/%s", thisMonth.getYear(), thisMonth.getMonthValue());
     }
 
-    @GetMapping("/report/year/{year}/month/{month}")
+    @GetMapping(REPORT_YEAR_MONTH_PATH_TEMPLATE)
     public ModelAndView monthlyUserReport(
         @PathVariable Integer year,
         @PathVariable Integer month,
@@ -127,17 +162,17 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad, HasUserSearch
 
         final int previousYear = month == 1 ? year - 1 : year;
         final int previousMonth = month == 1 ? 12 : month - 1;
-        final String previousSectionUrl = viewHelper.createUrl(String.format("/report/year/%d/month/%d", previousYear, previousMonth), allUsersSelected, userLocalIds);
+        final String previousSectionUrl = viewHelper.createUrl(reportYearMonthPath(previousYear, previousMonth), allUsersSelected, userLocalIds);
 
         final String todaySectionUrl = viewHelper.createUrl("/report/month", allUsersSelected, userLocalIds);
 
         final int nextYear = month == 12 ? year + 1 : year;
         final int nextMonth = month == 12 ? 1 : month + 1;
-        final String nextSectionUrl = viewHelper.createUrl(String.format("/report/year/%d/month/%d", nextYear, nextMonth), allUsersSelected, userLocalIds);
+        final String nextSectionUrl = viewHelper.createUrl(reportYearMonthPath(nextYear, nextMonth), allUsersSelected, userLocalIds);
 
         final int selectedYear = year;
         final int selectedMonth = month;
-        final String selectedYearMonthUrl = viewHelper.createUrl(String.format("/report/year/%d/month/%d", selectedYear, selectedMonth), allUsersSelected, userLocalIds);
+        final String selectedYearMonthUrl = viewHelper.createUrl(reportYearMonthPath(selectedYear, selectedMonth), allUsersSelected, userLocalIds);
         final String csvDownloadUrl = selectedYearMonthUrl.contains("?") ? selectedYearMonthUrl + "&csv" : selectedYearMonthUrl + "?csv";
 
         model.addAttribute("userReportPreviousSectionUrl", previousSectionUrl);
@@ -147,7 +182,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad, HasUserSearch
 
         final List<User> users = reportPermissionService.findAllPermittedUsersForCurrentUser();
 
-        viewHelper.addUserFilterModelAttributes(model, allUsersSelected, users, userLocalIds, String.format("/report/year/%d/month/%d", year, month));
+        viewHelper.addUserFilterModelAttributes(model, allUsersSelected, users, userLocalIds, reportYearMonthPath(year, month));
         viewHelper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, userLocalIds, reportMonth);
 
         model.addAttribute("isAllowedToEditTimeEntries", currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
@@ -155,29 +190,7 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad, HasUserSearch
         return new ModelAndView("reports/user-report");
     }
 
-    @GetMapping(value = {"/report/month", "/report/year/{year}/month/{month}"}, params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
-    @PreAuthorize("hasAuthority('ZEITERFASSUNG_VIEW_REPORT_ALL')")
-    ModelAndView userSearchFragment(
-        @RequestParam(USER_SEARCH_QUERY_PARAM) String query,
-        @PathVariable(required = false) Integer year,
-        @PathVariable(required = false) Integer month,
-        @CurrentUser CurrentOidcUser currentUser, Model model) {
-
-        if ((year != null && month == null) || (year == null && month != null)) {
-            LOG.error("called user search for month report but whether year or month is not given.");
-            return new ModelAndView("error/404");
-        }
-
-        final boolean monthMode = month != null;
-
-        return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
-            suggestion -> monthMode
-                ? "/report/year/%s/month/%s?user=%s".formatted(year, month, suggestion.userLocalId().value())
-                : "/report/month?user=%s".formatted(suggestion.userLocalId().value())
-        );
-    }
-
-    @PostMapping("/report/year/{year}/month/{month}")
+    @PostMapping(REPORT_YEAR_MONTH_PATH_TEMPLATE)
     public ModelAndView postEditTimeEntry(
         @PathVariable Integer year,
         @PathVariable Integer month,
@@ -303,6 +316,10 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad, HasUserSearch
             LOG.error("could not create YearMonth with year={} month={}", year, month, exception);
             return Optional.empty();
         }
+    }
+
+    private static String reportYearMonthPath(int year, int month) {
+        return "/report/year/%s/month/%s".formatted(year, month);
     }
 
     private static String durationToTimeString(Duration duration) {
