@@ -21,7 +21,6 @@ import org.springframework.security.web.context.DelegatingSecurityContextReposit
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -67,23 +66,67 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
     @Override
     public void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain chain) throws ServletException, IOException {
 
-        final HttpSession session = request.getSession();
+        final HttpSession session = request.getSession(false);
+        if (session == null) {
+            LOG.debug("No session available, skipping authority reload and continuing filter chain.");
+            chain.doFilter(request, response);
+            return;
+        }
+
         sessionService.unmarkSessionToReloadAuthorities(session.getId());
 
         final SecurityContext context = SecurityContextHolder.getContext();
         final Authentication authentication = context.getAuthentication();
 
-        final OAuth2AuthenticationToken oAuth2Auth = (OAuth2AuthenticationToken) authentication;
-        final CurrentOidcUser currentOidcUser = (CurrentOidcUser) oAuth2Auth.getPrincipal();
+        if (authentication == null) {
+            LOG.warn("SecurityContext has no authentication, cannot reload authorities. Session: {}", session.getId());
+            chain.doFilter(request, response);
+            return;
+        }
 
-        tenantContextHolder.runInTenantIdContext(oAuth2Auth.getAuthorizedClientRegistrationId(), tenantId -> {
+        if (!(authentication instanceof OAuth2AuthenticationToken oAuth2Auth)) {
+            LOG.warn("Authentication is not an OAuth2AuthenticationToken (type={}), cannot reload authorities.", authentication.getClass().getSimpleName());
+            chain.doFilter(request, response);
+            return;
+        }
+
+        final Object principal = oAuth2Auth.getPrincipal();
+        if (!(principal instanceof CurrentOidcUser currentOidcUser)) {
+            LOG.warn("Principal is not a CurrentOidcUser (type={}), cannot reload authorities.",
+                principal != null ? principal.getClass().getSimpleName() : "null");
+            chain.doFilter(request, response);
+            return;
+        }
+
+        final String registrationId = oAuth2Auth.getAuthorizedClientRegistrationId();
+        if (registrationId == null) {
+            LOG.warn("No authorized client registration ID found, cannot determine tenant context.");
+            chain.doFilter(request, response);
+            return;
+        }
+
+        final var userLocalIdOptional = currentOidcUser.getUserLocalId();
+        if (userLocalIdOptional.isEmpty()) {
+            LOG.warn("CurrentOidcUser has no UserLocalId, cannot reload authorities.");
+            chain.doFilter(request, response);
+            return;
+        }
+
+        tenantContextHolder.runInTenantIdContext(registrationId, tenantId -> {
             final User user = getUserFromUserManagement(currentOidcUser);
 
-            final List<GrantedAuthority> applicationAuthoritiesNew = user.grantedAuthorities();
-            final Collection<? extends GrantedAuthority> oidcAuthorities = currentOidcUser.getOidcAuthorities();
-            final Set<GrantedAuthority> updatedMergedAuthorities = concat(oidcAuthorities.stream(), applicationAuthoritiesNew.stream()).collect(toSet());
+            // Defensive: treat null authority collections as empty
+            final var safeOidcAuthorities = currentOidcUser.getOidcAuthorities() != null ? currentOidcUser.getOidcAuthorities() : List.<GrantedAuthority>of();
+            final var safeAppAuthorities = user.grantedAuthorities();
 
-            final CurrentOidcUser updatedCurrentOidcUser = new CurrentOidcUser(currentOidcUser.getOidcUser(), applicationAuthoritiesNew, oidcAuthorities, currentOidcUser.getUserLocalId().orElseThrow());
+            final Set<GrantedAuthority> updatedMergedAuthorities = concat(safeOidcAuthorities.stream(), safeAppAuthorities.stream()).collect(toSet());
+
+            final CurrentOidcUser updatedCurrentOidcUser = new CurrentOidcUser(
+                currentOidcUser.getOidcUser(),
+                safeAppAuthorities,
+                safeOidcAuthorities,
+                userLocalIdOptional.orElseThrow(() -> new IllegalStateException("UserLocalId disappeared after null-check"))
+            );
             final OAuth2AuthenticationToken updatedAuthentication = new OAuth2AuthenticationToken(updatedCurrentOidcUser, updatedMergedAuthorities, tenantId);
 
             context.setAuthentication(updatedAuthentication);
