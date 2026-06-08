@@ -11,7 +11,10 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.Errors;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
 import static org.mockito.Mockito.verify;
@@ -20,13 +23,15 @@ import static org.mockito.Mockito.verifyNoInteractions;
 @ExtendWith(MockitoExtension.class)
 class SettingsDtoValidatorTest {
 
+    private static final Clock fixedClock = Clock.fixed(Instant.parse("2025-05-30T12:00:00Z"), ZoneOffset.UTC);
+
     private SettingsDtoValidator sut;
 
     private Errors errors;
 
     @BeforeEach
     void setUp() {
-        sut = new SettingsDtoValidator();
+        sut = new SettingsDtoValidator(fixedClock);
         errors = Mockito.mock(Errors.class);
     }
 
@@ -122,6 +127,64 @@ class SettingsDtoValidatorTest {
             );
 
             sut.validate(settingsDto, errors);
+            verifyNoInteractions(errors);
+        }
+    }
+
+    @Nested
+    class AutomaticBreakDeduction {
+
+        @Test
+        void ensureInvalidWhenActiveDateIsInThePast() {
+            final SettingsDto settingsDto = new SettingsDto(
+                GERMANY_BADEN_WUERTTEMBERG,
+                false,
+                false,
+                null,
+                null,
+                null,
+                true,
+                LocalDate.parse("2025-05-29")
+            );
+
+            sut.validate(settingsDto, errors);
+
+            verify(errors).rejectValue("automaticBreakDeductionActiveDate", "settings.automatic-break-deduction.date.validation.past");
+        }
+
+        @Test
+        void ensureValidWhenActiveDateIsToday() {
+            final SettingsDto settingsDto = new SettingsDto(
+                GERMANY_BADEN_WUERTTEMBERG,
+                false,
+                false,
+                null,
+                null,
+                null,
+                true,
+                LocalDate.parse("2025-05-30")
+            );
+
+            sut.validate(settingsDto, errors);
+
+            verifyNoInteractions(errors);
+        }
+
+        @Test
+        void ensureValidWhenActiveDateIsInTheFuture() {
+            final SettingsDto settingsDto = new SettingsDto(
+                GERMANY_BADEN_WUERTTEMBERG,
+                false,
+                false,
+                null,
+                null,
+                null,
+                true,
+                LocalDate.parse("2025-05-31")
+            );
+
+            sut.validate(settingsDto, errors);
+
             verifyNoInteractions(errors);
         }
     }

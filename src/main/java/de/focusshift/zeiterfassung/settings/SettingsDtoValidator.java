@@ -4,12 +4,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+import java.time.Clock;
 import java.time.LocalDate;
 
 import static java.lang.Boolean.TRUE;
 
 @Component
 class SettingsDtoValidator implements Validator {
+
+    private final Clock clock;
+
+    SettingsDtoValidator(Clock clock) {
+        this.clock = clock;
+    }
 
     @Override
     public boolean supports(Class<?> clazz) {
@@ -22,6 +29,7 @@ class SettingsDtoValidator implements Validator {
         validateFederalState(settingsDto, errors);
         validateLockTimeEntriesDaysInPast(settingsDto, errors);
         validateSubtractBreak(settingsDto, errors);
+        validateAutomaticBreakDeduction(settingsDto, errors);
     }
 
     private void validateFederalState(SettingsDto settingsDto, Errors errors) {
@@ -45,6 +53,15 @@ class SettingsDtoValidator implements Validator {
             final LocalDate date = settingsDto.subtractBreakFromTimeEntryActiveDate();
             if (date == null) {
                 errors.rejectValue("subtractBreakFromTimeEntryActiveDate", "settings.work-duration.calculation.subtract-breaks.date.validation.NotNull");
+            }
+        }
+    }
+
+    private void validateAutomaticBreakDeduction(SettingsDto settingsDto, Errors errors) {
+        if (TRUE.equals(settingsDto.automaticBreakDeductionIsActive())) {
+            final LocalDate date = settingsDto.automaticBreakDeductionActiveDate();
+            if (date != null && date.isBefore(LocalDate.now(clock))) {
+                errors.rejectValue("automaticBreakDeductionActiveDate", "settings.automatic-break-deduction.date.validation.past");
             }
         }
     }
