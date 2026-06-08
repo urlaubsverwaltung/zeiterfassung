@@ -8,6 +8,7 @@ import org.springframework.web.client.RestClient;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -429,8 +430,11 @@ public class BitbucketActivityProvider implements GitActivityProvider {
 
     private static Instant parseTs(String s) {
         try {
-            // Bitbucket returns ISO 8601 with timezone offset, e.g. "2026-06-04T14:32:00.000000+00:00"
-            return Instant.parse(s.replace(" ", "T").replaceAll("\\+00:00$", "Z").replaceAll("(\\+\\d{2}:\\d{2})$", "Z"));
+            // Bitbucket returns ISO 8601 with optional space separator and timezone offset,
+            // e.g. "2026-06-04T14:32:00.000000+05:30". OffsetDateTime handles all offsets
+            // correctly; the previous string-replace approach replaced non-UTC offsets with Z,
+            // silently shifting timestamps by the offset amount.
+            return OffsetDateTime.parse(s.replace(" ", "T")).toInstant();
         } catch (Exception e) {
             return Instant.now();
         }
