@@ -35,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Controller
@@ -104,7 +105,17 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
         final List<GitActivityRawEventEntity> rawEvents =
             eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(login, dayStart, dayEnd);
 
-        final List<ActivityAnchor> allAnchors = toAnchors(rawEvents, zone, login, selectedDate);
+        final Set<String> prAnchorIds = rawEvents.stream()
+            .filter(e -> "PR".equals(e.getAnchorType()) && e.getAnchorId() != null)
+            .map(GitActivityRawEventEntity::getAnchorId)
+            .collect(Collectors.toSet());
+        final Map<String, Instant> earliestPrTimestamps = prAnchorIds.isEmpty() ? Map.of()
+            : eventRepository.findEarliestPrTimestamps(login, prAnchorIds).stream()
+                .collect(Collectors.toMap(
+                    row -> (String) row[0] + "|" + (String) row[1],
+                    row -> toInstant(row[2])));
+
+        final List<ActivityAnchor> allAnchors = toAnchors(rawEvents, zone, login, selectedDate, earliestPrTimestamps);
         final Long userLocalId = currentUser.getUserIdComposite().localId().value();
 
         final List<ActivityAnchor> prAnchors = allAnchors.stream()
@@ -135,7 +146,7 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
             .filter(a -> a.anchorId() != null && prHeadKeys.contains(a.repoName() + "|" + a.anchorId()))
             .filter(a -> a.events().stream().anyMatch(
                 e -> !e.summary().startsWith("Created ") && !e.summary().startsWith("Deleted ")))
-            .flatMap(repoAnchor -> buildSyntheticPrAnchor(repoAnchor, existingPrKeys, login, zone, selectedDate))
+            .flatMap(repoAnchor -> buildSyntheticPrAnchor(repoAnchor, existingPrKeys, login, zone, selectedDate, earliestPrTimestamps))
             .toList();
         final List<ActivityAnchor> allPrAnchors = Stream.concat(
             prAnchors.stream(), syntheticPrAnchors.stream()).toList();
@@ -270,7 +281,8 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
     }
 
     private List<ActivityAnchor> toAnchors(List<GitActivityRawEventEntity> entities, ZoneId zone,
-                                           String login, LocalDate selectedDate) {
+                                           String login, LocalDate selectedDate,
+                                           Map<String, Instant> earliestPrTimestamps) {
         if (entities.isEmpty()) return List.of();
 
         final Map<String, List<GitActivityRawEventEntity>> grouped = new LinkedHashMap<>();
@@ -331,7 +343,7 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
                 && group.stream().anyMatch(e -> REVIEW_EVENT_TYPES.contains(e.getEventType()));
 
             final String prStatus = isOwnPr ? derivePrStatus(group) : null;
-            final String openedDate = isOwnPr ? derivePrOpenedDate(login, first, zone, selectedDate) : null;
+            final String openedDate = isOwnPr ? derivePrOpenedDate(earliestPrTimestamps, first, zone, selectedDate) : null;
             final String reviewOutcome = isReview ? deriveReviewOutcome(group) : null;
             final String issueAction = "ISSUE".equals(first.getAnchorType()) ? deriveIssueAction(group) : null;
 
@@ -359,7 +371,8 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
     private Stream<ActivityAnchor> buildSyntheticPrAnchor(ActivityAnchor repoAnchor,
                                                            Set<String> existingPrKeys,
                                                            String login, ZoneId zone,
-                                                           LocalDate selectedDate) {
+                                                           LocalDate selectedDate,
+                                                           Map<String, Instant> earliestPrTimestamps) {
         java.util.Optional<GitActivityRawEventEntity> prOpt = eventRepository
             .findFirstByPlatformUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
                 login, repoAnchor.repoName(), repoAnchor.anchorId());
@@ -385,7 +398,7 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
                     repoAnchor.windowEnd(),
                     repoAnchor.suggestedDuration(),
                     prefilledComment,
-                    derivePrOpenedDate(login, pr, zone, selectedDate),
+                    derivePrOpenedDate(earliestPrTimestamps, pr, zone, selectedDate),
                     derivePrStatus(List.of(pr)),
                     null,
                     null,
@@ -417,17 +430,27 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
         return "Open";
     }
 
-    private String derivePrOpenedDate(String login, GitActivityRawEventEntity first, ZoneId zone, LocalDate selectedDate) {
-        return eventRepository
-            .findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
-                login, first.getRepoName(), "PR", first.getAnchorId())
-            .map(oldest -> {
-                final LocalDate openedDay = oldest.getEventTimestamp().atZone(zone).toLocalDate();
-                return openedDay.isBefore(selectedDate)
-                    ? OPENED_DATE_FMT.withZone(zone).format(oldest.getEventTimestamp())
-                    : null;
-            })
-            .orElse(null);
+    private String derivePrOpenedDate(Map<String, Instant> earliestPrTimestamps,
+                                       GitActivityRawEventEntity first,
+                                       ZoneId zone, LocalDate selectedDate) {
+        Instant oldest = earliestPrTimestamps.get(first.getRepoName() + "|" + first.getAnchorId());
+        if (oldest == null) {
+            // Fallback for synthetic PR anchors whose event wasn't in the current day's raw events
+            oldest = eventRepository
+                .findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                    first.getPlatformUsername(), first.getRepoName(), "PR", first.getAnchorId())
+                .map(GitActivityRawEventEntity::getEventTimestamp)
+                .orElse(null);
+        }
+        if (oldest == null) return null;
+        final LocalDate openedDay = oldest.atZone(zone).toLocalDate();
+        return openedDay.isBefore(selectedDate) ? OPENED_DATE_FMT.withZone(zone).format(oldest) : null;
+    }
+
+    private static Instant toInstant(Object o) {
+        if (o instanceof Instant i) return i;
+        if (o instanceof java.sql.Timestamp t) return t.toInstant();
+        return Instant.EPOCH;
     }
 
     private String deriveReviewOutcome(List<GitActivityRawEventEntity> group) {
