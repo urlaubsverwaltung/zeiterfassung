@@ -200,12 +200,6 @@ public class GitHubActivityProvider implements GitActivityProvider {
 
     @SuppressWarnings("unchecked")
     void syncUser(String login, String token) {
-        // Remove any commit entities stored in the old format ({pushEventId}_{shortSha}).
-        final int removed = repository.deleteOldFormatCommits(login, login + "_commit_%");
-        if (removed > 0) {
-            LOG.info("Removed {} old-format commit entities for {} — will re-sync with author filter", removed, login);
-        }
-
         final List<Map<String, Object>> events = fetchEvents(login, token);
         int saved = 0;
         for (Map<String, Object> raw : events) {
