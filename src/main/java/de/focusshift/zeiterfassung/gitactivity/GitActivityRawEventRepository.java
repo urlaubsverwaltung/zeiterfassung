@@ -73,15 +73,6 @@ public interface GitActivityRawEventRepository extends JpaRepository<GitActivity
     @org.springframework.transaction.annotation.Transactional
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query(
-        "DELETE FROM GitActivityRawEventEntity e WHERE e.platformUsername = :username " +
-        "AND e.eventType = 'PushEvent' AND e.platformEventId NOT LIKE :newPrefix")
-    int deleteOldFormatCommits(
-        @org.springframework.data.repository.query.Param("username") String username,
-        @org.springframework.data.repository.query.Param("newPrefix") String newPrefix);
-
-    @org.springframework.transaction.annotation.Transactional
-    @org.springframework.data.jpa.repository.Modifying
-    @org.springframework.data.jpa.repository.Query(
         "UPDATE GitActivityRawEventEntity e SET e.loggedAt = :now " +
         "WHERE e.platformUsername = :username AND e.repoName = :repoName " +
         "AND e.anchorType = :anchorType AND e.anchorId = :anchorId " +

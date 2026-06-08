@@ -1,0 +1,20 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <!--
+    One-time cleanup of old-format commit entries created before the per-commit sync was
+    introduced. Old entries used "{pushEventId}_{shortSha}" as the platform_event_id;
+    the current format is "{github_username}_commit_{sha}". Rows not matching the new
+    prefix are stale and safe to delete — they will be re-synced on the next scheduled run.
+  -->
+  <changeSet author="slint" id="remove-old-format-push-event-commits">
+    <sql>
+      DELETE FROM github_raw_event
+      WHERE event_type = 'PushEvent'
+        AND platform_event_id NOT LIKE CONCAT(github_username, '_commit_%')
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

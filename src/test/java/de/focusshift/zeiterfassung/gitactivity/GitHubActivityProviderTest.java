@@ -279,21 +279,6 @@ class GitHubActivityProviderTest {
         }
     }
 
-    // ── old-format commit cleanup ─────────────────────────────────────────────
-
-    @Nested
-    class OldFormatCleanup {
-
-        @Test
-        void ensureOldFormatCommitsAreDeletedBeforeSync() {
-            stubRestGet(List.of());
-
-            sut.syncUser(LOGIN, TOKEN);
-
-            verify(repository).deleteOldFormatCommits(LOGIN, LOGIN + "_commit_%");
-        }
-    }
-
     // ── commit author filtering ───────────────────────────────────────────────
 
     @Nested
