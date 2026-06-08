@@ -122,6 +122,17 @@
             </div>
           </div>
 
+          <!-- Auto-sync banner — shown by JS when page triggers a background sync -->
+          <div id="gh-syncing-banner"
+               th:attr="data-auto-sync=${autoSync}"
+               class="hidden mb-4 flex items-center gap-2 px-4 py-2 rounded bg-blue-50 dark:bg-sky-950 border border-blue-200 dark:border-sky-800 text-sm text-blue-700 dark:text-sky-200">
+            <svg class="w-4 h-4 shrink-0 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+            </svg>
+            <span th:text="#{github-activity.syncing}">Syncing your activity…</span>
+          </div>
+
           <!-- Sync not configured notice -->
           <div th:if="${!syncConfigured}"
                data-testid="github-activity-sync-not-configured"
@@ -754,6 +765,16 @@
                 window.location.href = '/github-activity?date=' + e.detail.value;
               }
             });
+          }
+
+          // ── Auto-sync on first load of the day ───────────────────────────
+          const syncBanner = document.getElementById('gh-syncing-banner');
+          if (syncBanner && syncBanner.dataset.autoSync === 'true') {
+            const syncForm = document.querySelector('form[action$="/sync"]');
+            if (syncForm) {
+              syncBanner.classList.remove('hidden');
+              setTimeout(() => syncForm.submit(), 200);
+            }
           }
         });
 

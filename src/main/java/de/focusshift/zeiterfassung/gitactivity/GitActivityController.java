@@ -170,8 +170,10 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
             !allPrAnchors.isEmpty() || !reviewAnchors.isEmpty()
             || !issueAnchors.isEmpty() || (showStandaloneCommits && !standaloneAnchors.isEmpty()));
         model.addAttribute("userLocalId", userLocalId);
-        model.addAttribute("isLocked", timeEntryLockService.isLocked(selectedDate));
-        model.addAttribute("syncConfigured", gitHubProvider.isConfigured());
+        final boolean isLocked = timeEntryLockService.isLocked(selectedDate);
+        model.addAttribute("isLocked", isLocked);
+        final boolean syncConfigured = gitHubProvider.isConfigured();
+        model.addAttribute("syncConfigured", syncConfigured);
         model.addAttribute("syncMissingConfig", gitHubProvider.missingConfig());
         final Instant lastSync = gitHubProvider.getLastSyncTime(login);
         model.addAttribute("lastSyncedAt", lastSync != null ? lastSync.atZone(zone) : null);
@@ -204,6 +206,12 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
                 : minutes + "m";
             model.addAttribute("loggedDuration", formatted);
         }
+
+        final boolean isToday = selectedDate.equals(LocalDate.now(zone));
+        final LocalDate lastSyncDay = lastSync != null ? lastSync.atZone(zone).toLocalDate() : null;
+        final boolean autoSync = syncConfigured && rateLimitSafe && isToday && !isLocked
+            && (lastSyncDay == null || lastSyncDay.isBefore(selectedDate));
+        model.addAttribute("autoSync", autoSync);
 
         return "github-activity/index";
     }

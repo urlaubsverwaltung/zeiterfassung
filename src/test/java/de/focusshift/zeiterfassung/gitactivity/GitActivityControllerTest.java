@@ -710,9 +710,12 @@ class GitActivityControllerTest implements ControllerTest {
     @Test
     void ensureHasActivityIsTrueWhenEventsExist() throws Exception {
         stubCommonDependencies("tronical");
-        final var commit = commitEntity("abc123", "slint-ui/slint", "simon/license", "My commit");
+        // A PR/review/issue event always counts toward hasActivity, independent of the
+        // showStandaloneCommits setting. Commit-only gating is covered by StandaloneCommitsToggle.
+        final var issue = issueEntity("e1", "slint-ui/slint", "11949",
+            "Keys bug", "Opened issue #11949: Keys bug");
         when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
-            anyString(), any(), any())).thenReturn(List.of(commit));
+            anyString(), any(), any())).thenReturn(List.of(issue));
 
         perform(get("/github-activity").with(oidcSubject("user-uuid")))
             .andExpect(status().isOk())
@@ -1253,6 +1256,83 @@ class GitActivityControllerTest implements ControllerTest {
             perform(get("/github-activity").with(oidcSubject("user-uuid")))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("hasActivity", true));
+        }
+    }
+
+    // ── autoSync flag ─────────────────────────────────────────────────────────
+
+    @Nested
+    class AutoSync {
+
+        @Test
+        void ensureAutoSyncTrueWhenSyncConfiguredAndNeverSyncedToday() throws Exception {
+            stubCommonDependencies("tronical");
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("autoSync", true));
+        }
+
+        @Test
+        void ensureAutoSyncFalseForPastDate() throws Exception {
+            stubCommonDependencies("tronical");
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")).param("date", "2026-01-01"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("autoSync", false));
+        }
+
+        @Test
+        void ensureAutoSyncFalseWhenAlreadySyncedToday() throws Exception {
+            stubCommonDependencies("tronical");
+            when(gitHubProvider.getLastSyncTime("tronical")).thenReturn(Instant.now());
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("autoSync", false));
+        }
+
+        @Test
+        void ensureAutoSyncFalseWhenRateLimited() throws Exception {
+            stubCommonDependencies("tronical");
+            when(gitHubProvider.isRateLimitSafe()).thenReturn(false);
+            when(gitHubProvider.getRateLimitReset()).thenReturn(Instant.now().plusSeconds(300));
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("autoSync", false));
+        }
+
+        @Test
+        void ensureAutoSyncFalseWhenSyncNotConfigured() throws Exception {
+            stubCommonDependencies("tronical");
+            when(gitHubProvider.isConfigured()).thenReturn(false);
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("autoSync", false));
+        }
+
+        @Test
+        void ensureAutoSyncFalseWhenDayIsLocked() throws Exception {
+            stubCommonDependencies("tronical");
+            when(timeEntryLockService.isLocked(any(LocalDate.class))).thenReturn(true);
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("autoSync", false));
         }
     }
 
