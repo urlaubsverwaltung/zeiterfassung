@@ -159,6 +159,7 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
         model.addAttribute("date", selectedDate);
         model.addAttribute("prevDate", selectedDate.minusDays(1));
         model.addAttribute("nextDate", selectedDate.plusDays(1));
+        model.addAttribute("isToday", selectedDate.equals(LocalDate.now(zone)));
         model.addAttribute("prAnchors", allPrAnchors);
         model.addAttribute("reviewAnchors", reviewAnchors);
         model.addAttribute("issueAnchors", issueAnchors);
