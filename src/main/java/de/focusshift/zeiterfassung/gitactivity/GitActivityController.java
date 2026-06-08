@@ -58,6 +58,7 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
     private final ActivityTypeService activityTypeService;
     private final TimeEntryLockService timeEntryLockService;
     private final GitActivityRawEventRepository eventRepository;
+    private final GitOAuthTokenRepository oAuthTokenRepository;
     private final GitHubActivityProvider gitHubProvider;
     private final WorkingTimeSettingsService workingTimeSettingsService;
     private final CategorisationSettingsService categorisationSettingsService;
@@ -70,6 +71,7 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
                           ActivityTypeService activityTypeService,
                           TimeEntryLockService timeEntryLockService,
                           GitActivityRawEventRepository eventRepository,
+                          GitOAuthTokenRepository oAuthTokenRepository,
                           GitHubActivityProvider gitHubProvider,
                           WorkingTimeSettingsService workingTimeSettingsService,
                           CategorisationSettingsService categorisationSettingsService) {
@@ -81,6 +83,7 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
         this.activityTypeService = activityTypeService;
         this.timeEntryLockService = timeEntryLockService;
         this.eventRepository = eventRepository;
+        this.oAuthTokenRepository = oAuthTokenRepository;
         this.gitHubProvider = gitHubProvider;
         this.workingTimeSettingsService = workingTimeSettingsService;
         this.categorisationSettingsService = categorisationSettingsService;
@@ -220,16 +223,13 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
     String dismiss(@RequestParam String eventId,
                    @RequestParam(required = false) LocalDate date,
                    @CurrentUser CurrentOidcUser currentUser) {
-        final UserSettings userSettings = userSettingsService.getUserSettings(currentUser.getUserIdComposite());
-        final String login = userSettings.githubLogin().orElse(null);
-        if (login != null) {
-            eventRepository.findByPlatformEventId(eventId).ifPresent(e -> {
-                if (login.equals(e.getPlatformUsername())) {
-                    e.setDismissed(true);
-                    eventRepository.save(e);
-                }
-            });
-        }
+        final Set<String> usernames = resolvePlatformUsernames(currentUser);
+        eventRepository.findByPlatformEventId(eventId).ifPresent(e -> {
+            if (usernames.contains(e.getPlatformUsername())) {
+                e.setDismissed(true);
+                eventRepository.save(e);
+            }
+        });
         final String redirectDate = (date != null ? date : LocalDate.now()).toString();
         return "redirect:/github-activity?date=" + redirectDate;
     }
@@ -237,16 +237,13 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
     @PostMapping("/mark-logged")
     org.springframework.http.ResponseEntity<Void> markLogged(@RequestParam String eventId,
                                                               @CurrentUser CurrentOidcUser currentUser) {
-        final UserSettings userSettings = userSettingsService.getUserSettings(currentUser.getUserIdComposite());
-        final String login = userSettings.githubLogin().orElse(null);
-        if (login != null) {
-            eventRepository.findByPlatformEventId(eventId).ifPresent(e -> {
-                if (login.equals(e.getPlatformUsername())) {
-                    e.setLoggedAt(java.time.Instant.now());
-                    eventRepository.save(e);
-                }
-            });
-        }
+        final Set<String> usernames = resolvePlatformUsernames(currentUser);
+        eventRepository.findByPlatformEventId(eventId).ifPresent(e -> {
+            if (usernames.contains(e.getPlatformUsername())) {
+                e.setLoggedAt(java.time.Instant.now());
+                eventRepository.save(e);
+            }
+        });
         return org.springframework.http.ResponseEntity.ok().build();
     }
 
@@ -493,6 +490,17 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
             case "GITLAB"    -> "https://gitlab.com/" + e.getRepoName() + "/-/commit/" + sha;
             default          -> "https://github.com/" + e.getRepoName() + "/commit/" + sha;
         };
+    }
+
+    /** Returns all platform usernames owned by the current user (GitHub login + OAuth account IDs). */
+    private Set<String> resolvePlatformUsernames(CurrentOidcUser currentUser) {
+        final Set<String> usernames = new java.util.HashSet<>();
+        userSettingsService.getUserSettings(currentUser.getUserIdComposite())
+            .githubLogin().ifPresent(usernames::add);
+        final Long userLocalId = currentUser.getUserIdComposite().localId().value();
+        oAuthTokenRepository.findByUserLocalId(userLocalId)
+            .forEach(t -> usernames.add(t.getPlatformAccountId()));
+        return usernames;
     }
 
     private static String buildEventComment(GitActivityRawEventEntity e) {

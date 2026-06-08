@@ -54,6 +54,7 @@ class GitActivityControllerTest implements ControllerTest {
     @Mock private ActivityTypeService activityTypeService;
     @Mock private TimeEntryLockService timeEntryLockService;
     @Mock private GitActivityRawEventRepository eventRepository;
+    @Mock private GitOAuthTokenRepository oAuthTokenRepository;
     @Mock private GitHubActivityProvider gitHubProvider;
     @Mock private WorkingTimeSettingsService workingTimeSettingsService;
     @Mock private de.focusshift.zeiterfassung.settings.CategorisationSettingsService categorisationSettingsService;
@@ -65,9 +66,10 @@ class GitActivityControllerTest implements ControllerTest {
         sut = new GitActivityController(
             userSettingsService, userSettingsProvider, timeEntryService,
             userSearchViewHelper, projectService, activityTypeService,
-            timeEntryLockService, eventRepository, gitHubProvider,
+            timeEntryLockService, eventRepository, oAuthTokenRepository, gitHubProvider,
             workingTimeSettingsService, categorisationSettingsService
         );
+        when(oAuthTokenRepository.findByUserLocalId(any())).thenReturn(java.util.List.of());
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
