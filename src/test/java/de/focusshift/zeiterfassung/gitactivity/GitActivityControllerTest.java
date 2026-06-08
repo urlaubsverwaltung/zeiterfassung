@@ -964,7 +964,6 @@ class GitActivityControllerTest implements ControllerTest {
         }
     }
 
-<<<<<<< HEAD
     // ── day summary (loggedDuration) ──────────────────────────────────────────
 
     @Nested
