@@ -341,6 +341,9 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         viewHelper.updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
         if (hasText(turboFrame)) {
+            model.addAttribute("projects", projectService.findAllActive());
+            model.addAttribute("activityTypes", activityTypeService.findAllActive());
+            model.addAttribute("categorisationSettings", categorisationSettingsService.getCategorisationSettings());
             if (bindingResult.hasErrors()) {
                 LOG.info("Could not update timeEntry {} due to constraint violation errors. Rendering turbo frame.", timeEntryId);
                 model.addAttribute("turboEditedTimeEntry", timeEntryDTO);

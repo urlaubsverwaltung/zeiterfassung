@@ -950,6 +950,103 @@ class TimeEntryControllerTest implements ControllerTest {
     }
 
     @Test
+    void ensureProjectsAndActivityTypesAreInModelWhenEditingViaAjax() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final ZonedDateTime start = ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin);
+        final ZonedDateTime end = ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin);
+        final TimeEntry timeEntryToEdit = new TimeEntry(new TimeEntryId(1337L), userIdComposite, "hard work", start, end, false, null, null);
+
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(
+            LocalDate.of(2022, 9, 26),
+            PlannedWorkingHours.EIGHT,
+            List.of(new TimeEntryDay(false, LocalDate.of(2022, 9, 28),
+                new WorkDuration(Duration.ofMinutes(45)), PlannedWorkingHours.EIGHT,
+                ShouldWorkingHours.EIGHT, List.of(timeEntryToEdit), List.of()))
+        );
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 39))
+            .thenReturn(new TimeEntryWeekPage(timeEntryWeek, 1));
+
+        final de.focusshift.zeiterfassung.project.Project project = new de.focusshift.zeiterfassung.project.Project(
+            new de.focusshift.zeiterfassung.project.ProjectId(1L), "Desktop", true,
+            new de.focusshift.zeiterfassung.customer.CustomerId(10L), "NLNet");
+        final de.focusshift.zeiterfassung.activitytype.ActivityType activityType =
+            new de.focusshift.zeiterfassung.activitytype.ActivityType(
+                new de.focusshift.zeiterfassung.activitytype.ActivityTypeId(1L), "Development", true);
+
+        when(projectService.findAllActive()).thenReturn(List.of(project));
+        when(activityTypeService.findAllActive()).thenReturn(List.of(activityType));
+        when(categorisationSettingsService.getCategorisationSettings())
+            .thenReturn(de.focusshift.zeiterfassung.settings.CategorisationSettings.DEFAULT);
+
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
+            .header("Turbo-Frame", "frame-time-entry")
+            .with(oidcSubject(userIdComposite))
+            .param("id", "1337")
+            .param("userLocalId", userLocalId.value().toString())
+            .param("date", "2022-09-28")
+            .param("start", "20:30:00.000+01:00")
+            .param("end", "21:15:00.000+01:00")
+            .param("comment", "hard work")
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("timeentries/index::#frame-time-entry"))
+            .andExpect(model().attribute("projects", is(List.of(project))))
+            .andExpect(model().attribute("activityTypes", is(List.of(activityType))));
+    }
+
+    @Test
+    void ensureProjectsAndActivityTypesAreInModelWhenEditingViaAjaxWithValidationError() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final de.focusshift.zeiterfassung.project.Project project = new de.focusshift.zeiterfassung.project.Project(
+            new de.focusshift.zeiterfassung.project.ProjectId(1L), "Desktop", true,
+            new de.focusshift.zeiterfassung.customer.CustomerId(10L), "NLNet");
+        final de.focusshift.zeiterfassung.activitytype.ActivityType activityType =
+            new de.focusshift.zeiterfassung.activitytype.ActivityType(
+                new de.focusshift.zeiterfassung.activitytype.ActivityTypeId(1L), "Development", true);
+
+        when(projectService.findAllActive()).thenReturn(List.of(project));
+        when(activityTypeService.findAllActive()).thenReturn(List.of(activityType));
+        when(categorisationSettingsService.getCategorisationSettings())
+            .thenReturn(de.focusshift.zeiterfassung.settings.CategorisationSettings.DEFAULT);
+
+        final TimeEntryDTO dto = new TimeEntryDTO();
+        dto.setUserLocalId(userLocalId.value());
+        dto.setDate(LocalDate.parse("2022-09-28"));
+        dto.setComment("hard work");
+
+        doAnswer(args -> {
+            final BindingResult bindingResult = args.getArgument(2);
+            bindingResult.reject("something.is.wrong");
+            return null;
+        }).when(timeEntryViewHelper).updateTimeEntry(any(CurrentOidcUser.class), eq(dto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
+            .header("Turbo-Frame", "frame-time-entry")
+            .with(oidcSubject(userIdComposite))
+            .param("id", "1337")
+            .param("userLocalId", userLocalId.value().toString())
+            .param("date", "2022-09-28")
+            .param("comment", "hard work")
+        )
+            .andExpect(view().name("timeentries/index::#frame-time-entry"))
+            .andExpect(model().attribute("projects", is(List.of(project))))
+            .andExpect(model().attribute("activityTypes", is(List.of(activityType))));
+    }
+
+    @Test
     void ensureTimeEntryEditForOtherUserIsForbidden() {
 
         final UserLocalId userLocalId = new UserLocalId(1L);

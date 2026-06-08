@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.githubactivity;
+package de.focusshift.zeiterfassung.gitactivity;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
@@ -39,13 +39,13 @@ import java.util.stream.Stream;
 
 @Controller
 @RequestMapping("/github-activity")
-class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch {
+class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter OPENED_DATE_FMT = DateTimeFormatter.ofPattern("MMM d");
     private static final Set<String> REVIEW_EVENT_TYPES = Set.of(
         "PullRequestReviewEvent", "PullRequestReviewCommentEvent",
-        "IssueCommentEvent"); // IssueCommentEvent on PRs is routed to anchorType=PR by the sync service
+        "IssueCommentEvent");
 
     private final UserSettingsService userSettingsService;
     private final UserSettingsProvider userSettingsProvider;
@@ -54,22 +54,22 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     private final ProjectService projectService;
     private final ActivityTypeService activityTypeService;
     private final TimeEntryLockService timeEntryLockService;
-    private final GitHubRawEventRepository eventRepository;
-    private final GitHubSyncService syncService;
+    private final GitActivityRawEventRepository eventRepository;
+    private final GitHubActivityProvider gitHubProvider;
     private final WorkingTimeSettingsService workingTimeSettingsService;
     private final CategorisationSettingsService categorisationSettingsService;
 
-    GitHubActivityController(UserSettingsService userSettingsService,
-                              UserSettingsProvider userSettingsProvider,
-                              TimeEntryService timeEntryService,
-                              UserSearchViewHelper userSearchViewHelper,
-                              ProjectService projectService,
-                              ActivityTypeService activityTypeService,
-                              TimeEntryLockService timeEntryLockService,
-                              GitHubRawEventRepository eventRepository,
-                              GitHubSyncService syncService,
-                              WorkingTimeSettingsService workingTimeSettingsService,
-                              CategorisationSettingsService categorisationSettingsService) {
+    GitActivityController(UserSettingsService userSettingsService,
+                          UserSettingsProvider userSettingsProvider,
+                          TimeEntryService timeEntryService,
+                          UserSearchViewHelper userSearchViewHelper,
+                          ProjectService projectService,
+                          ActivityTypeService activityTypeService,
+                          TimeEntryLockService timeEntryLockService,
+                          GitActivityRawEventRepository eventRepository,
+                          GitHubActivityProvider gitHubProvider,
+                          WorkingTimeSettingsService workingTimeSettingsService,
+                          CategorisationSettingsService categorisationSettingsService) {
         this.userSettingsService = userSettingsService;
         this.userSettingsProvider = userSettingsProvider;
         this.timeEntryService = timeEntryService;
@@ -78,7 +78,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         this.activityTypeService = activityTypeService;
         this.timeEntryLockService = timeEntryLockService;
         this.eventRepository = eventRepository;
-        this.syncService = syncService;
+        this.gitHubProvider = gitHubProvider;
         this.workingTimeSettingsService = workingTimeSettingsService;
         this.categorisationSettingsService = categorisationSettingsService;
     }
@@ -101,8 +101,8 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
 
         final Instant dayStart = selectedDate.atStartOfDay(zone).toInstant();
         final Instant dayEnd = selectedDate.plusDays(1).atStartOfDay(zone).toInstant();
-        final List<GitHubRawEventEntity> rawEvents =
-            eventRepository.findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(login, dayStart, dayEnd);
+        final List<GitActivityRawEventEntity> rawEvents =
+            eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(login, dayStart, dayEnd);
 
         final List<ActivityAnchor> allAnchors = toAnchors(rawEvents, zone, login, selectedDate);
         final Long userLocalId = currentUser.getUserIdComposite().localId().value();
@@ -117,22 +117,16 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
             .filter(a -> "ISSUE".equals(a.anchorType()))
             .toList();
 
-        // Scope to PRs opened on or before the selected day — prevents retroactively hiding
-        // standalone commits that were pushed before a PR was opened for that branch.
         final Set<String> prHeadKeys = eventRepository
             .findDistinctRepoAndHeadBranchesByUsernameUpToDate(login, dayEnd);
 
         final List<ActivityAnchor> standaloneAnchors = allAnchors.stream()
             .filter(a -> "REPO".equals(a.anchorType()))
-            // Exclude commits on branches that are the head of a known PR
             .filter(a -> a.anchorId() == null || !prHeadKeys.contains(a.repoName() + "|" + a.anchorId()))
-            // Exclude groups that contain only branch create/delete events
             .filter(a -> a.events().stream().anyMatch(
                 e -> !e.summary().startsWith("Created ") && !e.summary().startsWith("Deleted ")))
             .toList();
 
-        // Synthesize PR anchors for days where only commits were pushed (no PullRequestEvent).
-        // Without this, a day with push-only activity on a PR branch would show nothing at all.
         final Set<String> existingPrKeys = prAnchors.stream()
             .map(a -> a.repoName() + "|" + a.anchorId())
             .collect(java.util.stream.Collectors.toSet());
@@ -158,22 +152,21 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
             || !issueAnchors.isEmpty() || !standaloneAnchors.isEmpty());
         model.addAttribute("userLocalId", userLocalId);
         model.addAttribute("isLocked", timeEntryLockService.isLocked(selectedDate));
-        model.addAttribute("syncConfigured", syncService.isConfigured());
-        model.addAttribute("syncMissingConfig", syncService.missingConfig());
-        final Instant lastSync = syncService.getLastSyncTime(login);
+        model.addAttribute("syncConfigured", gitHubProvider.isConfigured());
+        model.addAttribute("syncMissingConfig", gitHubProvider.missingConfig());
+        final Instant lastSync = gitHubProvider.getLastSyncTime(login);
         model.addAttribute("lastSyncedAt", lastSync != null ? lastSync.atZone(zone) : null);
-        final boolean rateLimitSafe = syncService.isRateLimitSafe();
-        final int rateLimitPercent = syncService.getRateLimitPercent();
+        final boolean rateLimitSafe = gitHubProvider.isRateLimitSafe();
+        final int rateLimitPercent = gitHubProvider.getRateLimitPercent();
         model.addAttribute("rateLimitSafe", rateLimitSafe);
         model.addAttribute("rateLimitPercent", rateLimitPercent);
-        model.addAttribute("rateLimitRemaining", syncService.getRateLimitRemaining());
-        model.addAttribute("rateLimitTotal", syncService.getRateLimitTotal());
-        // Fill colour: green > 60 %, amber > 30 %, red otherwise
+        model.addAttribute("rateLimitRemaining", gitHubProvider.getRateLimitRemaining());
+        model.addAttribute("rateLimitTotal", gitHubProvider.getRateLimitTotal());
         model.addAttribute("rateLimitFillColor",
             rateLimitPercent > 60 ? "#22c55e" : rateLimitPercent > 30 ? "#f59e0b" : "#ef4444");
-        if (!rateLimitSafe && syncService.getRateLimitReset().isAfter(Instant.MIN)) {
+        if (!rateLimitSafe && gitHubProvider.getRateLimitReset().isAfter(Instant.MIN)) {
             model.addAttribute("rateLimitResetAt",
-                syncService.getRateLimitReset().atZone(zone)
+                gitHubProvider.getRateLimitReset().atZone(zone)
                     .format(DateTimeFormatter.ofPattern("HH:mm")));
         }
 
@@ -187,7 +180,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
 
         final UserSettings userSettings = userSettingsService.getUserSettings(currentUser.getUserIdComposite());
         if (userSettings.githubLoginVerified() && userSettings.githubLogin().isPresent()) {
-            syncService.syncNow(userSettings.githubLogin().get());
+            gitHubProvider.syncUser(userSettings.githubLogin().get());
         }
 
         final String redirectDate = (date != null ? date : LocalDate.now()).toString();
@@ -197,7 +190,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
     @PostMapping("/dismiss")
     String dismiss(@RequestParam String eventId,
                    @RequestParam(required = false) LocalDate date) {
-        eventRepository.findByGithubEventId(eventId).ifPresent(e -> {
+        eventRepository.findByPlatformEventId(eventId).ifPresent(e -> {
             e.setDismissed(true);
             eventRepository.save(e);
         });
@@ -207,7 +200,7 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
 
     @PostMapping("/mark-logged")
     org.springframework.http.ResponseEntity<Void> markLogged(@RequestParam String eventId) {
-        eventRepository.findByGithubEventId(eventId).ifPresent(e -> {
+        eventRepository.findByPlatformEventId(eventId).ifPresent(e -> {
             e.setLoggedAt(java.time.Instant.now());
             eventRepository.save(e);
         });
@@ -262,23 +255,23 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         return "github-activity/inline-form";
     }
 
-    private List<ActivityAnchor> toAnchors(List<GitHubRawEventEntity> entities, ZoneId zone,
+    private List<ActivityAnchor> toAnchors(List<GitActivityRawEventEntity> entities, ZoneId zone,
                                            String login, LocalDate selectedDate) {
         if (entities.isEmpty()) return List.of();
 
-        final Map<String, List<GitHubRawEventEntity>> grouped = new LinkedHashMap<>();
-        for (GitHubRawEventEntity e : entities) {
+        final Map<String, List<GitActivityRawEventEntity>> grouped = new LinkedHashMap<>();
+        for (GitActivityRawEventEntity e : entities) {
             final String key = e.getRepoName() + "|" + e.getAnchorType() + "|"
                 + (e.getAnchorId() != null ? e.getAnchorId() : "");
             grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(e);
         }
 
         return grouped.values().stream().<ActivityAnchor>map(group -> {
-            final GitHubRawEventEntity first = group.get(0);
+            final GitActivityRawEventEntity first = group.get(0);
 
-            final Instant minTs = group.stream().map(GitHubRawEventEntity::getEventTimestamp)
+            final Instant minTs = group.stream().map(GitActivityRawEventEntity::getEventTimestamp)
                 .min(Comparator.naturalOrder()).orElseThrow();
-            final Instant maxTs = group.stream().map(GitHubRawEventEntity::getEventTimestamp)
+            final Instant maxTs = group.stream().map(GitActivityRawEventEntity::getEventTimestamp)
                 .max(Comparator.naturalOrder()).orElseThrow();
 
             final String windowStart = TIME_FMT.withZone(zone).format(minTs);
@@ -294,12 +287,10 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
 
             final boolean isRepo = "REPO".equals(first.getAnchorType());
             final List<AnchorEvent> events = group.stream()
-                // Deduplicate by summary: same commit message from multiple push events
-                // (e.g. old-format event IDs before the login_commit_sha change)
                 .collect(java.util.stream.Collectors.toMap(
-                    GitHubRawEventEntity::getEventSummary,
+                    GitActivityRawEventEntity::getEventSummary,
                     e -> e,
-                    (a, b) -> a,           // keep first occurrence
+                    (a, b) -> a,
                     java.util.LinkedHashMap::new))
                 .values().stream()
                 .map(e -> new AnchorEvent(
@@ -307,13 +298,11 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                     e.getEventSummary(),
                     TIME_FMT.withZone(zone).format(e.getEventTimestamp()),
                     buildEventComment(e),
-                    e.getGithubEventId(),
+                    e.getPlatformEventId(),
                     e.getLoggedAt() != null,
                     isRepo ? buildCommitUrl(e) : null))
                 .toList();
 
-            // anchorTitle may be blank when the GitHub App token strips PR payload fields;
-            // fall back to extracting the title from the stored event summary (e.g. "Merged PR #X: Title")
             final String anchorTitle = resolveAnchorTitle(first, group);
             final String anchorLabel = !anchorTitle.isBlank()
                 ? anchorTitle
@@ -322,7 +311,6 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
             final String prefilledComment = first.getRepoName() + (anchorRef.isEmpty() ? "" : " " + anchorRef)
                 + (anchorLabel.isEmpty() ? "" : ": " + anchorLabel);
 
-            // Categorise PR anchors into own PRs vs. reviews
             final boolean isOwnPr = "PR".equals(first.getAnchorType())
                 && group.stream().anyMatch(e -> "PullRequestEvent".equals(e.getEventType()));
             final boolean isReview = "PR".equals(first.getAnchorType()) && !isOwnPr
@@ -354,22 +342,16 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         }).toList();
     }
 
-    /**
-     * For a REPO anchor (commits on a PR branch) that has no PullRequestEvent on the selected day,
-     * look up the PR entity and produce a synthetic PR anchor so the PR appears in the PR section.
-     * Returns an empty stream if the PR is already present or cannot be found.
-     */
     private Stream<ActivityAnchor> buildSyntheticPrAnchor(ActivityAnchor repoAnchor,
                                                            Set<String> existingPrKeys,
                                                            String login, ZoneId zone,
                                                            LocalDate selectedDate) {
-        // Same-repo lookup first; fall back to cross-fork lookup (commit repo == PR headRepoName)
-        java.util.Optional<GitHubRawEventEntity> prOpt = eventRepository
-            .findFirstByGithubUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
+        java.util.Optional<GitActivityRawEventEntity> prOpt = eventRepository
+            .findFirstByPlatformUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
                 login, repoAnchor.repoName(), repoAnchor.anchorId());
         if (prOpt.isEmpty()) {
             prOpt = eventRepository
-                .findFirstByGithubUsernameAndHeadRepoNameAndHeadBranchOrderByEventTimestampDesc(
+                .findFirstByPlatformUsernameAndHeadRepoNameAndHeadBranchOrderByEventTimestampDesc(
                     login, repoAnchor.repoName(), repoAnchor.anchorId());
         }
         return prOpt
@@ -384,13 +366,13 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
                     "PR",
                     pr.getAnchorId(),
                     anchorTitle,
-                    repoAnchor.events(),           // commit events → drive the time window
+                    repoAnchor.events(),
                     repoAnchor.windowStart(),
                     repoAnchor.windowEnd(),
                     repoAnchor.suggestedDuration(),
                     prefilledComment,
                     derivePrOpenedDate(login, pr, zone, selectedDate),
-                    derivePrStatus(List.of(pr)),   // Open / Merged / Closed from the PR entity
+                    derivePrStatus(List.of(pr)),
                     null,
                     null,
                     repoAnchor.logged()
@@ -399,12 +381,11 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
             .stream();
     }
 
-    private static String resolveAnchorTitle(GitHubRawEventEntity first, List<GitHubRawEventEntity> group) {
+    private static String resolveAnchorTitle(GitActivityRawEventEntity first, List<GitActivityRawEventEntity> group) {
         if (first.getAnchorTitle() != null && !first.getAnchorTitle().isBlank()) {
             return first.getAnchorTitle();
         }
-        // Fall back: extract title from "Verb PR/Issue #N: Title" stored in eventSummary
-        for (GitHubRawEventEntity e : group) {
+        for (GitActivityRawEventEntity e : group) {
             final int colonIdx = e.getEventSummary().indexOf(": ");
             if (colonIdx >= 0) {
                 final String candidate = e.getEventSummary().substring(colonIdx + 2).trim();
@@ -414,17 +395,17 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         return first.getAnchorTitle() != null ? first.getAnchorTitle() : "";
     }
 
-    private String derivePrStatus(List<GitHubRawEventEntity> group) {
-        for (GitHubRawEventEntity e : group) {
+    private String derivePrStatus(List<GitActivityRawEventEntity> group) {
+        for (GitActivityRawEventEntity e : group) {
             if (e.getEventSummary().startsWith("Merged")) return "Merged";
             if (e.getEventSummary().startsWith("Closed")) return "Closed";
         }
         return "Open";
     }
 
-    private String derivePrOpenedDate(String login, GitHubRawEventEntity first, ZoneId zone, LocalDate selectedDate) {
+    private String derivePrOpenedDate(String login, GitActivityRawEventEntity first, ZoneId zone, LocalDate selectedDate) {
         return eventRepository
-            .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+            .findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
                 login, first.getRepoName(), "PR", first.getAnchorId())
             .map(oldest -> {
                 final LocalDate openedDay = oldest.getEventTimestamp().atZone(zone).toLocalDate();
@@ -435,18 +416,18 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
             .orElse(null);
     }
 
-    private String deriveReviewOutcome(List<GitHubRawEventEntity> group) {
+    private String deriveReviewOutcome(List<GitActivityRawEventEntity> group) {
         boolean approved = false, changesRequested = false;
-        for (GitHubRawEventEntity e : group) {
+        for (GitActivityRawEventEntity e : group) {
             if (e.getEventSummary().startsWith("Approved")) approved = true;
             if (e.getEventSummary().startsWith("Requested changes")) changesRequested = true;
         }
         return approved ? "Approved" : changesRequested ? "Changes requested" : "Commented";
     }
 
-    private String deriveIssueAction(List<GitHubRawEventEntity> group) {
+    private String deriveIssueAction(List<GitActivityRawEventEntity> group) {
         boolean closed = false, opened = false, commented = false;
-        for (GitHubRawEventEntity e : group) {
+        for (GitActivityRawEventEntity e : group) {
             if (e.getEventSummary().startsWith("Closed")) closed = true;
             else if (e.getEventSummary().startsWith("Opened")) opened = true;
             else if (e.getEventSummary().startsWith("Commented")) commented = true;
@@ -454,22 +435,27 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         return closed ? "Closed" : opened ? "Opened" : commented ? "Commented" : "Updated";
     }
 
-    private static String buildCommitUrl(GitHubRawEventEntity e) {
-        // Event ID format: {login}_commit_{fullSha}
-        final String id = e.getGithubEventId();
+    private static String buildCommitUrl(GitActivityRawEventEntity e) {
+        final String id = e.getPlatformEventId();
         final int shaStart = id.lastIndexOf('_') + 1;
         if (shaStart <= 0 || shaStart >= id.length()) return null;
-        return "https://github.com/" + e.getRepoName() + "/commit/" + id.substring(shaStart);
+        final String sha = id.substring(shaStart);
+
+        return switch (e.getPlatform() != null ? e.getPlatform() : "GITHUB") {
+            case "BITBUCKET" -> "https://bitbucket.org/" + e.getRepoName() + "/commits/" + sha;
+            case "GITLAB"    -> "https://gitlab.com/" + e.getRepoName() + "/-/commit/" + sha;
+            default          -> "https://github.com/" + e.getRepoName() + "/commit/" + sha;
+        };
     }
 
-    private static String buildEventComment(GitHubRawEventEntity e) {
+    private static String buildEventComment(GitActivityRawEventEntity e) {
         final String shortRepo = e.getRepoName().contains("/")
             ? e.getRepoName().substring(e.getRepoName().lastIndexOf('/') + 1)
             : e.getRepoName();
         return shortRepo + ": " + e.getEventSummary();
     }
 
-    private static String buildAnchorRef(GitHubRawEventEntity e) {
+    private static String buildAnchorRef(GitActivityRawEventEntity e) {
         return switch (e.getAnchorType()) {
             case "PR" -> e.getAnchorId() != null ? "PR #" + e.getAnchorId() : "";
             case "ISSUE" -> e.getAnchorId() != null ? "Issue #" + e.getAnchorId() : "";
@@ -507,24 +493,24 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         final Instant fromInstant = effectiveFrom.atStartOfDay(zone).toInstant();
         final Instant toInstant = effectiveTo.plusDays(1).atStartOfDay(zone).toInstant();
 
-        final List<GitHubRawEventEntity> raw = eventRepository.searchEvents(login, query, fromInstant, toInstant);
+        final List<GitActivityRawEventEntity> raw = eventRepository.searchEvents(login, query, fromInstant, toInstant);
 
         final DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("EEE d MMM yyyy");
         final DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
 
-        final Map<LocalDate, List<GitHubRawEventEntity>> byDate = new LinkedHashMap<>();
-        for (GitHubRawEventEntity e : raw) {
+        final Map<LocalDate, List<GitActivityRawEventEntity>> byDate = new LinkedHashMap<>();
+        for (GitActivityRawEventEntity e : raw) {
             byDate.computeIfAbsent(e.getEventTimestamp().atZone(zone).toLocalDate(),
                 k -> new ArrayList<>()).add(e);
         }
 
-        final List<GitHubSearchResultGroup> groups = byDate.entrySet().stream()
-            .map(entry -> new GitHubSearchResultGroup(
+        final List<GitSearchResultGroup> groups = byDate.entrySet().stream()
+            .map(entry -> new GitSearchResultGroup(
                 dateFmt.withZone(zone).format(entry.getKey().atStartOfDay(zone).toInstant()),
                 entry.getKey(),
                 entry.getValue().stream()
                     .filter(e -> !"Commit".equals(deriveSearchType(e)))
-                    .map(e -> new GitHubSearchResultItem(
+                    .map(e -> new GitSearchResultItem(
                         deriveSearchType(e),
                         e.getRepoName(),
                         e.getAnchorId(),
@@ -539,18 +525,17 @@ class GitHubActivityController implements HasTimeClock, HasLaunchpad, HasUserSea
         return "github-activity/search-results";
     }
 
-    private String deriveSearchType(GitHubRawEventEntity e) {
+    private String deriveSearchType(GitActivityRawEventEntity e) {
         if ("ISSUE".equals(e.getAnchorType())) return "Issue";
         if ("PR".equals(e.getAnchorType()) && REVIEW_EVENT_TYPES.contains(e.getEventType())) return "Review";
         if ("PR".equals(e.getAnchorType())) return "PR";
         return "Commit";
     }
 
-    record GitHubSearchResultItem(
+    record GitSearchResultItem(
         String type, String repoName, String anchorId,
         String title, String time, boolean logged) {}
 
-    record GitHubSearchResultGroup(
-        String dateLabel, LocalDate date, List<GitHubSearchResultItem> items) {}
-
+    record GitSearchResultGroup(
+        String dateLabel, LocalDate date, List<GitSearchResultItem> items) {}
 }

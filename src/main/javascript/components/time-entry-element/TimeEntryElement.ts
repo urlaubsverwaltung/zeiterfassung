@@ -1,6 +1,7 @@
 export class TimeEntryElement extends HTMLDivElement {
   connectedCallback() {
     this.#initForm();
+    this.#initCompactRow();
   }
 
   #initForm() {
@@ -45,6 +46,7 @@ export class TimeEntryElement extends HTMLDivElement {
       for (const element of form.querySelectorAll(".edited")) {
         element.classList.remove("edited");
       }
+      delete this.dataset.open;
     });
 
     function handleValueChanged(
@@ -73,6 +75,55 @@ export class TimeEntryElement extends HTMLDivElement {
           originalFormData.get(entry[0]) === entry[1]
         );
       });
+    }
+  }
+
+  #initCompactRow() {
+    const readRow = this.querySelector<HTMLElement>("[data-read-row]");
+    if (!readRow) return;
+
+    this.#populateReadRow();
+
+    readRow.addEventListener("click", () => {
+      this.dataset.open = "";
+    });
+
+    readRow.addEventListener("keydown", (event_: KeyboardEvent) => {
+      if (event_.key === "Enter" || event_.key === " ") {
+        event_.preventDefault();
+        this.dataset.open = "";
+      }
+    });
+  }
+
+  #populateReadRow() {
+    const readRow = this.querySelector("[data-read-row]");
+    if (!readRow) return;
+
+    const form = this.querySelector("form")!;
+    const projectSelect = form.querySelector<HTMLSelectElement>(
+      "select[name='projectId']",
+    );
+    const activitySelect = form.querySelector<HTMLSelectElement>(
+      "select[name='activityTypeId']",
+    );
+
+    const selectedProjectOption =
+      projectSelect && projectSelect.selectedIndex > 0
+        ? projectSelect.options[projectSelect.selectedIndex]
+        : undefined;
+
+    const customerName = selectedProjectOption?.dataset.customerName;
+    const projectName = selectedProjectOption?.text;
+    const activityName =
+      activitySelect && activitySelect.selectedIndex > 0
+        ? activitySelect.options[activitySelect.selectedIndex].text
+        : undefined;
+
+    const projectElement = readRow.querySelector("[data-read-project]");
+    if (projectElement) {
+      const parts = [customerName, projectName, activityName].filter(Boolean);
+      projectElement.textContent = parts.length > 0 ? parts.join(" / ") : "";
     }
   }
 }

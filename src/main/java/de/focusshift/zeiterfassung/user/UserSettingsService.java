@@ -144,6 +144,27 @@ public class UserSettingsService {
         return toUserSettings(userSettingsRepository.save(entity));
     }
 
+    /**
+     * Stores (or clears) the GitHub App installation ID for the user's personal account.
+     * Called after the user completes the GitHub App installation flow for customer repos.
+     */
+    public UserSettings updateGithubInstallationId(UserIdComposite userIdComposite, @Nullable Long installationId) {
+        final UserSettingsEntity entity = findOrGetDefault(userIdComposite);
+        entity.setGithubInstallationId(installationId);
+        final UserSettingsEntity persisted = userSettingsRepository.save(entity);
+        LOG.info("Updated GitHub installation ID for user {} to {}", userIdComposite.localId().value(), installationId);
+        return toUserSettings(persisted);
+    }
+
+    /**
+     * Looks up the personal GitHub App installation ID for the user identified by their
+     * verified GitHub login. Used by the sync service to get a personal installation token.
+     */
+    public Optional<Long> findGithubInstallationIdByLogin(String githubLogin) {
+        return userSettingsRepository.findByGithubLoginAndGithubLoginVerifiedTrue(githubLogin)
+            .map(UserSettingsEntity::getGithubInstallationId);
+    }
+
     private static UserSettings toUserSettings(UserSettingsEntity userSettingsEntity) {
         return new UserSettings(
             userSettingsEntity.getTheme(),
@@ -152,7 +173,8 @@ public class UserSettingsService {
             userSettingsEntity.getGithubLogin(),
             userSettingsEntity.isGithubLoginVerified(),
             userSettingsEntity.getGithubToken(),
-            userSettingsEntity.isNotificationsEnabled()
+            userSettingsEntity.isNotificationsEnabled(),
+            userSettingsEntity.getGithubInstallationId()
         );
     }
 

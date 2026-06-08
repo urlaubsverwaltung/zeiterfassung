@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.githubactivity;
+package de.focusshift.zeiterfassung.gitactivity;
 
 import java.util.List;
 

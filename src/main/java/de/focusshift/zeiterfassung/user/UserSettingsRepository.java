@@ -12,4 +12,6 @@ interface UserSettingsRepository extends CrudRepository<UserSettingsEntity, Long
     Optional<UserSettingsEntity> findByTenantUserLocalId(Long tenantUserLocalId);
 
     List<UserSettingsEntity> findByGithubLoginVerifiedTrue();
+
+    Optional<UserSettingsEntity> findByGithubLoginAndGithubLoginVerifiedTrue(String githubLogin);
 }

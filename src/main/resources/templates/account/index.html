@@ -32,7 +32,7 @@
 
           <div class="flex flex-col gap-10">
 
-            <!-- Identity section (read-only) -->
+            <!-- ── Identity (read-only) ──────────────────────────────────── -->
             <section>
               <h2 class="text-lg font-semibold dark:text-zinc-300 mb-1" th:text="#{account.identity.section.title}">Identity</h2>
               <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4" th:text="#{account.identity.managed-by-cloudron}">
@@ -50,16 +50,17 @@
               </div>
             </section>
 
-            <!-- GitHub section -->
+            <!-- ── GitHub ────────────────────────────────────────────────── -->
             <section>
               <h2 class="text-lg font-semibold dark:text-zinc-300 mb-1" th:text="#{account.github.section.title}">GitHub</h2>
 
               <form action="#" th:action="@{/account}" method="post" id="account-form">
-                <!-- Hidden: tracks whether the current input has been verified -->
                 <input type="hidden" name="githubLoginVerified" id="githubLoginVerifiedField"
                        th:value="${githubLoginVerified}" />
 
                 <div class="flex flex-col gap-4 max-w-md">
+
+                  <!-- Username + verify -->
                   <div class="flex flex-col gap-1">
                     <label for="githubLogin" class="text-sm font-medium" th:text="#{account.github-login.label}">
                       GitHub username
@@ -95,9 +96,8 @@
                     </p>
                   </div>
 
-                  <!-- Turbo Frame: GitHub verification result appears here -->
+                  <!-- Turbo Frame: GitHub verification result -->
                   <turbo-frame id="github-verify-result" class="block">
-                    <!-- Show badge if already verified -->
                     <div th:if="${githubLoginVerified and !#strings.isEmpty(githubLogin)}"
                          class="flex items-center gap-3 p-2 rounded border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-950">
                       <img
@@ -120,53 +120,105 @@
                     </div>
                   </turbo-frame>
 
-                  <!-- GitHub Personal Access Token (optional, for private repos) -->
-                  <div class="flex flex-col gap-1">
-                    <label for="githubToken" class="text-sm font-medium" th:text="#{account.github-token.label}">
-                      Personal Access Token
-                    </label>
-                    <input
-                      type="password"
-                      id="githubToken"
-                      name="githubToken"
-                      th:value="${githubToken}"
-                      th:placeholder="#{account.github-token.placeholder}"
-                      class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 dark:bg-zinc-800 dark:text-zinc-100"
-                      maxlength="255"
-                      autocomplete="off"
-                    />
-                    <p class="text-sm text-gray-500 dark:text-zinc-400" th:text="#{account.github-token.hint}">
-                      Optional. Required to see activity from private repositories.
+                  <!-- Customer repos: GitHub App personal installation -->
+                  <div th:if="${githubLoginVerified and githubPersonalInstallConfigured}"
+                       class="flex flex-col gap-2 border-t border-gray-200 dark:border-zinc-700 pt-4">
+                    <span class="text-sm font-medium">Customer repos</span>
+                    <p class="text-xs text-gray-500 dark:text-zinc-400">
+                      Install the GitHub App in your personal account to sync activity
+                      from customer repositories you have been granted access to.
                     </p>
+
+                    <!-- Connected -->
+                    <div th:if="${githubInstallationId != null}"
+                         class="flex items-center gap-3 p-2 rounded border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-950">
+                      <span class="text-sm font-medium text-green-700 dark:text-green-300">✓ Connected</span>
+                      <span class="text-xs text-gray-500 dark:text-zinc-400"
+                            th:text="|Installation #${githubInstallationId}|"></span>
+                      <form th:action="@{/account/github/disconnect-personal}" method="post" class="ml-auto">
+                        <button type="submit" class="text-sm text-red-600 dark:text-red-400 hover:underline">
+                          Disconnect
+                        </button>
+                      </form>
+                    </div>
+
+                    <!-- Not connected -->
+                    <div th:if="${githubInstallationId == null}">
+                      <a href="/account/github/connect"
+                         class="button-secondary text-sm inline-flex items-center gap-2">
+                        Connect (customer repos)
+                      </a>
+                    </div>
                   </div>
 
-                  <!-- Notification preferences -->
-                  <div class="flex flex-col gap-1 border-t border-gray-200 dark:border-zinc-700 pt-4">
-                    <label class="flex items-center gap-3 cursor-pointer">
-                      <span class="checkbox-switch">
-                        <input type="checkbox" name="notificationsEnabled"
-                               th:checked="${notificationsEnabled}"
-                               class="peer mt-0.5"/>
-                      </span>
-                      <div class="flex flex-col">
-                        <span class="text-sm font-medium" th:text="#{account.notifications.label}">Email notifications</span>
-                        <span class="text-xs text-gray-500 dark:text-zinc-400" th:text="#{account.notifications.hint}">Lock warnings and weekly summary emails</span>
-                      </div>
-                    </label>
-                  </div>
+                </div>
 
+                <!-- Sticky save bar -->
+                <div style="position:sticky;bottom:-1px;z-index:999999;padding:8px 0;"
+                     class="bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-700 mt-8">
+                  <button
+                    type="submit"
+                    id="saveButton"
+                    class="button-main-green"
+                    th:disabled="${!githubLoginVerified and !#strings.isEmpty(githubLogin)}"
+                    th:text="#{account.save.button}"
+                  >Save</button>
+                </div>
+              </form>
+            </section>
+
+            <!-- ── Bitbucket ──────────────────────────────────────────────── -->
+            <section>
+              <h2 class="text-lg font-semibold dark:text-zinc-300 mb-1">Bitbucket</h2>
+              <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">
+                Connect your Bitbucket account to log time from pull request activity.
+              </p>
+
+              <div th:if="${!bitbucketConfigured}"
+                   class="p-3 rounded border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950 text-sm text-amber-800 dark:text-amber-200">
+                Bitbucket is not configured on this server.
+                An admin can set it up under <a href="/settings/git-activity" class="underline">Settings → Git Activity</a>.
               </div>
-              <!-- Sticky save bar -->
-              <div style="position:sticky;bottom:-1px;z-index:999999;padding:8px 0;"
-                   class="bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-700 mt-8">
-                <button
-                  type="submit"
-                  id="saveButton"
-                  class="button-main-green"
-                  th:disabled="${!githubLoginVerified and !#strings.isEmpty(githubLogin)}"
-                  th:text="#{account.save.button}"
-                >Save</button>
+
+              <div th:if="${bitbucketConfigured}">
+                <div th:if="${bitbucketConnected}"
+                     class="flex items-center gap-4 p-3 rounded border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-950">
+                  <span class="text-green-700 dark:text-green-300 font-medium">✓ Connected</span>
+                  <form th:action="@{/account/bitbucket/disconnect}" method="post" class="ml-auto">
+                    <button type="submit"
+                            class="text-sm text-red-600 dark:text-red-400 hover:underline">
+                      Disconnect
+                    </button>
+                  </form>
+                </div>
+                <div th:if="${!bitbucketConnected}">
+                  <a href="/account/bitbucket/connect" class="button-secondary inline-flex items-center gap-2">
+                    Connect Bitbucket
+                  </a>
+                </div>
               </div>
+            </section>
+
+            <!-- ── Notifications ──────────────────────────────────────────── -->
+            <section>
+              <h2 class="text-lg font-semibold dark:text-zinc-300 mb-1">Notifications</h2>
+              <form th:action="@{/account}" method="post">
+                <input type="hidden" name="githubLogin" th:value="${githubLogin}" />
+                <input type="hidden" name="githubLoginVerified" th:value="${githubLoginVerified}" />
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <span class="checkbox-switch">
+                    <input type="checkbox" name="notificationsEnabled"
+                           th:checked="${notificationsEnabled}"
+                           class="peer mt-0.5"/>
+                  </span>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium" th:text="#{account.notifications.label}">Email notifications</span>
+                    <span class="text-xs text-gray-500 dark:text-zinc-400" th:text="#{account.notifications.hint}">Lock warnings and weekly summary emails</span>
+                  </div>
+                </label>
+                <div class="mt-4">
+                  <button type="submit" class="button-secondary">Save</button>
+                </div>
               </form>
             </section>
 
@@ -179,11 +231,9 @@
           const verified = document.getElementById('githubLoginVerifiedField').value === 'true';
           const username = document.getElementById('githubLogin').value.trim();
           const btn = document.getElementById('saveButton');
-          // Allow save if: verified, or field is empty (clearing the value)
           btn.disabled = username !== '' && !verified;
         }
 
-        // When Turbo Frame loads the verify result, update the verified field
         document.addEventListener('turbo:frame-load', function(e) {
           if (e.target.id === 'github-verify-result') {
             const verifiedEl = e.target.querySelector('[data-verified]');

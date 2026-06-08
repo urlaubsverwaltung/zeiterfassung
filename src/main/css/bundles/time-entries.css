@@ -608,6 +608,169 @@
     }
   }
 
+  /* ── Compact read row ── */
+
+  .time-entry-read-row {
+    display: flex;
+    align-items: center;
+    gap: --spacing(3);
+    padding: --spacing(1.5) --spacing(4);
+    cursor: pointer;
+    min-height: 2.5rem;
+
+    &:hover {
+      background-color: color-mix(in srgb, currentColor 4%, transparent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-sky-500);
+      outline-offset: -2px;
+    }
+  }
+
+  .time-entry-read-row__time {
+    font-family: ui-monospace, monospace;
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    width: 7rem;
+    flex-shrink: 0;
+  }
+
+  .time-entry-read-row__duration {
+    font-family: ui-monospace, monospace;
+    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+    padding: --spacing(0.5) --spacing(1.5);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    background-color: var(--color-gray-100);
+    color: var(--color-gray-600);
+
+    @variant dark {
+      background-color: var(--color-zinc-700);
+      color: var(--color-zinc-300);
+    }
+  }
+
+  .time-entry-read-row__break {
+    font-size: var(--text-xs);
+    padding: --spacing(0.5) --spacing(1.5);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    background-color: color-mix(in srgb, var(--color-amber-500) 15%, transparent);
+    color: var(--color-amber-700);
+    border: 1px solid color-mix(in srgb, var(--color-amber-500) 30%, transparent);
+
+    @variant dark {
+      color: var(--color-amber-400);
+    }
+  }
+
+  .time-entry-read-row__project {
+    flex: 1;
+    font-size: var(--text-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .time-entry-read-row__comment {
+    font-size: var(--text-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 240px;
+    color: var(--color-gray-500);
+
+    @variant dark {
+      color: var(--color-zinc-400);
+    }
+  }
+
+  .time-entry-read-row__edit-icon {
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.1s;
+    color: var(--color-gray-400);
+
+    @variant dark {
+      color: var(--color-zinc-500);
+    }
+  }
+
+  .time-entry-read-row:hover .time-entry-read-row__edit-icon {
+    opacity: 1;
+  }
+
+  /* ── Show/hide toggle: hide edit form by default, show read row ── */
+
+  /* !important needed to override Tailwind's `flex` utility class on .time-entry-box */
+  [is="z-time-entry-element"] .time-entry-box {
+    display: none !important;
+  }
+
+  [is="z-time-entry-element"] [data-error-container] {
+    display: none;
+  }
+
+  [is="z-time-entry-element"][data-open] .time-entry-read-row {
+    display: none;
+  }
+
+  [is="z-time-entry-element"][data-open] .time-entry-box {
+    display: flex !important;
+  }
+
+  [is="z-time-entry-element"][data-open] [data-error-container] {
+    display: block;
+  }
+
+  /* ── Grouped card for entries under a day ── */
+
+  /* Use .time-entries-day nesting to match specificity of the shared gap rule above */
+  .time-entries-day .time-entries-day__entries {
+    gap: 0;
+
+    @variant md {
+      gap: 0;
+      /* Match the width of the green day banner pill (which sits beside an empty
+         .time-entry-box__controls spacer of width 20% + margin-left --spacing(4)) */
+      margin-right: calc(20% + --spacing(4));
+    }
+
+    @variant lg {
+      margin-right: calc(16.6667% + --spacing(4));
+    }
+  }
+
+  .time-entries-day__entries {
+    border-radius: var(--time-entries-box-border-radius);
+    border: 1px solid var(--color-gray-200);
+
+    @variant dark {
+      border-color: var(--timeslot-form-border-color);
+    }
+  }
+
+  [is="z-time-entry-element"]:not(:last-of-type) .time-entry-read-row {
+    border-bottom: 1px solid var(--color-gray-200);
+
+    @variant dark {
+      border-bottom-color: var(--timeslot-form-border-color);
+    }
+  }
+
+  [is="z-time-entry-element"]:first-of-type .time-entry-read-row {
+    border-top-left-radius: calc(var(--time-entries-box-border-radius) - 1px);
+    border-top-right-radius: calc(var(--time-entries-box-border-radius) - 1px);
+  }
+
+  [is="z-time-entry-element"]:last-of-type .time-entry-read-row {
+    border-bottom-left-radius: calc(var(--time-entries-box-border-radius) - 1px);
+    border-bottom-right-radius: calc(var(--time-entries-box-border-radius) - 1px);
+  }
+
   .time-entry-history-list {
     display: flex;
     flex-direction: column;

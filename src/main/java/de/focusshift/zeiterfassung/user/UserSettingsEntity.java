@@ -50,6 +50,15 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
     @Column(name = "notifications_enabled", nullable = false)
     private boolean notificationsEnabled = true;
 
+    /**
+     * GitHub App installation ID for the user's personal account.
+     * Set when the user installs the GitHub App in their own account to grant
+     * access to customer repos. Null means no personal installation connected.
+     */
+    @Column(name = "github_installation_id")
+    @Nullable
+    private Long githubInstallationId;
+
     protected UserSettingsEntity() {
         super(null);
     }
@@ -124,6 +133,14 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
 
     public void setNotificationsEnabled(boolean notificationsEnabled) {
         this.notificationsEnabled = notificationsEnabled;
+    }
+
+    public @Nullable Long getGithubInstallationId() {
+        return githubInstallationId;
+    }
+
+    public void setGithubInstallationId(@Nullable Long githubInstallationId) {
+        this.githubInstallationId = githubInstallationId;
     }
 
     @Override

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en" th:lang="${language}" th:class="|theme-${theme}|" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{_layout::head(title=~{::title})}">
+  <title>Git Activity Settings</title>
+</head>
+<body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
+<th:block th:ref="search">
+  <div th:replace="~{fragments/user-search::user-search(placeholder=#{user-search.input.placeholder})}"></div>
+</th:block>
+
+<th:block th:fragment="content">
+<main class="content-container content--max-w flex flex-col">
+  <div class="flex-1 flex flex-col mx-auto w-full max-w-3xl px-4 desktop:px-8 pb-24">
+
+    <div class="flex items-center gap-3 mb-8">
+      <a href="/settings" class="text-sm text-blue-600 dark:text-sky-400 hover:underline">← Settings</a>
+      <h1 class="text-xl font-bold">Git Activity</h1>
+    </div>
+
+    <!-- Save success banner -->
+    <div th:if="${savedSuccess}"
+         class="mb-6 p-4 bg-green-100 dark:bg-green-900 rounded-lg text-green-800 dark:text-green-200">
+      Settings saved.
+    </div>
+
+    <!-- ── GitHub ─────────────────────────────────────────────────────────── -->
+    <section class="mb-10">
+      <div class="flex items-center justify-between mb-1">
+        <h2 class="text-lg font-semibold dark:text-zinc-300">GitHub</h2>
+        <span th:if="${githubSettings.isConfigured()}"
+              class="text-xs font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900 px-2 py-0.5 rounded-full">
+          ● Active
+        </span>
+        <span th:if="${!githubSettings.isConfigured()}"
+              class="text-xs font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
+          ○ Not configured
+        </span>
+      </div>
+      <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">
+        Configure the GitHub App to sync pull request and commit activity.
+        The App needs Read-only access to Metadata, Contents, Issues, and Pull Requests.
+      </p>
+
+      <!-- Rate limit (only shown when active) -->
+      <div th:if="${githubSettings.isConfigured()}" class="mb-4 p-3 rounded bg-gray-50 dark:bg-zinc-800 text-sm">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-gray-600 dark:text-zinc-400">API rate limit</span>
+          <span class="font-mono text-xs" th:text="|${githubRateLimitRemaining} / ${githubRateLimitTotal}|">5000 / 5000</span>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-1.5">
+          <div class="h-1.5 rounded-full"
+               th:style="|width: ${githubRateLimitPercent}%; background-color: ${githubRateLimitPercent > 60 ? '#22c55e' : githubRateLimitPercent > 30 ? '#f59e0b' : '#ef4444'}|"></div>
+        </div>
+      </div>
+
+      <form th:action="@{/settings/git-activity/github}" method="post" class="flex flex-col gap-4 max-w-xl">
+
+        <div class="flex flex-col gap-1">
+          <label for="githubAppId" class="text-sm font-medium">App ID</label>
+          <input type="text" id="githubAppId" name="githubAppId"
+                 th:value="${githubSettings.appId()}"
+                 placeholder="e.g. 123456"
+                 class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 text-sm dark:bg-zinc-800 dark:text-zinc-100"
+                 autocomplete="off"/>
+          <p class="text-xs text-gray-500 dark:text-zinc-400">
+            Found on the GitHub App settings page (github.com/settings/apps/your-app).
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="githubPrivateKey" class="text-sm font-medium">Private key (PEM)</label>
+          <textarea id="githubPrivateKey" name="githubPrivateKey" rows="6"
+                    placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"
+                    class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 text-xs font-mono dark:bg-zinc-800 dark:text-zinc-100"
+                    autocomplete="off"
+                    th:text="${githubSettings.appSecret()}"></textarea>
+          <p class="text-xs text-gray-500 dark:text-zinc-400">
+            Download from the GitHub App settings page and paste the full PEM content here.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="githubOrgName" class="text-sm font-medium">Organisation login</label>
+          <input type="text" id="githubOrgName" name="githubOrgName"
+                 th:value="${githubSettings.orgName()}"
+                 placeholder="e.g. slint-ui"
+                 class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 text-sm dark:bg-zinc-800 dark:text-zinc-100"
+                 autocomplete="off"/>
+          <p class="text-xs text-gray-500 dark:text-zinc-400">
+            The GitHub organisation where the app is installed. Covers all repos in the org.
+            Leave blank if using personal installations only.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="githubAppName" class="text-sm font-medium">App slug</label>
+          <input type="text" id="githubAppName" name="githubAppName"
+                 th:value="${githubSettings.appName()}"
+                 placeholder="e.g. my-zeiterfassung"
+                 class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 text-sm dark:bg-zinc-800 dark:text-zinc-100"
+                 autocomplete="off"/>
+          <p class="text-xs text-gray-500 dark:text-zinc-400">
+            The app slug from the GitHub App URL (github.com/apps/<strong>slug</strong>).
+            Required for the "Connect customer repos" flow on the account page.
+            Also configure the GitHub App "Setup URL" to
+            <code class="text-xs bg-gray-100 dark:bg-zinc-700 px-1 rounded">https://&lt;your-domain&gt;/account/github/installed</code>.
+          </p>
+        </div>
+
+        <div>
+          <button type="submit" class="button-main-green">Save GitHub settings</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ── Bitbucket ──────────────────────────────────────────────────────── -->
+    <section>
+      <div class="flex items-center justify-between mb-1">
+        <h2 class="text-lg font-semibold dark:text-zinc-300">Bitbucket</h2>
+        <span th:if="${bitbucketSettings.isConfigured()}"
+              class="text-xs font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900 px-2 py-0.5 rounded-full">
+          ● Active
+        </span>
+        <span th:if="${!bitbucketSettings.isConfigured()}"
+              class="text-xs font-medium text-gray-500 dark:text-zinc-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
+          ○ Not configured
+        </span>
+      </div>
+      <p class="text-sm text-gray-500 dark:text-zinc-400 mb-4">
+        Configure a Bitbucket OAuth consumer so developers can connect their accounts and
+        sync pull request activity. Create an OAuth consumer in your Bitbucket workspace
+        (Settings → OAuth → Add consumer) with scopes: <code>account</code>, <code>pullrequest</code>, <code>repository</code>.
+      </p>
+
+      <form th:action="@{/settings/git-activity/bitbucket}" method="post" class="flex flex-col gap-4 max-w-xl">
+
+        <div class="flex flex-col gap-1">
+          <label for="bitbucketOauthKey" class="text-sm font-medium">OAuth consumer key</label>
+          <input type="text" id="bitbucketOauthKey" name="bitbucketOauthKey"
+                 th:value="${bitbucketSettings.appId()}"
+                 placeholder="Consumer key from Bitbucket workspace settings"
+                 class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 text-sm dark:bg-zinc-800 dark:text-zinc-100"
+                 autocomplete="off"/>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="bitbucketOauthSecret" class="text-sm font-medium">OAuth consumer secret</label>
+          <input type="password" id="bitbucketOauthSecret" name="bitbucketOauthSecret"
+                 th:value="${bitbucketSettings.appSecret()}"
+                 placeholder="Consumer secret"
+                 class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 text-sm dark:bg-zinc-800 dark:text-zinc-100"
+                 autocomplete="off"/>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="bitbucketWorkspace" class="text-sm font-medium">Workspace slug</label>
+          <input type="text" id="bitbucketWorkspace" name="bitbucketWorkspace"
+                 th:value="${bitbucketSettings.orgName()}"
+                 placeholder="e.g. my-workspace"
+                 class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 text-sm dark:bg-zinc-800 dark:text-zinc-100"
+                 autocomplete="off"/>
+          <p class="text-xs text-gray-500 dark:text-zinc-400">
+            Optional. The Bitbucket workspace slug — used to label the OAuth consumer in the UI.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="bitbucketCallbackUrl" class="text-sm font-medium">Callback URL</label>
+          <input type="text" id="bitbucketCallbackUrl" name="bitbucketCallbackUrl"
+                 th:value="${bitbucketSettings.callbackUrl()}"
+                 placeholder="https://timesheet.yourdomain.com/account/bitbucket/callback"
+                 class="border border-gray-300 dark:border-zinc-600 rounded px-3 py-2 text-sm dark:bg-zinc-800 dark:text-zinc-100"
+                 autocomplete="off"/>
+          <p class="text-xs text-gray-500 dark:text-zinc-400">
+            Must match the callback URL registered in the Bitbucket OAuth consumer settings.
+          </p>
+        </div>
+
+        <div>
+          <button type="submit" class="button-main-green">Save Bitbucket settings</button>
+        </div>
+      </form>
+    </section>
+
+  </div>
+</main>
+</th:block>
+</body>
+</html>

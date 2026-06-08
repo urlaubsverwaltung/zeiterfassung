@@ -3,9 +3,9 @@ package de.focusshift.zeiterfassung.ui;
 import com.microsoft.playwright.Page;
 import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
 import de.focusshift.zeiterfassung.TestKeycloakContainer;
-import de.focusshift.zeiterfassung.githubactivity.GitHubRawEventEntity;
-import de.focusshift.zeiterfassung.githubactivity.GitHubRawEventRepository;
-import de.focusshift.zeiterfassung.githubactivity.GitHubSyncService;
+import de.focusshift.zeiterfassung.gitactivity.GitActivityRawEventEntity;
+import de.focusshift.zeiterfassung.gitactivity.GitActivityRawEventRepository;
+import de.focusshift.zeiterfassung.gitactivity.GitHubActivityProvider;
 import de.focusshift.zeiterfassung.user.UserSettings;
 import de.focusshift.zeiterfassung.user.UserSettingsService;
 import de.focusshift.zeiterfassung.ui.extension.UiTest;
@@ -60,22 +60,22 @@ class GitHubActivityUIIT {
     private UserSettingsService userSettingsService;
 
     @MockitoBean
-    private GitHubRawEventRepository gitHubRawEventRepository;
+    private GitActivityRawEventRepository gitActivityRawEventRepository;
 
     @MockitoBean
-    private GitHubSyncService gitHubSyncService;
+    private GitHubActivityProvider gitHubProvider;
 
     @BeforeEach
     void setUpDefaultMocks() {
-        when(gitHubSyncService.isConfigured()).thenReturn(true);
-        when(gitHubSyncService.missingConfig()).thenReturn("");
-        when(gitHubSyncService.getLastSyncTime(anyString())).thenReturn(null);
-        when(gitHubSyncService.isRateLimitSafe()).thenReturn(true);
-        when(gitHubSyncService.getRateLimitReset()).thenReturn(java.time.Instant.MIN);
-        when(gitHubSyncService.getRateLimitPercent()).thenReturn(100);
-        when(gitHubSyncService.getRateLimitRemaining()).thenReturn(5000);
-        when(gitHubSyncService.getRateLimitTotal()).thenReturn(5000);
-        when(gitHubRawEventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
+        when(gitHubProvider.isConfigured()).thenReturn(true);
+        when(gitHubProvider.missingConfig()).thenReturn("");
+        when(gitHubProvider.getLastSyncTime(anyString())).thenReturn(null);
+        when(gitHubProvider.isRateLimitSafe()).thenReturn(true);
+        when(gitHubProvider.getRateLimitReset()).thenReturn(java.time.Instant.MIN);
+        when(gitHubProvider.getRateLimitPercent()).thenReturn(100);
+        when(gitHubProvider.getRateLimitRemaining()).thenReturn(5000);
+        when(gitHubProvider.getRateLimitTotal()).thenReturn(5000);
+        when(gitActivityRawEventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
             .thenReturn(Set.of());
         // Default user settings — extracted before thenReturn() to avoid UnfinishedStubbingException
         final UserSettings defaultSettings = userSettingsWithLogin("tronical");
@@ -96,11 +96,11 @@ class GitHubActivityUIIT {
         return settings;
     }
 
-    private GitHubRawEventEntity prEntity(
+    private GitActivityRawEventEntity prEntity(
         String eventId, String repo, String prNumber, String title, String summary) {
-        final var e = new GitHubRawEventEntity();
-        e.setGithubEventId(eventId);
-        e.setGithubUsername("tronical");
+        final var e = new GitActivityRawEventEntity();
+        e.setPlatformEventId(eventId);
+        e.setPlatformUsername("tronical");
         e.setEventType("PullRequestEvent");
         e.setRepoName(repo);
         e.setAnchorType("PR");
@@ -112,11 +112,11 @@ class GitHubActivityUIIT {
         return e;
     }
 
-    private GitHubRawEventEntity reviewEntity(
+    private GitActivityRawEventEntity reviewEntity(
         String eventId, String repo, String prNumber, String title, String summary) {
-        final var e = new GitHubRawEventEntity();
-        e.setGithubEventId(eventId);
-        e.setGithubUsername("tronical");
+        final var e = new GitActivityRawEventEntity();
+        e.setPlatformEventId(eventId);
+        e.setPlatformUsername("tronical");
         e.setEventType("PullRequestReviewEvent");
         e.setRepoName(repo);
         e.setAnchorType("PR");
@@ -128,11 +128,11 @@ class GitHubActivityUIIT {
         return e;
     }
 
-    private GitHubRawEventEntity issueEntity(
+    private GitActivityRawEventEntity issueEntity(
         String eventId, String repo, String issueNumber, String title, String summary) {
-        final var e = new GitHubRawEventEntity();
-        e.setGithubEventId(eventId);
-        e.setGithubUsername("tronical");
+        final var e = new GitActivityRawEventEntity();
+        e.setPlatformEventId(eventId);
+        e.setPlatformUsername("tronical");
         e.setEventType("IssuesEvent");
         e.setRepoName(repo);
         e.setAnchorType("ISSUE");
@@ -144,11 +144,11 @@ class GitHubActivityUIIT {
         return e;
     }
 
-    private GitHubRawEventEntity commitEntity(
+    private GitActivityRawEventEntity commitEntity(
         String sha, String repo, String branch, String message) {
-        final var e = new GitHubRawEventEntity();
-        e.setGithubEventId("tronical_commit_" + sha);
-        e.setGithubUsername("tronical");
+        final var e = new GitActivityRawEventEntity();
+        e.setPlatformEventId("tronical_commit_" + sha);
+        e.setPlatformUsername("tronical");
         e.setEventType("PushEvent");
         e.setRepoName(repo);
         e.setAnchorType("REPO");
@@ -188,8 +188,8 @@ class GitHubActivityUIIT {
         @Test
         void ensureEmptyStateIsShownWhenNoEvents(Page page) {
             // userSettingsService default stub set in setUpDefaultMocks() — no override needed
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of());
 
@@ -215,10 +215,10 @@ class GitHubActivityUIIT {
         @Test
         void ensureSyncNotConfiguredBannerIsShown(Page page) {
             // userSettingsService default stub set in setUpDefaultMocks() — no override needed
-            when(gitHubSyncService.isConfigured()).thenReturn(false);
-            when(gitHubSyncService.missingConfig()).thenReturn("GITHUB_APP_ID, GITHUB_APP_PRIVATE_KEY");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitHubProvider.isConfigured()).thenReturn(false);
+            when(gitHubProvider.missingConfig()).thenReturn("GITHUB_APP_ID, GITHUB_APP_PRIVATE_KEY");
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of());
 
@@ -242,12 +242,12 @@ class GitHubActivityUIIT {
             // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final var pr = prEntity("e1", "slint-ui/slint", "11950",
                 "Upgrade fontique and parley", "Merged PR #11950: Upgrade fontique and parley");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(pr));
-            when(gitHubRawEventRepository
-                .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
                     anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(Optional.of(pr));
         }
@@ -323,8 +323,8 @@ class GitHubActivityUIIT {
             // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final var review = reviewEntity("e2", "slint-ui/slint", "11958",
                 "Accessibility enhancements", "Approved PR #11958: Accessibility enhancements");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(review));
 
@@ -344,8 +344,8 @@ class GitHubActivityUIIT {
             // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final var review = reviewEntity("e2", "slint-ui/slint", "11958",
                 "Accessibility enhancements", "Approved PR #11958: Accessibility enhancements");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(review));
 
@@ -369,8 +369,8 @@ class GitHubActivityUIIT {
             // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final var issue = issueEntity("e3", "slint-ui/slint", "11949",
                 "Keys is anonymous type", "Opened issue #11949: Keys is anonymous type");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(issue));
 
@@ -390,8 +390,8 @@ class GitHubActivityUIIT {
             // userSettingsService default stub set in setUpDefaultMocks() — no override needed
             final var issue = issueEntity("e3", "slint-ui/slint", "11949",
                 "Keys is anonymous type", "Opened issue #11949: Keys is anonymous type");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(issue));
 
@@ -493,13 +493,13 @@ class GitHubActivityUIIT {
                 assertThat(activityPage.prSection().getByText("✓ Logged")).isVisible();
             }
 
-            private void stubPrEvents(GitHubRawEventEntity pr) {
-                when(gitHubRawEventRepository
-                    .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            private void stubPrEvents(GitActivityRawEventEntity pr) {
+                when(gitActivityRawEventRepository
+                    .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                         anyString(), any(), any()))
                     .thenReturn(List.of(pr));
-                when(gitHubRawEventRepository
-                    .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+                when(gitActivityRawEventRepository
+                    .findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
                         anyString(), anyString(), anyString(), anyString()))
                     .thenReturn(Optional.of(pr));
             }
@@ -570,9 +570,9 @@ class GitHubActivityUIIT {
                 assertThat(activityPage.reviewsSection().getByText("✓ Logged")).isVisible();
             }
 
-            private void stubReviewEvents(GitHubRawEventEntity review) {
-                when(gitHubRawEventRepository
-                    .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            private void stubReviewEvents(GitActivityRawEventEntity review) {
+                when(gitActivityRawEventRepository
+                    .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                         anyString(), any(), any()))
                     .thenReturn(List.of(review));
             }
@@ -643,9 +643,9 @@ class GitHubActivityUIIT {
                 assertThat(activityPage.issuesSection().getByText("✓ Logged")).isVisible();
             }
 
-            private void stubIssueEvents(GitHubRawEventEntity issue) {
-                when(gitHubRawEventRepository
-                    .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            private void stubIssueEvents(GitActivityRawEventEntity issue) {
+                when(gitActivityRawEventRepository
+                    .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                         anyString(), any(), any()))
                     .thenReturn(List.of(issue));
             }
@@ -659,8 +659,8 @@ class GitHubActivityUIIT {
             @Test
             void ensureStandaloneSectionIsNotVisible(Page page) {
                 final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix typo in docs");
-                when(gitHubRawEventRepository
-                    .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                when(gitActivityRawEventRepository
+                    .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                         anyString(), any(), any()))
                     .thenReturn(List.of(commit));
                 final var loginPage = new LoginPage(page, port);
@@ -683,8 +683,8 @@ class GitHubActivityUIIT {
 
         @Test
         void ensureSearchTriggerButtonIsVisible(Page page) {
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of());
 
@@ -699,8 +699,8 @@ class GitHubActivityUIIT {
 
         @Test
         void ensureSearchModalOpensByClickingTrigger(Page page) {
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of());
 
@@ -720,8 +720,8 @@ class GitHubActivityUIIT {
 
         @Test
         void ensureSearchModalOpensWithKeyboardShortcut(Page page) {
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of());
 
@@ -738,8 +738,8 @@ class GitHubActivityUIIT {
 
         @Test
         void ensureSearchModalClosesOnEscapeKey(Page page) {
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of());
 
@@ -759,8 +759,8 @@ class GitHubActivityUIIT {
 
         @Test
         void ensureSearchModalClosesOnBackdropClick(Page page) {
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of());
 
@@ -785,12 +785,12 @@ class GitHubActivityUIIT {
                 "Fix layout bug", "Merged PR #100: Fix layout bug");
             final var pr2 = prEntity("e2", "slint-ui/slint", "101",
                 "Add dark mode", "Opened PR #101: Add dark mode");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(pr1, pr2));
-            when(gitHubRawEventRepository
-                .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
                     anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(Optional.empty());
 
@@ -813,12 +813,12 @@ class GitHubActivityUIIT {
             final var review = reviewEntity("e2", "slint-ui/slint", "101", "Renderer review", "Approved PR #101: Renderer review");
             final var issue  = issueEntity("e3", "slint-ui/slint", "202", "Renderer crash", "Opened issue #202: Renderer crash");
             final var commit = commitEntity("abc123", "slint-ui/slint", "main", "Fix renderer path");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(pr, review, issue, commit));
-            when(gitHubRawEventRepository
-                .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
                     anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(Optional.empty());
 
@@ -838,12 +838,12 @@ class GitHubActivityUIIT {
         @Test
         void ensureSearchFilterShowsNoMatchStateWhenNothingMatches(Page page) {
             final var pr = prEntity("e1", "slint-ui/slint", "100", "Fix layout", "Merged PR #100: Fix layout");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(pr));
-            when(gitHubRawEventRepository
-                .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
                     anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(Optional.empty());
 
@@ -865,12 +865,12 @@ class GitHubActivityUIIT {
         void ensureSearchFilterIsCaseInsensitive(Page page) {
             final var pr = prEntity("e1", "slint-ui/slint", "100",
                 "Fix Layout Bug", "Merged PR #100: Fix Layout Bug");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(pr));
-            when(gitHubRawEventRepository
-                .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
                     anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(Optional.empty());
 
@@ -888,8 +888,8 @@ class GitHubActivityUIIT {
 
         @Test
         void ensureSearchAllDatesLinkAppearsAfterTyping(Page page) {
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of());
 
@@ -911,11 +911,11 @@ class GitHubActivityUIIT {
 
         @Test
         void ensureClickingAllDatesTabSwitchesMode(Page page) {
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of());
-            when(gitHubRawEventRepository.searchEvents(anyString(), anyString(), any(), any()))
+            when(gitActivityRawEventRepository.searchEvents(anyString(), anyString(), any(), any()))
                 .thenReturn(List.of());
 
             final var loginPage = new LoginPage(page, port);
@@ -934,14 +934,14 @@ class GitHubActivityUIIT {
 
         @Test
         void ensureAllDatesSearchShowsServerResults(Page page) {
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of());
             final var pr = prEntity("e1", "slint-ui/slint", "200",
                 "Fix rendering pipeline", "Merged PR #200: Fix rendering pipeline");
             pr.setEventTimestamp(Instant.parse("2026-05-20T10:00:00Z"));
-            when(gitHubRawEventRepository.searchEvents(anyString(), anyString(), any(), any()))
+            when(gitActivityRawEventRepository.searchEvents(anyString(), anyString(), any(), any()))
                 .thenReturn(List.of(pr));
 
             final var loginPage = new LoginPage(page, port);
@@ -960,11 +960,11 @@ class GitHubActivityUIIT {
 
         @Test
         void ensureAllDatesSearchShowsEmptyStateWhenNoResults(Page page) {
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of());
-            when(gitHubRawEventRepository.searchEvents(anyString(), anyString(), any(), any()))
+            when(gitActivityRawEventRepository.searchEvents(anyString(), anyString(), any(), any()))
                 .thenReturn(List.of());
 
             final var loginPage = new LoginPage(page, port);
@@ -985,12 +985,12 @@ class GitHubActivityUIIT {
         @Test
         void ensureClickingLogItInModalClosesModalAndOpensInlineForm(Page page) {
             final var pr = prEntity("e1", "slint-ui/slint", "100", "Fix bug", "Merged PR #100: Fix bug");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(pr));
-            when(gitHubRawEventRepository
-                .findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
                     anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(Optional.empty());
 
@@ -1018,8 +1018,8 @@ class GitHubActivityUIIT {
         void ensureStandaloneSectionIsHiddenEvenWhenCommitsExist(Page page) {
             final var commit = commitEntity("abc123", "slint-ui/slint", "simon/license",
                 "Replace cargo-about");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(commit));
 
@@ -1044,11 +1044,11 @@ class GitHubActivityUIIT {
             // appear as standalone once the COALESCE query returns the fork repo|branch key.
             final var commit = commitEntity("abc123def456abc123def456abc123def456abc1",
                 "LeonMatthes/slint", "fix-tree-sitter-grammar", "Setup improved tree-sitter harness");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(commit));
-            when(gitHubRawEventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
+            when(gitActivityRawEventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
                 .thenReturn(Set.of("LeonMatthes/slint|fix-tree-sitter-grammar"));
 
             final var loginPage = new LoginPage(page, port);
@@ -1066,15 +1066,15 @@ class GitHubActivityUIIT {
             // so the commit should appear in the PR section, not standalone.
             final var commit = commitEntity("abc123def456abc123def456abc123def456abc1",
                 "LeonMatthes/slint", "fix-tree-sitter-grammar", "Setup improved tree-sitter harness");
-            when(gitHubRawEventRepository
-                .findByGithubUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository
+                .findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
                     anyString(), any(), any()))
                 .thenReturn(List.of(commit));
-            when(gitHubRawEventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
+            when(gitActivityRawEventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any()))
                 .thenReturn(Set.of("LeonMatthes/slint|fix-tree-sitter-grammar"));
 
             // Standard same-repo lookup returns nothing
-            when(gitHubRawEventRepository.findFirstByGithubUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
+            when(gitActivityRawEventRepository.findFirstByPlatformUsernameAndRepoNameAndHeadBranchOrderByEventTimestampDesc(
                 anyString(), anyString(), anyString()))
                 .thenReturn(Optional.empty());
 
@@ -1082,10 +1082,10 @@ class GitHubActivityUIIT {
             final var prEntity = prEntity("e-pr-fork", "slint-ui/tree-sitter-slint", "1",
                 "Fix tree-sitter grammar", "Opened PR #1: Fix tree-sitter grammar");
             prEntity.setHeadBranch("fix-tree-sitter-grammar");
-            when(gitHubRawEventRepository.findFirstByGithubUsernameAndHeadRepoNameAndHeadBranchOrderByEventTimestampDesc(
+            when(gitActivityRawEventRepository.findFirstByPlatformUsernameAndHeadRepoNameAndHeadBranchOrderByEventTimestampDesc(
                 anyString(), anyString(), anyString()))
                 .thenReturn(Optional.of(prEntity));
-            when(gitHubRawEventRepository.findFirstByGithubUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
+            when(gitActivityRawEventRepository.findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
                 anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(Optional.of(prEntity));
 

@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.githubactivity;
+package de.focusshift.zeiterfassung.gitactivity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,7 +16,7 @@ import java.util.Objects;
 @Table(name = "github_raw_event", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"github_event_id"})
 })
-public class GitHubRawEventEntity {
+public class GitActivityRawEventEntity {
 
     @Id
     @Column(name = "id", unique = true, nullable = false, updatable = false)
@@ -24,11 +24,17 @@ public class GitHubRawEventEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "github_raw_event_seq")
     private Long id;
 
+    /** Provider-specific event identifier (e.g. GitHub event ID, GitLab event ID). */
     @Column(name = "github_event_id", nullable = false)
-    private String githubEventId;
+    private String platformEventId;
 
+    /** Provider-specific username (e.g. GitHub login, GitLab username). */
     @Column(name = "github_username", nullable = false)
-    private String githubUsername;
+    private String platformUsername;
+
+    /** Which provider produced this event — "GITHUB", "GITLAB", "BITBUCKET". */
+    @Column(name = "platform", nullable = false)
+    private String platform = "GITHUB";
 
     @Column(name = "event_type", nullable = false)
     private String eventType;
@@ -74,11 +80,14 @@ public class GitHubRawEventEntity {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getGithubEventId() { return githubEventId; }
-    public void setGithubEventId(String githubEventId) { this.githubEventId = githubEventId; }
+    public String getPlatformEventId() { return platformEventId; }
+    public void setPlatformEventId(String platformEventId) { this.platformEventId = platformEventId; }
 
-    public String getGithubUsername() { return githubUsername; }
-    public void setGithubUsername(String githubUsername) { this.githubUsername = githubUsername; }
+    public String getPlatformUsername() { return platformUsername; }
+    public void setPlatformUsername(String platformUsername) { this.platformUsername = platformUsername; }
+
+    public String getPlatform() { return platform; }
+    public void setPlatform(String platform) { this.platform = platform; }
 
     public String getEventType() { return eventType; }
     public void setEventType(String eventType) { this.eventType = eventType; }
@@ -120,7 +129,7 @@ public class GitHubRawEventEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        GitHubRawEventEntity that = (GitHubRawEventEntity) o;
+        GitActivityRawEventEntity that = (GitActivityRawEventEntity) o;
         return Objects.equals(id, that.id);
     }
 

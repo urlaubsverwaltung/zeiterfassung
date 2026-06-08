@@ -16,8 +16,13 @@ public class UserSettings {
     @Nullable
     private final String githubToken;
     private final boolean notificationsEnabled;
+    @Nullable
+    private final Long githubInstallationId;
 
-    UserSettings(Theme theme, Locale locale, Locale localeBrowserSpecific, @Nullable String githubLogin, boolean githubLoginVerified, @Nullable String githubToken, boolean notificationsEnabled) {
+    UserSettings(Theme theme, Locale locale, Locale localeBrowserSpecific,
+                 @Nullable String githubLogin, boolean githubLoginVerified,
+                 @Nullable String githubToken, boolean notificationsEnabled,
+                 @Nullable Long githubInstallationId) {
         this.theme = theme;
         this.locale = locale;
         this.localeBrowserSpecific = localeBrowserSpecific;
@@ -25,6 +30,7 @@ public class UserSettings {
         this.githubLoginVerified = githubLoginVerified;
         this.githubToken = githubToken;
         this.notificationsEnabled = notificationsEnabled;
+        this.githubInstallationId = githubInstallationId;
     }
 
     public Theme theme() {
@@ -53,5 +59,13 @@ public class UserSettings {
 
     public boolean notificationsEnabled() {
         return notificationsEnabled;
+    }
+
+    /**
+     * Returns the GitHub App installation ID for the user's personal account,
+     * or empty if no personal installation has been connected.
+     */
+    public Optional<Long> githubInstallationId() {
+        return Optional.ofNullable(githubInstallationId);
     }
 }

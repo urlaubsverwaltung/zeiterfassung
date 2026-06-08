@@ -5,7 +5,7 @@
   </head>
   <body>
     <form
-      th:fragment="timeentry-slot-form(formAction, timeEntry, actions, disabled, class)"
+      th:fragment="timeentry-slot-form(formAction, timeEntry, actions, disabled, class, showReadRow)"
       is="z-time-entry-slot-form"
       action="#"
       th:action="${formAction}"
@@ -25,6 +25,22 @@
           class="sr-only"
           th:text="${#temporals.format(timeEntry.date, 'dd. MMMM yyyy')}"
         ></h4>
+        <th:block th:if="${showReadRow ?: false}">
+          <div class="time-entry-read-row" data-read-row role="button" tabindex="0">
+            <span data-read-time class="time-entry-read-row__time">
+              <th:block th:if="${timeEntry.start != null}" th:text="${#temporals.format(timeEntry.start, 'HH:mm')}"></th:block>
+              <th:block th:if="${timeEntry.start != null and timeEntry.end != null}">–</th:block>
+              <th:block th:if="${timeEntry.end != null}" th:text="${#temporals.format(timeEntry.end, 'HH:mm')}"></th:block>
+            </span>
+            <span data-read-duration class="time-entry-read-row__duration" th:text="${timeEntry.duration}"></span>
+            <span th:if="${timeEntry.isBreak}" data-read-break class="time-entry-read-row__break" th:text="#{time-entry.form.is-break.label}">Break</span>
+            <span data-read-project class="time-entry-read-row__project"></span>
+            <span data-read-comment class="time-entry-read-row__comment" th:if="${timeEntry.comment}" th:text="${timeEntry.comment}"></span>
+            <svg class="time-entry-read-row__edit-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+            </svg>
+          </div>
+        </th:block>
         <div class="time-entry-box flex flex-col md:flex-row">
           <div class="time-entry-box__inputs flex-1 flex flex-col md:flex-row">
             <div
