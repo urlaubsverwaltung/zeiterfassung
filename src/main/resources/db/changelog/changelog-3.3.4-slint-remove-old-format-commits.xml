@@ -5,15 +5,18 @@
 
   <!--
     One-time cleanup of old-format commit entries created before the per-commit sync was
-    introduced. Old entries used "{pushEventId}_{shortSha}" as the platform_event_id;
+    introduced. Old entries used "{pushEventId}_{shortSha}" as the github_event_id;
     the current format is "{github_username}_commit_{sha}". Rows not matching the new
     prefix are stale and safe to delete — they will be re-synced on the next scheduled run.
+
+    Note: the JPA field is GitActivityRawEventEntity.platformEventId, but it maps to the
+    DB column github_event_id (@Column(name = "github_event_id")) — use the column name here.
   -->
   <changeSet author="slint" id="remove-old-format-push-event-commits">
     <sql>
       DELETE FROM github_raw_event
       WHERE event_type = 'PushEvent'
-        AND platform_event_id NOT LIKE CONCAT(github_username, '_commit_%')
+        AND github_event_id NOT LIKE CONCAT(github_username, '_commit_%')
     </sql>
   </changeSet>
 
