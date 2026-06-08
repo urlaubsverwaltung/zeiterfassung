@@ -205,17 +205,30 @@
               <form th:action="@{/account}" method="post">
                 <input type="hidden" name="githubLogin" th:value="${githubLogin}" />
                 <input type="hidden" name="githubLoginVerified" th:value="${githubLoginVerified}" />
-                <label class="flex items-center gap-3 cursor-pointer">
-                  <span class="checkbox-switch">
-                    <input type="checkbox" name="notificationsEnabled"
-                           th:checked="${notificationsEnabled}"
-                           class="peer mt-0.5"/>
-                  </span>
-                  <div class="flex flex-col">
-                    <span class="text-sm font-medium" th:text="#{account.notifications.label}">Email notifications</span>
-                    <span class="text-xs text-gray-500 dark:text-zinc-400" th:text="#{account.notifications.hint}">Lock warnings and weekly summary emails</span>
-                  </div>
-                </label>
+                <div class="flex flex-col gap-4">
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <span class="checkbox-switch">
+                      <input type="checkbox" name="notificationsEnabled"
+                             th:checked="${notificationsEnabled}"
+                             class="peer mt-0.5"/>
+                    </span>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-medium" th:text="#{account.notifications.label}">Email notifications</span>
+                      <span class="text-xs text-gray-500 dark:text-zinc-400" th:text="#{account.notifications.hint}">Lock warnings and weekly summary emails</span>
+                    </div>
+                  </label>
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <span class="checkbox-switch">
+                      <input type="checkbox" name="showStandaloneCommits"
+                             th:checked="${showStandaloneCommits}"
+                             class="peer mt-0.5"/>
+                    </span>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-medium">Show standalone commits</span>
+                      <span class="text-xs text-gray-500 dark:text-zinc-400">Display commits that are not linked to a pull request in the Git Activity view</span>
+                    </div>
+                  </label>
+                </div>
                 <div class="mt-4">
                   <button type="submit" class="button-secondary">Save</button>
                 </div>

@@ -18,11 +18,12 @@ public class UserSettings {
     private final boolean notificationsEnabled;
     @Nullable
     private final Long githubInstallationId;
+    private final boolean showStandaloneCommits;
 
     UserSettings(Theme theme, Locale locale, Locale localeBrowserSpecific,
                  @Nullable String githubLogin, boolean githubLoginVerified,
                  @Nullable String githubToken, boolean notificationsEnabled,
-                 @Nullable Long githubInstallationId) {
+                 @Nullable Long githubInstallationId, boolean showStandaloneCommits) {
         this.theme = theme;
         this.locale = locale;
         this.localeBrowserSpecific = localeBrowserSpecific;
@@ -31,6 +32,7 @@ public class UserSettings {
         this.githubToken = githubToken;
         this.notificationsEnabled = notificationsEnabled;
         this.githubInstallationId = githubInstallationId;
+        this.showStandaloneCommits = showStandaloneCommits;
     }
 
     public Theme theme() {
@@ -67,5 +69,9 @@ public class UserSettings {
      */
     public Optional<Long> githubInstallationId() {
         return Optional.ofNullable(githubInstallationId);
+    }
+
+    public boolean showStandaloneCommits() {
+        return showStandaloneCommits;
     }
 }

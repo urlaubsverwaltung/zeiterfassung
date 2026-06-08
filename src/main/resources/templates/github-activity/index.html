@@ -439,7 +439,7 @@
           </section>
 
           <!-- ── Standalone Commits ────────────────────────────────────── -->
-          <section th:if="false" data-testid="github-activity-standalone-section" class="mb-8">
+          <section th:if="${showStandaloneCommits and !#lists.isEmpty(standaloneAnchors)}" data-testid="github-activity-standalone-section" class="mb-8">
             <h2 class="text-base font-semibold text-gray-700 dark:text-zinc-200 mb-2">Standalone Commits</h2>
 
             <div th:each="anchor, anchorStat : ${standaloneAnchors}"

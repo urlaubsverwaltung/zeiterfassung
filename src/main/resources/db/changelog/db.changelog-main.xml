@@ -59,4 +59,5 @@
   <include relativeToChangelogFile="true" file="changelog-3.3.2-slint-github-user-installation.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.3.3-slint-git-activity-platform-settings.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.3.4-slint-remove-old-format-commits.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-3.3.5-slint-show-standalone-commits.xml"/>
 </databaseChangeLog>

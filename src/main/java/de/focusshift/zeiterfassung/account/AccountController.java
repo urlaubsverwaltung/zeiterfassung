@@ -81,12 +81,14 @@ class AccountController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     ModelAndView saveAccount(@RequestParam(value = "githubLogin", required = false) String githubLogin,
                              @RequestParam(value = "githubLoginVerified", required = false, defaultValue = "false") boolean verified,
                              @RequestParam(value = "notificationsEnabled", required = false, defaultValue = "false") boolean notificationsEnabled,
+                             @RequestParam(value = "showStandaloneCommits", required = false, defaultValue = "false") boolean showStandaloneCommits,
                              @CurrentUser CurrentOidcUser currentOidcUser, Model model) {
         final String trimmed = githubLogin != null ? githubLogin.trim() : null;
         final String toSave = trimmed != null && !trimmed.isEmpty() ? trimmed : null;
         final boolean saveVerified = toSave != null && verified;
         userSettingsService.updateGithubLogin(currentOidcUser.getUserIdComposite(), toSave, saveVerified);
         userSettingsService.updateNotificationsEnabled(currentOidcUser.getUserIdComposite(), notificationsEnabled);
+        userSettingsService.updateShowStandaloneCommits(currentOidcUser.getUserIdComposite(), showStandaloneCommits);
         final Long userLocalId = currentOidcUser.getUserIdComposite().localId().value();
         final UserSettings refreshed = userSettingsService.getUserSettings(currentOidcUser.getUserIdComposite());
         populateModel(model, currentOidcUser, refreshed, userLocalId, true);
@@ -182,6 +184,7 @@ class AccountController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         model.addAttribute("githubLogin", userSettings.githubLogin().orElse(""));
         model.addAttribute("githubLoginVerified", userSettings.githubLoginVerified());
         model.addAttribute("notificationsEnabled", userSettings.notificationsEnabled());
+        model.addAttribute("showStandaloneCommits", userSettings.showStandaloneCommits());
         // GitHub personal install (customer repos)
         model.addAttribute("githubPersonalInstallConfigured", gh.isPersonalInstallConfigured());
         model.addAttribute("githubInstallationId", userSettings.githubInstallationId().orElse(null));

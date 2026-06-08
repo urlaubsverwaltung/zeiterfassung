@@ -75,9 +75,14 @@ class GitActivityControllerTest implements ControllerTest {
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private UserSettings userSettingsWith(String githubLogin) {
+        return userSettingsWith(githubLogin, false);
+    }
+
+    private UserSettings userSettingsWith(String githubLogin, boolean showStandaloneCommits) {
         final UserSettings settings = mock(UserSettings.class);
         when(settings.githubLoginVerified()).thenReturn(true);
         when(settings.githubLogin()).thenReturn(java.util.Optional.ofNullable(githubLogin));
+        when(settings.showStandaloneCommits()).thenReturn(showStandaloneCommits);
         return settings;
     }
 
@@ -1169,6 +1174,85 @@ class GitActivityControllerTest implements ControllerTest {
                 .andExpect(status().isOk());
 
             assertThat(event.getLoggedAt()).isNotNull();
+        }
+    }
+
+    // ── showStandaloneCommits user setting ────────────────────────────────────
+
+    @Nested
+    class StandaloneCommitsToggle {
+
+        @Test
+        void ensureShowStandaloneCommitsFalseByDefault() throws Exception {
+            stubCommonDependencies("tronical");
+            final var commit = commitEntity("sha1", "slint-ui/slint", "main", "Fix crash");
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(commit));
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("showStandaloneCommits", false));
+        }
+
+        @Test
+        void ensureShowStandaloneCommitsTrueWhenEnabledInUserSettings() throws Exception {
+            final UserSettings settings = userSettingsWith("tronical", true);
+            when(userSettingsService.getUserSettings(any())).thenReturn(settings);
+            when(userSettingsProvider.zoneId()).thenReturn(ZoneOffset.UTC);
+            when(timeEntryLockService.isLocked(any(LocalDate.class))).thenReturn(false);
+            when(gitHubProvider.isConfigured()).thenReturn(true);
+            when(gitHubProvider.getLastSyncTime(anyString())).thenReturn(null);
+            when(gitHubProvider.isRateLimitSafe()).thenReturn(true);
+            when(gitHubProvider.getRateLimitReset()).thenReturn(java.time.Instant.MIN);
+            when(gitHubProvider.getRateLimitPercent()).thenReturn(100);
+            when(gitHubProvider.getRateLimitRemaining()).thenReturn(5000);
+            when(gitHubProvider.getRateLimitTotal()).thenReturn(5000);
+            when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any())).thenReturn(Set.of());
+            when(workingTimeSettingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("showStandaloneCommits", true));
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureHasActivityFalseForCommitOnlyDayWhenStandaloneCommitsDisabled() throws Exception {
+            stubCommonDependencies("tronical");
+            final var commit = commitEntity("sha1", "slint-ui/slint", "main", "Fix crash");
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(commit));
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("hasActivity", false));
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        void ensureHasActivityTrueForCommitOnlyDayWhenStandaloneCommitsEnabled() throws Exception {
+            final UserSettings settings = userSettingsWith("tronical", true);
+            when(userSettingsService.getUserSettings(any())).thenReturn(settings);
+            when(userSettingsProvider.zoneId()).thenReturn(ZoneOffset.UTC);
+            when(timeEntryLockService.isLocked(any(LocalDate.class))).thenReturn(false);
+            when(gitHubProvider.isConfigured()).thenReturn(true);
+            when(gitHubProvider.getLastSyncTime(anyString())).thenReturn(null);
+            when(gitHubProvider.isRateLimitSafe()).thenReturn(true);
+            when(gitHubProvider.getRateLimitReset()).thenReturn(java.time.Instant.MIN);
+            when(gitHubProvider.getRateLimitPercent()).thenReturn(100);
+            when(gitHubProvider.getRateLimitRemaining()).thenReturn(5000);
+            when(gitHubProvider.getRateLimitTotal()).thenReturn(5000);
+            when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any())).thenReturn(Set.of());
+            when(workingTimeSettingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
+            final var commit = commitEntity("sha1", "slint-ui/slint", "main", "Fix crash");
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of(commit));
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("hasActivity", true));
         }
     }
 

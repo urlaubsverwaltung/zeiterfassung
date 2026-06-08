@@ -163,10 +163,12 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
         model.addAttribute("prAnchors", allPrAnchors);
         model.addAttribute("reviewAnchors", reviewAnchors);
         model.addAttribute("issueAnchors", issueAnchors);
+        final boolean showStandaloneCommits = userSettings.showStandaloneCommits();
         model.addAttribute("standaloneAnchors", standaloneAnchors);
+        model.addAttribute("showStandaloneCommits", showStandaloneCommits);
         model.addAttribute("hasActivity",
             !allPrAnchors.isEmpty() || !reviewAnchors.isEmpty()
-            || !issueAnchors.isEmpty() || !standaloneAnchors.isEmpty());
+            || !issueAnchors.isEmpty() || (showStandaloneCommits && !standaloneAnchors.isEmpty()));
         model.addAttribute("userLocalId", userLocalId);
         model.addAttribute("isLocked", timeEntryLockService.isLocked(selectedDate));
         model.addAttribute("syncConfigured", gitHubProvider.isConfigured());

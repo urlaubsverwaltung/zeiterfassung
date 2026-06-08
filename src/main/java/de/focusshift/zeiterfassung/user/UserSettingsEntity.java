@@ -59,6 +59,9 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
     @Nullable
     private Long githubInstallationId;
 
+    @Column(name = "show_standalone_commits", nullable = false)
+    private boolean showStandaloneCommits = false;
+
     protected UserSettingsEntity() {
         super(null);
     }
@@ -141,6 +144,14 @@ public class UserSettingsEntity extends AbstractTenantAwareEntity {
 
     public void setGithubInstallationId(@Nullable Long githubInstallationId) {
         this.githubInstallationId = githubInstallationId;
+    }
+
+    public boolean isShowStandaloneCommits() {
+        return showStandaloneCommits;
+    }
+
+    public void setShowStandaloneCommits(boolean showStandaloneCommits) {
+        this.showStandaloneCommits = showStandaloneCommits;
     }
 
     @Override

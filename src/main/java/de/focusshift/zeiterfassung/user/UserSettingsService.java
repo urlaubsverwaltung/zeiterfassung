@@ -165,6 +165,12 @@ public class UserSettingsService {
             .map(UserSettingsEntity::getGithubInstallationId);
     }
 
+    public UserSettings updateShowStandaloneCommits(UserIdComposite userIdComposite, boolean show) {
+        final UserSettingsEntity entity = findOrGetDefault(userIdComposite);
+        entity.setShowStandaloneCommits(show);
+        return toUserSettings(userSettingsRepository.save(entity));
+    }
+
     private static UserSettings toUserSettings(UserSettingsEntity userSettingsEntity) {
         return new UserSettings(
             userSettingsEntity.getTheme(),
@@ -174,7 +180,8 @@ public class UserSettingsService {
             userSettingsEntity.isGithubLoginVerified(),
             userSettingsEntity.getGithubToken(),
             userSettingsEntity.isNotificationsEnabled(),
-            userSettingsEntity.getGithubInstallationId()
+            userSettingsEntity.getGithubInstallationId(),
+            userSettingsEntity.isShowStandaloneCommits()
         );
     }
 
