@@ -49,8 +49,12 @@
                 <span th:text="${#temporals.format(lastSyncedAt, 'd MMM HH:mm')}"></span>
               </span>
               <span th:if="${lastSyncedAt == null}"
-                    class="text-xs text-gray-400 dark:text-zinc-500"
-                    th:text="#{github-activity.never-synced}">Never synced</span>
+                    class="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+                <span th:text="#{github-activity.never-synced-hint}">Not synced yet — click Refresh to load your activity</span>
+              </span>
               <!-- Refresh button with battery-style fill indicator.
                    A thin bar drains left-to-right as the API rate limit is consumed,
                    shifting colour from green → amber → red. Disabled when limit is low. -->
