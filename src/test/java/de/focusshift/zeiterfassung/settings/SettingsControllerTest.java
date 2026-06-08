@@ -264,6 +264,24 @@ class SettingsControllerTest implements ControllerTest {
         verify(settingsService).updateSubtractBreakFromTimeEntrySettings(true, LocalDate.parse("2025-05-30").atStartOfDay().toInstant(UTC));
     }
 
+    @Test
+    void ensureUpdateSettingsSavesAutomaticBreakDeductionSettings() throws Exception {
+
+        when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+        perform(post("/settings")
+            .param("federalState", "NONE")
+            .param("worksOnPublicHoliday", "false")
+            .param("lockingIsActive", "false")
+            .param("automaticBreakDeductionIsActive", "true")
+            .param("automaticBreakDeductionActiveDate", "2025-05-30")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/settings"));
+
+        verify(settingsService).updateAutomaticBreakDeductionSettings(true, LocalDate.parse("2025-05-30").atStartOfDay().toInstant(UTC));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"0", "1"})
     void ensureUpdateLockTimeSettingsWithDisabledLockingAndZeroOrPositiveDaysInPast(String daysInPast) throws Exception {

@@ -117,6 +117,21 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
             settingsService.updateSubtractBreakFromTimeEntrySettings(subtractBreakFromTimeEntryIsActive, timestamp);
         }
 
+        final Boolean automaticBreakDeductionIsActive = settingsDto.automaticBreakDeductionIsActive();
+        if (automaticBreakDeductionIsActive != null) {
+            final LocalDate date = settingsDto.automaticBreakDeductionActiveDate();
+
+            final Instant timestamp;
+            if (date == null) {
+                timestamp = null;
+            } else {
+                final ZoneId zoneId = userSettingsProvider.zoneId();
+                timestamp = date.atStartOfDay(zoneId).toInstant();
+            }
+
+            settingsService.updateAutomaticBreakDeductionSettings(automaticBreakDeductionIsActive, timestamp);
+        }
+
         return new ModelAndView("redirect:/settings");
     }
 
