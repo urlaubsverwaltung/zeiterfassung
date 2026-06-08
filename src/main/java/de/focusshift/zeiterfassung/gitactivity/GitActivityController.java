@@ -164,10 +164,11 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
         model.addAttribute("rateLimitTotal", gitHubProvider.getRateLimitTotal());
         model.addAttribute("rateLimitFillColor",
             rateLimitPercent > 60 ? "#22c55e" : rateLimitPercent > 30 ? "#f59e0b" : "#ef4444");
-        if (!rateLimitSafe && gitHubProvider.getRateLimitReset().isAfter(Instant.MIN)) {
+        final Instant rateLimitReset = gitHubProvider.getRateLimitReset();
+        if (!rateLimitSafe && rateLimitReset.isAfter(Instant.MIN)) {
             model.addAttribute("rateLimitResetAt",
-                gitHubProvider.getRateLimitReset().atZone(zone)
-                    .format(DateTimeFormatter.ofPattern("HH:mm")));
+                rateLimitReset.atZone(zone).format(DateTimeFormatter.ofPattern("HH:mm")));
+            model.addAttribute("rateLimitResetEpoch", rateLimitReset.getEpochSecond());
         }
 
         return "github-activity/index";
