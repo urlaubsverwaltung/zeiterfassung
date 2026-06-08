@@ -33,7 +33,7 @@ class SettingsDtoValidatorTest {
     @Test
     void ensureFederalStateMustNotBeNull() {
 
-        final SettingsDto settingsDto = new SettingsDto(null, false, false, null, false, null);
+        final SettingsDto settingsDto = new SettingsDto(null, false, false, null, false, null, null, null);
         sut.validate(settingsDto, errors);
 
         verify(errors).rejectValue("federalState", "jakarta.validation.constraints.NotNull.message");
@@ -42,7 +42,7 @@ class SettingsDtoValidatorTest {
     @Test
     void ensureFederalStateValid() {
 
-        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, false, null, false, null);
+        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, false, null, false, null, null, null);
         sut.validate(settingsDto, errors);
 
         verifyNoInteractions(errors);
@@ -53,7 +53,7 @@ class SettingsDtoValidatorTest {
     @NullSource
     void ensureLockTimeEntriesInPastMustBePositiveWhenFeatureIsEnabled(String input) {
 
-        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, true, input, false, null);
+        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, true, input, false, null, null, null);
         sut.validate(settingsDto, errors);
 
         verify(errors).rejectValue("lockTimeEntriesDaysInPast", "settings.lock-timeentries-days-in-past.validation.positiveOrZero");
@@ -64,7 +64,7 @@ class SettingsDtoValidatorTest {
     @NullSource
     void ensureLockTimeEntriesValidWhenFeatureDisabled(String input) {
 
-        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, false, input, false, null);
+        final SettingsDto settingsDto = new SettingsDto(GERMANY_BADEN_WUERTTEMBERG, false, false, input, false, null, null, null);
         sut.validate(settingsDto, errors);
 
         verifyNoInteractions(errors);
@@ -81,6 +81,8 @@ class SettingsDtoValidatorTest {
                 false,
                 "30",
                 false,
+                null,
+                null,
                 null
             );
 
@@ -96,6 +98,8 @@ class SettingsDtoValidatorTest {
                 false,
                 "30",
                 true,
+                null,
+                null,
                 null
             );
 
@@ -112,7 +116,9 @@ class SettingsDtoValidatorTest {
                 false,
                 "30",
                 true,
-                LocalDate.now()
+                LocalDate.now(),
+                null,
+                null
             );
 
             sut.validate(settingsDto, errors);
