@@ -4,10 +4,9 @@ import de.focusshift.zeiterfassung.email.EMailConstants;
 import de.focusshift.zeiterfassung.email.EMailService;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextRunner;
-import de.focusshift.zeiterfassung.timeentry.TimeEntry;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryDay;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDayService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
-import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryWeek;
 import de.focusshift.zeiterfassung.user.UserSettings;
 import de.focusshift.zeiterfassung.user.UserSettingsService;
@@ -19,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.threeten.extra.YearWeek;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
+
+import java.util.Optional;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
@@ -40,7 +41,6 @@ class NotificationServiceImpl implements NotificationService {
     private final TenantContextRunner tenantContextRunner;
     private final UserManagementService userManagementService;
     private final UserSettingsService userSettingsService;
-    private final TimeEntryService timeEntryService;
     private final TimeEntryDayService timeEntryDayService;
     private final TimeEntryLockService timeEntryLockService;
     private final EMailService eMailService;
@@ -51,7 +51,6 @@ class NotificationServiceImpl implements NotificationService {
         TenantContextRunner tenantContextRunner,
         UserManagementService userManagementService,
         UserSettingsService userSettingsService,
-        TimeEntryService timeEntryService,
         TimeEntryDayService timeEntryDayService,
         TimeEntryLockService timeEntryLockService,
         EMailService eMailService,
@@ -61,7 +60,6 @@ class NotificationServiceImpl implements NotificationService {
         this.tenantContextRunner = tenantContextRunner;
         this.userManagementService = userManagementService;
         this.userSettingsService = userSettingsService;
-        this.timeEntryService = timeEntryService;
         this.timeEntryDayService = timeEntryDayService;
         this.timeEntryLockService = timeEntryLockService;
         this.eMailService = eMailService;
@@ -92,6 +90,7 @@ class NotificationServiceImpl implements NotificationService {
         // The day that is (threshold - 2) days ago will be locked in exactly 2 nights
         final LocalDate today = LocalDate.now(clock);
         final LocalDate warningDate = today.minusDays(lockSettings.lockTimeEntriesDaysInPast() - 2);
+        final YearWeek weekOfWarning = YearWeek.from(warningDate);
 
         LOG.info("Checking lock warnings for date={}", warningDate);
 
@@ -101,8 +100,34 @@ class NotificationServiceImpl implements NotificationService {
             final UserSettings settings = userSettingsService.getUserSettings(user.userIdComposite());
             if (!settings.notificationsEnabled()) continue;
 
-            final List<TimeEntry> entries = timeEntryService.getEntries(warningDate, warningDate.plusDays(1), user.userLocalId());
-            if (entries.stream().anyMatch(e -> !e.isBreak())) continue; // has entries, skip
+            // Fetch the full day context: planned hours, absences, and existing entries.
+            // This covers working schedule (day of week), public holidays, and approved absences.
+            final Optional<TimeEntryDay> warningDayOpt = timeEntryDayService
+                .getEntryWeekPage(user.userLocalId(), weekOfWarning.getYear(), weekOfWarning.getWeek())
+                .timeEntryWeek()
+                .days()
+                .stream()
+                .filter(d -> d.date().equals(warningDate))
+                .findFirst();
+
+            if (warningDayOpt.isEmpty()) continue;
+            final TimeEntryDay warningDay = warningDayOpt.get();
+
+            // Skip if the user is not expected to work on this day
+            // (non-working day of week, public holiday they don't work on)
+            if (warningDay.shouldWorkingHours().durationInMinutes().isZero()) {
+                LOG.debug("Skipping lock warning for user={} on {}: no work planned", user.userLocalId().value(), warningDate);
+                continue;
+            }
+
+            // Skip if the user has an approved absence (vacation, sick leave, etc.)
+            if (!warningDay.absences().isEmpty()) {
+                LOG.debug("Skipping lock warning for user={} on {}: has absence", user.userLocalId().value(), warningDate);
+                continue;
+            }
+
+            // Skip if the user already has time entries for the day
+            if (warningDay.timeEntries().stream().anyMatch(e -> !e.isBreak())) continue;
 
             LOG.info("Sending lock warning to user={} for date={}", user.userLocalId().value(), warningDate);
             sendLockWarningEmail(user, warningDate, lockSettings.lockTimeEntriesDaysInPast());
