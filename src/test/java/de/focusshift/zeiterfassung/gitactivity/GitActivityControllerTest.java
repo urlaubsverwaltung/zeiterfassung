@@ -93,7 +93,7 @@ class GitActivityControllerTest implements ControllerTest {
         when(gitHubProvider.getRateLimitTotal()).thenReturn(5000);
         when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any())).thenReturn(Set.of());
         when(workingTimeSettingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
-        when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any())).thenReturn(List.of());
+        when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any(de.focusshift.zeiterfassung.usermanagement.UserLocalId.class))).thenReturn(List.of());
     }
 
     private GitActivityRawEventEntity entity(String eventId, String type, String repo,
@@ -986,7 +986,7 @@ class GitActivityControllerTest implements ControllerTest {
             final de.focusshift.zeiterfassung.timeentry.TimeEntry entry =
                 mock(de.focusshift.zeiterfassung.timeentry.TimeEntry.class);
             when(entry.durationInMinutes()).thenReturn(java.time.Duration.ofMinutes(90));
-            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any()))
+            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any(de.focusshift.zeiterfassung.usermanagement.UserLocalId.class)))
                 .thenReturn(List.of(entry));
 
             perform(get("/github-activity").with(oidcSubject("user-uuid")))
@@ -1003,7 +1003,7 @@ class GitActivityControllerTest implements ControllerTest {
             final de.focusshift.zeiterfassung.timeentry.TimeEntry entry =
                 mock(de.focusshift.zeiterfassung.timeentry.TimeEntry.class);
             when(entry.durationInMinutes()).thenReturn(java.time.Duration.ofHours(3));
-            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any()))
+            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any(de.focusshift.zeiterfassung.usermanagement.UserLocalId.class)))
                 .thenReturn(List.of(entry));
 
             perform(get("/github-activity").with(oidcSubject("user-uuid")))
@@ -1020,7 +1020,7 @@ class GitActivityControllerTest implements ControllerTest {
             final de.focusshift.zeiterfassung.timeentry.TimeEntry entry =
                 mock(de.focusshift.zeiterfassung.timeentry.TimeEntry.class);
             when(entry.durationInMinutes()).thenReturn(java.time.Duration.ofMinutes(45));
-            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any()))
+            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any(de.focusshift.zeiterfassung.usermanagement.UserLocalId.class)))
                 .thenReturn(List.of(entry));
 
             perform(get("/github-activity").with(oidcSubject("user-uuid")))
@@ -1040,7 +1040,7 @@ class GitActivityControllerTest implements ControllerTest {
                 mock(de.focusshift.zeiterfassung.timeentry.TimeEntry.class);
             when(e1.durationInMinutes()).thenReturn(java.time.Duration.ofMinutes(60));
             when(e2.durationInMinutes()).thenReturn(java.time.Duration.ofMinutes(45));
-            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any()))
+            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any(de.focusshift.zeiterfassung.usermanagement.UserLocalId.class)))
                 .thenReturn(List.of(e1, e2));
 
             perform(get("/github-activity").with(oidcSubject("user-uuid")))
