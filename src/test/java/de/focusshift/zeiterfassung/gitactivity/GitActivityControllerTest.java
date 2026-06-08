@@ -92,6 +92,7 @@ class GitActivityControllerTest implements ControllerTest {
         when(gitHubProvider.getRateLimitRemaining()).thenReturn(5000);
         when(gitHubProvider.getRateLimitTotal()).thenReturn(5000);
         when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any())).thenReturn(Set.of());
+        when(eventRepository.findEarliestPrTimestamps(anyString(), any())).thenReturn(List.of());
         when(workingTimeSettingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
     }
 

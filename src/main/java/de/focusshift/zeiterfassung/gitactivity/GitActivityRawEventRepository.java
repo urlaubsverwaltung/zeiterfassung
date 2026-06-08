@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -17,6 +18,20 @@ public interface GitActivityRawEventRepository extends JpaRepository<GitActivity
 
     List<GitActivityRawEventEntity> findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
         String platformUsername, Instant from, Instant to);
+
+    /**
+     * Returns the earliest event timestamp per (repoName, anchorId) pair for the given PR anchor IDs.
+     * Each row is [repoName (String), anchorId (String), minTimestamp (Instant)].
+     * Used to batch-load PR opened-dates in a single query instead of one query per PR.
+     */
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT e.repoName, e.anchorId, MIN(e.eventTimestamp) " +
+        "FROM GitActivityRawEventEntity e " +
+        "WHERE e.platformUsername = :username AND e.anchorType = 'PR' AND e.anchorId IN :anchorIds " +
+        "GROUP BY e.repoName, e.anchorId")
+    List<Object[]> findEarliestPrTimestamps(
+        @org.springframework.data.repository.query.Param("username") String username,
+        @org.springframework.data.repository.query.Param("anchorIds") Collection<String> anchorIds);
 
     Optional<GitActivityRawEventEntity> findFirstByPlatformUsernameAndRepoNameAndAnchorTypeAndAnchorIdOrderByEventTimestampAsc(
         String platformUsername, String repoName, String anchorType, String anchorId);
