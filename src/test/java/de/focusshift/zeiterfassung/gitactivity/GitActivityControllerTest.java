@@ -94,6 +94,7 @@ class GitActivityControllerTest implements ControllerTest {
         when(eventRepository.findDistinctRepoAndHeadBranchesByUsernameUpToDate(anyString(), any())).thenReturn(Set.of());
         when(eventRepository.findEarliestPrTimestamps(anyString(), any())).thenReturn(List.of());
         when(workingTimeSettingsService.getWorkingTimeSettings()).thenReturn(WorkingTimeSettings.DEFAULT);
+        when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any(de.focusshift.zeiterfassung.usermanagement.UserLocalId.class))).thenReturn(List.of());
     }
 
     private GitActivityRawEventEntity entity(String eventId, String type, String repo,
@@ -958,6 +959,94 @@ class GitActivityControllerTest implements ControllerTest {
             final var groups = (List<GitActivityController.GitSearchResultGroup>)
                 result.getModelAndView().getModel().get("searchResultGroups");
             assertThat(groups.get(0).items().get(0).logged()).isTrue();
+        }
+    }
+
+    // ── day summary (loggedDuration) ──────────────────────────────────────────
+
+    @Nested
+    class DaySummary {
+
+        @Test
+        void ensureLoggedDurationAbsentWhenNoEntriesLogged() throws Exception {
+            stubCommonDependencies("tronical");
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeDoesNotExist("loggedDuration"));
+        }
+
+        @Test
+        void ensureLoggedDurationFormattedAsHoursAndMinutes() throws Exception {
+            stubCommonDependencies("tronical");
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            final de.focusshift.zeiterfassung.timeentry.TimeEntry entry =
+                mock(de.focusshift.zeiterfassung.timeentry.TimeEntry.class);
+            when(entry.durationInMinutes()).thenReturn(java.time.Duration.ofMinutes(90));
+            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any(de.focusshift.zeiterfassung.usermanagement.UserLocalId.class)))
+                .thenReturn(List.of(entry));
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("loggedDuration", "1h 30m"));
+        }
+
+        @Test
+        void ensureLoggedDurationFormattedAsHoursOnlyWhenNoRemainingMinutes() throws Exception {
+            stubCommonDependencies("tronical");
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            final de.focusshift.zeiterfassung.timeentry.TimeEntry entry =
+                mock(de.focusshift.zeiterfassung.timeentry.TimeEntry.class);
+            when(entry.durationInMinutes()).thenReturn(java.time.Duration.ofHours(3));
+            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any(de.focusshift.zeiterfassung.usermanagement.UserLocalId.class)))
+                .thenReturn(List.of(entry));
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("loggedDuration", "3h"));
+        }
+
+        @Test
+        void ensureLoggedDurationFormattedAsMinutesOnlyWhenLessThanOneHour() throws Exception {
+            stubCommonDependencies("tronical");
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            final de.focusshift.zeiterfassung.timeentry.TimeEntry entry =
+                mock(de.focusshift.zeiterfassung.timeentry.TimeEntry.class);
+            when(entry.durationInMinutes()).thenReturn(java.time.Duration.ofMinutes(45));
+            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any(de.focusshift.zeiterfassung.usermanagement.UserLocalId.class)))
+                .thenReturn(List.of(entry));
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("loggedDuration", "45m"));
+        }
+
+        @Test
+        void ensureLoggedDurationSumsMultipleEntries() throws Exception {
+            stubCommonDependencies("tronical");
+            when(eventRepository.findByPlatformUsernameAndEventTimestampBetweenAndDismissedFalseOrderByEventTimestampAsc(
+                anyString(), any(), any())).thenReturn(List.of());
+
+            final de.focusshift.zeiterfassung.timeentry.TimeEntry e1 =
+                mock(de.focusshift.zeiterfassung.timeentry.TimeEntry.class);
+            final de.focusshift.zeiterfassung.timeentry.TimeEntry e2 =
+                mock(de.focusshift.zeiterfassung.timeentry.TimeEntry.class);
+            when(e1.durationInMinutes()).thenReturn(java.time.Duration.ofMinutes(60));
+            when(e2.durationInMinutes()).thenReturn(java.time.Duration.ofMinutes(45));
+            when(timeEntryService.getEntries(any(LocalDate.class), any(LocalDate.class), any(de.focusshift.zeiterfassung.usermanagement.UserLocalId.class)))
+                .thenReturn(List.of(e1, e2));
+
+            perform(get("/github-activity").with(oidcSubject("user-uuid")))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("loggedDuration", "1h 45m"));
         }
     }
 

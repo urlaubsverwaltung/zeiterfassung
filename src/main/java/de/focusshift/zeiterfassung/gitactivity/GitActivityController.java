@@ -4,8 +4,10 @@ import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.activitytype.ActivityTypeService;
 import de.focusshift.zeiterfassung.project.ProjectService;
 import de.focusshift.zeiterfassung.settings.CategorisationSettingsService;
+import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
+import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
@@ -180,6 +182,21 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
             model.addAttribute("rateLimitResetAt",
                 rateLimitReset.atZone(zone).format(DateTimeFormatter.ofPattern("HH:mm")));
             model.addAttribute("rateLimitResetEpoch", rateLimitReset.getEpochSecond());
+        }
+
+        final Duration loggedTotal = timeEntryService
+            .getEntries(selectedDate, selectedDate.plusDays(1), new UserLocalId(userLocalId))
+            .stream()
+            .map(TimeEntry::durationInMinutes)
+            .reduce(Duration.ZERO, Duration::plus);
+        final long totalMinutes = loggedTotal.toMinutes();
+        if (totalMinutes > 0) {
+            final long hours = totalMinutes / 60;
+            final long minutes = totalMinutes % 60;
+            final String formatted = hours > 0
+                ? (minutes > 0 ? hours + "h " + minutes + "m" : hours + "h")
+                : minutes + "m";
+            model.addAttribute("loggedDuration", formatted);
         }
 
         return "github-activity/index";

@@ -112,6 +112,19 @@
             <span th:text="#{github-activity.locked}">This day is locked. Time entries can no longer be added.</span>
           </div>
 
+          <!-- Day logged-time summary -->
+          <div th:if="${loggedDuration != null}"
+               class="mb-4 flex items-center gap-2 text-sm text-gray-500 dark:text-zinc-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0 text-green-500 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span th:text="#{github-activity.logged-today}">Logged today:</span>
+            <span class="font-semibold text-gray-800 dark:text-zinc-100" th:text="${loggedDuration}">2h 30m</span>
+            <a th:href="@{/timeentries(date=${date})}"
+               class="text-xs text-blue-500 dark:text-sky-400 hover:underline ml-1"
+               th:text="#{github-activity.view-entries}">View entries →</a>
+          </div>
+
           <!-- Empty state -->
           <p th:if="${!hasActivity}" data-testid="github-activity-empty" class="text-gray-500 dark:text-zinc-400"
              th:text="${syncConfigured} ? #{github-activity.empty} : #{github-activity.empty-no-sync}">
