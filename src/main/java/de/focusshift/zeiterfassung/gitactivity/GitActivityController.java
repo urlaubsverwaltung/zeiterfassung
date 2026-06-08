@@ -240,16 +240,8 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
         model.addAttribute("userLocalId", userLocalId);
         model.addAttribute("frameId", frameId != null ? frameId : "inline-form-frame");
 
-        try {
-            model.addAttribute("projects", projectService.findAllActive());
-        } catch (Exception e) {
-            model.addAttribute("projects", List.of());
-        }
-        try {
-            model.addAttribute("activityTypes", activityTypeService.findAllActive());
-        } catch (Exception e) {
-            model.addAttribute("activityTypes", List.of());
-        }
+        model.addAttribute("projects", projectService.findAllActive());
+        model.addAttribute("activityTypes", activityTypeService.findAllActive());
         model.addAttribute("categorisationSettings", categorisationSettingsService.getCategorisationSettings());
 
         return "github-activity/inline-form";
