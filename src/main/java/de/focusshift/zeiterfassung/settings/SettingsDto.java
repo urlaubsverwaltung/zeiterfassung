@@ -19,7 +19,13 @@ record SettingsDto(
     Boolean subtractBreakFromTimeEntryIsActive,
     @Nullable
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    LocalDate subtractBreakFromTimeEntryActiveDate
+    LocalDate subtractBreakFromTimeEntryActiveDate,
+
+    @Nullable
+    Boolean automaticBreakDeductionIsActive,
+    @Nullable
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    LocalDate automaticBreakDeductionActiveDate
 ) {
 
     /**
