@@ -73,6 +73,7 @@
                 </form>
                 <th:block th:if="${rateLimitSafe == false}">
                   <button type="button" disabled
+                          id="gh-rate-limited-btn"
                           class="button-secondary text-sm opacity-40 cursor-not-allowed relative overflow-hidden"
                           th:title="#{github-activity.rate-limited}">
                     <span class="pointer-events-none absolute bottom-0 left-0 h-0.5 rounded-full"
@@ -80,7 +81,9 @@
                     </span>
                     <span class="relative" th:text="#{github-activity.sync-now}">↻ Refresh</span>
                   </button>
-                  <span class="text-xs text-amber-500 dark:text-amber-400">
+                  <span class="text-xs text-amber-500 dark:text-amber-400"
+                        th:attr="data-reset-epoch=${rateLimitResetEpoch}"
+                        id="gh-rate-limit-reset-label">
                     <span th:if="${rateLimitResetAt != null}"
                           th:text="#{github-activity.rate-limit-resets-at(${rateLimitResetAt})}">Available at HH:mm</span>
                     <span th:if="${rateLimitResetAt == null}"
@@ -670,6 +673,36 @@
             const meta = document.createElement('meta');
             meta.name = '_csrf'; meta.content = csrfInput.value;
             document.head.appendChild(meta);
+          }
+
+          // ── Rate-limit auto-refresh ──────────────────────────────────────
+          // When rate-limited, reload the page automatically once the reset
+          // time passes so the Refresh button re-enables without user action.
+          const resetLabel = document.getElementById('gh-rate-limit-reset-label');
+          if (resetLabel) {
+            const resetEpoch = parseInt(resetLabel.dataset.resetEpoch || '0', 10);
+            if (resetEpoch > 0) {
+              const msUntilReset = resetEpoch * 1000 - Date.now();
+              if (msUntilReset <= 0) {
+                window.location.reload();
+              } else {
+                // Live countdown in the label
+                const tick = () => {
+                  const remaining = Math.ceil((resetEpoch * 1000 - Date.now()) / 1000);
+                  if (remaining <= 0) {
+                    window.location.reload();
+                  } else {
+                    const m = Math.floor(remaining / 60);
+                    const s = remaining % 60;
+                    resetLabel.textContent = m > 0
+                      ? `Available in ${m}m ${s}s`
+                      : `Available in ${s}s`;
+                  }
+                };
+                tick();
+                setInterval(tick, 1000);
+              }
+            }
           }
         });
 
