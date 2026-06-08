@@ -54,6 +54,7 @@ class GitActivityControllerTest implements ControllerTest {
     @Mock private ActivityTypeService activityTypeService;
     @Mock private TimeEntryLockService timeEntryLockService;
     @Mock private GitActivityRawEventRepository eventRepository;
+    @Mock private GitOAuthTokenRepository oAuthTokenRepository;
     @Mock private GitHubActivityProvider gitHubProvider;
     @Mock private WorkingTimeSettingsService workingTimeSettingsService;
     @Mock private de.focusshift.zeiterfassung.settings.CategorisationSettingsService categorisationSettingsService;
@@ -65,9 +66,10 @@ class GitActivityControllerTest implements ControllerTest {
         sut = new GitActivityController(
             userSettingsService, userSettingsProvider, timeEntryService,
             userSearchViewHelper, projectService, activityTypeService,
-            timeEntryLockService, eventRepository, gitHubProvider,
+            timeEntryLockService, eventRepository, oAuthTokenRepository, gitHubProvider,
             workingTimeSettingsService, categorisationSettingsService
         );
+        when(oAuthTokenRepository.findByUserLocalId(any())).thenReturn(java.util.List.of());
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
@@ -1047,6 +1049,126 @@ class GitActivityControllerTest implements ControllerTest {
             perform(get("/github-activity").with(oidcSubject("user-uuid")))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("loggedDuration", "1h 45m"));
+        }
+    }
+
+    // ── dismiss / mark-logged ownership ──────────────────────────────────────
+
+    @Nested
+    class DismissOwnership {
+
+        @Test
+        void ensureDismissAllowedForOwnEvent() throws Exception {
+            final UserSettings settings = userSettingsWith("tronical");
+            when(userSettingsService.getUserSettings(any())).thenReturn(settings);
+            when(oAuthTokenRepository.findByUserLocalId(any())).thenReturn(java.util.List.of());
+
+            final GitActivityRawEventEntity event = new GitActivityRawEventEntity();
+            event.setPlatformEventId("evt-1");
+            event.setPlatformUsername("tronical");
+            when(eventRepository.findByPlatformEventId("evt-1"))
+                .thenReturn(java.util.Optional.of(event));
+
+            perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/github-activity/dismiss")
+                .with(oidcSubject("user-uuid"))
+                .param("eventId", "evt-1"))
+                .andExpect(status().is3xxRedirection());
+
+            assertThat(event.isDismissed()).isTrue();
+        }
+
+        @Test
+        void ensureDismissBlockedForEventOwnedByAnotherUser() throws Exception {
+            final UserSettings settings = userSettingsWith("tronical");
+            when(userSettingsService.getUserSettings(any())).thenReturn(settings);
+            when(oAuthTokenRepository.findByUserLocalId(any())).thenReturn(java.util.List.of());
+
+            final GitActivityRawEventEntity event = new GitActivityRawEventEntity();
+            event.setPlatformEventId("evt-2");
+            event.setPlatformUsername("other-user");
+            when(eventRepository.findByPlatformEventId("evt-2"))
+                .thenReturn(java.util.Optional.of(event));
+
+            perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/github-activity/dismiss")
+                .with(oidcSubject("user-uuid"))
+                .param("eventId", "evt-2"))
+                .andExpect(status().is3xxRedirection());
+
+            assertThat(event.isDismissed()).isFalse();
+        }
+    }
+
+    @Nested
+    class MarkLoggedOwnership {
+
+        @Test
+        void ensureMarkLoggedAllowedForOwnEvent() throws Exception {
+            final UserSettings settings = userSettingsWith("tronical");
+            when(userSettingsService.getUserSettings(any())).thenReturn(settings);
+            when(oAuthTokenRepository.findByUserLocalId(any())).thenReturn(java.util.List.of());
+
+            final GitActivityRawEventEntity event = new GitActivityRawEventEntity();
+            event.setPlatformEventId("evt-3");
+            event.setPlatformUsername("tronical");
+            when(eventRepository.findByPlatformEventId("evt-3"))
+                .thenReturn(java.util.Optional.of(event));
+
+            perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/github-activity/mark-logged")
+                .with(oidcSubject("user-uuid"))
+                .param("eventId", "evt-3"))
+                .andExpect(status().isOk());
+
+            assertThat(event.getLoggedAt()).isNotNull();
+        }
+
+        @Test
+        void ensureMarkLoggedBlockedForEventOwnedByAnotherUser() throws Exception {
+            final UserSettings settings = userSettingsWith("tronical");
+            when(userSettingsService.getUserSettings(any())).thenReturn(settings);
+            when(oAuthTokenRepository.findByUserLocalId(any())).thenReturn(java.util.List.of());
+
+            final GitActivityRawEventEntity event = new GitActivityRawEventEntity();
+            event.setPlatformEventId("evt-4");
+            event.setPlatformUsername("other-user");
+            when(eventRepository.findByPlatformEventId("evt-4"))
+                .thenReturn(java.util.Optional.of(event));
+
+            perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/github-activity/mark-logged")
+                .with(oidcSubject("user-uuid"))
+                .param("eventId", "evt-4"))
+                .andExpect(status().isOk());
+
+            assertThat(event.getLoggedAt()).isNull();
+        }
+
+        @Test
+        void ensureMarkLoggedAllowedWhenEventMatchesOAuthPlatformUsername() throws Exception {
+            // Bitbucket events use the Bitbucket account ID as platformUsername, not the GitHub login
+            final UserSettings settings = userSettingsWith("tronical");
+            when(userSettingsService.getUserSettings(any())).thenReturn(settings);
+
+            final GitOAuthTokenEntity oauthToken = new GitOAuthTokenEntity();
+            oauthToken.setPlatformAccountId("bitbucket-account-id-xyz");
+            when(oAuthTokenRepository.findByUserLocalId(any()))
+                .thenReturn(java.util.List.of(oauthToken));
+
+            final GitActivityRawEventEntity event = new GitActivityRawEventEntity();
+            event.setPlatformEventId("evt-5");
+            event.setPlatformUsername("bitbucket-account-id-xyz");
+            when(eventRepository.findByPlatformEventId("evt-5"))
+                .thenReturn(java.util.Optional.of(event));
+
+            perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/github-activity/mark-logged")
+                .with(oidcSubject("user-uuid"))
+                .param("eventId", "evt-5"))
+                .andExpect(status().isOk());
+
+            assertThat(event.getLoggedAt()).isNotNull();
         }
     }
 

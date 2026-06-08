@@ -15,5 +15,7 @@ public interface GitOAuthTokenRepository extends JpaRepository<GitOAuthTokenEnti
 
     List<GitOAuthTokenEntity> findByPlatform(String platform);
 
+    List<GitOAuthTokenEntity> findByUserLocalId(Long userLocalId);
+
     void deleteByPlatformAndUserLocalId(String platform, Long userLocalId);
 }
