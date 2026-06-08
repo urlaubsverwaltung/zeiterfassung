@@ -189,21 +189,35 @@ class GitActivityController implements HasTimeClock, HasLaunchpad, HasUserSearch
 
     @PostMapping("/dismiss")
     String dismiss(@RequestParam String eventId,
-                   @RequestParam(required = false) LocalDate date) {
-        eventRepository.findByPlatformEventId(eventId).ifPresent(e -> {
-            e.setDismissed(true);
-            eventRepository.save(e);
-        });
+                   @RequestParam(required = false) LocalDate date,
+                   @CurrentUser CurrentOidcUser currentUser) {
+        final UserSettings userSettings = userSettingsService.getUserSettings(currentUser.getUserIdComposite());
+        final String login = userSettings.githubLogin().orElse(null);
+        if (login != null) {
+            eventRepository.findByPlatformEventId(eventId).ifPresent(e -> {
+                if (login.equals(e.getPlatformUsername())) {
+                    e.setDismissed(true);
+                    eventRepository.save(e);
+                }
+            });
+        }
         final String redirectDate = (date != null ? date : LocalDate.now()).toString();
         return "redirect:/github-activity?date=" + redirectDate;
     }
 
     @PostMapping("/mark-logged")
-    org.springframework.http.ResponseEntity<Void> markLogged(@RequestParam String eventId) {
-        eventRepository.findByPlatformEventId(eventId).ifPresent(e -> {
-            e.setLoggedAt(java.time.Instant.now());
-            eventRepository.save(e);
-        });
+    org.springframework.http.ResponseEntity<Void> markLogged(@RequestParam String eventId,
+                                                              @CurrentUser CurrentOidcUser currentUser) {
+        final UserSettings userSettings = userSettingsService.getUserSettings(currentUser.getUserIdComposite());
+        final String login = userSettings.githubLogin().orElse(null);
+        if (login != null) {
+            eventRepository.findByPlatformEventId(eventId).ifPresent(e -> {
+                if (login.equals(e.getPlatformUsername())) {
+                    e.setLoggedAt(java.time.Instant.now());
+                    eventRepository.save(e);
+                }
+            });
+        }
         return org.springframework.http.ResponseEntity.ok().build();
     }
 
