@@ -1,4 +1,4 @@
-package de.focusshift.zeiterfassung.githubactivity;
+package de.focusshift.zeiterfassung.gitactivity;
 
 import de.focusshift.zeiterfassung.user.UserSettingsService;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,23 +29,23 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
-class GitHubSyncServiceTest {
+class GitHubActivityProviderTest {
 
     private static final String LOGIN = "tronical";
     private static final String TOKEN = "test-token";
 
-    @Mock private GitHubRawEventRepository repository;
+    @Mock private GitActivityRawEventRepository repository;
     @Mock private UserSettingsService userSettingsService;
     @Mock private RestClient restClient;
     @Mock @SuppressWarnings("rawtypes") private RestClient.RequestHeadersUriSpec requestHeadersUriSpec;
     @Mock @SuppressWarnings("rawtypes") private RestClient.RequestHeadersSpec requestHeadersSpec;
     @Mock private RestClient.ResponseSpec responseSpec;
 
-    private GitHubSyncService sut;
+    private GitHubActivityProvider sut;
 
     @BeforeEach
     void setUp() {
-        sut = new GitHubSyncService(repository, userSettingsService, restClient);
+        sut = new GitHubActivityProvider(repository, userSettingsService, restClient);
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
@@ -80,7 +80,6 @@ class GitHubSyncServiceTest {
         return commitWithDates(sha, authorLogin, message, "2026-06-02T14:00:00Z", "2026-06-02T14:00:00Z");
     }
 
-    /** Build a commit where author date ≠ committer date (simulating a rebase / force-push). */
     private Map<String, Object> commitWithDates(String sha, String authorLogin, String message,
                                                  String authorDate, String committerDate) {
         final Map<String, Object> authorGh = authorLogin != null ? Map.of("login", authorLogin) : Map.of();
@@ -134,11 +133,11 @@ class GitHubSyncServiceTest {
         );
     }
 
-    private GitHubRawEventEntity existingPrEntity(String eventId, String repo, String prNumber,
-                                                   String title, String headBranch) {
-        final GitHubRawEventEntity e = new GitHubRawEventEntity();
-        e.setGithubEventId(eventId);
-        e.setGithubUsername(LOGIN);
+    private GitActivityRawEventEntity existingPrEntity(String eventId, String repo, String prNumber,
+                                                        String title, String headBranch) {
+        final GitActivityRawEventEntity e = new GitActivityRawEventEntity();
+        e.setPlatformEventId(eventId);
+        e.setPlatformUsername(LOGIN);
         e.setEventType("PullRequestEvent");
         e.setRepoName(repo);
         e.setAnchorType("PR");
@@ -151,15 +150,12 @@ class GitHubSyncServiceTest {
         return e;
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
-    /** A page of {@code count} stub events with sequential IDs starting at {@code firstId}. */
     private List<Map<String, Object>> mockEventPage(int count, int firstId) {
         final List<Map<String, Object>> page = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             page.add(Map.of(
                 "id", "evt-" + (firstId + i),
-                "type", "UnknownEvent",   // parseToEntity returns null → no save, no enrich calls
+                "type", "UnknownEvent",
                 "created_at", "2026-06-02T14:00:00Z",
                 "repo", Map.of("name", "slint-ui/slint"),
                 "payload", Map.of()
@@ -168,7 +164,6 @@ class GitHubSyncServiceTest {
         return page;
     }
 
-    /** Stubs the RestClient chain so that successive body() calls return the given pages. */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void stubPages(List<Map<String, Object>>... pages) {
         when(restClient.get()).thenReturn(requestHeadersUriSpec);
@@ -188,7 +183,7 @@ class GitHubSyncServiceTest {
 
         @Test
         void ensureSinglePageFetchedWhenFewerThan100Events() {
-            stubPages(mockEventPage(3, 0)); // 3 events < 100 → last page
+            stubPages(mockEventPage(3, 0));
 
             sut.syncUser(LOGIN, TOKEN);
 
@@ -197,7 +192,7 @@ class GitHubSyncServiceTest {
 
         @Test
         void ensureSinglePageFetchedWhenPageIsEmpty() {
-            stubPages(List.of()); // empty → stop immediately
+            stubPages(List.of());
 
             sut.syncUser(LOGIN, TOKEN);
 
@@ -208,8 +203,8 @@ class GitHubSyncServiceTest {
         @Test
         void ensureSecondPageFetchedWhenFirstPageIsFull() {
             stubPages(
-                mockEventPage(100, 0),   // page 1: full → continue
-                mockEventPage(30, 100)   // page 2: partial → stop
+                mockEventPage(100, 0),
+                mockEventPage(30, 100)
             );
 
             sut.syncUser(LOGIN, TOKEN);
@@ -221,9 +216,9 @@ class GitHubSyncServiceTest {
         @Test
         void ensureAllThreePagesFetchedOnFirstSync() {
             stubPages(
-                mockEventPage(100, 0),   // page 1: full
-                mockEventPage(100, 100), // page 2: full
-                mockEventPage(50, 200)   // page 3: partial → stop
+                mockEventPage(100, 0),
+                mockEventPage(100, 100),
+                mockEventPage(50, 200)
             );
 
             sut.syncUser(LOGIN, TOKEN);
@@ -234,7 +229,6 @@ class GitHubSyncServiceTest {
         @SuppressWarnings("unchecked")
         @Test
         void ensureAtMostThreePagesEvenWhenAllFull() {
-            // All pages return 100 events; loop must cap at 3
             stubPages(
                 mockEventPage(100, 0),
                 mockEventPage(100, 100),
@@ -249,25 +243,21 @@ class GitHubSyncServiceTest {
         @SuppressWarnings("unchecked")
         @Test
         void ensurePaginationStopsAtFirstKnownEventId() {
-            // Page 1: 3 new events, then 1 already-known, then older events — fill to 100
             final List<Map<String, Object>> page1 = new ArrayList<>(mockEventPage(3, 0));
             page1.add(Map.of("id", "known-evt", "type", "UnknownEvent",
                 "created_at", "2026-06-01T09:00:00Z", "repo", Map.of("name", "r"), "payload", Map.of()));
-            page1.addAll(mockEventPage(96, 4)); // fill to 100 so size-check doesn't fire first
+            page1.addAll(mockEventPage(96, 4));
 
-            when(repository.existsByGithubEventId("known-evt")).thenReturn(true);
+            when(repository.existsByPlatformEventId("known-evt")).thenReturn(true);
             stubPages(page1);
 
             sut.syncUser(LOGIN, TOKEN);
 
-            // Must stop at page 1 — page 2 never fetched
             verify(restClient, times(1)).get();
         }
 
         @Test
         void ensureEventsAfterKnownIdAreNotExamined() {
-            // Page: new-1, new-2, known-evt (stop here), old-1 (must never be checked)
-            // Page has < 100 items but known-evt fires first anyway
             final var new1  = Map.of("id", "new-1",    "type", "UnknownEvent",
                 "created_at", "2026-06-02T12:00:00Z", "repo", Map.of("name", "r"), "payload", Map.of());
             final var new2  = Map.of("id", "new-2",    "type", "UnknownEvent",
@@ -277,16 +267,15 @@ class GitHubSyncServiceTest {
             final var old1  = Map.of("id", "old-1",    "type", "UnknownEvent",
                 "created_at", "2026-06-01T09:00:00Z", "repo", Map.of("name", "r"), "payload", Map.of());
 
-            when(repository.existsByGithubEventId("known-evt")).thenReturn(true);
+            when(repository.existsByPlatformEventId("known-evt")).thenReturn(true);
             stubPages(List.of(new1, new2, known, old1));
 
             sut.syncUser(LOGIN, TOKEN);
 
-            // new-1 and new-2 examined, known-evt triggers stop, old-1 never reached
-            verify(repository).existsByGithubEventId("new-1");
-            verify(repository).existsByGithubEventId("new-2");
-            verify(repository).existsByGithubEventId("known-evt");
-            verify(repository, never()).existsByGithubEventId("old-1");
+            verify(repository).existsByPlatformEventId("new-1");
+            verify(repository).existsByPlatformEventId("new-2");
+            verify(repository).existsByPlatformEventId("known-evt");
+            verify(repository, never()).existsByPlatformEventId("old-1");
         }
     }
 
@@ -297,7 +286,7 @@ class GitHubSyncServiceTest {
 
         @Test
         void ensureOldFormatCommitsAreDeletedBeforeSync() {
-            stubRestGet(List.of()); // no events returned
+            stubRestGet(List.of());
 
             sut.syncUser(LOGIN, TOKEN);
 
@@ -317,7 +306,6 @@ class GitHubSyncServiceTest {
             final var otherCommit = commit("abc1234567890abcdef1234567890abcdef123456", "ogoffart", "Some commit");
             stubRestGet(List.of(push));
 
-            // Second get() call returns compare result
             when(restClient.get())
                 .thenReturn(requestHeadersUriSpec);
             when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
@@ -325,12 +313,12 @@ class GitHubSyncServiceTest {
             when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
             when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
             when(responseSpec.body(any(ParameterizedTypeReference.class)))
-                .thenReturn(List.of(push))  // events
-                .thenReturn(Map.of("commits", List.of(otherCommit)));  // compare
+                .thenReturn(List.of(push))
+                .thenReturn(Map.of("commits", List.of(otherCommit)));
 
             sut.syncUser(LOGIN, TOKEN);
 
-            verify(repository, never()).save(any(GitHubRawEventEntity.class));
+            verify(repository, never()).save(any(GitActivityRawEventEntity.class));
         }
 
         @SuppressWarnings("unchecked")
@@ -344,7 +332,6 @@ class GitHubSyncServiceTest {
                     "message", "My commit"
                 ),
                 "parents", List.of(Map.of("sha", "aaa"))
-                // no "author" key → GitHub user not linked
             );
             final var push = pushEvent("evt1", "slint-ui/slint", "simon/feature", "head123", "prev456");
 
@@ -357,11 +344,11 @@ class GitHubSyncServiceTest {
                 .thenReturn(List.of(push))
                 .thenReturn(Map.of("commits", List.of(commitData)));
 
-            when(repository.existsByGithubEventId(LOGIN + "_commit_" + sha)).thenReturn(false);
+            when(repository.existsByPlatformEventId(LOGIN + "_commit_" + sha)).thenReturn(false);
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getEventSummary()).isEqualTo("My commit");
         }
@@ -388,13 +375,13 @@ class GitHubSyncServiceTest {
                 .thenReturn(List.of(push))
                 .thenReturn(Map.of("commits", List.of(c)));
 
-            when(repository.existsByGithubEventId(LOGIN + "_commit_" + sha)).thenReturn(false);
+            when(repository.existsByPlatformEventId(LOGIN + "_commit_" + sha)).thenReturn(false);
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
-            assertThat(captor.getValue().getGithubEventId()).isEqualTo(LOGIN + "_commit_" + sha);
+            assertThat(captor.getValue().getPlatformEventId()).isEqualTo(LOGIN + "_commit_" + sha);
         }
     }
 
@@ -415,13 +402,13 @@ class GitHubSyncServiceTest {
             when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
             when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(pr));
 
-            when(repository.existsByGithubEventId("evt-pr-1")).thenReturn(false);
+            when(repository.existsByPlatformEventId("evt-pr-1")).thenReturn(false);
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
-            final GitHubRawEventEntity saved = captor.getValue();
+            final GitActivityRawEventEntity saved = captor.getValue();
             assertThat(saved.getAnchorType()).isEqualTo("PR");
             assertThat(saved.getHeadBranch()).isEqualTo("nigel/my-feature");
             assertThat(saved.getAnchorTitle()).isEqualTo("My feature");
@@ -439,11 +426,11 @@ class GitHubSyncServiceTest {
             when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
             when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(pr));
 
-            when(repository.existsByGithubEventId("evt-pr-2")).thenReturn(false);
+            when(repository.existsByPlatformEventId("evt-pr-2")).thenReturn(false);
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getEventSummary()).startsWith("Merged PR #11950");
         }
@@ -459,13 +446,13 @@ class GitHubSyncServiceTest {
             when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
             when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
             when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(pr));
-            when(repository.existsByGithubEventId("evt-pr-fork")).thenReturn(false);
+            when(repository.existsByPlatformEventId("evt-pr-fork")).thenReturn(false);
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
-            final GitHubRawEventEntity saved = captor.getValue();
+            final GitActivityRawEventEntity saved = captor.getValue();
             assertThat(saved.getRepoName()).isEqualTo("slint-ui/tree-sitter-slint");
             assertThat(saved.getHeadBranch()).isEqualTo("fix-tree-sitter-grammar");
             assertThat(saved.getHeadRepoName()).isEqualTo("LeonMatthes/slint");
@@ -474,7 +461,6 @@ class GitHubSyncServiceTest {
         @SuppressWarnings("unchecked")
         @Test
         void ensureHeadRepoNameNullForSameRepoPR() {
-            // head.repo.full_name == repo.name → same-repo, headRepoName must be null
             final var pr = crossForkPrEvent("evt-pr-same", "slint-ui/slint", 11940,
                 "My feature", "nigel/my-feature", "slint-ui/slint");
 
@@ -483,11 +469,11 @@ class GitHubSyncServiceTest {
             when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
             when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
             when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(pr));
-            when(repository.existsByGithubEventId("evt-pr-same")).thenReturn(false);
+            when(repository.existsByPlatformEventId("evt-pr-same")).thenReturn(false);
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getHeadRepoName()).isNull();
         }
@@ -495,7 +481,6 @@ class GitHubSyncServiceTest {
         @SuppressWarnings("unchecked")
         @Test
         void ensureHeadRepoNameNullWhenHeadRepoAbsentFromPayload() {
-            // payload has no head.repo — headRepoName must stay null, no NPE
             final var pr = prEvent("evt-pr-noheadrepo", "slint-ui/slint", 11940,
                 "My feature", "nigel/my-feature", "opened");
 
@@ -504,11 +489,11 @@ class GitHubSyncServiceTest {
             when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
             when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
             when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(pr));
-            when(repository.existsByGithubEventId("evt-pr-noheadrepo")).thenReturn(false);
+            when(repository.existsByPlatformEventId("evt-pr-noheadrepo")).thenReturn(false);
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getHeadRepoName()).isNull();
         }
@@ -523,7 +508,6 @@ class GitHubSyncServiceTest {
         @Test
         void ensureCommitterDateIsUsedAsTimestampNotAuthorDate() {
             final String sha = "abc1234567890abcdef1234567890abcdef123456";
-            // Author date = Jun 2, committer date = Jun 3 (rebased on Jun 3)
             final var rebased = commitWithDates(sha, LOGIN, "Implement DragIcon",
                 "2026-06-02T20:06:46Z", "2026-06-03T19:25:03Z");
             final var push = pushEvent("evt1", "slint-ui/winit", "simon/win32-drag", "head123", "prev456");
@@ -536,14 +520,13 @@ class GitHubSyncServiceTest {
             when(responseSpec.body(any(ParameterizedTypeReference.class)))
                 .thenReturn(List.of(push))
                 .thenReturn(Map.of("commits", List.of(rebased)));
-            when(repository.existsByGithubEventId(LOGIN + "_commit_" + sha)).thenReturn(false);
-            when(repository.findByGithubEventId(LOGIN + "_commit_" + sha)).thenReturn(java.util.Optional.empty());
+            when(repository.existsByPlatformEventId(LOGIN + "_commit_" + sha)).thenReturn(false);
+            when(repository.findByPlatformEventId(LOGIN + "_commit_" + sha)).thenReturn(java.util.Optional.empty());
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
-            // Must use committer date (Jun 3), not author date (Jun 2)
             assertThat(captor.getValue().getEventTimestamp())
                 .isEqualTo(java.time.Instant.parse("2026-06-03T19:25:03Z"));
         }
@@ -552,18 +535,16 @@ class GitHubSyncServiceTest {
         @Test
         void ensureExistingEntityTimestampUpdatedWhenCommitterDateChanges() {
             final String sha = "abc1234567890abcdef1234567890abcdef123456";
-            // Simulate entity already stored with the old author date (Jun 2)
-            final GitHubRawEventEntity existing = new GitHubRawEventEntity();
-            existing.setGithubEventId(LOGIN + "_commit_" + sha);
-            existing.setGithubUsername(LOGIN);
+            final GitActivityRawEventEntity existing = new GitActivityRawEventEntity();
+            existing.setPlatformEventId(LOGIN + "_commit_" + sha);
+            existing.setPlatformUsername(LOGIN);
             existing.setEventType("PushEvent");
             existing.setRepoName("slint-ui/winit");
             existing.setAnchorType("REPO");
             existing.setEventIcon("📝");
             existing.setEventSummary("Implement DragIcon");
-            existing.setEventTimestamp(java.time.Instant.parse("2026-06-02T20:06:46Z")); // old: Jun 2
+            existing.setEventTimestamp(java.time.Instant.parse("2026-06-02T20:06:46Z"));
 
-            // Force-push: same SHA, committer date now Jun 3
             final var rebased = commitWithDates(sha, LOGIN, "Implement DragIcon",
                 "2026-06-02T20:06:46Z", "2026-06-03T19:25:03Z");
             final var push = pushEvent("evt1", "slint-ui/winit", "simon/win32-drag", "head123", "prev456");
@@ -576,13 +557,12 @@ class GitHubSyncServiceTest {
             when(responseSpec.body(any(ParameterizedTypeReference.class)))
                 .thenReturn(List.of(push))
                 .thenReturn(Map.of("commits", List.of(rebased)));
-            when(repository.findByGithubEventId(LOGIN + "_commit_" + sha))
+            when(repository.findByPlatformEventId(LOGIN + "_commit_" + sha))
                 .thenReturn(java.util.Optional.of(existing));
 
             sut.syncUser(LOGIN, TOKEN);
 
-            // Existing entity must be updated to Jun 3 committer date
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getEventTimestamp())
                 .isEqualTo(java.time.Instant.parse("2026-06-03T19:25:03Z"));
@@ -594,10 +574,10 @@ class GitHubSyncServiceTest {
     @Nested
     class OpenPrCommitSync {
 
-        private GitHubRawEventEntity openPrEntity(String repoName, String prNumber, String headBranch) {
-            final GitHubRawEventEntity e = new GitHubRawEventEntity();
-            e.setGithubEventId("evt-pr-" + prNumber);
-            e.setGithubUsername(LOGIN);
+        private GitActivityRawEventEntity openPrEntity(String repoName, String prNumber, String headBranch) {
+            final GitActivityRawEventEntity e = new GitActivityRawEventEntity();
+            e.setPlatformEventId("evt-pr-" + prNumber);
+            e.setPlatformUsername(LOGIN);
             e.setEventType("PullRequestEvent");
             e.setRepoName(repoName);
             e.setAnchorType("PR");
@@ -610,8 +590,8 @@ class GitHubSyncServiceTest {
             return e;
         }
 
-        private GitHubRawEventEntity mergedPrEntity(String repoName, String prNumber) {
-            final GitHubRawEventEntity e = openPrEntity(repoName, prNumber, "feature/x");
+        private GitActivityRawEventEntity mergedPrEntity(String repoName, String prNumber) {
+            final GitActivityRawEventEntity e = openPrEntity(repoName, prNumber, "feature/x");
             e.setEventSummary("Merged PR #" + prNumber + ": My PR");
             return e;
         }
@@ -621,26 +601,25 @@ class GitHubSyncServiceTest {
         void ensureCommitsAreFetchedForOpenPr() {
             final String sha = "abc1234567890abcdef1234567890abcdef123456";
             final var prEntity = openPrEntity("slint-ui/slint", "11940", "nigel/my-feature");
-            when(repository.findByGithubUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
+            when(repository.findByPlatformUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
                 .thenReturn(List.of(prEntity));
-            when(repository.findByGithubEventId(LOGIN + "_commit_" + sha)).thenReturn(java.util.Optional.empty());
+            when(repository.findByPlatformEventId(LOGIN + "_commit_" + sha)).thenReturn(java.util.Optional.empty());
 
-            // fetchEvents returns empty; fetchAndStorePrCommits returns one commit
             when(restClient.get()).thenReturn(requestHeadersUriSpec);
             when(requestHeadersUriSpec.uri(anyString(), any(Object[].class))).thenReturn(requestHeadersSpec);
             when(requestHeadersUriSpec.uri(any(java.net.URI.class))).thenReturn(requestHeadersSpec);
             when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
             when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
             when(responseSpec.body(any(ParameterizedTypeReference.class)))
-                .thenReturn(List.of())   // fetchEvents → no events
+                .thenReturn(List.of())
                 .thenReturn(List.of(commitWithDates(sha, LOGIN, "Fix crash",
-                    "2026-06-02T14:00:00Z", "2026-06-03T19:25:00Z")));  // fetchAndStorePrCommits
+                    "2026-06-02T14:00:00Z", "2026-06-03T19:25:00Z")));
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
-            final GitHubRawEventEntity saved = captor.getValue();
+            final GitActivityRawEventEntity saved = captor.getValue();
             assertThat(saved.getAnchorId()).isEqualTo("nigel/my-feature");
             assertThat(saved.getEventSummary()).isEqualTo("Fix crash");
             assertThat(saved.getEventTimestamp()).isEqualTo(Instant.parse("2026-06-03T19:25:00Z"));
@@ -649,42 +628,39 @@ class GitHubSyncServiceTest {
         @Test
         void ensureCommitsAreNotFetchedForMergedPr() {
             final var prEntity = mergedPrEntity("slint-ui/slint", "11950");
-            when(repository.findByGithubUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
-                .thenReturn(List.of(prEntity));
-            stubRestGet(List.of()); // fetchEvents returns empty
-
-            sut.syncUser(LOGIN, TOKEN);
-
-            // save should never be called — merged PR commits are not fetched
-            verify(repository, never()).save(any(GitHubRawEventEntity.class));
-        }
-
-        @Test
-        void ensureCommitsAreNotFetchedWhenRateLimitLow() {
-            final var prEntity = openPrEntity("slint-ui/slint", "11940", "nigel/my-feature");
-            when(repository.findByGithubUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
-                .thenReturn(List.of(prEntity));
-            stubRestGet(List.of()); // fetchEvents returns empty
-
-            // Simulate rate limit too low
-            sut.setRateLimitRemaining(50);
-
-            sut.syncUser(LOGIN, TOKEN);
-
-            // Only the deleteOldFormatCommits call expected — no PR commit fetch
-            verify(repository, never()).save(any(GitHubRawEventEntity.class));
-        }
-
-        @Test
-        void ensureCommitsAreSkippedWhenHeadBranchNotSet() {
-            final var prEntity = openPrEntity("slint-ui/slint", "11940", null); // no headBranch
-            when(repository.findByGithubUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
+            when(repository.findByPlatformUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
                 .thenReturn(List.of(prEntity));
             stubRestGet(List.of());
 
             sut.syncUser(LOGIN, TOKEN);
 
-            verify(repository, never()).save(any(GitHubRawEventEntity.class));
+            verify(repository, never()).save(any(GitActivityRawEventEntity.class));
+        }
+
+        @Test
+        void ensureCommitsAreNotFetchedWhenRateLimitLow() {
+            final var prEntity = openPrEntity("slint-ui/slint", "11940", "nigel/my-feature");
+            when(repository.findByPlatformUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
+                .thenReturn(List.of(prEntity));
+            stubRestGet(List.of());
+
+            sut.setRateLimitRemaining(50);
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            verify(repository, never()).save(any(GitActivityRawEventEntity.class));
+        }
+
+        @Test
+        void ensureCommitsAreSkippedWhenHeadBranchNotSet() {
+            final var prEntity = openPrEntity("slint-ui/slint", "11940", null);
+            when(repository.findByPlatformUsernameAndAnchorTypeAndEventType(LOGIN, "PR", "PullRequestEvent"))
+                .thenReturn(List.of(prEntity));
+            stubRestGet(List.of());
+
+            sut.syncUser(LOGIN, TOKEN);
+
+            verify(repository, never()).save(any(GitActivityRawEventEntity.class));
         }
     }
 
@@ -717,11 +693,11 @@ class GitHubSyncServiceTest {
             when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
             when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
             when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(event));
-            when(repository.existsByGithubEventId("evt-ic-pr")).thenReturn(false);
+            when(repository.existsByPlatformEventId("evt-ic-pr")).thenReturn(false);
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getAnchorType()).isEqualTo("PR");
             assertThat(captor.getValue().getAnchorId()).isEqualTo("11952");
@@ -741,7 +717,6 @@ class GitHubSyncServiceTest {
                     "issue", Map.of(
                         "number", 11876,
                         "title", "Skia Vulkan error"
-                        // no "pull_request" key → plain issue
                     ),
                     "comment", Map.of("body", "Works for me on Windows")
                 )
@@ -752,11 +727,11 @@ class GitHubSyncServiceTest {
             when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
             when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
             when(responseSpec.body(any(ParameterizedTypeReference.class))).thenReturn(List.of(event));
-            when(repository.existsByGithubEventId("evt-ic-issue")).thenReturn(false);
+            when(repository.existsByPlatformEventId("evt-ic-issue")).thenReturn(false);
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getAnchorType()).isEqualTo("ISSUE");
             assertThat(captor.getValue().getEventSummary()).startsWith("Commented on issue #11876");
@@ -771,7 +746,6 @@ class GitHubSyncServiceTest {
         @SuppressWarnings("unchecked")
         @Test
         void ensureBlankTitleIsBackfilledForExistingPrEntity() {
-            // Existing PR entity with blank title and no headBranch
             final var existing = existingPrEntity("evt-pr-old", "slint-ui/slint", "11940", "", null);
             final var events = List.of(Map.of(
                 "id", "evt-pr-old", "type", "PullRequestEvent",
@@ -785,7 +759,6 @@ class GitHubSyncServiceTest {
                     )
                 )
             ));
-            // PR details API response
             final Map<String, Object> prDetails = Map.of(
                 "title", "Very simple remote viewer screen",
                 "head", Map.of("ref", "nigel/feature")
@@ -797,14 +770,14 @@ class GitHubSyncServiceTest {
             when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
             when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
             when(responseSpec.body(any(ParameterizedTypeReference.class)))
-                .thenReturn(events)    // fetchEvents
-                .thenReturn(prDetails); // enrichPrDetails → GET /pulls/11940
+                .thenReturn(events)
+                .thenReturn(prDetails);
 
-            when(repository.findByGithubEventId("evt-pr-old")).thenReturn(Optional.of(existing));
+            when(repository.findByPlatformEventId("evt-pr-old")).thenReturn(Optional.of(existing));
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getAnchorTitle()).isEqualTo("Very simple remote viewer screen");
             assertThat(captor.getValue().getHeadBranch()).isEqualTo("nigel/feature");
@@ -841,11 +814,11 @@ class GitHubSyncServiceTest {
                 .thenReturn(events)
                 .thenReturn(prDetails);
 
-            when(repository.findByGithubEventId("evt-pr-old2")).thenReturn(Optional.of(existing));
+            when(repository.findByPlatformEventId("evt-pr-old2")).thenReturn(Optional.of(existing));
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getHeadBranch()).isEqualTo("nigel/feature");
         }
@@ -883,11 +856,11 @@ class GitHubSyncServiceTest {
                 .thenReturn(events)
                 .thenReturn(prDetails);
 
-            when(repository.findByGithubEventId("evt-pr-fork-old")).thenReturn(Optional.of(existing));
+            when(repository.findByPlatformEventId("evt-pr-fork-old")).thenReturn(Optional.of(existing));
 
             sut.syncUser(LOGIN, TOKEN);
 
-            final var captor = ArgumentCaptor.forClass(GitHubRawEventEntity.class);
+            final var captor = ArgumentCaptor.forClass(GitActivityRawEventEntity.class);
             verify(repository).save(captor.capture());
             assertThat(captor.getValue().getHeadBranch()).isEqualTo("fix-tree-sitter-grammar");
             assertThat(captor.getValue().getHeadRepoName()).isEqualTo("LeonMatthes/slint");

@@ -1,0 +1,38 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <changeSet author="slint" id="git-activity-add-platform-settings-table">
+    <preConditions onFail="MARK_RAN">
+      <not><tableExists tableName="git_activity_platform_settings"/></not>
+    </preConditions>
+
+    <createTable tableName="git_activity_platform_settings">
+      <column name="platform" type="VARCHAR(20)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="git_activity_platform_settings_pkey"/>
+      </column>
+      <!-- GitHub: App ID;  Bitbucket: OAuth consumer key -->
+      <column name="app_id" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+      <!-- GitHub: private key PEM content;  Bitbucket: OAuth consumer secret -->
+      <column name="app_secret" type="TEXT">
+        <constraints nullable="true"/>
+      </column>
+      <!-- GitHub: org login;  Bitbucket: workspace slug;  GitLab: group URL -->
+      <column name="org_name" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+      <!-- GitHub: app slug used in installation redirect URL -->
+      <column name="app_name" type="VARCHAR(255)">
+        <constraints nullable="true"/>
+      </column>
+      <!-- OAuth callback URL (Bitbucket) -->
+      <column name="callback_url" type="VARCHAR(1000)">
+        <constraints nullable="true"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+</databaseChangeLog>

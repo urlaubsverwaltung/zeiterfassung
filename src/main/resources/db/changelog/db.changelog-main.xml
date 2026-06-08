@@ -54,4 +54,8 @@
   <include relativeToChangelogFile="true" file="changelog-3.2.0-slint-github-activity-head-branch.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.2.0-slint-add-global-working-time-defaults.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.2.0-slint-add-categorisation-requirements.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-3.3.0-slint-git-activity-platform-column.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-3.3.1-slint-git-oauth-tokens.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-3.3.2-slint-github-user-installation.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-3.3.3-slint-git-activity-platform-settings.xml"/>
 </databaseChangeLog>
