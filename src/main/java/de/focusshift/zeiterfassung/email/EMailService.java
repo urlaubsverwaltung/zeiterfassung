@@ -33,7 +33,11 @@ public class EMailService {
         message.setTo(to);
         message.setSubject(subject);
         message.setReplyTo(generateMailAddressAndDisplayName(replyTo, replayToDisplayName));
-        message.setText(plainText, htmlText);
+        if (htmlText != null && !htmlText.isBlank()) {
+            message.setText(plainText, htmlText);
+        } else {
+            message.setText(plainText);
+        }
         this.mailSender.send(mimeMessage);
     }
 
