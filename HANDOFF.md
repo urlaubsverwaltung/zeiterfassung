@@ -13,6 +13,7 @@
 |---|---|---|
 | 01 | `StatutoryBreakRule` – ArbZG §4 Staffellogik + Tests | `5b8b65ed` |
 | 02 | `AutomaticBreakDeductionSettings` – vollständig (DB → Service → Controller → View) | `f7fc7bb4`–`6c15ebf1` |
+| 03 | `BreakViolationChecker` – beide ArbZG §4-Regeln + 14 Unit-Tests | `1147be18` |
 
 ### Issue 02 – vollständig abgeschlossen
 
@@ -28,18 +29,9 @@ Alle Acceptance Criteria aus `docs/issues/02-automatic-break-deduction-settings.
 
 ## Nächste Schritte
 
-**Issue 03 – `BreakViolationChecker`** (`docs/issues/03-break-violation-checker.md`)
+**Issue 04** – gemäß `docs/issues/` – Views/UI für Pausenverstöße.
 
-Reine, zustandslose Logik – kein Persistence- oder UI-Layer. Ideal für TDD-Einstieg.
-
-Zwei Regeln:
-- **Tagesregel (ArbZG §4 Satz 1):** Erfasste Pausenzeit < gesetzliche Pflichtpause laut `StatutoryBreakRule`
-- **Kontinuitätsregel (ArbZG §4 Satz 3):** Ununterbrochener Arbeitsblock > 6h (Unterbrechung = `isBreak=true`-Eintrag ≥ 15 min; zeitliche Lücken zählen nicht)
-
-Interface: `List<BreakViolation> check(List<TimeEntry> entriesForDay)`
-`BreakViolation` = Value Object mit Typ-Feld `DAILY` / `CONTINUITY`
-
-Danach in Reihenfolge: Issue 04 (Views), 05 (Calculator), 06 (Datenmodell), 07 (Views), 08 (CSV).
+Danach in Reihenfolge: Issue 05 (Calculator), 06 (Datenmodell), 07 (Views), 08 (CSV).
 
 ---
 
@@ -48,7 +40,7 @@ Danach in Reihenfolge: Issue 04 (Views), 05 (Calculator), 06 (Datenmodell), 07 (
 | Was | Wo |
 |---|---|
 | PRD | `docs/prd-94-automatischer-pausenabzug.md` |
-| Issue 03 | `docs/issues/03-break-violation-checker.md` |
+| `BreakViolationChecker` | `workduration/BreakViolationChecker.java` |
 | `StatutoryBreakRule` | Vorhanden, vollständig getestet (Issue 01) |
 | Neuer Controller-Block | `SettingsController.java` – `automaticBreakDeduction`-Abschnitt |
 | Neuer Validator | `SettingsDtoValidator.java` – `validateAutomaticBreakDeduction()` |
