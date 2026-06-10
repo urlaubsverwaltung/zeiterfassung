@@ -40,6 +40,7 @@ updates:
         patterns:
           - "tailwindcss"
           - "@tailwindcss/*"
+    target-branch: main
 
   - package-ecosystem: "maven"
     directory: "/"
@@ -66,6 +67,76 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    target-branch: main
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    cooldown:
+      default-days: 5
+    labels:
+      - "type: dependencies"
+      - "javascript"
+    open-pull-requests-limit: 10
+    groups:
+      vitest:
+        patterns:
+          - "*vitest*"
+      rollup:
+        patterns:
+          - "@rollup/*"
+          - "rollup"
+          - "rollup-*"
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+      typescript-eslint:
+        patterns:
+          - "typescript-eslint*"
+          - "@typescript-eslint/*"
+      postcss:
+        patterns:
+          - "postcss"
+          - "postcss-*"
+      prettier:
+        patterns:
+          - "prettier"
+          - "prettier-*"
+      tailwindcss:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+    target-branch: v2.x
+
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "type: dependencies"
+      - "java"
+    groups:
+      shedlock:
+        patterns:
+          - "net.javacrumbs.shedlock:*"
+      jollyday:
+        patterns:
+          - "de.focus-shift:jollyday-*"
+      spring-boot-major-upgrades:
+        patterns:
+          - "org.springframework.boot:*"
+        update-types:
+          - "major"
+      spring-boot-minor-and-patch-upgrades:
+        patterns:
+          - "org.springframework.boot:*"
+        update-types:
+          - "minor"
+          - "patch"
+    target-branch: v2.x
 
   - package-ecosystem: "github-actions"
     directory: "/.github/workflows"
