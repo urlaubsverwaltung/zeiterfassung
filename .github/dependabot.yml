@@ -50,6 +50,17 @@ updates:
       - "type: dependencies"
       - "java"
     groups:
+      spring-boot-major:
+        patterns:
+          - "org.springframework.boot:*"
+        update-types:
+          - "major"
+      spring-boot-minor-patch:
+        patterns:
+          - "org.springframework.boot*"
+        update-types:
+          - "minor"
+          - "patch"
       shedlock:
         patterns:
           - "net.javacrumbs.shedlock:*"
@@ -119,6 +130,17 @@ updates:
       - "type: dependencies"
       - "java"
     groups:
+      spring-boot-major:
+        patterns:
+          - "org.springframework.boot:*"
+        update-types:
+          - "major"
+      spring-boot-minor-patch:
+        patterns:
+          - "org.springframework.boot*"
+        update-types:
+          - "minor"
+          - "patch"
       shedlock:
         patterns:
           - "net.javacrumbs.shedlock:*"
