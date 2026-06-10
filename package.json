@@ -53,7 +53,7 @@
     "rollup-plugin-esbuild": "6.2.1",
     "rollup-plugin-postcss": "4.0.2",
     "tailwindcss": "4.3.0",
-    "typescript": "5.9.3",
+    "typescript": "6.0.3",
     "typescript-eslint": "8.60.1",
     "vitest": "4.1.8"
   },
