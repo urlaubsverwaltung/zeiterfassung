@@ -61,11 +61,15 @@ updates:
           - "org.springframework.boot:*"
         update-types:
           - "major"
-      spring-boot-minor-and-patch-upgrades:
+      spring-boot-minor-upgrades:
         patterns:
           - "org.springframework.boot:*"
         update-types:
           - "minor"
+      spring-boot-patch-upgrades:
+        patterns:
+          - "org.springframework.boot:*"
+        update-types:
           - "patch"
     target-branch: main
 
@@ -130,11 +134,15 @@ updates:
           - "org.springframework.boot:*"
         update-types:
           - "major"
-      spring-boot-minor-and-patch-upgrades:
+      spring-boot-minor-upgrades:
         patterns:
           - "org.springframework.boot:*"
         update-types:
           - "minor"
+      spring-boot-patch-upgrades:
+        patterns:
+          - "org.springframework.boot:*"
+        update-types:
           - "patch"
     target-branch: v2.x
 
