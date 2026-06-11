@@ -11,6 +11,7 @@ on:
       - "docker/**"
     branches:
       - main
+      - v2.x
   pull_request:
     paths-ignore:
       - ".examples/**"
