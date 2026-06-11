@@ -6,17 +6,21 @@ on:
     - cron: "30 23 * * *"
   push:
     paths-ignore:
+      - "**/*.md"
       - ".examples/**"
       - ".githooks/**"
       - "docker/**"
+      - "docs/**"
     branches:
       - main
       - v2.x
   pull_request:
     paths-ignore:
+      - "**/*.md"
       - ".examples/**"
       - ".githooks/**"
       - "docker/**"
+      - "docs/**"
   workflow_dispatch:
 
 env:
