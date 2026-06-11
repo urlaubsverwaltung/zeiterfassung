@@ -2,7 +2,8 @@ name: Build
 
 on:
   schedule:
-    - cron: "2 4 * * *"
+    - cron: "30 0 * * *"
+    - cron: "30 23 * * *"
   push:
     paths-ignore:
       - ".examples/**"
