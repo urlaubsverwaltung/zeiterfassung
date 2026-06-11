@@ -21,9 +21,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
@@ -69,14 +69,14 @@ class TimeClockUIIT {
         final LoginPage loginPage = new LoginPage(page, port);
         final TimeClockPage timeClockPage = new TimeClockPage(page);
 
-        final LocalDateTime now = LocalDateTime.now(clock.withZone(USER_ZONE_ID));
-
         loginPage.login(OFFICE);
 
         timeClockPage.ensureTimeClockNotRunning();
 
         timeClockPage.startTimeClock();
         timeClockPage.ensureTimeClockRunning();
+
+        final ZonedDateTime now = ZonedDateTime.now(clock.withZone(USER_ZONE_ID));
 
         timeClockPage.openEditForm();
         timeClockPage.hasDate(now.toLocalDate());
