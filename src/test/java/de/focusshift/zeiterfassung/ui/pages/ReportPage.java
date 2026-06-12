@@ -31,8 +31,8 @@ public class ReportPage {
 
     public void isVisibleForOtherPerson(String name) {
         final Locator hint = page.getByTestId("report-users-selected-hint");
-        final Locator locator = hint.locator("z-tooltip").filter(new Locator.FilterOptions().setHasText(name));
-        assertThat(locator).isAttached();
+        final Locator locator = hint.getByTestId("avatar-" + name.toLowerCase().replace(" ", "-"));
+        assertThat(locator).isVisible();
     }
 
     public class PersonSelect {

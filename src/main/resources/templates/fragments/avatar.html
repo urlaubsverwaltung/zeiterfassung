@@ -9,7 +9,7 @@
       th:fragment="avatar(initials,fullName,width,height)"
       th:with="tooltip=${#objects.nullSafe(tooltip, true)}"
     >
-      <span>
+      <span th:data-testid="'avatar-' + ${#strings.toLowerCase(#strings.replace(fullName, ' ', '-'))}">
         <svg
           th:replace="~{icons/avatar::svg(avatarText=${initials}, tooltipText=${fullName}, height=${height}, width=${width})}"
         ></svg>

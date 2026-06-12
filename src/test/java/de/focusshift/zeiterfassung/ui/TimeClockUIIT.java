@@ -79,6 +79,8 @@ class TimeClockUIIT {
         final ZonedDateTime now = ZonedDateTime.now(clock.withZone(USER_ZONE_ID));
 
         timeClockPage.openEditForm();
+
+        final LocalDateTime now = LocalDateTime.now(clock.withZone(USER_ZONE_ID));
         timeClockPage.hasDate(now.toLocalDate());
         timeClockPage.hasTime(now.toLocalTime());
 
