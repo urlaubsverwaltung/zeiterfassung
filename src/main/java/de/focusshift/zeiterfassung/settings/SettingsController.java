@@ -67,7 +67,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
         final FederalStateSettings federalStateSettings = settingsService.getFederalStateSettings();
         final LockTimeEntriesSettings lockTimeEntriesSettings = settingsService.getLockTimeEntriesSettings();
         final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings = settingsService.getSubtractBreakFromTimeEntrySettings();
-        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings.orElse(null));
+        final Optional<AutomaticBreakDeductionSettings> automaticBreakDeductionSettings = settingsService.getAutomaticBreakDeductionSettings();
+        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings.orElse(null), automaticBreakDeductionSettings.orElse(null));
 
         prepareModel(model, locale, settingsDto);
 
@@ -116,6 +117,21 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
             settingsService.updateSubtractBreakFromTimeEntrySettings(subtractBreakFromTimeEntryIsActive, timestamp);
         }
 
+        final Boolean automaticBreakDeductionIsActive = settingsDto.automaticBreakDeductionIsActive();
+        if (automaticBreakDeductionIsActive != null) {
+            final LocalDate date = settingsDto.automaticBreakDeductionActiveDate();
+
+            final Instant timestamp;
+            if (date == null) {
+                timestamp = null;
+            } else {
+                final ZoneId zoneId = userSettingsProvider.zoneId();
+                timestamp = date.atStartOfDay(zoneId).toInstant();
+            }
+
+            settingsService.updateAutomaticBreakDeductionSettings(automaticBreakDeductionIsActive, timestamp);
+        }
+
         return new ModelAndView("redirect:/settings");
     }
 
@@ -141,7 +157,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
     private SettingsDto toSettingsDto(
         FederalStateSettings federalStateSettings,
         LockTimeEntriesSettings lockTimeEntriesSettings,
-        @Nullable SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings
+        @Nullable SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings,
+        @Nullable AutomaticBreakDeductionSettings automaticBreakDeductionSettings
     ) {
 
         final ZoneId userZoneId = userSettingsProvider.zoneId();
@@ -156,13 +173,23 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
             ? null
             : subtractBreakFromTimeEntrySettings.timestampAsLocalDate(userZoneId).orElse(null);
 
+        final Boolean automaticBreakDeductionIsActive = automaticBreakDeductionSettings == null
+            ? null
+            : automaticBreakDeductionSettings.active();
+
+        final LocalDate automaticBreakDeductionActiveDate = automaticBreakDeductionSettings == null
+            ? null
+            : automaticBreakDeductionSettings.enabledDate(userZoneId).orElse(null);
+
         return new SettingsDto(
             federalStateSettings.federalState(),
             federalStateSettings.worksOnPublicHoliday(),
             lockTimeEntriesSettings.lockingIsActive(),
             lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null,
             subtractBreakFromTimeEntryIsActive,
-            subtractBreakFromTimeEntryIsActiveDate
+            subtractBreakFromTimeEntryIsActiveDate,
+            automaticBreakDeductionIsActive,
+            automaticBreakDeductionActiveDate
         );
     }
 
