@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
 import de.focusshift.zeiterfassung.TestKeycloakContainer;
+import de.focusshift.zeiterfassung.ui.extension.IntegrationTest;
 import de.focusshift.zeiterfassung.ui.extension.UiTest;
 import de.focusshift.zeiterfassung.ui.pages.LoginPage;
 import de.focusshift.zeiterfassung.ui.pages.NavigationPage;
@@ -37,6 +38,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers(parallel = true)
+@IntegrationTest
 @UiTest
 class TimeEntryUIIT {
 

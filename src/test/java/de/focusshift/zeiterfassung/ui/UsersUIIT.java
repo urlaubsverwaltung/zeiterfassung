@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.ui;
 import com.microsoft.playwright.Page;
 import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
 import de.focusshift.zeiterfassung.TestKeycloakContainer;
+import de.focusshift.zeiterfassung.ui.extension.IntegrationTest;
 import de.focusshift.zeiterfassung.ui.extension.UiTest;
 import de.focusshift.zeiterfassung.ui.pages.LoginPage;
 import de.focusshift.zeiterfassung.ui.pages.NavigationPage;
@@ -22,6 +23,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @Testcontainers(parallel = true)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
+@IntegrationTest
 @UiTest
 class UsersUIIT {
 
