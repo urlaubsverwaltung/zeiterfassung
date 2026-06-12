@@ -6,6 +6,78 @@
     <title>Navigation</title>
   </head>
   <body>
+    <!--
+      Renders a single navigation link. Items without sub-items render as an anchor.
+      Items with sub-items render as a button opening a popover sub-navigation (collapsed state).
+      The icon (or a first-letter fallback) is always rendered so the collapsed, icon-only
+      navigation stays usable; the textual label lives in `.nav-link-text` and is hidden when collapsed.
+    -->
+    <th:block th:fragment="navLink(link)">
+      <a
+        th:if="${#lists.isEmpty(link.subItems)}"
+        class="navigation-link flex items-center gap-2"
+        th:classappend="${link.active ? 'navigation-link--active' : ''}"
+        th:id="${link.id}"
+        th:href="@{__${link.href}__}"
+        th:data-testid="${link.dataTestId}"
+        th:aria-current="${link.ariaCurrent}"
+      >
+        <th:block th:replace="~{_navigation::navIcon(${link})}" />
+        <span
+          class="nav-link-text"
+          th:text="${#messages.msg(link.messageKey)}"
+        ></span>
+      </a>
+
+      <th:block th:if="${not #lists.isEmpty(link.subItems)}">
+        <button
+          type="button"
+          class="navigation-link flex items-center gap-2"
+          th:classappend="${link.active ? 'navigation-link--active' : ''}"
+          th:id="${link.id}"
+          th:data-href="@{__${link.href}__}"
+          th:data-testid="${link.dataTestId}"
+          aria-haspopup="true"
+        >
+          <th:block th:replace="~{_navigation::navIcon(${link})}" />
+          <span
+            class="nav-link-text"
+            th:text="${#messages.msg(link.messageKey)}"
+          ></span>
+        </button>
+        <ul class="subnav-group">
+          <li th:each="subLink : ${link.subItems}">
+            <a
+              class="navigation-sublink"
+              th:classappend="${subLink.active ? 'navigation-sublink--active' : ''}"
+              th:href="@{__${subLink.href}__}"
+              th:id="${subLink.id}"
+              th:data-testid="${subLink.dataTestId}"
+              th:aria-current="${subLink.ariaCurrent}"
+            >
+              <th:block
+                th:text="${#messages.msg(subLink.messageKey)}"
+              ></th:block>
+            </a>
+          </li>
+        </ul>
+      </th:block>
+    </th:block>
+
+    <!-- icon for a navigation link, falling back to the first letter of the label when no icon is set -->
+    <th:block th:fragment="navIcon(link)">
+      <svg
+        th:if="${not #strings.isEmpty(link.iconName)}"
+        th:replace="~{'icons/' + __${link.iconName}__ :: svg(className='nav-link-badge w-5 h-5')}"
+      />
+      <span
+        th:if="${#strings.isEmpty(link.iconName)}"
+        class="nav-link-badge"
+        aria-hidden="true"
+        th:text="${#strings.substring(#messages.msg(link.messageKey), 0, 1)}"
+      ></span>
+    </th:block>
+
     <th:block th:fragment="nav">
       <div class="topbar-cell navigation-container desktop:h-auto">
         <button
@@ -21,21 +93,54 @@
           class="navigation popover popover--slide-to-right"
         >
           <div class="navigation-inner">
-            <div>
-              <ul>
-                <li th:each="link : ${navigation.items}">
-                  <a
-                    class="navigation-link"
-                    th:classappend="${link.active ? 'navigation-link--active' : ''}"
-                    th:id="${link.id}"
-                    th:href="@{__${link.href}__}"
-                    th:data-testid="${link.dataTestId}"
-                    th:aria-current="${link.ariaCurrent}"
-                  >
-                    <th:block
-                      th:text="${#messages.msg(link.messageKey)}"
-                    ></th:block>
-                  </a>
+            <div th:if="${not #lists.isEmpty(navigation.favorites)}">
+              <span
+                id="nav-group-favorites-label"
+                class="sr-only nav-group-label"
+              >
+                <th:block th:text="#{nav.group.basic}">Persönlich</th:block>
+              </span>
+              <ul aria-labelledby="nav-group-favorites-label">
+                <li th:each="link : ${navigation.favorites}">
+                  <th:block th:replace="~{_navigation::navLink(${link})}" />
+                </li>
+              </ul>
+            </div>
+            <div th:if="${not #lists.isEmpty(navigation.basic)}">
+              <span id="nav-group-basic-label" class="sr-only nav-group-label">
+                <th:block th:text="#{navigation.basic}">Me</th:block>
+              </span>
+              <ul aria-labelledby="nav-group-basic-label">
+                <li th:each="link : ${navigation.basic}">
+                  <th:block th:replace="~{_navigation::navLink(${link})}" />
+                </li>
+              </ul>
+            </div>
+            <div th:if="${not #lists.isEmpty(navigation.company)}">
+              <span
+                id="nav-group-company-label"
+                class="sr-only nav-group-label"
+              >
+                <th:block th:text="#{navigation.company}">Unternehmen</th:block>
+              </span>
+              <ul aria-labelledby="nav-group-company-label">
+                <li th:each="link : ${navigation.company}">
+                  <th:block th:replace="~{_navigation::navLink(${link})}" />
+                </li>
+              </ul>
+            </div>
+            <div th:if="${not #lists.isEmpty(navigation.settings)}">
+              <span
+                id="nav-group-settings-label"
+                class="sr-only nav-group-label"
+              >
+                <th:block th:text="#{navigation.settings}"
+                  >Einstellungen</th:block
+                >
+              </span>
+              <ul aria-labelledby="nav-group-settings-label">
+                <li th:each="link : ${navigation.settings}">
+                  <th:block th:replace="~{_navigation::navLink(${link})}" />
                 </li>
               </ul>
             </div>
@@ -43,22 +148,37 @@
               data-sticky="bottom"
               class="navigation-inner__bottom flex flex-col gap-2"
             >
-              <div class="flex items-center gap-4">
-                <a
-                  class="flex-1 navigation-link flex items-center gap-2"
-                  th:href="${menuHelpUrl}"
-                  target="_blank"
-                  rel="noopener"
+              <a
+                id="global-help-button"
+                class="flex-1 navigation-link flex items-center gap-2"
+                th:href="${menuHelpUrl}"
+                target="_blank"
+                rel="noopener"
+              >
+                <svg
+                  th:replace="~{icons/help-circle::svg(className='nav-help-icon h-5 w-5')}"
+                />
+                <span
+                  class="nav-link-text whitespace-nowrap text-ellipsis overflow-hidden"
+                  style="min-width: 0"
+                  th:text="#{nav.help.title}"
+                ></span>
+              </a>
+              <div class="flex items-center justify-between gap-2">
+                <button
+                  id="nav-toggle"
+                  class="nav-collapse-btn navigation-link flex items-center gap-2"
+                  th:aria-label="#{nav.toggle.aria-label}"
+                  aria-expanded="true"
                 >
-                  <span
-                    class="whitespace-nowrap text-ellipsis overflow-hidden"
-                    style="min-width: 0"
-                    th:text="#{nav.help.title}"
-                  ></span>
                   <svg
-                    th:replace="~{icons/external-link::svg(className='h-4 w-4')}"
-                  ></svg>
-                </a>
+                    th:replace="~{icons/panel-left::svg(className='w-5 h-5')}"
+                  />
+                  <span
+                    class="nav-link-text"
+                    th:text="#{nav.toggle.text}"
+                  ></span>
+                </button>
                 <div id="feedback-heart-container"></div>
               </div>
             </z-sticky>

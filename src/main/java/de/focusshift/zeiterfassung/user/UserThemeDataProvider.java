@@ -7,12 +7,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
-
-import java.security.Principal;
 
 import static java.lang.invoke.MethodHandles.lookup;
 
@@ -33,26 +33,26 @@ public class UserThemeDataProvider implements DataProviderInterface {
     public void postHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler, ModelAndView modelAndView) {
         if (addDataIf(modelAndView)) {
 
-            final Principal userPrincipal = request.getUserPrincipal();
+            final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-            final Theme theme;
+            Theme theme = UserSettings.DEFAULT.theme();
+            boolean navigationCollapsed = UserSettings.DEFAULT.navigationCollapsed();
 
-            if (userPrincipal instanceof OAuth2AuthenticationToken token) {
+            if (authentication instanceof OAuth2AuthenticationToken token) {
                 final OAuth2User oauth2User = token.getPrincipal();
                 if (oauth2User instanceof CurrentOidcUser user) {
-                    user.getUserIdComposite();
-                    theme = userSettingsService.findTheme(user.getUserIdComposite()).orElse(DEFAULT_THEME);
+                    final UserSettings userSettings = userSettingsService.getUserSettings(user.getUserIdComposite());
+                    theme = userSettings.theme();
+                    navigationCollapsed = userSettings.navigationCollapsed();
                 } else {
-                    LOG.info("userPrincipal not of type {}. Using default system theme.", CurrentOidcUser.class.getName());
-                    theme = DEFAULT_THEME;
+                    LOG.info("authentication principal not of type {}. Using default system theme.", CurrentOidcUser.class.getName());
                 }
             } else {
-                LOG.info("userPrincipal not of type OAuth2AuthenticationToken. Using default system theme.");
-                theme = DEFAULT_THEME;
+                LOG.info("authentication not of type OAuth2AuthenticationToken. Using default system theme.");
             }
 
-            final String themeValueLowerCase = theme.name().toLowerCase();
-            modelAndView.addObject("theme", themeValueLowerCase);
+            modelAndView.addObject("theme", theme.name().toLowerCase());
+            modelAndView.addObject("navigationCollapsed", navigationCollapsed);
         }
     }
 }
