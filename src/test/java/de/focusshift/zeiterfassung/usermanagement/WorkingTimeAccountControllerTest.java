@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.settings.FederalStateSettings;
@@ -29,7 +28,6 @@ import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.ui.Model;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.math.BigDecimal;
@@ -40,7 +38,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static de.focusshift.zeiterfassung.publicholiday.FederalState.GERMANY_BADEN_WUERTTEMBERG;
@@ -52,8 +49,6 @@ import static java.time.ZoneOffset.UTC;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -76,14 +71,15 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
     @Mock
     private FederalStateSettingsService federalStateSettingsService;
     @Mock
-    private UserSearchViewHelper userSearchViewHelper;
+    private UserManagementSearchUiFragmentSupplier userManagementSearchUiFragmentSupplier;
 
     private static final Clock clockFixed = Clock.fixed(Instant.now(), UTC);
     private static final BigDecimal EIGHT = BigDecimal.valueOf(8);
 
     @BeforeEach
     void setUp() {
-        sut = new WorkingTimeAccountController(userManagementService, workingTimeService, federalStateSettingsService, userSearchViewHelper, clockFixed);
+        sut = new WorkingTimeAccountController(userManagementService, workingTimeService, federalStateSettingsService,
+            userManagementSearchUiFragmentSupplier, clockFixed);
     }
 
     @Test
@@ -344,27 +340,6 @@ class WorkingTimeAccountControllerTest implements ControllerTest {
             .andExpect(model().attribute("workingTimes", List.of(expectedWorkingTimeListEntryDto)))
             .andExpect(model().attribute("globalFederalState", GERMANY_BERLIN))
             .andExpect(model().attribute("globalFederalStateMessageKey", "federalState.GERMANY_BERLIN"));
-    }
-
-    @Test
-    void ensureUserSearchReturnsSuggestionsFrameWithJavaScript() throws Exception {
-
-        final UserId userId = new UserId("uuid");
-        final UserLocalId userLocalId = new UserLocalId(42L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-
-        final CurrentOidcUser oidcUser = currentOidcUser(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL));
-
-        when(userSearchViewHelper.getSuggestionFragment(eq("super"), eq(oidcUser), any(Model.class), any(Function.class)))
-            .thenReturn(new ModelAndView("user-search-view"));
-
-        perform(get(WORKING_TIMES_URL_TEMPLATE, userLocalId.value())
-            .with(oidcLogin().oidcUser(oidcUser))
-            .header("Turbo-Frame", "frame-users-suggestions")
-            .param("query", "super")
-        )
-            .andExpect(status().isOk())
-            .andExpect(view().name("user-search-view"));
     }
 
     @Nested

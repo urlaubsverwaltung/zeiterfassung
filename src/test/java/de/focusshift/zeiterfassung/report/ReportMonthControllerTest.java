@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.ControllerTest;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.search.UserSearchUiFragmentSupplier;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
@@ -25,8 +25,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
@@ -37,7 +35,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Clock;
@@ -52,19 +49,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
-import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL;
 import static java.time.ZoneOffset.UTC;
 import static java.util.Locale.GERMAN;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
@@ -72,7 +65,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 @ExtendWith(MockitoExtension.class)
@@ -93,7 +85,7 @@ class ReportMonthControllerTest implements ControllerTest {
     @Mock
     private UserManagementService userManagementService;
     @Mock
-    private UserSearchViewHelper userSearchViewHelper;
+    private UserSearchUiFragmentSupplier userSearchUiFragmentSupplier;
     @Mock
     private MessageSource messageSource;
 
@@ -112,29 +104,7 @@ class ReportMonthControllerTest implements ControllerTest {
         reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
         timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
         timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService);
-        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper, timeEntryDialogHelper, userSearchViewHelper, clock);
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"/report/month", "/report/year/2026/month/4"})
-    void ensureUserSearchReturnsSuggestionsFrameWithJavaScript(String url) throws Exception {
-
-        final UserId userId = new UserId("uuid");
-        final UserLocalId userLocalId = new UserLocalId(42L);
-        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
-
-        final CurrentOidcUser oidcUser = currentOidcUser(userIdComposite, List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_VIEW_REPORT_ALL));
-
-        when(userSearchViewHelper.getSuggestionFragment(eq("super"), eq(oidcUser), any(Model.class), any(java.util.function.Function.class)))
-            .thenReturn(new ModelAndView("user-search-view"));
-
-        perform(get(url)
-            .with(oidcLogin().oidcUser(oidcUser))
-            .header("Turbo-Frame", "frame-users-suggestions")
-            .param("query", "super")
-        )
-            .andExpect(status().isOk())
-            .andExpect(view().name("user-search-view"));
+        sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper, timeEntryDialogHelper, userSearchUiFragmentSupplier, clock);
     }
 
     @Test
@@ -531,7 +501,8 @@ class ReportMonthControllerTest implements ControllerTest {
         @BeforeEach
         void setUp() {
             timeEntryDialogHelper = mock(TimeEntryDialogHelper.class);
-            sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper, timeEntryDialogHelper, userSearchViewHelper, clock);
+            sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper,
+                timeEntryDialogHelper, userSearchUiFragmentSupplier, clock);
         }
 
         @Test

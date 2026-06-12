@@ -24,11 +24,6 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WO
 public class UserSearchViewHelper {
 
     /**
-     * Name of the user search submit button to signal a user search.
-     */
-    public static final String USER_SEARCH_SIGNAL = "action-user-search";
-
-    /**
      * Name of the user search query parameter.
      */
     public static final String USER_SEARCH_QUERY_PARAM = "query";

@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.user;
 
 import de.focusshift.zeiterfassung.ControllerTest;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.search.UserSearchUiFragmentSupplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,15 +48,16 @@ class UserSettingsViewControllerTest implements ControllerTest {
     @Mock
     private SupportedLocaleService supportedLocaleService;
     @Mock
-    private MessageSource messageSource;
-    @Mock
     private UserSettingsDtoValidator userSettingsDtoValidator;
     @Mock
-    private UserSearchViewHelper userSearchViewHelper;
+    private UserSearchUiFragmentSupplier userSearchUiFragmentSupplier;
+    @Mock
+    private MessageSource messageSource;
 
     @BeforeEach
     void setUp() {
-        sut = new UserSettingsViewController(userSettingsService, supportedLocaleService, messageSource, userSettingsDtoValidator, userSearchViewHelper);
+        sut = new UserSettingsViewController(userSettingsService, supportedLocaleService, userSettingsDtoValidator,
+            userSearchUiFragmentSupplier, messageSource);
     }
 
     @Test

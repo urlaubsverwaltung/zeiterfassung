@@ -2,8 +2,8 @@ package de.focusshift.zeiterfassung.settings;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
-import de.focusshift.zeiterfassung.security.CurrentUser;
+import de.focusshift.zeiterfassung.search.UserSearchUiFragmentSupplier;
+import de.focusshift.zeiterfassung.search.UserSuggestionUrlStrategy;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -27,9 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Optional;
 
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.settings.FederalStateSelectDtoFactory.federalStateSelectDto;
-import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.util.Objects.requireNonNullElse;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
@@ -44,21 +42,39 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
     private final SettingsService settingsService;
     private final SettingsDtoValidator settingsDtoValidator;
     private final UserSettingsProvider userSettingsProvider;
-    private final UserSearchViewHelper userSearchViewHelper;
+    private final UserSearchUiFragmentSupplier defaultUserSearchUiFragmentSupplier;
     private final Clock clock;
 
     SettingsController(
         SettingsService settingsService,
         SettingsDtoValidator settingsDtoValidator,
         UserSettingsProvider userSettingsProvider,
-        UserSearchViewHelper userSearchViewHelper,
+        UserSearchUiFragmentSupplier defaultUserSearchUiFragmentSupplier,
         Clock clock
     ) {
         this.settingsService = settingsService;
         this.settingsDtoValidator = settingsDtoValidator;
         this.userSettingsProvider = userSettingsProvider;
-        this.userSearchViewHelper = userSearchViewHelper;
+        this.defaultUserSearchUiFragmentSupplier = defaultUserSearchUiFragmentSupplier;
         this.clock = clock;
+    }
+
+    @Override
+    public UserSuggestionUrlStrategy userSuggestionUrlStrategy() {
+        return (suggestion, context) -> {
+            final CurrentOidcUser user = context.getUser();
+            final boolean isCurrentUser = suggestion.userIdComposite().equals(user.getUserIdComposite());
+            if (isCurrentUser) {
+                return "/timeentries";
+            } else {
+                return "/timeentries/users/%s".formatted(suggestion.userLocalId().value());
+            }
+        };
+    }
+
+    @Override
+    public UserSearchUiFragmentSupplier userSearchUiFragmentSupplier() {
+        return defaultUserSearchUiFragmentSupplier;
     }
 
     @GetMapping
@@ -117,19 +133,6 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
         }
 
         return new ModelAndView("redirect:/settings");
-    }
-
-    @GetMapping(params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
-    ModelAndView userSearchFragment(@RequestParam(USER_SEARCH_QUERY_PARAM) String query, @CurrentUser CurrentOidcUser currentUser, Model model) {
-        return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
-            suggestion -> {
-                if (suggestion.userIdComposite().equals(currentUser.getUserIdComposite())) {
-                    return "/timeentries";
-                } else {
-                    return "/timeentries/users/%s".formatted(suggestion.userLocalId().value());
-                }
-            }
-        );
     }
 
     private void prepareModel(Model model, Locale locale, SettingsDto settingsDto) {

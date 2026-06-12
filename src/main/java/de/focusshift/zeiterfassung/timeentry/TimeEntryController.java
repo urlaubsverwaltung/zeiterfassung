@@ -2,7 +2,8 @@ package de.focusshift.zeiterfassung.timeentry;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.search.UserSearchUiFragmentSupplier;
+import de.focusshift.zeiterfassung.search.UserSuggestionUrlStrategy;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
@@ -45,7 +46,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
@@ -73,7 +73,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     private final TimeEntryLockService timeEntryLockService;
     private final DateFormatter dateFormatter;
     private final TimeEntryViewHelper viewHelper;
-    private final UserSearchViewHelper userSearchViewHelper;
+    private final TimeEntryUserSuggestionUrlStrategy userSuggestionUrlStrategy;
     private final Clock clock;
 
     TimeEntryController(
@@ -84,7 +84,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         TimeEntryLockService timeEntryLockService,
         DateFormatter dateFormatter,
         TimeEntryViewHelper viewHelper,
-        UserSearchViewHelper userSearchViewHelper,
+        TimeEntryUserSuggestionUrlStrategy userSuggestionUrlStrategy,
         Clock clock
     ) {
         this.timeEntryService = timeEntryService;
@@ -94,8 +94,18 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         this.timeEntryLockService = timeEntryLockService;
         this.dateFormatter = dateFormatter;
         this.viewHelper = viewHelper;
-        this.userSearchViewHelper = userSearchViewHelper;
+        this.userSuggestionUrlStrategy = userSuggestionUrlStrategy;
         this.clock = clock;
+    }
+
+    @Override
+    public UserSuggestionUrlStrategy userSuggestionUrlStrategy() {
+        return userSuggestionUrlStrategy;
+    }
+
+    @Override
+    public UserSearchUiFragmentSupplier userSearchUiFragmentSupplier() {
+        return () -> "timeentries/fragments/user-search::search";
     }
 
     @GetMapping("/timeentries")
@@ -404,26 +414,6 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         LOG.info("User {} deleted timeEntry {} of user {}. Redirecting to {}.", currentUserLocalId, timeEntryId, ownerLocalId, userTimeEntriesUri);
         return new ModelAndView(new RedirectView(userTimeEntriesUri));
-    }
-
-    @GetMapping(value = {"/timeentries", "/timeentries/users/{ownerLocalIdValue}"}, params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
-    ModelAndView userSearchFragment(@PathVariable(required = false) Long ownerLocalIdValue,
-                                    @RequestParam(USER_SEARCH_QUERY_PARAM) String query,
-                                    Model model, @CurrentUser CurrentOidcUser currentUser) {
-
-        if (ownerLocalIdValue != null) {
-            assertTimeEntryAccess(currentUser, ownerLocalIdValue);
-        }
-
-        return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
-            suggestion -> {
-                if (suggestion.userIdComposite().equals(currentUser.getUserIdComposite())) {
-                    return "/timeentries";
-                } else {
-                    return "/timeentries/users/%s".formatted(suggestion.userLocalId().value());
-                }
-            }
-        );
     }
 
     private void prepareViewedUser(Model model, UserLocalId userLocalId) {

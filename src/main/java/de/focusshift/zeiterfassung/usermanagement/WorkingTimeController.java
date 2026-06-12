@@ -3,7 +3,8 @@ package de.focusshift.zeiterfassung.usermanagement;
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.search.UserSearchUiFragmentSupplier;
+import de.focusshift.zeiterfassung.search.UserSuggestionUrlStrategy;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.settings.FederalStateSettings;
@@ -37,8 +38,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.FRAME_USERS_SUGGESTION;
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
@@ -73,20 +72,30 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad, HasUserSearch
     private final WorkingTimeService workingTimeService;
     private final WorkingTimeDtoValidator validator;
     private final FederalStateSettingsService federalStateSettingsService;
-    private final UserSearchViewHelper userSearchViewHelper;
+    private final UserManagementSearchUiFragmentSupplier searchUiFragmentSupplier;
 
     WorkingTimeController(
         UserManagementService userManagementService,
         WorkingTimeService workingTimeService,
         WorkingTimeDtoValidator validator,
         FederalStateSettingsService federalStateSettingsService,
-        UserSearchViewHelper userSearchViewHelper
+        UserManagementSearchUiFragmentSupplier searchUiFragmentSupplier
     ) {
         this.userManagementService = userManagementService;
         this.workingTimeService = workingTimeService;
         this.validator = validator;
         this.federalStateSettingsService = federalStateSettingsService;
-        this.userSearchViewHelper = userSearchViewHelper;
+        this.searchUiFragmentSupplier = searchUiFragmentSupplier;
+    }
+
+    @Override
+    public UserSuggestionUrlStrategy userSuggestionUrlStrategy() {
+        return (suggestion, context) -> "/users/%s/working-time".formatted(suggestion.userLocalId().value());
+    }
+
+    @Override
+    public UserSearchUiFragmentSupplier userSearchUiFragmentSupplier() {
+        return searchUiFragmentSupplier;
     }
 
     @GetMapping("/new")
@@ -127,29 +136,6 @@ class WorkingTimeController implements HasTimeClock, HasLaunchpad, HasUserSearch
         model.addAttribute("createMode", false);
 
         return new ModelAndView("usermanagement/users");
-    }
-
-    @GetMapping(value = {"/new", "/{workingTimeId}"}, params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
-    ModelAndView userSearchFragment(@RequestParam(USER_SEARCH_QUERY_PARAM) String query,
-                                    @PathVariable Long userId,
-                                    @PathVariable(required = false) String workingTimeId,
-                                    @RequestHeader(TURBO_FRAME_HEADER) String turboFrame,
-                                    @CurrentUser CurrentOidcUser currentUser, Model model) {
-
-        if (FRAME_USERS_SUGGESTION.equals(turboFrame)) {
-            return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
-                suggestion -> "/users/%s/working-time".formatted(suggestion.userLocalId().value())
-            );
-        } else if ("person-frame".equals(turboFrame)) {
-            if (workingTimeId == null) {
-                return newWorkingTime(userId, model, query, currentUser);
-            } else {
-                return getWorkingTime(userId, model, workingTimeId, query, currentUser);
-            }
-        } else {
-            LOG.error("unknown turbo-frame requested or person-frame but without userId");
-            return new ModelAndView("error/404", UNPROCESSABLE_CONTENT);
-        }
     }
 
     @PostMapping("/new")
