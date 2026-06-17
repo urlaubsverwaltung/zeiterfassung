@@ -135,12 +135,22 @@
       background-color: transparent;
       @apply rounded-xl;
 
-      &:hover {
+      &:hover,
+      &:focus-within {
         background-color: var(--color-gray-100);
 
         @variant dark {
           background-color: var(--color-zinc-900);
         }
+      }
+
+      &:has([data-user-search-suggestion]:focus-visible) {
+        outline: 2px solid var(--z-focus-ring-color);
+        outline-offset: -2px;
+      }
+
+      & a:focus-visible {
+        outline: none;
       }
     }
   }
