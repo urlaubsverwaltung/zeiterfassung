@@ -2,7 +2,6 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focusshift.zeiterfassung.ControllerTest;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.settings.FederalStateSettings;
 import de.focusshift.zeiterfassung.settings.FederalStateSettingsService;
@@ -82,11 +81,12 @@ class WorkingTimeControllerTest implements ControllerTest {
     @Mock
     private FederalStateSettingsService federalStateSettingsService;
     @Mock
-    private UserSearchViewHelper userSearchViewHelper;
+    private UserManagementSearchUiFragmentSupplier userManagementSearchUiFragmentSupplier;
 
     @BeforeEach
     void setUp() {
-        sut = new WorkingTimeController(userManagementService, workingTimeService, workingTimeDtoValidator, federalStateSettingsService, userSearchViewHelper);
+        sut = new WorkingTimeController(userManagementService, workingTimeService, workingTimeDtoValidator,
+            federalStateSettingsService, userManagementSearchUiFragmentSupplier);
     }
 
     @Test

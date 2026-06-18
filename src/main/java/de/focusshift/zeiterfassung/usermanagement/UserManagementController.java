@@ -2,7 +2,8 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.search.UserSearchUiFragmentSupplier;
+import de.focusshift.zeiterfassung.search.UserSuggestionUrlStrategy;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
@@ -20,15 +21,12 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.FRAME_USERS_SUGGESTION;
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 
 @Controller
 @RequestMapping("/users")
@@ -38,11 +36,24 @@ class UserManagementController implements HasTimeClock, HasLaunchpad, HasUserSea
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final UserManagementService userManagementService;
-    private final UserSearchViewHelper userSearchViewHelper;
+    private final UserManagementSearchUiFragmentSupplier searchUiFragmentSupplier;
 
-    UserManagementController(UserManagementService userManagementService, UserSearchViewHelper userSearchViewHelper) {
+    UserManagementController(
+        UserManagementService userManagementService,
+        UserManagementSearchUiFragmentSupplier searchUiFragmentSupplier
+    ) {
         this.userManagementService = userManagementService;
-        this.userSearchViewHelper = userSearchViewHelper;
+        this.searchUiFragmentSupplier = searchUiFragmentSupplier;
+    }
+
+    @Override
+    public UserSuggestionUrlStrategy userSuggestionUrlStrategy() {
+        return (suggestion, context) -> "/users/%s".formatted(suggestion.userLocalId().value());
+    }
+
+    @Override
+    public UserSearchUiFragmentSupplier userSearchUiFragmentSupplier() {
+        return searchUiFragmentSupplier;
     }
 
     @GetMapping
@@ -70,24 +81,6 @@ class UserManagementController implements HasTimeClock, HasLaunchpad, HasUserSea
     @GetMapping("/{id}")
     ModelAndView user(@PathVariable Long id, @CurrentUser CurrentOidcUser currentUser) {
         return forward(currentUser, id);
-    }
-
-    @GetMapping(value = {"","/{userId}"}, params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
-    ModelAndView userSearchFragment(@RequestParam(USER_SEARCH_QUERY_PARAM) String query,
-                                    @PathVariable(required = false) Long userId,
-                                    @RequestHeader(TURBO_FRAME_HEADER) String turboFrame,
-                                    @CurrentUser CurrentOidcUser currentUser, Model model) {
-
-        if (FRAME_USERS_SUGGESTION.equals(turboFrame)) {
-            return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
-                suggestion -> "/users/%s".formatted(suggestion.userLocalId().value())
-            );
-        } else if ("person-frame".equals(turboFrame) && userId != null) {
-            return forward(currentUser, userId);
-        } else {
-            LOG.error("unknown turbo-frame requested or person-frame but without userId");
-            return new ModelAndView("error/404", UNPROCESSABLE_CONTENT);
-        }
     }
 
     private ModelAndView forward(CurrentOidcUser currentUser, Long selectedUserId) {

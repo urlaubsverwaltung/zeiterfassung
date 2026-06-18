@@ -2,7 +2,8 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.search.UserSearchUiFragmentSupplier;
+import de.focusshift.zeiterfassung.search.UserSuggestionUrlStrategy;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
@@ -15,9 +16,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -34,13 +35,13 @@ import java.time.DateTimeException;
 import java.time.Year;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.ScrollPreservation.PRESERVE;
-import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_REFRESH_SCROLL_ATTRIBUTE;
+import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -52,27 +53,60 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch 
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
-    private static final String REPORT_YEAR_WEEK_URL_TEMPLATE = "/report/year/%d/week/%d";
+    private static final String REPORT_WEEK_PATH = "/report/week";
+    private static final String REPORT_YEAR_WEEK_PATH_TEMPLATE = "/report/year/{year}/week/{week}";
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     private final ReportService reportService;
     private final ReportPermissionService reportPermissionService;
     private final ReportViewHelper reportViewHelper;
     private final TimeEntryDialogHelper timeEntryDialogHelper;
-    private final UserSearchViewHelper userSearchViewHelper;
+    private final UserSearchUiFragmentSupplier defaultUserSearchUiFragmentSupplier;
     private final Clock clock;
 
-    ReportWeekController(ReportService reportService, ReportPermissionService reportPermissionService,
-                         ReportViewHelper reportViewHelper, TimeEntryDialogHelper timeEntryDialogHelper,
-                         UserSearchViewHelper userSearchViewHelper, Clock clock) {
+    ReportWeekController(
+        ReportService reportService,
+        ReportPermissionService reportPermissionService,
+        ReportViewHelper reportViewHelper,
+        TimeEntryDialogHelper timeEntryDialogHelper,
+        UserSearchUiFragmentSupplier defaultUserSearchUiFragmentSupplier,
+        Clock clock
+    ) {
         this.reportService = reportService;
         this.reportPermissionService = reportPermissionService;
         this.reportViewHelper = reportViewHelper;
         this.timeEntryDialogHelper = timeEntryDialogHelper;
-        this.userSearchViewHelper = userSearchViewHelper;
+        this.defaultUserSearchUiFragmentSupplier = defaultUserSearchUiFragmentSupplier;
         this.clock = clock;
     }
 
-    @GetMapping("/report/week")
+    @Override
+    public UserSuggestionUrlStrategy userSuggestionUrlStrategy() {
+        return (suggestion, context) -> {
+            final String path;
+            final String requestPath = context.getRequestPath();
+            if (requestPath.equals(REPORT_WEEK_PATH)) {
+                path = REPORT_WEEK_PATH;
+            } else {
+                final Map<String, String> variables = PATH_MATCHER.extractUriTemplateVariables(REPORT_YEAR_WEEK_PATH_TEMPLATE, requestPath);
+                path = reportYearWeekPath(parseInt(variables.get("year")), parseInt(variables.get("week")));
+            }
+
+            final boolean isUser = suggestion.userIdComposite().equals(context.getUser().getUserIdComposite());
+            if (isUser) {
+                return path;
+            } else {
+                return path + "?user=" + suggestion.userLocalId().value();
+            }
+        };
+    }
+
+    @Override
+    public UserSearchUiFragmentSupplier userSearchUiFragmentSupplier() {
+        return defaultUserSearchUiFragmentSupplier;
+    }
+
+    @GetMapping(REPORT_WEEK_PATH)
     public String weeklyUserReportToday(RedirectAttributes redirectAttributes, HttpServletRequest request) {
 
         redirectAttributes.mergeAttributes(request.getParameterMap());
@@ -82,7 +116,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch 
         return format("forward:/report/year/%s/week/%s", yearWeek.getYear(), yearWeek.getWeek());
     }
 
-    @GetMapping("/report/year/{year}/week/{week}")
+    @GetMapping(REPORT_YEAR_WEEK_PATH_TEMPLATE)
     public ModelAndView weeklyUserReport(
         @PathVariable Integer year,
         @PathVariable Integer week,
@@ -122,17 +156,17 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch 
 
         final int previousYear = reportYearWeek.minusWeeks(1).getYear();
         final int previousWeek = reportYearWeek.minusWeeks(1).getWeek();
-        final String previousSectionUrl = reportViewHelper.createUrl(format(REPORT_YEAR_WEEK_URL_TEMPLATE, previousYear, previousWeek), allUsersSelected, selectedUserLocalIds);
+        final String previousSectionUrl = reportViewHelper.createUrl(reportYearWeekPath(previousYear, previousWeek), allUsersSelected, selectedUserLocalIds);
 
         final String todaySectionUrl = reportViewHelper.createUrl("/report/week", allUsersSelected, selectedUserLocalIds);
 
         final int nextYear = reportYearWeek.plusWeeks(1).getYear();
         final int nextWeek = reportYearWeek.plusWeeks(1).getWeek();
-        final String nextSectionUrl = reportViewHelper.createUrl(format(REPORT_YEAR_WEEK_URL_TEMPLATE, nextYear, nextWeek), allUsersSelected, selectedUserLocalIds);
+        final String nextSectionUrl = reportViewHelper.createUrl(reportYearWeekPath(nextYear, nextWeek), allUsersSelected, selectedUserLocalIds);
 
         final int selectedYear = reportYearWeek.getYear();
         final int selectedWeek = reportYearWeek.getWeek();
-        final String selectedYearWeekUrl = reportViewHelper.createUrl(format(REPORT_YEAR_WEEK_URL_TEMPLATE, selectedYear, selectedWeek), allUsersSelected, selectedUserLocalIds);
+        final String selectedYearWeekUrl = reportViewHelper.createUrl(reportYearWeekPath(selectedYear, selectedWeek), allUsersSelected, selectedUserLocalIds);
         final String csvDownloadUrl = selectedYearWeekUrl.contains("?") ? selectedYearWeekUrl + "&csv" : selectedYearWeekUrl + "?csv";
 
         model.addAttribute("userReportPreviousSectionUrl", previousSectionUrl);
@@ -142,7 +176,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch 
 
         final List<User> users = reportPermissionService.findAllPermittedUsersForCurrentUser();
 
-        reportViewHelper.addUserFilterModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, format(REPORT_YEAR_WEEK_URL_TEMPLATE, year, week));
+        reportViewHelper.addUserFilterModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, reportYearWeekPath(year, week));
         reportViewHelper.addSelectedUserDurationAggregationModelAttributes(model, allUsersSelected, users, selectedUserLocalIds, reportWeek);
 
         model.addAttribute("isAllowedToEditTimeEntries", currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL));
@@ -150,30 +184,7 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch 
         return new ModelAndView("reports/user-report");
     }
 
-    @GetMapping(value = {"/report/week", "/report/year/{year}/week/{week}"}, params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
-    @PreAuthorize("hasAuthority('ZEITERFASSUNG_VIEW_REPORT_ALL')")
-    ModelAndView userSearchFragment(
-        @RequestParam(USER_SEARCH_QUERY_PARAM) String query,
-        @PathVariable(required = false) Integer year,
-        @PathVariable(required = false) Integer week,
-        @CurrentUser CurrentOidcUser currentUser, Model model) {
-
-        if ((year != null && week == null) || (year == null && week != null)) {
-            LOG.error("called user search for week report but whether year or week is not given.");
-            return new ModelAndView("error/404");
-        }
-
-        final boolean weekMode = week != null;
-
-        return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
-            suggestion -> weekMode
-                ? "/report/year/%s/week/%s?user=%s".formatted(year, week, suggestion.userLocalId().value())
-                : "/report/week?user=%s".formatted(suggestion.userLocalId().value())
-        );
-    }
-
-
-    @PostMapping("/report/year/{year}/week/{week}")
+    @PostMapping(REPORT_YEAR_WEEK_PATH_TEMPLATE)
     public ModelAndView postEditTimeEntry(
         @PathVariable Integer year,
         @PathVariable Integer week,
@@ -248,6 +259,10 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch 
         }
 
         return reportWeek;
+    }
+
+    private static String reportYearWeekPath(int year, int week) {
+        return "/report/year/%s/week/%s".formatted(year, week);
     }
 
     private static Optional<YearWeek> yearWeek(int year, int week) {

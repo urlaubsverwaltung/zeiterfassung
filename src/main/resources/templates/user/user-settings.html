@@ -17,13 +17,7 @@
       ></script>
     </th:block>
   </head>
-  <body th:replace="~{_layout::body(content=~{::content}, search=~{::search})}">
-    <th:block th:ref="search">
-      <div
-        th:replace="~{fragments/user-search::user-search(placeholder=#{user-search.input.placeholder})}"
-      ></div>
-    </th:block>
-
+  <body th:replace="~{_layout::body(content=~{::content})}">
     <th:block th:fragment="content">
       <main class="content-container content--max-w flex flex-col">
         <div

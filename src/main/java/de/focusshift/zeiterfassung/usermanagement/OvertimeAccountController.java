@@ -2,7 +2,8 @@ package de.focusshift.zeiterfassung.usermanagement;
 
 import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.search.HasUserSearch;
-import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
+import de.focusshift.zeiterfassung.search.UserSearchUiFragmentSupplier;
+import de.focusshift.zeiterfassung.search.UserSuggestionUrlStrategy;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
@@ -24,8 +25,6 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.FRAME_USERS_SUGGESTION;
-import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_OVERTIME_ACCOUNT_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_PERMISSIONS_EDIT_ALL;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
@@ -47,14 +46,26 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock, HasUserSe
 
     private final UserManagementService userManagementService;
     private final OvertimeAccountService overtimeAccountService;
-    private final UserSearchViewHelper userSearchViewHelper;
+    private final UserManagementSearchUiFragmentSupplier searchUiFragmentSupplier;
 
-    OvertimeAccountController(UserManagementService userManagementService,
-                              OvertimeAccountService overtimeAccountService,
-                              UserSearchViewHelper userSearchViewHelper) {
+    OvertimeAccountController(
+        UserManagementService userManagementService,
+        OvertimeAccountService overtimeAccountService,
+        UserManagementSearchUiFragmentSupplier searchUiFragmentSupplier
+    ) {
         this.userManagementService = userManagementService;
         this.overtimeAccountService = overtimeAccountService;
-        this.userSearchViewHelper = userSearchViewHelper;
+        this.searchUiFragmentSupplier = searchUiFragmentSupplier;
+    }
+
+    @Override
+    public UserSuggestionUrlStrategy userSuggestionUrlStrategy() {
+        return (suggestion, context) -> "/users/%s/overtime-account".formatted(suggestion.userLocalId().value());
+    }
+
+    @Override
+    public UserSearchUiFragmentSupplier userSearchUiFragmentSupplier() {
+        return searchUiFragmentSupplier;
     }
 
     @GetMapping
@@ -93,24 +104,6 @@ class OvertimeAccountController implements HasLaunchpad, HasTimeClock, HasUserSe
         overtimeAccountService.updateOvertimeAccount(userLocalId, allowed, maxAllowedOvertime);
 
         return new ModelAndView("redirect:/users/%s/overtime-account".formatted(userId));
-    }
-
-    @GetMapping(params = USER_SEARCH_QUERY_PARAM, headers = TURBO_FRAME_HEADER)
-    ModelAndView userSearchFragment(@RequestParam(USER_SEARCH_QUERY_PARAM) String query,
-                                    @PathVariable(required = false) Long userId,
-                                    @RequestHeader(TURBO_FRAME_HEADER) String turboFrame,
-                                    @CurrentUser CurrentOidcUser currentUser, Model model) {
-
-        if (FRAME_USERS_SUGGESTION.equals(turboFrame)) {
-            return userSearchViewHelper.getSuggestionFragment(query, currentUser, model,
-                suggestion -> "/users/%s/overtime-account".formatted(suggestion.userLocalId().value())
-            );
-        } else if ("person-frame".equals(turboFrame) && userId != null) {
-            return get(userId, model, query, currentUser);
-        } else {
-            LOG.error("unknown turbo-frame requested or person-frame but without userId");
-            return new ModelAndView("error/404", UNPROCESSABLE_CONTENT);
-        }
     }
 
     private void prepareGetRequestModel(Model model, String query, Long userId, OvertimeAccountDto overtimeAccountDto,
