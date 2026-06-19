@@ -86,7 +86,43 @@ class SettingsControllerTest implements ControllerTest {
             true,
             "42",
             true,
-            subtractBreakFeatureDate
+            subtractBreakFeatureDate,
+            null,
+            null
+        );
+
+        perform(get("/settings"))
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("settings", expectedSettingsDto));
+    }
+
+    @Test
+    void ensureGetSettingsContainsAutomaticBreakDeductionSettings() throws Exception {
+
+        final FederalStateSettings federalStateSettings = new FederalStateSettings(FederalState.NONE, false);
+        final LockTimeEntriesSettings lockTimeEntriesSettings = new LockTimeEntriesSettings(false, -1);
+
+        final Instant automaticBreakFeatureTimestamp = Instant.now();
+        final ZoneId berlin = ZoneId.of("Europe/Berlin");
+        final LocalDate automaticBreakFeatureDate = automaticBreakFeatureTimestamp.atZone(berlin).toLocalDate();
+        final AutomaticBreakDeductionSettings automaticBreakDeductionSettings =
+            new AutomaticBreakDeductionSettings(true, Optional.of(automaticBreakFeatureTimestamp));
+
+        when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
+        when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
+        when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
+        when(settingsService.getAutomaticBreakDeductionSettings()).thenReturn(Optional.of(automaticBreakDeductionSettings));
+        when(userSettingsProvider.zoneId()).thenReturn(berlin);
+
+        final SettingsDto expectedSettingsDto = new SettingsDto(
+            FederalState.NONE,
+            false,
+            false,
+            null,
+            null,
+            null,
+            true,
+            automaticBreakFeatureDate
         );
 
         perform(get("/settings"))
@@ -129,6 +165,8 @@ class SettingsControllerTest implements ControllerTest {
             false,
             null,
             null,
+            null,
+            null,
             null
         );
 
@@ -146,6 +184,8 @@ class SettingsControllerTest implements ControllerTest {
             true,
             "-1",
             false,
+            null,
+            null,
             null
         );
 
@@ -181,7 +221,9 @@ class SettingsControllerTest implements ControllerTest {
             true,
             "42",
             true,
-            LocalDate.parse("2025-05-30")
+            LocalDate.parse("2025-05-30"),
+            null,
+            null
         );
 
         perform(post("/settings")
@@ -220,6 +262,24 @@ class SettingsControllerTest implements ControllerTest {
         verify(settingsService).updateFederalStateSettings(FederalState.NONE, false);
         verify(settingsService).updateLockTimeEntriesSettings(true, 42);
         verify(settingsService).updateSubtractBreakFromTimeEntrySettings(true, LocalDate.parse("2025-05-30").atStartOfDay().toInstant(UTC));
+    }
+
+    @Test
+    void ensureUpdateSettingsSavesAutomaticBreakDeductionSettings() throws Exception {
+
+        when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+        perform(post("/settings")
+            .param("federalState", "NONE")
+            .param("worksOnPublicHoliday", "false")
+            .param("lockingIsActive", "false")
+            .param("automaticBreakDeductionIsActive", "true")
+            .param("automaticBreakDeductionActiveDate", "2025-05-30")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/settings"));
+
+        verify(settingsService).updateAutomaticBreakDeductionSettings(true, LocalDate.parse("2025-05-30").atStartOfDay().toInstant(UTC));
     }
 
     @ParameterizedTest

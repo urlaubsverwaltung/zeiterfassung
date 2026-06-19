@@ -36,6 +36,8 @@ class SettingsServiceTest {
     @Mock
     private SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
     @Mock
+    private AutomaticBreakDeductionSettingsRepository automaticBreakDeductionSettingsRepository;
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
 
@@ -45,6 +47,7 @@ class SettingsServiceTest {
             federalStateSettingsRepository,
             lockTimeEntriesSettingsRepository,
             subtractBreakFromTimeEntrySettingsRepository,
+            automaticBreakDeductionSettingsRepository,
             applicationEventPublisher
         );
     }
@@ -282,6 +285,76 @@ class SettingsServiceTest {
 
             assertThat(result.subtractBreakFromTimeEntryIsActive()).isTrue();
             assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).hasValue(timestamp);
+        }
+    }
+
+    @Nested
+    class AutomaticBreakDeductionSettingsTest {
+
+        @Test
+        void ensureGetAutomaticBreakDeductionSettingsReturnsEmptyWhenNotConfigured() {
+            when(automaticBreakDeductionSettingsRepository.findAll()).thenReturn(List.of());
+
+            assertThat(sut.getAutomaticBreakDeductionSettings()).isEmpty();
+        }
+
+        @Test
+        void ensureUpdateAutomaticBreakDeductionSettingsCreatesNewEntityWhenNoneExists() {
+            when(automaticBreakDeductionSettingsRepository.findAll()).thenReturn(List.of());
+            when(automaticBreakDeductionSettingsRepository.save(any(AutomaticBreakDeductionSettingsEntity.class))).thenAnswer(returnsFirstArg());
+
+            final Instant timestamp = Instant.now();
+            final AutomaticBreakDeductionSettings result = sut.updateAutomaticBreakDeductionSettings(true, timestamp);
+
+            assertThat(result.active()).isTrue();
+            assertThat(result.enabledTimestamp()).hasValue(timestamp);
+            verify(automaticBreakDeductionSettingsRepository).save(assertArg(entity -> assertThat(entity.getId()).isNull()));
+        }
+
+        @Test
+        void ensureUpdateAutomaticBreakDeductionSettingsUpdatesExistingEntity() {
+            final AutomaticBreakDeductionSettingsEntity entity = new AutomaticBreakDeductionSettingsEntity();
+            entity.setId(1L);
+            entity.setActive(false);
+
+            when(automaticBreakDeductionSettingsRepository.findAll()).thenReturn(List.of(entity));
+            when(automaticBreakDeductionSettingsRepository.save(any(AutomaticBreakDeductionSettingsEntity.class))).thenAnswer(returnsFirstArg());
+
+            final Instant timestamp = Instant.now();
+            final AutomaticBreakDeductionSettings result = sut.updateAutomaticBreakDeductionSettings(true, timestamp);
+
+            assertThat(result.active()).isTrue();
+            assertThat(result.enabledTimestamp()).hasValue(timestamp);
+        }
+
+        @Test
+        void ensureUpdateAutomaticBreakDeductionSettingsDeactivatesAndClearsTimestamp() {
+            final AutomaticBreakDeductionSettingsEntity entity = new AutomaticBreakDeductionSettingsEntity();
+            entity.setId(1L);
+            entity.setActive(true);
+            entity.setEnabledTimestamp(Instant.now());
+
+            when(automaticBreakDeductionSettingsRepository.findAll()).thenReturn(List.of(entity));
+            when(automaticBreakDeductionSettingsRepository.save(any(AutomaticBreakDeductionSettingsEntity.class))).thenAnswer(returnsFirstArg());
+
+            final AutomaticBreakDeductionSettings result = sut.updateAutomaticBreakDeductionSettings(false, null);
+
+            assertThat(result.active()).isFalse();
+            assertThat(result.enabledTimestamp()).isEmpty();
+        }
+
+        @Test
+        void ensureGetAutomaticBreakDeductionSettingsReturnsPersistedSettings() {
+            final Instant timestamp = Instant.now();
+            final AutomaticBreakDeductionSettingsEntity entity = new AutomaticBreakDeductionSettingsEntity();
+            entity.setId(1L);
+            entity.setActive(true);
+            entity.setEnabledTimestamp(timestamp);
+
+            when(automaticBreakDeductionSettingsRepository.findAll()).thenReturn(List.of(entity));
+
+            assertThat(sut.getAutomaticBreakDeductionSettings())
+                .hasValue(new AutomaticBreakDeductionSettings(true, Optional.of(timestamp)));
         }
     }
 }
