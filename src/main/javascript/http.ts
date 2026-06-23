@@ -21,8 +21,36 @@ export function post<T>(
 ): Promise<ResponseWithData<T>> {
   return doFetch(url, {
     ...options,
-    method: "post",
+    method: "POST",
     body: data,
+  });
+}
+
+/**
+ * This method does a PATCH request and internally handles app specific security aspects like CSRF.
+ *
+ * @param {string} url the endpoint for the request
+ * @param {BodyInit} data data used as RequestBody
+ * @param {RequestInit} [options]
+ *              configure the request with meta info. please see [native fetch init parameter](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters)
+ *              for more detail.
+ * @returns {Promise<ResponseWithData>}
+ *              returns a promise eventually resolve with the original `Response` object enriched
+ *              with a `data` attribute which contains the deserialized response data.
+ */
+export function patchJson<T>(
+  url: string | URL,
+  data: Record<string, unknown>,
+  options: RequestInit = {},
+): Promise<ResponseWithData<T>> {
+  return doFetch(url, {
+    ...options,
+    method: "PATCH",
+    body: JSON.stringify(data),
+    headers: {
+      ...options.headers,
+      "Content-Type": "application/json",
+    },
   });
 }
 
@@ -38,7 +66,7 @@ export function doGet<T>(
 ): Promise<ResponseWithData<T>> {
   return doFetch(url, {
     ...options,
-    method: "get",
+    method: "GET",
   });
 }
 

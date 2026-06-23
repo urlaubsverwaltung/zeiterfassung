@@ -25,6 +25,7 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_SE
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.INCLUDE;
@@ -370,6 +371,53 @@ class FrameDataProviderTest implements ControllerTest {
 
         assertThat(items.get(0).getDataTestId()).isEqualTo("navigation-link-timeentries");
         assertThat(items.get(1).getDataTestId()).isEqualTo("navigation-link-reports");
+    }
+
+    // ==================== Navigation Icon + Group Tests ====================
+
+    @Test
+    void ensureBasicNavigationItemsCarryIcons() throws Exception {
+
+        final MvcResult result = perform("/test-endpoint", List.of(ZEITERFASSUNG_USER));
+
+        assertThat(navigationDto(result).basic())
+            .extracting(NavigationItemDto::getHref, NavigationItemDto::getIconName)
+            .containsExactly(
+                tuple("/timeentries", "clock"),
+                tuple("/report", "chart-pie")
+            );
+    }
+
+    @Test
+    void ensureTimeentriesAndReportsLiveInBasicGroup() throws Exception {
+
+        final MvcResult result = perform("/test-endpoint", List.of(ZEITERFASSUNG_USER));
+
+        final NavigationDto navigation = navigationDto(result);
+        assertThat(navigation.basic()).extracting(NavigationItemDto::getHref).containsExactly("/timeentries", "/report");
+        assertThat(navigation.company()).isEmpty();
+        assertThat(navigation.settings()).isEmpty();
+        assertThat(navigation.favorites()).isEmpty();
+    }
+
+    @Test
+    void ensureUsersLinkLivesInCompanyGroupWithIcon() throws Exception {
+
+        final MvcResult result = perform("/test-endpoint", List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_WORKING_TIME_EDIT_ALL));
+
+        assertThat(navigationDto(result).company())
+            .extracting(NavigationItemDto::getHref, NavigationItemDto::getIconName)
+            .containsExactly(tuple("/users", "users"));
+    }
+
+    @Test
+    void ensureSettingsLinkLivesInSettingsGroupWithIcon() throws Exception {
+
+        final MvcResult result = perform("/test-endpoint", List.of(ZEITERFASSUNG_USER, ZEITERFASSUNG_SETTINGS_GLOBAL));
+
+        assertThat(navigationDto(result).settings())
+            .extracting(NavigationItemDto::getHref, NavigationItemDto::getIconName)
+            .containsExactly(tuple("/settings", "sliders"));
     }
 
     private NavigationDto navigationDto(MvcResult result) {
