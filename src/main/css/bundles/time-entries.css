@@ -358,7 +358,7 @@
       .time-entry-box__input__date {
         display: flex;
         align-items: center;
-        background-color: var(--color-gray-200);
+        background-color: var(--color-gray-100);
         padding: --spacing(3) --spacing(5);
         border-top-left-radius: var(--time-entries-box-border-radius);
         border-top-right-radius: var(--time-entries-box-border-radius);
@@ -373,17 +373,19 @@
         border-bottom-left-radius: var(--time-entries-box-border-radius);
         border-bottom-right-radius: var(--time-entries-box-border-radius);
 
+        /* flex is defined in common .time-entry-box__input__fields */
+        align-items: center;
+
         @variant dark {
           border: none;
         }
       }
     }
   }
-
   .time-entry-box__input__fields {
     flex: 1 0 0;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
   }
 
   .time-entry-box__controls {
@@ -425,12 +427,15 @@
   .time-entry-box-absence__absence-color-box {
     display: inline-block;
     width: 1.5rem;
+    height: 100%;
     background-color: var(--color-amber-200);
     border-bottom-left-radius: var(--time-entries-box-border-radius);
   }
 
   .time-entry-box-absence__absence-text {
     padding: --spacing(6) --spacing(5);
+    display: flex;
+    align-items: center;
   }
 
   @variant dark {
@@ -552,10 +557,6 @@
       }
     }
 
-    .time-entry-box__input__fields {
-      flex-direction: row;
-    }
-
     .time-entry-box__controls {
       margin-top: 0;
       margin-left: --spacing(4);
@@ -589,6 +590,7 @@
     .time-entry-box-absence__absence-color-box {
       margin-top: --spacing(1);
       margin-bottom: --spacing(1);
+      margin-left: --spacing(4);
       height: 3rem;
       width: 0.75rem;
       border-radius: var(--radius-lg);
