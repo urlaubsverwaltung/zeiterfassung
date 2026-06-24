@@ -64,6 +64,7 @@
                   data-user-search-suggestion
                   th:href="@{__${suggestion.href}__}"
                   class="flex items-center gap-2"
+                  th:data-testid="'user-suggestion-link-' + ${#strings.toLowerCase(#strings.replace(suggestion.name, ' ', '-'))}"
                 >
                   <span class="text-blue-300 dark:text-sky-800">
                     <span

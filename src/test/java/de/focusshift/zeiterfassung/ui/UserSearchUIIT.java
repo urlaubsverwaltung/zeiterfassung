@@ -10,7 +10,6 @@ import de.focusshift.zeiterfassung.ui.pages.ReportPage;
 import de.focusshift.zeiterfassung.ui.pages.TimeEntryPage;
 import de.focusshift.zeiterfassung.ui.pages.UserSearchPage;
 import de.focusshift.zeiterfassung.ui.pages.UsersPage;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -44,7 +43,6 @@ class UserSearchUIIT {
     }
 
     @Test
-    @Disabled
     void ensureUserSearch(Page page) {
         final LoginPage loginPage = new LoginPage(page, port);
         final NavigationPage navigationPage = new NavigationPage(page);
