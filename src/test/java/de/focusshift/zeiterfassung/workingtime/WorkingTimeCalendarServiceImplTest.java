@@ -42,6 +42,7 @@ import static java.util.Collections.min;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -452,6 +453,62 @@ class WorkingTimeCalendarServiceImplTest {
                     LocalDate.of(2023, 2, 18), new PlannedWorkingHours(Duration.ofHours(2)),
                     LocalDate.of(2023, 2, 19), new PlannedWorkingHours(Duration.ofHours(1))
                 ), Map.of()));
+        }
+
+        @Test
+        void ensureAbsenceOfOneUserDoesNotAffectPlannedHoursOfAnotherUser() {
+
+            final UserId userIdOne = new UserId("uuid-1");
+            final UserLocalId userLocalIdOne = new UserLocalId(1L);
+            final UserIdComposite userIdCompositeOne = new UserIdComposite(userIdOne, userLocalIdOne);
+
+            final UserId userIdTwo = new UserId("uuid-2");
+            final UserLocalId userLocalIdTwo = new UserLocalId(2L);
+            final UserIdComposite userIdCompositeTwo = new UserIdComposite(userIdTwo, userLocalIdTwo);
+
+            final LocalDate from = LocalDate.of(2023, 2, 13); // monday
+            final LocalDate toExclusive = from.plusWeeks(1);   // 2023-02-20
+
+            // user A has a full-day holiday absence starting BEFORE the requested interval (2023-02-09)
+            // but overlapping into it (2023-02-14)
+            final Absence absenceA = new Absence(userIdOne,
+                LocalDate.of(2023, 2, 9).atStartOfDay().toInstant(UTC),
+                LocalDate.of(2023, 2, 14).atStartOfDay().toInstant(UTC),
+                FULL, foo -> "", RED, HOLIDAY);
+
+            final LocalDate expandedFrom = LocalDate.of(2023, 2, 9);
+
+            // first fetch for the requested interval
+            when(absenceService.getAbsencesByUserIds(any(), eq(from), eq(toExclusive)))
+                .thenReturn(Map.of(userIdCompositeOne, List.of(absenceA), userIdCompositeTwo, List.of()));
+            // second fetch with expanded interval because A's absence overlaps the requested interval start
+            when(absenceService.getAbsencesByUserIds(any(), eq(expandedFrom), eq(toExclusive)))
+                .thenReturn(Map.of(userIdCompositeOne, List.of(absenceA), userIdCompositeTwo, List.of()));
+
+            when(workingTimeService.getWorkingTimesByUsers(expandedFrom, toExclusive, List.of(userLocalIdOne, userLocalIdTwo)))
+                .thenReturn(Map.of(
+                    userIdCompositeOne, List.of(
+                        WorkingTime.builder(userIdCompositeOne, new WorkingTimeId(UUID.randomUUID()))
+                            .federalState(NONE).worksOnPublicHoliday(WorksOnPublicHoliday.NO)
+                            .monday(8).tuesday(8).wednesday(8).thursday(8).friday(8).saturday(8).sunday(8).build()
+                    ),
+                    userIdCompositeTwo, List.of(
+                        WorkingTime.builder(userIdCompositeTwo, new WorkingTimeId(UUID.randomUUID()))
+                            .federalState(NONE).worksOnPublicHoliday(WorksOnPublicHoliday.NO)
+                            .monday(8).tuesday(8).wednesday(8).thursday(8).friday(8).saturday(8).sunday(8).build()
+                    )
+                ));
+
+            final Map<UserIdComposite, WorkingTimeCalendar> actual =
+                sut.getWorkingTimeCalendarForUsers(from, toExclusive, List.of(userLocalIdOne, userLocalIdTwo));
+
+            // User B has NO absence and was requested for the week starting 2023-02-13.
+            // B's calendar must NOT contain planned working hours for dates before the requested 'from'.
+            final WorkingTimeCalendar calendarB = actual.get(userIdCompositeTwo);
+            assertThat(calendarB.plannedWorkingHours(LocalDate.of(2023, 2, 9)))
+                .as("User B's planned hours must not be affected by user A's absence range")
+                .isEmpty();
+            assertThat(calendarB.plannedWorkingHours(LocalDate.of(2023, 2, 12))).isEmpty();
         }
 
         @Test
