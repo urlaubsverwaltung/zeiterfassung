@@ -358,7 +358,7 @@
       .time-entry-box__input__date {
         display: flex;
         align-items: center;
-        background-color: var(--color-gray-200);
+        background-color: var(--color-gray-100);
         padding: --spacing(3) --spacing(5);
         border-top-left-radius: var(--time-entries-box-border-radius);
         border-top-right-radius: var(--time-entries-box-border-radius);
