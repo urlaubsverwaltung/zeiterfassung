@@ -180,6 +180,7 @@ public class ReportServiceRaw {
                                           Function<Period, Map<UserIdComposite, WorkingTimeCalendar>> workingTimeCalendarProvider) {
 
         final LocalDate firstOfMonth = LocalDate.of(yearMonth.getYear(), yearMonth.getMonthValue(), 1);
+        final LocalDate lastDateInclusive = yearMonth.atEndOfMonth();
 
         final Period period = new Period(firstOfMonth, firstOfMonth.plusMonths(1));
 
@@ -188,7 +189,7 @@ public class ReportServiceRaw {
 
         final List<ReportWeek> weeks = getStartOfWeekDatesForMonth(yearMonth)
             .stream()
-            .map(startOfWeekDate -> reportWeek(startOfWeekDate, users, timeEntryDays, workingTimeCalendars))
+            .map(startOfWeekDate -> reportMonthWeek(startOfWeekDate, users, timeEntryDays, workingTimeCalendars, firstOfMonth, lastDateInclusive))
             .toList();
 
         return new ReportMonth(yearMonth, weeks);
@@ -218,6 +219,21 @@ public class ReportServiceRaw {
             .toList();
 
         return new ReportWeek(startOfWeekDate, reportDays);
+    }
+
+    private ReportWeek reportMonthWeek(LocalDate startOfWeekDate, List<User> users,
+                                       Map<UserIdComposite, List<TimeEntryDay>> timeEntryDaysByUser,
+                                       Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars,
+                                       LocalDate monthFrom, LocalDate monthTo) {
+
+        final ReportWeek reportWeek = reportWeek(startOfWeekDate, users, timeEntryDaysByUser, workingTimeCalendars);
+
+        return new ReportWeek(
+            reportWeek.firstDateOfWeek(),
+            reportWeek.reportDays().stream()
+                .filter(reportDay -> !reportDay.date().isBefore(monthFrom) && !reportDay.date().isAfter(monthTo))
+                .toList()
+        );
     }
 
     private List<LocalDate> getStartOfWeekDatesForMonth(YearMonth yearMonth) {

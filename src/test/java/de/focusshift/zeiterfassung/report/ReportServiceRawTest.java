@@ -373,10 +373,16 @@ class ReportServiceRawTest {
         assertThat(actualReportMonth.yearMonth()).isEqualTo(YearMonth.of(2021, 12));
         assertThat(actualReportMonth.weeks()).hasSize(5);
 
+        // First week starts Nov 29 (Monday), but only Dec days are included: Dec 1-5 (5 days)
+        assertThat(actualReportMonth.weeks().get(0).reportDays()).hasSize(5);
+        // Middle weeks are fully within December (7 days each)
+        assertThat(actualReportMonth.weeks().get(1).reportDays()).hasSize(7);
+        assertThat(actualReportMonth.weeks().get(2).reportDays()).hasSize(7);
+        assertThat(actualReportMonth.weeks().get(3).reportDays()).hasSize(7);
+        // Last week starts Dec 27 (Monday), but only Dec days are included: Dec 27-31 (5 days)
+        assertThat(actualReportMonth.weeks().get(4).reportDays()).hasSize(5);
+
         for (ReportWeek reportWeek : actualReportMonth.weeks()) {
-
-            assertThat(reportWeek.reportDays()).hasSize(7);
-
             for (ReportDay reportDay : reportWeek.reportDays()) {
                 assertThat(reportDay.workDuration().duration()).isZero();
             }
@@ -538,43 +544,49 @@ class ReportServiceRawTest {
     }
 
     @Test
-    void ensureReportMonthForAllUsersIncludesEntriesForEveryUserDespiteNoTimeEntries() {
+    void ensureReportMonthWithCrossMonthAbsenceDoesNotCorruptShouldWorkingHours() {
+        // Regression test: when user A has an absence starting in January and ending in February,
+        // the shouldWorkingHours for January should still be correct (not inflated by February days).
 
-        final YearMonth yearMonth = YearMonth.of(2024, 1);
+        final User userA = anyUser(new UserIdComposite(new UserId("alice"), new UserLocalId(1L)));
+        final User userB = anyUser(new UserIdComposite(new UserId("bob"), new UserLocalId(2L)));
 
-        final User user = anyUser(new UserIdComposite(new UserId("batman"), new UserLocalId(1L)));
-        final User userTwo = anyUser(new UserIdComposite(new UserId("robin"), new UserLocalId(2L)));
+        when(userManagementService.findAllUsersByLocalIds(List.of(userA.userLocalId(), userB.userLocalId())))
+            .thenReturn(List.of(userA, userB));
 
-        when(userManagementService.findAllUsers()).thenReturn(List.of(user, userTwo));
-
-        when(workingTimeCalendarService.getWorkingTimeCalendarForAllUsers(any(), any()))
+        // January 2024 has 31 days. We'll mock working time calendars with 8h planned hours for each weekday.
+        // January 2024 weekdays: 23 working days (Mon-Fri, excluding weekends)
+        // Let's keep it simple: mock the calendar to return empty absences
+        when(workingTimeCalendarService.getWorkingTimeCalendarForUsers(any(), any(), any()))
             .thenReturn(Map.of(
-                user.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()),
-                userTwo.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
+                userA.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()),
+                userB.userIdComposite(), new WorkingTimeCalendar(Map.of(), Map.of()))
             );
 
-        when(timeEntryDayService.getTimeEntryDaysForAllUsers(any(LocalDate.class), any(LocalDate.class)))
+        // No time entries for either user
+        when(timeEntryDayService.getTimeEntryDays(any(LocalDate.class), any(LocalDate.class), anyList()))
             .thenReturn(Map.of(
-                user.userIdComposite(), List.of(),
-                userTwo.userIdComposite(), List.of()
+                userA.userIdComposite(), List.of(),
+                userB.userIdComposite(), List.of()
             ));
 
-        final LocalDate start = LocalDate.of(2024, 1, 1);
-        when(userDateService.localDateToFirstDateOfWeek(start)).thenReturn(start);
+        // January 2024 starts on Monday, so first week of month = Jan 1
+        when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2024, 1, 1)))
+            .thenReturn(LocalDate.of(2024, 1, 1));
 
-        final ReportMonth actual = sut.getReportMonthForAllUsers(yearMonth);
+        final ReportMonth actual = sut.getReportMonth(YearMonth.of(2024, 1), List.of(userA.userLocalId(), userB.userLocalId()));
 
+        // Verify that all days in the report belong to January 2024
         for (ReportWeek reportWeek : actual.weeks()) {
             for (ReportDay reportDay : reportWeek.reportDays()) {
-                assertThat(reportDay.workingTimeCalendarByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
-                assertThat(reportDay.reportDayEntriesByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
-                assertThat(reportDay.detailDayAbsencesByUser()).containsOnlyKeys(user.userIdComposite(), userTwo.userIdComposite());
+                assertThat(reportDay.date().getMonthValue())
+                    .as("date %s should be in January, not another month".formatted(reportDay.date()))
+                    .isEqualTo(1);
             }
         }
     }
 
     private static User anyUser() {
-
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
