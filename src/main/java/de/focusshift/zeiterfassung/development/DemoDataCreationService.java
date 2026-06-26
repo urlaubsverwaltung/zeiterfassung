@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
@@ -114,13 +115,9 @@ class DemoDataCreationService {
      */
     private void createDemoAbsences(TenantUser user, LocalDate now) {
 
-        // make sure the "Urlaub" absence type the HOLIDAY absences refer to exists
-        absenceTypeService.updateAbsenceType(new AbsenceTypeUpdate(
-            DEMO_HOLIDAY_TYPE_SOURCE_ID,
-            AbsenceTypeCategory.HOLIDAY,
-            AbsenceColor.BLUE,
-            Map.of(Locale.GERMAN, "Urlaub", Locale.ENGLISH, "Holiday")
-        ));
+        // make sure the "Urlaub" absence type the HOLIDAY absences refer to exists.
+        // the type is shared by all users, so it is only created once per tenant and then reused.
+        ensureHolidayAbsenceTypeExists();
 
         final UserId userId = new UserId(user.id());
         final long localId = user.localId();
@@ -153,6 +150,20 @@ class DemoDataCreationService {
         final int sickDurationDays = (int) (localId % 4);        // 0..3 additional days -> 1..4 days total
         final LocalDate sickStart = firstOfThisMonth.plusDays(sickStartOffset);
         addSickAbsence(userId, sourceId, sickStart, sickStart.plusDays(sickDurationDays));
+    }
+
+    private void ensureHolidayAbsenceTypeExists() {
+        final boolean exists = !absenceTypeService
+            .findAllByAbsenceTypeSourceIds(List.of(DEMO_HOLIDAY_TYPE_SOURCE_ID))
+            .isEmpty();
+        if (!exists) {
+            absenceTypeService.updateAbsenceType(new AbsenceTypeUpdate(
+                DEMO_HOLIDAY_TYPE_SOURCE_ID,
+                AbsenceTypeCategory.HOLIDAY,
+                AbsenceColor.BLUE,
+                Map.of(Locale.GERMAN, "Urlaub", Locale.ENGLISH, "Holiday")
+            ));
+        }
     }
 
     private void addHolidayAbsence(UserId userId, long sourceId, LocalDate start, LocalDate endInclusive, DayLength dayLength) {
