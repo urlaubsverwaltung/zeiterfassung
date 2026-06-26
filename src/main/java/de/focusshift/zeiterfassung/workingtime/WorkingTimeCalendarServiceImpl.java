@@ -135,8 +135,17 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
 
         sortedWorkingTimes.forEach((userIdComposite, workingTimes) -> {
 
+            final List<Absence> userAbsences = absencesByUser.getOrDefault(userIdComposite, List.of());
+
+            // the date-range for which PlannedWorkingHours are calculated must only be expanded by THIS user's
+            // own absences. Otherwise another user's absence (overlapping the requested interval) would add
+            // planned working hours for dates outside the requested interval to this user's calendar, which then
+            // leaks into aggregated ShouldWorkingHours (e.g. adjacent-month days shown in a report).
+            final LocalDate userMinDate = minStartDate(List.of(userAbsences), from);
+            final LocalDate userMaxDateExclusive = maxEndDate(List.of(userAbsences), toExclusive.minusDays(1)).plusDays(1);
+
             final Map<LocalDate, List<Absence>> absencesByDate = new HashMap<>();
-            for (Absence absence : absencesByUser.get(userIdComposite)) {
+            for (Absence absence : userAbsences) {
                 Instant date = absence.startDate();
                 while (!date.isAfter(absence.endDate())) {
                     absencesByDate.computeIfAbsent(LocalDate.ofInstant(date, UTC), unused -> new ArrayList<>()).add(absence);
@@ -144,7 +153,7 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
                 }
             }
 
-            final WorkingTimeCalendar workingTimeCalendar = toWorkingTimeCalendar(minDate, maxDateExclusive, workingTimes, absencesByDate, isPublicHoliday);
+            final WorkingTimeCalendar workingTimeCalendar = toWorkingTimeCalendar(userMinDate, userMaxDateExclusive, workingTimes, absencesByDate, isPublicHoliday);
             workingTimeCalenderByUser.put(userIdComposite, workingTimeCalendar);
         });
 
