@@ -9,6 +9,7 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -19,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
@@ -31,7 +33,8 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static java.lang.invoke.MethodHandles.lookup;
-import static java.time.temporal.ChronoUnit.MONTHS;
+import static java.time.temporal.ChronoUnit.DAYS;
+import static java.time.temporal.TemporalAdjusters.next;
 import static java.util.HashMap.newHashMap;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -44,6 +47,7 @@ public class ReportServiceRaw {
     private final TimeEntryDayService timeEntryDayService;
     private final UserManagementService userManagementService;
     private final UserDateService userDateService;
+    private final UserSettingsProvider userSettingsProvider;
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final TimeEntryLockService timeEntryLockService;
 
@@ -51,6 +55,7 @@ public class ReportServiceRaw {
         TimeEntryDayService timeEntryDayService,
         UserManagementService userManagementService,
         UserDateService userDateService,
+        UserSettingsProvider userSettingsProvider,
         WorkingTimeCalendarService workingTimeCalendarService,
         TimeEntryLockService timeEntryLockService
     ) {
@@ -58,6 +63,7 @@ public class ReportServiceRaw {
         this.timeEntryDayService = timeEntryDayService;
         this.userManagementService = userManagementService;
         this.userDateService = userDateService;
+        this.userSettingsProvider = userSettingsProvider;
         this.workingTimeCalendarService = workingTimeCalendarService;
         this.timeEntryLockService = timeEntryLockService;
     }
@@ -171,7 +177,7 @@ public class ReportServiceRaw {
         final Map<UserIdComposite, List<TimeEntryDay>> timeEntryDays = timeEntryDaysProvider.apply(period);
         final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
 
-        return reportWeek(firstDateOfWeek, users, timeEntryDays, workingTimeCalendars);
+        return reportWeek(firstDateOfWeek, firstDateOfWeek.plusWeeks(1), users, timeEntryDays, workingTimeCalendars);
     }
 
     private ReportMonth createReportMonth(YearMonth yearMonth,
@@ -186,15 +192,25 @@ public class ReportServiceRaw {
         final Map<UserIdComposite, List<TimeEntryDay>> timeEntryDays = timeEntryDaysProvider.apply(period);
         final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
 
-        final List<ReportWeek> weeks = getStartOfWeekDatesForMonth(yearMonth)
-            .stream()
-            .map(startOfWeekDate -> reportWeek(startOfWeekDate, users, timeEntryDays, workingTimeCalendars))
+        final List<LocalDate> startOfWeekDates = getStartOfWeekDatesForMonth(yearMonth);
+        final LocalDate firstOfNextMonth = firstOfMonth.plusMonths(1);
+
+        final List<ReportWeek> weeks = IntStream.range(0, startOfWeekDates.size())
+            .mapToObj(index -> {
+                // include days of the month only.
+                // if the month starts at Sunday, then the first week only has one day.
+                final LocalDate startOfWeekDate = startOfWeekDates.get(index);
+                final LocalDate endOfWeekExclusive = index + 1 < startOfWeekDates.size()
+                    ? startOfWeekDates.get(index + 1)
+                    : firstOfNextMonth;
+                return reportWeek(startOfWeekDate, endOfWeekExclusive, users, timeEntryDays, workingTimeCalendars);
+            })
             .toList();
 
         return new ReportMonth(yearMonth, weeks);
     }
 
-    private ReportWeek reportWeek(LocalDate startOfWeekDate, List<User> users,
+    private ReportWeek reportWeek(LocalDate startOfWeekDate, LocalDate endOfWeekExclusive, List<User> users,
                                   Map<UserIdComposite, List<TimeEntryDay>> timeEntryDaysByUser,
                                   Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars) {
 
@@ -203,7 +219,8 @@ public class ReportServiceRaw {
 
         final LockTimeEntriesSettings settings = timeEntryLockService.getLockTimeEntriesSettings();
 
-        final List<ReportDay> reportDays = IntStream.rangeClosed(0, 6)
+        final int numberOfDays = (int) DAYS.between(startOfWeekDate, endOfWeekExclusive);
+        final List<ReportDay> reportDays = IntStream.range(0, numberOfDays)
             .mapToObj(daysToAdd -> {
                 final LocalDate date = startOfWeekDate.plusDays(daysToAdd);
                 final boolean locked = timeEntryLockService.isLocked(date, settings);
@@ -224,11 +241,14 @@ public class ReportServiceRaw {
         final List<LocalDate> startOfWeekDates = new ArrayList<>();
 
         final LocalDate firstOfMonth = yearMonth.atDay(1);
-        LocalDate date = userDateService.localDateToFirstDateOfWeek(firstOfMonth);
+        startOfWeekDates.add(firstOfMonth);
 
-        while (isPreviousMonth(date, yearMonth) || date.getMonthValue() == yearMonth.getMonthValue()) {
-            startOfWeekDates.add(date);
-            date = date.plusWeeks(1);
+        final DayOfWeek userFirstDayOfWeek = userSettingsProvider.firstDayOfWeek();
+
+        LocalDate startOfWeek = firstOfMonth.with(next(userFirstDayOfWeek));
+        while (YearMonth.from(startOfWeek).equals(yearMonth)) {
+            startOfWeekDates.add(startOfWeek);
+            startOfWeek = startOfWeek.plusWeeks(1);
         }
 
         return startOfWeekDates;
@@ -298,9 +318,5 @@ public class ReportServiceRaw {
         }
 
         return new ReportDay(date, dateIsLocked, workingTimeCalendars, reportDayEntriesByUser, workDurationByUser, reportDayAbsencesByUser);
-    }
-
-    private static boolean isPreviousMonth(LocalDate possiblePreviousMonthDate, YearMonth yearMonth) {
-        return YearMonth.from(possiblePreviousMonthDate).until(yearMonth, MONTHS) == 1;
     }
 }

@@ -145,9 +145,10 @@
             chartHeight=300,
             paddingTop=16,
             nrOfWeeks=${#lists.size(monthReport.weekReports)},
+            totalDays=${#aggregates.sum(monthReport.weekReports.![#lists.size(dayReports)])},
             weekGap=25,
             dayGap=5,
-            barWidth=${(chartWidth - (nrOfWeeks * weekGap) - (nrOfWeeks * 7 - dayGap)) / (nrOfWeeks * 7)}
+            barWidth=${(chartWidth - ((totalDays - nrOfWeeks) * dayGap) - ((nrOfWeeks - 1) * weekGap)) / totalDays}
           "
           viewbox="0 0 1024 360"
           width="100%"
@@ -180,7 +181,13 @@
             </th:block>
           </g>
           <g id="report-graph-month-weeks">
-            <g th:each="week, weekIt : ${monthReport.weekReports}">
+            <g
+              th:each="week, weekIt : ${monthReport.weekReports}"
+              th:with="
+                daysBefore=${weekIt.index == 0 ? 0 : #aggregates.sum(monthReport.weekReports.subList(0, weekIt.index).![#lists.size(dayReports)])},
+                weekLeft=${(daysBefore * barWidth) + ((daysBefore - weekIt.index) * dayGap) + (weekIt.index * weekGap)}
+              "
+            >
               <g
                 th:each="day, dayIt : ${week.dayReports}"
                 th:with="
@@ -189,7 +196,7 @@
                   topHours=${paddingTop + chartHeight - heightHours},
                   topShould=${paddingTop + chartHeight - heightShould},
                   bottom=${paddingTop + chartHeight},
-                  left=${(weekIt.index * weekGap) + (weekIt.index * 7 * barWidth) + (weekIt.index * 6 * dayGap) + (dayIt.index * dayGap) + (dayIt.index * barWidth)}
+                  left=${weekLeft + (dayIt.index * (barWidth + dayGap))}
                 "
                 th:classappend="${day.differentMonth ? 'report-graph-group--different-month' : ''}"
               >

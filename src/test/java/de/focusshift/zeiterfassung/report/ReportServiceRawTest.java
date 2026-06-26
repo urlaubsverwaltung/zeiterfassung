@@ -10,6 +10,7 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -39,6 +40,7 @@ import static java.time.DayOfWeek.MONDAY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -61,13 +63,16 @@ class ReportServiceRawTest {
     @Mock
     private UserDateService userDateService;
     @Mock
+    private UserSettingsProvider userSettingsProvider;
+    @Mock
     private WorkingTimeCalendarService workingTimeCalendarService;
     @Mock
     private TimeEntryLockService timeEntryLockService;
 
     @BeforeEach
     void setUp() {
-        sut = new ReportServiceRaw(timeEntryDayService, userManagementService, userDateService, workingTimeCalendarService, timeEntryLockService);
+        sut = new ReportServiceRaw(timeEntryDayService, userManagementService, userDateService, userSettingsProvider, workingTimeCalendarService, timeEntryLockService);
+        lenient().when(userSettingsProvider.firstDayOfWeek()).thenReturn(MONDAY);
     }
 
     // ------------------------------------------------------------
@@ -336,23 +341,25 @@ class ReportServiceRawTest {
     // ------------------------------------------------------------
 
     @Test
-    void ensureReportMonthFirstDayOfEveryWeekIsMonday() {
+    void ensureReportMonthWeeksStartWithFirstOfMonthThenFirstDayOfWeek() {
 
         final User user = anyUser();
         when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
-
-        when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 1, 1)))
-            .thenReturn(LocalDate.of(2020, 12, 28));
 
         when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of());
 
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), user.userId());
 
-        assertThat(actualReportMonth.weeks()).hasSize(5);
+        final List<ReportWeek> weeks = actualReportMonth.weeks();
+        assertThat(weeks).hasSize(5);
 
-        for (ReportWeek reportWeek : actualReportMonth.weeks()) {
-            assertThat(reportWeek.firstDateOfWeek().getDayOfWeek()).isEqualTo(MONDAY);
+        // first week starts at the first of the month, regardless of week day
+        assertThat(weeks.getFirst().firstDateOfWeek()).isEqualTo(LocalDate.of(2021, 1, 1));
+
+        // every following week starts at the user's first day of week (Monday)
+        for (int i = 1; i < weeks.size(); i++) {
+            assertThat(weeks.get(i).firstDateOfWeek().getDayOfWeek()).isEqualTo(MONDAY);
         }
     }
 
@@ -362,21 +369,24 @@ class ReportServiceRawTest {
         final User user = anyUser();
         when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
 
-        when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 12, 1)))
-            .thenReturn(LocalDate.of(2021, 11, 29));
-
         when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 12, 1), LocalDate.of(2022, 1, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of());
 
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 12), user.userId());
 
         assertThat(actualReportMonth.yearMonth()).isEqualTo(YearMonth.of(2021, 12));
-        assertThat(actualReportMonth.weeks()).hasSize(5);
 
-        for (ReportWeek reportWeek : actualReportMonth.weeks()) {
+        final List<ReportWeek> weeks = actualReportMonth.weeks();
+        assertThat(weeks).hasSize(5);
 
-            assertThat(reportWeek.reportDays()).hasSize(7);
+        // December 2021 starts on a Wednesday -> first/last week are partial
+        assertThat(weeks.get(0).reportDays()).hasSize(5);
+        assertThat(weeks.get(1).reportDays()).hasSize(7);
+        assertThat(weeks.get(2).reportDays()).hasSize(7);
+        assertThat(weeks.get(3).reportDays()).hasSize(7);
+        assertThat(weeks.get(4).reportDays()).hasSize(5);
 
+        for (ReportWeek reportWeek : weeks) {
             for (ReportDay reportDay : reportWeek.reportDays()) {
                 assertThat(reportDay.workDuration().duration()).isZero();
             }
@@ -449,9 +459,6 @@ class ReportServiceRawTest {
         final TimeEntryDay d30 = timeEntryDay(LocalDate.of(2021, 1, 30));
         final TimeEntryDay d31 = timeEntryDay(LocalDate.of(2021, 1, 31));
 
-        when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2021, 1, 1)))
-            .thenReturn(LocalDate.of(2020, 12, 28));
-
         when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of(user.userIdComposite(), List.of(d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, d29, d30, d31)));
 
@@ -475,9 +482,6 @@ class ReportServiceRawTest {
         final YearMonth yearMonth = YearMonth.of(2024, 1);
         final LocalDate start = yearMonth.atDay(1);
         final LocalDate endExclusive = yearMonth.atEndOfMonth().plusDays(1);
-
-        when(userDateService.localDateToFirstDateOfWeek(start))
-            .thenReturn(start);
 
         sut.getReportMonth(yearMonth, List.of(user.userLocalId()));
 
@@ -508,9 +512,6 @@ class ReportServiceRawTest {
                 userTwo.userIdComposite(), List.of()
             ));
 
-        final LocalDate start = LocalDate.of(2024, 1, 1);
-        when(userDateService.localDateToFirstDateOfWeek(start)).thenReturn(start);
-
         final ReportMonth actual = sut.getReportMonth(yearMonth, List.of(user.userLocalId(), userTwo.userLocalId()));
 
         for (ReportWeek reportWeek : actual.weeks()) {
@@ -527,9 +528,6 @@ class ReportServiceRawTest {
         YearMonth month = YearMonth.of(2024, 1);
         LocalDate start = month.atDay(1);
         LocalDate endExclusive = month.atEndOfMonth().plusDays(1);
-
-        when(userDateService.localDateToFirstDateOfWeek(start))
-            .thenReturn(start);
 
         sut.getReportMonthForAllUsers(month);
 
@@ -558,9 +556,6 @@ class ReportServiceRawTest {
                 user.userIdComposite(), List.of(),
                 userTwo.userIdComposite(), List.of()
             ));
-
-        final LocalDate start = LocalDate.of(2024, 1, 1);
-        when(userDateService.localDateToFirstDateOfWeek(start)).thenReturn(start);
 
         final ReportMonth actual = sut.getReportMonthForAllUsers(yearMonth);
 
