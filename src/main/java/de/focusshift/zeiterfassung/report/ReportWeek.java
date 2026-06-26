@@ -52,12 +52,13 @@ record ReportWeek(LocalDate firstDateOfWeek, List<ReportDay> reportDays) impleme
     }
 
     public LocalDate lastDateOfWeek() {
-        return firstDateOfWeek.plusDays(6);
+        if (reportDays.isEmpty()) {
+            return firstDateOfWeek;
+        }
+        return reportDays.getLast().date();
     }
 
     public int calenderWeek() {
-        final int minimalDaysInFirstWeek = WeekFields.of(GERMANY).getMinimalDaysInFirstWeek();
-        final WeekFields weekFields = WeekFields.of(firstDateOfWeek.getDayOfWeek(), minimalDaysInFirstWeek);
-        return firstDateOfWeek.get(weekFields.weekOfWeekBasedYear());
+        return firstDateOfWeek.get(WeekFields.of(GERMANY).weekOfWeekBasedYear());
     }
 }
