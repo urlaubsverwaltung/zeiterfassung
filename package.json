@@ -34,7 +34,7 @@
     "concurrently": "10.0.3",
     "cssnano": "8.0.1",
     "date-fns": "3.6.0",
-    "esbuild": "0.28.0",
+    "esbuild": "0.28.1",
     "eslint": "9.39.2",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-import": "2.32.0",
