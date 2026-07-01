@@ -74,8 +74,14 @@ class ReportServicePermissionAwareTest {
         when(reportPermissionService.filterUserLocalIdsByCurrentUserHasPermissionFor(userIds))
             .thenReturn(List.of());
 
-        when(userDateService.localDateToFirstDateOfWeek(LocalDate.of(2023, 2, 1)))
-            .thenReturn(LocalDate.of(2023, 1, 30));
+        when(userDateService.getStartOfWeekDatesForMonth(YearMonth.of(2023, 2)))
+            .thenReturn(List.of(
+                LocalDate.of(2023, 2, 1),
+                LocalDate.of(2023, 2, 6),
+                LocalDate.of(2023, 2, 13),
+                LocalDate.of(2023, 2, 20),
+                LocalDate.of(2023, 2, 27)
+            ));
 
         final ReportMonth actual = sut.getReportMonth(YearMonth.of(2023, 2), userIds);
 
@@ -84,15 +90,15 @@ class ReportServicePermissionAwareTest {
         assertThat(actual.weeks()).hasSize(5);
 
         assertThat(actual.weeks().get(0)).satisfies(week -> {
-            assertThat(week.firstDateOfWeek()).isEqualTo(LocalDate.of(2023, 1, 30));
+            assertThat(week.firstDateOfWeek()).isEqualTo(LocalDate.of(2023, 2, 1));
             assertThat(week.reportDays()).containsExactly(
-                new ReportDay(LocalDate.of(2023, 1, 30), false, Map.of(), Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 1, 31), false, Map.of(), Map.of(), Map.of(), Map.of()),
                 new ReportDay(LocalDate.of(2023, 2, 1), false, Map.of(), Map.of(), Map.of(), Map.of()),
                 new ReportDay(LocalDate.of(2023, 2, 2), false, Map.of(), Map.of(), Map.of(), Map.of()),
                 new ReportDay(LocalDate.of(2023, 2, 3), false, Map.of(), Map.of(), Map.of(), Map.of()),
                 new ReportDay(LocalDate.of(2023, 2, 4), false, Map.of(), Map.of(), Map.of(), Map.of()),
-                new ReportDay(LocalDate.of(2023, 2, 5), false, Map.of(), Map.of(), Map.of(), Map.of())
+                new ReportDay(LocalDate.of(2023, 2, 5), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 6), false, Map.of(), Map.of(), Map.of(), Map.of()),
+                new ReportDay(LocalDate.of(2023, 2, 7), false, Map.of(), Map.of(), Map.of(), Map.of())
             );
         });
 

@@ -7,10 +7,14 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Year;
+import java.time.YearMonth;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.WeekFields;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
+import static java.time.temporal.TemporalAdjusters.next;
 import static java.time.temporal.TemporalAdjusters.previousOrSame;
 import static java.util.Locale.GERMANY;
 
@@ -51,6 +55,24 @@ class UserDateServiceImpl implements UserDateService {
             .withYear(year.getValue())
             .with(weekFields.weekOfWeekBasedYear(), weekOfYear)
             .with(previousOrSame(usersFirstDayOfWeek));
+    }
+
+    @Override
+    public List<LocalDate> getStartOfWeekDatesForMonth(YearMonth yearMonth) {
+        final List<LocalDate> startOfWeekDates = new ArrayList<>();
+
+        final LocalDate firstOfMonth = yearMonth.atDay(1);
+        startOfWeekDates.add(firstOfMonth);
+
+        final DayOfWeek userFirstDayOfWeek = userSettingsProvider.firstDayOfWeek();
+
+        LocalDate startOfWeek = firstOfMonth.with(next(userFirstDayOfWeek));
+        while (YearMonth.from(startOfWeek).equals(yearMonth)) {
+            startOfWeekDates.add(startOfWeek);
+            startOfWeek = startOfWeek.plusWeeks(1);
+        }
+
+        return startOfWeekDates;
     }
 
     private LocalDate localDateToFirstDateOfWeek(LocalDate localDate, DayOfWeek firstDayOfWeek) {

@@ -257,7 +257,7 @@ class ReportWeekControllerTest implements ControllerTest {
 
         final DetailWeekDto detailWeekDto = new DetailWeekDto(
             Date.from(ZonedDateTime.of(LocalDate.of(2023, 1, 30), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
-            Date.from(ZonedDateTime.of(LocalDate.of(2023, 2, 5), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
+            Date.from(ZonedDateTime.of(LocalDate.of(2023, 2, 3), LocalTime.MIN, ZoneId.systemDefault()).toInstant()),
             5,
             List.of(
                 new DetailDayDto(true, "F", "Freitag", "03.02.2023", false, "00:00", "00:00", "00:00", false, List.of(),
