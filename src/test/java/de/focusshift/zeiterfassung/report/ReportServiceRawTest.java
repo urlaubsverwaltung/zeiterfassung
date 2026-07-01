@@ -10,7 +10,6 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
-import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -40,7 +39,6 @@ import static java.time.DayOfWeek.MONDAY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -63,16 +61,13 @@ class ReportServiceRawTest {
     @Mock
     private UserDateService userDateService;
     @Mock
-    private UserSettingsProvider userSettingsProvider;
-    @Mock
     private WorkingTimeCalendarService workingTimeCalendarService;
     @Mock
     private TimeEntryLockService timeEntryLockService;
 
     @BeforeEach
     void setUp() {
-        sut = new ReportServiceRaw(timeEntryDayService, userManagementService, userDateService, userSettingsProvider, workingTimeCalendarService, timeEntryLockService);
-        lenient().when(userSettingsProvider.firstDayOfWeek()).thenReturn(MONDAY);
+        sut = new ReportServiceRaw(timeEntryDayService, userManagementService, userDateService, workingTimeCalendarService, timeEntryLockService);
     }
 
     // ------------------------------------------------------------
@@ -349,6 +344,15 @@ class ReportServiceRawTest {
         when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of());
 
+        when(userDateService.getStartOfWeekDatesForMonth(YearMonth.of(2021, 1)))
+            .thenReturn(List.of(
+                LocalDate.of(2021, 1, 1),
+                LocalDate.of(2021, 1, 4),
+                LocalDate.of(2021, 1, 11),
+                LocalDate.of(2021, 1, 18),
+                LocalDate.of(2021, 1, 25)
+            ));
+
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), user.userId());
 
         final List<ReportWeek> weeks = actualReportMonth.weeks();
@@ -371,6 +375,15 @@ class ReportServiceRawTest {
 
         when(timeEntryDayService.getTimeEntryDays(LocalDate.of(2021, 12, 1), LocalDate.of(2022, 1, 1), List.of(user.userLocalId())))
             .thenReturn(Map.of());
+
+        when(userDateService.getStartOfWeekDatesForMonth(YearMonth.of(2021, 12)))
+            .thenReturn(List.of(
+                LocalDate.of(2021, 12, 1),
+                LocalDate.of(2021, 12, 6),
+                LocalDate.of(2021, 12, 13),
+                LocalDate.of(2021, 12, 20),
+                LocalDate.of(2021, 12, 27)
+            ));
 
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 12), user.userId());
 
@@ -464,6 +477,15 @@ class ReportServiceRawTest {
 
         when(userManagementService.findUserById(user.userId())).thenReturn(Optional.of(user));
 
+        when(userDateService.getStartOfWeekDatesForMonth(YearMonth.of(2021, 1)))
+            .thenReturn(List.of(
+                LocalDate.of(2021, 1, 1),
+                LocalDate.of(2021, 1, 4),
+                LocalDate.of(2021, 1, 11),
+                LocalDate.of(2021, 1, 18),
+                LocalDate.of(2021, 1, 25)
+            ));
+
         final ReportMonth actualReportMonth = sut.getReportMonth(YearMonth.of(2021, 1), user.userId());
 
         assertThat(actualReportMonth.yearMonth()).isEqualTo(YearMonth.of(2021, 1));
@@ -512,6 +534,15 @@ class ReportServiceRawTest {
                 userTwo.userIdComposite(), List.of()
             ));
 
+        when(userDateService.getStartOfWeekDatesForMonth(yearMonth))
+            .thenReturn(List.of(
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 1, 8),
+                LocalDate.of(2024, 1, 15),
+                LocalDate.of(2024, 1, 22),
+                LocalDate.of(2024, 1, 29)
+            ));
+
         final ReportMonth actual = sut.getReportMonth(yearMonth, List.of(user.userLocalId(), userTwo.userLocalId()));
 
         for (ReportWeek reportWeek : actual.weeks()) {
@@ -555,6 +586,15 @@ class ReportServiceRawTest {
             .thenReturn(Map.of(
                 user.userIdComposite(), List.of(),
                 userTwo.userIdComposite(), List.of()
+            ));
+
+        when(userDateService.getStartOfWeekDatesForMonth(yearMonth))
+            .thenReturn(List.of(
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 1, 8),
+                LocalDate.of(2024, 1, 15),
+                LocalDate.of(2024, 1, 22),
+                LocalDate.of(2024, 1, 29)
             ));
 
         final ReportMonth actual = sut.getReportMonthForAllUsers(yearMonth);

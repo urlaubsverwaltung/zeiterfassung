@@ -16,6 +16,8 @@ import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Year;
+import java.time.YearMonth;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static java.time.DayOfWeek.FRIDAY;
@@ -139,6 +141,88 @@ class UserDateServiceImplTest {
 
             assertThatThrownBy(() -> sut.firstDayOfWeek(year, 1337))
                 .isInstanceOf(DateTimeException.class);
+        }
+    }
+
+    @Nested
+    class GetStartOfWeekDatesForMonth {
+
+        static Stream<Arguments> startOfWeekDatesArguments() {
+            return Stream.of(
+                // firstDayOfWeek MONDAY - 2021-01 starts on a Friday
+                Arguments.of(MONDAY, YearMonth.of(2021, 1), List.of(
+                    LocalDate.of(2021, 1, 1),
+                    LocalDate.of(2021, 1, 4),
+                    LocalDate.of(2021, 1, 11),
+                    LocalDate.of(2021, 1, 18),
+                    LocalDate.of(2021, 1, 25)
+                )),
+                // firstDayOfWeek MONDAY - 2021-12 starts on a Wednesday
+                Arguments.of(MONDAY, YearMonth.of(2021, 12), List.of(
+                    LocalDate.of(2021, 12, 1),
+                    LocalDate.of(2021, 12, 6),
+                    LocalDate.of(2021, 12, 13),
+                    LocalDate.of(2021, 12, 20),
+                    LocalDate.of(2021, 12, 27)
+                )),
+                // firstDayOfWeek MONDAY - 2022-08 starts on a Monday (no duplicate first entry)
+                Arguments.of(MONDAY, YearMonth.of(2022, 8), List.of(
+                    LocalDate.of(2022, 8, 1),
+                    LocalDate.of(2022, 8, 8),
+                    LocalDate.of(2022, 8, 15),
+                    LocalDate.of(2022, 8, 22),
+                    LocalDate.of(2022, 8, 29)
+                )),
+                // firstDayOfWeek SUNDAY - 2022-01 starts on a Saturday -> first week is a single day
+                Arguments.of(SUNDAY, YearMonth.of(2022, 1), List.of(
+                    LocalDate.of(2022, 1, 1),
+                    LocalDate.of(2022, 1, 2),
+                    LocalDate.of(2022, 1, 9),
+                    LocalDate.of(2022, 1, 16),
+                    LocalDate.of(2022, 1, 23),
+                    LocalDate.of(2022, 1, 30)
+                )),
+                // firstDayOfWeek SUNDAY - 2023-10 starts on a Sunday (no duplicate first entry)
+                Arguments.of(SUNDAY, YearMonth.of(2023, 10), List.of(
+                    LocalDate.of(2023, 10, 1),
+                    LocalDate.of(2023, 10, 8),
+                    LocalDate.of(2023, 10, 15),
+                    LocalDate.of(2023, 10, 22),
+                    LocalDate.of(2023, 10, 29)
+                ))
+            );
+        }
+
+        @ParameterizedTest
+        @MethodSource("startOfWeekDatesArguments")
+        void ensureStartOfWeekDatesForMonth(DayOfWeek firstDayOfWeek, YearMonth yearMonth, List<LocalDate> expected) {
+
+            when(userSettingsProvider.firstDayOfWeek()).thenReturn(firstDayOfWeek);
+
+            assertThat(sut.getStartOfWeekDatesForMonth(yearMonth)).containsExactlyElementsOf(expected);
+        }
+
+        @Test
+        void ensureStartOfWeekDatesAlwaysStartWithFirstOfMonth() {
+
+            when(userSettingsProvider.firstDayOfWeek()).thenReturn(MONDAY);
+
+            final LocalDate today = LocalDate.now(Clock.systemUTC());
+            final YearMonth yearMonth = YearMonth.from(today);
+
+            assertThat(sut.getStartOfWeekDatesForMonth(yearMonth).getFirst())
+                .isEqualTo(today.withDayOfMonth(1));
+        }
+
+        @Test
+        void ensureStartOfWeekDatesDoNotExtendIntoNextMonth() {
+
+            when(userSettingsProvider.firstDayOfWeek()).thenReturn(MONDAY);
+
+            final YearMonth yearMonth = YearMonth.from(LocalDate.now(Clock.systemUTC()));
+
+            assertThat(sut.getStartOfWeekDatesForMonth(yearMonth))
+                .allMatch(date -> YearMonth.from(date).equals(yearMonth));
         }
     }
 }

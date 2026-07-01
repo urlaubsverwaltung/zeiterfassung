@@ -9,7 +9,6 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
-import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -20,11 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +31,6 @@ import java.util.stream.IntStream;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.temporal.ChronoUnit.DAYS;
-import static java.time.temporal.TemporalAdjusters.next;
 import static java.util.HashMap.newHashMap;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -47,7 +43,6 @@ public class ReportServiceRaw {
     private final TimeEntryDayService timeEntryDayService;
     private final UserManagementService userManagementService;
     private final UserDateService userDateService;
-    private final UserSettingsProvider userSettingsProvider;
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final TimeEntryLockService timeEntryLockService;
 
@@ -55,7 +50,6 @@ public class ReportServiceRaw {
         TimeEntryDayService timeEntryDayService,
         UserManagementService userManagementService,
         UserDateService userDateService,
-        UserSettingsProvider userSettingsProvider,
         WorkingTimeCalendarService workingTimeCalendarService,
         TimeEntryLockService timeEntryLockService
     ) {
@@ -63,7 +57,6 @@ public class ReportServiceRaw {
         this.timeEntryDayService = timeEntryDayService;
         this.userManagementService = userManagementService;
         this.userDateService = userDateService;
-        this.userSettingsProvider = userSettingsProvider;
         this.workingTimeCalendarService = workingTimeCalendarService;
         this.timeEntryLockService = timeEntryLockService;
     }
@@ -192,7 +185,7 @@ public class ReportServiceRaw {
         final Map<UserIdComposite, List<TimeEntryDay>> timeEntryDays = timeEntryDaysProvider.apply(period);
         final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendars = workingTimeCalendarProvider.apply(period);
 
-        final List<LocalDate> startOfWeekDates = getStartOfWeekDatesForMonth(yearMonth);
+        final List<LocalDate> startOfWeekDates = userDateService.getStartOfWeekDatesForMonth(yearMonth);
         final LocalDate firstOfNextMonth = firstOfMonth.plusMonths(1);
 
         final List<ReportWeek> weeks = IntStream.range(0, startOfWeekDates.size())
@@ -235,23 +228,6 @@ public class ReportServiceRaw {
             .toList();
 
         return new ReportWeek(startOfWeekDate, reportDays);
-    }
-
-    private List<LocalDate> getStartOfWeekDatesForMonth(YearMonth yearMonth) {
-        final List<LocalDate> startOfWeekDates = new ArrayList<>();
-
-        final LocalDate firstOfMonth = yearMonth.atDay(1);
-        startOfWeekDates.add(firstOfMonth);
-
-        final DayOfWeek userFirstDayOfWeek = userSettingsProvider.firstDayOfWeek();
-
-        LocalDate startOfWeek = firstOfMonth.with(next(userFirstDayOfWeek));
-        while (YearMonth.from(startOfWeek).equals(yearMonth)) {
-            startOfWeekDates.add(startOfWeek);
-            startOfWeek = startOfWeek.plusWeeks(1);
-        }
-
-        return startOfWeekDates;
     }
 
     record Period(LocalDate from, LocalDate toExclusive) {

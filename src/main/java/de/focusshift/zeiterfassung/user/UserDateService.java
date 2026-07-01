@@ -3,7 +3,9 @@ package de.focusshift.zeiterfassung.user;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.Year;
+import java.time.YearMonth;
 import java.time.temporal.TemporalAdjuster;
+import java.util.List;
 
 public interface UserDateService {
 
@@ -34,4 +36,19 @@ public interface UserDateService {
      * @throws DateTimeException if the weekOfYear value is invalid
      */
     LocalDate firstDayOfWeek(Year year, int weekOfYear);
+
+    /**
+     * Returns the dates that start a week within the given month, based on the user's firstDayOfWeek.
+     *
+     * <p>
+     * The first element is always the first day of the month, even when it is not the user's firstDayOfWeek (e.g. monday).
+     * Each following element is a date matching the user's firstDayOfWeek that still falls within the month.
+     *
+     * <p>
+     * Weeks are therefore clipped to the month boundaries and not extended into the previous or next month.
+     *
+     * @param yearMonth the month to compute the start-of-week dates for, not null
+     * @return ordered list of start-of-week {@link LocalDate}s within the given {@code yearMonth}
+     */
+    List<LocalDate> getStartOfWeekDatesForMonth(YearMonth yearMonth);
 }

@@ -10,12 +10,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
-
-import static java.time.temporal.ChronoUnit.MONTHS;
 
 @Service
 class ReportServicePermissionAware implements ReportService {
@@ -128,29 +125,11 @@ class ReportServicePermissionAware implements ReportService {
 
     private ReportMonth emptyReportMonth(YearMonth yearMonth) {
 
-        final List<ReportWeek> weeks = getStartOfWeekDatesForMonth(yearMonth)
+        final List<ReportWeek> weeks = userDateService.getStartOfWeekDatesForMonth(yearMonth)
             .stream()
             .map(this::emptyReportWeek)
             .toList();
 
         return new ReportMonth(yearMonth, weeks);
-    }
-
-    private List<LocalDate> getStartOfWeekDatesForMonth(YearMonth yearMonth) {
-        final List<LocalDate> startOfWeekDates = new ArrayList<>();
-
-        final LocalDate firstOfMonth = yearMonth.atDay(1);
-        LocalDate date = userDateService.localDateToFirstDateOfWeek(firstOfMonth);
-
-        while (isPreviousMonth(date, yearMonth) || date.getMonthValue() == yearMonth.getMonthValue()) {
-            startOfWeekDates.add(date);
-            date = date.plusWeeks(1);
-        }
-
-        return startOfWeekDates;
-    }
-
-    private static boolean isPreviousMonth(LocalDate possiblePreviousMonthDate, YearMonth yearMonth) {
-        return YearMonth.from(possiblePreviousMonthDate).until(yearMonth, MONTHS) == 1;
     }
 }
