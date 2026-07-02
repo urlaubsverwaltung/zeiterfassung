@@ -51,4 +51,16 @@ public interface UserDateService {
      * @return ordered list of start-of-week {@link LocalDate}s within the given {@code yearMonth}
      */
     List<LocalDate> getStartOfWeekDatesForMonth(YearMonth yearMonth);
+
+    /**
+     * The current date from the user's perspective, resolved with the user's {@link java.time.ZoneId}.
+     *
+     * <p>
+     * The application {@link java.time.Clock} runs in UTC. This method projects "now" into the user's timezone,
+     * so a user in {@code Europe/Berlin} shortly after midnight sees the already-started day and not the previous
+     * UTC day.
+     *
+     * @return today's {@link LocalDate} in the user's timezone
+     */
+    LocalDate today();
 }

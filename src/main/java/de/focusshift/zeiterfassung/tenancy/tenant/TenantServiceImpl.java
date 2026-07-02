@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -18,10 +19,12 @@ class TenantServiceImpl implements TenantService {
 
     private final TenantRepository tenantRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final Clock clock;
 
-    TenantServiceImpl(TenantRepository tenantRepository, ApplicationEventPublisher applicationEventPublisher) {
+    TenantServiceImpl(TenantRepository tenantRepository, ApplicationEventPublisher applicationEventPublisher, Clock clock) {
         this.tenantRepository = tenantRepository;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.clock = clock;
     }
 
     @Override
@@ -33,7 +36,7 @@ class TenantServiceImpl implements TenantService {
     @Override
     public Tenant create(String tenantId) {
         LOG.info("going to add new tenant with tenantId={}", tenantId);
-        final Instant now = Instant.now();
+        final Instant now = Instant.now(clock);
         final TenantEntity update = new TenantEntity(null, tenantId, now, now, TenantEntity.TenantStatusEntity.ACTIVE);
         Tenant tenant = toTenant(tenantRepository.save(update));
         LOG.info("added new tenant with tenantId={}", tenantId);
@@ -80,7 +83,7 @@ class TenantServiceImpl implements TenantService {
             existing.id,
             tenantId,
             existing.getCreatedAt(),
-            Instant.now(),
+            Instant.now(clock),
             TenantEntity.TenantStatusEntity.valueOf(tenant.status().name())
         );
         return toTenant(tenantRepository.save(update));

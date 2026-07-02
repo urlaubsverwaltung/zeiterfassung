@@ -64,7 +64,7 @@
                     data-day-text
                     class="font-semibold"
                     th:with="dayOfWeekName=${#temporals.dayOfWeekName(timeEntry.date)}"
-                    th:text="${timeEntry.today ? #messages.msg('datepicker.today') + ', ' + dayOfWeekName : dayOfWeekName}"
+                    th:text="${timeEntry.date == today ? #messages.msg('datepicker.today') + ', ' + dayOfWeekName : dayOfWeekName}"
                   >
                     Heute, Sonntag
                   </span>

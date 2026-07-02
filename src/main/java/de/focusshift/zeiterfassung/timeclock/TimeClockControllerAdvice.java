@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeclock;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
+import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -23,17 +24,20 @@ class TimeClockControllerAdvice {
     private final TimeClockService timeClockService;
     private final TimeEntryLockService timeEntryLockService;
     private final UserSettingsProvider userSettingsProvider;
+    private final UserDateService userDateService;
     private final Clock clock;
 
     TimeClockControllerAdvice(
         TimeClockService timeClockService,
         TimeEntryLockService timeEntryLockService,
         UserSettingsProvider userSettingsProvider,
+        UserDateService userDateService,
         Clock clock
     ) {
         this.timeClockService = timeClockService;
         this.timeEntryLockService = timeEntryLockService;
         this.userSettingsProvider = userSettingsProvider;
+        this.userDateService = userDateService;
         this.clock = clock;
     }
 
@@ -44,6 +48,8 @@ class TimeClockControllerAdvice {
     @ModelAttribute
     public void addAttributes(Model model, @CurrentUser CurrentOidcUser principal) {
         final UserId userId = userId(principal);
+
+        model.addAttribute("today", userDateService.today());
 
         timeClockService.getCurrentTimeClock(userId)
             .map(timeClock -> timeClockToTimeClockDto(timeClock, clock))
