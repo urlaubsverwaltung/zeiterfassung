@@ -8,6 +8,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Clock;
+
 @Configuration
 @ConditionalOnProperty(value = "zeiterfassung.development.demodata.create", havingValue = "true")
 @EnableConfigurationProperties(DemoDataProperties.class)
@@ -17,7 +19,8 @@ public class DemoDataConfiguration {
     DemoDataCreationService demoDataCreationService(TimeEntryService timeEntryService,
                                                     AbsenceWriteService absenceWriteService,
                                                     AbsenceTypeService absenceTypeService,
-                                                    DemoDataProperties demoDataProperties) {
-        return new DemoDataCreationService(timeEntryService, absenceWriteService, absenceTypeService, demoDataProperties);
+                                                    DemoDataProperties demoDataProperties,
+                                                    Clock clock) {
+        return new DemoDataCreationService(timeEntryService, absenceWriteService, absenceTypeService, demoDataProperties, clock);
     }
 }

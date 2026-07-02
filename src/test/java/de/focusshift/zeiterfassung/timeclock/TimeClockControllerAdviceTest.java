@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeclock;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,6 +35,8 @@ class TimeClockControllerAdviceTest {
     private TimeEntryLockService timeEntryLockService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
+    @Mock
+    private UserDateService userDateService;
 
     private final Clock clock = Clock.systemUTC();
 
@@ -85,6 +88,6 @@ class TimeClockControllerAdviceTest {
     }
 
     private TimeClockControllerAdvice createSut() {
-        return new TimeClockControllerAdvice(timeClockService, timeEntryLockService, userSettingsProvider, clock);
+        return new TimeClockControllerAdvice(timeClockService, timeEntryLockService, userSettingsProvider, userDateService, clock);
     }
 }

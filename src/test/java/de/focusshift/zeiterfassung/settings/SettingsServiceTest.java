@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -26,6 +27,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SettingsServiceTest {
+
+    private static final Clock clock = Clock.fixed(Instant.parse("2023-06-15T10:00:00Z"), ZoneId.of("Europe/Berlin"));
 
     private SettingsService sut;
 
@@ -45,7 +48,8 @@ class SettingsServiceTest {
             federalStateSettingsRepository,
             lockTimeEntriesSettingsRepository,
             subtractBreakFromTimeEntrySettingsRepository,
-            applicationEventPublisher
+            applicationEventPublisher,
+            clock
         );
     }
 
@@ -159,7 +163,7 @@ class SettingsServiceTest {
             assertThat(actual.lockTimeEntriesDaysInPast()).isEqualTo(9);
 
             final ZoneId zoneId = ZoneId.of("Europe/Berlin");
-            final LocalDate today = LocalDate.now(zoneId);
+            final LocalDate today = LocalDate.now(clock.withZone(zoneId));
 
             verify(applicationEventPublisher).publishEvent(new DayLockedEvent(today.minusDays(10), zoneId));
         }
@@ -181,7 +185,7 @@ class SettingsServiceTest {
             assertThat(actual.lockTimeEntriesDaysInPast()).isEqualTo(10);
 
             final ZoneId zoneId = ZoneId.of("Europe/Berlin");
-            final LocalDate today = LocalDate.now(zoneId);
+            final LocalDate today = LocalDate.now(clock.withZone(zoneId));
 
             verify(applicationEventPublisher).publishEvent(new DayLockedEvent(today.minusDays(11), zoneId));
         }

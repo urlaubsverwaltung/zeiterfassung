@@ -75,6 +75,11 @@ class UserDateServiceImpl implements UserDateService {
         return startOfWeekDates;
     }
 
+    @Override
+    public LocalDate today() {
+        return LocalDate.now(clock.withZone(userSettingsProvider.zoneId()));
+    }
+
     private LocalDate localDateToFirstDateOfWeek(LocalDate localDate, DayOfWeek firstDayOfWeek) {
         // using minimalDaysInFirstWeek = 4 since it is defined by ISO-8601 (starting week with monday)
         // I have no glue whether this value can be use here or not. Some unit tests say we can... so...
