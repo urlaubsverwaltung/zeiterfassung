@@ -145,6 +145,25 @@ class UserDateServiceImplTest {
             assertThatThrownBy(() -> sut.firstDayOfWeek(year, 1337))
                 .isInstanceOf(DateTimeException.class);
         }
+
+        @ParameterizedTest
+        @CsvSource({
+            // year boundary where the week-based-year differs from the calendar year -
+            // "now" formerly seeded the calculation and could shift the result across midnight / timezone.
+            "2024-12-31T23:59:59Z",
+            "2025-01-01T00:00:00Z",
+            "2025-06-01T12:00:00Z",
+        })
+        void ensureFirstDayOfWeekIsIndependentOfClockAndTimezone(String instant) {
+
+            when(userSettingsProvider.firstDayOfWeek()).thenReturn(MONDAY);
+
+            // week 1 of 2025 starts on 2024-12-30 (monday), regardless of what "now" is
+            final Clock clock = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
+            final UserDateServiceImpl sut = new UserDateServiceImpl(userSettingsProvider, clock);
+
+            assertThat(sut.firstDayOfWeek(Year.of(2025), 1)).isEqualTo(LocalDate.of(2024, 12, 30));
+        }
     }
 
     @Nested
