@@ -16,6 +16,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.nio.file.Paths;
+import java.time.ZoneId;
 
 /**
  * Base configuration for UI tests.
@@ -56,6 +57,8 @@ import java.nio.file.Paths;
 @Tag("ui")
 public @interface UiTest {
 
+    ZoneId USER_ZONE_ID = ZoneId.of("Europe/Berlin");
+
     class CustomOptions implements OptionsFactory {
 
         @Override
@@ -74,6 +77,7 @@ public @interface UiTest {
                 .setContextOptions(new Browser.NewContextOptions()
                     .setRecordVideoDir(Paths.get("target/ui-test", browser))
                     .setLocale("de")
+                    .setTimezoneId(USER_ZONE_ID.getId())
                     .setScreenSize(1500, 1080)
                     .setViewportSize(1500, 1080)
                     .setRecordVideoSize(1500, 2000)

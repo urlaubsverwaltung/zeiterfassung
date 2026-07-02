@@ -55,7 +55,10 @@ public class TimeEntryDTO {
     private boolean isBreak;
 
     public TimeEntryDTO() {
-        date = LocalDate.now();
+    }
+
+    public TimeEntryDTO(LocalDate date) {
+        this.date = date;
     }
 
     private TimeEntryDTO(Long id, Long userLocalId, LocalDate date, LocalTime start, LocalTime end, String duration, String comment, boolean isBreak) {
@@ -92,10 +95,6 @@ public class TimeEntryDTO {
 
     public void setDate(LocalDate date) {
         this.date = date;
-    }
-
-    public boolean isToday() {
-        return LocalDate.now().atStartOfDay().equals(date.atStartOfDay());
     }
 
     public LocalTime getStart() {

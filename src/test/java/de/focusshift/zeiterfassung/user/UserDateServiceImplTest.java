@@ -14,9 +14,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Clock;
 import java.time.DateTimeException;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -142,6 +145,25 @@ class UserDateServiceImplTest {
             assertThatThrownBy(() -> sut.firstDayOfWeek(year, 1337))
                 .isInstanceOf(DateTimeException.class);
         }
+
+        @ParameterizedTest
+        @CsvSource({
+            // year boundary where the week-based-year differs from the calendar year -
+            // "now" formerly seeded the calculation and could shift the result across midnight / timezone.
+            "2024-12-31T23:59:59Z",
+            "2025-01-01T00:00:00Z",
+            "2025-06-01T12:00:00Z",
+        })
+        void ensureFirstDayOfWeekIsIndependentOfClockAndTimezone(String instant) {
+
+            when(userSettingsProvider.firstDayOfWeek()).thenReturn(MONDAY);
+
+            // week 1 of 2025 starts on 2024-12-30 (monday), regardless of what "now" is
+            final Clock clock = Clock.fixed(Instant.parse(instant), ZoneOffset.UTC);
+            final UserDateServiceImpl sut = new UserDateServiceImpl(userSettingsProvider, clock);
+
+            assertThat(sut.firstDayOfWeek(Year.of(2025), 1)).isEqualTo(LocalDate.of(2024, 12, 30));
+        }
     }
 
     @Nested
@@ -223,6 +245,34 @@ class UserDateServiceImplTest {
 
             assertThat(sut.getStartOfWeekDatesForMonth(yearMonth))
                 .allMatch(date -> YearMonth.from(date).equals(yearMonth));
+        }
+    }
+
+    @Nested
+    class Today {
+
+        @Test
+        void ensureTodayIsProjectedIntoUsersTimezoneAcrossMidnight() {
+
+            // 23:30 UTC -> already 01:30 on the next day in Europe/Berlin (+2 in summer)
+            final Clock clock = Clock.fixed(Instant.parse("2026-07-02T23:30:00Z"), ZoneOffset.UTC);
+            final UserDateServiceImpl sut = new UserDateServiceImpl(userSettingsProvider, clock);
+
+            when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
+
+            assertThat(sut.today()).isEqualTo(LocalDate.of(2026, 7, 3));
+        }
+
+        @Test
+        void ensureTodayIsProjectedIntoUsersTimezoneWestOfUtc() {
+
+            // 02:00 UTC -> still 22:00 on the previous day in America/New_York (-4 in summer)
+            final Clock clock = Clock.fixed(Instant.parse("2026-07-02T02:00:00Z"), ZoneOffset.UTC);
+            final UserDateServiceImpl sut = new UserDateServiceImpl(userSettingsProvider, clock);
+
+            when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("America/New_York"));
+
+            assertThat(sut.today()).isEqualTo(LocalDate.of(2026, 7, 1));
         }
     }
 }

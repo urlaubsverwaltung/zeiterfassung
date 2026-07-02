@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -25,17 +26,20 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
     private final LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
     private final SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final Clock clock;
 
     SettingsService(
         FederalStateSettingsRepository federalStateSettingsRepository,
         LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository,
         SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository,
-        ApplicationEventPublisher applicationEventPublisher
+        ApplicationEventPublisher applicationEventPublisher,
+        Clock clock
     ) {
         this.federalStateSettingsRepository = federalStateSettingsRepository;
         this.lockTimeEntriesSettingsRepository = lockTimeEntriesSettingsRepository;
         this.subtractBreakFromTimeEntrySettingsRepository = subtractBreakFromTimeEntrySettingsRepository;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.clock = clock;
     }
 
     @Override
@@ -134,7 +138,7 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
 
     private void publishedDayLockedEvents(final int previousLockTimeEntriesDaysInPast, final int actualLockTimeEntriesDaysInPast) {
         final ZoneId zoneId = ZoneId.of("Europe/Berlin");
-        final LocalDate today = LocalDate.now(zoneId);
+        final LocalDate today = LocalDate.now(clock.withZone(zoneId));
         final LocalDate oldLockTimeEntryDate = today.minusDays(previousLockTimeEntriesDaysInPast).minusDays(1);
         final LocalDate actualLockTimeEntryDate = today.minusDays(actualLockTimeEntriesDaysInPast).minusDays(1);
 

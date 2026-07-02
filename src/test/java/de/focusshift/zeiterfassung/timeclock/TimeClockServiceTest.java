@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -46,7 +47,7 @@ class TimeClockServiceTest {
 
     @BeforeEach
     void setUp() {
-        sut = new TimeClockService(timeClockRepository, timeEntryService, userSettingsProvider, applicationEventPublisher);
+        sut = new TimeClockService(timeClockRepository, timeEntryService, userSettingsProvider, applicationEventPublisher, Clock.systemUTC());
     }
 
     @Test

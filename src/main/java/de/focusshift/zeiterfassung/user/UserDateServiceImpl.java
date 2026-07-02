@@ -51,8 +51,9 @@ class UserDateServiceImpl implements UserDateService {
         final DayOfWeek usersFirstDayOfWeek = userSettingsProvider.firstDayOfWeek();
         final WeekFields weekFields = WeekFields.of(usersFirstDayOfWeek, minimalDaysInFirstWeek);
 
-        return LocalDate.now(clock)
-            .withYear(year.getValue())
+        // seed a stable mid-year date so the week-based-year equals the calendar year (unambiguous).
+        // the result is fully determined by the arguments and must not depend on the clock or timezone.
+        return LocalDate.of(year.getValue(), 6, 1)
             .with(weekFields.weekOfWeekBasedYear(), weekOfYear)
             .with(previousOrSame(usersFirstDayOfWeek));
     }
@@ -73,6 +74,11 @@ class UserDateServiceImpl implements UserDateService {
         }
 
         return startOfWeekDates;
+    }
+
+    @Override
+    public LocalDate today() {
+        return LocalDate.now(clock.withZone(userSettingsProvider.zoneId()));
     }
 
     private LocalDate localDateToFirstDateOfWeek(LocalDate localDate, DayOfWeek firstDayOfWeek) {

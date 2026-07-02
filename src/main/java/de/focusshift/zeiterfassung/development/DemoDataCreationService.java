@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,6 +37,7 @@ class DemoDataCreationService {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
+    private static final ZoneId ZONE_ID_BERLIN = ZoneId.of("Europe/Berlin");
     private static final LocalTime END_OF_WORK_DAY = LocalTime.of(17, 0);
 
     // demo "Urlaub" absence type that the created HOLIDAY absences refer to
@@ -68,20 +70,23 @@ class DemoDataCreationService {
     private final AbsenceWriteService absenceWriteService;
     private final AbsenceTypeService absenceTypeService;
     private final DemoDataProperties demoDataProperties;
+    private final Clock clock;
 
     DemoDataCreationService(TimeEntryService timeEntryService, AbsenceWriteService absenceWriteService,
-                            AbsenceTypeService absenceTypeService, DemoDataProperties demoDataProperties) {
+                            AbsenceTypeService absenceTypeService, DemoDataProperties demoDataProperties,
+                            Clock clock) {
         this.timeEntryService = timeEntryService;
         this.absenceWriteService = absenceWriteService;
         this.absenceTypeService = absenceTypeService;
         this.demoDataProperties = demoDataProperties;
+        this.clock = clock;
     }
 
     @EventListener
     public void on(TenantUserCreatedEvent event) {
         final TenantUser user = event.tenantUser();
         LOG.info("Creating time entries for new user {}", user);
-        final LocalDate now = LocalDate.now();
+        final LocalDate now = LocalDate.now(clock);
 
         final LocalDate startDate = now.minus(demoDataProperties.getPast());
         final LocalDate endDate = now.plus(demoDataProperties.getFuture().plusDays(1));
@@ -93,9 +98,8 @@ class DemoDataCreationService {
             while (endTime.isBefore(END_OF_WORK_DAY)) {
 
                 final UserLocalId userLocalId = new UserLocalId(user.localId());
-                final ZoneId zoneId = ZoneId.of("Europe/Berlin");
-                final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(actualDate, startTime), zoneId);
-                final ZonedDateTime end = ZonedDateTime.of(LocalDateTime.of(actualDate, endTime), zoneId);
+                final ZonedDateTime start = ZonedDateTime.of(LocalDateTime.of(actualDate, startTime), ZONE_ID_BERLIN);
+                final ZonedDateTime end = ZonedDateTime.of(LocalDateTime.of(actualDate, endTime), ZONE_ID_BERLIN);
 
                 timeEntryService.createTimeEntry(userLocalId, getRandomComment(), start, end, false);
 

@@ -7,6 +7,7 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -19,13 +20,15 @@ public class TimeClockService {
     private final TimeEntryService timeEntryService;
     private final UserSettingsProvider userSettingsProvider;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final Clock clock;
 
     TimeClockService(TimeClockRepository timeClockRepository, TimeEntryService timeEntryService,
-                     UserSettingsProvider userSettingsProvider, ApplicationEventPublisher applicationEventPublisher) {
+                     UserSettingsProvider userSettingsProvider, ApplicationEventPublisher applicationEventPublisher, Clock clock) {
         this.timeClockRepository = timeClockRepository;
         this.timeEntryService = timeEntryService;
         this.userSettingsProvider = userSettingsProvider;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.clock = clock;
     }
 
     Optional<TimeClock> getCurrentTimeClock(UserId userId) {
@@ -33,7 +36,7 @@ public class TimeClockService {
     }
 
     void startTimeClock(UserId userId) {
-        final ZonedDateTime now = ZonedDateTime.now(userSettingsProvider.zoneId());
+        final ZonedDateTime now = ZonedDateTime.now(clock.withZone(userSettingsProvider.zoneId()));
         final TimeClock timeClock = new TimeClock(userId, now);
 
         timeClockRepository.save(toEntity(timeClock));
@@ -84,7 +87,7 @@ public class TimeClockService {
 
     void stopTimeClock(UserIdComposite userIdComposite) {
         timeClockRepository.findByOwnerAndStoppedAtIsNull(userIdComposite.id().value())
-            .map(entity -> timeClockEntityWithStoppedAt(entity, ZonedDateTime.now(userSettingsProvider.zoneId())))
+            .map(entity -> timeClockEntityWithStoppedAt(entity, ZonedDateTime.now(clock.withZone(userSettingsProvider.zoneId()))))
             .map(timeClockRepository::save)
             .map(TimeClockService::toTimeClock)
             .ifPresent(timeClock -> {
