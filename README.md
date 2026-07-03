@@ -17,8 +17,6 @@ Our development thrives on your feedback. We’re excited to improve time tracki
 If you would like to see more information and screenshots of this project, take a look at our landing page:
 [Landingpage](https://urlaubsverwaltung.cloud/zeiterfassung/)
 
-*Note*: The `main` branch contains the 3.x release series of the time tracking application. The current 2.x branch, which continues the 2.x release series, is available under `v2.x`.
-
 ![An image of the time tracking application on various devices](docs/zeiterfassung-screens.png)
 
 ## Operation
