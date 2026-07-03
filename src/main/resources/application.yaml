@@ -17,6 +17,16 @@ spring:
     password: zeiterfassung_app_password
     url: jdbc:postgresql://localhost:5432/zeiterfassung
     username: zeiterfassung_app_user
+    hikari:
+      # tenant-aware pool shared by all tenants - size against your postgres max_connections budget
+      maximum-pool-size: 30
+      minimum-idle: 30
+      # fail fast instead of pinning a virtual thread for 30s when the pool is exhausted
+      connection-timeout: 5000
+      # recycle connections below typical postgres/pgbouncer idle timeouts
+      max-lifetime: 1740000
+      keepalive-time: 300000
+      register-mbeans: true
   jpa:
     hibernate:
       ddl-auto: none
@@ -53,6 +63,17 @@ spring:
       enabled: true
   autoconfigure:
     exclude: org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration
+
+# admin datasource (created in multi-tenant mode only) - liquibase + tenant/oidc-client management, low traffic
+admin:
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 5
+      connection-timeout: 5000
+      max-lifetime: 1740000
+      keepalive-time: 300000
+      register-mbeans: true
 
 info:
   app:
