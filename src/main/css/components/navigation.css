@@ -343,14 +343,6 @@
   display: none;
 }
 
-.nav-collapse-btn {
-  display: none;
-
-  @variant desktop {
-    display: flex;
-  }
-}
-
 .nav-resize-handle {
   display: none;
 }

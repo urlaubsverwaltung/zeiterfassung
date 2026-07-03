@@ -21,7 +21,7 @@ describe("navigation collapse", () => {
   beforeEach(() => {
     delete document.documentElement.dataset.navCollapsed;
     document.body.innerHTML = `
-      <button id="nav-toggle" class="nav-collapse-btn navigation-link" aria-label="toggle" aria-expanded="true">
+      <button id="nav-toggle" class="navigation-link" aria-label="toggle" aria-expanded="true">
         <span class="nav-link-text">toggle</span>
       </button>
     `;
