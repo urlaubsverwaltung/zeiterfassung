@@ -7,6 +7,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import static org.springframework.util.StringUtils.hasText;
+
 @Service
 public class EMailService {
 
@@ -33,7 +35,11 @@ public class EMailService {
         message.setTo(to);
         message.setSubject(subject);
         message.setReplyTo(generateMailAddressAndDisplayName(replyTo, replayToDisplayName));
-        message.setText(plainText, htmlText);
+        if (hasText(htmlText)) {
+            message.setText(plainText, htmlText);
+        } else {
+            message.setText(plainText);
+        }
         this.mailSender.send(mimeMessage);
     }
 
