@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -35,11 +36,19 @@ public class TimeClockService {
         return timeClockRepository.findByOwnerAndStoppedAtIsNull(userId.value()).map(TimeClockService::toTimeClock);
     }
 
-    void startTimeClock(UserId userId) {
+    void startTimeClock(UserId userId) throws TimeClockAlreadyStartedException {
         final ZonedDateTime now = ZonedDateTime.now(clock.withZone(userSettingsProvider.zoneId()));
         final TimeClock timeClock = new TimeClock(userId, now);
 
-        timeClockRepository.save(toEntity(timeClock));
+        try {
+            timeClockRepository.save(toEntity(timeClock));
+        } catch (DataIntegrityViolationException e) {
+            // the partial unique index on time_clock (tenant_id, owner) WHERE stopped_at IS NULL
+            // guarantees that only one running stopwatch per user (and tenant) can exist. This is the
+            // server-side safety net against concurrent or duplicated start requests bypassing the
+            // check-then-act guard in the controller.
+            throw new TimeClockAlreadyStartedException(userId, e);
+        }
 
         applicationEventPublisher.publishEvent(new TimeClockStartedEvent(userId, now, timeClock.comment(), timeClock.isBreak()));
     }

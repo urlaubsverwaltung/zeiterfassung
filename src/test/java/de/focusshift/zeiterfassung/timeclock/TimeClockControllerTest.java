@@ -33,6 +33,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -95,6 +96,24 @@ class TimeClockControllerTest implements ControllerTest {
             .andExpect(status().isConflict());
 
         verify(timeClockService).getCurrentTimeClock(new UserId("batman"));
+        verifyNoMoreInteractions(timeClockService);
+    }
+
+    @Test
+    void ensureStartTimeClockRespondsWithConflictWhenServiceRejectsConcurrentStart() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        doThrow(new TimeClockAlreadyStartedException(userId, new RuntimeException()))
+            .when(timeClockService).startTimeClock(userId);
+
+        perform(
+            post("/timeclock/start")
+                .with(oidcSubject("batman"))
+        )
+            .andExpect(status().isConflict());
+
+        verify(timeClockService).getCurrentTimeClock(userId);
+        verify(timeClockService).startTimeClock(userId);
         verifyNoMoreInteractions(timeClockService);
     }
 

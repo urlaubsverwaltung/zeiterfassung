@@ -1,0 +1,50 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <!--
+    A running stopwatch is a time_clock row with stopped_at IS NULL.
+    There must only ever be one running stopwatch per tenant and owner.
+    See https://github.com/urlaubsverwaltung/zeiterfassung/issues/765
+  -->
+
+  <changeSet author="schneider" id="delete-duplicate-running-time-clocks">
+    <comment>
+      Clean up existing data that violates the "only one running stopwatch per tenant and owner"
+      invariant before adding the unique index. Keep the oldest running stopwatch (lowest id) and
+      delete the surplus ones that were created by concurrent or duplicated start requests.
+    </comment>
+    <sql dbms="postgresql">
+      DELETE FROM time_clock
+      WHERE stopped_at IS NULL
+        AND id NOT IN (
+          SELECT MIN(id)
+          FROM time_clock
+          WHERE stopped_at IS NULL
+          GROUP BY tenant_id, owner
+        );
+    </sql>
+  </changeSet>
+
+  <changeSet author="schneider" id="add-time-clock-running-unique-index">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="time_clock" indexName="time_clock_running_unique_per_owner"/>
+      </not>
+    </preConditions>
+    <comment>
+      Partial unique index guaranteeing at most one running stopwatch (stopped_at IS NULL)
+      per tenant and owner. Stopped stopwatches (stopped_at IS NOT NULL) are not affected.
+    </comment>
+    <sql dbms="postgresql">
+      CREATE UNIQUE INDEX time_clock_running_unique_per_owner
+      ON time_clock (tenant_id, owner)
+      WHERE stopped_at IS NULL;
+    </sql>
+    <rollback>
+      DROP INDEX IF EXISTS time_clock_running_unique_per_owner;
+    </rollback>
+  </changeSet>
+
+</databaseChangeLog>

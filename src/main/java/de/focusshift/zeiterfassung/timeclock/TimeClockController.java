@@ -102,13 +102,18 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
 
         final UserId userId = currentUser.getUserIdComposite().id();
 
-        // TODO should we do this in the service?
         final Optional<TimeClock> maybeCurrentTimeClock = timeClockService.getCurrentTimeClock(userId);
         if (maybeCurrentTimeClock.isPresent()) {
             throw new ResponseStatusException(CONFLICT, "Time clock has been started already.");
         }
 
-        timeClockService.startTimeClock(userId);
+        try {
+            timeClockService.startTimeClock(userId);
+        } catch (TimeClockAlreadyStartedException e) {
+            // the check above is not atomic, concurrent or duplicated start requests can slip through and
+            // are rejected by the database. Map it to the same conflict response instead of a 500.
+            throw new ResponseStatusException(CONFLICT, "Time clock has been started already.", e);
+        }
 
         return redirectToPreviousPage(request);
     }

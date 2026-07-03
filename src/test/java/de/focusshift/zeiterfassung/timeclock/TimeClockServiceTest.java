@@ -12,6 +12,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -89,7 +90,7 @@ class TimeClockServiceTest {
     }
 
     @Test
-    void ensureStartTimeClockPersistsNewEntity() {
+    void ensureStartTimeClockPersistsNewEntity() throws Exception {
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("UTC"));
 
@@ -107,7 +108,7 @@ class TimeClockServiceTest {
     }
 
     @Test
-    void ensureStartTimeClockPublishesTimeClockStartedEvent() {
+    void ensureStartTimeClockPublishesTimeClockStartedEvent() throws Exception {
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("UTC"));
 
@@ -122,6 +123,18 @@ class TimeClockServiceTest {
             assertThat(event.comment()).isEmpty();
             assertThat(event.isBreak()).isFalse();
         });
+    }
+
+    @Test
+    void ensureStartTimeClockThrowsWhenAnotherRunningTimeClockAlreadyExists() {
+
+        when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("UTC"));
+        when(timeClockRepository.save(any())).thenThrow(new DataIntegrityViolationException("running time clock already exists"));
+
+        assertThatExceptionOfType(TimeClockAlreadyStartedException.class)
+            .isThrownBy(() -> sut.startTimeClock(new UserId("batman")));
+
+        verifyNoInteractions(applicationEventPublisher);
     }
 
     @Test
