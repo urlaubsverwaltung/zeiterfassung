@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.absence.AbsenceAddedEvent;
 import de.focusshift.zeiterfassung.absence.AbsenceDeletedEvent;
 import de.focusshift.zeiterfassung.absence.AbsenceUpdatedEvent;
 import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
@@ -25,6 +26,10 @@ import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeCreatedEvent;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeDeletedEvent;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeUpdatedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -36,9 +41,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -72,6 +81,8 @@ class OvertimePublisherTest {
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
+    private final Clock clock = Clock.fixed(Instant.parse("2025-01-20T00:00:00Z"), ZoneId.of("Europe/Berlin"));
+
     @BeforeEach
     void setUp() {
         sut = new OvertimePublisher(
@@ -80,7 +91,8 @@ class OvertimePublisherTest {
             timeEntryLockService,
             userManagementService,
             workingTimeCalendarService,
-            applicationEventPublisher);
+            applicationEventPublisher,
+            clock);
     }
 
     @Nested
@@ -1153,6 +1165,266 @@ class OvertimePublisherTest {
                 verifyNoInteractions(applicationEventPublisher);
             }
         }
+    }
+
+    @Nested
+    class WorkingTimeCreated {
+
+        @Test
+        void ensureOvertimeResyncedForLockedDaysWithinAffectedRange() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final LocalDate validFrom = LocalDate.parse("2025-01-01");
+            final LocalDate date1 = LocalDate.parse("2025-01-01");
+            final LocalDate date2 = LocalDate.parse("2025-01-02");
+            final LocalDate date3 = LocalDate.parse("2025-01-03");
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-04")));
+            when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId()))
+                .thenReturn(new OvertimeAccount(userIdComposite, true));
+
+            final LockTimeEntriesSettings lockTimeEntriesSettings = anyLockTimeEntriesSettings();
+            when(timeEntryLockService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
+            when(timeEntryLockService.isLocked(date1, lockTimeEntriesSettings)).thenReturn(true);
+            when(timeEntryLockService.isLocked(date2, lockTimeEntriesSettings)).thenReturn(true);
+            when(timeEntryLockService.isLocked(date3, lockTimeEntriesSettings)).thenReturn(true);
+
+            when(workingTimeCalendarService.getWorkingTimeCalender(date1, date3.plusDays(1), userIdComposite.localId()))
+                .thenReturn(new WorkingTimeCalendar(
+                    Map.of(
+                        date1, PlannedWorkingHours.EIGHT,
+                        date2, PlannedWorkingHours.EIGHT,
+                        date3, PlannedWorkingHours.EIGHT
+                    ),
+                    Map.of()
+                ));
+
+            when(overtimeService.getOvertimeForDateAndUser(date1, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+            when(overtimeService.getOvertimeForDateAndUser(date2, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+            when(overtimeService.getOvertimeForDateAndUser(date3, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+
+            sut.publishOvertimeUpdated(new WorkingTimeCreatedEvent(
+                userIdComposite, anyWorkingTimeId(), validFrom, FederalState.GLOBAL, false, anyWorkdays()));
+
+            final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+            verify(applicationEventPublisher, times(3)).publishEvent(captor.capture());
+
+            assertThat(captor.getAllValues()).containsExactly(
+                new UserHasWorkedOvertimeEvent(userIdComposite, date1, OvertimeHours.EIGHT_POSITIVE),
+                new UserHasWorkedOvertimeEvent(userIdComposite, date2, OvertimeHours.EIGHT_POSITIVE),
+                new UserHasWorkedOvertimeEvent(userIdComposite, date3, OvertimeHours.EIGHT_POSITIVE)
+            );
+        }
+
+        @Test
+        void ensureNothingPublishedWhenLockingIsDisabled() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone())).thenReturn(Optional.empty());
+
+            sut.publishOvertimeUpdated(new WorkingTimeCreatedEvent(
+                userIdComposite, anyWorkingTimeId(), LocalDate.parse("2025-01-01"), FederalState.GLOBAL, false, anyWorkdays()));
+
+            verifyNoInteractions(applicationEventPublisher);
+            verifyNoInteractions(overtimeAccountService);
+        }
+
+        @Test
+        void ensureNothingPublishedWhenValidFromIsAfterLastLockedDate() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-04")));
+
+            // validFrom (2025-01-10) is after the last locked date (2025-01-03) -> change is entirely in the editable region
+            sut.publishOvertimeUpdated(new WorkingTimeCreatedEvent(
+                userIdComposite, anyWorkingTimeId(), LocalDate.parse("2025-01-10"), FederalState.GLOBAL, false, anyWorkdays()));
+
+            verifyNoInteractions(applicationEventPublisher);
+            verifyNoInteractions(overtimeAccountService);
+        }
+
+        @Test
+        void ensureNothingPublishedWhenOvertimeNotAllowed() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-04")));
+            when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId()))
+                .thenReturn(new OvertimeAccount(userIdComposite, false));
+
+            sut.publishOvertimeUpdated(new WorkingTimeCreatedEvent(
+                userIdComposite, anyWorkingTimeId(), LocalDate.parse("2025-01-01"), FederalState.GLOBAL, false, anyWorkdays()));
+
+            verifyNoInteractions(applicationEventPublisher);
+        }
+    }
+
+    @Nested
+    class WorkingTimeUpdated {
+
+        @Test
+        void ensureOvertimeResyncedFromCurrentValidFromWhenMovedIntoThePast() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final LocalDate previousValidFrom = LocalDate.parse("2025-01-03");
+            final LocalDate validFrom = LocalDate.parse("2025-01-01");
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-04")));
+            when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId()))
+                .thenReturn(new OvertimeAccount(userIdComposite, true));
+
+            final LockTimeEntriesSettings lockTimeEntriesSettings = anyLockTimeEntriesSettings();
+            when(timeEntryLockService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
+
+            final LocalDate date1 = LocalDate.parse("2025-01-01");
+            final LocalDate date2 = LocalDate.parse("2025-01-02");
+            final LocalDate date3 = LocalDate.parse("2025-01-03");
+            when(timeEntryLockService.isLocked(date1, lockTimeEntriesSettings)).thenReturn(true);
+            when(timeEntryLockService.isLocked(date2, lockTimeEntriesSettings)).thenReturn(true);
+            when(timeEntryLockService.isLocked(date3, lockTimeEntriesSettings)).thenReturn(true);
+
+            when(workingTimeCalendarService.getWorkingTimeCalender(date1, date3.plusDays(1), userIdComposite.localId()))
+                .thenReturn(new WorkingTimeCalendar(
+                    Map.of(date1, PlannedWorkingHours.EIGHT, date2, PlannedWorkingHours.EIGHT, date3, PlannedWorkingHours.EIGHT),
+                    Map.of()
+                ));
+
+            when(overtimeService.getOvertimeForDateAndUser(date1, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+            when(overtimeService.getOvertimeForDateAndUser(date2, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+            when(overtimeService.getOvertimeForDateAndUser(date3, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+
+            sut.publishOvertimeUpdated(new WorkingTimeUpdatedEvent(
+                userIdComposite, anyWorkingTimeId(), validFrom, previousValidFrom, FederalState.GLOBAL, false, anyWorkdays()));
+
+            final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+            verify(applicationEventPublisher, times(3)).publishEvent(captor.capture());
+            assertThat(captor.getAllValues()).containsExactly(
+                new UserHasWorkedOvertimeEvent(userIdComposite, date1, OvertimeHours.EIGHT_POSITIVE),
+                new UserHasWorkedOvertimeEvent(userIdComposite, date2, OvertimeHours.EIGHT_POSITIVE),
+                new UserHasWorkedOvertimeEvent(userIdComposite, date3, OvertimeHours.EIGHT_POSITIVE)
+            );
+        }
+
+        @Test
+        void ensureOvertimeResyncedFromPreviousValidFromWhenMovedIntoTheFuture() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final LocalDate previousValidFrom = LocalDate.parse("2025-01-01");
+            final LocalDate validFrom = LocalDate.parse("2025-01-03");
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-04")));
+            when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId()))
+                .thenReturn(new OvertimeAccount(userIdComposite, true));
+
+            final LockTimeEntriesSettings lockTimeEntriesSettings = anyLockTimeEntriesSettings();
+            when(timeEntryLockService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
+
+            final LocalDate date1 = LocalDate.parse("2025-01-01");
+            final LocalDate date2 = LocalDate.parse("2025-01-02");
+            final LocalDate date3 = LocalDate.parse("2025-01-03");
+            when(timeEntryLockService.isLocked(date1, lockTimeEntriesSettings)).thenReturn(true);
+            when(timeEntryLockService.isLocked(date2, lockTimeEntriesSettings)).thenReturn(true);
+            when(timeEntryLockService.isLocked(date3, lockTimeEntriesSettings)).thenReturn(true);
+
+            // range starts at the previous (earlier) validFrom 2025-01-01, so 2025-01-01/02 (now covered by the
+            // preceding working time) are resynced, too
+            when(workingTimeCalendarService.getWorkingTimeCalender(date1, date3.plusDays(1), userIdComposite.localId()))
+                .thenReturn(new WorkingTimeCalendar(
+                    Map.of(date1, PlannedWorkingHours.EIGHT, date2, PlannedWorkingHours.EIGHT, date3, PlannedWorkingHours.EIGHT),
+                    Map.of()
+                ));
+
+            when(overtimeService.getOvertimeForDateAndUser(date1, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+            when(overtimeService.getOvertimeForDateAndUser(date2, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+            when(overtimeService.getOvertimeForDateAndUser(date3, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+
+            sut.publishOvertimeUpdated(new WorkingTimeUpdatedEvent(
+                userIdComposite, anyWorkingTimeId(), validFrom, previousValidFrom, FederalState.GLOBAL, false, anyWorkdays()));
+
+            final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+            verify(applicationEventPublisher, times(3)).publishEvent(captor.capture());
+            assertThat(captor.getAllValues()).containsExactly(
+                new UserHasWorkedOvertimeEvent(userIdComposite, date1, OvertimeHours.EIGHT_POSITIVE),
+                new UserHasWorkedOvertimeEvent(userIdComposite, date2, OvertimeHours.EIGHT_POSITIVE),
+                new UserHasWorkedOvertimeEvent(userIdComposite, date3, OvertimeHours.EIGHT_POSITIVE)
+            );
+        }
+
+        @Test
+        void ensureNothingPublishedForVeryFirstWorkingTimeWithoutValidFrom() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+
+            sut.publishOvertimeUpdated(new WorkingTimeUpdatedEvent(
+                userIdComposite, anyWorkingTimeId(), null, null, FederalState.GLOBAL, false, anyWorkdays()));
+
+            verifyNoInteractions(applicationEventPublisher);
+            verifyNoInteractions(timeEntryLockService);
+            verifyNoInteractions(overtimeAccountService);
+        }
+    }
+
+    @Nested
+    class WorkingTimeDeleted {
+
+        @Test
+        void ensureOvertimeResyncedForLockedDaysFromValidFrom() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final LocalDate validFrom = LocalDate.parse("2025-01-02");
+            final LocalDate date2 = LocalDate.parse("2025-01-02");
+            final LocalDate date3 = LocalDate.parse("2025-01-03");
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-04")));
+            when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId()))
+                .thenReturn(new OvertimeAccount(userIdComposite, true));
+
+            final LockTimeEntriesSettings lockTimeEntriesSettings = anyLockTimeEntriesSettings();
+            when(timeEntryLockService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
+            when(timeEntryLockService.isLocked(date2, lockTimeEntriesSettings)).thenReturn(true);
+            when(timeEntryLockService.isLocked(date3, lockTimeEntriesSettings)).thenReturn(true);
+
+            when(workingTimeCalendarService.getWorkingTimeCalender(date2, date3.plusDays(1), userIdComposite.localId()))
+                .thenReturn(new WorkingTimeCalendar(
+                    Map.of(date2, PlannedWorkingHours.EIGHT, date3, PlannedWorkingHours.EIGHT),
+                    Map.of()
+                ));
+
+            when(overtimeService.getOvertimeForDateAndUser(date2, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+            when(overtimeService.getOvertimeForDateAndUser(date3, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+
+            sut.publishOvertimeUpdated(new WorkingTimeDeletedEvent(userIdComposite, anyWorkingTimeId(), validFrom));
+
+            final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+            verify(applicationEventPublisher, times(2)).publishEvent(captor.capture());
+
+            assertThat(captor.getAllValues()).containsExactly(
+                new UserHasWorkedOvertimeEvent(userIdComposite, date2, OvertimeHours.EIGHT_POSITIVE),
+                new UserHasWorkedOvertimeEvent(userIdComposite, date3, OvertimeHours.EIGHT_POSITIVE)
+            );
+        }
+    }
+
+    private static WorkingTimeId anyWorkingTimeId() {
+        return new WorkingTimeId(java.util.UUID.fromString("00000000-0000-0000-0000-000000000001"));
+    }
+
+    private static EnumMap<DayOfWeek, Duration> anyWorkdays() {
+        return new EnumMap<>(Map.of(
+            DayOfWeek.MONDAY, Duration.ofHours(8),
+            DayOfWeek.TUESDAY, Duration.ofHours(8),
+            DayOfWeek.WEDNESDAY, Duration.ofHours(8),
+            DayOfWeek.THURSDAY, Duration.ofHours(8),
+            DayOfWeek.FRIDAY, Duration.ofHours(8)
+        ));
     }
 
     private LockTimeEntriesSettings anyLockTimeEntriesSettings() {
