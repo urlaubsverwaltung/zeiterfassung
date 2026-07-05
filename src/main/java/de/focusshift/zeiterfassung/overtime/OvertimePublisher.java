@@ -5,6 +5,10 @@ import de.focusshift.zeiterfassung.absence.AbsenceAddedEvent;
 import de.focusshift.zeiterfassung.absence.AbsenceDeletedEvent;
 import de.focusshift.zeiterfassung.absence.AbsenceUpdatedEvent;
 import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.publicholiday.PublicHolidayCalendar;
+import de.focusshift.zeiterfassung.publicholiday.PublicHolidaysService;
+import de.focusshift.zeiterfassung.settings.FederalStateSettingsUpdatedEvent;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
@@ -20,11 +24,14 @@ import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
+import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCreatedEvent;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeDeletedEvent;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeUpdatedEvent;
+import de.focusshift.zeiterfassung.workingtime.WorksOnPublicHoliday;
 import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,8 +40,11 @@ import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -44,11 +54,21 @@ public class OvertimePublisher {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
+    /**
+     * Lower bound for resyncing overtime after a global federal state change. Working time periods with a concrete
+     * {@code validFrom} are bounded by that date; the very first (legacy default) working time has no {@code validFrom}
+     * and would otherwise reach infinitely into the past, so it is floored here. Since only public holidays are
+     * republished this bound can be generous.
+     */
+    private static final LocalDate FEDERAL_STATE_RESYNC_FLOOR = LocalDate.of(2015, 1, 1);
+
     private final OvertimeService overtimeService;
     private final OvertimeAccountService overtimeAccountService;
     private final TimeEntryLockService timeEntryLockService;
     private final UserManagementService userManagementService;
     private final WorkingTimeCalendarService workingTimeCalendarService;
+    private final WorkingTimeService workingTimeService;
+    private final PublicHolidaysService publicHolidaysService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final Clock clock;
 
@@ -58,6 +78,8 @@ public class OvertimePublisher {
         TimeEntryLockService timeEntryLockService,
         UserManagementService userManagementService,
         WorkingTimeCalendarService workingTimeCalendarService,
+        WorkingTimeService workingTimeService,
+        PublicHolidaysService publicHolidaysService,
         ApplicationEventPublisher applicationEventPublisher,
         Clock clock
     ) {
@@ -67,6 +89,8 @@ public class OvertimePublisher {
         this.timeEntryLockService = timeEntryLockService;
         this.userManagementService = userManagementService;
         this.workingTimeCalendarService = workingTimeCalendarService;
+        this.workingTimeService = workingTimeService;
+        this.publicHolidaysService = publicHolidaysService;
         this.clock = clock;
     }
 
@@ -227,6 +251,106 @@ public class OvertimePublisher {
     public void publishOvertimeUpdated(WorkingTimeDeletedEvent event) {
         // after deletion the preceding working time extends over the deleted range, so its planned working hours change.
         publishOvertimeForWorkingTimeChange(event.userIdComposite(), event.validFrom());
+    }
+
+    /**
+     * Recalculate and publish overtime for the locked days that are affected by a change of the global
+     * {@link de.focusshift.zeiterfassung.settings.FederalStateSettings federal state settings}.
+     *
+     * <p>
+     * Changing the global federal state (or {@code worksOnPublicHoliday}) changes which days are public holidays for
+     * every person whose {@link WorkingTime} inherits the global setting (individual federal state {@code GLOBAL} or
+     * {@code worksOnPublicHoliday} {@code GLOBAL}). Only such persons and only the days that are public holidays under
+     * the old or the new federal state are affected, so we recompute exactly those (already locked) days. Not-yet-locked
+     * days are (re)calculated by the scheduler once they get locked.
+     */
+    @EventListener
+    public void publishOvertimeUpdated(FederalStateSettingsUpdatedEvent event) {
+
+        final Optional<LocalDate> maybeLastLockedDate = getLastLockedDate();
+        if (maybeLastLockedDate.isEmpty()) {
+            LOG.debug("Locking is disabled, no locked overtime to resync for federal state settings change.");
+            return;
+        }
+
+        final LocalDate lastLockedDate = maybeLastLockedDate.get();
+        final LocalDate from = FEDERAL_STATE_RESYNC_FLOOR;
+        if (from.isAfter(lastLockedDate)) {
+            LOG.debug("Federal state settings change does not reach into the locked period (lastLockedDate={}). Nothing to resync.", lastLockedDate);
+            return;
+        }
+
+        final LocalDate toExclusive = lastLockedDate.plusDays(1);
+
+        final Set<LocalDate> affectedHolidays = affectedPublicHolidays(event, from, toExclusive);
+        if (affectedHolidays.isEmpty()) {
+            LOG.info("Federal state settings changed but no public holidays are affected in [{} - {}]. Nothing to resync.", from, lastLockedDate);
+            return;
+        }
+
+        final Map<UserIdComposite, List<WorkingTime>> workingTimesByUser = workingTimeService.getAllWorkingTimes(from, toExclusive);
+        final Map<UserIdComposite, OvertimeAccount> overtimeAccountByUser = overtimeAccountService.getAllOvertimeAccounts();
+        final LockTimeEntriesSettings lockSettings = timeEntryLockService.getLockTimeEntriesSettings();
+
+        LOG.info("Federal state settings changed. Resync overtime for {} affected public holiday(s) in [{} - {}].", affectedHolidays.size(), from, lastLockedDate);
+
+        workingTimesByUser.forEach((userIdComposite, workingTimes) -> {
+
+            final OvertimeAccount overtimeAccount = overtimeAccountByUser.get(userIdComposite);
+            if (overtimeAccount == null || !overtimeAccount.isAllowed()) {
+                LOG.debug("Skip federal state resync for user={} because overtime is not allowed.", userIdComposite);
+                return;
+            }
+
+            for (WorkingTime workingTime : workingTimes) {
+                if (!inheritsGlobalFederalStateSettings(workingTime)) {
+                    // this working time has its own federal state / worksOnPublicHoliday - not affected by the global change
+                    continue;
+                }
+
+                final LocalDate effStart = maxDate(workingTime.validFrom().orElse(from), from);
+                final LocalDate effEnd = minDate(workingTime.validTo().orElse(lastLockedDate), lastLockedDate);
+                if (effStart.isAfter(effEnd)) {
+                    continue;
+                }
+
+                for (LocalDate date : affectedHolidays) {
+                    final boolean withinPeriod = !date.isBefore(effStart) && !date.isAfter(effEnd);
+                    if (withinPeriod && timeEntryLockService.isLocked(date, lockSettings)) {
+                        publishUpdated(userIdComposite, date);
+                    }
+                }
+            }
+        });
+    }
+
+    private Set<LocalDate> affectedPublicHolidays(FederalStateSettingsUpdatedEvent event, LocalDate from, LocalDate toExclusive) {
+
+        final Set<FederalState> federalStates = new HashSet<>();
+        federalStates.add(event.oldFederalState());
+        federalStates.add(event.newFederalState());
+
+        final Map<FederalState, PublicHolidayCalendar> calendars =
+            publicHolidaysService.getPublicHolidays(from, toExclusive, federalStates);
+
+        final Set<LocalDate> dates = new HashSet<>();
+        for (PublicHolidayCalendar calendar : calendars.values()) {
+            dates.addAll(calendar.publicHolidays().keySet());
+        }
+        return dates;
+    }
+
+    private static boolean inheritsGlobalFederalStateSettings(WorkingTime workingTime) {
+        return FederalState.GLOBAL.equals(workingTime.individualFederalState())
+            || WorksOnPublicHoliday.GLOBAL.equals(workingTime.individualWorksOnPublicHoliday());
+    }
+
+    private static LocalDate maxDate(LocalDate a, LocalDate b) {
+        return a.isAfter(b) ? a : b;
+    }
+
+    private static LocalDate minDate(LocalDate a, LocalDate b) {
+        return a.isBefore(b) ? a : b;
     }
 
     /**

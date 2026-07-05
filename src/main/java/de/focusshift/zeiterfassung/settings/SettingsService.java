@@ -67,11 +67,31 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
      */
     FederalStateSettings updateFederalStateSettings(FederalState federalState, boolean worksOnPublicHoliday) {
 
-        final FederalStateSettingsEntity entity = getFederalStateEntity().orElseGet(FederalStateSettingsEntity::new);
+        final Optional<FederalStateSettingsEntity> maybeEntity = getFederalStateEntity();
+
+        final FederalState previousFederalState = maybeEntity
+            .map(FederalStateSettingsEntity::getFederalState)
+            .orElse(FederalStateSettings.DEFAULT.federalState());
+        final boolean previousWorksOnPublicHoliday = maybeEntity
+            .map(FederalStateSettingsEntity::isWorksOnPublicHoliday)
+            .orElse(FederalStateSettings.DEFAULT.worksOnPublicHoliday());
+
+        final FederalStateSettingsEntity entity = maybeEntity.orElseGet(FederalStateSettingsEntity::new);
         entity.setFederalState(federalState);
         entity.setWorksOnPublicHoliday(worksOnPublicHoliday);
 
         final FederalStateSettingsEntity saved = federalStateSettingsRepository.save(entity);
+
+        final boolean changed = previousFederalState != saved.getFederalState()
+            || previousWorksOnPublicHoliday != saved.isWorksOnPublicHoliday();
+
+        if (changed) {
+            LOG.info("FederalStateSettings changed (federalState {} -> {}, worksOnPublicHoliday {} -> {}). Publishing FederalStateSettingsUpdatedEvent to resync overtime.",
+                previousFederalState, saved.getFederalState(), previousWorksOnPublicHoliday, saved.isWorksOnPublicHoliday());
+            applicationEventPublisher.publishEvent(new FederalStateSettingsUpdatedEvent(
+                previousFederalState, previousWorksOnPublicHoliday, saved.getFederalState(), saved.isWorksOnPublicHoliday()
+            ));
+        }
 
         return toFederalStateSettings(saved);
     }
