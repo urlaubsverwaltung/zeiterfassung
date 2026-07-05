@@ -6,6 +6,10 @@ import de.focusshift.zeiterfassung.absence.AbsenceDeletedEvent;
 import de.focusshift.zeiterfassung.absence.AbsenceUpdatedEvent;
 import de.focusshift.zeiterfassung.overtime.events.UserHasWorkedOvertimeEvent;
 import de.focusshift.zeiterfassung.publicholiday.FederalState;
+import de.focusshift.zeiterfassung.publicholiday.PublicHoliday;
+import de.focusshift.zeiterfassung.publicholiday.PublicHolidayCalendar;
+import de.focusshift.zeiterfassung.publicholiday.PublicHolidaysService;
+import de.focusshift.zeiterfassung.settings.FederalStateSettingsUpdatedEvent;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
@@ -24,12 +28,15 @@ import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
+import de.focusshift.zeiterfassung.workingtime.WorkingTime;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCreatedEvent;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeDeletedEvent;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeId;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeService;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeUpdatedEvent;
+import de.focusshift.zeiterfassung.workingtime.WorksOnPublicHoliday;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -48,6 +55,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +65,7 @@ import java.util.stream.IntStream;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -79,6 +88,10 @@ class OvertimePublisherTest {
     @Mock
     private WorkingTimeCalendarService workingTimeCalendarService;
     @Mock
+    private WorkingTimeService workingTimeService;
+    @Mock
+    private PublicHolidaysService publicHolidaysService;
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
     private final Clock clock = Clock.fixed(Instant.parse("2025-01-20T00:00:00Z"), ZoneId.of("Europe/Berlin"));
@@ -91,6 +104,8 @@ class OvertimePublisherTest {
             timeEntryLockService,
             userManagementService,
             workingTimeCalendarService,
+            workingTimeService,
+            publicHolidaysService,
             applicationEventPublisher,
             clock);
     }
@@ -1411,6 +1426,218 @@ class OvertimePublisherTest {
                 new UserHasWorkedOvertimeEvent(userIdComposite, date3, OvertimeHours.EIGHT_POSITIVE)
             );
         }
+    }
+
+    @Nested
+    class FederalStateSettingsUpdated {
+
+        @Test
+        void ensureOvertimeResyncedForGlobalWorkingTimeOnAffectedLockedHolidays() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final LocalDate holiday1 = LocalDate.parse("2025-01-01");
+            final LocalDate holiday2 = LocalDate.parse("2025-01-06");
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-10"))); // lastLockedDate = 2025-01-09
+
+            when(publicHolidaysService.getPublicHolidays(any(), any(), any()))
+                .thenReturn(Map.of(FederalState.GERMANY_BADEN_WUERTTEMBERG,
+                    publicHolidayCalendar(FederalState.GERMANY_BADEN_WUERTTEMBERG, holiday1, holiday2)));
+
+            when(workingTimeService.getAllWorkingTimes(any(), any())).thenReturn(Map.of(
+                userIdComposite, List.of(globalWorkingTime(userIdComposite, null, null))
+            ));
+            when(overtimeAccountService.getAllOvertimeAccounts()).thenReturn(Map.of(
+                userIdComposite, new OvertimeAccount(userIdComposite, true)
+            ));
+
+            final LockTimeEntriesSettings lockSettings = anyLockTimeEntriesSettings();
+            when(timeEntryLockService.getLockTimeEntriesSettings()).thenReturn(lockSettings);
+            when(timeEntryLockService.isLocked(holiday1, lockSettings)).thenReturn(true);
+            when(timeEntryLockService.isLocked(holiday2, lockSettings)).thenReturn(true);
+
+            when(overtimeService.getOvertimeForDateAndUser(holiday1, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+            when(overtimeService.getOvertimeForDateAndUser(holiday2, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+
+            sut.publishOvertimeUpdated(new FederalStateSettingsUpdatedEvent(
+                FederalState.NONE, false, FederalState.GERMANY_BADEN_WUERTTEMBERG, false));
+
+            final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+            verify(applicationEventPublisher, times(2)).publishEvent(captor.capture());
+            assertThat(captor.getAllValues()).containsExactlyInAnyOrder(
+                new UserHasWorkedOvertimeEvent(userIdComposite, holiday1, OvertimeHours.EIGHT_POSITIVE),
+                new UserHasWorkedOvertimeEvent(userIdComposite, holiday2, OvertimeHours.EIGHT_POSITIVE)
+            );
+        }
+
+        @Test
+        void ensureNothingPublishedForUserWithLocalFederalState() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final LocalDate holiday = LocalDate.parse("2025-01-01");
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-10")));
+
+            when(publicHolidaysService.getPublicHolidays(any(), any(), any()))
+                .thenReturn(Map.of(FederalState.GERMANY_BADEN_WUERTTEMBERG,
+                    publicHolidayCalendar(FederalState.GERMANY_BADEN_WUERTTEMBERG, holiday)));
+
+            // working time has its own concrete federal state and worksOnPublicHoliday -> not affected by global change
+            when(workingTimeService.getAllWorkingTimes(any(), any())).thenReturn(Map.of(
+                userIdComposite, List.of(workingTime(userIdComposite, FederalState.GERMANY_BADEN_WUERTTEMBERG, WorksOnPublicHoliday.NO, null, null))
+            ));
+            when(overtimeAccountService.getAllOvertimeAccounts()).thenReturn(Map.of(
+                userIdComposite, new OvertimeAccount(userIdComposite, true)
+            ));
+
+            sut.publishOvertimeUpdated(new FederalStateSettingsUpdatedEvent(
+                FederalState.NONE, false, FederalState.GERMANY_BADEN_WUERTTEMBERG, false));
+
+            verifyNoInteractions(applicationEventPublisher);
+        }
+
+        @Test
+        void ensureOnlyHolidaysWithinValidFromArePublished() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final LocalDate holidayBefore = LocalDate.parse("2024-12-25");
+            final LocalDate holidayAfter = LocalDate.parse("2025-01-01");
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-10")));
+
+            when(publicHolidaysService.getPublicHolidays(any(), any(), any()))
+                .thenReturn(Map.of(FederalState.GERMANY_BADEN_WUERTTEMBERG,
+                    publicHolidayCalendar(FederalState.GERMANY_BADEN_WUERTTEMBERG, holidayBefore, holidayAfter)));
+
+            // working time valid only from 2025-01-01 -> 2024-12-25 must be ignored
+            when(workingTimeService.getAllWorkingTimes(any(), any())).thenReturn(Map.of(
+                userIdComposite, List.of(globalWorkingTime(userIdComposite, LocalDate.parse("2025-01-01"), null))
+            ));
+            when(overtimeAccountService.getAllOvertimeAccounts()).thenReturn(Map.of(
+                userIdComposite, new OvertimeAccount(userIdComposite, true)
+            ));
+
+            final LockTimeEntriesSettings lockSettings = anyLockTimeEntriesSettings();
+            when(timeEntryLockService.getLockTimeEntriesSettings()).thenReturn(lockSettings);
+            when(timeEntryLockService.isLocked(holidayAfter, lockSettings)).thenReturn(true);
+
+            when(overtimeService.getOvertimeForDateAndUser(holidayAfter, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
+
+            sut.publishOvertimeUpdated(new FederalStateSettingsUpdatedEvent(
+                FederalState.NONE, false, FederalState.GERMANY_BADEN_WUERTTEMBERG, false));
+
+            verify(applicationEventPublisher, times(1)).publishEvent(
+                new UserHasWorkedOvertimeEvent(userIdComposite, holidayAfter, OvertimeHours.EIGHT_POSITIVE));
+        }
+
+        @Test
+        void ensureUnlockedAffectedHolidayIsNotPublished() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final LocalDate holiday = LocalDate.parse("2025-01-01");
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-10")));
+
+            when(publicHolidaysService.getPublicHolidays(any(), any(), any()))
+                .thenReturn(Map.of(FederalState.GERMANY_BADEN_WUERTTEMBERG,
+                    publicHolidayCalendar(FederalState.GERMANY_BADEN_WUERTTEMBERG, holiday)));
+
+            when(workingTimeService.getAllWorkingTimes(any(), any())).thenReturn(Map.of(
+                userIdComposite, List.of(globalWorkingTime(userIdComposite, null, null))
+            ));
+            when(overtimeAccountService.getAllOvertimeAccounts()).thenReturn(Map.of(
+                userIdComposite, new OvertimeAccount(userIdComposite, true)
+            ));
+
+            final LockTimeEntriesSettings lockSettings = anyLockTimeEntriesSettings();
+            when(timeEntryLockService.getLockTimeEntriesSettings()).thenReturn(lockSettings);
+            when(timeEntryLockService.isLocked(holiday, lockSettings)).thenReturn(false);
+
+            sut.publishOvertimeUpdated(new FederalStateSettingsUpdatedEvent(
+                FederalState.NONE, false, FederalState.GERMANY_BADEN_WUERTTEMBERG, false));
+
+            verifyNoInteractions(applicationEventPublisher);
+        }
+
+        @Test
+        void ensureNothingPublishedWhenOvertimeNotAllowed() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+            final LocalDate holiday = LocalDate.parse("2025-01-01");
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-10")));
+
+            when(publicHolidaysService.getPublicHolidays(any(), any(), any()))
+                .thenReturn(Map.of(FederalState.GERMANY_BADEN_WUERTTEMBERG,
+                    publicHolidayCalendar(FederalState.GERMANY_BADEN_WUERTTEMBERG, holiday)));
+
+            when(workingTimeService.getAllWorkingTimes(any(), any())).thenReturn(Map.of(
+                userIdComposite, List.of(globalWorkingTime(userIdComposite, null, null))
+            ));
+            when(overtimeAccountService.getAllOvertimeAccounts()).thenReturn(Map.of(
+                userIdComposite, new OvertimeAccount(userIdComposite, false)
+            ));
+
+            sut.publishOvertimeUpdated(new FederalStateSettingsUpdatedEvent(
+                FederalState.NONE, false, FederalState.GERMANY_BADEN_WUERTTEMBERG, false));
+
+            verifyNoInteractions(applicationEventPublisher);
+        }
+
+        @Test
+        void ensureNothingPublishedWhenLockingIsDisabled() {
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone())).thenReturn(Optional.empty());
+
+            sut.publishOvertimeUpdated(new FederalStateSettingsUpdatedEvent(
+                FederalState.NONE, false, FederalState.GERMANY_BADEN_WUERTTEMBERG, false));
+
+            verifyNoInteractions(applicationEventPublisher);
+            verifyNoInteractions(publicHolidaysService);
+            verifyNoInteractions(workingTimeService);
+        }
+
+        @Test
+        void ensureNothingPublishedWhenNoPublicHolidaysAffected() {
+
+            when(timeEntryLockService.getMinValidTimeEntryDate(clock.getZone()))
+                .thenReturn(Optional.of(LocalDate.parse("2025-01-10")));
+
+            when(publicHolidaysService.getPublicHolidays(any(), any(), any())).thenReturn(Map.of());
+
+            sut.publishOvertimeUpdated(new FederalStateSettingsUpdatedEvent(
+                FederalState.NONE, false, FederalState.NONE, true));
+
+            verifyNoInteractions(applicationEventPublisher);
+            verifyNoInteractions(workingTimeService);
+        }
+    }
+
+    private static WorkingTime globalWorkingTime(UserIdComposite userIdComposite, LocalDate validFrom, LocalDate validTo) {
+        return workingTime(userIdComposite, FederalState.GLOBAL, WorksOnPublicHoliday.GLOBAL, validFrom, validTo);
+    }
+
+    private static WorkingTime workingTime(UserIdComposite userIdComposite, FederalState federalState,
+                                           WorksOnPublicHoliday worksOnPublicHoliday, LocalDate validFrom, LocalDate validTo) {
+        return WorkingTime.builder(userIdComposite, anyWorkingTimeId())
+            .federalState(federalState)
+            .worksOnPublicHoliday(worksOnPublicHoliday)
+            .validFrom(validFrom)
+            .validTo(validTo)
+            .build();
+    }
+
+    private static PublicHolidayCalendar publicHolidayCalendar(FederalState federalState, LocalDate... dates) {
+        final Map<LocalDate, List<PublicHoliday>> publicHolidays = new HashMap<>();
+        for (LocalDate date : dates) {
+            publicHolidays.put(date, List.of());
+        }
+        return new PublicHolidayCalendar(federalState, publicHolidays);
     }
 
     private static WorkingTimeId anyWorkingTimeId() {

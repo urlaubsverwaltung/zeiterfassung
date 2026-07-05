@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.settings;
 
+import de.focusshift.zeiterfassung.publicholiday.FederalState;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -47,6 +48,70 @@ class SettingsServiceTest {
             subtractBreakFromTimeEntrySettingsRepository,
             applicationEventPublisher
         );
+    }
+
+    @Nested
+    class FederalStateSettingsTest {
+
+        @Test
+        void ensureUpdatePublishesEventWhenFederalStateChanges() {
+
+            final FederalStateSettingsEntity entity = new FederalStateSettingsEntity();
+            entity.setFederalState(FederalState.NONE);
+            entity.setWorksOnPublicHoliday(false);
+
+            when(federalStateSettingsRepository.findAll()).thenReturn(List.of(entity));
+            when(federalStateSettingsRepository.save(any())).thenAnswer(returnsFirstArg());
+
+            sut.updateFederalStateSettings(FederalState.GERMANY_BADEN_WUERTTEMBERG, true);
+
+            verify(applicationEventPublisher).publishEvent(new FederalStateSettingsUpdatedEvent(
+                FederalState.NONE, false, FederalState.GERMANY_BADEN_WUERTTEMBERG, true));
+        }
+
+        @Test
+        void ensureUpdatePublishesEventWhenOnlyWorksOnPublicHolidayChanges() {
+
+            final FederalStateSettingsEntity entity = new FederalStateSettingsEntity();
+            entity.setFederalState(FederalState.GERMANY_BADEN_WUERTTEMBERG);
+            entity.setWorksOnPublicHoliday(false);
+
+            when(federalStateSettingsRepository.findAll()).thenReturn(List.of(entity));
+            when(federalStateSettingsRepository.save(any())).thenAnswer(returnsFirstArg());
+
+            sut.updateFederalStateSettings(FederalState.GERMANY_BADEN_WUERTTEMBERG, true);
+
+            verify(applicationEventPublisher).publishEvent(new FederalStateSettingsUpdatedEvent(
+                FederalState.GERMANY_BADEN_WUERTTEMBERG, false, FederalState.GERMANY_BADEN_WUERTTEMBERG, true));
+        }
+
+        @Test
+        void ensureUpdatePublishesEventWhenNothingWasPersistedYet() {
+
+            when(federalStateSettingsRepository.findAll()).thenReturn(List.of());
+            when(federalStateSettingsRepository.save(any())).thenAnswer(returnsFirstArg());
+
+            sut.updateFederalStateSettings(FederalState.GERMANY_BADEN_WUERTTEMBERG, false);
+
+            // previous values fall back to FederalStateSettings.DEFAULT (NONE, false)
+            verify(applicationEventPublisher).publishEvent(new FederalStateSettingsUpdatedEvent(
+                FederalState.NONE, false, FederalState.GERMANY_BADEN_WUERTTEMBERG, false));
+        }
+
+        @Test
+        void ensureUpdateDoesNotPublishEventWhenNothingChanged() {
+
+            final FederalStateSettingsEntity entity = new FederalStateSettingsEntity();
+            entity.setFederalState(FederalState.GERMANY_BADEN_WUERTTEMBERG);
+            entity.setWorksOnPublicHoliday(true);
+
+            when(federalStateSettingsRepository.findAll()).thenReturn(List.of(entity));
+            when(federalStateSettingsRepository.save(any())).thenAnswer(returnsFirstArg());
+
+            sut.updateFederalStateSettings(FederalState.GERMANY_BADEN_WUERTTEMBERG, true);
+
+            verifyNoInteractions(applicationEventPublisher);
+        }
     }
 
     @Nested
