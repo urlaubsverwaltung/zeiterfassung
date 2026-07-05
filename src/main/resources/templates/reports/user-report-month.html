@@ -239,7 +239,7 @@
                   <th:block
                     th:if="${day.hoursWorked != 0 && day.hoursWorked > day.hoursWorkedShould}"
                     th:with="
-                      heightOvertime=${chartHeight * (day.hoursWorked / week.graphLegendMaxHour)},
+                      heightOvertime=${chartHeight * (day.hoursWorked / monthReport.graphLegendMaxHour)},
                       bottomOvertime=${topHours + heightOvertime}
                     "
                   >
