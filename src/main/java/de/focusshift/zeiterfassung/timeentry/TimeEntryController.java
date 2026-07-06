@@ -8,6 +8,7 @@ import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
 import de.focusshift.zeiterfassung.user.DateFormatter;
 import de.focusshift.zeiterfassung.user.MonthFormat;
+import de.focusshift.zeiterfassung.user.UserDateService;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.user.YearFormat;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -74,6 +75,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     private final DateFormatter dateFormatter;
     private final TimeEntryViewHelper viewHelper;
     private final UserSearchViewHelper userSearchViewHelper;
+    private final UserDateService userDateService;
     private final Clock clock;
 
     TimeEntryController(
@@ -85,6 +87,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         DateFormatter dateFormatter,
         TimeEntryViewHelper viewHelper,
         UserSearchViewHelper userSearchViewHelper,
+        UserDateService userDateService,
         Clock clock
     ) {
         this.timeEntryService = timeEntryService;
@@ -95,6 +98,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         this.dateFormatter = dateFormatter;
         this.viewHelper = viewHelper;
         this.userSearchViewHelper = userSearchViewHelper;
+        this.userDateService = userDateService;
         this.clock = clock;
     }
 
@@ -138,7 +142,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
     private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, Model model, Locale locale, CurrentOidcUser currentUser) {
 
-        final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+        final TimeEntryDTO timeEntryDTO = new TimeEntryDTO(userDateService.today());
         timeEntryDTO.setUserLocalId(ownerLocalId.value());
 
         viewHelper.addTimeEntryToModel(model, timeEntryDTO);

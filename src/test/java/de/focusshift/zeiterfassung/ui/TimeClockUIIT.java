@@ -11,7 +11,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -20,14 +23,17 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static de.focusshift.zeiterfassung.ui.extension.UiTest.USER_ZONE_ID;
 import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.OFFICE;
+import static java.time.ZoneOffset.UTC;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -35,8 +41,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers(parallel = true)
 class TimeClockUIIT {
-
-    private static final ZoneId USER_ZONE_ID = ZoneId.of("Europe/Berlin");
 
     @Autowired
     private Clock clock;
@@ -58,6 +62,17 @@ class TimeClockUIIT {
     @MockitoBean
     private UserSettingsProvider userSettingsProvider;
 
+    @TestConfiguration
+    static class ClockTestConfiguration {
+        @Bean
+        @Primary
+        Clock fixedClock() {
+            final LocalDate date = LocalDate.now(USER_ZONE_ID);
+            final LocalTime time = LocalTime.of(17, 0);
+            return Clock.fixed(ZonedDateTime.of(date, time, USER_ZONE_ID).toInstant(), UTC);
+        }
+    }
+
     @BeforeEach
     void setUp() {
         when(userSettingsProvider.zoneId()).thenReturn(USER_ZONE_ID);
@@ -68,6 +83,9 @@ class TimeClockUIIT {
     void ensureTimeClock(Page page) {
         final LoginPage loginPage = new LoginPage(page, port);
         final TimeClockPage timeClockPage = new TimeClockPage(page);
+
+        // fix browser time to match server clock (Date.now() in client code)
+        page.clock().setFixedTime(Date.from(Instant.now(clock)));
 
         loginPage.login(OFFICE);
 
