@@ -28,7 +28,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: Release Zeiterfassung ${{ steps.vars.outputs.version }}
+          name: ${{ steps.vars.outputs.version }}
           body_path: .chglog/${{ steps.vars.outputs.version }}.md
           files: |
               ./target/zeiterfassung-*.jar
