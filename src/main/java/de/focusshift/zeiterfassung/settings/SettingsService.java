@@ -143,7 +143,13 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         final LocalDate actualLockTimeEntryDate = today.minusDays(actualLockTimeEntriesDaysInPast).minusDays(1);
 
         iterate(oldLockTimeEntryDate, date -> !date.isAfter(actualLockTimeEntryDate), date -> date.plusDays(1))
-            .forEach(lockedDate -> applicationEventPublisher.publishEvent(new DayLockedEvent(lockedDate, zoneId)));
+            .forEach(lockedDate -> {
+                try {
+                    applicationEventPublisher.publishEvent(new DayLockedEvent(lockedDate, zoneId));
+                } catch (Exception exception) {
+                    LOG.error("Unexpected error while publishing DayLockedEvent for lockedDate={}. Continuing with remaining dates.", lockedDate, exception);
+                }
+            });
     }
 
     private Optional<LockTimeEntriesSettingsEntity> getLockTimeEntriesSettingsEntity() {
