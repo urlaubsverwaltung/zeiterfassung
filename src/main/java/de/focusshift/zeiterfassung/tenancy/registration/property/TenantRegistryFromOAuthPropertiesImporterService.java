@@ -49,8 +49,12 @@ class TenantRegistryFromOAuthPropertiesImporterService {
             .values()
             .forEach(registration -> {
                 final String tenantId = registration.getProvider();
-                final String clientSecret = registration.getClientSecret();
-                tenantRegistrationService.registerNewTenant(new TenantRegistration(tenantId, clientSecret));
+                try {
+                    final String clientSecret = registration.getClientSecret();
+                    tenantRegistrationService.registerNewTenant(new TenantRegistration(tenantId, clientSecret));
+                } catch (Exception exception) {
+                    LOG.error("Unexpected error while importing tenantId={} from oAuth2ClientProperties. Continuing with remaining registrations.", tenantId, exception);
+                }
             });
         LOG.info("imported tenants from oAuth2ClientProperties to database!");
     }
