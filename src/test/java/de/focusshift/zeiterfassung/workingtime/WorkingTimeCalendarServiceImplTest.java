@@ -512,6 +512,79 @@ class WorkingTimeCalendarServiceImplTest {
         }
 
         @Test
+        void ensureFutureWorkingTimeOutsideRequestedIntervalDoesNotCrashWhenAnotherUsersAbsenceExtendsInterval() {
+
+            // Reproduces production crash:
+            // "java.lang.IllegalArgumentException: expected startDate not to be after endDate" (DateRange)
+            //
+            // User B has an absence overlapping the requested interval and extending BEYOND toExclusive.
+            // This widens the globally fetched working-time interval into the future.
+            // User A has NO absence (so A's own interval stays the requested one), but has a working time
+            // whose validFrom lies in that widened future interval. Since the per-user calendar for A is
+            // built with A's narrow interval, nextEnd was smaller than that future validFrom -> DateRange crash.
+
+            final UserId userIdOne = new UserId("uuid-1");
+            final UserLocalId userLocalIdOne = new UserLocalId(1L);
+            final UserIdComposite userIdCompositeOne = new UserIdComposite(userIdOne, userLocalIdOne);
+
+            final UserId userIdTwo = new UserId("uuid-2");
+            final UserLocalId userLocalIdTwo = new UserLocalId(2L);
+            final UserIdComposite userIdCompositeTwo = new UserIdComposite(userIdTwo, userLocalIdTwo);
+
+            final LocalDate from = LocalDate.of(2023, 2, 13); // monday
+            final LocalDate toExclusive = from.plusWeeks(1);   // 2023-02-20
+
+            // user B has a full-day absence overlapping the requested interval and extending into the future
+            final Absence absenceB = new Absence(userIdTwo,
+                LocalDate.of(2023, 2, 19).atStartOfDay().toInstant(UTC),
+                LocalDate.of(2023, 2, 28).atStartOfDay().toInstant(UTC),
+                FULL, foo -> "", RED, HOLIDAY);
+
+            final LocalDate expandedToExclusive = LocalDate.of(2023, 3, 1);
+
+            // first fetch for the requested interval
+            when(absenceService.getAbsencesByUserIds(any(), eq(from), eq(toExclusive)))
+                .thenReturn(Map.of(userIdCompositeOne, List.of(), userIdCompositeTwo, List.of(absenceB)));
+            // second fetch with expanded interval because B's absence overlaps into the future
+            when(absenceService.getAbsencesByUserIds(any(), eq(from), eq(expandedToExclusive)))
+                .thenReturn(Map.of(userIdCompositeOne, List.of(), userIdCompositeTwo, List.of(absenceB)));
+
+            // working times are fetched for the widened interval [from, expandedToExclusive).
+            // user A has a FUTURE working time (validFrom 2023-02-25) that is inside the widened interval
+            // but outside A's own requested interval, plus a base working time (validFrom null).
+            // provided in descending validFrom order (null last) as the service delivers them.
+            when(workingTimeService.getWorkingTimesByUsers(from, expandedToExclusive, List.of(userLocalIdOne, userLocalIdTwo)))
+                .thenReturn(Map.of(
+                    userIdCompositeOne, List.of(
+                        WorkingTime.builder(userIdCompositeOne, new WorkingTimeId(UUID.randomUUID()))
+                            .validFrom(LocalDate.of(2023, 2, 25))
+                            .federalState(NONE).worksOnPublicHoliday(WorksOnPublicHoliday.NO)
+                            .monday(4).tuesday(4).wednesday(4).thursday(4).friday(4).saturday(4).sunday(4).build(),
+                        WorkingTime.builder(userIdCompositeOne, new WorkingTimeId(UUID.randomUUID()))
+                            .validFrom(null)
+                            .federalState(NONE).worksOnPublicHoliday(WorksOnPublicHoliday.NO)
+                            .monday(8).tuesday(8).wednesday(8).thursday(8).friday(8).saturday(8).sunday(8).build()
+                    ),
+                    userIdCompositeTwo, List.of(
+                        WorkingTime.builder(userIdCompositeTwo, new WorkingTimeId(UUID.randomUUID()))
+                            .validFrom(null)
+                            .federalState(NONE).worksOnPublicHoliday(WorksOnPublicHoliday.NO)
+                            .monday(8).tuesday(8).wednesday(8).thursday(8).friday(8).saturday(8).sunday(8).build()
+                    )
+                ));
+
+            final Map<UserIdComposite, WorkingTimeCalendar> actual =
+                sut.getWorkingTimeCalendarForUsers(from, toExclusive, List.of(userLocalIdOne, userLocalIdTwo));
+
+            // user A's calendar must be built without crashing; the future working time is irrelevant
+            // for A's requested interval, so the base working time (8h) applies.
+            final WorkingTimeCalendar calendarA = actual.get(userIdCompositeOne);
+            assertThat(calendarA).isNotNull();
+            assertThat(calendarA.plannedWorkingHours(from)).hasValue(PlannedWorkingHours.EIGHT);
+            assertThat(calendarA.plannedWorkingHours(toExclusive.minusDays(1))).hasValue(PlannedWorkingHours.EIGHT);
+        }
+
+        @Test
         void ensureGetWorkingTimesForUsersConsidersPublicHolidays() {
 
             final UserId userIdOne = new UserId("uuid-1");
