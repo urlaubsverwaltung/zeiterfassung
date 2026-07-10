@@ -44,8 +44,8 @@ class TenantContextRunnerTest {
         final Runnable function = () -> {};
         sut.runForEachActiveTenant(function).run();
 
-        verify(tenantContextHolder).runInTenantIdContext(eq(new TenantId("one")), eq(function));
-        verify(tenantContextHolder).runInTenantIdContext(eq(new TenantId("two")), eq(function));
+        verify(tenantContextHolder).runInTenantIdContext(new TenantId("one"), function);
+        verify(tenantContextHolder).runInTenantIdContext(new TenantId("two"), function);
         verify(tenantContextHolder, times(0)).runInTenantIdContext(eq(new TenantId("three")), any(Runnable.class));
     }
 
@@ -60,12 +60,12 @@ class TenantContextRunnerTest {
         final Runnable function = () -> {};
 
         doThrow(new IllegalStateException("boom"))
-            .when(tenantContextHolder).runInTenantIdContext(eq(new TenantId("one")), eq(function));
+            .when(tenantContextHolder).runInTenantIdContext(new TenantId("one"), function);
 
         sut.runForEachActiveTenant(function).run();
 
-        verify(tenantContextHolder).runInTenantIdContext(eq(new TenantId("one")), eq(function));
-        verify(tenantContextHolder).runInTenantIdContext(eq(new TenantId("two")), eq(function));
+        verify(tenantContextHolder).runInTenantIdContext(new TenantId("one"), function);
+        verify(tenantContextHolder).runInTenantIdContext(new TenantId("two"), function);
     }
 
     private static Tenant tenant(String tenantId, TenantStatus status) {
