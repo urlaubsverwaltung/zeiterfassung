@@ -12,7 +12,6 @@ import org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2Clien
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -58,7 +57,7 @@ class TenantRegistryFromOAuthPropertiesImporterServiceTest {
         when(oAuth2ClientProperties.getRegistration()).thenReturn(registrations);
 
         doThrow(new IllegalStateException("boom"))
-            .when(tenantRegistrationService).registerNewTenant(eq(new TenantRegistration("one", "secret-one")));
+            .when(tenantRegistrationService).registerNewTenant(new TenantRegistration("one", "secret-one"));
 
         sut.importOIDCClientsFromProperties();
 
