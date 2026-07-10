@@ -101,7 +101,13 @@ class TenantImporterComponent {
                         return;
                     }
                     LOG.info("tenantId={} has no users, starting import {} users!", passedTenantId, importerData.users().size());
-                    importerData.users().forEach(userToImport -> importUser(userToImport, new TenantId(passedTenantId)));
+                    importerData.users().forEach(userToImport -> {
+                        try {
+                            importUser(userToImport, new TenantId(passedTenantId));
+                        } catch (Exception exception) {
+                            LOG.error("Unexpected error while importing user={} of tenantId={}. Continuing with remaining users.", userToImport.user().externalId(), passedTenantId, exception);
+                        }
+                    });
                     LOG.info("finished importing {} users of tenantId={}", importerData.users().size(), passedTenantId);
                 } catch (Exception e) {
                     LOG.error("Error occurred while importing users", e);
