@@ -148,6 +148,29 @@ class OvertimePublisherTest {
 
             verifyNoInteractions(applicationEventPublisher);
         }
+
+        @Test
+        void ensureExceptionForOneUserDoesNotAbortRemainingUsers() {
+
+            final UserIdComposite userOne = anyUserIdComposite();
+            final UserIdComposite userTwo = new UserIdComposite(new UserId("user-id-2"), new UserLocalId(2L));
+
+            // userOne has no OvertimeAccount configured -> overtimeAccount.isAllowed() throws a NullPointerException
+            when(overtimeAccountService.getAllOvertimeAccounts()).thenReturn(Map.of(
+                userTwo, new OvertimeAccount(userTwo, true)
+            ));
+
+            final LocalDate date = LocalDate.parse("2026-03-06");
+            when(overtimeService.getOvertimeForDate(date)).thenReturn(Map.of(
+                userOne, OvertimeHours.EIGHT_POSITIVE,
+                userTwo, OvertimeHours.EIGHT_POSITIVE
+            ));
+
+            sut.publishOvertime(new DayLockedEvent(date, ZoneId.of("Europe/Berlin")));
+
+            verify(applicationEventPublisher).publishEvent(new UserHasWorkedOvertimeEvent(userTwo, date, OvertimeHours.EIGHT_POSITIVE));
+            verifyNoMoreInteractions(applicationEventPublisher);
+        }
     }
 
     @Nested
