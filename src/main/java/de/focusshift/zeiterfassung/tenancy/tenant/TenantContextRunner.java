@@ -1,11 +1,16 @@
 package de.focusshift.zeiterfassung.tenancy.tenant;
 
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Stream;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 @Component
 public class TenantContextRunner {
+
+    private static final Logger LOG = getLogger(TenantContextRunner.class);
 
     private final TenantContextHolder tenantContextHolder;
     private final TenantService tenantService;
@@ -26,7 +31,13 @@ public class TenantContextRunner {
      * @return a runnable
      */
     public Runnable runForEachActiveTenant(Runnable function) {
-        return () -> getAllActiveTenants().forEach(tenant -> tenantContextHolder.runInTenantIdContext(new TenantId(tenant.tenantId()), function));
+        return () -> getAllActiveTenants().forEach(tenant -> {
+            try {
+                tenantContextHolder.runInTenantIdContext(new TenantId(tenant.tenantId()), function);
+            } catch (Exception exception) {
+                LOG.error("Unexpected error while running function for tenant={}. Continuing with remaining tenants.", tenant.tenantId(), exception);
+            }
+        });
     }
 
     private Stream<Tenant> getAllActiveTenants() {

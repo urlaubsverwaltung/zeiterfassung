@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.assertArg;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -188,6 +189,30 @@ class SettingsServiceTest {
             final LocalDate today = LocalDate.now(clock.withZone(zoneId));
 
             verify(applicationEventPublisher).publishEvent(new DayLockedEvent(today.minusDays(11), zoneId));
+        }
+
+        @Test
+        void ensureExceptionForOneDayLockedEventDoesNotAbortRemainingDates() {
+
+            final LockTimeEntriesSettingsEntity entity = new LockTimeEntriesSettingsEntity();
+            entity.setId(1L);
+            entity.setLockingIsActive(true);
+            entity.setLockTimeEntriesDaysInPast(2);
+
+            when(lockTimeEntriesSettingsRepository.findAll()).thenReturn(List.of(entity));
+            when(lockTimeEntriesSettingsRepository.save(any(LockTimeEntriesSettingsEntity.class))).thenAnswer(returnsFirstArg());
+
+            final ZoneId zoneId = ZoneId.of("Europe/Berlin");
+            final LocalDate today = LocalDate.now(clock.withZone(zoneId));
+
+            doThrow(new IllegalStateException("boom"))
+                .when(applicationEventPublisher).publishEvent(new DayLockedEvent(today.minusDays(2), zoneId));
+
+            sut.updateLockTimeEntriesSettings(true, 0);
+
+            verify(applicationEventPublisher).publishEvent(new DayLockedEvent(today.minusDays(3), zoneId));
+            verify(applicationEventPublisher).publishEvent(new DayLockedEvent(today.minusDays(2), zoneId));
+            verify(applicationEventPublisher).publishEvent(new DayLockedEvent(today.minusDays(1), zoneId));
         }
 
         @Test

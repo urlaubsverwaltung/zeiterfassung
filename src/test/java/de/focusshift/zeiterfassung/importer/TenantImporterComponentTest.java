@@ -56,6 +56,7 @@ import static java.time.DayOfWeek.WEDNESDAY;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anySet;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -84,8 +85,12 @@ class TenantImporterComponentTest {
     private ImportInputProvider importInputProvider;
 
     private static TenantExport exportedData() {
-        UserExport userExport = new UserExport(
-            new UserDTO("externalId", "marlene", "muster", "my.name@example.org", Instant.now().minus(365, ChronoUnit.DAYS), Set.of(SecurityRole.ZEITERFASSUNG_USER.name())),
+        return new TenantExport("tenantId", Instant.now(), List.of(userExport("externalId", "marlene", "muster")));
+    }
+
+    private static UserExport userExport(String externalId, String givenName, String familyName) {
+        return new UserExport(
+            new UserDTO(externalId, givenName, familyName, "my.name@example.org", Instant.now().minus(365, ChronoUnit.DAYS), Set.of(SecurityRole.ZEITERFASSUNG_USER.name())),
             new OvertimeAccountDTO(true, Duration.ofHours(8)),
             new WorkingTimeDTO(
                 new WorkDayDTO("MONDAY", Duration.ofHours(8)),
@@ -103,7 +108,6 @@ class TenantImporterComponentTest {
                 new TimeEntryDTO("lala", ZonedDateTime.parse("2024-06-01T06:00:00.123Z"), ZonedDateTime.parse("2024-06-01T10:00:00.123Z"), false)
             )
         );
-        return new TenantExport("tenantId", Instant.now(), List.of(userExport));
     }
 
     @Test
@@ -161,6 +165,36 @@ class TenantImporterComponentTest {
             userLocalId, "lala", ZonedDateTime.parse("2024-06-01T08:00:00.123+02:00[Europe/Berlin]"), ZonedDateTime.parse("2024-06-01T12:00:00.123+02:00[Europe/Berlin]"), false
         );
 
+    }
+
+    @Test
+    void whenImportOfOneUserFailsRemainingUsersAreStillImported() {
+
+        final UserExport userOne = userExport("one", "marlene", "muster");
+        final UserExport userTwo = userExport("two", "erika", "musterfrau");
+        final TenantExport tenantExport = new TenantExport("tenantId", Instant.now(), List.of(userOne, userTwo));
+
+        when(importInputProvider.fromExport()).thenReturn(Optional.of(tenantExport));
+        Instant firstLoginAt = Instant.now().minus(365, ChronoUnit.DAYS);
+        when(tenantService.getTenantByTenantId(anyString())).thenReturn(Optional.of(new Tenant("tenantId", firstLoginAt, firstLoginAt, TenantStatus.ACTIVE)));
+        when(tenantUserService.findAllUsers()).thenReturn(List.of());
+
+        final UserLocalId userTwoLocalId = new UserLocalId(2L);
+
+        when(tenantUserService.createNewUser(eq("one"), anyString(), anyString(), any(EMailAddress.class), anySet()))
+            .thenThrow(new IllegalStateException("boom"));
+        when(tenantUserService.createNewUser(eq("two"), anyString(), anyString(), any(EMailAddress.class), anySet()))
+            .thenReturn(new TenantUser("two", userTwoLocalId.value(), "erika", "musterfrau", new EMailAddress("my.name@example.org"), firstLoginAt, Set.of(SecurityRole.ZEITERFASSUNG_USER), firstLoginAt, firstLoginAt, null, null, UserStatus.ACTIVE));
+
+        sut.runImport();
+
+        verify(tenantUserService).createNewUser(eq("one"), anyString(), anyString(), any(EMailAddress.class), anySet());
+        verify(tenantUserService).createNewUser(eq("two"), anyString(), anyString(), any(EMailAddress.class), anySet());
+
+        verify(overtimeAccountService).updateOvertimeAccount(userTwoLocalId, true, Duration.ofHours(8));
+        verify(workingTimeService).createWorkingTime(eq(userTwoLocalId), eq(null), eq(FederalState.GLOBAL), eq(null), any());
+        verify(timeClockService).importTimeClock(any(TimeClock.class));
+        verify(timeEntryService).createTimeEntry(eq(userTwoLocalId), anyString(), any(), any(), eq(false));
     }
 
     @Test

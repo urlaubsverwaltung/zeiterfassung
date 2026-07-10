@@ -69,13 +69,17 @@ public class OvertimePublisher {
         final Map<UserIdComposite, OvertimeAccount> overtimeAccountByUserId = overtimeAccountService.getAllOvertimeAccounts();
 
         overtimeService.getOvertimeForDate(event.date()).forEach((userIdComposite, overtimeHours) -> {
-            // currently we just know whether overtime is allowed or not.
-            // this may change in the future to have a date range for this info or more granular stuff.
-            final OvertimeAccount overtimeAccount = overtimeAccountByUserId.get(userIdComposite);
-            if (overtimeAccount.isAllowed()) {
-                publishUpdated(userIdComposite, event.date(), overtimeHours);
-            } else {
-                LOG.info("Overtime not allowed, ignore DayLockedEvent for User {}", userIdComposite);
+            try {
+                // currently we just know whether overtime is allowed or not.
+                // this may change in the future to have a date range for this info or more granular stuff.
+                final OvertimeAccount overtimeAccount = overtimeAccountByUserId.get(userIdComposite);
+                if (overtimeAccount.isAllowed()) {
+                    publishUpdated(userIdComposite, event.date(), overtimeHours);
+                } else {
+                    LOG.info("Overtime not allowed, ignore DayLockedEvent for User {}", userIdComposite);
+                }
+            } catch (Exception exception) {
+                LOG.error("Unexpected error while publishing overtime for user={} and date={}. Continuing with remaining users.", userIdComposite, event.date(), exception);
             }
         });
     }
