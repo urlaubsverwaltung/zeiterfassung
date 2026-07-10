@@ -201,6 +201,15 @@ class WorkingTimeCalendarServiceImpl implements WorkingTimeCalendarService {
         LocalDate nextEnd = maxDateExclusive.minusDays(1);
 
         for (WorkingTime workingTime : sortedWorkingTimes) {
+
+            // sortedWorkingTimes is fetched for the globally widened date-range (expanded by ALL users'
+            // absences). A workingTime whose validFrom is after nextEnd starts beyond the date-range relevant
+            // for this user and therefore does not contribute any planned hours here. Skipping it also avoids
+            // constructing an invalid DateRange(validFrom, nextEnd) with validFrom after nextEnd.
+            if (workingTime.validFrom().map(nextEnd::isBefore).orElse(false)) {
+                continue;
+            }
+
             final DateRange workingTimeDateRange = getDateRange(minDate, workingTime, nextEnd);
 
             for (LocalDate localDate : workingTimeDateRange) {
