@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import de.focusshift.zeiterfassung.security.oidc.clientregistration.OidcClientEntity;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantEntity;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
 import org.springframework.boot.jpa.EntityManagerFactoryBuilder;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 
-import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
 import static java.util.Objects.requireNonNull;
 
 @Configuration(proxyBeanMethods = false)
@@ -29,7 +27,7 @@ import static java.util.Objects.requireNonNull;
     entityManagerFactoryRef = "adminEntityManagerFactory",
     transactionManagerRef = "adminTransactionManager"
 )
-@ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
+@ConditionalOnMultiTenantMode
 class AdminAwareDatabaseConfiguration {
 
     @Bean

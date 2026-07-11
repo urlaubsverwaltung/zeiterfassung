@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry.republish;
 
+import de.focusshift.zeiterfassung.tenancy.configuration.multi.ConditionalOnMultiTenantMode;
+
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
@@ -9,10 +11,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
-
 @Configuration
-@ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
+@ConditionalOnMultiTenantMode
 @EnableConfigurationProperties(DayLockedRepublishRabbitmqConfigurationProperties.class)
 class DayLockedRepublishRabbitmqConfiguration {
 

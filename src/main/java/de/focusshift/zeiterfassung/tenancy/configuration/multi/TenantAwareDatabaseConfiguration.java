@@ -14,7 +14,6 @@ import de.focusshift.zeiterfassung.user.UserSettingsEntity;
 import de.focusshift.zeiterfassung.usermanagement.OvertimeAccountEntity;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeEntity;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
 import org.springframework.boot.jpa.EntityManagerFactoryBuilder;
@@ -31,7 +30,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 import java.util.Map;
 
-import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
 import static java.util.Objects.requireNonNull;
 import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
 
@@ -55,7 +53,7 @@ import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
     entityManagerFactoryRef = "tenantAwareEntityManagerFactory",
     transactionManagerRef = "tenantAwareTransactionManager"
 )
-@ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
+@ConditionalOnMultiTenantMode
 class TenantAwareDatabaseConfiguration {
 
     @Bean

@@ -1,24 +1,23 @@
 package de.focusshift.zeiterfassung.timeentry.republish;
 
+import de.focusshift.zeiterfassung.tenancy.configuration.multi.ConditionalOnMultiTenantMode;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextRunner;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.timeentry.events.DayLockedEvent;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 
-import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
-@ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
+@ConditionalOnMultiTenantMode
 class DayLockedRepublishServiceMultiTenant implements DayLockedRepublishService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
