@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.tenancy.user;
 
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.tenancy.authentication.TenantIdProvider;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
@@ -21,10 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.time.Instant;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +44,8 @@ class TenantUserCreatorAndUpdaterTest {
     @InjectMocks
     private TenantUserCreatorAndUpdater sut;
 
+    @Mock
+    private TenantIdProvider tenantIdProvider;
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private TenantContextHolder tenantContextHolder;
     @Mock
@@ -70,6 +71,7 @@ class TenantUserCreatorAndUpdaterTest {
         final Authentication authentication = new OAuth2AuthenticationToken(currentOidcUser, grantedAuthorities, "myRegistrationId");
         final InteractiveAuthenticationSuccessEvent event = new InteractiveAuthenticationSuccessEvent(authentication, this.getClass());
 
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class))).thenReturn(Optional.of(new TenantId("myRegistrationId")));
 
         when(tenantUserService.findById(new UserId("uniqueIdentifier"))).thenReturn(Optional.of(tenantUser));
 
@@ -100,6 +102,8 @@ class TenantUserCreatorAndUpdaterTest {
 
         final Authentication authentication = new OAuth2AuthenticationToken(currentOidcUser, grantedAuthorities, "myRegistrationId");
         final InteractiveAuthenticationSuccessEvent event = new InteractiveAuthenticationSuccessEvent(authentication, this.getClass());
+
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class))).thenReturn(Optional.of(new TenantId("myRegistrationId")));
 
         // user does not exist yet
         when(tenantUserService.findById(new UserId("uniqueIdentifier"))).thenReturn(Optional.empty());
@@ -146,6 +150,8 @@ class TenantUserCreatorAndUpdaterTest {
         final Authentication authentication = new OAuth2AuthenticationToken(currentOidcUser, grantedAuthorities, "myRegistrationId");
         final InteractiveAuthenticationSuccessEvent event = new InteractiveAuthenticationSuccessEvent(authentication, this.getClass());
 
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class))).thenReturn(Optional.of(new TenantId("myRegistrationId")));
+
         // user does not exist yet
         when(tenantUserService.findById(new UserId("uniqueIdentifier"))).thenReturn(Optional.empty());
         // ensure user will be created with default user roles instead of initial user roles
@@ -187,10 +193,11 @@ class TenantUserCreatorAndUpdaterTest {
 
         final List<GrantedAuthority> grantedAuthorities = List.of();
 
-        // pass invalid clientRegistrationId, so that TenantId is invalid
-        final Authentication authentication = new OAuth2AuthenticationTokenWithoutClientRegistrationId(new DefaultOidcUser(grantedAuthorities, idToken), grantedAuthorities, "invalid");
+        final Authentication authentication = new OAuth2AuthenticationToken(new DefaultOidcUser(grantedAuthorities, idToken), grantedAuthorities, "invalid");
 
         final InteractiveAuthenticationSuccessEvent event = new InteractiveAuthenticationSuccessEvent(authentication, this.getClass());
+
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class))).thenReturn(Optional.empty());
 
         sut.handle(event);
 
@@ -198,17 +205,6 @@ class TenantUserCreatorAndUpdaterTest {
 
         verify(tenantContextHolder, never()).setTenantId(any());
         verify(tenantContextHolder, never()).clear();
-    }
-
-    private static class OAuth2AuthenticationTokenWithoutClientRegistrationId extends OAuth2AuthenticationToken {
-        public OAuth2AuthenticationTokenWithoutClientRegistrationId(OAuth2User principal, Collection<? extends GrantedAuthority> authorities, String authorizedClientRegistrationId) {
-            super(principal, authorities, authorizedClientRegistrationId);
-        }
-
-        public String getAuthorizedClientRegistrationId() {
-            // yes - this is an ugly solution, but it is an easy way to test the invalid tenantId case
-            return "";
-        }
     }
 
     private TenantUser anyTenantUser(String id, Set<SecurityRole> authorities) {
