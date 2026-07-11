@@ -1,7 +1,7 @@
 package de.focusshift.zeiterfassung.web;
 
+import de.focusshift.zeiterfassung.tenancy.authentication.TenantIdProvider;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -21,9 +21,11 @@ class CurrentTenantInterceptor implements HandlerInterceptor {
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
     private final TenantContextHolder tenantContextHolder;
+    private final TenantIdProvider tenantIdProvider;
 
-    CurrentTenantInterceptor(TenantContextHolder tenantContextHolder) {
+    CurrentTenantInterceptor(TenantContextHolder tenantContextHolder, TenantIdProvider tenantIdProvider) {
         this.tenantContextHolder = tenantContextHolder;
+        this.tenantIdProvider = tenantIdProvider;
     }
 
     @Override
@@ -32,13 +34,10 @@ class CurrentTenantInterceptor implements HandlerInterceptor {
         final Principal userPrincipal = request.getUserPrincipal();
 
         if (userPrincipal instanceof final OAuth2AuthenticationToken oauthToken) {
-            final TenantId tenantId = new TenantId(oauthToken.getAuthorizedClientRegistrationId());
-            if (tenantId.valid()) {
-                tenantContextHolder.setTenantId(tenantId);
-            } else {
-                LOG.warn("invalid tenantId={}", tenantId);
+            tenantIdProvider.resolve(oauthToken).ifPresentOrElse(tenantContextHolder::setTenantId, () -> {
+                LOG.warn("could not resolve tenantId for oauthToken");
                 tenantContextHolder.clear();
-            }
+            });
         }
 
         return true;
