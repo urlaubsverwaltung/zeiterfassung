@@ -29,7 +29,6 @@ import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT;
 import static org.springframework.util.StringUtils.hasText;
@@ -103,16 +102,15 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
         final UserId userId = currentUser.getUserIdComposite().id();
 
         final Optional<TimeClock> maybeCurrentTimeClock = timeClockService.getCurrentTimeClock(userId);
-        if (maybeCurrentTimeClock.isPresent()) {
-            throw new ResponseStatusException(CONFLICT, "Time clock has been started already.");
-        }
-
-        try {
-            timeClockService.startTimeClock(userId);
-        } catch (TimeClockAlreadyStartedException e) {
-            // the check above is not atomic, concurrent or duplicated start requests can slip through and
-            // are rejected by the database. Map it to the same conflict response instead of a 500.
-            throw new ResponseStatusException(CONFLICT, "Time clock has been started already.", e);
+        if (maybeCurrentTimeClock.isEmpty()) {
+            try {
+                timeClockService.startTimeClock(userId);
+            } catch (TimeClockAlreadyStartedException e) {
+                // the check above is not atomic, concurrent or duplicated start requests can slip through and
+                // are rejected by the database. The user already has a running time clock either way, which is
+                // the state they wanted, so just fall through to the redirect instead of surfacing an error.
+                LOG.debug("Time clock has been started already for userId={}", userId, e);
+            }
         }
 
         return redirectToPreviousPage(request);
