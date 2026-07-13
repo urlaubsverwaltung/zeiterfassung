@@ -182,7 +182,7 @@ class AccessibilityCrawlerAccessibilityIT {
 
             // Intentionally fail the JUnit test if any violations exist across the site map
             assertThat(scanFailures).withFailMessage(failureSummary.toString())
-                .hasSizeLessThanOrEqualTo(13);
+                .isEmpty();
         }
     }
 
