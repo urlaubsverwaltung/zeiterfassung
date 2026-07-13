@@ -33,6 +33,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -82,7 +83,7 @@ class TimeClockControllerTest implements ControllerTest {
     }
 
     @Test
-    void ensureStartTimeClockThrowsWhenClockIsRunningAlready() throws Exception {
+    void ensureStartTimeClockIsNoopWhenClockIsRunningAlready() throws Exception {
 
         final ZonedDateTime startedAt = ZonedDateTime.of(2023, 1, 11, 13, 37, 0, 0, ZONE_EUROPE_BERLIN);
         final TimeClock timeClock = new TimeClock(1L, new UserId("batman"), startedAt, "awesome comment", false, Optional.empty());
@@ -91,10 +92,32 @@ class TimeClockControllerTest implements ControllerTest {
         perform(
             post("/timeclock/start")
                 .with(oidcSubject("batman"))
+                .header("Referer", "referer-url")
         )
-            .andExpect(status().isConflict());
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("referer-url"));
 
         verify(timeClockService).getCurrentTimeClock(new UserId("batman"));
+        verifyNoMoreInteractions(timeClockService);
+    }
+
+    @Test
+    void ensureStartTimeClockIsNoopWhenServiceRejectsConcurrentStart() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        doThrow(new TimeClockAlreadyStartedException(userId, new RuntimeException()))
+            .when(timeClockService).startTimeClock(userId);
+
+        perform(
+            post("/timeclock/start")
+                .with(oidcSubject("batman"))
+                .header("Referer", "referer-url")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("referer-url"));
+
+        verify(timeClockService).getCurrentTimeClock(userId);
+        verify(timeClockService).startTimeClock(userId);
         verifyNoMoreInteractions(timeClockService);
     }
 
