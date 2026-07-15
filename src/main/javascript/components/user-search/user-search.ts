@@ -17,6 +17,26 @@ export class UserSearch extends HTMLElement {
     return this.querySelector("[type=submit]")!;
   }
 
+  #showSuggestionsPopover() {
+    const popover = this.querySelector("[popover]") as HTMLDialogElement;
+    popover.showPopover();
+    this.#searchInput.setAttribute("aria-expanded", "true");
+    this.#popoverVisible = true;
+  }
+
+  #hideSuggestionsPopover() {
+    const popover = this.querySelector("[popover]") as HTMLDialogElement;
+    popover.hidePopover();
+    this.#searchInput.setAttribute("aria-expanded", "false");
+    this.#popoverVisible = false;
+  }
+
+  #submit() {
+    // always query element, do not memoize it, could be rerendered!
+    const form = this.querySelector("form");
+    form?.requestSubmit(this.#submitButton);
+  }
+
   connectedCallback() {
     let isLoading = false;
 
@@ -84,11 +104,6 @@ export class UserSearch extends HTMLElement {
       }
 
       const input = this.#searchInput;
-      const suggestions = [
-        ...(this.querySelectorAll(
-          "[data-user-search-suggestion]",
-        ) as unknown as HTMLElement[]),
-      ];
 
       if (event.key === "Escape") {
         event.preventDefault();
@@ -96,6 +111,12 @@ export class UserSearch extends HTMLElement {
         input.focus();
         return;
       }
+
+      const suggestions = [
+        ...(this.querySelectorAll(
+          "[data-user-search-suggestion]",
+        ) as unknown as HTMLElement[]),
+      ];
 
       if (!this.#popoverVisible || suggestions.length === 0) {
         return;
@@ -128,7 +149,7 @@ export class UserSearch extends HTMLElement {
     document.addEventListener("pointerup", handleGlobalPointerup);
     document.addEventListener("turbo:frame-render", handleFrameRender);
 
-    this.#cleanup = function () {
+    this.#cleanup = () => {
       this.removeEventListener("focusin", handleThisFocusin);
       this.removeEventListener("focusout", handleThisFocusout);
       this.removeEventListener("keydown", handleThisKeydown);
@@ -144,26 +165,6 @@ export class UserSearch extends HTMLElement {
 
   connectedMoveCallback() {
     // prevent connected/disconnected callbacks to be called when element is moved
-  }
-
-  #showSuggestionsPopover() {
-    const popover = this.querySelector("[popover]") as HTMLDialogElement;
-    popover.showPopover();
-    this.#searchInput.setAttribute("aria-expanded", "true");
-    this.#popoverVisible = true;
-  }
-
-  #hideSuggestionsPopover() {
-    const popover = this.querySelector("[popover]") as HTMLDialogElement;
-    popover.hidePopover();
-    this.#searchInput.setAttribute("aria-expanded", "false");
-    this.#popoverVisible = false;
-  }
-
-  #submit() {
-    // always query element, do not memoize it, could be rerendered!
-    const form = this.querySelector("form");
-    form?.requestSubmit(this.#submitButton);
   }
 }
 
