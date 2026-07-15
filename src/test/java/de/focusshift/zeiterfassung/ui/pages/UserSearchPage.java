@@ -26,6 +26,12 @@ public class UserSearchPage {
 
         userSearchLocator().fill(query);
 
+        // the input auto-submits itself, debounced by data-auto-submit-delay (see user-search.html).
+        // networkidle can resolve before that debounced submission even starts (there simply is no
+        // network activity yet), so wait it out first - otherwise a suggestion could be clicked right
+        // as the debounced submission re-renders (and possibly navigates away) from under it.
+        page.waitForTimeout(150);
+
         // wait for rerendered suggestions otherwise an old link outside the DOM could be tried to be clicked.
         // networkidle should be ok, we don't have long-running stuff
         page.waitForLoadState(NETWORKIDLE);
