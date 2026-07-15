@@ -50,18 +50,25 @@ describe("modal", () => {
     vitest
       .spyOn(document, "addEventListener")
       .mockImplementation((event, handler) => {
-        if (event === "click") {
-          clickListener = handler as Listener<MouseEvent>;
-        }
-        if (event === "keyup") {
-          keyupListener = handler as Listener<KeyboardEvent>;
-        }
-        if (event === "turbo:before-frame-render") {
-          turboBeforeFrameRenderListener =
-            handler as Listener<TurboBeforeFrameRenderEvent>;
-        }
-        if (event === "turbo:frame-render") {
-          turboFrameRenderListener = handler as Listener<TurboFrameRenderEvent>;
+        switch (event) {
+          case "click": {
+            clickListener = handler as Listener<MouseEvent>;
+            break;
+          }
+          case "keyup": {
+            keyupListener = handler as Listener<KeyboardEvent>;
+            break;
+          }
+          case "turbo:before-frame-render": {
+            turboBeforeFrameRenderListener =
+              handler as Listener<TurboBeforeFrameRenderEvent>;
+            break;
+          }
+          case "turbo:frame-render": {
+            turboFrameRenderListener =
+              handler as Listener<TurboFrameRenderEvent>;
+            break;
+          }
         }
       });
   });
