@@ -25,6 +25,7 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -93,8 +94,6 @@ class TimeClockUIIT {
 
         timeClockPage.startTimeClock();
         timeClockPage.ensureTimeClockRunning();
-
-        final ZonedDateTime now = ZonedDateTime.now(clock.withZone(USER_ZONE_ID));
 
         timeClockPage.openEditForm();
 
