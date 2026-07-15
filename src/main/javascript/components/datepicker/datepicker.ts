@@ -16,14 +16,14 @@ export function createDatepicker(selector: string): HTMLDuetDatePickerElement {
   const dateElement: HTMLInputElement = document.getElementById(
     selector,
   ) as HTMLInputElement;
-  const duetDateElement: HTMLDuetDatePickerElement =
-    document.createElement("duet-date-picker");
-
   if (dateElement.value && !dateElement.dataset.isoValue) {
     throw new Error(
       "date input defines a value but no `data-iso-value` attribute is given.",
     );
   }
+
+  const duetDateElement: HTMLDuetDatePickerElement =
+    document.createElement("duet-date-picker");
 
   if (navigator.language.slice(0, 2) === "de") {
     duetDateElement.dateAdapter = dateAdapterDE;
