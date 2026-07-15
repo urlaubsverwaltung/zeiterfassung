@@ -2,7 +2,7 @@
  * Adds a global `submit` listener and disables the submitter.
  */
 export function initPreventDoubleClickSubmit() {
-  globalThis.addEventListener("submit", function (event) {
+  addEventListener("submit", function (event) {
     if (!event.defaultPrevented) {
       // delay setting disabled attribute
       // otherwise the request does not contain the name attribute of the submitter

@@ -11,7 +11,7 @@ const MODAL_TURBO_FRAME = "#frame-modal";
  * </ul>
  */
 export function enhanceModal() {
-  globalThis.addEventListener("popstate", () => {
+  addEventListener("popstate", () => {
     // given use case:
     // - user is on the default report page with url=/report
     // - user opens a timeEntry modal
