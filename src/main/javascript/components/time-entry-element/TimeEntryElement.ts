@@ -1,8 +1,4 @@
 export class TimeEntryElement extends HTMLDivElement {
-  connectedCallback() {
-    this.#initForm();
-  }
-
   #initForm() {
     const form = this.querySelector("form")!;
 
@@ -74,6 +70,10 @@ export class TimeEntryElement extends HTMLDivElement {
         );
       });
     }
+  }
+
+  connectedCallback() {
+    this.#initForm();
   }
 }
 

@@ -3,6 +3,64 @@ import { i18n } from "../../i18n";
 class TimeEntrySlotForm extends HTMLFormElement {
   #hasBeenTriedToSubmitAtLeastOnce = false;
 
+  #validate(): boolean {
+    const errorContainer = this.querySelector(
+      "[data-error-container]",
+    ) as HTMLElement;
+    const startElement = this.querySelector(
+      "input[name='start']",
+    ) as HTMLInputElement;
+    const endElement = this.querySelector(
+      "input[name='end']",
+    ) as HTMLInputElement;
+    const durationElement = this.querySelector(
+      "input[name='duration']",
+    ) as HTMLInputElement;
+
+    let isValid = true;
+    let errorMessage = "";
+
+    if (!startElement.value && !endElement.value && !durationElement.value) {
+      startElement.setCustomValidity("required");
+      endElement.setCustomValidity("required");
+      durationElement.setCustomValidity("required");
+      isValid = false;
+    } else if (
+      startElement.value &&
+      !endElement.value &&
+      !durationElement.value
+    ) {
+      endElement.setCustomValidity("required");
+      durationElement.setCustomValidity("required");
+      errorMessage = i18n("time-entry.validation.endOrDuration.required");
+      isValid = false;
+    } else if (
+      !startElement.value &&
+      endElement.value &&
+      !durationElement.value
+    ) {
+      startElement.setCustomValidity("required");
+      durationElement.setCustomValidity("required");
+      errorMessage = i18n("time-entry.validation.startOrDuration.required");
+      isValid = false;
+    } else if (
+      !startElement.value &&
+      !endElement.value &&
+      durationElement.value
+    ) {
+      startElement.setCustomValidity("required");
+      endElement.setCustomValidity("required");
+      errorMessage = i18n("time-entry.validation.startOrEnd.required");
+      isValid = false;
+    }
+
+    if (errorMessage) {
+      errorContainer.innerHTML = `<ul><li>${errorMessage}</li></ul>`;
+    }
+
+    return isValid;
+  }
+
   connectedCallback() {
     // prevent html validation messages. we're doing it ourself here with JavaScript
     this.setAttribute("novalidate", "");
@@ -158,64 +216,6 @@ class TimeEntrySlotForm extends HTMLFormElement {
         }
       }
     });
-  }
-
-  #validate(): boolean {
-    const errorContainer = this.querySelector(
-      "[data-error-container]",
-    ) as HTMLElement;
-    const startElement = this.querySelector(
-      "input[name='start']",
-    ) as HTMLInputElement;
-    const endElement = this.querySelector(
-      "input[name='end']",
-    ) as HTMLInputElement;
-    const durationElement = this.querySelector(
-      "input[name='duration']",
-    ) as HTMLInputElement;
-
-    let isValid = true;
-    let errorMessage = "";
-
-    if (!startElement.value && !endElement.value && !durationElement.value) {
-      startElement.setCustomValidity("required");
-      endElement.setCustomValidity("required");
-      durationElement.setCustomValidity("required");
-      isValid = false;
-    } else if (
-      startElement.value &&
-      !endElement.value &&
-      !durationElement.value
-    ) {
-      endElement.setCustomValidity("required");
-      durationElement.setCustomValidity("required");
-      errorMessage = i18n("time-entry.validation.endOrDuration.required");
-      isValid = false;
-    } else if (
-      !startElement.value &&
-      endElement.value &&
-      !durationElement.value
-    ) {
-      startElement.setCustomValidity("required");
-      durationElement.setCustomValidity("required");
-      errorMessage = i18n("time-entry.validation.startOrDuration.required");
-      isValid = false;
-    } else if (
-      !startElement.value &&
-      !endElement.value &&
-      durationElement.value
-    ) {
-      startElement.setCustomValidity("required");
-      endElement.setCustomValidity("required");
-      errorMessage = i18n("time-entry.validation.startOrEnd.required");
-      isValid = false;
-    }
-
-    if (errorMessage) {
-      errorContainer.innerHTML = `<ul><li>${errorMessage}</li></ul>`;
-    }
-
-    return isValid;
   }
 }
 

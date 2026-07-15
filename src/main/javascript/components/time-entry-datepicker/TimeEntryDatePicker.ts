@@ -7,10 +7,6 @@ class TimeEntryDatePicker extends HTMLDivElement {
   // @ts-expect-error is defined...
   #duetDateElement: HTMLDuetDatePickerElement;
 
-  connectedCallback() {
-    this.#initDatepicker();
-  }
-
   #initDatepicker() {
     const originalDateInput = this.querySelector("input[type=date]")!;
 
@@ -85,6 +81,10 @@ class TimeEntryDatePicker extends HTMLDivElement {
         "dd. MMMM yyyy",
       );
     });
+  }
+
+  connectedCallback() {
+    this.#initDatepicker();
   }
 }
 
