@@ -3,11 +3,12 @@ import { doGet, patchJson, post } from "./http";
 
 describe("http module", () => {
   beforeEach(() => {
-    globalThis.fetch = vi.fn();
+    vi.stubGlobal("fetch", vi.fn());
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe("post", () => {

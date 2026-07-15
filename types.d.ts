@@ -1,5 +1,4 @@
 import type { DuetLocalizedText } from "@duetds/date-picker/dist/types/components/duet-date-picker/date-localization";
-import type { Locale } from "date-fns/locale/types";
 
 declare global {
   var zeiterfassung: {
@@ -12,7 +11,6 @@ declare global {
     i18n: Record<string, string>;
   };
 
-  var __datefnsLocale__: Locale;
   var injectStyle: (style: string) => HTMLElement;
 }
 
