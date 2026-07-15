@@ -19,7 +19,9 @@ class TimeEntryDatePicker extends HTMLDivElement {
     }
 
     const originalDateInputId = originalDateInput.getAttribute("id")!;
-    const label = document.querySelector(`[for='${originalDateInputId}']`)!;
+    const label = document.querySelector(
+      `[for='${CSS.escape(originalDateInputId)}']`,
+    )!;
 
     originalDateInput.classList.add("hidden");
 
@@ -32,10 +34,12 @@ class TimeEntryDatePicker extends HTMLDivElement {
     // make me keyboard focusable instead of the (hidden) input[date]
     this.setAttribute("tabindex", "0");
     this.addEventListener("keydown", async (event: KeyboardEvent) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        await this.#duetDateElement.show();
+      if (!(event.key === "Enter" || event.key === " ")) {
+        return;
       }
+
+      event.preventDefault();
+      await this.#duetDateElement.show();
     });
 
     // actually we have to wait till duet-date-picker has been rendered successfully. but... how?

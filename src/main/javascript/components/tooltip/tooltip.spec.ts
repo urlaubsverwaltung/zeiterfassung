@@ -7,9 +7,7 @@ vi.spyOn(popper, "createPopper");
 
 describe("tooltip", () => {
   afterEach(() => {
-    while (document.body.firstChild) {
-      document.body.firstChild.remove();
-    }
+    document.body.replaceChildren();
   });
 
   test("sets role attribute", () => {

@@ -25,7 +25,7 @@ export function createDatepicker(selector: string): HTMLDuetDatePickerElement {
     );
   }
 
-  if (globalThis.navigator.language.slice(0, 2) === "de") {
+  if (navigator.language.slice(0, 2) === "de") {
     duetDateElement.dateAdapter = dateAdapterDE;
     duetDateElement.localization =
       globalThis.zeiterfassung.datepicker.localization;

@@ -3,7 +3,7 @@ export class CheckboxAllOption extends HTMLInputElement {
     this.addEventListener("change", (event) => {
       const elements = [
         ...document.querySelectorAll(
-          `input[type='checkbox'][name='${this.dataset.name}']`,
+          `input[type='checkbox'][name='${CSS.escape(this.dataset.name)}']`,
         ),
       ] as HTMLInputElement[];
       const checked = (event.target as HTMLInputElement).checked;

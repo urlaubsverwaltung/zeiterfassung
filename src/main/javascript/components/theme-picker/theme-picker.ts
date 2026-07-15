@@ -50,10 +50,12 @@ try {
 }
 
 function handleMediaQueryChange() {
-  if (html.classList.contains("theme-system")) {
-    darkTheme = !darkTheme;
-    render();
+  if (!html.classList.contains("theme-system")) {
+    return;
   }
+
+  darkTheme = !darkTheme;
+  render();
 }
 
 function render() {
@@ -73,5 +75,5 @@ function render() {
     setTimeout(function () {
       transitionStyle.remove();
     }, 100);
-  });
+  }, 0);
 }

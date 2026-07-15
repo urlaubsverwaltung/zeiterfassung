@@ -45,7 +45,7 @@ describe("nav-tooltip", function () {
   afterEach(function () {
     teardown();
     vi.useRealTimers();
-    document.body.innerHTML = "";
+    document.body.replaceChildren();
   });
 
   test("mouseover on a tooltip anchor shows the tooltip after the 300ms hover delay", function () {

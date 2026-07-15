@@ -2,8 +2,8 @@ const userSettingsForm = document.querySelector(
   "#user-settings-form",
 ) as HTMLFormElement;
 
-let languageGroupFocused = false;
-let languageGroupFocusedWithKeyboard = false;
+let isLanguageGroupFocused = false;
+let isLanguageGroupFocusedWithKeyboard = false;
 
 const focusManager = createFocusManager();
 const languageFieldset = userSettingsForm.querySelector(
@@ -21,20 +21,20 @@ if (focusManager.shouldFocusAfterReload()) {
 languageFieldset.addEventListener("focusin", function (event) {
   const target = event.target as HTMLInputElement;
   if (target.matches("[name='locale']")) {
-    languageGroupFocused = true;
+    isLanguageGroupFocused = true;
   }
 });
 
 languageFieldset.addEventListener("focusout", function (event) {
   const target = event.target as HTMLInputElement;
   if (target.matches("[name='locale']")) {
-    languageGroupFocused = false;
+    isLanguageGroupFocused = false;
   }
 });
 
 userSettingsForm.addEventListener("change", function (event) {
   const target = event.target as HTMLInputElement;
-  if (languageGroupFocusedWithKeyboard) {
+  if (isLanguageGroupFocusedWithKeyboard) {
     focusManager.memoize();
   }
   if (target.name === "locale") {
@@ -43,11 +43,11 @@ userSettingsForm.addEventListener("change", function (event) {
 });
 
 globalThis.addEventListener("keyup", function (event) {
-  if (!languageGroupFocused) {
+  if (!isLanguageGroupFocused) {
     focusManager.clean();
   }
-  languageGroupFocusedWithKeyboard =
-    languageGroupFocused && event.key === "Tab";
+  isLanguageGroupFocusedWithKeyboard =
+    isLanguageGroupFocused && event.key === "Tab";
 });
 
 globalThis.addEventListener("click", function (event) {

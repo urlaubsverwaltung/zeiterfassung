@@ -18,12 +18,12 @@ export class UserSearch extends HTMLElement {
   }
 
   connectedCallback() {
-    let loading = false;
+    let isLoading = false;
 
     this.addEventListener("submit", () => {
-      loading = true;
+      isLoading = true;
       setTimeout(() => {
-        if (loading) {
+        if (isLoading) {
           this.#submitButton.classList.add("button--loading");
         }
       }, 100);
@@ -39,7 +39,7 @@ export class UserSearch extends HTMLElement {
     // show popover on initial submit.
     // subsequent renders can be ignored since content is updated, not the popover itself.
     const handleFrameRender = (event: TurboFrameRenderEvent) => {
-      loading = false;
+      isLoading = false;
       this.#submitButton.classList.remove("button--loading");
       if (
         !this.#popoverVisible &&
@@ -52,22 +52,22 @@ export class UserSearch extends HTMLElement {
 
     // suggestion popover should not be closed
     // when a suggestion link is supposed to be clicked
-    let pointerdownSuggestionLink = false;
+    let isPointerdownSuggestionLink = false;
 
     const handleGlobalPointerdown = (event: PointerEvent) => {
       const target = event.target as HTMLElement;
-      pointerdownSuggestionLink = Boolean(
+      isPointerdownSuggestionLink = Boolean(
         target.closest("a") && this.contains(target),
       );
     };
 
     const handleGlobalPointerup = () => {
-      pointerdownSuggestionLink = false;
+      isPointerdownSuggestionLink = false;
     };
 
     const handleThisFocusout = (event: FocusEvent) => {
       if (
-        !pointerdownSuggestionLink &&
+        !isPointerdownSuggestionLink &&
         !this.contains(event.relatedTarget as HTMLElement)
       ) {
         this.#hideSuggestionsPopover();

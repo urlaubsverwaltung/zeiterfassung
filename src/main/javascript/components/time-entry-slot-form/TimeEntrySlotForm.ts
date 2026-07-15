@@ -42,17 +42,17 @@ class TimeEntrySlotForm extends HTMLFormElement {
             "time-entry.validation.endOrDuration.required",
           )}</li></ul>`;
         } else {
-          errorContainer.innerHTML = ``;
+          errorContainer.replaceChildren();
           durationElement.setCustomValidity("");
         }
       } else {
         if (endElement.value && durationElement.value) {
           startElement.setCustomValidity("");
-          errorContainer.innerHTML = ``;
+          errorContainer.replaceChildren();
         } else if (!endElement.value && !durationElement.value) {
           startElement.setCustomValidity("required");
           durationElement.setCustomValidity("required");
-          errorContainer.innerHTML = ``;
+          errorContainer.replaceChildren();
         } else if (!endElement.value && durationElement.value) {
           startElement.setCustomValidity("required");
           endElement.setCustomValidity("required");
@@ -80,17 +80,17 @@ class TimeEntrySlotForm extends HTMLFormElement {
             "time-entry.validation.startOrDuration.required",
           )}</li></ul>`;
         } else {
-          errorContainer.innerHTML = ``;
+          errorContainer.replaceChildren();
           durationElement.setCustomValidity("");
         }
       } else {
         if (startElement.value && durationElement.value) {
           endElement.setCustomValidity("");
-          errorContainer.innerHTML = ``;
+          errorContainer.replaceChildren();
         } else if (!startElement.value && !durationElement.value) {
           endElement.setCustomValidity("required");
           durationElement.setCustomValidity("required");
-          errorContainer.innerHTML = ``;
+          errorContainer.replaceChildren();
         } else if (!startElement.value && durationElement.value) {
           endElement.setCustomValidity("required");
           startElement.setCustomValidity("required");
@@ -114,9 +114,10 @@ class TimeEntrySlotForm extends HTMLFormElement {
           "time-entry.validation.duration.pattern",
         )}</li></ul>`;
         return;
-      } else if (!this.#hasBeenTriedToSubmitAtLeastOnce) {
+      }
+      if (!this.#hasBeenTriedToSubmitAtLeastOnce) {
         durationElement.setCustomValidity("");
-        errorContainer.innerHTML = ``;
+        errorContainer.replaceChildren();
         return;
       }
 
@@ -131,17 +132,17 @@ class TimeEntrySlotForm extends HTMLFormElement {
             "time-entry.validation.startOrEnd.required",
           )}</li></ul>`;
         } else {
-          errorContainer.innerHTML = ``;
+          errorContainer.replaceChildren();
           startElement.setCustomValidity("");
           endElement.setCustomValidity("");
         }
       } else {
         if (startElement.value && endElement.value) {
           durationElement.setCustomValidity("");
-          errorContainer.innerHTML = ``;
+          errorContainer.replaceChildren();
         } else if (!startElement.value && !endElement.value) {
           durationElement.setCustomValidity("required");
-          errorContainer.innerHTML = ``;
+          errorContainer.replaceChildren();
         } else if (!startElement.value && endElement.value) {
           durationElement.setCustomValidity("required");
           startElement.setCustomValidity("required");
@@ -173,14 +174,14 @@ class TimeEntrySlotForm extends HTMLFormElement {
       "input[name='duration']",
     ) as HTMLInputElement;
 
-    let valid = true;
+    let isValid = true;
     let errorMessage = "";
 
     if (!startElement.value && !endElement.value && !durationElement.value) {
       startElement.setCustomValidity("required");
       endElement.setCustomValidity("required");
       durationElement.setCustomValidity("required");
-      valid = false;
+      isValid = false;
     } else if (
       startElement.value &&
       !endElement.value &&
@@ -189,7 +190,7 @@ class TimeEntrySlotForm extends HTMLFormElement {
       endElement.setCustomValidity("required");
       durationElement.setCustomValidity("required");
       errorMessage = i18n("time-entry.validation.endOrDuration.required");
-      valid = false;
+      isValid = false;
     } else if (
       !startElement.value &&
       endElement.value &&
@@ -198,7 +199,7 @@ class TimeEntrySlotForm extends HTMLFormElement {
       startElement.setCustomValidity("required");
       durationElement.setCustomValidity("required");
       errorMessage = i18n("time-entry.validation.startOrDuration.required");
-      valid = false;
+      isValid = false;
     } else if (
       !startElement.value &&
       !endElement.value &&
@@ -207,14 +208,14 @@ class TimeEntrySlotForm extends HTMLFormElement {
       startElement.setCustomValidity("required");
       endElement.setCustomValidity("required");
       errorMessage = i18n("time-entry.validation.startOrEnd.required");
-      valid = false;
+      isValid = false;
     }
 
     if (errorMessage) {
       errorContainer.innerHTML = `<ul><li>${errorMessage}</li></ul>`;
     }
 
-    return valid;
+    return isValid;
   }
 }
 

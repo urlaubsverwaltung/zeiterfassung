@@ -8,7 +8,7 @@ export function initPreventDoubleClickSubmit() {
       // otherwise the request does not contain the name attribute of the submitter
       setTimeout(() => {
         event.submitter?.setAttribute("disabled", "");
-      });
+      }, 0);
       // full page reload renders the form again with enabled submitter.
       // maybe @hotwired/turbo is enabled somewhere. in this case, however, turbo
       // handles the disabled attribute of the submitter.

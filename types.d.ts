@@ -16,5 +16,4 @@ declare global {
   var injectStyle: (style: string) => HTMLElement;
 }
 
-// eslint-disable-next-line unicorn/require-module-specifiers
 export {};

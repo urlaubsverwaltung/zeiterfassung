@@ -68,19 +68,19 @@ export function enhanceModal() {
       // @ts-expect-error renderMethod exists
       const renderMethod = event.detail.renderMethod;
       if (renderMethod === "replace") {
-        const currentlyShowingDialog = Boolean(currentFrame.innerHTML.trim());
-        const nextShowingDialog = Boolean(newFrame.innerHTML.trim());
+        const isCurrentlyShowingDialog = Boolean(currentFrame.innerHTML.trim());
+        const isNextShowingDialog = Boolean(newFrame.innerHTML.trim());
 
         // next showing dialog could contain constraint validation errors
         // in this case turbo doesn't update the history, and we don't have to touch it either.
-        if (currentlyShowingDialog && !nextShowingDialog) {
+        if (isCurrentlyShowingDialog && !isNextShowingDialog) {
           // rendering the dialog advances history. (to be able to close the dialog with back-button)
           // --
           // closing the dialog via submit or close, sends a request to the server
           // which answers with an empty frame-modal. due to the request the history stack is replaced (by turbo).
           // without calling history.back() here, the user would still be on the same view going backwards the first time.
           // therefore we have to go back first programmatically :)
-          globalThis.history.back();
+          history.back();
         }
 
         const dialog = document.createElement("dialog");
@@ -109,7 +109,7 @@ function closeModal() {
   if (dialog) {
     // well... this presupposes that modals are always handled with URLs. hmm...
     preserveScrollOnce();
-    globalThis.history.back();
+    history.back();
   }
 }
 

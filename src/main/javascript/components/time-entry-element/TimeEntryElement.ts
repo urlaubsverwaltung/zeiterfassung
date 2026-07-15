@@ -29,7 +29,7 @@ export class TimeEntryElement extends HTMLDivElement {
       setTimeout(() => {
         // @ts-expect-error yep...
         handleValueChanged(datepicker.name, event.detail.value, datepicker);
-      });
+      }, 0);
     });
 
     form.addEventListener("change", (event: Event) => {
@@ -67,8 +67,8 @@ export class TimeEntryElement extends HTMLDivElement {
 
     function isFormChanged() {
       const currentFormData: FormData = new FormData(form);
-      return ![...currentFormData.entries()].every((entry) => {
-        return (
+      return [...currentFormData].some((entry) => {
+        return !(
           originalFormData.has(entry[0]) &&
           originalFormData.get(entry[0]) === entry[1]
         );

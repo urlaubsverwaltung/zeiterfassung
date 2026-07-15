@@ -233,10 +233,12 @@ function prefersReducedMotion() {
 }
 
 function ensureMigratedTitle(anchor: HTMLElement): void {
-  if (anchor.hasAttribute("title")) {
-    anchor.dataset.title = anchor.getAttribute("title") ?? "";
-    anchor.removeAttribute("title");
+  if (!anchor.hasAttribute("title")) {
+    return;
   }
+
+  anchor.dataset.title = anchor.getAttribute("title") ?? "";
+  anchor.removeAttribute("title");
 }
 
 function closestTooltipAnchor(

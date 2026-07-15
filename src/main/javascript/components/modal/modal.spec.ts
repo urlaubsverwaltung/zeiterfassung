@@ -71,9 +71,7 @@ describe("modal", () => {
   });
 
   afterEach(() => {
-    while (document.body.firstChild) {
-      document.body.firstChild.remove();
-    }
+    document.body.replaceChildren();
     vitest.clearAllMocks();
     activeElement = undefined as unknown as HTMLElement;
     popstateListener = undefined as unknown as () => void;
