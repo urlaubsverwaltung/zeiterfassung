@@ -5,9 +5,12 @@ function focusSuggestion(element: HTMLElement) {
   element.closest("li")!.scrollIntoView({ block: "nearest" });
 }
 
+const ANNOUNCE_DEBOUNCE_MS = 500;
+
 export class UserSearch extends HTMLElement {
   #cleanup = () => {};
   #popoverVisible = false;
+  #announceTimer = 0;
 
   get #searchInput(): HTMLInputElement {
     return this.querySelector("input[type=search]")!;
@@ -15,6 +18,10 @@ export class UserSearch extends HTMLElement {
 
   get #submitButton(): HTMLButtonElement {
     return this.querySelector("[type=submit]")!;
+  }
+
+  get #statusRegion(): HTMLElement {
+    return this.querySelector("[data-user-search-status]")!;
   }
 
   connectedCallback() {
@@ -42,11 +49,13 @@ export class UserSearch extends HTMLElement {
       loading = false;
       this.#submitButton.classList.remove("button--loading");
       if (
-        !this.#popoverVisible &&
         // @ts-expect-error matches exists...
         event.target?.matches("[id=frame-users-suggestions]")
       ) {
-        this.#showSuggestionsPopover();
+        if (!this.#popoverVisible) {
+          this.#showSuggestionsPopover();
+        }
+        this.#announceResultCount();
       }
     };
 
@@ -139,6 +148,7 @@ export class UserSearch extends HTMLElement {
   }
 
   disconnectedCallback() {
+    clearTimeout(this.#announceTimer);
     this.#cleanup();
   }
 
@@ -149,15 +159,38 @@ export class UserSearch extends HTMLElement {
   #showSuggestionsPopover() {
     const popover = this.querySelector("[popover]") as HTMLDialogElement;
     popover.showPopover();
-    this.#searchInput.setAttribute("aria-expanded", "true");
     this.#popoverVisible = true;
   }
 
   #hideSuggestionsPopover() {
     const popover = this.querySelector("[popover]") as HTMLDialogElement;
     popover.hidePopover();
-    this.#searchInput.setAttribute("aria-expanded", "false");
     this.#popoverVisible = false;
+    clearTimeout(this.#announceTimer);
+    this.#statusRegion.textContent = "";
+  }
+
+  #announceResultCount() {
+    clearTimeout(this.#announceTimer);
+    this.#announceTimer = globalThis.setTimeout(() => {
+      const count = this.querySelectorAll(
+        "[data-user-search-suggestion]",
+      ).length;
+
+      let message: string;
+      if (count === 0) {
+        message = this.dataset.messageNothingFound ?? "";
+      } else if (count === 1) {
+        message = this.dataset.messageResultsOne ?? "";
+      } else {
+        message = (this.dataset.messageResultsOther ?? "").replace(
+          "{0}",
+          String(count),
+        );
+      }
+
+      this.#statusRegion.textContent = message;
+    }, ANNOUNCE_DEBOUNCE_MS) as unknown as number;
   }
 
   #submit() {
