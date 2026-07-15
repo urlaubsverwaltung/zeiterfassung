@@ -98,24 +98,26 @@ function isNavCollapsed(): boolean {
  * Apply the collapsed state to the DOM (attribute, aria, tooltips) and persist it to the
  * backend, but only when it actually changed.
  */
-function setNavCollapsed(collapsed: boolean) {
-  if (collapsed === isNavCollapsed()) {
+function setNavCollapsed(isCollapsed: boolean) {
+  if (isCollapsed === isNavCollapsed()) {
     return;
   }
-  applyNavState(collapsed);
-  persistNavCollapsed(collapsed);
+  applyNavState(isCollapsed);
+  persistNavCollapsed(isCollapsed);
 }
 
-function persistNavCollapsed(collapsed: boolean) {
-  void patchJson("/api/users/me/settings", { navigationCollapsed: collapsed });
+function persistNavCollapsed(isCollapsed: boolean) {
+  void patchJson("/api/users/me/settings", {
+    navigationCollapsed: isCollapsed,
+  });
 }
 
-function applyNavState(collapsed: boolean) {
+function applyNavState(isCollapsed: boolean) {
   const toggleButton = document.querySelector("#nav-toggle");
   if (!toggleButton) {
     return;
   }
-  if (collapsed) {
+  if (isCollapsed) {
     document.documentElement.setAttribute(NAV_COLLAPSED_ATTR, "");
     toggleButton.setAttribute("aria-expanded", "false");
     addTooltips();
@@ -181,6 +183,8 @@ function setupNavResizeHandle() {
   }
 
   const html = document.documentElement;
+  // fontSize is a css length (e.g. "16px"), so the trailing unit must be discarded, not coerced
+  // eslint-disable-next-line unicorn/prefer-number-coercion
   const remInPx = Number.parseFloat(getComputedStyle(html).fontSize) || 16;
   // collapsed width mirrors `html[data-nav-collapsed] { --nav-width: 5rem }`
   const collapsedWidth = remInPx * 5;
@@ -257,11 +261,7 @@ function setupNavResizeHandle() {
     html.style.setProperty("--nav-width", `${width}px`);
     // flip the layout attribute at the midpoint for live feedback; tooltips are
     // intentionally left untouched here and reconciled once on release
-    if (width < midpoint) {
-      html.setAttribute(NAV_COLLAPSED_ATTR, "");
-    } else {
-      html.removeAttribute(NAV_COLLAPSED_ATTR);
-    }
+    html.toggleAttribute(NAV_COLLAPSED_ATTR, width < midpoint);
   }
 
   handle.addEventListener("pointermove", function (event) {
