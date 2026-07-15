@@ -6,13 +6,14 @@ export class ReportBreakdownSection extends HTMLElement {
     const handleDaySelected = (event: CustomEvent) => {
       const { date } = event.detail;
       for (const element of this.querySelectorAll("[data-date]")) {
-        if (element.parentElement === this) {
-          if (!date || (element as HTMLElement).dataset.date === date) {
-            element.removeAttribute("hidden");
-          } else {
-            element.setAttribute("hidden", "");
-          }
+        if (element.parentElement !== this) {
+          continue;
         }
+        const element_ = element as HTMLElement;
+        element_.toggleAttribute(
+          "hidden",
+          Boolean(date) && element_.dataset.date !== date,
+        );
       }
     };
 
