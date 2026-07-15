@@ -57,6 +57,7 @@
               <li
                 th:each="suggestion : ${userSearchSuggestions}"
                 class="flex items-center gap-5"
+                data-testid="user-suggestion-row"
               >
                 <!-- @thymesVar id="suggestion" type="de.focusshift.zeiterfassung.search.UserSuggestion" -->
                 <a
@@ -64,7 +65,7 @@
                   data-user-search-suggestion
                   th:href="@{__${suggestion.href}__}"
                   class="flex-1 flex items-center gap-2"
-                  th:data-testid="'user-suggestion-link-' + ${#strings.toLowerCase(#strings.replace(suggestion.name, ' ', '-'))}"
+                  data-testid="user-suggestion-main-link"
                 >
                   <span class="text-blue-300 dark:text-sky-800">
                     <span
@@ -91,6 +92,7 @@
                       data-turbo="false"
                       th:href="@{__${link.href}__}"
                       class="flex items-center gap-2 rounded-full p-2 transition-colors text-gray-800 bg-transparent hover:bg-blue-200 hover:text-blue-800 focus-visible:bg-blue-200 focus-visible:text-blue-800 focus-visible:outline-none dark:text-zinc-300 dark:hover:bg-sky-700 dark:hover:text-sky-100 dark:focus-visible:bg-sky-700 dark:focus-visible:text-sky-100"
+                      th:data-testid="${link.icon().name() == 'TIME'} ? 'user-suggestion-time-entries-link' : (${link.icon().name() == 'REPORTS'} ? 'user-suggestion-reports-link' : 'user-suggestion-settings-link')"
                     >
                       <th:block th:if="${link.icon().name() == 'TIME'}">
                         <svg

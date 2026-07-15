@@ -111,11 +111,7 @@
                   <div
                     class="bg-linear-to-br from-blue-200 to-blue-100 dark:from-sky-800 dark:to-sky-950"
                   >
-                    <h2
-                      class="sr-only"
-                      th:text="${selectedUser.fullName}"
-                      th:data-testid="'user-heading-' + ${#strings.toLowerCase(#strings.replace(selectedUser.fullName, ' ', '-'))}"
-                    ></h2>
+                    <h2 class="sr-only" th:text="${selectedUser.fullName}"></h2>
                     <div class="p-4 flex items-center gap-4">
                       <span class="text-blue-300 dark:text-sky-800">
                         <img
