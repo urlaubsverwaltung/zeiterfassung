@@ -42,13 +42,20 @@ class TenantLifecycleEventHandlerOidcClient {
     void handleTenantRegisteredEvent(TenantRegisteredEvent tenantRegisteredEvent) {
 
         final String tenantId = tenantRegisteredEvent.tenant().tenantId();
+        final String oidcClientSecret = tenantRegisteredEvent.oidcClientSecret();
+
+        if (oidcClientSecret == null || oidcClientSecret.isEmpty()) {
+            LOG.info("skip registering oidc client registration for tenantId={} - no oidc client secret provided!", tenantId);
+            return;
+        }
+
         if (jdbcClientRegistrationRepository.existsClient(tenantId)) {
             LOG.info("skip registering oidc client registration for tenantId={} - already exists!", tenantId);
             return;
         }
 
         LOG.info("Registering new oidc client for tenantId={} ...!", tenantId);
-        jdbcClientRegistrationRepository.addNewClient(tenantId, tenantRegisteredEvent.oidcClientSecret());
+        jdbcClientRegistrationRepository.addNewClient(tenantId, oidcClientSecret);
         LOG.info("Finished registering new oidc client for tenantId={} ...!", tenantId);
     }
 }

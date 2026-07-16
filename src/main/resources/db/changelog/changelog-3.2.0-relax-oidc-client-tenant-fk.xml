@@ -1,0 +1,21 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <!--
+    Relax the oidc_client <-> tenant relationship so a shared oidc client can be
+    registered under a tenant_id that has no matching row in the tenant table.
+    Multiple tenants derive their actual tenant id from an OIDC claim while
+    sharing a single client registration (e.g. tenant_id=uvcloud).
+  -->
+  <changeSet author="grafjo" id="drop-oidc-client-tenant-foreign-key">
+
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyName="fk_oidc_client_tenant_id" foreignKeyTableName="oidc_client"/>
+    </preConditions>
+
+    <dropForeignKeyConstraint baseTableName="oidc_client" constraintName="fk_oidc_client_tenant_id"/>
+  </changeSet>
+
+</databaseChangeLog>

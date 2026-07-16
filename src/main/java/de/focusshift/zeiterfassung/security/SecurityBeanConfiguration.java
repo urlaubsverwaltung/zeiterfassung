@@ -4,6 +4,7 @@ import de.focusshift.zeiterfassung.security.oidc.OidcSecurityProperties;
 import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMapper;
 import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMappersInfusedOAuth2UserService;
 import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMappersProperties;
+import de.focusshift.zeiterfassung.tenancy.authentication.TenantIdProvider;
 import de.focusshift.zeiterfassung.tenancy.configuration.multi.ConditionalOnMultiTenantMode;
 import de.focusshift.zeiterfassung.tenancy.configuration.single.ConditionalOnSingleTenantMode;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
@@ -53,14 +54,14 @@ class SecurityBeanConfiguration {
 
     @Bean
     @ConditionalOnMultiTenantMode
-    OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserServiceMultiTenant(TenantUserService tenantUserService, TenantContextHolder tenantContextHolder, List<RolesFromClaimMapper> rolesFromClaimMappers) {
+    OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserServiceMultiTenant(TenantUserService tenantUserService, TenantContextHolder tenantContextHolder, TenantIdProvider tenantIdProvider, List<RolesFromClaimMapper> rolesFromClaimMappers) {
         final OidcUserService defaultOidcUserService = new OidcUserService();
 
         if (oidcSecurityProperties.retrieveUserInfo()) {
             forceRetrieveUserInfo(defaultOidcUserService);
         }
 
-        final OAuth2UserServiceMultiTenant userService = new OAuth2UserServiceMultiTenant(defaultOidcUserService, tenantUserService, tenantContextHolder);
+        final OAuth2UserServiceMultiTenant userService = new OAuth2UserServiceMultiTenant(defaultOidcUserService, tenantUserService, tenantContextHolder, tenantIdProvider);
         return new RolesFromClaimMappersInfusedOAuth2UserService(userService, rolesFromClaimMappers);
     }
 

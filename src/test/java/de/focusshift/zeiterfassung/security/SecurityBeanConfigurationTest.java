@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.security;
 
+import de.focusshift.zeiterfassung.tenancy.authentication.TenantIdProvider;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
@@ -26,7 +27,8 @@ class SecurityBeanConfigurationTest {
         .withUserConfiguration(SecurityBeanConfiguration.class)
         .withBean(InMemoryClientRegistrationRepository.class, anyClientRegistration())
         .withBean(TenantContextHolder.class, NoopTenantContextHolder::new)
-        .withBean(TenantUserService.class, NoopTenantUserService::new);
+        .withBean(TenantUserService.class, NoopTenantUserService::new)
+        .withBean(TenantIdProvider.class, () -> new TenantIdProvider(List.of()));
 
     @Test
     void ensureUserServiceForSingleTenantWhenMissing() {
