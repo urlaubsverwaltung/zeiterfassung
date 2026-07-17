@@ -5,12 +5,9 @@ function focusSuggestion(element: HTMLElement) {
   element.closest("li")!.scrollIntoView({ block: "nearest" });
 }
 
-const ANNOUNCE_DEBOUNCE_MS = 500;
-
 export class UserSearch extends HTMLElement {
   #cleanup = () => {};
   #popoverVisible = false;
-  #announceTimer = 0;
 
   get #searchInput(): HTMLInputElement {
     return this.querySelector("input[type=search]")!;
@@ -148,7 +145,6 @@ export class UserSearch extends HTMLElement {
   }
 
   disconnectedCallback() {
-    clearTimeout(this.#announceTimer);
     this.#cleanup();
   }
 
@@ -166,31 +162,25 @@ export class UserSearch extends HTMLElement {
     const popover = this.querySelector("[popover]") as HTMLDialogElement;
     popover.hidePopover();
     this.#popoverVisible = false;
-    clearTimeout(this.#announceTimer);
     this.#statusRegion.textContent = "";
   }
 
   #announceResultCount() {
-    clearTimeout(this.#announceTimer);
-    this.#announceTimer = globalThis.setTimeout(() => {
-      const count = this.querySelectorAll(
-        "[data-user-search-suggestion]",
-      ).length;
+    const count = this.querySelectorAll("[data-user-search-suggestion]").length;
 
-      let message: string;
-      if (count === 0) {
-        message = this.dataset.messageNothingFound ?? "";
-      } else if (count === 1) {
-        message = this.dataset.messageResultsOne ?? "";
-      } else {
-        message = (this.dataset.messageResultsOther ?? "").replace(
-          "{0}",
-          String(count),
-        );
-      }
+    let message: string;
+    if (count === 0) {
+      message = this.dataset.messageNothingFound ?? "";
+    } else if (count === 1) {
+      message = this.dataset.messageResultsOne ?? "";
+    } else {
+      message = (this.dataset.messageResultsOther ?? "").replace(
+        "{0}",
+        String(count),
+      );
+    }
 
-      this.#statusRegion.textContent = message;
-    }, ANNOUNCE_DEBOUNCE_MS) as unknown as number;
+    this.#statusRegion.textContent = message;
   }
 
   #submit() {
