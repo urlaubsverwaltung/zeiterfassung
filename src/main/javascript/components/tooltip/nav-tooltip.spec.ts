@@ -31,21 +31,24 @@ function anchorWith(title: string, ...children: Child[]) {
 describe("nav-tooltip", function () {
   beforeEach(function () {
     vi.useFakeTimers();
-    // @ts-expect-error .__.
-    globalThis.matchMedia = vi.fn(function (query) {
-      return {
-        matches: !query.includes("reduce"),
-        addEventListener() {},
-        removeEventListener() {},
-      };
-    });
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(function (query) {
+        return {
+          matches: !query.includes("reduce"),
+          addEventListener() {},
+          removeEventListener() {},
+        };
+      }),
+    );
     setup();
   });
 
   afterEach(function () {
     teardown();
     vi.useRealTimers();
-    document.body.innerHTML = "";
+    vi.unstubAllGlobals();
+    document.body.replaceChildren();
   });
 
   test("mouseover on a tooltip anchor shows the tooltip after the 300ms hover delay", function () {
@@ -302,14 +305,16 @@ describe("nav-tooltip", function () {
   });
 
   test("handoff does not animate when prefers-reduced-motion is reduce", function () {
-    // @ts-expect-error .__.
-    globalThis.matchMedia = vi.fn(function (query) {
-      return {
-        matches: query.includes("reduce"),
-        addEventListener() {},
-        removeEventListener() {},
-      };
-    });
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(function (query) {
+        return {
+          matches: query.includes("reduce"),
+          addEventListener() {},
+          removeEventListener() {},
+        };
+      }),
+    );
     teardown();
     setup();
 

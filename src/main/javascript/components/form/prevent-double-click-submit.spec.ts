@@ -20,9 +20,7 @@ describe("DoubleClickSubmitGuard", () => {
   });
 
   afterEach(() => {
-    while (document.body.firstChild) {
-      document.body.firstChild.remove();
-    }
+    document.body.replaceChildren();
   });
 
   test("disables submitter on form submit", async () => {
@@ -40,7 +38,7 @@ describe("DoubleClickSubmitGuard", () => {
 
     // attribute is added after end of event loop
     // to avoid not sending button attributes in form post
-    await new Promise((resolve) => setTimeout(resolve));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(button.getAttribute("disabled")).toBe("");
   });
@@ -52,13 +50,13 @@ describe("DoubleClickSubmitGuard", () => {
       </form>
     `;
 
-    let called = false;
+    let isCalled = false;
 
     document
       .querySelector("form")!
       .addEventListener("submit", function (event) {
         event.preventDefault();
-        called = true;
+        isCalled = true;
       });
 
     const button = document.querySelector("button")!;
@@ -66,6 +64,6 @@ describe("DoubleClickSubmitGuard", () => {
     button.click();
 
     expect(button.getAttribute("disabled")).toBeNull();
-    expect(called).toBe(true);
+    expect(isCalled).toBe(true);
   });
 });

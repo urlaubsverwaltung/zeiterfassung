@@ -27,21 +27,32 @@ type TooltipOptions = {
   delay?: number;
 };
 
-let tooltip: HTMLElement | undefined;
-let showTimerId: ReturnType<typeof setTimeout> | undefined;
-let hideTimerId: ReturnType<typeof setTimeout> | undefined;
-let activeAnchor: HTMLElement | undefined;
-let pendingAnchor: HTMLElement | undefined;
-let slideAnim: Animation | undefined;
-let state: State = "idle";
+const tooltipState: {
+  tooltip: HTMLElement | undefined;
+  showTimerId: ReturnType<typeof setTimeout> | undefined;
+  hideTimerId: ReturnType<typeof setTimeout> | undefined;
+  activeAnchor: HTMLElement | undefined;
+  pendingAnchor: HTMLElement | undefined;
+  slideAnim: Animation | undefined;
+  state: State;
+} = {
+  tooltip: undefined,
+  showTimerId: undefined,
+  hideTimerId: undefined,
+  activeAnchor: undefined,
+  pendingAnchor: undefined,
+  slideAnim: undefined,
+  state: "idle",
+};
 
 export function setup(): void {
-  if (!tooltip) {
-    tooltip = document.createElement("div");
+  if (!tooltipState.tooltip) {
+    const tooltip = document.createElement("div");
     tooltip.id = TOOLTIP_ID;
     tooltip.setAttribute("role", "tooltip");
     tooltip.setAttribute("popover", "hint");
     document.body.append(tooltip);
+    tooltipState.tooltip = tooltip;
   }
   document.addEventListener("mouseover", onPointerEnter);
   document.addEventListener("mouseout", onPointerLeave);
@@ -54,26 +65,26 @@ export function teardown(): void {
   document.removeEventListener("mouseout", onPointerLeave);
   document.removeEventListener("focusin", onPointerEnter);
   document.removeEventListener("focusout", onPointerLeave);
-  clearTimeout(showTimerId);
-  clearTimeout(hideTimerId);
-  showTimerId = undefined;
-  hideTimerId = undefined;
-  pendingAnchor = undefined;
-  if (slideAnim) {
-    slideAnim.cancel();
-    slideAnim = undefined;
+  clearTimeout(tooltipState.showTimerId);
+  clearTimeout(tooltipState.hideTimerId);
+  tooltipState.showTimerId = undefined;
+  tooltipState.hideTimerId = undefined;
+  tooltipState.pendingAnchor = undefined;
+  if (tooltipState.slideAnim) {
+    tooltipState.slideAnim.cancel();
+    tooltipState.slideAnim = undefined;
   }
-  if (activeAnchor) {
-    activeAnchor.classList.remove(ANCHOR_ACTIVE_CLASS);
-    activeAnchor.removeAttribute("aria-describedby");
-    activeAnchor = undefined;
+  if (tooltipState.activeAnchor) {
+    tooltipState.activeAnchor.classList.remove(ANCHOR_ACTIVE_CLASS);
+    tooltipState.activeAnchor.removeAttribute("aria-describedby");
+    tooltipState.activeAnchor = undefined;
   }
-  if (tooltip) {
-    tooltip.classList.remove(TOOLTIP_HIDING_CLASS);
-    tooltip.remove();
-    tooltip = undefined;
+  if (tooltipState.tooltip) {
+    tooltipState.tooltip.classList.remove(TOOLTIP_HIDING_CLASS);
+    tooltipState.tooltip.remove();
+    tooltipState.tooltip = undefined;
   }
-  state = "idle";
+  tooltipState.state = "idle";
 }
 
 function onPointerEnter(event: MouseEvent | FocusEvent): void {
@@ -81,21 +92,24 @@ function onPointerEnter(event: MouseEvent | FocusEvent): void {
   if (!anchor || isInternalCrossing(event, anchor)) {
     return;
   }
-  if (anchor === activeAnchor && state !== "pendingHide") {
+  if (
+    anchor === tooltipState.activeAnchor &&
+    tooltipState.state !== "pendingHide"
+  ) {
     return;
   }
-  if (state === "open" || state === "pendingHide") {
+  if (tooltipState.state === "open" || tooltipState.state === "pendingHide") {
     handoffTo(anchor);
     return;
   }
-  clearTimeout(showTimerId);
-  pendingAnchor = anchor;
-  state = "pendingShow";
+  clearTimeout(tooltipState.showTimerId);
+  tooltipState.pendingAnchor = anchor;
+  tooltipState.state = "pendingShow";
   if (event.type === "focusin") {
     showOn(anchor);
   } else {
     const delay = anchor.dataset.tooltipDelay;
-    showTimerId = setTimeout(
+    tooltipState.showTimerId = setTimeout(
       function () {
         showOn(anchor);
       },
@@ -109,14 +123,14 @@ function onPointerLeave(event: MouseEvent | FocusEvent): void {
   if (!anchor || isInternalCrossing(event, anchor)) {
     return;
   }
-  if (anchor === pendingAnchor) {
-    clearTimeout(showTimerId);
-    showTimerId = undefined;
-    pendingAnchor = undefined;
-    state = "idle";
+  if (anchor === tooltipState.pendingAnchor) {
+    clearTimeout(tooltipState.showTimerId);
+    tooltipState.showTimerId = undefined;
+    tooltipState.pendingAnchor = undefined;
+    tooltipState.state = "idle";
     return;
   }
-  if (anchor === activeAnchor) {
+  if (anchor === tooltipState.activeAnchor) {
     beginHide();
   }
 }
@@ -131,60 +145,62 @@ function isInternalCrossing(
 }
 
 function handoffTo(anchor: HTMLElement): void {
-  clearTimeout(hideTimerId);
-  hideTimerId = undefined;
-  tooltip?.classList.remove(TOOLTIP_HIDING_CLASS);
+  clearTimeout(tooltipState.hideTimerId);
+  tooltipState.hideTimerId = undefined;
+  tooltipState.tooltip?.classList.remove(TOOLTIP_HIDING_CLASS);
   retargetTo(anchor);
-  state = "open";
+  tooltipState.state = "open";
 }
 
 function beginHide() {
-  clearTimeout(showTimerId);
-  if (state !== "open") {
+  clearTimeout(tooltipState.showTimerId);
+  if (tooltipState.state !== "open") {
     return;
   }
-  state = "pendingHide";
-  tooltip?.classList.add(TOOLTIP_HIDING_CLASS);
-  hideTimerId = setTimeout(finalizeHide, FADE_OUT_MS);
+  tooltipState.state = "pendingHide";
+  tooltipState.tooltip?.classList.add(TOOLTIP_HIDING_CLASS);
+  tooltipState.hideTimerId = setTimeout(finalizeHide, FADE_OUT_MS);
 }
 
 function finalizeHide(): void {
-  hideTimerId = undefined;
-  tooltip?.classList.remove(TOOLTIP_HIDING_CLASS);
-  tooltip?.hidePopover();
-  if (activeAnchor) {
-    activeAnchor.classList.remove(ANCHOR_ACTIVE_CLASS);
-    activeAnchor.removeAttribute("aria-describedby");
-    activeAnchor = undefined;
+  tooltipState.hideTimerId = undefined;
+  tooltipState.tooltip?.classList.remove(TOOLTIP_HIDING_CLASS);
+  tooltipState.tooltip?.hidePopover();
+  if (tooltipState.activeAnchor) {
+    tooltipState.activeAnchor.classList.remove(ANCHOR_ACTIVE_CLASS);
+    tooltipState.activeAnchor.removeAttribute("aria-describedby");
+    tooltipState.activeAnchor = undefined;
   }
-  state = "idle";
+  tooltipState.state = "idle";
 }
 
 function showOn(anchor: HTMLElement): void {
-  pendingAnchor = undefined;
-  showTimerId = undefined;
+  tooltipState.pendingAnchor = undefined;
+  tooltipState.showTimerId = undefined;
   retargetTo(anchor);
-  tooltip?.showPopover();
-  state = "open";
+  tooltipState.tooltip?.showPopover();
+  tooltipState.state = "open";
 }
 
 function retargetTo(anchor: HTMLElement): void {
-  if (!tooltip) {
+  if (!tooltipState.tooltip) {
     return;
   }
-  const isHandoff = activeAnchor && activeAnchor !== anchor;
+  const tooltip = tooltipState.tooltip;
+  const isHandoff =
+    tooltipState.activeAnchor && tooltipState.activeAnchor !== anchor;
   const previousAnchorRect = isHandoff
-    ? activeAnchor!.getBoundingClientRect()
+    ? tooltipState.activeAnchor!.getBoundingClientRect()
     : undefined;
 
-  if (slideAnim) {
-    slideAnim.cancel();
-    slideAnim = undefined;
+  if (tooltipState.slideAnim) {
+    tooltipState.slideAnim.cancel();
+    tooltipState.slideAnim = undefined;
   }
 
   if (isHandoff) {
-    activeAnchor!.classList.remove(ANCHOR_ACTIVE_CLASS);
-    activeAnchor!.removeAttribute("aria-describedby");
+    tooltipState.activeAnchor!.classList.remove(ANCHOR_ACTIVE_CLASS);
+    tooltipState.activeAnchor!.removeAttribute("aria-describedby");
   }
   ensureMigratedTitle(anchor);
   anchor.classList.add(ANCHOR_ACTIVE_CLASS);
@@ -193,7 +209,7 @@ function retargetTo(anchor: HTMLElement): void {
   const placement =
     anchor.dataset.tooltipPlacement === "right" ? "right" : "top";
   tooltip.dataset.placement = placement;
-  activeAnchor = anchor;
+  tooltipState.activeAnchor = anchor;
 
   if (previousAnchorRect && !prefersReducedMotion()) {
     const nextAnchorRect = anchor.getBoundingClientRect();
@@ -215,7 +231,7 @@ function retargetTo(anchor: HTMLElement): void {
         (nextAnchorRect.left + nextAnchorRect.width / 2);
       dy = previousAnchorRect.top - nextAnchorRect.top;
     }
-    slideAnim = tooltip.animate(
+    tooltipState.slideAnim = tooltip.animate(
       [{ translate: `${dx}px ${dy}px` }, { translate: "0 0" }],
       {
         duration: SLIDE_MS,
@@ -227,31 +243,32 @@ function retargetTo(anchor: HTMLElement): void {
 }
 
 function prefersReducedMotion() {
-  return (
-    globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
-  );
+  return matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 }
 
 function ensureMigratedTitle(anchor: HTMLElement): void {
-  if (anchor.hasAttribute("title")) {
-    anchor.dataset.title = anchor.getAttribute("title") ?? "";
-    anchor.removeAttribute("title");
+  if (!anchor.hasAttribute("title")) {
+    return;
   }
+
+  anchor.dataset.title = anchor.getAttribute("title") ?? "";
+  anchor.removeAttribute("title");
 }
 
 function closestTooltipAnchor(
   element: HTMLElement | null,
 ): HTMLElement | undefined {
-  if (!element) {
-    return undefined;
+  let current = element;
+  while (current) {
+    if (
+      current.getAttribute &&
+      (current.getAttribute("title") || current.dataset?.title)
+    ) {
+      return current;
+    }
+    current = current.parentElement;
   }
-  if (
-    element.getAttribute &&
-    (element.getAttribute("title") || element.dataset?.title)
-  ) {
-    return element;
-  }
-  return closestTooltipAnchor(element.parentElement);
+  return undefined;
 }
 
 /**

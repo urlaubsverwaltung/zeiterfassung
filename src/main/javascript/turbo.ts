@@ -28,7 +28,7 @@ document.addEventListener("turbo:fetch-request-error", function (event) {
   // THEN user is confused and clicks the same turbo link again
   // THEN user is happy and keeps on using the app :o)
 
-  globalThis.location.reload();
+  location.reload();
 });
 
 /**

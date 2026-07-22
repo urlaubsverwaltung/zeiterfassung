@@ -49,6 +49,9 @@ export default defineConfig(
       ],
       "import-x/no-named-as-default": "off",
       "import-x/no-named-as-default-member": "off",
+      // Web Components are registered via a top-level `customElements.define(...)` call in
+      // every component module, which is an intentional, unavoidable side effect.
+      "unicorn/no-top-level-side-effects": "off",
     },
   },
 

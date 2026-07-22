@@ -1,12 +1,12 @@
 import { type Locale } from "date-fns";
 import { enUS as en } from "date-fns/locale/en-US";
 
-globalThis.__datefnsLocale__ = globalThis.__datefnsLocale__ || en;
+const state: { locale: Locale } = { locale: en };
 
 export function setLocale(locale: Locale): void {
-  globalThis.__datefnsLocale__ = locale;
+  state.locale = locale;
 }
 
 export default function resolveLocale(): Locale {
-  return globalThis.__datefnsLocale__;
+  return state.locale;
 }

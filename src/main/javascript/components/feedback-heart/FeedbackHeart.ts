@@ -1,14 +1,4 @@
 export class FeedbackHeart extends HTMLElement {
-  connectedCallback() {
-    this.render();
-  }
-
-  unleash() {
-    const heart = document.createElement("div");
-    heart.classList.add("feedback-floating-heart");
-    document.body.append(heart);
-  }
-
   private render() {
     if (this.matches(":has(button)")) {
       return;
@@ -31,6 +21,16 @@ export class FeedbackHeart extends HTMLElement {
     `;
 
     this.append(button);
+  }
+
+  connectedCallback() {
+    this.render();
+  }
+
+  unleash() {
+    const heart = document.createElement("div");
+    heart.classList.add("feedback-floating-heart");
+    document.body.append(heart);
   }
 }
 

@@ -11,7 +11,9 @@ document.addEventListener("input", function (event) {
   }
 });
 
-let progressBarTimer: undefined | number;
+const state: { progressBarTimer: undefined | number } = {
+  progressBarTimer: undefined,
+};
 
 function submitSettingsFormPreview(event: Event) {
   const target = event.target as HTMLElement;
@@ -45,8 +47,8 @@ document.addEventListener("turbo:before-frame-render", function (event) {
 });
 
 function showProgressBar() {
-  if (!progressBarTimer) {
-    progressBarTimer = setTimeout(function () {
+  if (!state.progressBarTimer) {
+    state.progressBarTimer = setTimeout(function () {
       // @ts-expect-error it exists
       Turbo.navigator.delegate.adapter.progressBar.show();
     }, Turbo.config.drive.progressBarDelay) as unknown as number;
@@ -54,6 +56,6 @@ function showProgressBar() {
 }
 
 function hideProgressBar() {
-  clearTimeout(progressBarTimer);
-  progressBarTimer = undefined;
+  clearTimeout(state.progressBarTimer);
+  state.progressBarTimer = undefined;
 }
