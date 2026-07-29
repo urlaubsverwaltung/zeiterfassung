@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.timeclock;
 
+import de.focusshift.zeiterfassung.timeentry.TimeEntry;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -18,6 +20,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -25,6 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -150,6 +156,40 @@ class TimeClockServiceTest {
 
         verifyNoMoreInteractions(timeClockRepository);
         verifyNoInteractions(timeEntryService);
+    }
+
+    @Test
+    void ensureStopTimeClockIsRejectedWhenItOverlapsExistingEntry() {
+
+        final Instant now = Instant.now();
+        final ZonedDateTime startedAt = ZonedDateTime.ofInstant(now.minusSeconds(120), ZONED_ID_BERLIN);
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final TimeClockEntity runningTimeClock = TimeClockEntity.builder()
+            .id(1L)
+            .owner(userId.value())
+            .startedAt(startedAt.toInstant())
+            .startedAtZoneId(startedAt.getZone())
+            .comment("awesome comment")
+            .isBreak(false)
+            .build();
+        final TimeEntry existingEntry = new TimeEntry(
+            new TimeEntryId(2L), userIdComposite, "existing",
+            startedAt.plusSeconds(60), startedAt.plusSeconds(180), false
+        );
+
+        when(timeClockRepository.findByOwnerAndStoppedAtIsNull(userId.value()))
+            .thenReturn(Optional.of(runningTimeClock));
+        when(userSettingsProvider.zoneId()).thenReturn(ZONED_ID_BERLIN);
+        when(timeEntryService.getEntries(any(), any(), eq(userLocalId))).thenReturn(List.of(existingEntry));
+
+        assertThatExceptionOfType(TimeClockOverlapsExistingEntryException.class)
+            .isThrownBy(() -> sut.stopTimeClock(userIdComposite));
+
+        verify(timeClockRepository, never()).save(any());
+        verify(timeEntryService, never()).createTimeEntry(any(), any(), any(), any(), anyBoolean());
+        verifyNoInteractions(applicationEventPublisher);
     }
 
     @Test
