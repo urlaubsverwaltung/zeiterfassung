@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -33,7 +35,11 @@ public class TimeEntryViewHelper {
     private final TimeEntryLockService timeEntryLockService;
     private final UserSettingsProvider userSettingsProvider;
 
-    public TimeEntryViewHelper(TimeEntryService timeEntryService, TimeEntryLockService timeEntryLockService, UserSettingsProvider userSettingsProvider) {
+    public TimeEntryViewHelper(
+        TimeEntryService timeEntryService,
+        TimeEntryLockService timeEntryLockService,
+        UserSettingsProvider userSettingsProvider
+    ) {
         this.timeEntryService = timeEntryService;
         this.timeEntryLockService = timeEntryLockService;
         this.userSettingsProvider = userSettingsProvider;
@@ -108,9 +114,14 @@ public class TimeEntryViewHelper {
         final ZonedDateTime end = getEndDate(dto, zoneId);
 
         final boolean timespanLocked = timeEntryLockService.isTimespanLocked(start, end);
-        if (timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
+        final boolean lockRejected = timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles());
+        if (lockRejected) {
             LOG.info("Updating TimeEntry is not allowed since currentUser is not privileged to bypass timespan lock.");
             bindingResult.reject("time-entry.validation.timespan.locked");
+        }
+
+        if (!lockRejected && start != null && end != null) {
+            rejectIfOverlapsExistingEntry(timeEntry.userIdComposite().localId(), timeEntryId, start, end, dto.isBreak(), bindingResult);
         }
 
         if (bindingResult.hasErrors()) {
@@ -203,13 +214,45 @@ public class TimeEntryViewHelper {
         }
 
         final boolean timespanLocked = timeEntryLockService.isTimespanLocked(start, end);
-        if (timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
+        final boolean lockRejected = timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles());
+        if (lockRejected) {
             LOG.info("Creating TimeEntry is not allowed since currentUser is not privileged to bypass timespan lock.");
             bindingResult.reject("time-entry.validation.timespan.locked");
-        } else {
-            final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
+        }
+
+        final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
+
+        final boolean overlapsExistingEntry = !lockRejected
+            && rejectIfOverlapsExistingEntry(ownerLocalId, null, start, end, timeEntryDto.isBreak(), bindingResult);
+
+        if (!lockRejected && !overlapsExistingEntry) {
             timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak());
         }
+    }
+
+    /**
+     * @return {@code true} if the given timespan overlaps with an existing {@link TimeEntry} of the same type
+     * (break or work) on the same day for the same user and was rejected, {@code false} otherwise
+     */
+    private boolean rejectIfOverlapsExistingEntry(UserLocalId ownerLocalId, @Nullable TimeEntryId excludedTimeEntryId,
+                                                   ZonedDateTime start, ZonedDateTime end, boolean isBreak, BindingResult bindingResult) {
+
+        // fetch a day before too since an existing entry may cross midnight (see #getEndDate) and is queried by its start
+        final LocalDate fromDate = start.toLocalDate().minusDays(1);
+        final LocalDate toDateExclusive = end.toLocalDate().plusDays(1);
+
+        final List<TimeEntry> existingEntries = timeEntryService.getEntries(fromDate, toDateExclusive, ownerLocalId);
+
+        final boolean overlaps = existingEntries.stream()
+            .filter(entry -> !entry.id().equals(excludedTimeEntryId))
+            .filter(entry -> entry.isBreak() == isBreak)
+            .anyMatch(entry -> entry.start().isBefore(end) && entry.end().isAfter(start));
+
+        if (overlaps) {
+            bindingResult.reject("time-entry.validation.timespan.overlaps");
+        }
+
+        return overlaps;
     }
 
     private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {
