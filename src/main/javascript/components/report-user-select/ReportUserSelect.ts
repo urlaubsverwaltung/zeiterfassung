@@ -6,7 +6,7 @@ export class ReportUserSelect extends HTMLAnchorElement {
     this.setAttribute("aria-haspopup", "true");
     this.setAttribute("aria-expanded", "false");
 
-    let expanded = false;
+    let isExpanded = false;
 
     targetElement.classList.add(
       "absolute",
@@ -30,7 +30,7 @@ export class ReportUserSelect extends HTMLAnchorElement {
     );
 
     const hidePopup = () => {
-      expanded = false;
+      isExpanded = false;
       targetElement.classList.remove("scale-y-100", "opacity-100");
       targetElement.addEventListener(
         "transitionend",
@@ -44,7 +44,7 @@ export class ReportUserSelect extends HTMLAnchorElement {
     document.body.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
       if (
-        expanded &&
+        isExpanded &&
         target !== this &&
         !this.contains(target) &&
         target !== targetElement &&
@@ -55,7 +55,7 @@ export class ReportUserSelect extends HTMLAnchorElement {
     });
 
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && expanded) {
+      if (event.key === "Escape" && isExpanded) {
         hidePopup();
       }
     });
@@ -63,15 +63,15 @@ export class ReportUserSelect extends HTMLAnchorElement {
     this.addEventListener("click", (event) => {
       event.preventDefault();
 
-      expanded = !expanded;
+      isExpanded = !isExpanded;
 
-      this.setAttribute("aria-expanded", expanded ? "true" : "false");
+      this.setAttribute("aria-expanded", isExpanded ? "true" : "false");
 
-      if (expanded) {
+      if (isExpanded) {
         delete targetElement.dataset.jsHidden;
         setTimeout(() => {
           targetElement.classList.add("scale-y-100", "opacity-100");
-        });
+        }, 0);
       } else {
         hidePopup();
       }

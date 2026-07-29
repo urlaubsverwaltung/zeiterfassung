@@ -17,10 +17,7 @@ export function initAutosubmit() {
 
     const target = event.target as HTMLElement;
     const autoSubmit = target.dataset.autoSubmit;
-    const autoSubmitDelay = Number.parseInt(
-      target.dataset.autoSubmitDelay ?? "0",
-      10,
-    );
+    const autoSubmitDelay = Number(target.dataset.autoSubmitDelay ?? "0");
 
     if (autoSubmit) {
       const button = document.querySelector(
@@ -43,7 +40,7 @@ export function initAutosubmit() {
 
   document.addEventListener("change", function (event) {
     const target = event.target as HTMLElement;
-    if (event.defaultPrevented || noTextInput(target)) {
+    if (event.defaultPrevented || isTextInput(target)) {
       // `change` is not of interest for text inputs which are triggered by `keyup`
       return;
     }
@@ -63,7 +60,7 @@ export function initAutosubmit() {
   });
 }
 
-function noTextInput(element: HTMLElement) {
+function isTextInput(element: HTMLElement) {
   return [
     "input[type='text']",
     "input[type='mail']",

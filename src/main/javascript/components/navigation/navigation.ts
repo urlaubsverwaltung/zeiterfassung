@@ -41,7 +41,7 @@ document.addEventListener("click", function (event) {
       navLinkButton.classList.add("navigation-link--loading");
       const href = navLinkButton.dataset.href;
       if (href) {
-        globalThis.location.href = href;
+        location.assign(href);
       }
     }
     return;
@@ -98,24 +98,26 @@ function isNavCollapsed(): boolean {
  * Apply the collapsed state to the DOM (attribute, aria, tooltips) and persist it to the
  * backend, but only when it actually changed.
  */
-function setNavCollapsed(collapsed: boolean) {
-  if (collapsed === isNavCollapsed()) {
+function setNavCollapsed(isCollapsed: boolean) {
+  if (isCollapsed === isNavCollapsed()) {
     return;
   }
-  applyNavState(collapsed);
-  persistNavCollapsed(collapsed);
+  applyNavState(isCollapsed);
+  persistNavCollapsed(isCollapsed);
 }
 
-function persistNavCollapsed(collapsed: boolean) {
-  void patchJson("/api/users/me/settings", { navigationCollapsed: collapsed });
+function persistNavCollapsed(isCollapsed: boolean) {
+  void patchJson("/api/users/me/settings", {
+    navigationCollapsed: isCollapsed,
+  });
 }
 
-function applyNavState(collapsed: boolean) {
+function applyNavState(isCollapsed: boolean) {
   const toggleButton = document.querySelector("#nav-toggle");
   if (!toggleButton) {
     return;
   }
-  if (collapsed) {
+  if (isCollapsed) {
     document.documentElement.setAttribute(NAV_COLLAPSED_ATTR, "");
     toggleButton.setAttribute("aria-expanded", "false");
     addTooltips();
@@ -150,9 +152,9 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  const collapsed = isNavCollapsed();
-  toggleButton.setAttribute("aria-expanded", String(!collapsed));
-  if (collapsed) {
+  const isCollapsed = isNavCollapsed();
+  toggleButton.setAttribute("aria-expanded", String(!isCollapsed));
+  if (isCollapsed) {
     addTooltips();
   }
 
@@ -181,6 +183,8 @@ function setupNavResizeHandle() {
   }
 
   const html = document.documentElement;
+  // fontSize is a css length (e.g. "16px"), so the trailing unit must be discarded, not coerced
+  // eslint-disable-next-line unicorn/prefer-number-coercion
   const remInPx = Number.parseFloat(getComputedStyle(html).fontSize) || 16;
   // collapsed width mirrors `html[data-nav-collapsed] { --nav-width: 5rem }`
   const collapsedWidth = remInPx * 5;
@@ -194,9 +198,9 @@ function setupNavResizeHandle() {
   let startX = 0;
   let lastX = 0;
   let pointerId: number | undefined;
-  let startCollapsed = false;
-  let dragging = false;
-  let moved = false;
+  let isStartCollapsed = false;
+  let isDragging = false;
+  let isMoved = false;
   let revealTimer: ReturnType<typeof setTimeout> | undefined;
   // cached on pointerdown so pointermove never calls getBoundingClientRect()
   // (a layout read after a style write thrashes layout, very slow in Safari)
@@ -240,12 +244,12 @@ function setupNavResizeHandle() {
     // a drag may start before the hover delay elapsed: reveal immediately
     clearTimeout(revealTimer);
     reveal();
-    dragging = true;
-    moved = false;
+    isDragging = true;
+    isMoved = false;
     startX = event.clientX;
     lastX = event.clientX;
     pointerId = event.pointerId;
-    startCollapsed = isNavCollapsed();
+    isStartCollapsed = isNavCollapsed();
     containerLeft = container.getBoundingClientRect().left;
     handle.setPointerCapture(event.pointerId);
     html.classList.add("nav-resizing");
@@ -257,23 +261,19 @@ function setupNavResizeHandle() {
     html.style.setProperty("--nav-width", `${width}px`);
     // flip the layout attribute at the midpoint for live feedback; tooltips are
     // intentionally left untouched here and reconciled once on release
-    if (width < midpoint) {
-      html.setAttribute(NAV_COLLAPSED_ATTR, "");
-    } else {
-      html.removeAttribute(NAV_COLLAPSED_ATTR);
-    }
+    html.toggleAttribute(NAV_COLLAPSED_ATTR, width < midpoint);
   }
 
   handle.addEventListener("pointermove", function (event) {
-    if (!dragging) {
+    if (!isDragging) {
       return;
     }
     lastX = event.clientX;
     // ignore sub-threshold jitter so a plain click neither resizes nor flips
-    if (!moved && Math.abs(event.clientX - startX) < NAV_RESIZE_THRESHOLD) {
+    if (!isMoved && Math.abs(event.clientX - startX) < NAV_RESIZE_THRESHOLD) {
       return;
     }
-    moved = true;
+    isMoved = true;
 
     // coalesce: one layout-triggering write per frame, not per pointermove
     pendingX = event.clientX;
@@ -283,10 +283,10 @@ function setupNavResizeHandle() {
   });
 
   function endDrag() {
-    if (!dragging) {
+    if (!isDragging) {
       return;
     }
-    dragging = false;
+    isDragging = false;
     // drop any frame still queued so it can't write width after release
     if (rafId !== undefined) {
       cancelAnimationFrame(rafId);
@@ -299,7 +299,7 @@ function setupNavResizeHandle() {
 
     // net direction from the drag start decides the final state; lastX is used
     // (not the event) so cleanup is correct even when pointer capture is lost
-    const finalCollapsed = moved ? lastX < startX : startCollapsed;
+    const finalCollapsed = isMoved ? lastX < startX : isStartCollapsed;
 
     // reconcile DOM (attribute, aria, tooltips) for the final state
     applyNavState(finalCollapsed);
@@ -308,7 +308,7 @@ function setupNavResizeHandle() {
     // the snap (and any rubber-band overshoot) over the re-enabled transition
     requestAnimationFrame(() => html.style.removeProperty("--nav-width"));
 
-    if (finalCollapsed !== startCollapsed) {
+    if (finalCollapsed !== isStartCollapsed) {
       persistNavCollapsed(finalCollapsed);
     }
 
@@ -330,7 +330,7 @@ function setupNavResizeHandle() {
   });
   handle.addEventListener("pointerleave", function () {
     // keep it visible while dragging even when the pointer leaves the handle
-    if (!dragging) {
+    if (!isDragging) {
       hide();
     }
   });

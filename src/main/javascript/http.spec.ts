@@ -3,11 +3,12 @@ import { doGet, patchJson, post } from "./http";
 
 describe("http module", () => {
   beforeEach(() => {
-    globalThis.fetch = vi.fn();
+    vi.stubGlobal("fetch", vi.fn());
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe("post", () => {
@@ -17,11 +18,11 @@ describe("http module", () => {
         headers: new Headers({ "Content-Type": "application/json" }),
         json: () => Promise.resolve({ id: 1 }),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       const result = await post("/api/users", JSON.stringify({ name: "John" }));
 
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         "/api/users",
         expect.objectContaining({
           method: "POST",
@@ -38,11 +39,11 @@ describe("http module", () => {
         headers: new Headers(),
         text: () => Promise.resolve(""),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       await post("/api/users", "{}");
 
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -58,13 +59,13 @@ describe("http module", () => {
         headers: new Headers(),
         text: () => Promise.resolve(""),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       await post("/api/users", "{}", {
         headers: { Authorization: "Bearer token" },
       });
 
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -82,7 +83,7 @@ describe("http module", () => {
         headers: new Headers({ "Content-Type": "application/json" }),
         json: () => Promise.resolve(responseData),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       const result = await post("/api/users", "{}");
 
@@ -97,12 +98,12 @@ describe("http module", () => {
         headers: new Headers({ "Content-Type": "application/json" }),
         json: () => Promise.resolve({}),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       const payload = { status: "active" };
       await patchJson("/api/users/1", payload);
 
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         "/api/users/1",
         expect.objectContaining({
           method: "PATCH",
@@ -117,11 +118,11 @@ describe("http module", () => {
         headers: new Headers(),
         text: () => Promise.resolve(""),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       await patchJson("/api/users/1", { status: "active" });
 
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -137,7 +138,7 @@ describe("http module", () => {
         headers: new Headers(),
         text: () => Promise.resolve(""),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       await patchJson(
         "/api/users/1",
@@ -147,7 +148,7 @@ describe("http module", () => {
         },
       );
 
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -165,7 +166,7 @@ describe("http module", () => {
         headers: new Headers({ "Content-Type": "application/json" }),
         json: () => Promise.resolve(responseData),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       const result = await patchJson("/api/users/1", {});
 
@@ -180,11 +181,11 @@ describe("http module", () => {
         headers: new Headers({ "Content-Type": "application/json" }),
         json: () => Promise.resolve([]),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       await doGet("/api/users");
 
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         "/api/users",
         expect.objectContaining({
           method: "GET",
@@ -199,11 +200,11 @@ describe("http module", () => {
         headers: new Headers(),
         text: () => Promise.resolve(""),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       await doGet("/api/users");
 
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -220,7 +221,7 @@ describe("http module", () => {
         headers: new Headers({ "Content-Type": "application/json" }),
         json: () => Promise.resolve(responseData),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       const result = await doGet("/api/users");
 
@@ -238,7 +239,7 @@ describe("http module", () => {
         }),
         json: () => Promise.resolve(responseData),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       const result = await doGet("/api/data");
 
@@ -252,7 +253,7 @@ describe("http module", () => {
         headers: new Headers({ "Content-Type": "text/plain" }),
         text: () => Promise.resolve(responseText),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       const result = await doGet("/api/data");
 
@@ -265,7 +266,7 @@ describe("http module", () => {
         status: 404,
         headers: new Headers({ "Content-Type": "application/json" }),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       const result = await doGet("/api/notfound");
 
@@ -279,7 +280,7 @@ describe("http module", () => {
         headers: new Headers({ "Content-Type": "application/json" }),
         json: () => Promise.reject(new Error("Invalid JSON")),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       const result = await doGet("/api/data");
 
@@ -293,7 +294,7 @@ describe("http module", () => {
         headers: new Headers(),
         text: () => Promise.resolve("response"),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       const result = await doGet("/api/data");
 
@@ -308,22 +309,22 @@ describe("http module", () => {
         headers: new Headers(),
         text: () => Promise.resolve(""),
       } as Response;
-      vi.mocked(globalThis.fetch).mockResolvedValue(mockResponse);
+      vi.mocked(fetch).mockResolvedValue(mockResponse);
 
       await post("/api/data", "{}");
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ credentials: "same-origin" }),
       );
 
       await patchJson("/api/data", {});
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ credentials: "same-origin" }),
       );
 
       await doGet("/api/data");
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetch).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ credentials: "same-origin" }),
       );

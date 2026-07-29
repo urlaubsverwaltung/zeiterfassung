@@ -20,9 +20,7 @@ describe("autosubmit", () => {
   });
 
   afterEach(() => {
-    while (document.body.firstChild) {
-      document.body.firstChild.remove();
-    }
+    document.body.replaceChildren();
   });
 
   test("auto-submits text input", async () => {

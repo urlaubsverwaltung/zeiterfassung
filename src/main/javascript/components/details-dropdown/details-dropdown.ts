@@ -3,12 +3,12 @@ export class DetailsDropdown extends HTMLDetailsElement {
   #cleanup: () => void;
 
   connectedCallback() {
-    let contentClicked = false;
+    let isContentClicked = false;
 
     const handleDocumentClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      contentClicked = this.contains(target);
-      if (contentClicked) {
+      isContentClicked = this.contains(target);
+      if (isContentClicked) {
         if (!isInteractiveElement(target)) {
           // prevent closing of detail element only when clicked element is not interactive.
           // otherwise we would prevent a form submit for instance.
@@ -23,10 +23,12 @@ export class DetailsDropdown extends HTMLDetailsElement {
     };
 
     const handleDocumentKeyUp = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        this.open = false;
-        contentClicked = false;
+      if (event.key !== "Escape") {
+        return;
       }
+
+      this.open = false;
+      isContentClicked = false;
     };
 
     const handleFocusOut = (event: FocusEvent) => {
@@ -35,7 +37,7 @@ export class DetailsDropdown extends HTMLDetailsElement {
           () => {
             if (
               !this.matches(":focus-within") &&
-              (document.activeElement !== document.body || !contentClicked)
+              (document.activeElement !== document.body || !isContentClicked)
             ) {
               this.open = false;
             }
