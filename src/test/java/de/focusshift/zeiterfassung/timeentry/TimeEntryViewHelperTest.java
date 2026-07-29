@@ -312,6 +312,118 @@ class TimeEntryViewHelperTest {
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
             verify(timeEntryService).createTimeEntry(userLocalId, null, start, end, false);
         }
+
+        @Test
+        void ensureCreateValidationErrorWhenTimespanOverlapsExistingEntry() {
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+            final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
+
+            final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+            timeEntryDTO.setUserLocalId(userLocalId.value());
+            timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
+            timeEntryDTO.setStart(LocalTime.parse("11:00"));
+            timeEntryDTO.setEnd(LocalTime.parse("14:00"));
+            timeEntryDTO.setComment("comment");
+            timeEntryDTO.setBreak(false);
+
+            final TimeEntry existingEntry = new TimeEntry(
+                new TimeEntryId(1L),
+                new UserIdComposite(new UserId("user-id"), userLocalId),
+                "existing",
+                ZonedDateTime.parse("2025-02-16T08:00:00Z"),
+                ZonedDateTime.parse("2025-02-16T12:00:00Z"),
+                false
+            );
+
+            when(timeEntryService.getEntries(LocalDate.parse("2025-02-15"), LocalDate.parse("2025-02-17"), userLocalId))
+                .thenReturn(List.of(existingEntry));
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
+
+            verify(bindingResult).reject("time-entry.validation.timespan.overlaps");
+            verify(timeEntryService, never()).createTimeEntry(any(), any(), any(), any(), anyBoolean(), anyInt());
+        }
+
+        @Test
+        void ensureCreateAllowedWhenTimespanDoesNotOverlapExistingEntry() {
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+            final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
+
+            final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+            timeEntryDTO.setUserLocalId(userLocalId.value());
+            timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
+            timeEntryDTO.setStart(LocalTime.parse("13:00"));
+            timeEntryDTO.setEnd(LocalTime.parse("17:00"));
+            timeEntryDTO.setComment("comment");
+            timeEntryDTO.setBreak(false);
+
+            final TimeEntry existingEntry = new TimeEntry(
+                new TimeEntryId(1L),
+                new UserIdComposite(new UserId("user-id"), userLocalId),
+                "existing",
+                ZonedDateTime.parse("2025-02-16T08:00:00Z"),
+                ZonedDateTime.parse("2025-02-16T12:00:00Z"),
+                false
+            );
+
+            when(timeEntryService.getEntries(LocalDate.parse("2025-02-15"), LocalDate.parse("2025-02-17"), userLocalId))
+                .thenReturn(List.of(existingEntry));
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
+
+            verify(bindingResult, never()).reject("time-entry.validation.timespan.overlaps");
+            final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T13:00:00Z");
+            final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
+            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false, 0);
+        }
+
+        @Test
+        void ensureCreateAllowedWhenTimespanOverlapsExistingBreakEntryOnly() {
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+            final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
+
+            final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+            timeEntryDTO.setUserLocalId(userLocalId.value());
+            timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
+            timeEntryDTO.setStart(LocalTime.parse("08:00"));
+            timeEntryDTO.setEnd(LocalTime.parse("12:00"));
+            timeEntryDTO.setComment("comment");
+            timeEntryDTO.setBreak(false);
+
+            final TimeEntry existingBreakEntry = new TimeEntry(
+                new TimeEntryId(1L),
+                new UserIdComposite(new UserId("user-id"), userLocalId),
+                "break",
+                ZonedDateTime.parse("2025-02-16T11:00:00Z"),
+                ZonedDateTime.parse("2025-02-16T11:30:00Z"),
+                true
+            );
+
+            when(timeEntryService.getEntries(LocalDate.parse("2025-02-15"), LocalDate.parse("2025-02-17"), userLocalId))
+                .thenReturn(List.of(existingBreakEntry));
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
+
+            verify(bindingResult, never()).reject("time-entry.validation.timespan.overlaps");
+            final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T08:00:00Z");
+            final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T12:00:00Z");
+            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false, 0);
+        }
     }
 
     @Nested
@@ -710,6 +822,97 @@ class TimeEntryViewHelperTest {
 
             verifyNoMoreInteractions(bindingResult);
             verify(timeEntryService).updateTimeEntry(new TimeEntryId(1L), "comment-new", start, end, Duration.ZERO, false);
+        }
+
+        @Test
+        void ensureUpdateValidationErrorWhenTimespanOverlapsExistingEntry() throws Exception {
+
+            final UserId loggedInUserId = new UserId("user-id");
+            final UserLocalId loggedInUserLocalId = new UserLocalId(42L);
+            final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
+
+            final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
+            timeEntryDto.setId(1L);
+            timeEntryDto.setDate(LocalDate.parse("2025-02-16"));
+            timeEntryDto.setStart(LocalTime.parse("11:00"));
+            timeEntryDto.setEnd(LocalTime.parse("14:00"));
+            timeEntryDto.setComment("comment-new");
+            timeEntryDto.setBreak(false);
+
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
+            when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+            final TimeEntry otherEntry = new TimeEntry(
+                new TimeEntryId(2L),
+                loggedInUserIdComposite,
+                "other",
+                ZonedDateTime.parse("2025-02-16T08:00:00Z"),
+                ZonedDateTime.parse("2025-02-16T12:00:00Z"),
+                false
+            );
+
+            when(timeEntryService.getEntries(LocalDate.parse("2025-02-15"), LocalDate.parse("2025-02-17"), loggedInUserLocalId))
+                .thenReturn(List.of(otherEntry));
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+            when(bindingResult.hasErrors()).thenReturn(true);
+
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(loggedInUserLocalId);
+            final Model model = new ConcurrentModel(bindingResult);
+            final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+            sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+
+            verify(bindingResult).reject("time-entry.validation.timespan.overlaps");
+            verify(timeEntryService, never()).updateTimeEntry(any(), any(), any(), any(), any(), anyBoolean(), anyInt());
+        }
+
+        @Test
+        void ensureUpdateExcludesItselfFromOverlapCheck() throws Exception {
+
+            final UserId loggedInUserId = new UserId("user-id");
+            final UserLocalId loggedInUserLocalId = new UserLocalId(42L);
+            final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
+
+            final TimeEntryId timeEntryId = new TimeEntryId(1L);
+
+            final TimeEntry existingTimeEntry = new TimeEntry(
+                timeEntryId,
+                loggedInUserIdComposite,
+                "comment",
+                ZonedDateTime.parse("2025-02-16T09:00:00Z"),
+                ZonedDateTime.parse("2025-02-16T17:00:00Z"),
+                false
+            );
+
+            final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
+            timeEntryDto.setId(1L);
+            timeEntryDto.setDate(LocalDate.parse("2025-02-16"));
+            timeEntryDto.setStart(LocalTime.parse("10:00"));
+            timeEntryDto.setEnd(LocalTime.parse("18:00"));
+            timeEntryDto.setComment("comment-new");
+            timeEntryDto.setBreak(false);
+
+            when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(existingTimeEntry));
+            when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+            // the only existing entry for that day is the one being edited itself -> must not be rejected as an overlap
+            when(timeEntryService.getEntries(LocalDate.parse("2025-02-15"), LocalDate.parse("2025-02-17"), loggedInUserLocalId))
+                .thenReturn(List.of(existingTimeEntry));
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+            when(bindingResult.hasErrors()).thenReturn(false);
+
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(loggedInUserLocalId);
+            final Model model = new ConcurrentModel(bindingResult);
+            final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
+
+            sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+
+            verify(bindingResult, never()).reject("time-entry.validation.timespan.overlaps");
+            final ZonedDateTime expectedStart = ZonedDateTime.parse("2025-02-16T10:00:00Z");
+            final ZonedDateTime expectedEnd = ZonedDateTime.parse("2025-02-16T18:00:00Z");
+            verify(timeEntryService).updateTimeEntry(timeEntryId, "comment-new", expectedStart, expectedEnd, Duration.ZERO, false, 0);
         }
     }
 
