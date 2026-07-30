@@ -138,12 +138,14 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad, HasUserSearch
         final int selectedYear = year;
         final int selectedMonth = month;
         final String selectedYearMonthUrl = viewHelper.createUrl(String.format("/report/year/%d/month/%d", selectedYear, selectedMonth), allUsersSelected, userLocalIds);
-        final String csvDownloadUrl = selectedYearMonthUrl.contains("?") ? selectedYearMonthUrl + "&csv" : selectedYearMonthUrl + "?csv";
+        final String csvDownloadUrlDetailed = appendCsvParam(selectedYearMonthUrl, "detailed");
+        final String csvDownloadUrlAggregated = appendCsvParam(selectedYearMonthUrl, "aggregated");
 
         model.addAttribute("userReportPreviousSectionUrl", previousSectionUrl);
         model.addAttribute("userReportTodaySectionUrl", todaySectionUrl);
         model.addAttribute("userReportNextSectionUrl", nextSectionUrl);
-        model.addAttribute("userReportCsvDownloadUrl", csvDownloadUrl);
+        model.addAttribute("userReportCsvDownloadUrlDetailed", csvDownloadUrlDetailed);
+        model.addAttribute("userReportCsvDownloadUrlAggregated", csvDownloadUrlAggregated);
 
         final List<User> users = reportPermissionService.findAllPermittedUsersForCurrentUser();
 
@@ -294,6 +296,10 @@ class ReportMonthController implements HasTimeClock, HasLaunchpad, HasUserSearch
         return fromMethodCall(on(ReportMonthController.class)
             .monthlyUserReport(year, month, everyoneParam, userParam, timeEntryId, null,null,null))
             .build().toUriString();
+    }
+
+    private static String appendCsvParam(String url, String csvType) {
+        return (url.contains("?") ? url + "&csv=" : url + "?csv=") + csvType;
     }
 
     private static Optional<YearMonth> yearMonth(int year, int month) {
