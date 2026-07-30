@@ -33,7 +33,7 @@ class ReportCsvServiceIT extends SingleTenantTestContainersBase {
     private UserManagementService userManagementService;
 
     @ParameterizedTest
-    @CsvSource({"de,Datum;Vorname;Nachname;Von;Bis;erfasste Stunden;Kommentar;Pause", "en,Date;Given name;Family name;From;To;Worked hours;Comment;Break"})
+    @CsvSource({"de,Datum;Vorname;Nachname;Von;Bis;Erfasste Stunden;Sollarbeitszeit;Kommentar;Pause", "en,Date;Given name;Family name;From;To;Worked hours;Should working hours;Comment;Break"})
     void ensureI18nHeader(String languageTag, String expectedHeader) {
         final PrintWriter printWriter = mock(PrintWriter.class);
 
@@ -45,6 +45,23 @@ class ReportCsvServiceIT extends SingleTenantTestContainersBase {
         when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
 
         sut.writeMonthReportCsv(YearMonth.of(2022, 9), Locale.forLanguageTag(languageTag), userId, printWriter);
+
+        verify(printWriter).println(expectedHeader);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"de,KW;Von;Bis;Vorname;Nachname;Erfasste Stunden;Sollarbeitszeit", "en,CW;From;To;Given name;Family name;Worked hours;Should working hours"})
+    void ensureI18nHeaderAggregated(String languageTag, String expectedHeader) {
+        final PrintWriter printWriter = mock(PrintWriter.class);
+
+        final UserId userId = new UserId("user");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
+        sut.writeMonthReportCsvAggregated(YearMonth.of(2022, 9), Locale.forLanguageTag(languageTag), userId, printWriter);
 
         verify(printWriter).println(expectedHeader);
     }
