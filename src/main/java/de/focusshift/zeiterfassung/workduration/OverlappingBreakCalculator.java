@@ -41,8 +41,17 @@ class OverlappingBreakCalculator implements WorkDurationCalculator {
 
         final Duration totalWork = summarizeDuration(notMergedWorkIntervals);
         final Duration totalBreak = summarizeDuration(notMergedBreakIntervalWithWorkIntervalOverlaps);
+        final Duration totalIntegratedBreak = summarizeIntegratedBreakMinutes(timeEntries);
 
-        return new WorkDuration(totalWork.minus(totalBreak));
+        return new WorkDuration(totalWork.minus(totalBreak).minus(totalIntegratedBreak));
+    }
+
+    private Duration summarizeIntegratedBreakMinutes(Collection<TimeEntry> timeEntries) {
+        return timeEntries.stream()
+            .distinct()
+            .filter(not(TimeEntry::isBreak))
+            .map(entry -> Duration.ofMinutes(entry.breakMinutes()))
+            .reduce(Duration.ZERO, Duration::plus);
     }
 
     private List<Interval> workIntervals(Collection<TimeEntry> timeEntries) {

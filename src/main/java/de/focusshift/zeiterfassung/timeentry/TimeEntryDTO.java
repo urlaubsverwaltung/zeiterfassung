@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -54,6 +55,10 @@ public class TimeEntryDTO {
 
     private boolean isBreak;
 
+    // | means emptyString OR the pattern
+    @Pattern(regexp = "^\\d{1,3}$|", message = "{time-entry.validation.breakMinutes.pattern}")
+    private String breakMinutes;
+
     public TimeEntryDTO() {
     }
 
@@ -61,7 +66,7 @@ public class TimeEntryDTO {
         this.date = date;
     }
 
-    private TimeEntryDTO(Long id, Long userLocalId, LocalDate date, LocalTime start, LocalTime end, String duration, String comment, boolean isBreak) {
+    private TimeEntryDTO(Long id, Long userLocalId, LocalDate date, LocalTime start, LocalTime end, String duration, String comment, boolean isBreak, String breakMinutes) {
         this.id = id;
         this.userLocalId = userLocalId;
         this.date = date;
@@ -70,6 +75,7 @@ public class TimeEntryDTO {
         this.duration = duration;
         this.comment = comment;
         this.isBreak = isBreak;
+        this.breakMinutes = breakMinutes;
     }
 
     public Long getId() {
@@ -137,6 +143,33 @@ public class TimeEntryDTO {
         return isBreak;
     }
 
+    public String getBreakMinutes() {
+        return breakMinutes;
+    }
+
+    public void setBreakMinutes(String breakMinutes) {
+        this.breakMinutes = breakMinutes;
+    }
+
+    /**
+     * Returns the user input string as number, or {@code null} when there is no value, or it is not a number.
+     *
+     * @return number value of the user input
+     */
+    @Nullable
+    public Integer breakMinutesAsNumber() {
+        if (breakMinutes == null || breakMinutes.isEmpty()) {
+            return null;
+        }
+
+        try {
+            return Integer.parseInt(breakMinutes);
+        } catch (NumberFormatException e) {
+            // ignore it, has to be covered by bean validation if necessary
+            return null;
+        }
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -152,12 +185,13 @@ public class TimeEntryDTO {
             && Objects.equals(end, that.end)
             && Objects.equals(duration, that.duration)
             && Objects.equals(comment, that.comment)
-            && Objects.equals(isBreak, that.isBreak);
+            && Objects.equals(isBreak, that.isBreak)
+            && Objects.equals(breakMinutes, that.breakMinutes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userLocalId, date, start, end, duration, comment, isBreak);
+        return Objects.hash(userLocalId, date, start, end, duration, comment, isBreak, breakMinutes);
     }
 
     @Override
@@ -171,6 +205,7 @@ public class TimeEntryDTO {
             ", duration='" + duration + '\'' +
             ", comment='" + comment + '\'' +
             ", isBreak='" + isBreak + '\'' +
+            ", breakMinutes=" + breakMinutes +
             '}';
     }
 
@@ -183,6 +218,7 @@ public class TimeEntryDTO {
         private String duration;
         private String comment;
         private boolean isBreak;
+        private String breakMinutes;
 
         private Builder() {
         }
@@ -227,8 +263,13 @@ public class TimeEntryDTO {
             return this;
         }
 
+        public Builder breakMinutes(String breakMinutes) {
+            this.breakMinutes = breakMinutes;
+            return this;
+        }
+
         public TimeEntryDTO build() {
-            return new TimeEntryDTO(id, userLocalId, date, start, end, duration, comment, isBreak);
+            return new TimeEntryDTO(id, userLocalId, date, start, end, duration, comment, isBreak, breakMinutes);
         }
     }
 }

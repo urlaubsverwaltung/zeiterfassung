@@ -202,6 +202,60 @@ class OverlappingBreakCalculatorTest {
         }
     }
 
+    @Nested
+    class CalculateWorkDurationWithIntegratedBreakMinutes {
+
+        @Test
+        void workDurationSubtractsIntegratedBreakMinutes() {
+            /*
+             *  --------------------------------------------------
+             * | [work] 08:00 - 17:00, breakMinutes=60             |     8h WorkDuration (not 9h)
+             *  --------------------------------------------------
+             */
+            final TimeEntry workEntry = workEntry("2025-09-26T08:00:00Z", "2025-09-26T17:00:00Z", 60);
+
+            final WorkDuration actual = sut.calculateWorkDuration(List.of(workEntry));
+            assertThat(actual.durationInMinutes()).isEqualTo(Duration.ofHours(8));
+        }
+
+        @Test
+        void workDurationSubtractsIntegratedBreakMinutesAndOverlappingBreakEntry() {
+            /*
+             *  ----------------------------------------------------------------
+             * | [work] 08:00 - 17:00, breakMinutes=30                          |     7h 30min WorkDuration (not 9h)
+             *  ----------------------------------------------------------------
+             *                  | [break] 12:00 - 13:00 |
+             *                   -----------------------
+             */
+            final TimeEntry workEntry = workEntry("2025-09-26T08:00:00Z", "2025-09-26T17:00:00Z", 30);
+            final TimeEntry breakEntry = entry("2025-09-26T12:00:00Z", "2025-09-26T13:00:00Z", true, 0);
+
+            final WorkDuration actual = sut.calculateWorkDuration(List.of(workEntry, breakEntry));
+            assertThat(actual.durationInMinutes()).isEqualTo(Duration.ofHours(7).plusMinutes(30));
+        }
+
+        @Test
+        void workDurationIgnoresBreakMinutesOnBreakEntries() {
+            /*
+             * breakMinutes on an entry with isBreak=true must not additionally reduce work duration -
+             * it is already excluded from work entirely.
+             */
+            final TimeEntry workEntry = workEntry("2025-09-26T08:00:00Z", "2025-09-26T12:00:00Z", 0);
+            final TimeEntry breakEntry = entry("2025-09-26T12:00:00Z", "2025-09-26T13:00:00Z", true, 60);
+
+            final WorkDuration actual = sut.calculateWorkDuration(List.of(workEntry, breakEntry));
+            assertThat(actual.durationInMinutes()).isEqualTo(Duration.ofHours(4));
+        }
+
+        private static TimeEntry workEntry(String start, String end, int breakMinutes) {
+            return entry(start, end, false, breakMinutes);
+        }
+
+        private static TimeEntry entry(String start, String end, boolean isBreak, int breakMinutes) {
+            return new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "", ZonedDateTime.parse(start), ZonedDateTime.parse(end), isBreak, breakMinutes);
+        }
+    }
+
     private static UserIdComposite anyUserIdComposite() {
         return new UserIdComposite(new UserId("user-id"), new UserLocalId(1L));
     }

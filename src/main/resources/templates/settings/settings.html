@@ -266,6 +266,94 @@
                   </div>
                 </div>
               </div>
+              <div class="mt-8 lg:mt-12">
+                <h2 class="font-bold" th:text="#{settings.time-entry.heading}">
+                  Zeiteintrag Einstellungen
+                </h2>
+                <div class="mt-4">
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="comment-enabled-checkbox"
+                      data-testid="comment-enabled-checkbox"
+                      th:field="*{commentEnabled}"
+                    />
+                    <label
+                      for="comment-enabled-checkbox"
+                      th:text="#{settings.time-entry.comment-enabled.label}"
+                    >
+                      Kommentarfeld anzeigen
+                    </label>
+                  </div>
+                  <p
+                    class="mt-2 text-dimmed"
+                    th:text="#{settings.time-entry.comment-enabled.teaser-text}"
+                  >
+                    Zeigt oder versteckt das Kommentarfeld bei der
+                    Zeiterfassung.
+                  </p>
+                </div>
+                <div class="mt-4">
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="break-integrated-checkbox"
+                      data-testid="break-integrated-checkbox"
+                      th:field="*{breakIntegrated}"
+                    />
+                    <label
+                      for="break-integrated-checkbox"
+                      th:text="#{settings.time-entry.break-integrated.label}"
+                    >
+                      Pause im Zeiteintrag erfassen
+                    </label>
+                  </div>
+                  <p
+                    class="mt-2 text-dimmed"
+                    th:text="#{settings.time-entry.break-integrated.teaser-text}"
+                  >
+                    Ersetzt den separaten Pause-Schalter durch ein
+                    Pausendauer-Eingabefeld im Zeiteintrag.
+                  </p>
+                </div>
+                <div
+                  th:if="${settings.breakIntegrated}"
+                  class="mt-4"
+                  th:with="fieldName=${'defaultBreakMinutes'}, hasError=${#fields.hasErrors(fieldName)}"
+                >
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="number"
+                      id="default-break-minutes-input"
+                      data-testid="default-break-minutes-input"
+                      class="xs:w-20"
+                      min="0"
+                      max="120"
+                      step="5"
+                      th:classappend="${hasError ? 'invalid' : ''}"
+                      th:aria-invalid="${hasError}"
+                      th:aria-message="${hasError ? fieldName + '-error-message' : ''}"
+                      th:field="*{defaultBreakMinutes}"
+                    />
+                    <label
+                      for="default-break-minutes-input"
+                      th:text="#{settings.time-entry.default-break-minutes.label}"
+                    >
+                      Standard-Pausendauer (Minuten)
+                    </label>
+                  </div>
+                  <div class="mt-2">
+                    <p
+                      th:id="${fieldName + '-error-message'}"
+                      th:text="${#fields.errors(fieldName)[0]}"
+                      th:if="${hasError}"
+                      class="invalid"
+                    >
+                      Fehlernachricht
+                    </p>
+                  </div>
+                </div>
+              </div>
               <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
                 <button
                   type="submit"

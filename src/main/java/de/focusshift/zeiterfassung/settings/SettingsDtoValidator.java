@@ -22,6 +22,7 @@ class SettingsDtoValidator implements Validator {
         validateFederalState(settingsDto, errors);
         validateLockTimeEntriesDaysInPast(settingsDto, errors);
         validateSubtractBreak(settingsDto, errors);
+        validateDefaultBreakMinutes(settingsDto, errors);
     }
 
     private void validateFederalState(SettingsDto settingsDto, Errors errors) {
@@ -45,6 +46,15 @@ class SettingsDtoValidator implements Validator {
             final LocalDate date = settingsDto.subtractBreakFromTimeEntryActiveDate();
             if (date == null) {
                 errors.rejectValue("subtractBreakFromTimeEntryActiveDate", "settings.work-duration.calculation.subtract-breaks.date.validation.NotNull");
+            }
+        }
+    }
+
+    private void validateDefaultBreakMinutes(SettingsDto settingsDto, Errors errors) {
+        if (settingsDto.breakIntegrated()) {
+            final Integer defaultBreakMinutes = settingsDto.defaultBreakMinutesAsNumber();
+            if (defaultBreakMinutes == null || defaultBreakMinutes < 0 || defaultBreakMinutes > 120) {
+                errors.rejectValue("defaultBreakMinutes", "settings.time-entry.default-break-minutes.validation.range");
             }
         }
     }

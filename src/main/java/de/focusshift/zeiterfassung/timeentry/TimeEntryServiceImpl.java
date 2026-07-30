@@ -190,6 +190,11 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     public TimeEntry createTimeEntry(UserLocalId userLocalId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak) {
+        return createTimeEntry(userLocalId, comment, start, end, isBreak, 0);
+    }
+
+    @Override
+    public TimeEntry createTimeEntry(UserLocalId userLocalId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak, int breakMinutes) {
 
         final User user = findUser(userLocalId);
 
@@ -201,6 +206,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
         entity.setEnd(end.toInstant());
         entity.setEndZoneId(end.getZone().getId());
         entity.setBreak(isBreak);
+        entity.setBreakMinutes(breakMinutes);
 
         final TimeEntry saved = save(entity, user);
 
@@ -219,6 +225,12 @@ class TimeEntryServiceImpl implements TimeEntryService {
     @Override
     public TimeEntry updateTimeEntry(TimeEntryId id, String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end,
                                      @Nullable Duration duration, boolean isBreak) throws TimeEntryUpdateNotPlausibleException {
+        return updateTimeEntry(id, comment, start, end, duration, isBreak, 0);
+    }
+
+    @Override
+    public TimeEntry updateTimeEntry(TimeEntryId id, String comment, @Nullable ZonedDateTime start, @Nullable ZonedDateTime end,
+                                     @Nullable Duration duration, boolean isBreak, int breakMinutes) throws TimeEntryUpdateNotPlausibleException {
 
         final TimeEntryEntity entity = timeEntryRepository.findById(id.value())
             .orElseThrow(() -> new IllegalStateException("could not find existing timeEntry id=%s".formatted(id)));
@@ -229,6 +241,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         entity.setComment(requireNonNullElse(comment, "").strip());
         entity.setBreak(isBreak);
+        entity.setBreakMinutes(breakMinutes);
 
         final TimeEntry saved = save(entity);
 
@@ -381,7 +394,7 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
         final UserIdComposite userIdComposite = user.userIdComposite();
 
-        return new TimeEntry(new TimeEntryId(entity.getId()), userIdComposite, entity.getComment(), startDateTime, endDateTime, entity.isBreak());
+        return new TimeEntry(new TimeEntryId(entity.getId()), userIdComposite, entity.getComment(), startDateTime, endDateTime, entity.isBreak(), entity.getBreakMinutes());
     }
 
     private Instant toInstant(LocalDate localDate) {
