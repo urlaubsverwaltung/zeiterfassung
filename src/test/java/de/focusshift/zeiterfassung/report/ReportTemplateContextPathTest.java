@@ -41,7 +41,8 @@ class ReportTemplateContextPathTest {
     private static final String PREVIOUS_URL = "/report/year/2026/month/8?everyone=&user=1&user=2";
     private static final String TODAY_URL = "/report/month?everyone=&user=1&user=2";
     private static final String NEXT_URL = "/report/year/2026/month/10?everyone=&user=1&user=2";
-    private static final String CSV_URL = "/report/year/2026/month/9?everyone=&user=1&user=2&csv";
+    private static final String CSV_URL_DETAILED = "/report/year/2026/month/9?everyone=&user=1&user=2&csv=detailed";
+    private static final String CSV_URL_AGGREGATED = "/report/year/2026/month/9?everyone=&user=1&user=2&csv=aggregated";
     private static final String FILTER_URL = "/report/year/2026/month/9";
 
     @ParameterizedTest(name = "{0} with context path \"{1}\"")
@@ -65,8 +66,11 @@ class ReportTemplateContextPathTest {
             .as("next")
             .contains("href=\"%s/report/year/2026/month/10?everyone=&amp;user=1&amp;user=2\"".formatted(contextPath));
         assertThat(html)
-            .as("csv download")
-            .contains("href=\"%s/report/year/2026/month/9?everyone=&amp;user=1&amp;user=2&amp;csv\"".formatted(contextPath));
+            .as("csv download detailed")
+            .contains("href=\"%s/report/year/2026/month/9?everyone=&amp;user=1&amp;user=2&amp;csv=detailed\"".formatted(contextPath));
+        assertThat(html)
+            .as("csv download aggregated")
+            .contains("href=\"%s/report/year/2026/month/9?everyone=&amp;user=1&amp;user=2&amp;csv=aggregated\"".formatted(contextPath));
         assertThat(html)
             .as("person filter form of reports/_user-select")
             .contains("action=\"%s/report/year/2026/month/9\"".formatted(contextPath));
@@ -92,7 +96,8 @@ class ReportTemplateContextPathTest {
             "userReportPreviousSectionUrl", PREVIOUS_URL,
             "userReportTodaySectionUrl", TODAY_URL,
             "userReportNextSectionUrl", NEXT_URL,
-            "userReportCsvDownloadUrl", CSV_URL,
+            "userReportCsvDownloadUrlDetailed", CSV_URL_DETAILED,
+            "userReportCsvDownloadUrlAggregated", CSV_URL_AGGREGATED,
             // reports/_user-select is pulled in by both chart-navigation fragments
             "userReportFilterUrl", FILTER_URL,
             "allUsersSelected", false,
