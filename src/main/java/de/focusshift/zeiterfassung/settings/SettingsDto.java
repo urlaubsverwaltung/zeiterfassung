@@ -19,7 +19,12 @@ record SettingsDto(
     Boolean subtractBreakFromTimeEntryIsActive,
     @Nullable
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    LocalDate subtractBreakFromTimeEntryActiveDate
+    LocalDate subtractBreakFromTimeEntryActiveDate,
+
+    boolean commentEnabled,
+    boolean breakIntegrated,
+    @Nullable
+    String defaultBreakMinutes
 ) {
 
     /**
@@ -29,12 +34,27 @@ record SettingsDto(
      */
     @Nullable
     public Integer lockTimeEntriesDaysInPastAsNumber() {
-        if (lockTimeEntriesDaysInPast == null) {
+        return parseNumber(lockTimeEntriesDaysInPast);
+    }
+
+    /**
+     * Returns the user input string as number, or {@code null} when there is no value, or it is not a number.
+     *
+     * @return number value of the user input
+     */
+    @Nullable
+    public Integer defaultBreakMinutesAsNumber() {
+        return parseNumber(defaultBreakMinutes);
+    }
+
+    @Nullable
+    private static Integer parseNumber(@Nullable String value) {
+        if (value == null) {
             return null;
         }
 
         try {
-            return Integer.parseInt(lockTimeEntriesDaysInPast);
+            return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             // ignore it, has to be covered by bean validation if necessary
             return null;

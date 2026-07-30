@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.settings.TimeEntrySettings;
+import de.focusshift.zeiterfassung.settings.TimeEntrySettingsService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -38,10 +40,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -58,10 +62,12 @@ class TimeEntryViewHelperTest {
     private TimeEntryLockService timeEntryLockService;
     @Mock
     private UserSettingsProvider userSettingsProvider;
+    @Mock
+    private TimeEntrySettingsService timeEntrySettingsService;
 
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
+        sut = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider, timeEntrySettingsService);
     }
 
     @Test
@@ -86,6 +92,43 @@ class TimeEntryViewHelperTest {
         assertThat(actual.getDuration()).isEqualTo("08:00");
         assertThat(actual.getComment()).isEqualTo("comment");
         assertThat(actual.isBreak()).isFalse();
+        assertThat(actual.getBreakMinutes()).isEqualTo("0");
+    }
+
+    @Nested
+    class NewTimeEntryDto {
+
+        @Test
+        void ensureNewTimeEntryDtoWithoutBreakMinutesWhenBreakIntegratedIsDisabled() {
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            final LocalDate date = LocalDate.parse("2025-02-16");
+
+            when(timeEntrySettingsService.getTimeEntrySettings())
+                .thenReturn(new TimeEntrySettings(true, false, 45));
+
+            final TimeEntryDTO actual = sut.newTimeEntryDto(date, userLocalId);
+
+            assertThat(actual.getDate()).isEqualTo(date);
+            assertThat(actual.getUserLocalId()).isEqualTo(userLocalId.value());
+            assertThat(actual.getBreakMinutes()).isNull();
+        }
+
+        @Test
+        void ensureNewTimeEntryDtoPrePopulatesDefaultBreakMinutesWhenBreakIntegratedIsEnabled() {
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            final LocalDate date = LocalDate.parse("2025-02-16");
+
+            when(timeEntrySettingsService.getTimeEntrySettings())
+                .thenReturn(new TimeEntrySettings(true, true, 30));
+
+            final TimeEntryDTO actual = sut.newTimeEntryDto(date, userLocalId);
+
+            assertThat(actual.getDate()).isEqualTo(date);
+            assertThat(actual.getUserLocalId()).isEqualTo(userLocalId.value());
+            assertThat(actual.getBreakMinutes()).isEqualTo("30");
+        }
     }
 
     @Nested
@@ -232,7 +275,7 @@ class TimeEntryViewHelperTest {
             verify(bindingResult).hasErrors();
             verifyNoMoreInteractions(bindingResult);
 
-            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false);
+            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false, 0);
         }
 
         @Test
@@ -258,7 +301,7 @@ class TimeEntryViewHelperTest {
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
-            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false);
+            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false, 0);
         }
 
         @ParameterizedTest
@@ -284,7 +327,7 @@ class TimeEntryViewHelperTest {
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
-            verify(timeEntryService).createTimeEntry(userLocalId, null, start, end, false);
+            verify(timeEntryService).createTimeEntry(userLocalId, null, start, end, false, 0);
         }
 
         @ParameterizedTest
@@ -310,7 +353,83 @@ class TimeEntryViewHelperTest {
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
-            verify(timeEntryService).createTimeEntry(userLocalId, null, start, end, false);
+            verify(timeEntryService).createTimeEntry(userLocalId, null, start, end, false, 0);
+        }
+
+        @Test
+        void ensureCreateValidationErrorWhenBreakMinutesExceedsTimespan() {
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+            final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
+
+            final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+            timeEntryDTO.setUserLocalId(userLocalId.value());
+            timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
+            timeEntryDTO.setStart(LocalTime.parse("09:00"));
+            timeEntryDTO.setEnd(LocalTime.parse("17:00"));
+            timeEntryDTO.setComment("comment");
+            timeEntryDTO.setBreak(false);
+            timeEntryDTO.setBreakMinutes("481"); // timespan is 8h == 480min
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
+
+            verify(bindingResult).rejectValue("breakMinutes", "time-entry.validation.breakMinutes.exceedsTimespan");
+            verifyNoInteractions(timeEntryService);
+        }
+
+        @Test
+        void ensureCreateAllowedWhenBreakMinutesEqualsTimespan() {
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+            final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
+
+            final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+            timeEntryDTO.setUserLocalId(userLocalId.value());
+            timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
+            timeEntryDTO.setStart(LocalTime.parse("09:00"));
+            timeEntryDTO.setEnd(LocalTime.parse("17:00"));
+            timeEntryDTO.setComment("comment");
+            timeEntryDTO.setBreak(false);
+            timeEntryDTO.setBreakMinutes("480"); // timespan is exactly 8h == 480min
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
+
+            verify(bindingResult, never()).rejectValue(eq("breakMinutes"), any());
+            final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
+            final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
+            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false, 480);
+        }
+
+        @Test
+        void ensureCreateAllowsBreakMinutesExceedingTimespanWhenEntryIsItselfABreak() {
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+            final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
+
+            final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+            timeEntryDTO.setUserLocalId(userLocalId.value());
+            timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
+            timeEntryDTO.setStart(LocalTime.parse("09:00"));
+            timeEntryDTO.setEnd(LocalTime.parse("09:30"));
+            timeEntryDTO.setComment("break");
+            timeEntryDTO.setBreak(true);
+            timeEntryDTO.setBreakMinutes("999");
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
+
+            verify(bindingResult, never()).rejectValue(eq("breakMinutes"), any());
         }
     }
 
@@ -550,7 +669,7 @@ class TimeEntryViewHelperTest {
             final ZonedDateTime expectedStart = ZonedDateTime.parse("2025-02-14T12:15:00Z");
             final ZonedDateTime expectedEnd = ZonedDateTime.parse("2025-02-14T18:30:00Z");
             final Duration expectedDuration = Duration.ZERO;
-            verify(timeEntryService).updateTimeEntry(timeEntryId, "comment-new", expectedStart, expectedEnd, expectedDuration, false);
+            verify(timeEntryService).updateTimeEntry(timeEntryId, "comment-new", expectedStart, expectedEnd, expectedDuration, false, 0);
         }
 
         @Test
@@ -588,7 +707,7 @@ class TimeEntryViewHelperTest {
             final ZonedDateTime expectedStart = ZonedDateTime.parse("2025-02-14T12:15:00Z");
             final ZonedDateTime expectedEnd = ZonedDateTime.parse("2025-02-14T18:30:00Z");
             final Duration expectedDuration = Duration.ZERO;
-            verify(timeEntryService).updateTimeEntry(timeEntryId, "comment-new", expectedStart, expectedEnd, expectedDuration, false);
+            verify(timeEntryService).updateTimeEntry(timeEntryId, "comment-new", expectedStart, expectedEnd, expectedDuration, false, 0);
         }
 
         @Test
@@ -609,7 +728,7 @@ class TimeEntryViewHelperTest {
             when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
-            when(timeEntryService.updateTimeEntry(any(TimeEntryId.class), anyString(), any(ZonedDateTime.class), any(ZonedDateTime.class), any(Duration.class), anyBoolean()))
+            when(timeEntryService.updateTimeEntry(any(TimeEntryId.class), anyString(), any(ZonedDateTime.class), any(ZonedDateTime.class), any(Duration.class), anyBoolean(), anyInt()))
                 .thenThrow(new TimeEntryUpdateNotPlausibleException("message"));
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -709,7 +828,39 @@ class TimeEntryViewHelperTest {
             sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(bindingResult);
-            verify(timeEntryService).updateTimeEntry(new TimeEntryId(1L), "comment-new", start, end, Duration.ZERO, false);
+            verify(timeEntryService).updateTimeEntry(new TimeEntryId(1L), "comment-new", start, end, Duration.ZERO, false, 0);
+        }
+
+        @Test
+        void ensureUpdateValidationErrorWhenBreakMinutesExceedsTimespan() throws Exception {
+
+            final UserId loggedInUserId = new UserId("user-id");
+            final UserLocalId loggedInUserLocalId = new UserLocalId(42L);
+            final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
+
+            final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
+            timeEntryDto.setId(1L);
+            timeEntryDto.setDate(LocalDate.parse("2025-02-14"));
+            timeEntryDto.setStart(LocalTime.parse("12:00"));
+            timeEntryDto.setEnd(LocalTime.parse("13:00"));
+            timeEntryDto.setComment("comment-new");
+            timeEntryDto.setBreak(false);
+            timeEntryDto.setBreakMinutes("61"); // timespan is 1h == 60min
+
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
+            when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+            when(bindingResult.hasErrors()).thenReturn(true);
+
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(loggedInUserLocalId);
+            final Model model = new ConcurrentModel(bindingResult);
+            final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+            sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+
+            verify(bindingResult).rejectValue("breakMinutes", "time-entry.validation.breakMinutes.exceedsTimespan");
+            verify(timeEntryService, never()).updateTimeEntry(any(), any(), any(), any(), any(), anyBoolean(), anyInt());
         }
     }
 

@@ -20,6 +20,8 @@ import java.time.ZonedDateTime;
  * @param start start timestamp
  * @param end end timestamp, never {@code null} ({@linkplain de.focusshift.zeiterfassung.timeclock.TimeClock} is something with start but without end)
  * @param isBreak whether time entry is a break or not
+ * @param breakMinutes break duration in minutes captured directly on this entry (integrated break mode).
+ *                      only relevant when {@code isBreak} is {@code false}, {@code 0} otherwise.
  */
 public record TimeEntry(
     TimeEntryId id,
@@ -27,8 +29,13 @@ public record TimeEntry(
     String comment,
     ZonedDateTime start,
     ZonedDateTime end,
-    boolean isBreak
+    boolean isBreak,
+    int breakMinutes
 ) {
+
+    public TimeEntry(TimeEntryId id, UserIdComposite userIdComposite, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak) {
+        this(id, userIdComposite, comment, start, end, isBreak, 0);
+    }
 
     /**
      * Returns the exact duration between {@code start} and {@code end} date.
@@ -51,11 +58,12 @@ public record TimeEntry(
     }
 
     public BreakDuration breakDuration() {
-        return new BreakDuration(isBreak ? duration() : Duration.ZERO);
+        return new BreakDuration(isBreak ? duration() : Duration.ofMinutes(breakMinutes));
     }
 
     /**
-     * Returns the duration between start and end if this entry is not a break, {@link WorkDuration#ZERO} otherwise.
+     * Returns the duration between start and end (minus {@link TimeEntry#breakMinutes} when captured on this entry)
+     * if this entry is not a break, {@link WorkDuration#ZERO} otherwise.
      *
      * <p>
      * Note that this {@link WorkDuration} must not be used for reports or if you have a day context for instance.
@@ -64,6 +72,6 @@ public record TimeEntry(
      * @return the work duration of this entry
      */
     public WorkDuration workDuration() {
-        return isBreak ? WorkDuration.ZERO : new WorkDuration(duration());
+        return isBreak ? WorkDuration.ZERO : new WorkDuration(duration().minus(Duration.ofMinutes(breakMinutes)));
     }
 }

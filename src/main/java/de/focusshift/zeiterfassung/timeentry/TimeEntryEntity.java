@@ -61,7 +61,10 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
     @Column(name = "is_break", nullable = false)
     private boolean isBreak;
 
-    protected TimeEntryEntity(String tenantId, Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt, boolean isBreak) {
+    @Column(name = "break_minutes", nullable = false)
+    private int breakMinutes;
+
+    protected TimeEntryEntity(String tenantId, Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt, boolean isBreak, int breakMinutes) {
         super(tenantId);
         this.id = id;
         this.owner = owner;
@@ -72,10 +75,15 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
         this.endZoneId = endZoneId.toString();
         this.updatedAt = updatedAt;
         this.isBreak = isBreak;
+        this.breakMinutes = breakMinutes;
+    }
+
+    protected TimeEntryEntity(String tenantId, Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt, boolean isBreak) {
+        this(tenantId, id, owner, comment, start, startZoneId, end, endZoneId, updatedAt, isBreak, 0);
     }
 
     protected TimeEntryEntity(Long id, String owner, String comment, Instant start, ZoneId startZoneId, Instant end, ZoneId endZoneId, Instant updatedAt, boolean isBreak) {
-        this(null, id, owner, comment, start, startZoneId, end, endZoneId, updatedAt, isBreak);
+        this(null, id, owner, comment, start, startZoneId, end, endZoneId, updatedAt, isBreak, 0);
     }
 
     protected TimeEntryEntity() {
@@ -152,6 +160,14 @@ public class TimeEntryEntity extends AbstractTenantAwareEntity {
 
     public void setBreak(boolean aBreak) {
         isBreak = aBreak;
+    }
+
+    public int getBreakMinutes() {
+        return breakMinutes;
+    }
+
+    public void setBreakMinutes(int breakMinutes) {
+        this.breakMinutes = breakMinutes;
     }
 
     @Override
