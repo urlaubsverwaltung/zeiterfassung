@@ -16,6 +16,7 @@ export class FeedbackHeart extends HTMLElement {
 
     const button = document.createElement("button");
     button.setAttribute("type", "button");
+    button.setAttribute("aria-label", "Throw hearts!");
     button.classList.add("block", "cursor-pointer");
     button.style.anchorName = "--feedback-heart-anchor";
     button.addEventListener("click", this.unleash.bind(this));

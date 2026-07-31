@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.security;
 
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.tenancy.authentication.TenantIdProvider;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
@@ -25,6 +26,7 @@ import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 
 import java.time.Instant;
 import java.util.List;
@@ -34,6 +36,7 @@ import java.util.Set;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -52,6 +55,8 @@ class OAuth2UserServiceMultiTenantTest {
     private TenantUserService tenantUserService;
     @Mock
     private TenantContextHolder tenantContextHolder;
+    @Mock
+    private TenantIdProvider tenantIdProvider;
 
     private static OAuth2AccessToken oAuth2AccessToken() {
         final Instant now = Instant.now();
@@ -60,7 +65,7 @@ class OAuth2UserServiceMultiTenantTest {
 
     @BeforeEach
     void setUp() {
-        sut = new OAuth2UserServiceMultiTenant(oidcUserService, tenantUserService, tenantContextHolder);
+        sut = new OAuth2UserServiceMultiTenant(oidcUserService, tenantUserService, tenantContextHolder, tenantIdProvider);
     }
 
     @Test
@@ -72,6 +77,7 @@ class OAuth2UserServiceMultiTenantTest {
         final DefaultOidcUser oidcUser = new DefaultOidcUser(List.of(new SimpleGrantedAuthority("remote-role")), oidcToken, new OidcUserInfo(claims));
         when(oidcUserService.loadUser(oidcUserRequest)).thenReturn(oidcUser);
 
+        when(tenantIdProvider.resolve(any(OidcUserAuthority.class))).thenReturn(Optional.of(new TenantId("most-awesome-tenant")));
         when(tenantUserService.findById(new UserId("uuid"))).thenReturn(Optional.empty());
 
         final CurrentOidcUser actual = sut.loadUser(oidcUserRequest);
@@ -95,6 +101,7 @@ class OAuth2UserServiceMultiTenantTest {
         final DefaultOidcUser oidcUser = new DefaultOidcUser(List.of(new SimpleGrantedAuthority("remote-role")), oidcToken, new OidcUserInfo(claims));
         when(oidcUserService.loadUser(oidcUserRequest)).thenReturn(oidcUser);
 
+        when(tenantIdProvider.resolve(any(OidcUserAuthority.class))).thenReturn(Optional.of(new TenantId("most-awesome-tenant")));
         when(tenantUserService.findById(new UserId("uuid"))).thenReturn(Optional.of(anyTenantUser("uuid", Set.of(ZEITERFASSUNG_VIEW_REPORT_ALL))));
 
         final OidcUser actual = sut.loadUser(oidcUserRequest);
@@ -112,6 +119,7 @@ class OAuth2UserServiceMultiTenantTest {
         final DefaultOidcUser oidcUser = new DefaultOidcUser(List.of(new SimpleGrantedAuthority("remote-role")), oidcToken, new OidcUserInfo(claims));
         when(oidcUserService.loadUser(oidcUserRequest)).thenReturn(oidcUser);
 
+        when(tenantIdProvider.resolve(any(OidcUserAuthority.class))).thenReturn(Optional.of(new TenantId("most-awesome-tenant")));
         when(tenantUserService.findById(new UserId("uuid"))).thenReturn(Optional.of(anyTenantUser("uuid")));
 
         CurrentOidcUser actual = sut.loadUser(oidcUserRequest);
@@ -127,8 +135,10 @@ class OAuth2UserServiceMultiTenantTest {
 
         final Map<String, Object> claims = Map.of(SUB, "uuid");
         final OidcIdToken oidcToken = oidcIdToken(claims);
-        final OidcUserRequest oidcUserRequest = oidcUserRequestWithoutTenantId(oidcToken);
+        final OidcUserRequest oidcUserRequest = oidcUserRequest(oidcToken);
         final DefaultOidcUser oidcUser = new DefaultOidcUser(List.of(new SimpleGrantedAuthority("remote-role")), oidcToken, new OidcUserInfo(claims));
+
+        when(tenantIdProvider.resolve(any(OidcUserAuthority.class))).thenReturn(Optional.empty());
 
         sut.loadTenantUser(oidcUserRequest, oidcUser);
 
@@ -139,12 +149,6 @@ class OAuth2UserServiceMultiTenantTest {
 
     private OidcUserRequest oidcUserRequest(OidcIdToken oidcToken) {
         final ClientRegistration clientRegistration = ClientRegistration.withRegistrationId("most-awesome-tenant").authorizationGrantType(JWT_BEARER).build();
-        return new OidcUserRequest(clientRegistration, oAuth2AccessToken(), oidcToken);
-    }
-
-    private OidcUserRequest oidcUserRequestWithoutTenantId(OidcIdToken oidcToken) {
-        final ClientRegistration clientRegistration = Mockito.mock(ClientRegistration.class);
-        when(clientRegistration.getRegistrationId()).thenReturn("");
         return new OidcUserRequest(clientRegistration, oAuth2AccessToken(), oidcToken);
     }
 

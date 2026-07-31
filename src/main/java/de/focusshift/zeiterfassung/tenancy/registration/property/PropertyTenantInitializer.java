@@ -1,20 +1,19 @@
 package de.focusshift.zeiterfassung.tenancy.registration.property;
 
 import de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties;
+import de.focusshift.zeiterfassung.tenancy.configuration.single.ConditionalOnSingleTenantMode;
 import de.focusshift.zeiterfassung.tenancy.configuration.single.SingleTenantConfigurationProperties;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantService;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.SINGLE;
 import static java.lang.invoke.MethodHandles.lookup;
 
 @Component
-@ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = SINGLE, matchIfMissing = true)
+@ConditionalOnSingleTenantMode
 @EnableConfigurationProperties({TenantConfigurationProperties.class, SingleTenantConfigurationProperties.class})
 class PropertyTenantInitializer {
 

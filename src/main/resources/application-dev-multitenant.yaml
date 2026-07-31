@@ -13,6 +13,9 @@ zeiterfassung:
           redirect-uri-template: '{baseScheme}://{baseHost}:${server.port}/login/oauth2/code/{registrationId}'
           server-url: http://localhost:8090
   tenant:
+    resolvers:
+      legacy:
+        tenant-id-pattern: ^[a-z0-9-]+$
     import:
       enabled: false
       filesystem:

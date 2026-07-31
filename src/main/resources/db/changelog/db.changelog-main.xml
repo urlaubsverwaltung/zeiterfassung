@@ -43,4 +43,5 @@
   <include relativeToChangelogFile="true" file="changelog-3.0.0-add-user-settings.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.1.0-add-navigation-collapsed-to-user-settings.xml"/>
   <include relativeToChangelogFile="true" file="changelog-3.2.0-add-time-clock-running-unique-index.xml"/>
+  <include relativeToChangelogFile="true" file="changelog-3.2.0-relax-oidc-client-tenant-fk.xml"/>
 </databaseChangeLog>

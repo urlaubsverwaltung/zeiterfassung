@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.web;
 
+import de.focusshift.zeiterfassung.tenancy.authentication.TenantIdProvider;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +16,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -28,6 +30,8 @@ class CurrentTenantInterceptorTest {
 
     @Mock
     private TenantContextHolder tenantContextHolder;
+    @Mock
+    private TenantIdProvider tenantIdProvider;
 
     @InjectMocks
     private CurrentTenantInterceptor sut;
@@ -39,6 +43,7 @@ class CurrentTenantInterceptorTest {
         final Authentication authentication = new OAuth2AuthenticationToken(oAuth2User, List.of(), "a154bc4e");
         final HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getUserPrincipal()).thenReturn(authentication);
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class))).thenReturn(Optional.of(new TenantId("a154bc4e")));
 
         sut.preHandle(request, mock(HttpServletResponse.class), null);
 
@@ -52,6 +57,7 @@ class CurrentTenantInterceptorTest {
         final OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
         final HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getUserPrincipal()).thenReturn(authentication);
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class))).thenReturn(Optional.empty());
 
         sut.preHandle(request, mock(HttpServletResponse.class), null);
 
