@@ -165,8 +165,8 @@ body {
 
     legend {
       font-size: var(--text-sm);
-      font-weight: var(--font-weight-medium);
-      color: var(--color-gray-400);
+      font-weight: var(--font-weight-normal);
+      color: var(--color-gray-500);
 
       @variant dark {
         color: var(--color-zinc-400);

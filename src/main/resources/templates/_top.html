@@ -85,11 +85,11 @@
         popovertarget="avatar-menu"
         class="flex items-center gap-1"
         data-testid="avatar"
+        th:aria-label="#{navigation.avatar.button.label}"
       >
         <span class="shrink-0 inline-flex text-blue-200 dark:text-sky-800">
           <img
             th:replace="~{fragments/avatar::avatar(className='w-8 h-8 lg:w-9 lg:h-9', initials=${signedInUser.initials},fullName=${signedInUser.fullName},width='40',height='40',tooltip=false)}"
-            alt=""
           />
         </span>
         <svg th:replace="~{icons/chevron-down::svg(className='w-4 h-4')}"></svg>
@@ -109,7 +109,6 @@
             <span class="text-blue-200 dark:text-sky-800">
               <img
                 th:replace="~{fragments/avatar::avatar(initials=${signedInUser.initials},fullName=${signedInUser.fullName},width='64',height='64',tooltip=false)}"
-                alt=""
               />
             </span>
             <span class="block whitespace-nowrap overflow-hidden text-ellipsis">
