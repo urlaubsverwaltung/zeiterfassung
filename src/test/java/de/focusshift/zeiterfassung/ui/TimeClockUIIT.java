@@ -4,6 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
 import de.focusshift.zeiterfassung.TestKeycloakContainer;
+import de.focusshift.zeiterfassung.ui.extension.UiIntegrationTest;
 import de.focusshift.zeiterfassung.ui.extension.UiTest;
 import de.focusshift.zeiterfassung.ui.pages.LoginPage;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
@@ -41,6 +42,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @UiTest
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers(parallel = true)
+@UiIntegrationTest
 class TimeClockUIIT {
 
     @Autowired

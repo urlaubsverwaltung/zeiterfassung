@@ -116,7 +116,6 @@
                       </th:block>
                       <th:block th:if="${not isAllowedToEditTimeEntries}">
                         <img
-                          alt=""
                           src=""
                           th:replace="~{fragments/avatar::avatar(${dayEntry.initials},${dayEntry.username},42,42)}"
                         />
@@ -223,7 +222,6 @@
                       </th:block>
                       <th:block th:if="${not isAllowedToEditTimeEntries}">
                         <img
-                          alt=""
                           src=""
                           th:replace="~{fragments/avatar::avatar(${absence.initials},${absence.username},42,42)}"
                         />

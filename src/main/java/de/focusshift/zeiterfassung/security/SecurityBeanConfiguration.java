@@ -4,9 +4,11 @@ import de.focusshift.zeiterfassung.security.oidc.OidcSecurityProperties;
 import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMapper;
 import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMappersInfusedOAuth2UserService;
 import de.focusshift.zeiterfassung.security.oidc.claimmapper.RolesFromClaimMappersProperties;
+import de.focusshift.zeiterfassung.tenancy.authentication.TenantIdProvider;
+import de.focusshift.zeiterfassung.tenancy.configuration.multi.ConditionalOnMultiTenantMode;
+import de.focusshift.zeiterfassung.tenancy.configuration.single.ConditionalOnSingleTenantMode;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,10 +23,6 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 
 import java.util.List;
 import java.util.function.Predicate;
-
-import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
-import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.SINGLE;
-
 
 @Configuration
 @EnableConfigurationProperties({OidcSecurityProperties.class, RolesFromClaimMappersProperties.class})
@@ -42,7 +40,7 @@ class SecurityBeanConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = SINGLE, matchIfMissing = true)
+    @ConditionalOnSingleTenantMode
     OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserServiceSingleTenant(TenantUserService tenantUserService, List<RolesFromClaimMapper> rolesFromClaimMappers) {
         final OidcUserService defaultOidcUserService = new OidcUserService();
 
@@ -55,15 +53,15 @@ class SecurityBeanConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
-    OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserServiceMultiTenant(TenantUserService tenantUserService, TenantContextHolder tenantContextHolder, List<RolesFromClaimMapper> rolesFromClaimMappers) {
+    @ConditionalOnMultiTenantMode
+    OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserServiceMultiTenant(TenantUserService tenantUserService, TenantContextHolder tenantContextHolder, TenantIdProvider tenantIdProvider, List<RolesFromClaimMapper> rolesFromClaimMappers) {
         final OidcUserService defaultOidcUserService = new OidcUserService();
 
         if (oidcSecurityProperties.retrieveUserInfo()) {
             forceRetrieveUserInfo(defaultOidcUserService);
         }
 
-        final OAuth2UserServiceMultiTenant userService = new OAuth2UserServiceMultiTenant(defaultOidcUserService, tenantUserService, tenantContextHolder);
+        final OAuth2UserServiceMultiTenant userService = new OAuth2UserServiceMultiTenant(defaultOidcUserService, tenantUserService, tenantContextHolder, tenantIdProvider);
         return new RolesFromClaimMappersInfusedOAuth2UserService(userService, rolesFromClaimMappers);
     }
 

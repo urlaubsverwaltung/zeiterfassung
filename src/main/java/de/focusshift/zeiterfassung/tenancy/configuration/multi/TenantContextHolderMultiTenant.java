@@ -5,16 +5,14 @@ import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
 import static java.lang.invoke.MethodHandles.lookup;
 
 @Component
-@ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
+@ConditionalOnMultiTenantMode
 class TenantContextHolderMultiTenant implements TenantContextHolder {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());

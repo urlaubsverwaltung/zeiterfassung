@@ -1,16 +1,15 @@
 package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
+import de.focusshift.zeiterfassung.tenancy.configuration.multi.ConditionalOnMultiTenantMode;
+
 import org.jspecify.annotations.NonNull;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
-
 @Repository
-@ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
+@ConditionalOnMultiTenantMode
 interface OidcClientEntityRepository extends CrudRepository<OidcClientEntity, Long> {
 
     OidcClientEntity findByTenantId(String tenantId);
