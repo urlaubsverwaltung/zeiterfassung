@@ -11,13 +11,14 @@
 
   <groupId>de.focus-shift</groupId>
   <artifactId>zeiterfassung</artifactId>
-  <version>3.1.7-SNAPSHOT</version>
+  <version>3.3.0-SNAPSHOT</version>
 
   <name>Zeiterfassung</name>
 
   <properties>
     <maven.compiler.showWarnings>true</maven.compiler.showWarnings>
     <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
+    <excluded.groups>a11y</excluded.groups>
     <java.version>25</java.version>
 
     <node.env>production</node.env>
@@ -51,12 +52,12 @@
     <dependency>
       <groupId>de.focus-shift</groupId>
       <artifactId>jollyday-core</artifactId>
-      <version>2.18.0</version>
+      <version>2.19.0</version>
     </dependency>
     <dependency>
       <groupId>de.focus-shift</groupId>
       <artifactId>jollyday-jaxb</artifactId>
-      <version>2.18.0</version>
+      <version>2.19.0</version>
     </dependency>
 
     <!-- Shedlock -->
@@ -232,6 +233,13 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>com.deque.html.axe-core</groupId>
+      <artifactId>playwright</artifactId>
+      <version>4.12.0</version>
+      <scope>test</scope>
+    </dependency>
+
     <!-- Arch Tests -->
     <dependency>
       <groupId>com.tngtech.archunit</groupId>
@@ -272,7 +280,7 @@
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
-        <version>2.0.1</version>
+        <version>2.0.2</version>
         <configuration>
           <nodeVersion>v24.18.0</nodeVersion>
           <npmVersion>11.16.0</npmVersion>
@@ -336,6 +344,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <excludedGroups>${excluded.groups}</excludedGroups>
+        </configuration>
       </plugin>
 
       <!-- Enforcer -->
@@ -429,6 +440,50 @@
             <artifactId>maven-failsafe-plugin</artifactId>
             <configuration>
               <groups>ui</groups>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- Run only UI Tests with `mvn verify` ignoring other integration tests -->
+    <profile>
+      <id>a11y-test</id>
+      <properties>
+        <excluded.groups></excluded.groups>
+      </properties>
+      <build>
+        <plugins>
+          <!-- skip javascript linting and tests -->
+          <plugin>
+            <groupId>com.github.eirslett</groupId>
+            <artifactId>frontend-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>npm-lint</id>
+                <phase>none</phase>
+              </execution>
+              <execution>
+                <id>npm-test</id>
+                <phase>none</phase>
+              </execution>
+            </executions>
+            <version>2.0.0</version>
+          </plugin>
+          <!-- skip unit tests -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <skipTests>true</skipTests>
+            </configuration>
+          </plugin>
+          <!-- run a11y tests, override default excludedGroups -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <groups>a11y</groups>
             </configuration>
           </plugin>
         </plugins>

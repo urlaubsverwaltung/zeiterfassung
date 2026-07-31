@@ -10,6 +10,9 @@
       <z-user-search
         th:if="${userSearchEnabled}"
         class="user-search desktop:max-w-lg"
+        th:data-message-nothing-found="#{user-search.nothing-found}"
+        th:data-message-results-one="#{user-search.results-found.one}"
+        th:data-message-results-other="#{user-search.results-found.other}"
       >
         <!-- use relative action (URL) since this form is used on different pages which all allow searching for users -->
         <form
@@ -34,7 +37,7 @@
             th:placeholder="${placeholder}"
             data-auto-submit="user-search-submit"
             data-auto-submit-delay="100"
-            aria-expanded="false"
+            aria-describedby="user-search-hint"
           />
           <button
             id="user-search-submit"
@@ -43,6 +46,11 @@
           >
             Suchen
           </button>
+          <span
+            id="user-search-hint"
+            class="sr-only"
+            th:text="#{user-search.input.hint}"
+          ></span>
         </form>
         <div
           popover="manual"
@@ -75,7 +83,8 @@
                   <span class="flex flex-col gap-px dark:text-zinc-200">
                     <span th:text="${suggestion.name}">Nice Name</span>
                     <span
-                      class="text-xs text-gray-400 dark:text-zinc-400"
+                      class="text-xs text-gray-600 dark:text-zinc-400"
+                      aria-hidden="true"
                       th:text="${suggestion.email}"
                       >email@example.org</span
                     >
@@ -126,6 +135,8 @@
             </p>
           </turbo-frame>
         </div>
+        <!-- persistent live region (outside turbo-frame so morph does not replace it) announcing async result count to screen readers -->
+        <div class="sr-only" role="status" data-user-search-status></div>
       </z-user-search>
     </th:block>
   </body>

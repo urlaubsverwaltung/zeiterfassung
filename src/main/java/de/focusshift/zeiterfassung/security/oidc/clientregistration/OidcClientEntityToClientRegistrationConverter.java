@@ -1,14 +1,13 @@
 package de.focusshift.zeiterfassung.security.oidc.clientregistration;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import de.focusshift.zeiterfassung.tenancy.configuration.multi.ConditionalOnMultiTenantMode;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.stereotype.Component;
 
-import static de.focusshift.zeiterfassung.tenancy.TenantConfigurationProperties.MULTI;
-
 @Component
-@ConditionalOnProperty(value = "zeiterfassung.tenant.mode", havingValue = MULTI)
+@ConditionalOnMultiTenantMode
 public class OidcClientEntityToClientRegistrationConverter implements Converter<OidcClientEntity, ClientRegistration> {
 
     private final ClientRegistrationFactory clientRegistrationFactory;
