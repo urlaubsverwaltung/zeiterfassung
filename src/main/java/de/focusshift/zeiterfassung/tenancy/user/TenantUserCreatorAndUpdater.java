@@ -2,8 +2,8 @@ package de.focusshift.zeiterfassung.tenancy.user;
 
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.tenancy.authentication.TenantIdProvider;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
-import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.slf4j.Logger;
@@ -24,10 +24,12 @@ class TenantUserCreatorAndUpdater {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
+    private final TenantIdProvider tenantIdProvider;
     private final TenantContextHolder tenantContextHolder;
     private final TenantUserService tenantUserService;
 
-    TenantUserCreatorAndUpdater(TenantContextHolder tenantContextHolder, TenantUserService tenantUserService) {
+    TenantUserCreatorAndUpdater(TenantIdProvider tenantIdProvider, TenantContextHolder tenantContextHolder, TenantUserService tenantUserService) {
+        this.tenantIdProvider = tenantIdProvider;
         this.tenantContextHolder = tenantContextHolder;
         this.tenantUserService = tenantUserService;
     }
@@ -36,12 +38,10 @@ class TenantUserCreatorAndUpdater {
     public void handle(InteractiveAuthenticationSuccessEvent event) {
 
         if (event.getAuthentication() instanceof final OAuth2AuthenticationToken oauthToken) {
-            final TenantId tenantId = new TenantId(oauthToken.getAuthorizedClientRegistrationId());
-            if (!tenantId.valid()) {
-                LOG.warn("Ignoring InteractiveAuthenticationSuccessEvent for invalid tenantId={}", tenantId.tenantId());
-            } else {
-                tenantContextHolder.runInTenantIdContext(tenantId, passedTenantId -> createOrUpdateTenantUser(oauthToken, passedTenantId));
-            }
+            tenantIdProvider.resolve(oauthToken).ifPresentOrElse(
+                tenantId -> tenantContextHolder.runInTenantIdContext(tenantId, passedTenantId -> createOrUpdateTenantUser(oauthToken, passedTenantId)),
+                () -> LOG.warn("Ignoring InteractiveAuthenticationSuccessEvent for unresolvable tenantId")
+            );
         } else {
             LOG.warn("Ignoring InteractiveAuthenticationSuccessEvent for unexpected authentication token type={}", event.getAuthentication().getClass());
         }

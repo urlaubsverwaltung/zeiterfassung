@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.user;
 
 import de.focusshift.zeiterfassung.security.oidc.OidcPersonMappingException;
+import de.focusshift.zeiterfassung.tenancy.authentication.TenantIdProvider;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import jakarta.servlet.ServletRequest;
@@ -42,13 +43,15 @@ class UserSettingsEventListener {
     private final UserManagementService userManagementService;
     private final UserSettingsService userSettingsService;
     private final TenantContextHolder tenantContextHolder;
+    private final TenantIdProvider tenantIdProvider;
 
 
-    public UserSettingsEventListener(LocaleResolver localeResolver, UserManagementService userManagementService, UserSettingsService userSettingsService, TenantContextHolder tenantContextHolder) {
+    public UserSettingsEventListener(LocaleResolver localeResolver, UserManagementService userManagementService, UserSettingsService userSettingsService, TenantContextHolder tenantContextHolder, TenantIdProvider tenantIdProvider) {
         this.localeResolver = localeResolver;
         this.userManagementService = userManagementService;
         this.userSettingsService = userSettingsService;
         this.tenantContextHolder = tenantContextHolder;
+        this.tenantIdProvider = tenantIdProvider;
     }
 
     @EventListener
@@ -59,19 +62,18 @@ class UserSettingsEventListener {
 
         if (event.getAuthentication() instanceof OAuth2LoginAuthenticationToken oAuth2LoginAuthenticationToken) {
 
-            final String extractedTenantId = oAuth2LoginAuthenticationToken.getClientRegistration().getRegistrationId();
+            tenantIdProvider.resolve(oAuth2LoginAuthenticationToken).ifPresent(tenantId ->
+                tenantContextHolder.runInTenantIdContext(tenantId, passedTenantId -> {
 
-            tenantContextHolder.runInTenantIdContext(extractedTenantId, (tenantId) -> {
+                    if (oAuth2LoginAuthenticationToken.getPrincipal() instanceof OidcUser oidcUser) {
+                        final String userName = extractIdentifier(oidcUser);
 
-                if (oAuth2LoginAuthenticationToken.getPrincipal() instanceof OidcUser oidcUser) {
-                    final String userName = extractIdentifier(oidcUser);
-
-                    userManagementService.findUserById(new UserId(userName)).ifPresent(user -> {
-                        updateUserSettingsWithLocaleBrowserSpecific(user.userIdComposite());
-                        userSettingsService.getLocale(user.userIdComposite()).ifPresent(this::setLocale);
-                    });
-                }
-            });
+                        userManagementService.findUserById(new UserId(userName)).ifPresent(user -> {
+                            updateUserSettingsWithLocaleBrowserSpecific(user.userIdComposite());
+                            userSettingsService.getLocale(user.userIdComposite()).ifPresent(this::setLocale);
+                        });
+                    }
+                }));
         }
     }
 

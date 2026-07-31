@@ -1,7 +1,9 @@
 package de.focusshift.zeiterfassung.security;
 
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.tenancy.authentication.TenantIdProvider;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
@@ -33,6 +35,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Answers.CALLS_REAL_METHODS;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -52,10 +55,12 @@ class ReloadAuthenticationAuthoritiesFilterTest {
     private DelegatingSecurityContextRepository securityContextRepository;
     @Mock(answer = CALLS_REAL_METHODS)
     private TenantContextHolder tenantContextHolder;
+    @Mock
+    private TenantIdProvider tenantIdProvider;
 
     @BeforeEach
     void setUp() {
-        sut = new ReloadAuthenticationAuthoritiesFilter(userManagementService, sessionService, securityContextRepository, tenantContextHolder);
+        sut = new ReloadAuthenticationAuthoritiesFilter(userManagementService, sessionService, securityContextRepository, tenantContextHolder, tenantIdProvider);
     }
 
     @Test
@@ -69,6 +74,9 @@ class ReloadAuthenticationAuthoritiesFilterTest {
 
         final SecurityContext context = SecurityContextHolder.getContext();
         context.setAuthentication(prepareOAuth2Authentication("username"));
+
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class)))
+            .thenReturn(Optional.of(new TenantId("authorizedClientRegistrationId")));
 
         final UserId userId = new UserId("username");
         when(userManagementService.findUserById(userId))
@@ -206,6 +214,35 @@ class ReloadAuthenticationAuthoritiesFilterTest {
     }
 
     @Test
+    void doFilterInternalWithUnresolvableTenantIdContinuesChainWithoutError() throws ServletException, IOException {
+        final MockHttpServletRequest request = new MockHttpServletRequest();
+        request.getSession().setAttribute("reloadAuthorities", true);
+
+        final MockHttpServletResponse response = new MockHttpServletResponse();
+        final FilterChain filterChain = mock(FilterChain.class);
+
+        final SecurityContext context = SecurityContextHolder.getContext();
+
+        final DefaultOidcUser oidcUser = new DefaultOidcUser(
+            List.of(),
+            OidcIdToken.withTokenValue("token-value").claim("claim", "not-empty").subject("username").build()
+        );
+        final CurrentOidcUser currentOidcUser = new CurrentOidcUser(oidcUser, List.of(), List.of(), new UserLocalId(1L));
+
+        final OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
+        when(authentication.getPrincipal()).thenReturn(currentOidcUser);
+        context.setAuthentication(authentication);
+
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class))).thenReturn(Optional.empty());
+
+        sut.doFilterInternal(request, response, filterChain);
+
+        verify(sessionService).unmarkSessionToReloadAuthorities(request.getSession().getId());
+        verify(securityContextRepository, never()).saveContext(context, request, response);
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
     void doFilterInternalWithNullRegistrationIdContinuesChainWithoutError() throws ServletException, IOException {
         final MockHttpServletRequest request = new MockHttpServletRequest();
         request.getSession().setAttribute("reloadAuthorities", true);
@@ -225,6 +262,8 @@ class ReloadAuthenticationAuthoritiesFilterTest {
         when(authentication.getPrincipal()).thenReturn(currentOidcUser);
         when(authentication.getAuthorizedClientRegistrationId()).thenReturn(null);
         context.setAuthentication(authentication);
+
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class))).thenReturn(Optional.of(new TenantId("a154bc4e")));
 
         sut.doFilterInternal(request, response, filterChain);
 
@@ -252,8 +291,10 @@ class ReloadAuthenticationAuthoritiesFilterTest {
 
         final OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
         when(authentication.getPrincipal()).thenReturn(currentOidcUser);
-        when(authentication.getAuthorizedClientRegistrationId()).thenReturn("some-id");
         context.setAuthentication(authentication);
+
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class)))
+            .thenReturn(Optional.of(new TenantId("some-id")));
 
         sut.doFilterInternal(request, response, filterChain);
 
@@ -272,6 +313,9 @@ class ReloadAuthenticationAuthoritiesFilterTest {
 
         final SecurityContext context = SecurityContextHolder.getContext();
         context.setAuthentication(prepareOAuth2Authentication("username"));
+
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class)))
+            .thenReturn(Optional.of(new TenantId("authorizedClientRegistrationId")));
 
         final UserId userId = new UserId("username");
         final User user = new User(

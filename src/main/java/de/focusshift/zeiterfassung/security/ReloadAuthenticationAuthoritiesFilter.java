@@ -1,7 +1,9 @@
 package de.focusshift.zeiterfassung.security;
 
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.tenancy.authentication.TenantIdProvider;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
+import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
@@ -22,6 +24,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static de.focusshift.zeiterfassung.security.SessionServiceImpl.RELOAD_AUTHORITIES;
@@ -39,17 +42,20 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
     private final SessionService sessionService;
     private final DelegatingSecurityContextRepository securityContextRepository;
     private final TenantContextHolder tenantContextHolder;
+    private final TenantIdProvider tenantIdProvider;
 
     ReloadAuthenticationAuthoritiesFilter(
         UserManagementService userManagementService,
         SessionService sessionService,
         DelegatingSecurityContextRepository securityContextRepository,
-        TenantContextHolder tenantContextHolder
+        TenantContextHolder tenantContextHolder,
+        TenantIdProvider tenantIdProvider
     ) {
         this.userManagementService = userManagementService;
         this.sessionService = sessionService;
         this.securityContextRepository = securityContextRepository;
         this.tenantContextHolder = tenantContextHolder;
+        this.tenantIdProvider = tenantIdProvider;
     }
 
     @Override
@@ -98,9 +104,18 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
             return;
         }
 
+        final Optional<TenantId> resolvedTenantId = tenantIdProvider.resolve(oAuth2Auth);
+        if (resolvedTenantId.isEmpty()) {
+            LOG.warn("Could not resolve tenant id from authentication, cannot reload authorities.");
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // keep the original registration id on the rebuilt token - the tenant id may be
+        // derived from a claim and must not overwrite the OAuth2 client registration id
         final String registrationId = oAuth2Auth.getAuthorizedClientRegistrationId();
         if (registrationId == null) {
-            LOG.warn("No authorized client registration ID found, cannot determine tenant context.");
+            LOG.warn("No authorized client registration ID found, cannot rebuild authentication.");
             chain.doFilter(request, response);
             return;
         }
@@ -112,7 +127,7 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
             return;
         }
 
-        tenantContextHolder.runInTenantIdContext(registrationId, tenantId -> {
+        tenantContextHolder.runInTenantIdContext(resolvedTenantId.get(), () -> {
             final User user = getUserFromUserManagement(currentOidcUser);
 
             // Defensive: treat null authority collections as empty
@@ -127,7 +142,7 @@ class ReloadAuthenticationAuthoritiesFilter extends OncePerRequestFilter {
                 safeOidcAuthorities,
                 userLocalIdOptional.orElseThrow(() -> new IllegalStateException("UserLocalId disappeared after null-check"))
             );
-            final OAuth2AuthenticationToken updatedAuthentication = new OAuth2AuthenticationToken(updatedCurrentOidcUser, updatedMergedAuthorities, tenantId);
+            final OAuth2AuthenticationToken updatedAuthentication = new OAuth2AuthenticationToken(updatedCurrentOidcUser, updatedMergedAuthorities, registrationId);
 
             context.setAuthentication(updatedAuthentication);
             securityContextRepository.saveContext(context, request, response);
