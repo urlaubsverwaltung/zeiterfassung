@@ -42,7 +42,7 @@
     "fast-glob": "3.3.3",
     "globals": "17.7.0",
     "idiomorph": "0.7.4",
-    "jsdom": "29.1.1",
+    "jsdom": "30.0.1",
     "lint-staged": "17.0.8",
     "postcss": "8.5.23",
     "postcss-cli": "11.0.1",
