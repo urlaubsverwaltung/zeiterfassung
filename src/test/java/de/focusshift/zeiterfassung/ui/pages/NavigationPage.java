@@ -12,6 +12,9 @@ import static com.microsoft.playwright.options.WaitForSelectorState.VISIBLE;
  */
 public class NavigationPage {
 
+    private static final String MOBILE_MENU_TOGGLE_SELECTOR = "button[popovertarget=navigation]";
+    private static final String MOBILE_MENU_SELECTOR = "#navigation";
+
     private final Page page;
     private final AvatarMenu avatarMenu;
 
@@ -38,6 +41,21 @@ public class NavigationPage {
 
     public void goToReportsPage() {
         goTo(reportsLink());
+    }
+
+    /**
+     * Opens the mobile navigation drawer by clicking the hamburger menu button, which is only visible below the
+     * desktop breakpoint.
+     */
+    public void openMobileMenu() {
+        page.locator(MOBILE_MENU_TOGGLE_SELECTOR).click();
+    }
+
+    /**
+     * @return the mobile navigation drawer element itself
+     */
+    public Locator mobileMenu() {
+        return page.locator(MOBILE_MENU_SELECTOR);
     }
 
     public Locator timeEntryLink() {
