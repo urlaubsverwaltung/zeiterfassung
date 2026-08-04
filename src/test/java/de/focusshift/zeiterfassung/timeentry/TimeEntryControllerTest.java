@@ -316,6 +316,8 @@ class TimeEntryControllerTest implements ControllerTest {
         final ZonedDateTime expectedEnd = ZonedDateTime.of(2024, 12, 31, 15, 0, 0, 0, zoneIdBerlin);
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "hack the planet", expectedStart, expectedEnd, false);
 
+        when(userDateService.today()).thenReturn(LocalDate.of(2025, 1, 1));
+
         final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), new WorkDuration(Duration.ofMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntry), List.of());
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 42);
@@ -368,6 +370,10 @@ class TimeEntryControllerTest implements ControllerTest {
 
         when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(expectedTimeEntryDto);
 
+        final TimeEntryDTO newTimeEntryDto = new TimeEntryDTO();
+        newTimeEntryDto.setUserLocalId(userIdComposite.localId().value());
+        when(timeEntryViewHelper.newTimeEntryDto(any(LocalDate.class), eq(userLocalId))).thenReturn(newTimeEntryDto);
+
         perform(get(TIME_ENTRIES_URL_TEMPLATE)
             .with(oidcSubject(userIdComposite))
             .queryParam("year", "2025")
@@ -378,9 +384,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(model().attribute("turboStreamsEnabled", is(true)))
             .andExpect(model().attribute("timeEntryWeeksPage", is(expectedPage)));
 
-        final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-        timeEntryDTO.setUserLocalId(userIdComposite.localId().value());
-        verify(timeEntryViewHelper).addTimeEntryToModel(any(Model.class), eq(timeEntryDTO));
+        verify(timeEntryViewHelper).addTimeEntryToModel(any(Model.class), eq(newTimeEntryDto));
     }
 
     @Test
@@ -527,6 +531,8 @@ class TimeEntryControllerTest implements ControllerTest {
 
         mockUserSettings(ZoneOffset.UTC);
 
+        when(userDateService.today()).thenReturn(LocalDate.of(2025, 3, 18));
+
         final User owner = anyUser(ownerIdComposite);
         when(userManagementService.findUserByLocalId(ownerLocalId)).thenReturn(Optional.of(owner));
 
@@ -537,6 +543,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final ViewedUserDto expectedViewedUserDto = new ViewedUserDto(ownerLocalId.value(), owner.givenName(), owner.familyName(), owner.fullName(), owner.initials(), owner.email().value());
         final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO();
         expectedTimeEntryDto.setUserLocalId(ownerLocalId.value());
+        when(timeEntryViewHelper.newTimeEntryDto(any(LocalDate.class), eq(ownerLocalId))).thenReturn(expectedTimeEntryDto);
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(weekOfYear, null, null, "00:00", "00:00", "00:00", false, 0.0, List.of());
         final TimeEntryWeeksPageDto expetectedWeeksPageDto = new TimeEntryWeeksPageDto(year, weekOfYear + 1, year, weekOfYear - 1, expectedTimeEntryWeekDto, 0);
