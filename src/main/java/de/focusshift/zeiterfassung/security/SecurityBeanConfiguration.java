@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -67,7 +68,14 @@ class SecurityBeanConfiguration {
 
     @Bean
     OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler(final ClientRegistrationRepository clientRegistrationRepository, final OidcSecurityProperties securityConfigurationProperties) {
-        final OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
+
+        final String endSessionEndpoint = securityConfigurationProperties.getEndSessionEndpoint();
+
+        final ClientRegistrationRepository logoutClientRegistrationRepository = StringUtils.hasText(endSessionEndpoint)
+            ? new EndSessionEndpointClientRegistrationRepository(clientRegistrationRepository, endSessionEndpoint)
+            : clientRegistrationRepository;
+
+        final OidcClientInitiatedLogoutSuccessHandler oidcClientInitiatedLogoutSuccessHandler = new OidcClientInitiatedLogoutSuccessHandler(logoutClientRegistrationRepository);
         oidcClientInitiatedLogoutSuccessHandler.setPostLogoutRedirectUri(securityConfigurationProperties.getPostLogoutRedirectUri());
         return oidcClientInitiatedLogoutSuccessHandler;
     }
