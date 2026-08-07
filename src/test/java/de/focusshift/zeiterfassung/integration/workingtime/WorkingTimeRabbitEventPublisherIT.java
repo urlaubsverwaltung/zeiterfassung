@@ -135,7 +135,7 @@ class WorkingTimeRabbitEventPublisherIT extends SingleTenantTestContainersBase {
         ));
 
         final WorkingTimeUpdatedEvent event = new WorkingTimeUpdatedEvent(
-            userIdComposite, new WorkingTimeId(UUID.randomUUID()), LocalDate.parse("2025-06-01"),
+            userIdComposite, new WorkingTimeId(UUID.randomUUID()), LocalDate.parse("2025-06-01"), LocalDate.parse("2025-06-01"),
             GERMANY_BADEN_WUERTTEMBERG, false, workdays
         );
         applicationEventPublisher.publishEvent(event);
