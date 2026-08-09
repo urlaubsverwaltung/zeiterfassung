@@ -7,7 +7,9 @@
   xmlns:th="http://www.thymeleaf.org"
 >
   <head th:replace="~{_layout::head(title=~{::title}, styles=~{::styles})}">
-    <title>Zeiterfassung - Personen</title>
+    <title
+      th:replace="~{fragments/page-title::page-title(#{usermanagement.page.meta.title})}"
+    ></title>
     <th:block th:fragment="styles">
       <link rel="stylesheet" type="text/css" th:href="@{/css/users.css}" />
     </th:block>
