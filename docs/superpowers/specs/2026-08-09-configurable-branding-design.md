@@ -65,23 +65,36 @@ An interceptor rather than a `@ControllerAdvice`: it must also run for error pag
 
 ## Page titles
 
-Titles move from the current prefix form (`Zeiterfassung - Berichte`) to UV's suffix form (`Berichte – Zeiterfassung`),
-built in one place.
+Titles move from the current prefix form (`Zeiterfassung - Berichte`) to UV's suffix form (`Berichte – Zeiterfassung`)
+— page name first, application name last, separated by an en dash — built in one place.
 
-New `templates/fragments/page-title.html`:
+New `templates/fragments/page-title.html`, matching UV's fragment on branch `configurable-application-name`
+(verified against the PR, which is still open) including its fragment name and null-guard:
 
 ```html
-<title th:fragment="title(pageTitle)" th:text="|${pageTitle} – ${applicationName}|">
-  Title
-</title>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title
+      th:fragment="page-title(pageTitle)"
+      th:text="${applicationName == null} ? ${pageTitle} : |${pageTitle} – ${applicationName}|"
+    >
+      Page Title – Zeiterfassung
+    </title>
+  </head>
+  <body></body>
+</html>
 ```
 
-Separator is an en dash (`–`), matching UV.
+The `applicationName == null` guard falls back to the bare page title for any view rendered without the
+interceptor having run.
 
-Pages keep their existing `_layout::head(title=~{::title}, …)` wiring; only the `<title>` element's body changes:
+Pages keep their existing `_layout::head(title=~{::title}, …)` wiring; only the `<title>` element changes — again
+identical in form to UV:
 
 ```html
-<title th:replace="~{fragments/page-title::title(#{report.page.meta.title})}"></title>
+<title th:replace="~{fragments/page-title::page-title(#{report.page.meta.title})}"></title>
 ```
 
 Exactly ten templates pass a title to the layout (`grep -l "_layout::head"`). Message keys become page-name-only:
