@@ -32,7 +32,10 @@
             <h1 class="text-xl font-bold" th:text="#{settings.heading}">
               Einstellungen
             </h1>
-            <p class="mt-2 text-dimmed" th:text="#{settings.teaser-text}">
+            <p
+              class="mt-2 text-dimmed"
+              th:text="#{settings.teaser-text(${applicationName})}"
+            >
               Lorem ipsum...
             </p>
           </div>

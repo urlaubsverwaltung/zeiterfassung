@@ -33,9 +33,12 @@
             <h1 class="text-xl font-bold" th:text="#{usermanagement.heading}">
               Personen
             </h1>
-            <p class="mt-2 text-dimmed" th:text="#{usermanagement.teaser-text}">
+            <p
+              class="mt-2 text-dimmed"
+              th:text="#{usermanagement.teaser-text(${applicationName})}"
+            >
               Information: Es werden hier nur Personen angezeigt, welche sich
-              mindestens einmal in der Zeiterfassung angemeldet haben.
+              mindestens einmal angemeldet haben.
             </p>
           </div>
           <div class="flex-1 flex gap-4">
