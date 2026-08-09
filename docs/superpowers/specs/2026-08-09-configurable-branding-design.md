@@ -9,7 +9,7 @@ Port of [urlaubsverwaltung#6505](https://github.com/urlaubsverwaltung/urlaubsver
 ## Goal
 
 Self-hosted operators can rebrand the application by configuring its name. A deployment configured with
-`zeiterfassung.branding.name=Zeitkonto` shows "Zeitkonto" in the header, in browser tab titles, in the web
+`zeiterfassung.branding.name=Zeiterfassung` shows "Zeiterfassung" in the header, in browser tab titles, in the web
 manifest, and as the sender display name of outgoing e-mails.
 
 ## Scope
