@@ -11,16 +11,12 @@
   >
     <title
       th:if="${viewedUser == null}"
-      th:text="#{timeentries.page.meta.title}"
-    >
-      Zeiterfassung
-    </title>
+      th:replace="~{fragments/page-title::page-title(#{timeentries.page.meta.title})}"
+    ></title>
     <title
       th:if="${viewedUser != null}"
-      th:text="#{timeentries.page.meta.title.person(${viewedUser.fullName})}"
-    >
-      Zeiterfassung von XXX
-    </title>
+      th:replace="~{fragments/page-title::page-title(#{timeentries.page.meta.title.person(${viewedUser.fullName})})}"
+    ></title>
     <th:block th:fragment="styles">
       <link
         rel="stylesheet"

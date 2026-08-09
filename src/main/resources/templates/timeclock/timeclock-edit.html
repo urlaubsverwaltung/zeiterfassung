@@ -7,7 +7,9 @@
   xmlns:th="http://www.thymeleaf.org"
 >
   <head th:replace="~{_layout::head(~{::title})}">
-    <title>Zeiterfassung</title>
+    <title
+      th:replace="~{fragments/page-title::page-title(#{timeclock.page.meta.title})}"
+    ></title>
   </head>
   <body th:replace="~{_layout::body(~{::content})}">
     <th:block th:fragment="content">
