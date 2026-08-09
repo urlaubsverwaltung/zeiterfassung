@@ -3,9 +3,9 @@ zeiterfassung:
     name: Zeiterfassung
   mail:
     from: zeiterfassung@localhost
-    fromDisplayName: zeiterfassung
+    fromDisplayName: ${zeiterfassung.branding.name}
     replyTo: replyto@localhost
-    replyToDisplayName: replyto
+    replyToDisplayName: ${zeiterfassung.branding.name}
   security:
     oidc:
       login-form-url: ''
