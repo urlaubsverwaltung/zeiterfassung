@@ -202,6 +202,21 @@ zeiterfassung:
 | zeiterfassung.info-banner.enabled  | Boolean | (default) `false`, `true` to activate the banner  |
 | zeiterfassung.info-banner.text.de  | String  | Text of the info banner for the German Locale.    |
 
+#### Branding
+
+The application name can be changed, e.g. to match your own product name. It is shown in the header, in browser tab
+titles, in the web manifest and as the display name of outgoing e-mails.
+
+```yaml
+zeiterfassung:
+  branding:
+    name: Zeiterfassung
+```
+
+| Property                    | Type   | Description                                   |
+|-----------------------------|--------|-----------------------------------------------|
+| zeiterfassung.branding.name | String | (default) `Zeiterfassung`. Must not be empty. |
+
 #### Launchpad
 
 You can configure a launchpad that shows other applications the user can navigate to.
