@@ -283,7 +283,7 @@
         <version>2.0.2</version>
         <configuration>
           <nodeVersion>v24.18.0</nodeVersion>
-          <npmVersion>11.16.0</npmVersion>
+          <npmVersion>11.17.0</npmVersion>
           <environmentVariables>
             <NODE_ENV>${node.env}</NODE_ENV>
           </environmentVariables>
