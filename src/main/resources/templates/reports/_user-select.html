@@ -14,7 +14,7 @@
       th:if="${userReportFilterUrl != null}"
       th:with="personsSelected=${allUsersSelected or !#lists.isEmpty(selectedUserIds)}"
       action="#"
-      th:action="${userReportFilterUrl}"
+      th:action="@{__${userReportFilterUrl}__}"
       method="get"
       class="report-actions__persons"
       th:classappend="${personsSelected ? 'report-actions__persons--persons-selected' : ''}"
