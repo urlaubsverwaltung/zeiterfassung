@@ -79,6 +79,8 @@ class SettingsControllerSecurityIT extends SingleTenantTestContainersBase implem
                 .param("worksOnPublicHoliday", "false")
                 .param("lockingIsActive", "false")
                 .param("lockTimeEntriesDaysInPast", "1")
+                .param("commentEnabled", "true")
+                .param("breakIntegrated", "false")
             )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/settings"));
