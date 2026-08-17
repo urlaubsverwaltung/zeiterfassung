@@ -341,6 +341,42 @@ class TimeEntryServiceImplTest {
     }
 
     @Test
+    void ensureCreateTimeEntryWithBreakMinutes() {
+
+        final LocalDateTime entryStart = LocalDateTime.of(2023, 1, 1, 8, 0, 0);
+        final LocalDateTime entryEnd = LocalDateTime.of(2023, 1, 1, 17, 0, 0);
+
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(invocationOnMock -> {
+            final TimeEntryEntity entity = invocationOnMock.getArgument(0);
+            entity.setId(1L);
+            return entity;
+        });
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+        final TimeEntry actual = sut.createTimeEntry(
+            userLocalId,
+            "hard work",
+            ZonedDateTime.of(entryStart, ZONE_ID_UTC),
+            ZonedDateTime.of(entryEnd, ZONE_ID_UTC),
+            false,
+            60
+        );
+
+        assertThat(actual.breakMinutes()).isEqualTo(60);
+        assertThat(actual.workDuration().duration()).isEqualTo(Duration.ofHours(8));
+
+        final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
+        verify(timeEntryRepository).save(captor.capture());
+
+        assertThat(captor.getValue().getBreakMinutes()).isEqualTo(60);
+    }
+
+    @Test
     void ensureUpdateTimeEntryThrowsWhenTimeEntryIsUnknown() {
         final TimeEntryId id = new TimeEntryId(42L);
         assertThatExceptionOfType(IllegalStateException.class)
@@ -1032,6 +1068,49 @@ class TimeEntryServiceImplTest {
         assertThat(actualPersisted.getEndZoneId()).isEqualTo(sameEnd.getZone().getId());
         assertThat(actualPersisted.getUpdatedAt()).isEqualTo(Instant.now(clockFixed));
         assertThat(actualPersisted.isBreak()).isTrue();
+    }
+
+    @Test
+    void ensureUpdateTimeEntryWithBreakMinutes() throws Exception {
+
+        final LocalDate from = LocalDate.of(2023, 1, 1);
+
+        final LocalDateTime entryStart = LocalDateTime.of(from, LocalTime.of(8, 0, 0));
+        final LocalDateTime entryEnd = entryStart.plusHours(9);
+
+        final TimeEntryEntity existingEntity = new TimeEntryEntity(
+            42L,
+            "batman",
+            "",
+            entryStart.toInstant(UTC),
+            ZONE_ID_UTC,
+            entryEnd.toInstant(UTC),
+            ZONE_ID_UTC,
+            Instant.now(),
+            false);
+
+        when(timeEntryRepository.findById(42L)).thenReturn(Optional.of(existingEntity));
+        when(timeEntryRepository.save(any(TimeEntryEntity.class))).thenAnswer(returnsFirstArg());
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        when(userManagementService.findUserById(userId)).thenReturn(Optional.of(user));
+
+        final ZonedDateTime sameStart = ZonedDateTime.ofInstant(entryStart.toInstant(UTC), ZONE_ID_UTC);
+        final ZonedDateTime sameEnd = ZonedDateTime.ofInstant(entryEnd.toInstant(UTC), ZONE_ID_UTC);
+        final Duration sameDuration = Duration.ofHours(9);
+
+        final TimeEntry actualUpdatedTimeEntry = sut.updateTimeEntry(new TimeEntryId(42L), "", sameStart, sameEnd, sameDuration, false, 60);
+
+        assertThat(actualUpdatedTimeEntry.breakMinutes()).isEqualTo(60);
+        assertThat(actualUpdatedTimeEntry.workDuration().duration()).isEqualTo(Duration.ofHours(8));
+
+        final ArgumentCaptor<TimeEntryEntity> captor = ArgumentCaptor.forClass(TimeEntryEntity.class);
+        verify(timeEntryRepository).save(captor.capture());
+
+        assertThat(captor.getValue().getBreakMinutes()).isEqualTo(60);
     }
 
     @ParameterizedTest

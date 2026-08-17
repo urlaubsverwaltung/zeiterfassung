@@ -35,6 +35,36 @@ class TimeEntryTest {
         assertThat(timeEntry.workDuration().duration()).isEqualTo(Duration.ofHours(1));
     }
 
+    @Test
+    void ensureWorkDurationSubtractsIntegratedBreakMinutes() {
+
+        final ZonedDateTime from = dateTime(2021, 1, 4, 8, 0);
+        final ZonedDateTime to = dateTime(2021, 1, 4, 17, 0);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "hard work", from, to, false, 60);
+
+        assertThat(timeEntry.workDuration().duration()).isEqualTo(Duration.ofHours(8));
+    }
+
+    @Test
+    void ensureBreakDurationReflectsIntegratedBreakMinutesWhenNotABreakEntry() {
+
+        final ZonedDateTime from = dateTime(2021, 1, 4, 8, 0);
+        final ZonedDateTime to = dateTime(2021, 1, 4, 17, 0);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "hard work", from, to, false, 45);
+
+        assertThat(timeEntry.breakDuration().duration()).isEqualTo(Duration.ofMinutes(45));
+    }
+
+    @Test
+    void ensureBreakDurationIgnoresBreakMinutesWhenEntryIsABreak() {
+
+        final ZonedDateTime from = dateTime(2021, 1, 4, 12, 0);
+        final ZonedDateTime to = dateTime(2021, 1, 4, 13, 0);
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), anyUserIdComposite(), "break", from, to, true, 30);
+
+        assertThat(timeEntry.breakDuration().duration()).isEqualTo(Duration.ofHours(1));
+    }
+
     private UserIdComposite anyUserIdComposite() {
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);

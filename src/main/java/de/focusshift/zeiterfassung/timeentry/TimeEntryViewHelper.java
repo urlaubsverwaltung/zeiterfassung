@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
+import de.focusshift.zeiterfassung.settings.TimeEntrySettings;
+import de.focusshift.zeiterfassung.settings.TimeEntrySettingsService;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.slf4j.Logger;
@@ -19,6 +21,7 @@ import java.time.ZonedDateTime;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.Objects.requireNonNullElse;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.util.StringUtils.hasText;
 
@@ -32,15 +35,43 @@ public class TimeEntryViewHelper {
     private final TimeEntryService timeEntryService;
     private final TimeEntryLockService timeEntryLockService;
     private final UserSettingsProvider userSettingsProvider;
+    private final TimeEntrySettingsService timeEntrySettingsService;
 
-    public TimeEntryViewHelper(TimeEntryService timeEntryService, TimeEntryLockService timeEntryLockService, UserSettingsProvider userSettingsProvider) {
+    public TimeEntryViewHelper(
+        TimeEntryService timeEntryService,
+        TimeEntryLockService timeEntryLockService,
+        UserSettingsProvider userSettingsProvider,
+        TimeEntrySettingsService timeEntrySettingsService
+    ) {
         this.timeEntryService = timeEntryService;
         this.timeEntryLockService = timeEntryLockService;
         this.userSettingsProvider = userSettingsProvider;
+        this.timeEntrySettingsService = timeEntrySettingsService;
     }
 
     public void addTimeEntryToModel(Model model, TimeEntryDTO timeEntryDTO) {
         model.addAttribute(TIME_ENTRY_MODEL_NAME, timeEntryDTO);
+    }
+
+    /**
+     * Creates a new, empty {@linkplain TimeEntryDTO} for the given date, pre-populated with the
+     * configured default break minutes when break-integrated mode is active.
+     *
+     * @param date        date of the new time entry row
+     * @param ownerLocalId owner of the new time entry row
+     * @return the new {@linkplain TimeEntryDTO}
+     */
+    public TimeEntryDTO newTimeEntryDto(LocalDate date, UserLocalId ownerLocalId) {
+
+        final TimeEntryDTO timeEntryDto = new TimeEntryDTO(date);
+        timeEntryDto.setUserLocalId(ownerLocalId.value());
+
+        final TimeEntrySettings timeEntrySettings = timeEntrySettingsService.getTimeEntrySettings();
+        if (timeEntrySettings.breakIntegrated()) {
+            timeEntryDto.setBreakMinutes(String.valueOf(timeEntrySettings.defaultBreakMinutes()));
+        }
+
+        return timeEntryDto;
     }
 
     public TimeEntryDTO toTimeEntryDto(TimeEntry timeEntry) {
@@ -64,6 +95,7 @@ public class TimeEntryViewHelper {
             .duration(durationString)
             .comment(timeEntry.comment())
             .isBreak(timeEntry.isBreak())
+            .breakMinutes(String.valueOf(timeEntry.breakMinutes()))
             .build();
     }
 
@@ -113,6 +145,10 @@ public class TimeEntryViewHelper {
             bindingResult.reject("time-entry.validation.timespan.locked");
         }
 
+        if (!dto.isBreak() && start != null && end != null) {
+            rejectIfBreakMinutesExceedsTimespan(dto, start, end, bindingResult);
+        }
+
         if (bindingResult.hasErrors()) {
             handleCrudTimeEntryErrors(dto, bindingResult, model, redirectAttributes);
             return;
@@ -120,7 +156,8 @@ public class TimeEntryViewHelper {
 
         try {
             final Duration duration = toDuration(dto.getDuration());
-            timeEntryService.updateTimeEntry(timeEntryId, dto.getComment(), start, end, duration, dto.isBreak());
+            final int breakMinutes = requireNonNullElse(dto.breakMinutesAsNumber(), 0);
+            timeEntryService.updateTimeEntry(timeEntryId, dto.getComment(), start, end, duration, dto.isBreak(), breakMinutes);
         } catch (TimeEntryUpdateNotPlausibleException e) {
             LOG.debug("Could not update timeEntry.", e);
 
@@ -203,13 +240,39 @@ public class TimeEntryViewHelper {
         }
 
         final boolean timespanLocked = timeEntryLockService.isTimespanLocked(start, end);
-        if (timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
+        final boolean lockRejected = timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles());
+        if (lockRejected) {
             LOG.info("Creating TimeEntry is not allowed since currentUser is not privileged to bypass timespan lock.");
             bindingResult.reject("time-entry.validation.timespan.locked");
-        } else {
-            final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
-            timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak());
         }
+
+        final boolean breakMinutesExceedsTimespan = !timeEntryDto.isBreak()
+            && rejectIfBreakMinutesExceedsTimespan(timeEntryDto, start, end, bindingResult);
+
+        if (!lockRejected && !breakMinutesExceedsTimespan) {
+            final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
+            final int breakMinutes = requireNonNullElse(timeEntryDto.breakMinutesAsNumber(), 0);
+            timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak(), breakMinutes);
+        }
+    }
+
+    /**
+     * @return {@code true} if breakMinutes exceeds the timespan and was rejected, {@code false} otherwise
+     */
+    private static boolean rejectIfBreakMinutesExceedsTimespan(TimeEntryDTO dto, ZonedDateTime start, ZonedDateTime end, BindingResult bindingResult) {
+
+        final Integer breakMinutes = dto.breakMinutesAsNumber();
+        if (breakMinutes == null || breakMinutes == 0) {
+            return false;
+        }
+
+        final Duration timespan = Duration.between(start, end);
+        if (Duration.ofMinutes(breakMinutes).compareTo(timespan) > 0) {
+            bindingResult.rejectValue("breakMinutes", "time-entry.validation.breakMinutes.exceedsTimespan");
+            return true;
+        }
+
+        return false;
     }
 
     private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {

@@ -40,6 +40,8 @@ class SettingsServiceTest {
     @Mock
     private SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
     @Mock
+    private TimeEntrySettingsRepository timeEntrySettingsRepository;
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
 
@@ -49,6 +51,7 @@ class SettingsServiceTest {
             federalStateSettingsRepository,
             lockTimeEntriesSettingsRepository,
             subtractBreakFromTimeEntrySettingsRepository,
+            timeEntrySettingsRepository,
             applicationEventPublisher,
             clock
         );
@@ -311,6 +314,86 @@ class SettingsServiceTest {
 
             assertThat(result.subtractBreakFromTimeEntryIsActive()).isTrue();
             assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).hasValue(timestamp);
+        }
+    }
+
+    @Nested
+    class TimeEntrySettingsTest {
+
+        @Test
+        void ensureGetTimeEntrySettings() {
+
+            final TimeEntrySettingsEntity entity = new TimeEntrySettingsEntity();
+            entity.setId(1L);
+            entity.setCommentEnabled(false);
+            entity.setBreakIntegrated(true);
+            entity.setDefaultBreakMinutes(30);
+
+            when(timeEntrySettingsRepository.findAll()).thenReturn(List.of(entity));
+
+            final TimeEntrySettings actual = sut.getTimeEntrySettings();
+            assertThat(actual.commentEnabled()).isFalse();
+            assertThat(actual.breakIntegrated()).isTrue();
+            assertThat(actual.defaultBreakMinutes()).isEqualTo(30);
+        }
+
+        @Test
+        void ensureGetTimeEntrySettingsReturnsDefaultSettings() {
+
+            when(timeEntrySettingsRepository.findAll()).thenReturn(List.of());
+
+            final TimeEntrySettings actual = sut.getTimeEntrySettings();
+            assertThat(actual).isEqualTo(TimeEntrySettings.DEFAULT);
+        }
+
+        @Test
+        void ensureUpdateTimeEntrySettings() {
+
+            final TimeEntrySettingsEntity entity = new TimeEntrySettingsEntity();
+            entity.setId(1L);
+            entity.setCommentEnabled(true);
+            entity.setBreakIntegrated(false);
+            entity.setDefaultBreakMinutes(45);
+
+            when(timeEntrySettingsRepository.findAll()).thenReturn(List.of(entity));
+            when(timeEntrySettingsRepository.save(any(TimeEntrySettingsEntity.class))).thenAnswer(returnsFirstArg());
+
+            final TimeEntrySettings actual = sut.updateTimeEntrySettings(false, true, 20);
+
+            assertThat(actual.commentEnabled()).isFalse();
+            assertThat(actual.breakIntegrated()).isTrue();
+            assertThat(actual.defaultBreakMinutes()).isEqualTo(20);
+
+            final ArgumentCaptor<TimeEntrySettingsEntity> captor = ArgumentCaptor.forClass(TimeEntrySettingsEntity.class);
+            verify(timeEntrySettingsRepository).save(captor.capture());
+
+            assertThat(captor.getValue()).isSameAs(entity);
+            assertThat(entity.isCommentEnabled()).isFalse();
+            assertThat(entity.isBreakIntegrated()).isTrue();
+            assertThat(entity.getDefaultBreakMinutes()).isEqualTo(20);
+        }
+
+        @Test
+        void ensureUpdateTimeEntrySettingsCreatesNewEntity() {
+
+            when(timeEntrySettingsRepository.findAll()).thenReturn(List.of());
+            when(timeEntrySettingsRepository.save(any(TimeEntrySettingsEntity.class))).thenAnswer(returnsFirstArg());
+
+            final TimeEntrySettings actual = sut.updateTimeEntrySettings(true, false, 45);
+
+            assertThat(actual.commentEnabled()).isTrue();
+            assertThat(actual.breakIntegrated()).isFalse();
+            assertThat(actual.defaultBreakMinutes()).isEqualTo(45);
+
+            final ArgumentCaptor<TimeEntrySettingsEntity> captor = ArgumentCaptor.forClass(TimeEntrySettingsEntity.class);
+            verify(timeEntrySettingsRepository).save(captor.capture());
+
+            assertThat(captor.getValue()).satisfies(entity -> {
+                assertThat(entity.getId()).isNull(); // set by JPA
+                assertThat(entity.isCommentEnabled()).isTrue();
+                assertThat(entity.isBreakIntegrated()).isFalse();
+                assertThat(entity.getDefaultBreakMinutes()).isEqualTo(45);
+            });
         }
     }
 }

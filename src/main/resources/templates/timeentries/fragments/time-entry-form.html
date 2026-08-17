@@ -96,7 +96,10 @@
                 />
               </svg>
               <div class="ajax-loader time-entry-cell-container">
-                <div class="time-entry-cell time-entry-cell__comment">
+                <div
+                  th:if="${timeEntrySettings == null or timeEntrySettings.commentEnabled()}"
+                  class="time-entry-cell time-entry-cell__comment"
+                >
                   <input
                     type="text"
                     id="input-entry-comment"
@@ -188,7 +191,10 @@
                     Dauer
                   </label>
                 </div>
-                <div class="time-entry-cell time-entry-cell__break">
+                <div
+                  th:if="${timeEntrySettings == null or !timeEntrySettings.breakIntegrated()}"
+                  class="time-entry-cell time-entry-cell__break"
+                >
                   <span class="checkbox-switch">
                     <input
                       type="checkbox"
@@ -207,6 +213,33 @@
                     th:text="#{time-entry.form.is-break.label}"
                   >
                     Pause
+                  </label>
+                </div>
+                <div
+                  th:if="${timeEntrySettings != null and timeEntrySettings.breakIntegrated()}"
+                  class="time-entry-cell time-entry-cell__break-minutes"
+                >
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    id="input-entry-break-minutes"
+                    th:id="|${rnd}-input-entry-break-minutes|"
+                    name="breakMinutes"
+                    th:value="${timeEntry.breakMinutes}"
+                    placeholder="0"
+                    class="peer invalid:border-(--z-error-border-color)"
+                    th:classappend="${showErrors && #fields.hasErrors('breakMinutes') && timeEntryErrorId == timeEntry.id ? 'invalid' : ''}"
+                    th:disabled="${disabled}"
+                    data-testid="input-time-entry-break-minutes"
+                  />
+                  <label
+                    for="input-entry-break-minutes"
+                    th:for="|${rnd}-input-entry-break-minutes|"
+                    class="peer-invalid:text-(--z-error-color)"
+                    th:classappend="${showErrors && #fields.hasErrors('breakMinutes') && timeEntryErrorId == timeEntry.id ? 'invalid' : ''}"
+                    th:text="#{time-entry.form.break-minutes.label}"
+                  >
+                    Pause (min)
                   </label>
                 </div>
               </div>

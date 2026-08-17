@@ -61,7 +61,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 @Controller
-class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
+class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch, HasTimeEntryForm {
 
     private static final String IS_REDIRECTED = "isRedirected";
 
@@ -142,8 +142,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
     private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, Model model, Locale locale, CurrentOidcUser currentUser) {
 
-        final TimeEntryDTO timeEntryDTO = new TimeEntryDTO(userDateService.today());
-        timeEntryDTO.setUserLocalId(ownerLocalId.value());
+        final TimeEntryDTO timeEntryDTO = viewHelper.newTimeEntryDto(userDateService.today(), ownerLocalId);
 
         viewHelper.addTimeEntryToModel(model, timeEntryDTO);
         addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale, currentUser);
