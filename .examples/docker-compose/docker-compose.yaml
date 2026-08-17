@@ -1,7 +1,7 @@
 services:
 
   zeiterfassung:
-    image: urlaubsverwaltung/zeiterfassung:3.1.6
+    image: urlaubsverwaltung/zeiterfassung:3.2.1
     network_mode: "host"
     environment:
       SERVER_PORT: 8080
@@ -52,7 +52,7 @@ services:
       retries: 5
 
   mailpit:
-    image: axllent/mailpit:v1.30.6
+    image: axllent/mailpit:v1.30.7
     ports:
       - '1025:1025'
       - '8025:8025'
