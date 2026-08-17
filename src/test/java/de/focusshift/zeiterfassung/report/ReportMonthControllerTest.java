@@ -365,7 +365,8 @@ class ReportMonthControllerTest implements ControllerTest {
             get("/report/year/2022/month/1")
                 .with(oidcSubject("batman"))
         )
-            .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/month/1?csv"));
+            .andExpect(model().attribute("userReportCsvDownloadUrlDetailed", "/report/year/2022/month/1?csv=detailed"))
+            .andExpect(model().attribute("userReportCsvDownloadUrlAggregated", "/report/year/2022/month/1?csv=aggregated"));
     }
 
     @Test
@@ -379,7 +380,8 @@ class ReportMonthControllerTest implements ControllerTest {
                 .with(oidcSubject("batman"))
                 .param("everyone", "")
         )
-            .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/month/1?everyone=&csv"));
+            .andExpect(model().attribute("userReportCsvDownloadUrlDetailed", "/report/year/2022/month/1?everyone=&csv=detailed"))
+            .andExpect(model().attribute("userReportCsvDownloadUrlAggregated", "/report/year/2022/month/1?everyone=&csv=aggregated"));
     }
 
     @Test
@@ -393,7 +395,8 @@ class ReportMonthControllerTest implements ControllerTest {
                 .with(oidcSubject("batman"))
                 .param("user", "1", "2", "42")
         )
-            .andExpect(model().attribute("userReportCsvDownloadUrl", "/report/year/2022/month/1?user=1&user=2&user=42&csv"));
+            .andExpect(model().attribute("userReportCsvDownloadUrlDetailed", "/report/year/2022/month/1?user=1&user=2&user=42&csv=detailed"))
+            .andExpect(model().attribute("userReportCsvDownloadUrlAggregated", "/report/year/2022/month/1?user=1&user=2&user=42&csv=aggregated"));
     }
 
     @Test
