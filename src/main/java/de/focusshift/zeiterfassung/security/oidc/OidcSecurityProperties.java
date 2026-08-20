@@ -25,6 +25,16 @@ public class OidcSecurityProperties {
      */
     private boolean retrieveUserInfo;
 
+    /**
+     * OIDC end_session_endpoint used for RP-initiated logout.
+     * <p>
+     * This is only needed when the provider's {@code end_session_endpoint} cannot be discovered
+     * automatically, e.g. when the OAuth2 client is configured with explicit
+     * {@code authorization-uri}/{@code token-uri}/{@code jwk-set-uri}/{@code user-info-uri} instead
+     * of {@code issuer-uri} (no OpenID Connect discovery happens in that case).
+     */
+    private String endSessionEndpoint;
+
     public String getPostLogoutRedirectUri() {
         return postLogoutRedirectUri;
     }
@@ -47,5 +57,13 @@ public class OidcSecurityProperties {
 
     public boolean retrieveUserInfo() {
         return retrieveUserInfo;
+    }
+
+    public String getEndSessionEndpoint() {
+        return endSessionEndpoint;
+    }
+
+    public void setEndSessionEndpoint(String endSessionEndpoint) {
+        this.endSessionEndpoint = endSessionEndpoint;
     }
 }
