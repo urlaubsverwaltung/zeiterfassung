@@ -4,8 +4,6 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    cooldown:
-      default-days: 5
     labels:
       - "type: dependencies"
       - "javascript"
