@@ -17,6 +17,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
@@ -31,6 +32,9 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 class SettingsUIIT {
 
     public static final DateTimeFormatter FORMATTER_DD_MM_YYYY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+    // the application renders the example date for the zoneId of the user, not for the zoneId of the jvm.
+    private static final ZoneId USER_ZONE_ID = ZoneId.of("Europe/Berlin");
 
     @LocalServerPort
     private int port;
@@ -59,7 +63,7 @@ class SettingsUIIT {
 
         settingsPage.assertLockTimeEntriesDaysInPastInputValue("2");
 
-        final String expectedDatePreviewText = LocalDate.now().minusDays(6).format(FORMATTER_DD_MM_YYYY);
+        final String expectedDatePreviewText = LocalDate.now(USER_ZONE_ID).minusDays(6).format(FORMATTER_DD_MM_YYYY);
         settingsPage.setLockTimeEntriesDaysInPast("5");
         assertThat(page.getByText(Pattern.compile(expectedDatePreviewText))).isVisible();
 

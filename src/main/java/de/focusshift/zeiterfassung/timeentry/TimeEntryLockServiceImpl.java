@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.security.SecurityRole;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettings;
 import de.focusshift.zeiterfassung.settings.LockTimeEntriesSettingsService;
+import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
@@ -26,10 +27,13 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final LockTimeEntriesSettingsService lockTimeEntriesSettingsService;
+    private final UserSettingsProvider userSettingsProvider;
     private final Clock clock;
 
-    TimeEntryLockServiceImpl(LockTimeEntriesSettingsService lockTimeEntriesSettingsService, Clock clock) {
+    TimeEntryLockServiceImpl(LockTimeEntriesSettingsService lockTimeEntriesSettingsService,
+                             UserSettingsProvider userSettingsProvider, Clock clock) {
         this.lockTimeEntriesSettingsService = lockTimeEntriesSettingsService;
+        this.userSettingsProvider = userSettingsProvider;
         this.clock = clock;
     }
 
@@ -97,14 +101,20 @@ class TimeEntryLockServiceImpl implements TimeEntryLockService {
 
     private boolean isDateLocked(Temporal date, int daysInPastAllowed) {
 
+        // whether a date is locked or not has to be decided from the point of view of the user, not of the clock.
+        // the clock is UTC based, so between 00:00 and 02:00 in Europe/Berlin it is still on the day before and would
+        // consider yesterday to be today. the user would then be able to create time entries for a date that
+        // getMinValidTimeEntryDate(ZoneId) already reports as locked.
+        final ZoneId userZoneId = userSettingsProvider.zoneId();
+
         final LocalDate dateNormalized;
         switch (date) {
             case LocalDate localDate -> dateNormalized = localDate;
             case LocalDateTime localDateTime -> dateNormalized = localDateTime.toLocalDate();
-            default -> dateNormalized = ZonedDateTime.from(date).withZoneSameInstant(clock.getZone()).toLocalDate();
+            default -> dateNormalized = ZonedDateTime.from(date).withZoneSameInstant(userZoneId).toLocalDate();
         }
 
-        final LocalDate today = LocalDate.now(clock);
+        final LocalDate today = LocalDate.now(clock.withZone(userZoneId));
         final long daysBetween = DAYS.between(dateNormalized, today);
 
         return daysBetween > daysInPastAllowed;
