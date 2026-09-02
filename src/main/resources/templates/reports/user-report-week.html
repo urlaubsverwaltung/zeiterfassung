@@ -51,15 +51,47 @@
         </a>
       </nav>
       <form th:replace="~{reports/_user-select::form}" />
-      <a
-        href="#"
-        th:href="${userReportCsvDownloadUrl}"
-        download
-        class="report-actions__csv button-secondary"
-        th:text="#{report.week.button.csv-download}"
-      >
-        CSV Download
-      </a>
+      <div class="report-actions__csv">
+        <button
+          type="button"
+          popovertarget="csv-export-menu-week"
+          class="button-secondary flex items-center gap-1"
+          data-testid="csv-export-button"
+        >
+          <span th:text="#{report.button.csv-export}">Export</span>
+          <svg th:replace="~{icons/chevron-down::svg(className='w-4 h-4')}"></svg>
+        </button>
+        <div
+          popover
+          id="csv-export-menu-week"
+          class="nav-popover-menu-container popover popover--slide-to-bottom"
+        >
+          <div class="navigation-popover-menu-content">
+            <ul class="navigation-popover-menu">
+              <li>
+                <a
+                  href="#"
+                  th:href="${userReportCsvDownloadUrlDetailed}"
+                  download
+                  class="navigation-popover-menu__link"
+                  th:text="#{report.csv.export.detailed}"
+                  >CSV (Detailliert)</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  th:href="${userReportCsvDownloadUrlAggregated}"
+                  download
+                  class="navigation-popover-menu__link"
+                  th:text="#{report.csv.export.aggregated}"
+                  >CSV (Aggregiert)</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
 
     <th:block th:fragment="chart">
