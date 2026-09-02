@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -380,6 +381,37 @@ class TenantUserServiceImplTest {
                     .hasMessage("could not find user with id=%s", userId);
 
                 verify(repository).findById(userId);
+            }
+        }
+
+        @Nested
+        class DeleteUserPermanently {
+
+            @Test
+            void deleteUserPermanentlyRemovesTheUser() {
+
+                final TenantUserEntity existing = activeUserEntityOne(clock.instant());
+
+                when(repository.findById(any())).thenReturn(Optional.of(existing));
+
+                sut.deleteUserPermanently(existing.getId());
+
+                verify(repository).findById(existing.getId());
+                verify(repository).delete(existing);
+            }
+
+            @Test
+            void deleteUserPermanentlyThrowsExceptionWhenUserNotFound() {
+                final Long userId = 1L;
+
+                when(repository.findById(any())).thenReturn(Optional.empty());
+
+                assertThatThrownBy(() -> sut.deleteUserPermanently(userId))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("could not find user with id=%s", userId);
+
+                verify(repository).findById(userId);
+                verify(repository, never()).delete(any());
             }
         }
 

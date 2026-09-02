@@ -122,6 +122,16 @@ class TenantUserServiceImpl implements TenantUserService {
     }
 
     @Override
+    public void deleteUserPermanently(Long id) {
+
+        final TenantUserEntity current = getTenantUserOrThrow(id);
+
+        tenantUserRepository.delete(current);
+
+        LOG.info("Permanently deleted user with id={} including all related data", id);
+    }
+
+    @Override
     public void activateUser(Long id) {
 
         final Instant now = clock.instant();
