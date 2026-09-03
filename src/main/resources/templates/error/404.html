@@ -41,14 +41,14 @@
                 th:text="#{error-page.goto.previous}"
               ></a>
               <a
-                href="/"
+                th:href="@{/}"
                 class="button-secondary"
                 th:text="#{error-page.goto.start}"
               ></a>
             </div>
           </div>
           <img
-            src="/images/404_sloth.svg"
+            th:src="@{/images/404_sloth.svg}"
             width="323"
             height="407"
             alt=""
