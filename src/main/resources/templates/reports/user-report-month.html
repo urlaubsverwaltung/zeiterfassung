@@ -17,7 +17,7 @@
       >
         <a
           href="#"
-          th:href="${userReportPreviousSectionUrl}"
+          th:href="@{__${userReportPreviousSectionUrl}__}"
           class="button-primary button-primary-icon"
         >
           <svg
@@ -29,7 +29,7 @@
         </a>
         <a
           href="#"
-          th:href="${userReportTodaySectionUrl}"
+          th:href="@{__${userReportTodaySectionUrl}__}"
           class="button-primary button-primary-icon flex-1 justify-center xs:flex-none xs:justify-normal"
           th:text="#{report.month.navigation.button.today}"
         >
@@ -37,7 +37,7 @@
         </a>
         <a
           href="#"
-          th:href="${userReportNextSectionUrl}"
+          th:href="@{__${userReportNextSectionUrl}__}"
           class="button-primary button-primary-icon"
         >
           <svg
@@ -51,7 +51,7 @@
       <form th:replace="~{reports/_user-select::form}" />
       <a
         href="#"
-        th:href="${userReportCsvDownloadUrl}"
+        th:href="@{__${userReportCsvDownloadUrl}__}"
         download
         class="report-actions__csv button-secondary"
         th:text="#{report.month.button.csv-download}"
