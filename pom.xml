@@ -21,6 +21,7 @@
     <excluded.groups>a11y</excluded.groups>
     <java.version>25</java.version>
     <tomcat.version>11.0.25</tomcat.version>
+    <rabbit-amqp-client.version>5.33.1</rabbit-amqp-client.version>
 
     <node.env>production</node.env>
     <docker-publish-registry>registry.example.com</docker-publish-registry>
