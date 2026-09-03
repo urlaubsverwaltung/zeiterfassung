@@ -20,6 +20,7 @@
     <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
     <excluded.groups>a11y</excluded.groups>
     <java.version>25</java.version>
+    <tomcat.version>11.0.25</tomcat.version>
 
     <node.env>production</node.env>
     <docker-publish-registry>registry.example.com</docker-publish-registry>
