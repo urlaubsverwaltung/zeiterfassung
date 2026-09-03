@@ -150,7 +150,7 @@
                     >
                       <img
                         src="#"
-                        th:src="|/images/user-settings-theme-${#strings.toLowerCase(selectableTheme.value)}.png|"
+                        th:src="@{/images/user-settings-theme-{theme}.png(theme=${#strings.toLowerCase(selectableTheme.value)})}"
                         width="323"
                         height="200"
                         class="w-full h-auto block"

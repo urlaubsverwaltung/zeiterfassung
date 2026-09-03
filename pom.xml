@@ -6,12 +6,12 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.1.0</version>
+    <version>4.1.1</version>
   </parent>
 
   <groupId>de.focus-shift</groupId>
   <artifactId>zeiterfassung</artifactId>
-  <version>3.2.2-SNAPSHOT</version>
+  <version>3.2.3-SNAPSHOT</version>
 
   <name>Zeiterfassung</name>
 
@@ -20,6 +20,8 @@
     <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
     <excluded.groups>a11y</excluded.groups>
     <java.version>25</java.version>
+    <tomcat.version>11.0.25</tomcat.version>
+    <rabbit-amqp-client.version>5.33.1</rabbit-amqp-client.version>
 
     <node.env>production</node.env>
     <docker-publish-registry>registry.example.com</docker-publish-registry>
@@ -64,12 +66,12 @@
     <dependency>
       <groupId>net.javacrumbs.shedlock</groupId>
       <artifactId>shedlock-spring</artifactId>
-      <version>7.7.0</version>
+      <version>7.9.0</version>
     </dependency>
     <dependency>
       <groupId>net.javacrumbs.shedlock</groupId>
       <artifactId>shedlock-provider-jdbc-template</artifactId>
-      <version>7.7.0</version>
+      <version>7.9.0</version>
     </dependency>
 
     <!-- Security -->
@@ -236,7 +238,7 @@
     <dependency>
       <groupId>com.deque.html.axe-core</groupId>
       <artifactId>playwright</artifactId>
-      <version>4.12.0</version>
+      <version>4.13.0</version>
       <scope>test</scope>
     </dependency>
 
@@ -282,8 +284,8 @@
         <artifactId>frontend-maven-plugin</artifactId>
         <version>2.0.2</version>
         <configuration>
-          <nodeVersion>v24.18.0</nodeVersion>
-          <npmVersion>11.17.0</npmVersion>
+          <nodeVersion>v24.20.0</nodeVersion>
+          <npmVersion>11.19.0</npmVersion>
           <environmentVariables>
             <NODE_ENV>${node.env}</NODE_ENV>
           </environmentVariables>

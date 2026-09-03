@@ -4,8 +4,6 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    cooldown:
-      default-days: 5
     labels:
       - "type: dependencies"
       - "javascript"
@@ -80,6 +78,10 @@ updates:
     labels:
       - "type: dependencies"
       - "github_actions"
+    groups:
+      codeql:
+        patterns:
+          - "github/codeql-action/*"
 
   - package-ecosystem: "docker-compose"
     directories:
