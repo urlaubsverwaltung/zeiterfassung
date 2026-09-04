@@ -339,52 +339,6 @@ class TenantUserServiceImplTest {
         }
 
         @Nested
-        class DeleteUser {
-
-            @Test
-            void deleteUserSuccessfully() {
-
-                final Instant now = clock.instant();
-                final TenantUserEntity existing = activeUserEntityOne(now);
-
-                when(repository.findById(any())).thenReturn(Optional.of(existing));
-
-                sut.deleteUser(existing.getId());
-
-                verify(repository).findById(existing.getId());
-
-                final ArgumentCaptor<TenantUserEntity> entityArgumentCaptor = ArgumentCaptor.forClass(TenantUserEntity.class);
-                verify(repository).save(entityArgumentCaptor.capture());
-                assertThat(entityArgumentCaptor.getValue()).satisfies(entity -> {
-                    assertThat(entity.getId()).isEqualTo(existing.id);
-                    assertThat(entity.getUuid()).isEqualTo(existing.getUuid());
-                    assertThat(entity.getGivenName()).isEqualTo(existing.getGivenName());
-                    assertThat(entity.getFamilyName()).isEqualTo(existing.getFamilyName());
-                    assertThat(entity.getEmail()).isEqualTo(existing.getEmail());
-                    assertThat(entity.getAuthorities()).isEqualTo(existing.getAuthorities());
-                    assertThat(entity.getCreatedAt()).isEqualTo(existing.getCreatedAt());
-                    assertThat(entity.getUpdatedAt()).isEqualTo(now);
-                    assertThat(entity.getDeactivatedAt()).isNull();
-                    assertThat(entity.getDeletedAt()).isEqualTo(now);
-                    assertThat(entity.getStatus()).isEqualTo(UserStatus.DELETED);
-                });
-            }
-
-            @Test
-            void deleteUserThrowsExceptionWhenUserNotFound() {
-                final Long userId = 1L;
-
-                when(repository.findById(any())).thenReturn(Optional.empty());
-
-                assertThatThrownBy(() -> sut.deleteUser(userId))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("could not find user with id=%s", userId);
-
-                verify(repository).findById(userId);
-            }
-        }
-
-        @Nested
         class DeleteUserPermanently {
 
             @Test

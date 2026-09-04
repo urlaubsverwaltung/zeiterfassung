@@ -26,15 +26,11 @@ public interface TenantUserService {
 
     Optional<TenantUser> findByLocalId(UserLocalId localId);
 
-    void deleteUser(Long id);
-
     /**
      * Irreversibly removes the user and everything the database knows about this person. All related data
      * (time entries, time clocks, working times, overtime account, user settings, absences and the time entry
      * history) is removed by {@code ON DELETE CASCADE}. Revisions the person authored on time entries of other
      * people are kept, but lose the reference to the person.
-     *
-     * <p>Unlike {@linkplain #deleteUser(Long)} this is not a soft delete - the person cannot be restored.
      *
      * @param id local id of the user to delete
      * @throws IllegalArgumentException when there is no user with the given id

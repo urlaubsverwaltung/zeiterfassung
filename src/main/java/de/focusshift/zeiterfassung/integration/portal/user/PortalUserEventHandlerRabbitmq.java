@@ -95,7 +95,7 @@ public class PortalUserEventHandlerRabbitmq {
         tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), tenantId -> tenantUserService.findById(new UserId(event.uuid()))
             .ifPresentOrElse(existing -> {
                 LOG.info("Found existing user with userId={} of tenantId={} - deleting user ...", event.uuid(), tenantId);
-                tenantUserService.deleteUser(existing.localId());
+                tenantUserService.deleteUserPermanently(existing.localId());
             }, () -> LOG.info("No user found for userId={} of tenantId={} - skipping deletion ...", event.uuid(), tenantId)));
     }
 

@@ -109,19 +109,6 @@ class TenantUserServiceImpl implements TenantUserService {
     }
 
     @Override
-    public void deleteUser(Long id) {
-
-        final Instant now = clock.instant();
-
-        final TenantUserEntity current = getTenantUserOrThrow(id);
-
-        final TenantUserEntity next =
-            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), current.getLastLoginAt(), current.getGivenName(), current.getFamilyName(), current.getEmail(), current.getAuthorities(), current.getCreatedAt(), now, current.getDeactivatedAt(), now, UserStatus.DELETED);
-
-        tenantUserRepository.save(next);
-    }
-
-    @Override
     public void deleteUserPermanently(Long id) {
 
         final TenantUserEntity current = getTenantUserOrThrow(id);
