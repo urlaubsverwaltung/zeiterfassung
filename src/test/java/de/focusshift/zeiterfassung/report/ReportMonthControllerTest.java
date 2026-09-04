@@ -30,6 +30,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
+import org.springframework.context.support.StaticMessageSource;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
@@ -111,7 +112,7 @@ class ReportMonthControllerTest implements ControllerTest {
         dateRangeFormatter = new DateRangeFormatter(dateFormatter, messageSource);
         reportViewHelper = new ReportViewHelper(dateFormatter, dateRangeFormatter);
         timeEntryViewHelper = new TimeEntryViewHelper(timeEntryService, timeEntryLockService, userSettingsProvider);
-        timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        timeEntryDialogHelper = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService, new StaticMessageSource());
         sut = new ReportMonthController(reportService, reportPermissionService, dateFormatter, reportViewHelper, timeEntryDialogHelper, userSearchViewHelper, clock);
     }
 

@@ -1,0 +1,84 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <!--
+    Deleting a person has to delete everything the database knows about this person. The database takes care of
+    it, the application only deletes the tenant_user row. time_entry, time_clock, working_time, overtime_account,
+    user_settings and tenant_user_authorities already cascade, absence, time_entry_aud and revinfo did not.
+  -->
+
+  <changeSet author="schneider" id="delete-orphaned-absences">
+    <preConditions>
+      <tableExists tableName="absence"/>
+      <tableExists tableName="tenant_user"/>
+    </preConditions>
+
+    <comment>
+      absence.user_id never had a foreign key constraint, therefore absences of unknown persons could be stored.
+      These absences are invisible in the application anyway and have to be removed before the constraint is added.
+    </comment>
+
+    <sql>
+      DELETE
+      FROM absence
+      WHERE user_id NOT IN (SELECT uuid FROM tenant_user);
+    </sql>
+  </changeSet>
+
+  <changeSet author="schneider" id="add-fk-from-absence-to-tenant-user">
+    <preConditions>
+      <tableExists tableName="absence"/>
+      <tableExists tableName="tenant_user"/>
+      <not>
+        <indexExists tableName="absence" indexName="absence_user_id"/>
+      </not>
+    </preConditions>
+
+    <createIndex tableName="absence" indexName="absence_user_id">
+      <column name="user_id"/>
+    </createIndex>
+
+    <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="absence"
+                             constraintName="FK_ABSENCE_USER_ID__TENANT_USER_UUID"
+                             deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+                             referencedColumnNames="uuid" referencedTableName="tenant_user"/>
+  </changeSet>
+
+  <changeSet author="schneider" id="cascade-delete-time-entry-aud-owner">
+    <preConditions>
+      <tableExists tableName="time_entry_aud"/>
+      <tableExists tableName="tenant_user"/>
+    </preConditions>
+
+    <comment>
+      The time entry history of the deleted person is part of the information about this person and is removed.
+    </comment>
+
+    <dropForeignKeyConstraint baseTableName="time_entry_aud" constraintName="FK_TIME_ENTRY_AUD_OWNER"/>
+    <addForeignKeyConstraint baseColumnNames="owner" baseTableName="time_entry_aud"
+                             constraintName="FK_TIME_ENTRY_AUD_OWNER"
+                             deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+                             referencedColumnNames="uuid" referencedTableName="tenant_user"/>
+  </changeSet>
+
+  <changeSet author="schneider" id="set-null-revinfo-updated-by">
+    <preConditions>
+      <tableExists tableName="revinfo"/>
+      <tableExists tableName="tenant_user"/>
+    </preConditions>
+
+    <comment>
+      A revision authored by the deleted person may belong to a time entry of another person. Deleting the
+      revision would delete the history of that other person as well, therefore only the reference to the
+      deleted person is removed. updated_by is nullable, the UI shows an unknown person for it.
+    </comment>
+
+    <dropForeignKeyConstraint baseTableName="revinfo" constraintName="FK_REVINFO_UPDATED_BY_TENANT_USER_UUID"/>
+    <addForeignKeyConstraint baseColumnNames="updated_by" baseTableName="revinfo"
+                             constraintName="FK_REVINFO_UPDATED_BY_TENANT_USER_UUID"
+                             deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION"
+                             referencedColumnNames="uuid" referencedTableName="tenant_user"/>
+  </changeSet>
+</databaseChangeLog>

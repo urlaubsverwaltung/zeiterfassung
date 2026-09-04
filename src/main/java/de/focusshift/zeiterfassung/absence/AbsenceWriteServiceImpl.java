@@ -1,6 +1,9 @@
 package de.focusshift.zeiterfassung.absence;
 
 import de.focusshift.zeiterfassung.DateRange;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
+import de.focusshift.zeiterfassung.user.UserId;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,16 +22,22 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final AbsenceRepository repository;
+    private final TenantUserService tenantUserService;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    AbsenceWriteServiceImpl(AbsenceRepository repository, ApplicationEventPublisher applicationEventPublisher) {
+    AbsenceWriteServiceImpl(AbsenceRepository repository, TenantUserService tenantUserService, ApplicationEventPublisher applicationEventPublisher) {
         this.repository = repository;
+        this.tenantUserService = tenantUserService;
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
     @Transactional
     public void addAbsence(AbsenceWrite absence) {
+
+        if (isUnknownUser(absence)) {
+            return;
+        }
 
         final Optional<AbsenceWriteEntity> existing = findEntity(absence);
 
@@ -56,6 +65,10 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
     @Override
     @Transactional
     public void updateAbsence(AbsenceWrite absence) {
+
+        if (isUnknownUser(absence)) {
+            return;
+        }
 
         final Optional<AbsenceWriteEntity> existing = findEntity(absence);
 
@@ -89,6 +102,24 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
         } else {
             LOG.info("did not delete absence. sourceId={} typeSourceId={} typeCategory={}", sourceId, typeSourceId, category);
         }
+    }
+
+    /**
+     * An absence can only be stored for a person known to zeiterfassung, the database enforces this with a foreign
+     * key. urlaubsverwaltung, however, knows persons that never logged into zeiterfassung and therefore have no
+     * {@linkplain TenantUser} yet. Their absences are of no use here -
+     * nothing in the application could display them - so they are skipped instead of failing the message.
+     */
+    private boolean isUnknownUser(AbsenceWrite absence) {
+
+        final UserId userId = absence.userId();
+
+        if (tenantUserService.findById(userId).isPresent()) {
+            return false;
+        }
+
+        LOG.warn("skip absence of unknown person. sourceId={} type={} userId={}", absence.sourceId(), absence.absenceTypeSourceId(), userId);
+        return true;
     }
 
     private Optional<AbsenceWriteEntity> findEntity(AbsenceWrite absence) {
