@@ -23,6 +23,7 @@ function timeEntryFormHtml({
   <input type="text" name="duration" value="${duration}" />
   <input type="checkbox" name="break" ${isBreak ? "checked" : ""} />
   <div data-error-container></div>
+  <button type="submit" name="delete">Delete</button>
   </form>
   `;
 }
@@ -90,6 +91,25 @@ describe("TimeEntrySlotForm overlap validation", () => {
     const submittedForm = forms[1] as HTMLFormElement;
 
     const event = new Event("submit", { cancelable: true });
+    submittedForm.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  test("allows deleting an entry that overlaps another entry", () => {
+    document.body.innerHTML =
+      timeEntryFormHtml({ start: "08:00", end: "12:00" }) +
+      timeEntryFormHtml({ start: "11:00", end: "14:00" });
+
+    const submittedForm = document.querySelectorAll("form")[1];
+    const deleteButton = submittedForm.querySelector(
+      "button[name='delete']",
+    ) as HTMLButtonElement;
+    const event = new SubmitEvent("submit", {
+      cancelable: true,
+      submitter: deleteButton,
+    });
+
     submittedForm.dispatchEvent(event);
 
     expect(event.defaultPrevented).toBe(false);

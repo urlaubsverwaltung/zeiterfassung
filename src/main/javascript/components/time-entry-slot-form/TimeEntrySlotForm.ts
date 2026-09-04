@@ -72,7 +72,11 @@ class TimeEntrySlotForm extends HTMLFormElement {
       this.querySelector(".ajax-loader")?.classList.add("ajax-loader--loading");
     });
 
-    this.addEventListener("submit", (event) => {
+    this.addEventListener("submit", (event: SubmitEvent) => {
+      if ((event.submitter as HTMLButtonElement | null)?.name === "delete") {
+        return;
+      }
+
       this.#hasBeenTriedToSubmitAtLeastOnce = true;
       if (!this.#validate()) {
         event.preventDefault();

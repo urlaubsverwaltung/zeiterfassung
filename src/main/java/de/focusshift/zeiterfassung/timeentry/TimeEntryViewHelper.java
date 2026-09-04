@@ -17,9 +17,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.List;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
+import static de.focusshift.zeiterfassung.timeentry.TimeEntryOverlapChecker.overlaps;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.util.StringUtils.hasText;
@@ -110,8 +110,11 @@ public class TimeEntryViewHelper {
         }
 
         final ZoneId zoneId = userSettingsProvider.zoneId();
+        final Duration duration = toDuration(dto.getDuration());
         final ZonedDateTime start = dto.getStart() == null ? null : ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
         final ZonedDateTime end = getEndDate(dto, zoneId);
+        final ZonedDateTime effectiveStart = start == null && end != null ? end.minusMinutes(duration.toMinutes()) : start;
+        final ZonedDateTime effectiveEnd = end == null && start != null ? start.plusMinutes(duration.toMinutes()) : end;
 
         final boolean timespanLocked = timeEntryLockService.isTimespanLocked(start, end);
         final boolean lockRejected = timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles());
@@ -120,8 +123,8 @@ public class TimeEntryViewHelper {
             bindingResult.reject("time-entry.validation.timespan.locked");
         }
 
-        if (!lockRejected && start != null && end != null) {
-            rejectIfOverlapsExistingEntry(timeEntry.userIdComposite().localId(), timeEntryId, start, end, dto.isBreak(), bindingResult);
+        if (!lockRejected && effectiveStart != null && effectiveEnd != null) {
+            rejectIfOverlapsExistingEntry(timeEntry.userIdComposite().localId(), timeEntryId, effectiveStart, effectiveEnd, dto.isBreak(), bindingResult);
         }
 
         if (bindingResult.hasErrors()) {
@@ -130,8 +133,10 @@ public class TimeEntryViewHelper {
         }
 
         try {
-            final Duration duration = toDuration(dto.getDuration());
             timeEntryService.updateTimeEntry(timeEntryId, dto.getComment(), start, end, duration, dto.isBreak());
+        } catch (TimeEntryOverlapException exception) {
+            bindingResult.reject("time-entry.validation.timespan.overlaps");
+            handleCrudTimeEntryErrors(dto, bindingResult, model, redirectAttributes);
         } catch (TimeEntryUpdateNotPlausibleException e) {
             LOG.debug("Could not update timeEntry.", e);
 
@@ -226,7 +231,11 @@ public class TimeEntryViewHelper {
             && rejectIfOverlapsExistingEntry(ownerLocalId, null, start, end, timeEntryDto.isBreak(), bindingResult);
 
         if (!lockRejected && !overlapsExistingEntry) {
-            timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak());
+            try {
+                timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak());
+            } catch (TimeEntryOverlapException exception) {
+                bindingResult.reject("time-entry.validation.timespan.overlaps");
+            }
         }
     }
 
@@ -237,16 +246,7 @@ public class TimeEntryViewHelper {
     private boolean rejectIfOverlapsExistingEntry(UserLocalId ownerLocalId, @Nullable TimeEntryId excludedTimeEntryId,
                                                    ZonedDateTime start, ZonedDateTime end, boolean isBreak, BindingResult bindingResult) {
 
-        // fetch a day before too since an existing entry may cross midnight (see #getEndDate) and is queried by its start
-        final LocalDate fromDate = start.toLocalDate().minusDays(1);
-        final LocalDate toDateExclusive = end.toLocalDate().plusDays(1);
-
-        final List<TimeEntry> existingEntries = timeEntryService.getEntries(fromDate, toDateExclusive, ownerLocalId);
-
-        final boolean overlaps = existingEntries.stream()
-            .filter(entry -> !entry.id().equals(excludedTimeEntryId))
-            .filter(entry -> entry.isBreak() == isBreak)
-            .anyMatch(entry -> entry.start().isBefore(end) && entry.end().isAfter(start));
+        final boolean overlaps = overlaps(timeEntryService, ownerLocalId, excludedTimeEntryId, start, end, isBreak);
 
         if (overlaps) {
             bindingResult.reject("time-entry.validation.timespan.overlaps");

@@ -869,6 +869,40 @@ class TimeEntryViewHelperTest {
         }
 
         @Test
+        void ensureUpdateValidationErrorWhenDerivedEndOverlapsExistingEntry() throws Exception {
+
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserIdComposite userIdComposite = new UserIdComposite(new UserId("user-id"), userLocalId);
+            final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
+            timeEntryDto.setId(1L);
+            timeEntryDto.setDate(LocalDate.parse("2025-02-16"));
+            timeEntryDto.setStart(LocalTime.parse("11:00"));
+            timeEntryDto.setDuration("03:00");
+            timeEntryDto.setBreak(false);
+
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L)))
+                .thenReturn(Optional.of(anyTimeEntry(userIdComposite)));
+            when(userSettingsProvider.zoneId()).thenReturn(UTC);
+            when(timeEntryService.getEntries(LocalDate.parse("2025-02-15"), LocalDate.parse("2025-02-17"), userLocalId))
+                .thenReturn(List.of(new TimeEntry(
+                    new TimeEntryId(2L), userIdComposite, "other",
+                    ZonedDateTime.parse("2025-02-16T08:00:00Z"),
+                    ZonedDateTime.parse("2025-02-16T12:00:00Z"), false
+                )));
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+            when(bindingResult.hasErrors()).thenReturn(true);
+
+            sut.updateTimeEntry(
+                anyCurrentOidcUser(userLocalId), timeEntryDto, bindingResult,
+                new ConcurrentModel(bindingResult), new RedirectAttributesModelMap()
+            );
+
+            verify(bindingResult).reject("time-entry.validation.timespan.overlaps");
+            verify(timeEntryService, never()).updateTimeEntry(any(), any(), any(), any(), any(), anyBoolean());
+        }
+
+        @Test
         void ensureUpdateExcludesItselfFromOverlapCheck() throws Exception {
 
             final UserId loggedInUserId = new UserId("user-id");
