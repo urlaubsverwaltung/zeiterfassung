@@ -4,6 +4,7 @@ import de.focus_shift.launchpad.api.HasLaunchpad;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryLockService;
+import de.focusshift.zeiterfassung.timeentry.TimeEntryOverlapException;
 import de.focusshift.zeiterfassung.user.UserId;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -39,6 +40,7 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
     private static final String IS_REDIRECTED = "isRedirected";
+    private static final String TIME_CLOCK_OVERLAP = "timeClockOverlap";
 
     private final TimeClockService timeClockService;
     private final TimeEntryLockService timeEntryLockService;
@@ -117,9 +119,16 @@ class TimeClockController implements HasTimeClock, HasLaunchpad {
     }
 
     @PostMapping("/stop")
-    public String stopTimeClock(@CurrentUser CurrentOidcUser currentUser, HttpServletRequest request) {
+    public String stopTimeClock(@CurrentUser CurrentOidcUser currentUser, HttpServletRequest request,
+                                RedirectAttributes redirectAttributes) {
 
-        timeClockService.stopTimeClock(currentUser.getUserIdComposite());
+        try {
+            timeClockService.stopTimeClock(currentUser.getUserIdComposite());
+        } catch (TimeClockOverlapsExistingEntryException | TimeEntryOverlapException exception) {
+            LOG.info("Stopping TimeClock is not allowed since it overlaps an existing time entry.");
+            redirectAttributes.addFlashAttribute(TIME_CLOCK_OVERLAP, true);
+            return "redirect:/timeclock";
+        }
 
         return redirectToPreviousPage(request);
     }

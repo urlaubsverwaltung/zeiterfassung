@@ -42,6 +42,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -138,6 +139,19 @@ class TimeClockControllerTest implements ControllerTest {
 
         verify(timeClockService).stopTimeClock(userIdComposite);
         verifyNoMoreInteractions(timeClockService);
+    }
+
+    @Test
+    void ensureStopTimeClockRedirectsToEditWhenEntryWouldOverlap() throws Exception {
+
+        final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), new UserLocalId(1L));
+        doThrow(new TimeClockOverlapsExistingEntryException())
+            .when(timeClockService).stopTimeClock(userIdComposite);
+
+        perform(post("/timeclock/stop").with(oidcSubject(userIdComposite)))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/timeclock"))
+            .andExpect(flash().attribute("timeClockOverlap", true));
     }
 
     @Test
