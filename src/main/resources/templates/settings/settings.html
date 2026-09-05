@@ -266,6 +266,61 @@
                   </div>
                 </div>
               </div>
+              <div class="mt-8 lg:mt-12">
+                <h2 class="font-bold" th:text="#{settings.time-entry.heading}">
+                  Zeiteintrag Einstellungen
+                </h2>
+                <p
+                  class="mt-2 text-dimmed"
+                  th:text="#{settings.time-entry.teaser-text}"
+                >
+                  Lege fest, welche optionalen Felder bei der Zeiterfassung angezeigt werden.
+                </p>
+                <div class="mt-4 flex flex-col gap-3">
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="comment-enabled-checkbox"
+                      data-testid="comment-enabled-checkbox"
+                      th:field="*{commentEnabled}"
+                    />
+                    <label
+                      for="comment-enabled-checkbox"
+                      th:text="#{settings.time-entry.comment-enabled.label}"
+                    >
+                      Kommentarfeld anzeigen
+                    </label>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="duration-enabled-checkbox"
+                      data-testid="duration-enabled-checkbox"
+                      th:field="*{durationEnabled}"
+                    />
+                    <label
+                      for="duration-enabled-checkbox"
+                      th:text="#{settings.time-entry.duration-enabled.label}"
+                    >
+                      Dauerfeld anzeigen
+                    </label>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="break-enabled-checkbox"
+                      data-testid="break-enabled-checkbox"
+                      th:field="*{breakEnabled}"
+                    />
+                    <label
+                      for="break-enabled-checkbox"
+                      th:text="#{settings.time-entry.break-enabled.label}"
+                    >
+                      Pause-Schalter anzeigen
+                    </label>
+                  </div>
+                </div>
+              </div>
               <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
                 <button
                   type="submit"

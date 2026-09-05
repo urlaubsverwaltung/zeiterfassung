@@ -40,6 +40,8 @@ class SettingsServiceTest {
     @Mock
     private SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
     @Mock
+    private TimeEntrySettingsRepository timeEntrySettingsRepository;
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
 
@@ -49,6 +51,7 @@ class SettingsServiceTest {
             federalStateSettingsRepository,
             lockTimeEntriesSettingsRepository,
             subtractBreakFromTimeEntrySettingsRepository,
+            timeEntrySettingsRepository,
             applicationEventPublisher,
             clock
         );
@@ -311,6 +314,32 @@ class SettingsServiceTest {
 
             assertThat(result.subtractBreakFromTimeEntryIsActive()).isTrue();
             assertThat(result.subtractBreakFromTimeEntryEnabledTimestamp()).hasValue(timestamp);
+        }
+    }
+
+    @Nested
+    class TimeEntrySettingsTest {
+
+        @Test
+        void ensureGetReturnsDefaultsWhenNothingIsConfigured() {
+            when(timeEntrySettingsRepository.findAll()).thenReturn(List.of());
+
+            assertThat(sut.getTimeEntrySettings()).isEqualTo(TimeEntrySettings.DEFAULT);
+        }
+
+        @Test
+        void ensureUpdateCreatesSettings() {
+            when(timeEntrySettingsRepository.findAll()).thenReturn(List.of());
+            when(timeEntrySettingsRepository.save(any(TimeEntrySettingsEntity.class))).thenAnswer(returnsFirstArg());
+
+            final TimeEntrySettings result = sut.updateTimeEntrySettings(false, true, false);
+
+            assertThat(result).isEqualTo(new TimeEntrySettings(false, true, false));
+            verify(timeEntrySettingsRepository).save(assertArg(entity -> {
+                assertThat(entity.isCommentEnabled()).isFalse();
+                assertThat(entity.isDurationEnabled()).isTrue();
+                assertThat(entity.isBreakEnabled()).isFalse();
+            }));
         }
     }
 }
