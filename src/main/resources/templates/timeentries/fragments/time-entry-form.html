@@ -96,7 +96,10 @@
                 />
               </svg>
               <div class="ajax-loader time-entry-cell-container">
-                <div class="time-entry-cell time-entry-cell__comment">
+                <div
+                  th:if="${timeEntrySettings == null or timeEntrySettings.commentEnabled()}"
+                  class="time-entry-cell time-entry-cell__comment"
+                >
                   <input
                     type="text"
                     id="input-entry-comment"
@@ -115,6 +118,12 @@
                     Kommentar
                   </label>
                 </div>
+                <input
+                  th:if="${timeEntrySettings != null and !timeEntrySettings.commentEnabled()}"
+                  type="hidden"
+                  name="comment"
+                  th:value="${timeEntry.comment}"
+                />
                 <div class="time-entry-cell time-entry-cell__from">
                   <input
                     type="time"
@@ -163,7 +172,10 @@
                     Bis
                   </label>
                 </div>
-                <div class="time-entry-cell time-entry-cell__duration">
+                <div
+                  th:if="${timeEntrySettings == null or timeEntrySettings.durationEnabled()}"
+                  class="time-entry-cell time-entry-cell__duration"
+                >
                   <input
                     is="z-time-entry-duration-input"
                     type="text"
@@ -188,7 +200,16 @@
                     Dauer
                   </label>
                 </div>
-                <div class="time-entry-cell time-entry-cell__break">
+                <input
+                  th:if="${timeEntrySettings != null and !timeEntrySettings.durationEnabled()}"
+                  type="hidden"
+                  name="duration"
+                  th:value="${timeEntry.duration}"
+                />
+                <div
+                  th:if="${timeEntrySettings == null or timeEntrySettings.breakEnabled()}"
+                  class="time-entry-cell time-entry-cell__break"
+                >
                   <span class="checkbox-switch">
                     <input
                       type="checkbox"
@@ -209,6 +230,12 @@
                     Pause
                   </label>
                 </div>
+                <input
+                  th:if="${timeEntrySettings != null and !timeEntrySettings.breakEnabled()}"
+                  type="hidden"
+                  name="break"
+                  th:value="${timeEntry.isBreak}"
+                />
               </div>
             </div>
           </div>
