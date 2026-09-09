@@ -118,7 +118,7 @@ class AbsenceWriteServiceImpl implements AbsenceWriteService {
             return false;
         }
 
-        LOG.warn("skip absence of unknown person. sourceId={} type={} userId={}", absence.sourceId(), absence.absenceTypeSourceId(), userId);
+        LOG.info("skip absence of unknown person. sourceId={} type={} userId={}", absence.sourceId(), absence.absenceTypeSourceId(), userId);
         return true;
     }
 
