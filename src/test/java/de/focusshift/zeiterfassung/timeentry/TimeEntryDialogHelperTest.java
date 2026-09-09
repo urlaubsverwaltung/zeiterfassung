@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.StaticMessageSource;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.ui.ConcurrentModel;
@@ -34,6 +36,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import static de.focusshift.zeiterfassung.data.history.EntityRevisionType.CREATED;
 import static de.focusshift.zeiterfassung.data.history.EntityRevisionType.UPDATED;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
+import static java.util.Locale.GERMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -55,9 +58,12 @@ class TimeEntryDialogHelperTest {
     @Mock
     private UserManagementService userManagementService;
 
+    private final StaticMessageSource messageSource = new StaticMessageSource();
+
     @BeforeEach
     void setUp() {
-        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService);
+        messageSource.addMessage("time-entry.dialog.history.item.unknown-user", GERMAN, "Unbekannte Person");
+        sut = new TimeEntryDialogHelper(timeEntryService, timeEntryLockService, timeEntryViewHelper, userSettingsProvider, userManagementService, messageSource);
     }
 
     @Nested
@@ -238,6 +244,47 @@ class TimeEntryDialogHelperTest {
                     assertThat(dto.historyItems().get(0).timeEntry()).isSameAs(modifiedTimeEntryDto);
                     assertThat(dto.historyItems().get(1).timeEntry()).isSameAs(createdTimeEntryDto);
                 });
+        }
+
+        @Test
+        void ensureTimeEntryHistoryModelWithDeletedPerson() {
+
+            final UserIdComposite batmanIdComposite = anyUserIdComposite("batman");
+            final CurrentOidcUser batmanOidcUser = anyCurrentOidcUser(batmanIdComposite);
+
+            final User user = anyUser(batmanIdComposite, "Bruce", "Wayne");
+
+            final TimeEntry timeEntry = anyTimeEntry(batmanIdComposite, "workshop");
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntry));
+
+            when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+            when(userSettingsProvider.zoneId()).thenReturn(ZoneOffset.UTC);
+
+            // the person that modified the time entry has been deleted -> revision has no modifiedBy anymore
+            final EntityRevisionMetadata metadata = new EntityRevisionMetadata(1, UPDATED, Instant.now(), Optional.empty());
+            final TimeEntryHistoryItem historyItem = new TimeEntryHistoryItem(metadata, timeEntry, true, true, true, true);
+
+            when(timeEntryService.findTimeEntryHistory(timeEntry.id()))
+                .thenReturn(Optional.of(new TimeEntryHistory(timeEntry.id(), List.of(historyItem))));
+            when(userManagementService.findAllUsersByIds(List.of())).thenReturn(List.of());
+            when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(new TimeEntryDTO());
+
+            LocaleContextHolder.setLocale(GERMAN);
+            try {
+                final ConcurrentModel model = new ConcurrentModel();
+                sut.addTimeEntryEditToModel(model, batmanOidcUser, 1L, "edit-form-action", "close-form-action");
+
+                assertThat(model.getAttribute("timeEntryDialog"))
+                    .isInstanceOf(TimeEntryDialogDto.class)
+                    .satisfies(dialogDto -> {
+                        final TimeEntryDialogDto dto = (TimeEntryDialogDto) dialogDto;
+                        assertThat(dto.historyItems()).hasSize(1);
+                        assertThat(dto.historyItems().getFirst().username()).isEqualTo("Unbekannte Person");
+                        assertThat(dto.historyItems().getFirst().initials()).isEqualTo("??");
+                    });
+            } finally {
+                LocaleContextHolder.resetLocaleContext();
+            }
         }
     }
 

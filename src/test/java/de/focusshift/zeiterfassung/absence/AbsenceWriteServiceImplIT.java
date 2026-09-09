@@ -3,6 +3,8 @@ package de.focusshift.zeiterfassung.absence;
 import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
 import de.focusshift.zeiterfassung.user.UserId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -30,6 +34,9 @@ class AbsenceWriteServiceImplIT extends SingleTenantTestContainersBase {
     @Autowired
     private AbsenceRepository repository;
 
+    @Autowired
+    private TenantUserService tenantUserService;
+
     @MockitoBean
     private TenantContextHolder tenantContextHolder;
 
@@ -40,7 +47,10 @@ class AbsenceWriteServiceImplIT extends SingleTenantTestContainersBase {
         final Instant endDate = Instant.now();
         final UserId userId = new UserId("user-id");
 
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("default")));
+
+        // an absence can only be stored for a person known to zeiterfassung
+        tenantUserService.createNewUser("user-id", "Bruce", "Wayne", new EMailAddress("bruce@example.org"), List.of(ZEITERFASSUNG_USER));
 
         sut.addAbsence(new AbsenceWrite(42L, userId, startDate, endDate, DayLength.FULL, null, HOLIDAY, new AbsenceTypeSourceId(1L)));
         sut.updateAbsence(new AbsenceWrite(42L, userId, startDate, endDate, DayLength.FULL, null, AbsenceTypeCategory.OTHER, new AbsenceTypeSourceId(2L)));
@@ -63,7 +73,10 @@ class AbsenceWriteServiceImplIT extends SingleTenantTestContainersBase {
         final Instant startDate = Instant.now();
         final Instant endDate = Instant.now();
 
-        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("tenant")));
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId("default")));
+
+        // an absence can only be stored for a person known to zeiterfassung
+        tenantUserService.createNewUser("user-id", "Bruce", "Wayne", new EMailAddress("bruce@example.org"), List.of(ZEITERFASSUNG_USER));
 
         final AbsenceWriteEntity existingEntity = new AbsenceWriteEntity();
         existingEntity.setSourceId(42L);
@@ -90,7 +103,7 @@ class AbsenceWriteServiceImplIT extends SingleTenantTestContainersBase {
         sut.deleteAbsence(absence);
 
         assertThat(repository.findAll()).isEmpty();
-        verify(tenantContextHolder, times(2)).getCurrentTenantId();
+        verify(tenantContextHolder, times(3)).getCurrentTenantId();
     }
 
 }

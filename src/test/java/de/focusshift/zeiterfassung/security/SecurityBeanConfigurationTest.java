@@ -109,7 +109,7 @@ class SecurityBeanConfigurationTest {
         }
 
         @Override
-        public void deleteUser(Long id) {
+        public void deleteUserPermanently(Long id) {
 
         }
 

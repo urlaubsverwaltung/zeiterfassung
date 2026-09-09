@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -338,48 +339,33 @@ class TenantUserServiceImplTest {
         }
 
         @Nested
-        class DeleteUser {
+        class DeleteUserPermanently {
 
             @Test
-            void deleteUserSuccessfully() {
+            void deleteUserPermanentlyRemovesTheUser() {
 
-                final Instant now = clock.instant();
-                final TenantUserEntity existing = activeUserEntityOne(now);
+                final TenantUserEntity existing = activeUserEntityOne(clock.instant());
 
                 when(repository.findById(any())).thenReturn(Optional.of(existing));
 
-                sut.deleteUser(existing.getId());
+                sut.deleteUserPermanently(existing.getId());
 
                 verify(repository).findById(existing.getId());
-
-                final ArgumentCaptor<TenantUserEntity> entityArgumentCaptor = ArgumentCaptor.forClass(TenantUserEntity.class);
-                verify(repository).save(entityArgumentCaptor.capture());
-                assertThat(entityArgumentCaptor.getValue()).satisfies(entity -> {
-                    assertThat(entity.getId()).isEqualTo(existing.id);
-                    assertThat(entity.getUuid()).isEqualTo(existing.getUuid());
-                    assertThat(entity.getGivenName()).isEqualTo(existing.getGivenName());
-                    assertThat(entity.getFamilyName()).isEqualTo(existing.getFamilyName());
-                    assertThat(entity.getEmail()).isEqualTo(existing.getEmail());
-                    assertThat(entity.getAuthorities()).isEqualTo(existing.getAuthorities());
-                    assertThat(entity.getCreatedAt()).isEqualTo(existing.getCreatedAt());
-                    assertThat(entity.getUpdatedAt()).isEqualTo(now);
-                    assertThat(entity.getDeactivatedAt()).isNull();
-                    assertThat(entity.getDeletedAt()).isEqualTo(now);
-                    assertThat(entity.getStatus()).isEqualTo(UserStatus.DELETED);
-                });
+                verify(repository).delete(existing);
             }
 
             @Test
-            void deleteUserThrowsExceptionWhenUserNotFound() {
+            void deleteUserPermanentlyThrowsExceptionWhenUserNotFound() {
                 final Long userId = 1L;
 
                 when(repository.findById(any())).thenReturn(Optional.empty());
 
-                assertThatThrownBy(() -> sut.deleteUser(userId))
+                assertThatThrownBy(() -> sut.deleteUserPermanently(userId))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("could not find user with id=%s", userId);
 
                 verify(repository).findById(userId);
+                verify(repository, never()).delete(any());
             }
         }
 

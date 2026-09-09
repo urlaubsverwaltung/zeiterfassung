@@ -4,6 +4,8 @@ package de.focusshift.zeiterfassung.absence;
 import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +16,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -28,6 +31,9 @@ class AbsenceRepositoryIT extends SingleTenantTestContainersBase {
 
     @Autowired
     private AbsenceRepository sut;
+
+    @Autowired
+    private TenantUserService tenantUserService;
 
     @MockitoBean
     private TenantContextHolder tenantContextHolder;
@@ -48,6 +54,9 @@ class AbsenceRepositoryIT extends SingleTenantTestContainersBase {
 
         when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(TENANT_ID));
 
+        // an absence can only be stored for a person known to zeiterfassung
+        tenantUserService.createNewUser(USER, "Bruce", "Wayne", new EMailAddress("bruce@example.org"), List.of(ZEITERFASSUNG_USER));
+
         sut.saveAll(List.of(oneDayBeforeRequestedWeek, startOutsideEndOnStartOfWeek, startAndEndInside, startBeforeEndAfter, startOnEndAndEndOutside, oneDayAfterRequestedWeek));
 
         final Instant startOfWeek = Instant.parse("2023-07-30T22:00:00.000Z");
@@ -58,7 +67,7 @@ class AbsenceRepositoryIT extends SingleTenantTestContainersBase {
                 .contains(startOutsideEndOnStartOfWeek, startAndEndInside, startBeforeEndAfter, startOnEndAndEndOutside)
                 .doesNotContain(oneDayBeforeRequestedWeek, oneDayAfterRequestedWeek);
 
-        verify(tenantContextHolder, times(6)).getCurrentTenantId();
+        verify(tenantContextHolder, times(7)).getCurrentTenantId();
     }
 
     private static AbsenceWriteEntity absence(long sourceId, String start, String end) {

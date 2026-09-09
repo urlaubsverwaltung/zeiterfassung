@@ -8,6 +8,9 @@ import de.focusshift.zeiterfassung.RabbitTestConfiguration;
 import de.focusshift.zeiterfassung.SingleTenantTestContainersBase;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.junit.jupiter.api.AfterEach;
@@ -34,6 +37,7 @@ import java.util.function.Function;
 
 import static de.focus_shift.urlaubsverwaltung.extension.api.application.DayLength.FULL;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.HOLIDAY;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static java.time.ZoneOffset.UTC;
 import static java.util.Locale.ENGLISH;
 import static java.util.Locale.GERMAN;
@@ -75,6 +79,10 @@ class AbsenceIT extends SingleTenantTestContainersBase {
     private AbsenceRepository absenceRepository;
     @Autowired
     private AbsenceTypeRepository absenceTypeRepository;
+    @Autowired
+    private TenantUserService tenantUserService;
+
+    private TenantUser boss;
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -83,12 +91,19 @@ class AbsenceIT extends SingleTenantTestContainersBase {
     void setUp() {
         when(userSettingsProvider.zoneId()).thenReturn(ZONE_ID);
         when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId(TENANT_ID)));
+
+        // an absence can only be stored for a person known to zeiterfassung
+        boss = tenantUserService.createNewUser("boss", "The", "Boss", new EMailAddress("boss@example.org"), List.of(ZEITERFASSUNG_USER));
+
+        // the tenant interactions of the setup are of no interest for the test
+        Mockito.clearInvocations(tenantContextHolder);
     }
 
     @AfterEach
     void tearDown() {
         absenceRepository.deleteAll();
         absenceTypeRepository.deleteAll();
+        tenantUserService.deleteUserPermanently(boss.localId());
     }
 
     @Test

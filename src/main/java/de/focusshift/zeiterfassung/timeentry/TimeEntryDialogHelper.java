@@ -8,6 +8,8 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.slf4j.Logger;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -46,19 +48,22 @@ public class TimeEntryDialogHelper {
     private final TimeEntryViewHelper timeEntryViewHelper;
     private final UserSettingsProvider userSettingsProvider;
     private final UserManagementService userManagementService;
+    private final MessageSource messageSource;
 
     public TimeEntryDialogHelper(
         TimeEntryService timeEntryService,
         TimeEntryLockService timeEntryLockService,
         TimeEntryViewHelper timeEntryViewHelper,
         UserSettingsProvider userSettingsProvider,
-        UserManagementService userManagementService
+        UserManagementService userManagementService,
+        MessageSource messageSource
     ) {
         this.timeEntryService = timeEntryService;
         this.timeEntryLockService = timeEntryLockService;
         this.timeEntryViewHelper = timeEntryViewHelper;
         this.userSettingsProvider = userSettingsProvider;
         this.userManagementService = userManagementService;
+        this.messageSource = messageSource;
     }
 
     public void addTimeEntryEditToModel(Model model, CurrentOidcUser currentUser, Long timeEntryIdValue, String editFormAction, String cancelFormAction) {
@@ -136,11 +141,17 @@ public class TimeEntryDialogHelper {
 
         final EntityRevisionMetadata metadata = historyItem.metadata();
 
-        final String username = metadata.modifiedBy().map(userSupplier).map(User::fullName).orElse("");
+        // modifiedBy is empty when the person has been deleted or when the time entry
+        // was modified by some other mechanism than a person
+        final String username = metadata.modifiedBy().map(userSupplier).map(User::fullName).orElseGet(this::unknownUsername);
         final String initials = metadata.modifiedBy().map(userSupplier).map(User::initials).orElse("??");
         final LocalDateTime date = LocalDateTime.ofInstant(metadata.modifiedAt(), zoneId);
         final TimeEntryDTO timeEntryDto = timeEntryViewHelper.toTimeEntryDto(historyItem.timeEntry());
 
         return new TimeEntryHistoryItemDto(username, initials, metadata.entityRevisionType(), date, timeEntryDto);
+    }
+
+    private String unknownUsername() {
+        return messageSource.getMessage("time-entry.dialog.history.item.unknown-user", null, LocaleContextHolder.getLocale());
     }
 }

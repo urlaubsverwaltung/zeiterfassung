@@ -14,8 +14,12 @@ import de.focusshift.zeiterfassung.absence.AbsenceWrite;
 import de.focusshift.zeiterfassung.absence.AbsenceWriteService;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantContextHolder;
 import de.focusshift.zeiterfassung.tenancy.tenant.TenantId;
+import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUser;
+import de.focusshift.zeiterfassung.tenancy.user.TenantUserService;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
@@ -42,6 +46,7 @@ import java.util.function.Function;
 import static de.focusshift.zeiterfassung.absence.AbsenceColor.RED;
 import static de.focusshift.zeiterfassung.absence.AbsenceTypeCategory.SICK;
 import static de.focusshift.zeiterfassung.absence.DayLength.FULL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_USER;
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -84,10 +89,27 @@ class SickNoteEventHandlerRabbitmqIT extends SingleTenantTestContainersBase {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private TenantUserService tenantUserService;
+
+    private TenantUser boss;
 
     @BeforeEach
     void setUp() {
         when(userSettingsProvider.zoneId()).thenReturn(ZONE_ID);
+        when(tenantContextHolder.getCurrentTenantId()).thenReturn(Optional.of(new TenantId(TENANT_ID)));
+
+        // an absence can only be stored for a person known to zeiterfassung
+        boss = tenantUserService.createNewUser("boss", "The", "Boss", new EMailAddress("boss@example.org"), List.of(ZEITERFASSUNG_USER));
+
+        // the tenant interactions of the setup are of no interest for the tests
+        Mockito.clearInvocations(tenantContextHolder);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // deletes the absences of the person as well
+        tenantUserService.deleteUserPermanently(boss.localId());
     }
 
     @Test

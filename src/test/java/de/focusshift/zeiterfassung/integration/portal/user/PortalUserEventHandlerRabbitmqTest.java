@@ -231,7 +231,7 @@ class PortalUserEventHandlerRabbitmqTest {
 
             verify(tenantService).getTenantByTenantId(event.tenantId());
             verify(tenantUserService).findById(new UserId(event.uuid()));
-            verify(tenantUserService, never()).deleteUser(any());
+            verify(tenantUserService, never()).deleteUserPermanently(any());
             InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(new TenantId(event.tenantId()));
             inOrder.verify(tenantContextHolder).clear();
@@ -248,7 +248,7 @@ class PortalUserEventHandlerRabbitmqTest {
 
             verify(tenantService).getTenantByTenantId(event.tenantId());
             verify(tenantUserService).findById(new UserId(event.uuid()));
-            verify(tenantUserService).deleteUser(existingUser.localId());
+            verify(tenantUserService).deleteUserPermanently(existingUser.localId());
             InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(new TenantId(event.tenantId()));
             inOrder.verify(tenantContextHolder).clear();
