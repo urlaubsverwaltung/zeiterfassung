@@ -58,7 +58,7 @@ class TimeEntryServiceIT extends SingleTenantTestContainersBase {
         final ZonedDateTime endUtc = ZonedDateTime.parse("2025-06-06T23:40:00+00:00[UTC]");
         final TimeEntry timeEntry3ValidUtc = timeEntryService.createTimeEntry(user.userLocalId(), "comment", startUtc, endUtc, false);
 
-        final ZonedDateTime startInvalid = ZonedDateTime.parse("2025-06-06T23:00:00+00:00[UTC]");
+        final ZonedDateTime startInvalid = ZonedDateTime.parse("2025-06-06T23:45:00+00:00[UTC]");
         final ZonedDateTime endInvalid = ZonedDateTime.parse("2025-06-07T01:00:00+00:00[UTC]");
         timeEntryService.createTimeEntry(user.userLocalId(), "comment", startInvalid, endInvalid, false);
 
