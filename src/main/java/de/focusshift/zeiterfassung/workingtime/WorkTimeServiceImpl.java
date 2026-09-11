@@ -128,6 +128,8 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final WorkingTimeEntity entity = repository.findById(workingTimeId.uuid())
             .orElseThrow(() -> new IllegalStateException("could not find working-time with id=%s".formatted(workingTimeId)));
 
+        final LocalDate previousValidFrom = entity.getValidFrom();
+
         if (entity.getValidFrom() == null) {
             LOG.info("ignore updating validFrom of very first workingTime={}", workingTimeId);
         } else if (validFrom != null) {
@@ -147,7 +149,7 @@ class WorkTimeServiceImpl implements WorkingTimeService {
         final List<WorkingTimeEntity> allEntitiesSorted = findAllWorkingTimeEntitiesSorted(userLocalId);
 
         applicationEventPublisher.publishEvent(new WorkingTimeUpdatedEvent(
-            user.userIdComposite(), workingTimeId, saved.getValidFrom(), federalState, worksOnPublicHoliday, workdays
+            user.userIdComposite(), workingTimeId, saved.getValidFrom(), previousValidFrom, federalState, worksOnPublicHoliday, workdays
         ));
 
         return entityToWorkingTime(saved, user.userIdComposite(), allEntitiesSorted, new CachedSupplier<>(this::getGlobalFederalStateSettings));
