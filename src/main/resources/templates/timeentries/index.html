@@ -10,17 +10,8 @@
     th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scripts=~{::scripts}, scriptsDefer=~{::scriptsDefer})}"
   >
     <title
-      th:if="${viewedUser == null}"
-      th:text="#{timeentries.page.meta.title}"
-    >
-      Zeiterfassung
-    </title>
-    <title
-      th:if="${viewedUser != null}"
-      th:text="#{timeentries.page.meta.title.person(${viewedUser.fullName})}"
-    >
-      Zeiterfassung von XXX
-    </title>
+      th:replace="~{fragments/page-title::page-title(${viewedUser == null} ? #{timeentries.page.meta.title} : #{timeentries.page.meta.title.person(${viewedUser.fullName})})}"
+    ></title>
     <th:block th:fragment="styles">
       <link
         rel="stylesheet"

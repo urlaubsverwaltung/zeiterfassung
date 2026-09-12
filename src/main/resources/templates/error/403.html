@@ -7,7 +7,9 @@
   xmlns:th="http://www.thymeleaf.org"
 >
   <head th:replace="~{_layout::head(title=~{::title})}">
-    <title th:text="#{error-page.common.meta.title}"></title>
+    <title
+      th:replace="~{fragments/page-title::page-title(#{error-page.common.meta.title})}"
+    ></title>
   </head>
   <body th:replace="~{_layout::body(~{::main})}">
     <main th:ref="main">

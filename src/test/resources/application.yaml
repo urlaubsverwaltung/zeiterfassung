@@ -1,4 +1,6 @@
 zeiterfassung:
+  branding:
+    name: Zeiterfassung
   mail:
     from: zeiterfassung@localhost
     fromDisplayName: zeiterfassung
