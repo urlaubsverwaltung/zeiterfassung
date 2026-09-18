@@ -9,7 +9,9 @@
   <head
     th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{::scriptsDefer})}"
   >
-    <title>Zeiterfassung - Einstellungen</title>
+    <title
+      th:replace="~{fragments/page-title::page-title(#{settings.page.meta.title})}"
+    ></title>
     <th:block th:fragment="scriptsDefer">
       <script type="module" src="" th:src="@{/assets/settings.js}"></script>
     </th:block>
@@ -30,7 +32,10 @@
             <h1 class="text-xl font-bold" th:text="#{settings.heading}">
               Einstellungen
             </h1>
-            <p class="mt-2 text-dimmed" th:text="#{settings.teaser-text}">
+            <p
+              class="mt-2 text-dimmed"
+              th:text="#{settings.teaser-text(${applicationName})}"
+            >
               Lorem ipsum...
             </p>
           </div>

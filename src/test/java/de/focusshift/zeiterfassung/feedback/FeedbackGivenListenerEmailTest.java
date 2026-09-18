@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.feedback;
 
+import de.focusshift.zeiterfassung.branding.BrandingConfigProperties;
 import de.focusshift.zeiterfassung.email.EMailService;
 import de.focusshift.zeiterfassung.feedback.events.FeedbackGivenEvent;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
@@ -7,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.IContext;
@@ -20,13 +23,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(
-    classes = {FeedbackGivenListenerEmail.class, FeedbackConfigurationProperties.class},
+    classes = {FeedbackGivenListenerEmail.class, FeedbackConfigurationProperties.class, FeedbackGivenListenerEmailTest.BrandingTestConfiguration.class},
     properties = {
         "zeiterfassung.feedback.enabled=true",
-        "zeiterfassung.feedback.email.to=zeiterfassung@example.org"
+        "zeiterfassung.feedback.email.to=zeiterfassung@example.org",
+        "zeiterfassung.branding.name=Custom Name"
     }
 )
 class FeedbackGivenListenerEmailTest {
+
+    @Configuration
+    @EnableConfigurationProperties(BrandingConfigProperties.class)
+    static class BrandingTestConfiguration {
+    }
 
     @Autowired
     private FeedbackGivenListenerEmail sut;
@@ -55,7 +64,7 @@ class FeedbackGivenListenerEmailTest {
         applicationEventPublisher.publishEvent(event);
 
         await().untilAsserted(() -> {
-            verify(eMailService).sendMail("feedback@example.org", "Zeiterfassung - Nutzer Feedback", "rendered text email", "");
+            verify(eMailService).sendMail("feedback@example.org", "Custom Name - Nutzer Feedback", "rendered text email", "");
         });
     }
 
@@ -77,6 +86,7 @@ class FeedbackGivenListenerEmailTest {
             final IContext model = captor.getValue();
             assertThat(model.getVariable("sender")).isEqualTo("user@example.org");
             assertThat(model.getVariable("message")).isEqualTo("awesome feedback message");
+            assertThat(model.getVariable("applicationName")).isEqualTo("Custom Name");
         });
     }
 
