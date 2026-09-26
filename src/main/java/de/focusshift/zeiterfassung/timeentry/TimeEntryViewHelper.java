@@ -3,6 +3,7 @@ package de.focusshift.zeiterfassung.timeentry;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
+import static de.focusshift.zeiterfassung.timeentry.TimeEntryOverlapChecker.overlaps;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.util.StringUtils.hasText;
@@ -33,7 +35,11 @@ public class TimeEntryViewHelper {
     private final TimeEntryLockService timeEntryLockService;
     private final UserSettingsProvider userSettingsProvider;
 
-    public TimeEntryViewHelper(TimeEntryService timeEntryService, TimeEntryLockService timeEntryLockService, UserSettingsProvider userSettingsProvider) {
+    public TimeEntryViewHelper(
+        TimeEntryService timeEntryService,
+        TimeEntryLockService timeEntryLockService,
+        UserSettingsProvider userSettingsProvider
+    ) {
         this.timeEntryService = timeEntryService;
         this.timeEntryLockService = timeEntryLockService;
         this.userSettingsProvider = userSettingsProvider;
@@ -104,13 +110,21 @@ public class TimeEntryViewHelper {
         }
 
         final ZoneId zoneId = userSettingsProvider.zoneId();
+        final Duration duration = toDuration(dto.getDuration());
         final ZonedDateTime start = dto.getStart() == null ? null : ZonedDateTime.of(LocalDateTime.of(dto.getDate(), dto.getStart()), zoneId);
         final ZonedDateTime end = getEndDate(dto, zoneId);
+        final ZonedDateTime effectiveStart = start == null && end != null ? end.minusMinutes(duration.toMinutes()) : start;
+        final ZonedDateTime effectiveEnd = end == null && start != null ? start.plusMinutes(duration.toMinutes()) : end;
 
         final boolean timespanLocked = timeEntryLockService.isTimespanLocked(start, end);
-        if (timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
+        final boolean lockRejected = timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles());
+        if (lockRejected) {
             LOG.info("Updating TimeEntry is not allowed since currentUser is not privileged to bypass timespan lock.");
             bindingResult.reject("time-entry.validation.timespan.locked");
+        }
+
+        if (!lockRejected && effectiveStart != null && effectiveEnd != null) {
+            rejectIfOverlapsExistingEntry(timeEntry.userIdComposite().localId(), timeEntryId, effectiveStart, effectiveEnd, dto.isBreak(), bindingResult);
         }
 
         if (bindingResult.hasErrors()) {
@@ -119,8 +133,10 @@ public class TimeEntryViewHelper {
         }
 
         try {
-            final Duration duration = toDuration(dto.getDuration());
             timeEntryService.updateTimeEntry(timeEntryId, dto.getComment(), start, end, duration, dto.isBreak());
+        } catch (TimeEntryOverlapException exception) {
+            bindingResult.reject("time-entry.validation.timespan.overlaps");
+            handleCrudTimeEntryErrors(dto, bindingResult, model, redirectAttributes);
         } catch (TimeEntryUpdateNotPlausibleException e) {
             LOG.debug("Could not update timeEntry.", e);
 
@@ -203,13 +219,40 @@ public class TimeEntryViewHelper {
         }
 
         final boolean timespanLocked = timeEntryLockService.isTimespanLocked(start, end);
-        if (timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles())) {
+        final boolean lockRejected = timespanLocked && !timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles());
+        if (lockRejected) {
             LOG.info("Creating TimeEntry is not allowed since currentUser is not privileged to bypass timespan lock.");
             bindingResult.reject("time-entry.validation.timespan.locked");
-        } else {
-            final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
-            timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak());
         }
+
+        final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
+
+        final boolean overlapsExistingEntry = !lockRejected
+            && rejectIfOverlapsExistingEntry(ownerLocalId, null, start, end, timeEntryDto.isBreak(), bindingResult);
+
+        if (!lockRejected && !overlapsExistingEntry) {
+            try {
+                timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak());
+            } catch (TimeEntryOverlapException exception) {
+                bindingResult.reject("time-entry.validation.timespan.overlaps");
+            }
+        }
+    }
+
+    /**
+     * @return {@code true} if the given timespan overlaps with an existing {@link TimeEntry} of the same type
+     * (break or work) on the same day for the same user and was rejected, {@code false} otherwise
+     */
+    private boolean rejectIfOverlapsExistingEntry(UserLocalId ownerLocalId, @Nullable TimeEntryId excludedTimeEntryId,
+                                                   ZonedDateTime start, ZonedDateTime end, boolean isBreak, BindingResult bindingResult) {
+
+        final boolean overlaps = overlaps(timeEntryService, ownerLocalId, excludedTimeEntryId, start, end, isBreak);
+
+        if (overlaps) {
+            bindingResult.reject("time-entry.validation.timespan.overlaps");
+        }
+
+        return overlaps;
     }
 
     private ZonedDateTime getEndDate(TimeEntryDTO dto, ZoneId zoneId) {

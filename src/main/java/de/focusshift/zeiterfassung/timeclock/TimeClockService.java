@@ -7,12 +7,15 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import static de.focusshift.zeiterfassung.timeentry.TimeEntryOverlapChecker.overlaps;
 
 @Service
 public class TimeClockService {
@@ -94,21 +97,30 @@ public class TimeClockService {
         return updatedTimeClock;
     }
 
+    @Transactional
     void stopTimeClock(UserIdComposite userIdComposite) {
-        timeClockRepository.findByOwnerAndStoppedAtIsNull(userIdComposite.id().value())
-            .map(entity -> timeClockEntityWithStoppedAt(entity, ZonedDateTime.now(clock.withZone(userSettingsProvider.zoneId()))))
-            .map(timeClockRepository::save)
-            .map(TimeClockService::toTimeClock)
-            .ifPresent(timeClock -> {
+        final Optional<TimeClockEntity> maybeRunningTimeClock =
+            timeClockRepository.findByOwnerAndStoppedAtIsNull(userIdComposite.id().value());
+        if (maybeRunningTimeClock.isEmpty()) {
+            return;
+        }
 
-                final ZonedDateTime start = timeClock.startedAt();
-                final ZonedDateTime end = timeClock.stoppedAt()
-                    .orElseThrow(() -> new IllegalStateException("expected stoppedAt to contain a value."));
+        final ZonedDateTime stoppedAt = ZonedDateTime.now(clock.withZone(userSettingsProvider.zoneId()));
+        final TimeClockEntity stoppedTimeClockEntity = timeClockEntityWithStoppedAt(maybeRunningTimeClock.get(), stoppedAt);
+        final TimeClock timeClock = toTimeClock(stoppedTimeClockEntity);
+        final ZonedDateTime start = timeClock.startedAt();
 
-                applicationEventPublisher.publishEvent(new TimeClockStoppedEvent(userIdComposite.id(), start, end, timeClock.comment(), timeClock.isBreak()));
+        if (overlaps(timeEntryService, userIdComposite.localId(), null, start, stoppedAt, timeClock.isBreak())) {
+            throw new TimeClockOverlapsExistingEntryException();
+        }
 
-                timeEntryService.createTimeEntry(userIdComposite.localId(), timeClock.comment(), start, end, timeClock.isBreak());
-            });
+        final TimeClock stoppedTimeClock = toTimeClock(timeClockRepository.save(stoppedTimeClockEntity));
+        final ZonedDateTime savedStoppedAt = stoppedTimeClock.stoppedAt()
+            .orElseThrow(() -> new IllegalStateException("expected stoppedAt to contain a value."));
+        applicationEventPublisher.publishEvent(new TimeClockStoppedEvent(
+            userIdComposite.id(), start, savedStoppedAt, timeClock.comment(), timeClock.isBreak()));
+        timeEntryService.createTimeEntry(
+            userIdComposite.localId(), timeClock.comment(), start, savedStoppedAt, timeClock.isBreak());
     }
 
     private static TimeClockEntity toEntity(TimeClock timeClock) {
