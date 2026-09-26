@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.feedback;
 
+import de.focusshift.zeiterfassung.branding.BrandingConfigProperties;
 import de.focusshift.zeiterfassung.email.EMailConfigurationProperties;
 import de.focusshift.zeiterfassung.email.EMailService;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ class FeedbackConfigurationTest {
         .withUserConfiguration(FeedbackConfiguration.class)
         .withBean(EMailService.class, new JavaMailSenderImpl(), new EMailConfigurationProperties())
         .withBean("emailTemplateEngine", SpringTemplateEngine.class)
+        .withBean(BrandingConfigProperties.class, () -> new BrandingConfigProperties("Zeiterfassung"))
         .withBean(FeedbackGivenControllerAdvice.class);
 
     @Test

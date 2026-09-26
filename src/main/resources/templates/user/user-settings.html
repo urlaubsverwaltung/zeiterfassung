@@ -9,7 +9,9 @@
   <head
     th:replace="~{_layout::head(title=~{::title}, scriptsDefer=~{::scriptsDefer})}"
   >
-    <title th:text="#{user-settings.header.title}"></title>
+    <title
+      th:replace="~{fragments/page-title::page-title(#{user-settings.header.title})}"
+    ></title>
     <th:block th:fragment="scriptsDefer">
       <script
         type="module"
