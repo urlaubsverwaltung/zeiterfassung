@@ -57,7 +57,7 @@ class DemoDataCreationService {
         "Mittagessen mit Freunden \uD83C\uDF5C",
         "Kunden-Workshop",
         "Jourfix im Team",
-        "Ablösung der Zeiterfassung mit urlaubsverwaltung.cloud",
+        "Ablösung der Zeiterfassung mit focus-shift.de",
         "Bericht vorbereiten",
         "Präsentation vorbereiten",
         "Austausch mit Marketing-Team",

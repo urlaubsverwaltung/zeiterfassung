@@ -1,7 +1,7 @@
 {
-  "name": "urlaubsverwaltung.cloud",
-  "short_name": "uv.cloud",
-  "start_url": "https://urlaubsverwaltung.cloud/",
+  "name": "focus-shift.de",
+  "short_name": "focus:shift",
+  "start_url": "https://focus-shift.de/",
   "icons": [
     {
       "src": "/favicons/android-chrome-192x192.png",
