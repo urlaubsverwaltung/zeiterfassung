@@ -58,8 +58,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
@@ -579,7 +581,33 @@ class TimeEntryControllerTest implements ControllerTest {
         expectedTimeEntryDto.setEnd(LocalTime.parse("15:00"));
         expectedTimeEntryDto.setComment("hard work");
 
-        verify(timeEntryViewHelper).createTimeEntry(eq(expectedTimeEntryDto), any(BindingResult.class), any(CurrentOidcUser.class));
+        verify(timeEntryViewHelper).createTimeEntry(eq(userLocalId), eq(expectedTimeEntryDto), any(BindingResult.class), any(CurrentOidcUser.class));
+    }
+
+    @Test
+    void ensureTimeEntryCreationUsesCurrentUserAsOwnerAndIgnoresUserLocalIdFromRequest() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final UserLocalId otherUserLocalId = new UserLocalId(2L);
+
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        perform(post(TIME_ENTRIES_URL_TEMPLATE)
+            .header("Referer", "/timeentries")
+            .with(oidcSubject(userIdComposite))
+            .param("userLocalId", otherUserLocalId.value().toString())
+            .param("date", "2022-01-02")
+            .param("start", "14:30:00.000+01:00")
+            .param("end", "15:00:00.000+01:00")
+            .param("comment", "hard work")
+        )
+            .andExpect(redirectedUrl("/timeentries"));
+
+        verify(timeEntryViewHelper).createTimeEntry(eq(userLocalId), any(TimeEntryDTO.class), any(BindingResult.class), any(CurrentOidcUser.class));
+        verify(timeEntryViewHelper, never()).createTimeEntry(eq(otherUserLocalId), any(TimeEntryDTO.class), any(BindingResult.class), any(CurrentOidcUser.class));
     }
 
     @Test
@@ -612,7 +640,7 @@ class TimeEntryControllerTest implements ControllerTest {
         timeEntryDto.setComment("hard work");
         timeEntryDto.setBreak(true);
 
-        verify(timeEntryViewHelper).createTimeEntry(eq(timeEntryDto), any(BindingResult.class), any(CurrentOidcUser.class));
+        verify(timeEntryViewHelper).createTimeEntry(eq(userLocalId), eq(timeEntryDto), any(BindingResult.class), any(CurrentOidcUser.class));
     }
 
     @Test
@@ -643,7 +671,7 @@ class TimeEntryControllerTest implements ControllerTest {
         timeEntryDto.setEnd(LocalTime.parse("01:15"));
         timeEntryDto.setComment("hard work");
 
-        verify(timeEntryViewHelper).createTimeEntry(eq(timeEntryDto), any(BindingResult.class), any(CurrentOidcUser.class));
+        verify(timeEntryViewHelper).createTimeEntry(eq(userLocalId), eq(timeEntryDto), any(BindingResult.class), any(CurrentOidcUser.class));
     }
 
     @Test
@@ -689,6 +717,34 @@ class TimeEntryControllerTest implements ControllerTest {
     }
 
     @Test
+    void ensureTimeEntryCreationErrorRendersWeekOfCurrentUserAndNotOfUserLocalIdFromRequest() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final UserLocalId otherUserLocalId = new UserLocalId(2L);
+
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2021, 12, 27), PlannedWorkingHours.EIGHT, List.of());
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2021, 52)).thenReturn(new TimeEntryWeekPage(timeEntryWeek, 0));
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+
+        perform(post(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
+            .param("userLocalId", otherUserLocalId.value().toString())
+            .param("date", "2022-01-02")
+            .param("comment", "hard work")
+            .param("duration", "08:00")
+            // missing start/end/value
+        )
+            .andExpect(view().name("timeentries/index"));
+
+        verify(timeEntryDayService, never()).getEntryWeekPage(eq(otherUserLocalId), anyInt(), anyInt());
+    }
+
+    @Test
     void ensureTimeEntryCreationForOtherUserIsForbidden() {
 
         final UserLocalId userLocalId = new UserLocalId(1L);
@@ -730,7 +786,61 @@ class TimeEntryControllerTest implements ControllerTest {
         expectedTimeEntryDto.setEnd(LocalTime.parse("15:00"));
         expectedTimeEntryDto.setComment("hard work");
 
-        verify(timeEntryViewHelper).createTimeEntry(eq(expectedTimeEntryDto), any(BindingResult.class), any(CurrentOidcUser.class));
+        verify(timeEntryViewHelper).createTimeEntry(eq(ownerLocalId), eq(expectedTimeEntryDto), any(BindingResult.class), any(CurrentOidcUser.class));
+    }
+
+    @Test
+    void ensureTimeEntryCreationForUserUsesPathVariableAsOwnerAndIgnoresUserLocalIdFromRequest() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final UserLocalId otherUserLocalId = new UserLocalId(2L);
+
+        perform(post(TIME_ENTRIES_USER_URL_TEMPLATE, userLocalId.value())
+            .with(oidcSubject(userIdComposite))
+            .param("userLocalId", otherUserLocalId.value().toString())
+            .param("date", "2025-03-17")
+            .param("start", "14:30:00.000+02:00")
+            .param("end", "15:00:00.000+02:00")
+            .param("comment", "hard work")
+        )
+            .andExpect(redirectedUrl("http://localhost/timeentries/users/1"));
+
+        verify(timeEntryViewHelper).createTimeEntry(eq(userLocalId), any(TimeEntryDTO.class), any(BindingResult.class), any(CurrentOidcUser.class));
+        verify(timeEntryViewHelper, never()).createTimeEntry(eq(otherUserLocalId), any(TimeEntryDTO.class), any(BindingResult.class), any(CurrentOidcUser.class));
+    }
+
+    @Test
+    void ensureTimeEntryCreationForUserErrorRendersWeekOfPathVariableUserAndNotOfUserLocalIdFromRequest() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final UserLocalId otherUserLocalId = new UserLocalId(2L);
+
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2021, 12, 27), PlannedWorkingHours.EIGHT, List.of());
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2021, 52)).thenReturn(new TimeEntryWeekPage(timeEntryWeek, 0));
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+
+        perform(post(TIME_ENTRIES_USER_URL_TEMPLATE, userLocalId.value())
+            .with(oidcSubject(userIdComposite))
+            .param("userLocalId", otherUserLocalId.value().toString())
+            .param("date", "2022-01-02")
+            .param("comment", "hard work")
+            .param("duration", "08:00")
+            // missing start/end/value
+        )
+            .andExpect(view().name("timeentries/index"));
+
+        verify(timeEntryViewHelper).createTimeEntry(eq(userLocalId), any(TimeEntryDTO.class), any(BindingResult.class), any(CurrentOidcUser.class));
+        verify(timeEntryDayService, never()).getEntryWeekPage(eq(otherUserLocalId), anyInt(), anyInt());
     }
 
     @Test
@@ -809,6 +919,9 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
+
+        when(timeEntryViewHelper.updateTimeEntry(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(userLocalId);
 
         perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
             .header("Turbo-Frame", "any-value")
@@ -895,6 +1008,8 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 1, 2021, 51, expectedTimeEntryWeekDto, 1337);
 
         when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(expectedTimeEntryDto);
+        when(timeEntryViewHelper.updateTimeEntry(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(userLocalId);
 
         perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
             .with(oidcSubject(userIdComposite))
@@ -906,6 +1021,39 @@ class TimeEntryControllerTest implements ControllerTest {
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attribute("timeEntryWeeksPage", is(expectedPage)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/timeentries/1337", "/timeentries/users/1/timeentry/1337"})
+    void ensureTimeEntryEditWithValidationErrorRendersWeekOfTimeEntryOwnerAndNotOfUserLocalIdFromRequest(String url) throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final UserLocalId otherUserLocalId = new UserLocalId(2L);
+
+        // viewHelper verifies access and returns the owner of the persisted timeEntry
+        when(timeEntryViewHelper.updateTimeEntry(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(userLocalId);
+
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2021, 12, 27), PlannedWorkingHours.EIGHT, List.of());
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2021, 52)).thenReturn(new TimeEntryWeekPage(timeEntryWeek, 0));
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+
+        perform(post(url)
+            .with(oidcSubject(userIdComposite))
+            .param("id", "1337")
+            .param("userLocalId", otherUserLocalId.value().toString())
+            .param("date", "2022-01-02")
+            .param("comment", "hard work")
+            // missing start/end/value
+        )
+            .andExpect(view().name("timeentries/index"));
+
+        verify(timeEntryDayService, never()).getEntryWeekPage(eq(otherUserLocalId), anyInt(), anyInt());
     }
 
     @Test
