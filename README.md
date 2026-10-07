@@ -26,7 +26,7 @@ However, there is a **Discussions section** under [Operations](https://github.co
 where people can share experiences and discuss questions.
 
 If **paid support** for on-premise installation or operation is needed, you can find more
-information about the available support options at [focus-shift.de/software](https://focus-shift.de/software/#preis).
+information about the available support options at [focus:shift](https://focus-shift.de/software/#preis).
 
 ### Prerequisites
 
