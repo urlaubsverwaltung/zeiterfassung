@@ -12,10 +12,10 @@ Get started with time tracking! The following features are already included:
 
 Our development thrives on your feedback. We’re excited to improve time tracking together with you.
 * [GitHub Issue](https://github.com/urlaubsverwaltung/zeiterfassung/issues/new/choose)
-* [Email](mailto:info@urlaubsverwaltung.cloud?subject=Zeiterfassung%20-%20Nutzer%20Feedback)
+* [Email](mailto:info@focus-shift.de?subject=Zeiterfassung%20-%20Nutzer%20Feedback)
 
 If you would like to see more information and screenshots of this project, take a look at our landing page:
-[Landingpage](https://urlaubsverwaltung.cloud/zeiterfassung/)
+[Landingpage](https://focus-shift.de/software/#arbeitszeiterfassung)
 
 ![An image of the time tracking application on various devices](docs/zeiterfassung-screens.png)
 
@@ -26,7 +26,7 @@ However, there is a **Discussions section** under [Operations](https://github.co
 where people can share experiences and discuss questions.
 
 If **paid support** for on-premise installation or operation is needed, you can find more
-information about the available support options at [urlaubsverwaltung.cloud/preis](https://urlaubsverwaltung.cloud/preis/).
+information about the available support options at [focus:shift](https://focus-shift.de/software/#preis).
 
 ### Prerequisites
 
@@ -42,7 +42,7 @@ The application is available as docker image on [GitHub][docker-image-on-github]
 
 ### Configuration
 
-The application has a [configuration file](https://github.com/urlaubsverwaltung/zeiterfassung/blob/main/src/main/resources/application.properties) in the `src/main/resources` directory. This includes certain basic settings 
+The application has a [configuration file](https://github.com/urlaubsverwaltung/zeiterfassung/blob/main/src/main/resources/application.yaml) in the `src/main/resources` directory. This includes certain basic settings 
 and default values. However, these alone are not sufficient to put the application into production. Specific 
 configurations such as the database, e-mail server and security provider must be stored in a separate configuration file or
 handed via environment variables.

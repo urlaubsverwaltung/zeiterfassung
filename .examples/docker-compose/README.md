@@ -24,4 +24,4 @@ Additionally, you need to make sure:
 * create backups (application data, keycloak data) on regularly bases
 * keep Zeiterfassung up-to-date
 
-If you need any assistance for installation, you can reach out via [E-Mail](mailto:info@urlaubsverwaltung.cloud?subject=Zeiterfassung%20-%20OnPremise%20Support)
+If you need any assistance for installation, you can reach out via [E-Mail](mailto:info@focus-shift.de?subject=Zeiterfassung%20-%20OnPremise%20Support)

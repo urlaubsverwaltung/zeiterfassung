@@ -871,7 +871,7 @@
       "oidc.ciba.grant.enabled" : "false",
       "client.secret.creation.time" : "1663021719",
       "backchannel.logout.session.required" : "true",
-      "post.logout.redirect.uris" : "https://urlaubsverwaltung.cloud",
+      "post.logout.redirect.uris" : "https://focus-shift.de",
       "display.on.consent.screen" : "false",
       "oauth2.device.authorization.grant.enabled" : "false",
       "backchannel.logout.revoke.offline.tokens" : "false"

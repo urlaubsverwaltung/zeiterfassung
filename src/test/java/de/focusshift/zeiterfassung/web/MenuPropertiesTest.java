@@ -28,13 +28,13 @@ class MenuPropertiesTest {
     @Test
     void helpUrlDefault() {
         final MenuProperties menuProperties = new MenuProperties();
-        assertThat(menuProperties.getHelp().getUrl()).isEqualTo("https://urlaubsverwaltung.cloud/hilfe/?utm_source=zeiterfassung-open-source#dokumentation-zeiterfassung");
+        assertThat(menuProperties.getHelp().getUrl()).isEqualTo("https://focus-shift.de/hilfe/?utm_source=zeiterfassung-open-source#zeiterfassung");
     }
 
     @Test
     void helpUrlIsGiven() {
         final MenuProperties menuProperties = new MenuProperties();
-        menuProperties.getHelp().setUrl("https://urlaubsverwaltung.cloud/hilfe/?utm_source=zeiterfassung-open-source#dokumentation-zeiterfassung");
+        menuProperties.getHelp().setUrl("https://focus-shift.de/hilfe/?utm_source=zeiterfassung-open-source#zeiterfassung");
         final Set<ConstraintViolation<MenuProperties>> violations = validator.validate(menuProperties);
 
         assertThat(violations).isEmpty();

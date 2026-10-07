@@ -26,7 +26,7 @@ launchpad:
     name:
       de: Urlaubsverwaltung
       en: Vacation Management
-    url: https://demo.urlaubsverwaltung.cloud
+    url: https://focus-shift.de/demo/
 
 server:
   port: 8060
