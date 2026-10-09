@@ -67,7 +67,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
         final FederalStateSettings federalStateSettings = settingsService.getFederalStateSettings();
         final LockTimeEntriesSettings lockTimeEntriesSettings = settingsService.getLockTimeEntriesSettings();
         final Optional<SubtractBreakFromTimeEntrySettings> subtractBreakFromTimeEntrySettings = settingsService.getSubtractBreakFromTimeEntrySettings();
-        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings.orElse(null));
+        final TimeEntrySettings timeEntrySettings = settingsService.getTimeEntrySettings();
+        final SettingsDto settingsDto = toSettingsDto(federalStateSettings, lockTimeEntriesSettings, subtractBreakFromTimeEntrySettings.orElse(null), timeEntrySettings);
 
         prepareModel(model, locale, settingsDto);
 
@@ -116,6 +117,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
             settingsService.updateSubtractBreakFromTimeEntrySettings(subtractBreakFromTimeEntryIsActive, timestamp);
         }
 
+        settingsService.updateTimeEntrySettings(settingsDto.commentEnabled(), settingsDto.durationEnabled(), settingsDto.breakEnabled());
+
         return new ModelAndView("redirect:/settings");
     }
 
@@ -141,7 +144,8 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
     private SettingsDto toSettingsDto(
         FederalStateSettings federalStateSettings,
         LockTimeEntriesSettings lockTimeEntriesSettings,
-        @Nullable SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings
+        @Nullable SubtractBreakFromTimeEntrySettings subtractBreakFromTimeEntrySettings,
+        TimeEntrySettings timeEntrySettings
     ) {
 
         final ZoneId userZoneId = userSettingsProvider.zoneId();
@@ -162,7 +166,10 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
             lockTimeEntriesSettings.lockingIsActive(),
             lockTimeEntriesDaysInPast > -1 ? String.valueOf(lockTimeEntriesDaysInPast) : null,
             subtractBreakFromTimeEntryIsActive,
-            subtractBreakFromTimeEntryIsActiveDate
+            subtractBreakFromTimeEntryIsActiveDate,
+            timeEntrySettings.commentEnabled(),
+            timeEntrySettings.durationEnabled(),
+            timeEntrySettings.breakEnabled()
         );
     }
 

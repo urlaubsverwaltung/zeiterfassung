@@ -61,7 +61,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 @Controller
-class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
+class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch, HasTimeEntryForm {
 
     private static final String IS_REDIRECTED = "isRedirected";
 
