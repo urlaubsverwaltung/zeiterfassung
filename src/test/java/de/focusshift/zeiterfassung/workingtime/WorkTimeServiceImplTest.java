@@ -896,9 +896,44 @@ class WorkTimeServiceImplTest {
                 assertThat(event.userIdComposite()).isEqualTo(userIdComposite);
                 assertThat(event.workingTimeId()).isEqualTo(new WorkingTimeId(id));
                 assertThat(event.validFrom()).isNull();
+                assertThat(event.previousValidFrom()).isNull();
                 assertThat(event.federalState()).isEqualTo(GERMANY_BADEN_WUERTTEMBERG);
                 assertThat(event.worksOnPublicHoliday()).isTrue();
                 assertThat(event.workdays()).containsEntry(MONDAY, Duration.ofHours(8));
+            });
+        }
+
+        @Test
+        void ensureUpdateWorkingTimePublishesEventWithPreviousValidFromWhenValidFromIsMoved() {
+
+            final UserId userId = new UserId("uuid-1");
+            final UserLocalId userLocalId = new UserLocalId(42L);
+            final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+            final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+            when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+
+            final UUID id = UUID.randomUUID();
+            final WorkingTimeEntity entity = anyWorkingTimeEntity(id, 42L, LocalDate.parse("2025-08-01"));
+
+            when(workingTimeRepository.findById(id)).thenReturn(Optional.of(entity));
+            when(workingTimeRepository.save(any())).thenAnswer(returnsFirstArg());
+
+            when(workingTimeRepository.findAllByUserId(userLocalId.value())).thenReturn(List.of(
+                entity,
+                anyWorkingTimeEntity(UUID.randomUUID(), userLocalId.value(), null)
+            ));
+
+            final EnumMap<DayOfWeek, Duration> workdays = new EnumMap<>(Map.of(MONDAY, Duration.ofHours(8)));
+
+            // move validFrom into the past
+            sut.updateWorkingTime(new WorkingTimeId(id), LocalDate.parse("2025-06-01"), GERMANY_BADEN_WUERTTEMBERG, true, workdays);
+
+            final ArgumentCaptor<WorkingTimeUpdatedEvent> eventCaptor = ArgumentCaptor.forClass(WorkingTimeUpdatedEvent.class);
+            verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
+
+            assertThat(eventCaptor.getValue()).satisfies(event -> {
+                assertThat(event.validFrom()).isEqualTo(LocalDate.parse("2025-06-01"));
+                assertThat(event.previousValidFrom()).isEqualTo(LocalDate.parse("2025-08-01"));
             });
         }
     }

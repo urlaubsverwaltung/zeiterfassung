@@ -22,11 +22,16 @@ import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeCreatedEvent;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeDeletedEvent;
+import de.focusshift.zeiterfassung.workingtime.WorkingTimeUpdatedEvent;
+import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +50,7 @@ public class OvertimePublisher {
     private final UserManagementService userManagementService;
     private final WorkingTimeCalendarService workingTimeCalendarService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final Clock clock;
 
     OvertimePublisher(
         OvertimeService overtimeService,
@@ -52,7 +58,8 @@ public class OvertimePublisher {
         TimeEntryLockService timeEntryLockService,
         UserManagementService userManagementService,
         WorkingTimeCalendarService workingTimeCalendarService,
-        ApplicationEventPublisher applicationEventPublisher
+        ApplicationEventPublisher applicationEventPublisher,
+        Clock clock
     ) {
         this.overtimeService = overtimeService;
         this.overtimeAccountService = overtimeAccountService;
@@ -60,6 +67,7 @@ public class OvertimePublisher {
         this.timeEntryLockService = timeEntryLockService;
         this.userManagementService = userManagementService;
         this.workingTimeCalendarService = workingTimeCalendarService;
+        this.clock = clock;
     }
 
     @EventListener
@@ -205,19 +213,92 @@ public class OvertimePublisher {
         publishForUserAndDateRange(event.userId(), event.newDateRange());
     }
 
-    private void publishForUserAndDateRange(UserId userId, DateRange dateRange) {
-        final Optional<UserIdComposite> maybeUserIdComposite = userManagementService.findUserById(userId).map(User::userIdComposite);
-        if (maybeUserIdComposite.isEmpty()) {
-            LOG.info("Ignore absence. Unknown user {}.", userId);
+    @EventListener
+    public void publishOvertimeUpdated(WorkingTimeCreatedEvent event) {
+        publishOvertimeForWorkingTimeChange(event.userIdComposite(), event.validFrom());
+    }
+
+    @EventListener
+    public void publishOvertimeUpdated(WorkingTimeUpdatedEvent event) {
+        // validFrom may have been moved into the past or into the future. Either way the whole span between the
+        // previous and the current validFrom (and everything up to the last locked day) is affected, because the
+        // planned working hours of those days changed.
+        final LocalDate affectedValidFrom = earliestNonNull(event.previousValidFrom(), event.validFrom());
+        publishOvertimeForWorkingTimeChange(event.userIdComposite(), affectedValidFrom);
+    }
+
+    @EventListener
+    public void publishOvertimeUpdated(WorkingTimeDeletedEvent event) {
+        // after deletion the preceding working time extends over the deleted range, so its planned working hours change.
+        publishOvertimeForWorkingTimeChange(event.userIdComposite(), event.validFrom());
+    }
+
+    /**
+     * Recalculate and publish overtime for the locked days that are affected by a working time change.
+     *
+     * <p>
+     * A working time change alters the {@link de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours planned
+     * working hours} from {@code validFrom} onwards. Only days that are already locked ("festgeschrieben") need to be
+     * synced here, since not-yet-locked days are (re)calculated by the scheduler once they get locked.
+     *
+     * @param userIdComposite user whose working time changed
+     * @param validFrom earliest date affected by the change, or {@code null} for the very first working time (which
+     *                  has no {@code validFrom} and therefore cannot be bounded - skipped)
+     */
+    private void publishOvertimeForWorkingTimeChange(UserIdComposite userIdComposite, @Nullable LocalDate validFrom) {
+
+        if (validFrom == null) {
+            LOG.info("Cannot resync overtime for working time change of user={} without validFrom (very first working time). Skipping.", userIdComposite);
             return;
         }
 
-        final UserIdComposite userIdComposite = maybeUserIdComposite.get();
+        final Optional<LocalDate> maybeLastLockedDate = getLastLockedDate();
+        if (maybeLastLockedDate.isEmpty()) {
+            LOG.debug("Locking is disabled, no locked overtime to resync for working time change of user={}.", userIdComposite);
+            return;
+        }
+
+        final LocalDate lastLockedDate = maybeLastLockedDate.get();
+        if (validFrom.isAfter(lastLockedDate)) {
+            LOG.debug("Working time change of user={} (validFrom={}) does not reach into the locked period (lastLockedDate={}). Nothing to resync.", userIdComposite, validFrom, lastLockedDate);
+            return;
+        }
+
+        LOG.info("Working time changed for user={}. Resync overtime for locked days in range [{} - {}].", userIdComposite, validFrom, lastLockedDate);
+        publishForUserAndDateRange(userIdComposite, new DateRange(validFrom, lastLockedDate));
+    }
+
+    private Optional<LocalDate> getLastLockedDate() {
+        return timeEntryLockService.getMinValidTimeEntryDate(clock.getZone())
+            .map(minValidDate -> minValidDate.minusDays(1));
+    }
+
+    private static LocalDate earliestNonNull(@Nullable LocalDate first, @Nullable LocalDate second) {
+        if (first == null) {
+            return second;
+        }
+        if (second == null) {
+            return first;
+        }
+        return first.isBefore(second) ? first : second;
+    }
+
+    private void publishForUserAndDateRange(UserId userId, DateRange dateRange) {
+        final Optional<UserIdComposite> maybeUserIdComposite = userManagementService.findUserById(userId).map(User::userIdComposite);
+        if (maybeUserIdComposite.isEmpty()) {
+            LOG.info("Ignore event. Unknown user {}.", userId);
+            return;
+        }
+
+        publishForUserAndDateRange(maybeUserIdComposite.get(), dateRange);
+    }
+
+    private void publishForUserAndDateRange(UserIdComposite userIdComposite, DateRange dateRange) {
         final UserLocalId userLocalId = userIdComposite.localId();
 
         final OvertimeAccount overtimeAccount = overtimeAccountService.getOvertimeAccount(userLocalId);
         if (!overtimeAccount.isAllowed()) {
-            LOG.info("Ignore absence. User {} overtime not allowed.", userIdComposite);
+            LOG.info("Ignore event. User {} overtime not allowed.", userIdComposite);
             return;
         }
 
@@ -241,7 +322,7 @@ public class OvertimePublisher {
             if (hasPlannedWorkingHours) {
                 publishUpdated(userIdComposite, date);
             } else {
-                LOG.info("Skip absence day {} for user {} because planned working hours are zero.", date, userIdComposite);
+                LOG.info("Skip day {} for user {} because planned working hours are zero.", date, userIdComposite);
             }
         }
     }
