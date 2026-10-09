@@ -35,6 +35,11 @@
             </form>
           </div>
           <div class="mt-4" th:if="${timeClockUpdate != null}">
+            <p
+              th:if="${timeClockOverlap}"
+              class="invalid mb-4"
+              th:text="#{time-entry.validation.timespan.overlaps}"
+            ></p>
             <div
               th:replace="~{timeclock/timeclock-edit-form::time-clock-update}"
             ></div>

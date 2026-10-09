@@ -48,6 +48,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.data.history.RevisionMetadata.RevisionType.INSERT;
@@ -79,6 +81,7 @@ class TimeEntryServiceImplTest {
     void setUp() {
         sut = new TimeEntryServiceImpl(timeEntryRepository, timeEntryLockService, userManagementService,
             userSettingsProvider, entityRevisionMapper, applicationEventPublisher, clockFixed);
+        lenient().when(userSettingsProvider.zoneId()).thenReturn(ZONE_ID_UTC);
     }
 
     @Nested
@@ -263,6 +266,33 @@ class TimeEntryServiceImplTest {
             assertThat(entity.getUpdatedAt()).isEqualTo(Instant.now(clockFixed));
             assertThat(entity.isBreak()).isFalse();
         });
+    }
+
+    @Test
+    void ensureCreateTimeEntryRejectsOverlappingEntry() {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+        final User user = new User(userIdComposite, "Bruce", "Wayne", new EMailAddress(""), Set.of());
+        final ZonedDateTime existingStart = ZonedDateTime.parse("2023-01-01T09:55:00Z");
+        final ZonedDateTime existingEnd = ZonedDateTime.parse("2023-01-01T10:45:00Z");
+        final TimeEntryEntity existingEntry = new TimeEntryEntity(
+            1L, userId.value(), "", existingStart.toInstant(), ZONE_ID_UTC,
+            existingEnd.toInstant(), ZONE_ID_UTC, Instant.now(), false
+        );
+
+        when(userManagementService.findUserByLocalId(userLocalId)).thenReturn(Optional.of(user));
+        when(timeEntryRepository.findAllByOwnerAndStartGreaterThanEqualAndStartLessThanOrderByStartDesc(
+            userId.value(), Instant.parse("2022-12-31T00:00:00Z"), Instant.parse("2023-01-02T00:00:00Z")))
+            .thenReturn(List.of(existingEntry));
+
+        assertThatExceptionOfType(TimeEntryOverlapException.class).isThrownBy(() -> sut.createTimeEntry(
+            userLocalId, "", ZonedDateTime.parse("2023-01-01T10:00:00Z"),
+            ZonedDateTime.parse("2023-01-01T13:30:00Z"), false
+        ));
+
+        verify(timeEntryRepository, never()).save(any());
     }
 
     @ParameterizedTest
