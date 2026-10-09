@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.feedback;
 
+import de.focusshift.zeiterfassung.branding.BrandingConfigProperties;
 import de.focusshift.zeiterfassung.email.EMailConstants;
 import de.focusshift.zeiterfassung.email.EMailService;
 import de.focusshift.zeiterfassung.feedback.events.FeedbackGivenEvent;
@@ -21,12 +22,15 @@ class FeedbackGivenListenerEmail {
     private final EMailService eMailService;
     private final ITemplateEngine mailTemplateEngine;
     private final FeedbackConfigurationProperties feedbackConfigurationProperties;
+    private final BrandingConfigProperties brandingConfigProperties;
 
     FeedbackGivenListenerEmail(EMailService eMailService, ITemplateEngine emailTemplateEngine,
-                               FeedbackConfigurationProperties feedbackConfigurationProperties) {
+                               FeedbackConfigurationProperties feedbackConfigurationProperties,
+                               BrandingConfigProperties brandingConfigProperties) {
         this.eMailService = eMailService;
         this.mailTemplateEngine = emailTemplateEngine;
         this.feedbackConfigurationProperties = feedbackConfigurationProperties;
+        this.brandingConfigProperties = brandingConfigProperties;
     }
 
     @Async
@@ -35,12 +39,14 @@ class FeedbackGivenListenerEmail {
 
         final EMailAddress sender = feedbackGivenEvent.sender();
         final String message = feedbackGivenEvent.message();
-        final String subject = "Zeiterfassung - Nutzer Feedback";
+        final String applicationName = brandingConfigProperties.name();
+        final String subject = "%s - Nutzer Feedback".formatted(applicationName);
         final String to = feedbackConfigurationProperties.getEmail().getTo();
 
         final Context context = new Context(EMailConstants.DEFAULT_LOCALE);
         context.setVariable("sender", sender.value());
         context.setVariable("message", message);
+        context.setVariable("applicationName", applicationName);
 
         final String plainTextEmail = mailTemplateEngine.process("text/user-feedback.txt", context);
         final String htmlEmail = "";

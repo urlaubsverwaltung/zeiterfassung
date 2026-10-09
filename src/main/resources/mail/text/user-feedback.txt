@@ -1,4 +1,4 @@
-Wir haben Feedback zur Zeiterfassung bekommen :party:
+Wir haben Feedback zu [(${applicationName})] bekommen :party:
 
 Von:
 [(${sender})]

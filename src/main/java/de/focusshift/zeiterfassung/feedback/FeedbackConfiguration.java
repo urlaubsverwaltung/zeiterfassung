@@ -1,5 +1,6 @@
 package de.focusshift.zeiterfassung.feedback;
 
+import de.focusshift.zeiterfassung.branding.BrandingConfigProperties;
 import de.focusshift.zeiterfassung.email.EMailService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,8 +24,8 @@ public class FeedbackConfiguration {
         }
 
         @Bean
-        FeedbackGivenListenerEmail feedbackGivenListenerEmail(EMailService eMailService, @Qualifier("emailTemplateEngine") ITemplateEngine emailTemplateEngine, FeedbackConfigurationProperties properties) {
-            return new FeedbackGivenListenerEmail(eMailService, emailTemplateEngine, properties);
+        FeedbackGivenListenerEmail feedbackGivenListenerEmail(EMailService eMailService, @Qualifier("emailTemplateEngine") ITemplateEngine emailTemplateEngine, FeedbackConfigurationProperties properties, BrandingConfigProperties brandingConfigProperties) {
+            return new FeedbackGivenListenerEmail(eMailService, emailTemplateEngine, properties, brandingConfigProperties);
         }
     }
 }

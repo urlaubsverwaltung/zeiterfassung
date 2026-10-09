@@ -9,7 +9,9 @@
   <head
     th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scriptsDefer=~{::scriptsDefer})}"
   >
-    <title th:text="#{report.page.meta.title}">Zeiterfassung - Bericht</title>
+    <title
+      th:replace="~{fragments/page-title::page-title(#{report.page.meta.title})}"
+    ></title>
     <th:block th:fragment="styles">
       <link
         rel="stylesheet"
