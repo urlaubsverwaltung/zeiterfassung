@@ -278,6 +278,12 @@
         </configuration>
       </plugin>
 
+      <!-- SBOM of the Java dependencies, configured by spring-boot-starter-parent -->
+      <plugin>
+        <groupId>org.cyclonedx</groupId>
+        <artifactId>cyclonedx-maven-plugin</artifactId>
+      </plugin>
+
       <!-- Frontend assets -->
       <plugin>
         <groupId>com.github.eirslett</groupId>
@@ -305,7 +311,7 @@
               <goal>npm</goal>
             </goals>
             <configuration>
-              <arguments>ci</arguments>
+              <arguments>ci --include=dev</arguments>
             </configuration>
           </execution>
           <!-- Static Code Analysis -->
