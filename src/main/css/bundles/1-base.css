@@ -104,13 +104,7 @@
   font-display: swap;
 }
 
-html {
-  height: -webkit-fill-available;
-}
-
 body {
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
   display: grid;
   grid-template-rows: auto auto auto 1fr;
   grid-template-columns: auto 1fr auto auto auto;
@@ -120,7 +114,10 @@ body {
     "search search search search search"
     "content content content content content";
   overflow: hidden;
-  height: 100vh;
+  /* body never scrolls, #main is the scroll container. 100vh would be the large viewport on mobile
+     which reaches behind the browser toolbar (e.g. iOS Safari) and hides the bottom of #main
+     including the footer. the dynamic viewport only covers the actually visible area. */
+  height: 100dvh;
 
   @variant dark {
     background-color: var(--color-zinc-900);
