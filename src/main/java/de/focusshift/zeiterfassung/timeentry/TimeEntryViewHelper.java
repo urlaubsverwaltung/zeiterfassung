@@ -57,7 +57,6 @@ public class TimeEntryViewHelper {
 
         return TimeEntryDTO.builder()
             .id(timeEntry.id().value())
-            .userLocalId(timeEntry.userIdComposite().localId().value())
             .date(date)
             .start(startTime)
             .end(endTime)
@@ -177,7 +176,7 @@ public class TimeEntryViewHelper {
      * This method validates whether the desired timespan is locked or not. Creating the timeEntry is rejected
      * via bindingResult if timespan is locked and current user is not allowed to bypass it.
      *
-     * @param ownerLocalId owner of the time entry, already authorized. {@link TimeEntryDTO#getUserLocalId()} is ignored!
+     * @param ownerLocalId owner of the time entry, already authorized
      * @param timeEntryDto user input for the time entry
      */
     void createTimeEntry(UserLocalId ownerLocalId, TimeEntryDTO timeEntryDto, BindingResult bindingResult, CurrentOidcUser currentUser) {

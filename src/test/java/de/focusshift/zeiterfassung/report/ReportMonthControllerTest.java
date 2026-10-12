@@ -554,7 +554,6 @@ class ReportMonthControllerTest implements ControllerTest {
 
             perform(post("/report/year/2025/month/2")
                 .param("id", "1")
-                .param("userLocalId", "1")
                 .param("date", "2025-02-28")
                 .param("start", "14:30")
                 .param("end", "15:00")

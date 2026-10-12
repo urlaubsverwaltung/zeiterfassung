@@ -533,7 +533,6 @@ class ReportWeekControllerTest implements ControllerTest {
 
             perform(post("/report/year/2025/week/9")
                 .param("id", "1")
-                .param("userLocalId", "1")
                 .param("date", "2025-02-28")
                 .param("start", "14:30")
                 .param("end", "15:00")

@@ -161,7 +161,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
-            .userLocalId(userLocalId.value())
             .date(timeEntryDate)
             .start(LocalTime.of(14, 30))
             .end(LocalTime.of(15, 0))
@@ -244,7 +243,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
-            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2024, 12, 31))
             .start(LocalTime.of(14, 30))
             .end(LocalTime.of(15, 0))
@@ -332,7 +330,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
-            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2024, 12, 31))
             .start(LocalTime.of(14, 30))
             .end(LocalTime.of(15, 0))
@@ -381,7 +378,6 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(model().attribute("timeEntryWeeksPage", is(expectedPage)));
 
         final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-        timeEntryDTO.setUserLocalId(userIdComposite.localId().value());
         verify(timeEntryViewHelper).addTimeEntryToModel(any(Model.class), eq(timeEntryDTO));
     }
 
@@ -538,7 +534,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final ViewedUserDto expectedViewedUserDto = new ViewedUserDto(ownerLocalId.value(), owner.givenName(), owner.familyName(), owner.fullName(), owner.initials(), owner.email().value());
         final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO();
-        expectedTimeEntryDto.setUserLocalId(ownerLocalId.value());
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(weekOfYear, null, null, "00:00", "00:00", "00:00", false, 0.0, List.of());
         final TimeEntryWeeksPageDto expetectedWeeksPageDto = new TimeEntryWeeksPageDto(year, weekOfYear + 1, year, weekOfYear - 1, expectedTimeEntryWeekDto, 0);
@@ -566,7 +561,6 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(post(TIME_ENTRIES_URL_TEMPLATE)
             .header("Referer", "/timeentries")
             .with(oidcSubject(userIdComposite))
-            .param("userLocalId", userLocalId.value().toString())
             .param("date", "2022-01-02")
             .param("start", "14:30:00.000+01:00")
             .param("end", "15:00:00.000+01:00")
@@ -575,7 +569,6 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(redirectedUrl("/timeentries"));
 
         final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO();
-        expectedTimeEntryDto.setUserLocalId(userLocalId.value());
         expectedTimeEntryDto.setDate(LocalDate.parse("2022-01-02"));
         expectedTimeEntryDto.setStart(LocalTime.parse("14:30"));
         expectedTimeEntryDto.setEnd(LocalTime.parse("15:00"));
@@ -622,7 +615,6 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(post(TIME_ENTRIES_URL_TEMPLATE)
             .header("Referer", "/timeentries")
             .with(oidcSubject(userIdComposite))
-            .param("userLocalId", userLocalId.value().toString())
             .param("date", "2022-01-02")
             .param("start", "14:30:00.000+01:00")
             .param("end", "15:00:00.000+01:00")
@@ -633,7 +625,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
         timeEntryDto.setId(1337L);
-        timeEntryDto.setUserLocalId(userIdComposite.localId().value());
         timeEntryDto.setDate(LocalDate.parse("2022-01-02"));
         timeEntryDto.setStart(LocalTime.parse("14:30"));
         timeEntryDto.setEnd(LocalTime.parse("15:00"));
@@ -655,7 +646,6 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(post(TIME_ENTRIES_URL_TEMPLATE)
             .header("Referer", "/timeentries")
             .with(oidcSubject(userIdComposite))
-            .param("userLocalId", userLocalId.value().toString())
             .param("date", "2022-01-02")
             .param("start", "22:30:00.000+01:00")
             .param("end", "01:15:00.000+01:00")
@@ -665,7 +655,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
         timeEntryDto.setId(1337L);
-        timeEntryDto.setUserLocalId(userIdComposite.localId().value());
         timeEntryDto.setDate(LocalDate.parse("2022-01-02"));
         timeEntryDto.setStart(LocalTime.parse("22:30"));
         timeEntryDto.setEnd(LocalTime.parse("01:15"));
@@ -706,7 +695,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         perform(post(TIME_ENTRIES_URL_TEMPLATE)
             .with(oidcSubject(userIdComposite))
-            .param("userLocalId", userLocalId.value().toString())
             .param("date", "2022-01-02")
             .param("comment", "hard work")
             .param("duration", "08:00")
@@ -771,7 +759,6 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(post(TIME_ENTRIES_USER_URL_TEMPLATE, ownerLocalId.value())
             .header("Referer", "/timeentries/users/2")
             .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
-            .param("userLocalId", ownerLocalId.value().toString())
             .param("date", "2025-03-17")
             .param("start", "14:30:00.000+02:00")
             .param("end", "15:00:00.000+02:00")
@@ -780,7 +767,6 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(redirectedUrl("http://localhost/timeentries/users/2"));
 
         final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO();
-        expectedTimeEntryDto.setUserLocalId(ownerLocalId.value());
         expectedTimeEntryDto.setDate(LocalDate.parse("2025-03-17"));
         expectedTimeEntryDto.setStart(LocalTime.parse("14:30"));
         expectedTimeEntryDto.setEnd(LocalTime.parse("15:00"));
@@ -855,7 +841,6 @@ class TimeEntryControllerTest implements ControllerTest {
             .header("Referer", "/timeentries/2022/39")
             .with(oidcSubject(userIdComposite))
             .param("id", "1337")
-            .param("userLocalId", userIdComposite.localId().value().toString())
             .param("date", "2022-09-28")
             .param("start", "21:15:00.000+01:00")
             .param("end", "")
@@ -866,7 +851,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO();
         expectedTimeEntryDto.setId(1337L);
-        expectedTimeEntryDto.setUserLocalId(userIdComposite.localId().value());
         expectedTimeEntryDto.setDate(LocalDate.parse("2022-09-28"));
         expectedTimeEntryDto.setStart(LocalTime.parse("21:15"));
         expectedTimeEntryDto.setDuration("01:00");
@@ -927,7 +911,6 @@ class TimeEntryControllerTest implements ControllerTest {
             .header("Turbo-Frame", "any-value")
             .with(oidcSubject(userIdComposite))
             .param("id", "1337")
-            .param("userLocalId", userIdComposite.localId().value().toString())
             .param("date", "2022-09-28")
             .param("start", "20:30:00.000+01:00")
             .param("end", "21:15:00.000+01:00")
@@ -938,7 +921,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedUpdatedTimeEntryDto = TimeEntryDTO.builder()
             .id(1337L)
-            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2022, 9, 28))
             .start(LocalTime.of(20, 30))
             .end(LocalTime.of(21, 15))
@@ -972,7 +954,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
-            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2022, 9, 22))
             .start(LocalTime.of(14, 30))
             .end(LocalTime.of(15, 0))
@@ -1014,7 +995,6 @@ class TimeEntryControllerTest implements ControllerTest {
         perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
             .with(oidcSubject(userIdComposite))
             .param("id", "1337")
-            .param("userLocalId", userLocalId.value().toString())
             .param("date", "2022-01-02")
             .param("comment", "hard work")
             // missing start/end/value
@@ -1066,7 +1046,6 @@ class TimeEntryControllerTest implements ControllerTest {
         mockUserSettings(DayOfWeek.MONDAY);
 
         final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO();
-        expectedTimeEntryDto.setUserLocalId(userLocalId.value());
         expectedTimeEntryDto.setDate(LocalDate.parse("2022-09-28"));
         expectedTimeEntryDto.setComment("hard work extended");
 
@@ -1080,7 +1059,6 @@ class TimeEntryControllerTest implements ControllerTest {
             .header("Turbo-Frame", "any-value")
             .with(oidcSubject(userIdComposite))
             .param("id", "1337")
-            .param("userLocalId", userLocalId.value().toString())
             .param("date", "2022-09-28")
             .param("start", "")
             .param("end", "")
@@ -1116,7 +1094,6 @@ class TimeEntryControllerTest implements ControllerTest {
             .header("Referer", "/timeentries/users/2")
             .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
             .param("id", "42")
-            .param("userLocalId", "2")
             .param("date", "2025-03-17")
             .param("start", "20:30:00.000+02:00")
             .param("end", "21:15:00.000+02:00")
@@ -1126,7 +1103,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
         timeEntryDto.setId(42L);
-        timeEntryDto.setUserLocalId(2L);
         timeEntryDto.setDate(LocalDate.parse("2025-03-17"));
         timeEntryDto.setStart(LocalTime.parse("20:30"));
         timeEntryDto.setEnd(LocalTime.parse("21:15"));
@@ -1190,7 +1166,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedDeletedTimeEntryDeletedDto = TimeEntryDTO.builder()
             .id(1L)
-            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2022, 9, 28))
             .start(LocalTime.of(20, 30))
             .end(LocalTime.of(21, 15))
@@ -1200,7 +1175,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedTimeEntry2Dto = TimeEntryDTO.builder()
             .id(2L)
-            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2022, 9, 28))
             .start(LocalTime.of(16, 30))
             .end(LocalTime.of(17, 30))
@@ -1273,7 +1247,6 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryDTO expectedDeletedTimeEntryDto = TimeEntryDTO.builder()
             .id(1L)
-            .userLocalId(userLocalId.value())
             .date(LocalDate.of(2022, 9, 28))
             .start(LocalTime.of(20, 30))
             .end(LocalTime.of(21, 15))

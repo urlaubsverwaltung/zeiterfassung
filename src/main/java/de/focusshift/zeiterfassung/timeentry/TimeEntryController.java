@@ -143,7 +143,6 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, Model model, Locale locale, CurrentOidcUser currentUser) {
 
         final TimeEntryDTO timeEntryDTO = new TimeEntryDTO(userDateService.today());
-        timeEntryDTO.setUserLocalId(ownerLocalId.value());
 
         viewHelper.addTimeEntryToModel(model, timeEntryDTO);
         addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale, currentUser);
@@ -204,7 +203,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     }
 
     /**
-     * Creates the time entry for the given owner. The owner must already be authorized, it is never read from the dto.
+     * Creates the time entry for the given owner. The owner must already be authorized.
      */
     private void handleCreateTimeEntry(UserLocalId ownerLocalId, TimeEntryDTO timeEntryDto, BindingResult bindingResult,
                                        CurrentOidcUser currentUser,
@@ -292,7 +291,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         final Long timeEntryId = timeEntryDTO.getId();
 
-        // owner of the persisted timeEntry, verified by the viewHelper. never use the userLocalId of the dto!
+        // owner of the persisted timeEntry, verified by the viewHelper
         final UserLocalId ownerLocalId = viewHelper.updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
         if (hasText(turboFrame)) {

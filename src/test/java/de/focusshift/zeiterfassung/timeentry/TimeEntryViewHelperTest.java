@@ -181,7 +181,6 @@ class TimeEntryViewHelperTest {
             final LocalTime endTime = LocalTime.parse("17:00");
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setDate(date);
             timeEntryDTO.setStart(startTime);
             timeEntryDTO.setEnd(endTime);
@@ -213,7 +212,6 @@ class TimeEntryViewHelperTest {
             final LocalTime endTime = LocalTime.parse("17:00");
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setDate(date);
             timeEntryDTO.setStart(startTime);
             timeEntryDTO.setEnd(endTime);
@@ -244,7 +242,6 @@ class TimeEntryViewHelperTest {
             final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setId(null);
             timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
             timeEntryDTO.setStart(LocalTime.parse("09:00"));
@@ -271,7 +268,6 @@ class TimeEntryViewHelperTest {
             final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setId(null);
             timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
             timeEntryDTO.setStart(LocalTime.parse("09:00"));
@@ -297,7 +293,6 @@ class TimeEntryViewHelperTest {
             final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setId(null);
             timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
             timeEntryDTO.setEnd(LocalTime.parse("17:00"));
@@ -314,16 +309,15 @@ class TimeEntryViewHelperTest {
         }
 
         @Test
-        void ensureCreateTimeEntryUsesGivenOwnerAndIgnoresUserLocalIdOfDto() {
+        void ensureCreateTimeEntryUsesGivenOwnerAndNotTheCurrentUser() {
 
             final UserLocalId userLocalId = new UserLocalId(1L);
-            final UserLocalId otherUserLocalId = new UserLocalId(2L);
+            final UserLocalId ownerLocalId = new UserLocalId(2L);
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
             final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(otherUserLocalId.value());
             timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
             timeEntryDTO.setStart(LocalTime.parse("09:00"));
             timeEntryDTO.setEnd(LocalTime.parse("17:00"));
@@ -331,11 +325,11 @@ class TimeEntryViewHelperTest {
 
             final BindingResult bindingResult = mock(BindingResult.class);
 
-            sut.createTimeEntry(userLocalId, timeEntryDTO, bindingResult, currentUser);
+            sut.createTimeEntry(ownerLocalId, timeEntryDTO, bindingResult, currentUser);
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
-            verify(timeEntryService).createTimeEntry(userLocalId, "comment", start, end, false);
+            verify(timeEntryService).createTimeEntry(ownerLocalId, "comment", start, end, false);
             verifyNoMoreInteractions(timeEntryService);
         }
     }
@@ -349,7 +343,6 @@ class TimeEntryViewHelperTest {
             final UserLocalId userLocalId = new UserLocalId(1L);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
 
             final BindingResult bindingResult = mock(BindingResult.class);
             final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(userLocalId);
@@ -372,7 +365,6 @@ class TimeEntryViewHelperTest {
             final UserLocalId userLocalId = new UserLocalId(1L);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -402,7 +394,6 @@ class TimeEntryViewHelperTest {
             final UserIdComposite timeEntryOwnerIdComposite = new UserIdComposite(timeEntryOwnerId, timeEntryOwnerLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDTO.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -430,7 +421,6 @@ class TimeEntryViewHelperTest {
             final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDTO.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -460,7 +450,6 @@ class TimeEntryViewHelperTest {
             final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDTO.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -490,7 +479,6 @@ class TimeEntryViewHelperTest {
             final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDTO.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -521,7 +509,6 @@ class TimeEntryViewHelperTest {
             final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDTO.setId(1L);
 
             when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
@@ -550,7 +537,6 @@ class TimeEntryViewHelperTest {
             final TimeEntryId timeEntryId = new TimeEntryId(1L);
 
             final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
-            timeEntryDto.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDto.setId(1L);
             timeEntryDto.setDate(LocalDate.parse("2025-02-14"));
             timeEntryDto.setStart(LocalTime.parse("12:15"));
@@ -591,7 +577,6 @@ class TimeEntryViewHelperTest {
             final TimeEntryId timeEntryId = new TimeEntryId(1L);
 
             final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
-            timeEntryDto.setUserLocalId(timeEntryOwnerLocalId.value());
             timeEntryDto.setId(1L);
             timeEntryDto.setDate(LocalDate.parse("2025-02-14"));
             timeEntryDto.setStart(LocalTime.parse("12:15"));
@@ -618,7 +603,7 @@ class TimeEntryViewHelperTest {
         }
 
         @Test
-        void ensureUpdateTimeEntryReturnsOwnerOfPersistedTimeEntryAndNotUserLocalIdOfDto() throws Exception {
+        void ensureUpdateTimeEntryReturnsOwnerOfPersistedTimeEntry() throws Exception {
 
             final UserLocalId loggedInUserLocalId = new UserLocalId(1L);
 
@@ -627,7 +612,6 @@ class TimeEntryViewHelperTest {
             final UserIdComposite timeEntryOwnerIdComposite = new UserIdComposite(timeEntryOwnerId, timeEntryOwnerLocalId);
 
             final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
-            timeEntryDto.setUserLocalId(3L);
             timeEntryDto.setId(1L);
             timeEntryDto.setDate(LocalDate.parse("2025-02-14"));
             timeEntryDto.setStart(LocalTime.parse("12:15"));
@@ -649,14 +633,13 @@ class TimeEntryViewHelperTest {
         }
 
         @Test
-        void ensureUpdateTimeEntryReturnsOwnerOfPersistedTimeEntryAndNotUserLocalIdOfDtoOnValidationError() {
+        void ensureUpdateTimeEntryReturnsOwnerOfPersistedTimeEntryOnValidationError() {
 
             final UserId loggedInUserId = new UserId("user-id");
             final UserLocalId loggedInUserLocalId = new UserLocalId(1L);
             final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(2L);
             timeEntryDTO.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
