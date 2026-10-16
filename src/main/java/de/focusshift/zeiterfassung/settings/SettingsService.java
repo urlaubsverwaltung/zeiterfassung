@@ -18,13 +18,14 @@ import static java.util.stream.StreamSupport.stream;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Service
-class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService {
+class SettingsService implements FederalStateSettingsService, LockTimeEntriesSettingsService, SubtractBreakFromTimeEntrySettingsService, TimeEntrySettingsService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final FederalStateSettingsRepository federalStateSettingsRepository;
     private final LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository;
     private final SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository;
+    private final TimeEntrySettingsRepository timeEntrySettingsRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final Clock clock;
 
@@ -32,12 +33,14 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         FederalStateSettingsRepository federalStateSettingsRepository,
         LockTimeEntriesSettingsRepository lockTimeEntriesSettingsRepository,
         SubtractBreakFromTimeEntrySettingsRepository subtractBreakFromTimeEntrySettingsRepository,
+        TimeEntrySettingsRepository timeEntrySettingsRepository,
         ApplicationEventPublisher applicationEventPublisher,
         Clock clock
     ) {
         this.federalStateSettingsRepository = federalStateSettingsRepository;
         this.lockTimeEntriesSettingsRepository = lockTimeEntriesSettingsRepository;
         this.subtractBreakFromTimeEntrySettingsRepository = subtractBreakFromTimeEntrySettingsRepository;
+        this.timeEntrySettingsRepository = timeEntrySettingsRepository;
         this.applicationEventPublisher = applicationEventPublisher;
         this.clock = clock;
     }
@@ -60,6 +63,13 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
     public Optional<SubtractBreakFromTimeEntrySettings> getSubtractBreakFromTimeEntrySettings() {
         return getSubtractBreakFromTimeEntrySettingsEntity()
             .map(SettingsService::toSubtractBreakFromTimeEntrySettings);
+    }
+
+    @Override
+    public TimeEntrySettings getTimeEntrySettings() {
+        return getTimeEntrySettingsEntity()
+            .map(SettingsService::toTimeEntrySettings)
+            .orElse(TimeEntrySettings.DEFAULT);
     }
 
     /**
@@ -129,6 +139,16 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         return toSubtractBreakFromTimeEntrySettings(saved);
     }
 
+    TimeEntrySettings updateTimeEntrySettings(boolean commentEnabled, boolean durationEnabled, boolean breakEnabled) {
+
+        final TimeEntrySettingsEntity entity = getTimeEntrySettingsEntity().orElseGet(TimeEntrySettingsEntity::new);
+        entity.setCommentEnabled(commentEnabled);
+        entity.setDurationEnabled(durationEnabled);
+        entity.setBreakEnabled(breakEnabled);
+
+        return toTimeEntrySettings(timeEntrySettingsRepository.save(entity));
+    }
+
     private Optional<FederalStateSettingsEntity> getFederalStateEntity() {
         // `findFirst` is sufficient as there exists only one FederalStateSettingsEntity per tenant.
         // however, the tenantId is handled transparently in the background. and we only have the public API of `findAll`.
@@ -166,6 +186,11 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         return stream(settings.spliterator(), false).findFirst();
     }
 
+    private Optional<TimeEntrySettingsEntity> getTimeEntrySettingsEntity() {
+        final Iterable<TimeEntrySettingsEntity> settings = timeEntrySettingsRepository.findAll();
+        return stream(settings.spliterator(), false).findFirst();
+    }
+
     private static FederalStateSettings toFederalStateSettings(FederalStateSettingsEntity federalStateSettingsEntity) {
         return new FederalStateSettings(
             federalStateSettingsEntity.getFederalState(),
@@ -185,5 +210,9 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
             entity.isSubtractBreakFromTimeEntryIsActive(),
             Optional.ofNullable(entity.getSubtractBreakFromTimeEntryEnabledTimestamp())
         );
+    }
+
+    private static TimeEntrySettings toTimeEntrySettings(TimeEntrySettingsEntity entity) {
+        return new TimeEntrySettings(entity.isCommentEnabled(), entity.isDurationEnabled(), entity.isBreakEnabled());
     }
 }
