@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.StaticMessageSource;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.ui.ConcurrentModel;
@@ -36,10 +37,13 @@ import java.util.concurrent.ThreadLocalRandom;
 import static de.focusshift.zeiterfassung.data.history.EntityRevisionType.CREATED;
 import static de.focusshift.zeiterfassung.data.history.EntityRevisionType.UPDATED;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL;
 import static java.util.Locale.GERMAN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -171,7 +175,7 @@ class TimeEntryDialogHelperTest {
             final UserIdComposite anyUserIdComposite = anyUserIdComposite("joker");
             final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(anyUserIdComposite);
 
-            final TimeEntry timeEntry = anyTimeEntry();
+            final TimeEntry timeEntry = anyTimeEntry(anyUserIdComposite);
             when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntry));
 
             final User user = anyUser();
@@ -191,6 +195,50 @@ class TimeEntryDialogHelperTest {
 
             final TimeEntryDialogDto expected = new TimeEntryDialogDto(false, user.fullName(), user.initials(), List.of(), "edit-form-action", "close-form-action");
             assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
+        }
+
+        @Test
+        void ensureTimeEntryIsReadOnlyForOtherUserWithViewReportAll() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite("office");
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(userIdComposite, List.of(ZEITERFASSUNG_VIEW_REPORT_ALL));
+
+            final TimeEntry timeEntry = anyTimeEntry();
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntry));
+
+            final User user = anyUser();
+            when(userManagementService.findUserById(timeEntry.userIdComposite().id())).thenReturn(Optional.of(user));
+
+            final TimeEntryHistory timeEntryHistory = new TimeEntryHistory(timeEntry.id(), List.of());
+            when(timeEntryService.findTimeEntryHistory(timeEntry.id())).thenReturn(Optional.of(timeEntryHistory));
+
+            when(timeEntryLockService.isUserAllowedToBypassLock(currentOidcUser.getRoles())).thenReturn(false);
+
+            final ConcurrentModel model = new ConcurrentModel();
+            model.addAttribute("timeEntry", -1);
+
+            sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "edit-form-action", "close-form-action");
+
+            final TimeEntryDialogDto expected = new TimeEntryDialogDto(false, user.fullName(), user.initials(), List.of(), "edit-form-action", "close-form-action");
+            assertThat(model.getAttribute("timeEntryDialog")).isEqualTo(expected);
+        }
+
+        @Test
+        void ensureTimeEntryOfOtherUserIsForbiddenWithoutPermission() {
+
+            final UserIdComposite userIdComposite = anyUserIdComposite("joker");
+            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(userIdComposite);
+
+            final TimeEntry timeEntry = anyTimeEntry();
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(timeEntry));
+
+            final ConcurrentModel model = new ConcurrentModel();
+
+            assertThatThrownBy(() -> sut.addTimeEntryEditToModel(model, currentOidcUser, 1L, "edit-form-action", "close-form-action"))
+                .isInstanceOf(AccessDeniedException.class);
+
+            assertThat(model.asMap()).isEmpty();
+            verifyNoInteractions(userManagementService, timeEntryViewHelper);
         }
 
         @Test
@@ -306,7 +354,7 @@ class TimeEntryDialogHelperTest {
 
             sut.saveTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
-            verify(timeEntryViewHelper).updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            verify(timeEntryViewHelper).updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
         }
     }
 

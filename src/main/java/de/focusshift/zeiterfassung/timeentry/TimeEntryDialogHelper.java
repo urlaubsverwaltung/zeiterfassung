@@ -10,6 +10,7 @@ import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import org.slf4j.Logger;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -22,6 +23,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
+import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_VIEW_REPORT_ALL;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -70,14 +73,26 @@ public class TimeEntryDialogHelper {
 
         final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
-            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry %d".formatted(timeEntryIdValue)));
+            .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
+
+        assertTimeEntryViewAccess(currentUser, timeEntry);
 
         addTimeEntry(model, timeEntry);
         addTimeEntryDialog(model, currentUser, timeEntry, editFormAction, cancelFormAction);
     }
 
     public void saveTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
-        timeEntryViewHelper.updateTimeEntry(currentUser, timeEntryDTO, errors, model, redirectAttributes);
+        timeEntryViewHelper.updateTimeEntryAndGetOwner(currentUser, timeEntryDTO, errors, model, redirectAttributes);
+    }
+
+    private static void assertTimeEntryViewAccess(CurrentOidcUser currentUser, TimeEntry timeEntry) {
+
+        final boolean isOwner = timeEntry.userIdComposite().equals(currentUser.getUserIdComposite());
+        final boolean allowedToViewAll = currentUser.hasRole(ZEITERFASSUNG_VIEW_REPORT_ALL) || currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
+
+        if (!isOwner && !allowedToViewAll) {
+            throw new AccessDeniedException("Not allowed to view timeEntry %s.".formatted(timeEntry.id()));
+        }
     }
 
     private void addTimeEntry(Model model, TimeEntry timeEntry) {

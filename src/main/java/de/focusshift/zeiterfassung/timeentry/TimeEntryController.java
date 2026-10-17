@@ -143,7 +143,6 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     private ModelAndView prepareTimeEntriesForYearAndWeekOfYear(YearAndWeek yearAndWeek, UserLocalId ownerLocalId, Model model, Locale locale, CurrentOidcUser currentUser) {
 
         final TimeEntryDTO timeEntryDTO = new TimeEntryDTO(userDateService.today());
-        timeEntryDTO.setUserLocalId(ownerLocalId.value());
 
         viewHelper.addTimeEntryToModel(model, timeEntryDTO);
         addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale, currentUser);
@@ -164,7 +163,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
         LOG.info("User {} wants to create a new timeEntry.", currentUserLocalId);
 
-        handleCreateTimeEntry(timeEntryDTO, bindingResult, currentUser, model, locale, redirectAttributes);
+        handleCreateTimeEntry(currentUserLocalId, timeEntryDTO, bindingResult, currentUser, model, locale, redirectAttributes);
 
         if (bindingResult.hasErrors()) {
             LOG.info("Could not create timeEntry due to errors. Rendering timeentries page.");
@@ -188,7 +187,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         LOG.info("User {} wants to create a new timeEntry for user {}", currentUserLocalId, ownerLocalId);
 
         assertTimeEntryAccess(currentUser, ownerLocalIdValue);
-        handleCreateTimeEntry(timeEntryDTO, bindingResult, currentUser, model, locale, redirectAttributes);
+        handleCreateTimeEntry(ownerLocalId, timeEntryDTO, bindingResult, currentUser, model, locale, redirectAttributes);
 
         if (bindingResult.hasErrors()) {
             LOG.info("Could not create timeEntry for user {} due to errors. Rendering timeentries page.", ownerLocalId);
@@ -203,7 +202,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         return "redirect:" + userTimeEntriesUri;
     }
 
-    private void handleCreateTimeEntry(TimeEntryDTO timeEntryDto, BindingResult bindingResult,
+    private void handleCreateTimeEntry(UserLocalId ownerLocalId, TimeEntryDTO timeEntryDto, BindingResult bindingResult,
                                        CurrentOidcUser currentUser,
                                        Model model, Locale locale, RedirectAttributes redirectAttributes) {
 
@@ -222,11 +221,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
             throw new InvalidTimeEntryException("Invalid timeEntry. Expected date to be set.");
         }
 
-        viewHelper.createTimeEntry(timeEntryDto, bindingResult, currentUser);
+        viewHelper.createTimeEntry(ownerLocalId, timeEntryDto, bindingResult, currentUser);
 
         if (bindingResult.hasErrors()) {
             final YearAndWeek yearAndWeek = yearAndWeek(year, weekOfYear);
-            final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
             addTimeEntryWeeksPageToModel(yearAndWeek, model, ownerLocalId, locale, currentUser);
             viewHelper.handleCrudTimeEntryErrors(timeEntryDto, bindingResult, model, redirectAttributes);
         }
@@ -246,6 +244,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
         LOG.info("User {} wants to update timeEntry {}.", currentUserLocalId, timeEntryIdValue);
+
+        assertTimeEntryIdMatches(timeEntryIdValue, timeEntryDTO);
 
         return updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, locale, redirectAttributes,
             turboFrame, request);
@@ -269,8 +269,27 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         LOG.info("User {} wants to update timeEntry {} of user {}.", currentUserLocalId, timeEntryIdValue, ownerLocalId);
 
         assertTimeEntryAccess(currentUser, ownerLocalIdValue);
+        assertTimeEntryIdMatches(timeEntryIdValue, timeEntryDTO);
+
+        final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
+        final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
+            .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
+
+        assertTimeEntryOwner(timeEntry, ownerLocalId);
 
         return updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, locale, redirectAttributes, turboFrame, request);
+    }
+
+    private static void assertTimeEntryIdMatches(Long timeEntryIdValue, TimeEntryDTO timeEntryDTO) {
+        if (!timeEntryIdValue.equals(timeEntryDTO.getId())) {
+            throw new InvalidTimeEntryException("Invalid timeEntry. Expected id %s but was %s.".formatted(timeEntryIdValue, timeEntryDTO.getId()));
+        }
+    }
+
+    private static void assertTimeEntryOwner(TimeEntry timeEntry, UserLocalId ownerLocalId) {
+        if (!timeEntry.userIdComposite().localId().equals(ownerLocalId)) {
+            throw new NotFoundException("Could not find timeEntry %s of user %s.".formatted(timeEntry.id().value(), ownerLocalId.value()));
+        }
     }
 
     private ModelAndView updateTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO timeEntryDTO, BindingResult bindingResult,
@@ -289,9 +308,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         }
 
         final Long timeEntryId = timeEntryDTO.getId();
-        final UserLocalId ownerLocalId = new UserLocalId(timeEntryDTO.getUserLocalId());
 
-        viewHelper.updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+        final UserLocalId ownerLocalId = viewHelper.updateTimeEntryAndGetOwner(currentUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
         if (hasText(turboFrame)) {
             if (bindingResult.hasErrors()) {
@@ -346,7 +364,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
-            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry %s.".formatted(timeEntryIdValue)));
+            .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
         final UserLocalId ownerLocalId = timeEntry.userIdComposite().localId();
         final boolean isOwner = ownerLocalId.equals(currentUserLocalId);
@@ -383,9 +401,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
-            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry %s.".formatted(timeEntryIdValue)));
+            .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
         assertTimeEntryAccess(currentUser, timeEntry);
+        assertTimeEntryOwner(timeEntry, new UserLocalId(ownerLocalIdValue));
 
         final UserLocalId ownerLocalId = timeEntry.userIdComposite().localId();
 

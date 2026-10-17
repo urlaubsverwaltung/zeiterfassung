@@ -181,7 +181,6 @@ class TimeEntryViewHelperTest {
             final LocalTime endTime = LocalTime.parse("17:00");
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setDate(date);
             timeEntryDTO.setStart(startTime);
             timeEntryDTO.setEnd(endTime);
@@ -194,7 +193,7 @@ class TimeEntryViewHelperTest {
 
             final BindingResult bindingResult = mock(BindingResult.class);
 
-            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
+            sut.createTimeEntry(userLocalId, timeEntryDTO, bindingResult, currentUser);
 
             verify(bindingResult).reject("time-entry.validation.timespan.locked");
         }
@@ -213,7 +212,6 @@ class TimeEntryViewHelperTest {
             final LocalTime endTime = LocalTime.parse("17:00");
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setDate(date);
             timeEntryDTO.setStart(startTime);
             timeEntryDTO.setEnd(endTime);
@@ -227,7 +225,7 @@ class TimeEntryViewHelperTest {
 
             final BindingResult bindingResult = mock(BindingResult.class);
 
-            sut.createTimeEntry(timeEntryDTO, bindingResult, privilegedUser);
+            sut.createTimeEntry(userLocalId, timeEntryDTO, bindingResult, privilegedUser);
 
             verify(bindingResult).hasErrors();
             verifyNoMoreInteractions(bindingResult);
@@ -244,7 +242,6 @@ class TimeEntryViewHelperTest {
             final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setId(null);
             timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
             timeEntryDTO.setStart(LocalTime.parse("09:00"));
@@ -254,7 +251,7 @@ class TimeEntryViewHelperTest {
 
             final BindingResult bindingResult = mock(BindingResult.class);
 
-            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
+            sut.createTimeEntry(userLocalId, timeEntryDTO, bindingResult, currentUser);
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
@@ -271,7 +268,6 @@ class TimeEntryViewHelperTest {
             final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setId(null);
             timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
             timeEntryDTO.setStart(LocalTime.parse("09:00"));
@@ -280,7 +276,7 @@ class TimeEntryViewHelperTest {
 
             final BindingResult bindingResult = mock(BindingResult.class);
 
-            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
+            sut.createTimeEntry(userLocalId, timeEntryDTO, bindingResult, currentUser);
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
@@ -297,7 +293,6 @@ class TimeEntryViewHelperTest {
             final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setId(null);
             timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
             timeEntryDTO.setEnd(LocalTime.parse("17:00"));
@@ -306,11 +301,36 @@ class TimeEntryViewHelperTest {
 
             final BindingResult bindingResult = mock(BindingResult.class);
 
-            sut.createTimeEntry(timeEntryDTO, bindingResult, currentUser);
+            sut.createTimeEntry(userLocalId, timeEntryDTO, bindingResult, currentUser);
 
             final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
             final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
             verify(timeEntryService).createTimeEntry(userLocalId, null, start, end, false);
+        }
+
+        @Test
+        void ensureCreateTimeEntryUsesGivenOwnerAndNotTheCurrentUser() {
+
+            final UserLocalId userLocalId = new UserLocalId(1L);
+            final UserLocalId ownerLocalId = new UserLocalId(2L);
+            when(userSettingsProvider.zoneId()).thenReturn(UTC);
+
+            final CurrentOidcUser currentUser = anyCurrentOidcUser(userLocalId);
+
+            final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+            timeEntryDTO.setDate(LocalDate.parse("2025-02-16"));
+            timeEntryDTO.setStart(LocalTime.parse("09:00"));
+            timeEntryDTO.setEnd(LocalTime.parse("17:00"));
+            timeEntryDTO.setComment("comment");
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+
+            sut.createTimeEntry(ownerLocalId, timeEntryDTO, bindingResult, currentUser);
+
+            final ZonedDateTime start = ZonedDateTime.parse("2025-02-16T09:00:00Z");
+            final ZonedDateTime end = ZonedDateTime.parse("2025-02-16T17:00:00Z");
+            verify(timeEntryService).createTimeEntry(ownerLocalId, "comment", start, end, false);
+            verifyNoMoreInteractions(timeEntryService);
         }
     }
 
@@ -323,14 +343,13 @@ class TimeEntryViewHelperTest {
             final UserLocalId userLocalId = new UserLocalId(1L);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
 
             final BindingResult bindingResult = mock(BindingResult.class);
             final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(userLocalId);
             final Model model = mock(Model.class);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            assertThatThrownBy(() -> sut.updateTimeEntry(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
+            assertThatThrownBy(() -> sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Expected timeEntry id to have value. Did you meant to create a time entry?");
 
@@ -346,7 +365,6 @@ class TimeEntryViewHelperTest {
             final UserLocalId userLocalId = new UserLocalId(1L);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(userLocalId.value());
             timeEntryDTO.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -356,7 +374,7 @@ class TimeEntryViewHelperTest {
 
             when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> sut.updateTimeEntry(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
+            assertThatThrownBy(() -> sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
                 .isInstanceOf(TimeEntryNotFoundException.class)
                 .hasMessage("TimeEntry with TimeEntryId[value=1] not found.");
 
@@ -376,7 +394,6 @@ class TimeEntryViewHelperTest {
             final UserIdComposite timeEntryOwnerIdComposite = new UserIdComposite(timeEntryOwnerId, timeEntryOwnerLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDTO.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -386,7 +403,7 @@ class TimeEntryViewHelperTest {
 
             when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(timeEntryOwnerIdComposite)));
 
-            assertThatThrownBy(() -> sut.updateTimeEntry(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
+            assertThatThrownBy(() -> sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("Not allowed to edit timeEntry TimeEntryId[value=1].");
 
@@ -404,7 +421,6 @@ class TimeEntryViewHelperTest {
             final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDTO.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -419,7 +435,7 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
 
-            sut.updateTimeEntry(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(timeEntryService);
             verify(bindingResult).reject("time-entry.validation.startOrEnd.required");
@@ -434,7 +450,6 @@ class TimeEntryViewHelperTest {
             final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDTO.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -449,7 +464,7 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
 
-            sut.updateTimeEntry(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(timeEntryService);
             verify(bindingResult).reject("time-entry.validation.endOrDuration.required");
@@ -464,7 +479,6 @@ class TimeEntryViewHelperTest {
             final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDTO.setId(1L);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -479,7 +493,7 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
 
-            sut.updateTimeEntry(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(timeEntryService);
             verify(bindingResult).reject("time-entry.validation.startOrDuration.required");
@@ -495,7 +509,6 @@ class TimeEntryViewHelperTest {
             final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
-            timeEntryDTO.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDTO.setId(1L);
 
             when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
@@ -507,7 +520,7 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.updateTimeEntry(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
             verify(redirectAttributes).addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + "timeEntry", bindingResult);
             verify(redirectAttributes).addFlashAttribute("timeEntry", timeEntryDTO);
@@ -524,7 +537,6 @@ class TimeEntryViewHelperTest {
             final TimeEntryId timeEntryId = new TimeEntryId(1L);
 
             final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
-            timeEntryDto.setUserLocalId(loggedInUserLocalId.value());
             timeEntryDto.setId(1L);
             timeEntryDto.setDate(LocalDate.parse("2025-02-14"));
             timeEntryDto.setStart(LocalTime.parse("12:15"));
@@ -542,7 +554,7 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(bindingResult);
             verifyNoInteractions(redirectAttributes);
@@ -565,7 +577,6 @@ class TimeEntryViewHelperTest {
             final TimeEntryId timeEntryId = new TimeEntryId(1L);
 
             final TimeEntryDTO timeEntryDto = new TimeEntryDTO();
-            timeEntryDto.setUserLocalId(timeEntryOwnerLocalId.value());
             timeEntryDto.setId(1L);
             timeEntryDto.setDate(LocalDate.parse("2025-02-14"));
             timeEntryDto.setStart(LocalTime.parse("12:15"));
@@ -583,12 +594,38 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            final UserLocalId actual = sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             final ZonedDateTime expectedStart = ZonedDateTime.parse("2025-02-14T12:15:00Z");
             final ZonedDateTime expectedEnd = ZonedDateTime.parse("2025-02-14T18:30:00Z");
             final Duration expectedDuration = Duration.ZERO;
             verify(timeEntryService).updateTimeEntry(timeEntryId, "comment-new", expectedStart, expectedEnd, expectedDuration, false);
+            assertThat(actual).isEqualTo(timeEntryOwnerLocalId);
+        }
+
+        @Test
+        void ensureUpdateTimeEntryReturnsOwnerOfPersistedTimeEntryOnValidationError() {
+
+            final UserLocalId loggedInUserLocalId = new UserLocalId(1L);
+
+            final UserId timeEntryOwnerId = new UserId("other-user-id");
+            final UserLocalId timeEntryOwnerLocalId = new UserLocalId(2L);
+            final UserIdComposite timeEntryOwnerIdComposite = new UserIdComposite(timeEntryOwnerId, timeEntryOwnerLocalId);
+
+            final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
+            timeEntryDTO.setId(1L);
+
+            final BindingResult bindingResult = mock(BindingResult.class);
+            when(bindingResult.hasErrors()).thenReturn(true);
+
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(timeEntryOwnerIdComposite)));
+
+            final CurrentOidcUser currentOidcUser = anyAuthenticatedCurrentOidcUser(loggedInUserLocalId);
+            final Model model = new ConcurrentModel(bindingResult);
+            final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+            final UserLocalId actual = sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+            assertThat(actual).isEqualTo(timeEntryOwnerLocalId);
         }
 
         @Test
@@ -619,7 +656,7 @@ class TimeEntryViewHelperTest {
             final Model model = mock(Model.class);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             verify(bindingResult).reject("time-entry.validation.plausible");
             verify(bindingResult).rejectValue("start", "");
@@ -666,7 +703,7 @@ class TimeEntryViewHelperTest {
             final Model model = mock(Model.class);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             verify(bindingResult).reject("time-entry.validation.timespan.locked");
         }
@@ -706,7 +743,7 @@ class TimeEntryViewHelperTest {
             final Model model = mock(Model.class);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(bindingResult);
             verify(timeEntryService).updateTimeEntry(new TimeEntryId(1L), "comment-new", start, end, Duration.ZERO, false);

@@ -57,7 +57,6 @@ public class TimeEntryViewHelper {
 
         return TimeEntryDTO.builder()
             .id(timeEntry.id().value())
-            .userLocalId(timeEntry.userIdComposite().localId().value())
             .date(date)
             .start(startTime)
             .end(endTime)
@@ -82,10 +81,11 @@ public class TimeEntryViewHelper {
      * @param bindingResult      {@link BindingResult} containing constraint violations
      * @param model              view model
      * @param redirectAttributes {@link RedirectAttributes}
+     * @return {@link UserLocalId} of the owner of the persisted time entry. The current user is authorized to edit it.
      * @throws TimeEntryNotFoundException when time entry does not exist
      * @throws AccessDeniedException      when current user is not allowed to edit the time entry
      */
-    public void updateTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+    public UserLocalId updateTimeEntryAndGetOwner(CurrentOidcUser currentUser, TimeEntryDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 
         if (dto.getId() == null) {
             throw new IllegalStateException("Expected timeEntry id to have value. Did you meant to create a time entry?");
@@ -96,8 +96,9 @@ public class TimeEntryViewHelper {
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
             .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
+        final UserLocalId ownerLocalId = timeEntry.userIdComposite().localId();
         final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
-        final boolean isOwner = timeEntry.userIdComposite().localId().equals(currentUserLocalId);
+        final boolean isOwner = ownerLocalId.equals(currentUserLocalId);
         final boolean allowedToEdit = currentUser.hasRole(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL);
         if (!allowedToEdit && !isOwner) {
             throw new AccessDeniedException("Not allowed to edit timeEntry %s.".formatted(timeEntryId));
@@ -115,7 +116,7 @@ public class TimeEntryViewHelper {
 
         if (bindingResult.hasErrors()) {
             handleCrudTimeEntryErrors(dto, bindingResult, model, redirectAttributes);
-            return;
+            return ownerLocalId;
         }
 
         try {
@@ -131,6 +132,8 @@ public class TimeEntryViewHelper {
 
             setTimeEntryErrorRedirectAttributes(redirectAttributes, dto, bindingResult);
         }
+
+        return ownerLocalId;
     }
 
     /**
@@ -173,9 +176,10 @@ public class TimeEntryViewHelper {
      * This method validates whether the desired timespan is locked or not. Creating the timeEntry is rejected
      * via bindingResult if timespan is locked and current user is not allowed to bypass it.
      *
+     * @param ownerLocalId owner of the time entry, already authorized
      * @param timeEntryDto user input for the time entry
      */
-    void createTimeEntry(TimeEntryDTO timeEntryDto, BindingResult bindingResult, CurrentOidcUser currentUser) {
+    void createTimeEntry(UserLocalId ownerLocalId, TimeEntryDTO timeEntryDto, BindingResult bindingResult, CurrentOidcUser currentUser) {
 
         if (bindingResult.hasErrors()) {
             // nothing to do here if there are input errors already
@@ -207,7 +211,6 @@ public class TimeEntryViewHelper {
             LOG.info("Creating TimeEntry is not allowed since currentUser is not privileged to bypass timespan lock.");
             bindingResult.reject("time-entry.validation.timespan.locked");
         } else {
-            final UserLocalId ownerLocalId = new UserLocalId(timeEntryDto.getUserLocalId());
             timeEntryService.createTimeEntry(ownerLocalId, timeEntryDto.getComment(), start, end, timeEntryDto.isBreak());
         }
     }
