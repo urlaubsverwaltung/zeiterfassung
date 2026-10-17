@@ -635,9 +635,11 @@ class TimeEntryViewHelperTest {
         @Test
         void ensureUpdateTimeEntryReturnsOwnerOfPersistedTimeEntryOnValidationError() {
 
-            final UserId loggedInUserId = new UserId("user-id");
             final UserLocalId loggedInUserLocalId = new UserLocalId(1L);
-            final UserIdComposite loggedInUserIdComposite = new UserIdComposite(loggedInUserId, loggedInUserLocalId);
+
+            final UserId timeEntryOwnerId = new UserId("other-user-id");
+            final UserLocalId timeEntryOwnerLocalId = new UserLocalId(2L);
+            final UserIdComposite timeEntryOwnerIdComposite = new UserIdComposite(timeEntryOwnerId, timeEntryOwnerLocalId);
 
             final TimeEntryDTO timeEntryDTO = new TimeEntryDTO();
             timeEntryDTO.setId(1L);
@@ -645,14 +647,14 @@ class TimeEntryViewHelperTest {
             final BindingResult bindingResult = mock(BindingResult.class);
             when(bindingResult.hasErrors()).thenReturn(true);
 
-            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(loggedInUserIdComposite)));
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(timeEntryOwnerIdComposite)));
 
-            final CurrentOidcUser currentOidcUser = anyCurrentOidcUser(loggedInUserLocalId);
+            final CurrentOidcUser currentOidcUser = anyAuthenticatedCurrentOidcUser(loggedInUserLocalId);
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
 
             final UserLocalId actual = sut.updateTimeEntry(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
-            assertThat(actual).isEqualTo(loggedInUserLocalId);
+            assertThat(actual).isEqualTo(timeEntryOwnerLocalId);
         }
 
         @Test

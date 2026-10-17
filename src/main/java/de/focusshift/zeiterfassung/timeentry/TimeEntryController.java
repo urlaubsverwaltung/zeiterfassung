@@ -248,6 +248,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         final UserLocalId currentUserLocalId = currentUser.getUserIdComposite().localId();
         LOG.info("User {} wants to update timeEntry {}.", currentUserLocalId, timeEntryIdValue);
 
+        assertTimeEntryIdMatches(timeEntryIdValue, timeEntryDTO);
+
         return updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, locale, redirectAttributes,
             turboFrame, request);
     }
@@ -270,8 +272,26 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         LOG.info("User {} wants to update timeEntry {} of user {}.", currentUserLocalId, timeEntryIdValue, ownerLocalId);
 
         assertTimeEntryAccess(currentUser, ownerLocalIdValue);
+        assertTimeEntryIdMatches(timeEntryIdValue, timeEntryDTO);
+        assertTimeEntryOwner(timeEntryIdValue, ownerLocalId);
 
         return updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, locale, redirectAttributes, turboFrame, request);
+    }
+
+    private static void assertTimeEntryIdMatches(Long timeEntryIdValue, TimeEntryDTO timeEntryDTO) {
+        if (!timeEntryIdValue.equals(timeEntryDTO.getId())) {
+            throw new InvalidTimeEntryException("Invalid timeEntry. Expected id %s but was %s.".formatted(timeEntryIdValue, timeEntryDTO.getId()));
+        }
+    }
+
+    private void assertTimeEntryOwner(Long timeEntryIdValue, UserLocalId ownerLocalId) {
+        final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
+        final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
+            .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
+
+        if (!timeEntry.userIdComposite().localId().equals(ownerLocalId)) {
+            throw new NotFoundException("Could not find timeEntry %s of user %s.".formatted(timeEntryIdValue, ownerLocalId.value()));
+        }
     }
 
     private ModelAndView updateTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO timeEntryDTO, BindingResult bindingResult,
