@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -26,6 +27,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -54,11 +56,11 @@ class PortalUserEventHandlerRabbitmqTest {
     }
 
     private static TenantUser activeTenantUser(Instant now) {
-        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), null, now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
     }
 
     private static TenantUser unknownTenantUser(Instant now) {
-        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), now, Set.of(), now, now, null, null, UserStatus.UNKNOWN);
+        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), null, now, Set.of(), now, now, null, null, UserStatus.UNKNOWN);
     }
 
     @Nested
@@ -90,7 +92,7 @@ class PortalUserEventHandlerRabbitmqTest {
 
             verify(tenantService).getTenantByTenantId(event.tenantId());
             verify(tenantUserService).findById(new UserId(event.uuid()));
-            verify(tenantUserService, never()).createNewUser(any(), any(), any(), any(), any());
+            verify(tenantUserService, never()).createNewUser(any(), any(), any(), any(), any(), any());
             InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(new TenantId(event.tenantId()));
             inOrder.verify(tenantContextHolder).clear();
@@ -107,7 +109,7 @@ class PortalUserEventHandlerRabbitmqTest {
 
             verify(tenantService).getTenantByTenantId(event.tenantId());
             verify(tenantUserService).findById(new UserId(event.uuid()));
-            verify(tenantUserService).createNewUser(event.uuid(), event.firstName(), event.lastName(), new EMailAddress(event.email()), SecurityRole.DEFAULT_USER_ROLES);
+            verify(tenantUserService).createNewUser(event.uuid(), event.firstName(), event.lastName(), new EMailAddress(event.email()), event.emailVerified(), SecurityRole.DEFAULT_USER_ROLES);
             InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(new TenantId(event.tenantId()));
             inOrder.verify(tenantContextHolder).clear();
@@ -123,7 +125,7 @@ class PortalUserEventHandlerRabbitmqTest {
 
             verify(tenantService).getTenantByTenantId(event.tenantId());
             verify(tenantUserService).findById(new UserId(event.uuid()));
-            verify(tenantUserService).createNewUser(event.uuid(), event.firstName(), event.lastName(), new EMailAddress(event.email()), SecurityRole.INITIAL_USER_ROLES);
+            verify(tenantUserService).createNewUser(event.uuid(), event.firstName(), event.lastName(), new EMailAddress(event.email()), event.emailVerified(), SecurityRole.INITIAL_USER_ROLES);
             InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(new TenantId(event.tenantId()));
             inOrder.verify(tenantContextHolder).clear();
@@ -160,7 +162,7 @@ class PortalUserEventHandlerRabbitmqTest {
 
             verify(tenantService).getTenantByTenantId(event.tenantId());
             verify(tenantUserService).findById(new UserId(event.uuid()));
-            verify(tenantUserService).createNewUser(event.uuid(), event.lastName(), event.firstName(), new EMailAddress(event.email()), SecurityRole.DEFAULT_USER_ROLES);
+            verify(tenantUserService).createNewUser(event.uuid(), event.lastName(), event.firstName(), new EMailAddress(event.email()), event.emailVerified(), SecurityRole.DEFAULT_USER_ROLES);
             InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(new TenantId(event.tenantId()));
             inOrder.verify(tenantContextHolder).clear();
@@ -177,10 +179,24 @@ class PortalUserEventHandlerRabbitmqTest {
 
             verify(tenantService).getTenantByTenantId(event.tenantId());
             verify(tenantUserService).findById(new UserId(event.uuid()));
-            verify(tenantUserService).updateUser(new TenantUser(existingUser.id(), existingUser.localId(), event.firstName(), event.lastName(), new EMailAddress(event.email()), existingUser.firstLoginAt(), existingUser.authorities(), existingUser.createdAt(), existingUser.updatedAt(), existingUser.deactivatedAt(), existingUser.deletedAt(), existingUser.status()));
+            verify(tenantUserService).updateUser(new TenantUser(existingUser.id(), existingUser.localId(), event.firstName(), event.lastName(), new EMailAddress(event.email()), event.emailVerified(), existingUser.firstLoginAt(), existingUser.authorities(), existingUser.createdAt(), existingUser.updatedAt(), existingUser.deactivatedAt(), existingUser.deletedAt(), existingUser.status()));
             InOrder inOrder = Mockito.inOrder(tenantContextHolder);
             inOrder.verify(tenantContextHolder).setTenantId(new TenantId(event.tenantId()));
             inOrder.verify(tenantContextHolder).clear();
+        }
+
+        @Test
+        void whenUserExists_UserIsUpdatedWithEmailVerifiedOfEvent() {
+            PortalUserUpdatedEvent event = new PortalUserUpdatedEvent("my-external-id-1", "my-tenant-id", "Catwoman", "Catwoman", "Catwoman@batman.com", false, Instant.now(), Instant.now(), "ACTIVE");
+            when(tenantService.getTenantByTenantId(any())).thenReturn(Optional.of(myTenant()));
+            TenantUser existingUser = activeTenantUser(Instant.now());
+            when(tenantUserService.findById(any())).thenReturn(Optional.of(existingUser));
+
+            portalUserEventHandlerRabbitmq.on(event);
+
+            ArgumentCaptor<TenantUser> captor = ArgumentCaptor.forClass(TenantUser.class);
+            verify(tenantUserService).updateUser(captor.capture());
+            assertThat(captor.getValue().eMailVerified()).isFalse();
         }
 
         @Test

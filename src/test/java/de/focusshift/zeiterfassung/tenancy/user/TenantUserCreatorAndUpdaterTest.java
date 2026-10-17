@@ -10,6 +10,7 @@ import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -110,9 +111,9 @@ class TenantUserCreatorAndUpdaterTest {
 
         // and will be created
         final TenantUser createdTenantUser = new TenantUser("uniqueIdentifier", 1L, "Samuel", "Jackson",
-            new EMailAddress("s.jackson@example.org"), Instant.now(), INITIAL_USER_ROLES,
+            new EMailAddress("s.jackson@example.org"), null, Instant.now(), INITIAL_USER_ROLES,
             Instant.now(), Instant.now(), Instant.now(), Instant.now(), UserStatus.ACTIVE);
-        when(tenantUserService.createNewUser("uniqueIdentifier", "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), INITIAL_USER_ROLES))
+        when(tenantUserService.createNewUser("uniqueIdentifier", "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), null, INITIAL_USER_ROLES))
             .thenReturn(createdTenantUser);
 
         sut.handle(event);
@@ -159,9 +160,9 @@ class TenantUserCreatorAndUpdaterTest {
 
         // and will be created
         final TenantUser createdTenantUser = new TenantUser("uniqueIdentifier", 1L, "Samuel", "Jackson",
-            new EMailAddress("s.jackson@example.org"), Instant.now(), DEFAULT_USER_ROLES,
+            new EMailAddress("s.jackson@example.org"), null, Instant.now(), DEFAULT_USER_ROLES,
             Instant.now(), Instant.now(), Instant.now(), Instant.now(), UserStatus.ACTIVE);
-        when(tenantUserService.createNewUser("uniqueIdentifier", "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), DEFAULT_USER_ROLES))
+        when(tenantUserService.createNewUser("uniqueIdentifier", "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), null, DEFAULT_USER_ROLES))
             .thenReturn(createdTenantUser);
 
         sut.handle(event);
@@ -178,6 +179,73 @@ class TenantUserCreatorAndUpdaterTest {
             assertThat(actualCurrentOidcUser.getUserLocalId()).hasValue(new UserLocalId(1L));
             assertThat(actualCurrentOidcUser.getOidcUser()).isSameAs(currentOidcUser);
         });
+    }
+
+    @Test
+    void ensureToUpdateTenantUserWithEmailVerifiedClaim() {
+
+        final TenantUser tenantUser = anyTenantUser("uniqueIdentifier", Set.of());
+
+        final Map<String, Object> sub = Map.of(
+            "sub", tenantUser.id(),
+            "given_name", tenantUser.givenName(),
+            "family_name", tenantUser.familyName(),
+            "email", tenantUser.eMail().value(),
+            "email_verified", false
+        );
+        final OidcIdToken idToken = new OidcIdToken("tokenValue", Instant.now(), Instant.MAX, sub);
+
+        final List<GrantedAuthority> grantedAuthorities = List.of();
+        final DefaultOidcUser oidcUser = new DefaultOidcUser(grantedAuthorities, idToken);
+        final CurrentOidcUser currentOidcUser = new CurrentOidcUser(oidcUser, List.of(), grantedAuthorities, new UserLocalId(tenantUser.localId()));
+
+        final Authentication authentication = new OAuth2AuthenticationToken(currentOidcUser, grantedAuthorities, "myRegistrationId");
+        final InteractiveAuthenticationSuccessEvent event = new InteractiveAuthenticationSuccessEvent(authentication, this.getClass());
+
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class))).thenReturn(Optional.of(new TenantId("myRegistrationId")));
+
+        when(tenantUserService.findById(new UserId("uniqueIdentifier"))).thenReturn(Optional.of(tenantUser));
+
+        sut.handle(event);
+
+        final ArgumentCaptor<TenantUser> captor = ArgumentCaptor.forClass(TenantUser.class);
+        verify(tenantUserService).updateUser(captor.capture());
+        assertThat(captor.getValue().eMailVerified()).isFalse();
+    }
+
+    @Test
+    void ensureToCreateNewTenantUserWithEmailVerifiedClaim() {
+
+        final Map<String, Object> sub = Map.of(
+            "sub", "uniqueIdentifier",
+            "given_name", "Samuel",
+            "family_name", "Jackson",
+            "email", "s.jackson@example.org",
+            "email_verified", true
+        );
+        final OidcIdToken idToken = new OidcIdToken("tokenValue", Instant.now(), Instant.MAX, sub);
+
+        final List<GrantedAuthority> grantedAuthorities = List.of();
+        final DefaultOidcUser oidcUser = new DefaultOidcUser(grantedAuthorities, idToken);
+        final CurrentOidcUser currentOidcUser = new CurrentOidcUser(oidcUser, List.of(), grantedAuthorities);
+
+        final Authentication authentication = new OAuth2AuthenticationToken(currentOidcUser, grantedAuthorities, "myRegistrationId");
+        final InteractiveAuthenticationSuccessEvent event = new InteractiveAuthenticationSuccessEvent(authentication, this.getClass());
+
+        when(tenantIdProvider.resolve(any(OAuth2AuthenticationToken.class))).thenReturn(Optional.of(new TenantId("myRegistrationId")));
+
+        when(tenantUserService.findById(new UserId("uniqueIdentifier"))).thenReturn(Optional.empty());
+        when(tenantUserService.countUsers()).thenReturn(1L);
+
+        final TenantUser createdTenantUser = new TenantUser("uniqueIdentifier", 1L, "Samuel", "Jackson",
+            new EMailAddress("s.jackson@example.org"), true, Instant.now(), DEFAULT_USER_ROLES,
+            Instant.now(), Instant.now(), Instant.now(), Instant.now(), UserStatus.ACTIVE);
+        when(tenantUserService.createNewUser("uniqueIdentifier", "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), true, DEFAULT_USER_ROLES))
+            .thenReturn(createdTenantUser);
+
+        sut.handle(event);
+
+        verify(tenantUserService).createNewUser("uniqueIdentifier", "Samuel", "Jackson", new EMailAddress("s.jackson@example.org"), true, DEFAULT_USER_ROLES);
     }
 
     @Test
@@ -209,6 +277,6 @@ class TenantUserCreatorAndUpdaterTest {
 
     private TenantUser anyTenantUser(String id, Set<SecurityRole> authorities) {
         Instant now = Instant.now();
-        return new TenantUser(id, 1L, "Bruce", "Wayne", new EMailAddress("batman@example.org"), now, authorities, now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUser(id, 1L, "Bruce", "Wayne", new EMailAddress("batman@example.org"), null, now, authorities, now, now, null, null, UserStatus.ACTIVE);
     }
 }

@@ -7,12 +7,16 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * @param eMailVerified whether the identity provider has verified the {@linkplain #eMail() email address}, {@code null} if unknown
+ */
 public record TenantUser(
     String id,
     Long localId,
     String givenName,
     String familyName,
     EMailAddress eMail,
+    Boolean eMailVerified,
     Instant firstLoginAt,
     Set<SecurityRole> authorities,
     Instant createdAt,
@@ -39,6 +43,14 @@ public record TenantUser(
         return status == UserStatus.ACTIVE || status == UserStatus.UNKNOWN;
     }
 
+
+    /**
+     * @return {@code true} if the identity provider has verified the {@linkplain #eMail() email address},
+     * {@code false} if it is not verified or unknown.
+     */
+    public boolean isEMailVerified() {
+        return Boolean.TRUE.equals(eMailVerified);
+    }
 
     public List<GrantedAuthority> grantedAuthorities() {
         return authorities.stream()

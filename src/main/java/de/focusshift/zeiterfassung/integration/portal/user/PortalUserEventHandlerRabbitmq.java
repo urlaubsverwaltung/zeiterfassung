@@ -53,7 +53,7 @@ public class PortalUserEventHandlerRabbitmq {
 
             LOG.info("Creating new user with userId={} of tenantId={}", event.uuid(), tenantId);
             Set<SecurityRole> userRoles = decideUserRoles(tenantId, event.uuid());
-            tenantUserService.createNewUser(event.uuid(), event.firstName(), event.lastName(), new EMailAddress(event.email()), userRoles);
+            tenantUserService.createNewUser(event.uuid(), event.firstName(), event.lastName(), new EMailAddress(event.email()), event.emailVerified(), userRoles);
         });
     }
 
@@ -69,7 +69,7 @@ public class PortalUserEventHandlerRabbitmq {
         tenantContextHolder.runInTenantIdContext(new TenantId(event.tenantId()), tenantId -> tenantUserService.findById(new UserId(event.uuid()))
             .ifPresentOrElse(existing -> {
                 LOG.info("Found existing user with userId={} of tenantId={} - updating user ...", event.uuid(), tenantId);
-                tenantUserService.updateUser(new TenantUser(existing.id(), existing.localId(), event.firstName(), event.lastName(), new EMailAddress(event.email()), existing.firstLoginAt(), existing.authorities(), existing.createdAt(), existing.updatedAt(), existing.deactivatedAt(), existing.deletedAt(), existing.status()));
+                tenantUserService.updateUser(new TenantUser(existing.id(), existing.localId(), event.firstName(), event.lastName(), new EMailAddress(event.email()), event.emailVerified(), existing.firstLoginAt(), existing.authorities(), existing.createdAt(), existing.updatedAt(), existing.deactivatedAt(), existing.deletedAt(), existing.status()));
                 // all users who existed before the introduction of this feature have the status UNKNOWN
                 // therefore we're handling this state like an active user -> activate the user / toggle the userStatus
                 if(UserStatus.UNKNOWN.equals(existing.status())) {
@@ -79,7 +79,7 @@ public class PortalUserEventHandlerRabbitmq {
             }, () -> {
                 LOG.info("No user found for userId={} of tenantId={} - going to create user ...", event.uuid(), tenantId);
                 Set<SecurityRole> userRoles = decideUserRoles(tenantId, event.uuid());
-                tenantUserService.createNewUser(event.uuid(), event.lastName(), event.firstName(), new EMailAddress(event.email()), userRoles);
+                tenantUserService.createNewUser(event.uuid(), event.lastName(), event.firstName(), new EMailAddress(event.email()), event.emailVerified(), userRoles);
             }));
     }
 

@@ -36,11 +36,16 @@ class TenantUserServiceImpl implements TenantUserService {
 
     @Override
     public TenantUser createNewUser(String uuid, String givenName, String familyName, EMailAddress eMailAddress, Collection<SecurityRole> authorities) {
+        return createNewUser(uuid, givenName, familyName, eMailAddress, null, authorities);
+    }
+
+    @Override
+    public TenantUser createNewUser(String uuid, String givenName, String familyName, EMailAddress eMailAddress, Boolean eMailVerified, Collection<SecurityRole> authorities) {
 
         final Instant now = clock.instant();
 
         final TenantUserEntity tenantUserEntity =
-            new TenantUserEntity(null, uuid, now, now, givenName.strip(), familyName.strip(), eMailAddress.value(), prepareAuthorities(authorities), now, now, null, null, UserStatus.ACTIVE);
+            new TenantUserEntity(null, uuid, now, now, givenName.strip(), familyName.strip(), eMailAddress.value(), eMailVerified, prepareAuthorities(authorities), now, now, null, null, UserStatus.ACTIVE);
 
         final TenantUserEntity persisted = tenantUserRepository.save(tenantUserEntity);
 
@@ -65,10 +70,11 @@ class TenantUserServiceImpl implements TenantUserService {
         final String givenName = user.givenName().strip();
         final String familyName = user.familyName().strip();
         final String email = user.eMail().value();
+        final Boolean emailVerified = user.eMailVerified();
         final Set<SecurityRole> preparedAuthorities = prepareAuthorities(user.authorities());
 
         final TenantUserEntity next =
-            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), now, givenName, familyName, email, preparedAuthorities, current.getCreatedAt(), now, current.getDeactivatedAt(), current.getDeletedAt(), current.getStatus());
+            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), now, givenName, familyName, email, emailVerified, preparedAuthorities, current.getCreatedAt(), now, current.getDeactivatedAt(), current.getDeletedAt(), current.getStatus());
 
         final TenantUserEntity persisted = tenantUserRepository.save(next);
 
@@ -130,7 +136,7 @@ class TenantUserServiceImpl implements TenantUserService {
         }
 
         final TenantUserEntity next =
-            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), current.getLastLoginAt(), current.getGivenName(), current.getFamilyName(), current.getEmail(), current.getAuthorities(), current.getCreatedAt(), now, current.getDeactivatedAt(), current.getDeletedAt(), UserStatus.ACTIVE);
+            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), current.getLastLoginAt(), current.getGivenName(), current.getFamilyName(), current.getEmail(), current.getEmailVerified(), current.getAuthorities(), current.getCreatedAt(), now, current.getDeactivatedAt(), current.getDeletedAt(), UserStatus.ACTIVE);
 
         tenantUserRepository.save(next);
     }
@@ -143,7 +149,7 @@ class TenantUserServiceImpl implements TenantUserService {
         final TenantUserEntity current = getTenantUserOrThrow(id);
 
         final TenantUserEntity next =
-            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), current.getLastLoginAt(), current.getGivenName(), current.getFamilyName(), current.getEmail(), current.getAuthorities(), current.getCreatedAt(), now, now, current.getDeletedAt(), UserStatus.DEACTIVATED);
+            new TenantUserEntity(current.getId(), current.getUuid(), current.getFirstLoginAt(), current.getLastLoginAt(), current.getGivenName(), current.getFamilyName(), current.getEmail(), current.getEmailVerified(), current.getAuthorities(), current.getCreatedAt(), now, now, current.getDeletedAt(), UserStatus.DEACTIVATED);
 
         tenantUserRepository.save(next);
     }
@@ -168,6 +174,7 @@ class TenantUserServiceImpl implements TenantUserService {
         final String givenName = tenantUserEntity.getGivenName();
         final String familyName = tenantUserEntity.getFamilyName();
         final EMailAddress eMail = new EMailAddress(tenantUserEntity.getEmail());
+        final Boolean eMailVerified = tenantUserEntity.getEmailVerified();
         final Instant firstLoginAt = tenantUserEntity.getFirstLoginAt();
         final Set<SecurityRole> authorities = new HashSet<>(tenantUserEntity.getAuthorities());
         final Instant createdAt = tenantUserEntity.getCreatedAt();
@@ -176,7 +183,7 @@ class TenantUserServiceImpl implements TenantUserService {
         final Instant deletedAt = tenantUserEntity.getDeletedAt();
         final UserStatus status = tenantUserEntity.getStatus();
 
-        return new TenantUser(uuid, id, givenName, familyName, eMail, firstLoginAt, authorities, createdAt, updatedAt, deactivatedAt, deletedAt, status);
+        return new TenantUser(uuid, id, givenName, familyName, eMail, eMailVerified, firstLoginAt, authorities, createdAt, updatedAt, deactivatedAt, deletedAt, status);
     }
 
     private static Set<SecurityRole> prepareAuthorities(Collection<SecurityRole> authorities) {
