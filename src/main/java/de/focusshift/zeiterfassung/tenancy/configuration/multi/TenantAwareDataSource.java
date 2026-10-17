@@ -16,7 +16,6 @@ import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import static java.lang.invoke.MethodHandles.lookup;
 
@@ -49,12 +48,14 @@ class TenantAwareDataSource extends DelegatingDataSource {
     }
 
     private void setTenantId(Connection connection) throws SQLException {
-        try (final Statement sql = connection.createStatement()) {
+        // set_config with a bind parameter instead of "SET ... TO '<tenantId>'", so the tenant id can never alter the statement
+        try (final PreparedStatement sql = connection.prepareStatement("SELECT set_config('app.tenant_id', ?, false)")) {
             final String tenantId = resolveTenantId();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("setting parameter app.tenant_id={}", tenantId);
             }
-            sql.execute("SET app.tenant_id TO '%s'".formatted(tenantId));
+            sql.setString(1, tenantId);
+            sql.execute();
         }
     }
 
