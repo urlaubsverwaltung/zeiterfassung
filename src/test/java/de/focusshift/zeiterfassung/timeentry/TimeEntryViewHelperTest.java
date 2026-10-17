@@ -603,7 +603,7 @@ class TimeEntryViewHelperTest {
         }
 
         @Test
-        void ensureUpdateTimeEntryReturnsOwnerOfPersistedTimeEntry() throws Exception {
+        void ensureUpdateTimeEntryReturnsOwnerOfPersistedTimeEntry() {
 
             final UserLocalId loggedInUserLocalId = new UserLocalId(1L);
 
