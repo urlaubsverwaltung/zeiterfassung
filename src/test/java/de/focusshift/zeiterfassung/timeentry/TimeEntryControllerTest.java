@@ -59,13 +59,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -603,7 +603,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(redirectedUrl("/timeentries"));
 
         verify(timeEntryViewHelper).createTimeEntry(eq(userLocalId), any(TimeEntryDTO.class), any(BindingResult.class), any(CurrentOidcUser.class));
-        verify(timeEntryViewHelper, never()).createTimeEntry(eq(otherUserLocalId), any(TimeEntryDTO.class), any(BindingResult.class), any(CurrentOidcUser.class));
+        verifyNoMoreInteractions(timeEntryViewHelper);
     }
 
     @Test
@@ -732,7 +732,8 @@ class TimeEntryControllerTest implements ControllerTest {
         )
             .andExpect(view().name("timeentries/index"));
 
-        verify(timeEntryDayService, never()).getEntryWeekPage(eq(otherUserLocalId), anyInt(), anyInt());
+        verify(timeEntryDayService).getEntryWeekPage(userLocalId, 2021, 52);
+        verifyNoMoreInteractions(timeEntryDayService);
     }
 
     @Test
@@ -801,8 +802,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(redirectedUrl("http://localhost/timeentries/users/2"));
 
         verify(timeEntryViewHelper).createTimeEntry(eq(ownerLocalId), any(TimeEntryDTO.class), any(BindingResult.class), any(CurrentOidcUser.class));
-        verify(timeEntryViewHelper, never()).createTimeEntry(eq(userLocalId), any(TimeEntryDTO.class), any(BindingResult.class), any(CurrentOidcUser.class));
-        verify(timeEntryViewHelper, never()).createTimeEntry(eq(otherUserLocalId), any(TimeEntryDTO.class), any(BindingResult.class), any(CurrentOidcUser.class));
+        verifyNoMoreInteractions(timeEntryViewHelper);
     }
 
     @Test
@@ -833,8 +833,7 @@ class TimeEntryControllerTest implements ControllerTest {
 
         verify(timeEntryViewHelper).createTimeEntry(eq(ownerLocalId), any(TimeEntryDTO.class), any(BindingResult.class), any(CurrentOidcUser.class));
         verify(timeEntryDayService).getEntryWeekPage(ownerLocalId, 2021, 52);
-        verify(timeEntryDayService, never()).getEntryWeekPage(eq(userLocalId), anyInt(), anyInt());
-        verify(timeEntryDayService, never()).getEntryWeekPage(eq(otherUserLocalId), anyInt(), anyInt());
+        verifyNoMoreInteractions(timeEntryDayService);
     }
 
     @Test
@@ -864,7 +863,7 @@ class TimeEntryControllerTest implements ControllerTest {
         expectedTimeEntryDto.setDuration("01:00");
         expectedTimeEntryDto.setComment("");
 
-        verify(timeEntryViewHelper).updateTimeEntry(any(CurrentOidcUser.class), eq(expectedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+        verify(timeEntryViewHelper).updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), eq(expectedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
     }
 
     @Test
@@ -912,7 +911,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
 
-        when(timeEntryViewHelper.updateTimeEntry(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+        when(timeEntryViewHelper.updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
             .thenReturn(userLocalId);
 
         perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
@@ -935,7 +934,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .comment("hard work extended")
             .build();
 
-        verify(timeEntryViewHelper).updateTimeEntry(any(CurrentOidcUser.class), eq(expectedUpdatedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+        verify(timeEntryViewHelper).updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), eq(expectedUpdatedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
     }
 
     @Test
@@ -997,7 +996,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 1, 2021, 51, expectedTimeEntryWeekDto, 1337);
 
         when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(expectedTimeEntryDto);
-        when(timeEntryViewHelper.updateTimeEntry(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+        when(timeEntryViewHelper.updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
             .thenReturn(userLocalId);
 
         perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
@@ -1030,7 +1029,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .thenReturn(Optional.of(anyTimeEntry(timeEntryId, new UserIdComposite(new UserId("joker"), ownerLocalId))));
 
         // viewHelper verifies access and returns the owner of the persisted timeEntry
-        when(timeEntryViewHelper.updateTimeEntry(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+        when(timeEntryViewHelper.updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
             .thenReturn(ownerLocalId);
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2021, 12, 27), PlannedWorkingHours.EIGHT, List.of());
@@ -1048,8 +1047,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(view().name("timeentries/index"));
 
         verify(timeEntryDayService).getEntryWeekPage(ownerLocalId, 2021, 52);
-        verify(timeEntryDayService, never()).getEntryWeekPage(eq(userLocalId), anyInt(), anyInt());
-        verify(timeEntryDayService, never()).getEntryWeekPage(eq(otherUserLocalId), anyInt(), anyInt());
+        verifyNoMoreInteractions(timeEntryDayService);
     }
 
     @Test
@@ -1069,7 +1067,7 @@ class TimeEntryControllerTest implements ControllerTest {
             final BindingResult bindingResult = args.getArgument(2);
             bindingResult.reject("something.is.wrong");
             return null;
-        }).when(timeEntryViewHelper).updateTimeEntry(any(CurrentOidcUser.class), eq(expectedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+        }).when(timeEntryViewHelper).updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), eq(expectedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
 
         perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
             .header("Turbo-Frame", "any-value")
@@ -1128,7 +1126,7 @@ class TimeEntryControllerTest implements ControllerTest {
         timeEntryDto.setEnd(LocalTime.parse("21:15"));
         timeEntryDto.setComment("hard work extended");
 
-        verify(timeEntryViewHelper).updateTimeEntry(any(CurrentOidcUser.class), eq(timeEntryDto), any(BeanPropertyBindingResult.class), any(Model.class), any(RedirectAttributes.class));
+        verify(timeEntryViewHelper).updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), eq(timeEntryDto), any(BeanPropertyBindingResult.class), any(Model.class), any(RedirectAttributes.class));
     }
 
     @ParameterizedTest
@@ -1202,7 +1200,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(status().isNotFound());
 
         verifyNoInteractions(timeEntryViewHelper);
-        verify(timeEntryDayService, never()).getEntryWeekPage(any(UserLocalId.class), anyInt(), anyInt());
+        verifyNoInteractions(timeEntryDayService);
     }
 
     @Test
@@ -1215,7 +1213,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         // viewHelper verifies access against the owner of the persisted timeEntry, even when the form has errors
-        when(timeEntryViewHelper.updateTimeEntry(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+        when(timeEntryViewHelper.updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
             .thenThrow(new AccessDeniedException("Not allowed to edit timeEntry 1337."));
 
         assertThatThrownBy(() -> perform(post("/timeentries/1337")
@@ -1228,7 +1226,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .isInstanceOf(ServletException.class)
             .hasCauseInstanceOf(AccessDeniedException.class);
 
-        verify(timeEntryDayService, never()).getEntryWeekPage(any(UserLocalId.class), anyInt(), anyInt());
+        verifyNoInteractions(timeEntryDayService);
     }
 
     @Test
@@ -1451,6 +1449,48 @@ class TimeEntryControllerTest implements ControllerTest {
             .andExpect(redirectedUrl("http://localhost/timeentries/users/2?year=2025&week=12"));
 
         verify(timeEntryService).deleteTimeEntry(timeEntryId);
+    }
+
+    @Test
+    void ensureDeleteForOtherUserWithTimeEntryOfAnotherUserIsNotFound() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        // timeEntry belongs to user 3, not to user 2 of the path
+        final TimeEntryId timeEntryId = new TimeEntryId(42L);
+        final UserIdComposite timeEntryOwnerIdComposite = new UserIdComposite(new UserId("joker"), new UserLocalId(3L));
+        when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(anyTimeEntry(timeEntryId, timeEntryOwnerIdComposite)));
+
+        perform(post(TIME_ENTRIES_USER_EDIT_URL_TEMPLATE, "2", "42")
+            .with(oidcSubject(userIdComposite, List.of(ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL)))
+            .param("delete", "")
+        )
+            .andExpect(status().isNotFound());
+
+        verify(timeEntryService, never()).deleteTimeEntry(any(TimeEntryId.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/timeentries/users/1/timeentry/42", "/timeentries/42?delete", "/timeentries/users/1/timeentry/42?delete"})
+    void ensureUnknownTimeEntryIsNotFound(String url) throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        when(timeEntryService.findTimeEntry(new TimeEntryId(42L))).thenReturn(Optional.empty());
+
+        perform(post(url)
+            .with(oidcSubject(userIdComposite))
+            .param("id", "42")
+            .param("date", "2025-03-17")
+        )
+            .andExpect(status().isNotFound());
+
+        verifyNoInteractions(timeEntryViewHelper);
+        verify(timeEntryService, never()).deleteTimeEntry(any(TimeEntryId.class));
     }
 
     private TimeEntry anyTimeEntry(TimeEntryId id, UserIdComposite userIdComposite) {

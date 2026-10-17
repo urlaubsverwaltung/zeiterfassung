@@ -73,7 +73,7 @@ public class TimeEntryDialogHelper {
 
         final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
-            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry %d".formatted(timeEntryIdValue)));
+            .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
         assertTimeEntryViewAccess(currentUser, timeEntry);
 
@@ -82,7 +82,7 @@ public class TimeEntryDialogHelper {
     }
 
     public void saveTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
-        timeEntryViewHelper.updateTimeEntry(currentUser, timeEntryDTO, errors, model, redirectAttributes);
+        timeEntryViewHelper.updateTimeEntryAndGetOwner(currentUser, timeEntryDTO, errors, model, redirectAttributes);
     }
 
     private static void assertTimeEntryViewAccess(CurrentOidcUser currentUser, TimeEntry timeEntry) {

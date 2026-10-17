@@ -81,11 +81,11 @@ public class TimeEntryViewHelper {
      * @param bindingResult      {@link BindingResult} containing constraint violations
      * @param model              view model
      * @param redirectAttributes {@link RedirectAttributes}
-     * @return {@link UserLocalId} of the owner of the persisted time entry, which is authorized to be edited by current user
+     * @return {@link UserLocalId} of the owner of the persisted time entry. The current user is authorized to edit it.
      * @throws TimeEntryNotFoundException when time entry does not exist
      * @throws AccessDeniedException      when current user is not allowed to edit the time entry
      */
-    public UserLocalId updateTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+    public UserLocalId updateTimeEntryAndGetOwner(CurrentOidcUser currentUser, TimeEntryDTO dto, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 
         if (dto.getId() == null) {
             throw new IllegalStateException("Expected timeEntry id to have value. Did you meant to create a time entry?");

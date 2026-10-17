@@ -354,7 +354,7 @@ class TimeEntryDialogHelperTest {
 
             sut.saveTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
-            verify(timeEntryViewHelper).updateTimeEntry(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            verify(timeEntryViewHelper).updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
         }
     }
 

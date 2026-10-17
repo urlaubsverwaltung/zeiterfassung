@@ -202,9 +202,6 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         return "redirect:" + userTimeEntriesUri;
     }
 
-    /**
-     * Creates the time entry for the given owner. The owner must already be authorized.
-     */
     private void handleCreateTimeEntry(UserLocalId ownerLocalId, TimeEntryDTO timeEntryDto, BindingResult bindingResult,
                                        CurrentOidcUser currentUser,
                                        Model model, Locale locale, RedirectAttributes redirectAttributes) {
@@ -273,7 +270,12 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         assertTimeEntryAccess(currentUser, ownerLocalIdValue);
         assertTimeEntryIdMatches(timeEntryIdValue, timeEntryDTO);
-        assertTimeEntryOwner(timeEntryIdValue, ownerLocalId);
+
+        final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
+        final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
+            .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
+
+        assertTimeEntryOwner(timeEntry, ownerLocalId);
 
         return updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, locale, redirectAttributes, turboFrame, request);
     }
@@ -284,13 +286,9 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         }
     }
 
-    private void assertTimeEntryOwner(Long timeEntryIdValue, UserLocalId ownerLocalId) {
-        final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
-        final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
-            .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
-
+    private static void assertTimeEntryOwner(TimeEntry timeEntry, UserLocalId ownerLocalId) {
         if (!timeEntry.userIdComposite().localId().equals(ownerLocalId)) {
-            throw new NotFoundException("Could not find timeEntry %s of user %s.".formatted(timeEntryIdValue, ownerLocalId.value()));
+            throw new NotFoundException("Could not find timeEntry %s of user %s.".formatted(timeEntry.id().value(), ownerLocalId.value()));
         }
     }
 
@@ -311,8 +309,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         final Long timeEntryId = timeEntryDTO.getId();
 
-        // owner of the persisted timeEntry, verified by the viewHelper
-        final UserLocalId ownerLocalId = viewHelper.updateTimeEntry(currentUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+        final UserLocalId ownerLocalId = viewHelper.updateTimeEntryAndGetOwner(currentUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
         if (hasText(turboFrame)) {
             if (bindingResult.hasErrors()) {
@@ -367,7 +364,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
-            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry %s.".formatted(timeEntryIdValue)));
+            .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
         final UserLocalId ownerLocalId = timeEntry.userIdComposite().localId();
         final boolean isOwner = ownerLocalId.equals(currentUserLocalId);
@@ -404,9 +401,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         final TimeEntryId timeEntryId = new TimeEntryId(timeEntryIdValue);
         final TimeEntry timeEntry = timeEntryService.findTimeEntry(timeEntryId)
-            .orElseThrow(() -> new IllegalStateException("Could not find timeEntry %s.".formatted(timeEntryIdValue)));
+            .orElseThrow(() -> new TimeEntryNotFoundException(timeEntryId));
 
         assertTimeEntryAccess(currentUser, timeEntry);
+        assertTimeEntryOwner(timeEntry, new UserLocalId(ownerLocalIdValue));
 
         final UserLocalId ownerLocalId = timeEntry.userIdComposite().localId();
 
