@@ -34,7 +34,7 @@
     "@typescript-eslint/eslint-plugin": "8.71.2",
     "@typescript-eslint/parser": "8.71.2",
     "@vitest/coverage-v8": "5.0.4",
-    "concurrently": "10.0.5",
+    "concurrently": "10.0.6",
     "cssnano": "9.8.0",
     "esbuild": "0.28.2",
     "eslint": "10.4.1",
