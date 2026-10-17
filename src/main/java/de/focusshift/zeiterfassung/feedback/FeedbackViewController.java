@@ -26,7 +26,7 @@ class FeedbackViewController {
     @PostMapping
     public String feedback(FeedbackDto feedbackDto, @CurrentUser CurrentOidcUser currentUser, HttpServletRequest request, RedirectAttributes redirectAttributes) {
 
-        feedbackService.sendFeedback(new EMailAddress(currentUser.getEmail()), feedbackDto.body());
+        feedbackService.sendFeedback(new EMailAddress(currentUser.getEmail()), currentUser.getEmailVerified(), feedbackDto.body());
 
         redirectAttributes.addFlashAttribute(FLASH_FEEDBACK_GIVEN, true);
 

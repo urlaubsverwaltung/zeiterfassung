@@ -56,7 +56,7 @@ class FeedbackGivenListenerEmailTest {
     void ensureHandledFeedbackGivenEventSendsAnEmail() {
 
         final EMailAddress sender = new EMailAddress("user@example.org");
-        final FeedbackGivenEvent event = new FeedbackGivenEvent(sender, "awesome feedback message");
+        final FeedbackGivenEvent event = new FeedbackGivenEvent(sender, null, "awesome feedback message");
 
         mockFeedbackEmailConfiguration("feedback@example.org");
         when(emailTemplateEngine.process(eq("text/user-feedback.txt"), any(IContext.class))).thenReturn("rendered text email");
@@ -64,7 +64,7 @@ class FeedbackGivenListenerEmailTest {
         applicationEventPublisher.publishEvent(event);
 
         await().untilAsserted(() -> {
-            verify(eMailService).sendMail("feedback@example.org", "Custom Name - Nutzer Feedback", "rendered text email", "");
+            verify(eMailService).sendMailToConfiguredAddress("feedback@example.org", "Custom Name - Nutzer Feedback", "rendered text email", "");
         });
     }
 
@@ -72,7 +72,7 @@ class FeedbackGivenListenerEmailTest {
     void ensureHandledFeedbackGivenEventSendsAnEmailWithCorrectModel() {
 
         final EMailAddress sender = new EMailAddress("user@example.org");
-        final FeedbackGivenEvent event = new FeedbackGivenEvent(sender, "awesome feedback message");
+        final FeedbackGivenEvent event = new FeedbackGivenEvent(sender, null, "awesome feedback message");
 
         mockFeedbackEmailConfiguration("feedback@example.org");
         when(emailTemplateEngine.process(eq("text/user-feedback.txt"), any(IContext.class))).thenReturn("rendered text email");
@@ -85,8 +85,28 @@ class FeedbackGivenListenerEmailTest {
 
             final IContext model = captor.getValue();
             assertThat(model.getVariable("sender")).isEqualTo("user@example.org");
+            assertThat(model.getVariable("senderEMailUnverified")).isEqualTo(false);
             assertThat(model.getVariable("message")).isEqualTo("awesome feedback message");
             assertThat(model.getVariable("applicationName")).isEqualTo("Custom Name");
+        });
+    }
+
+    @Test
+    void ensureHandledFeedbackGivenEventMarksUnverifiedSenderEmail() {
+
+        final EMailAddress sender = new EMailAddress("user@example.org");
+        final FeedbackGivenEvent event = new FeedbackGivenEvent(sender, false, "awesome feedback message");
+
+        mockFeedbackEmailConfiguration("feedback@example.org");
+        when(emailTemplateEngine.process(eq("text/user-feedback.txt"), any(IContext.class))).thenReturn("rendered text email");
+
+        applicationEventPublisher.publishEvent(event);
+
+        await().untilAsserted(() -> {
+            final ArgumentCaptor<IContext> captor = ArgumentCaptor.forClass(IContext.class);
+            verify(emailTemplateEngine).process(eq("text/user-feedback.txt"), captor.capture());
+
+            assertThat(captor.getValue().getVariable("senderEMailUnverified")).isEqualTo(true);
         });
     }
 
