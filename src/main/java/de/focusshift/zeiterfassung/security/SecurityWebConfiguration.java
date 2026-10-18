@@ -60,7 +60,6 @@ public class SecurityWebConfiguration {
                 .requestMatchers(EndpointRequest.to(PrometheusScrapeEndpoint.class)).permitAll()
                 .requestMatchers("/fonts/*/*", "/style.css").permitAll()
                 .requestMatchers("/favicons/**").permitAll()
-                .requestMatchers("/browserconfig.xml").permitAll()
                 .requestMatchers("/site.webmanifest").permitAll()
                 .requestMatchers("/", "/**").hasAuthority(ZEITERFASSUNG_USER.name())
                 .anyRequest().authenticated()
