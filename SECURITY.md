@@ -14,8 +14,8 @@ We will support the following version with security fixes.
 
 ## Reporting a Vulnerability
 
-Please send an email to [info@focus-shift.de](mailto:info@focus-shift.de)  
-instead of raising a security vulnerability issue here.
+Please open a report of a security vulnerability via
+[Report a security vulnerability](https://github.com/urlaubsverwaltung/zeiterfassung/security/advisories/new)
 
 So we can disclose it responsibly.
 
