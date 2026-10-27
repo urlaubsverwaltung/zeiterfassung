@@ -43,7 +43,6 @@ jobs:
       - name: Set up JDK from .tool-versions
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad
         with:
-          distribution: 'liberica'
           java-version-file: ".tool-versions"
           cache: 'maven'
 
@@ -87,7 +86,6 @@ jobs:
       - name: Set up JDK from .tool-versions
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad
         with:
-          distribution: 'liberica'
           java-version-file: ".tool-versions"
           cache: 'maven'
 
@@ -133,7 +131,6 @@ jobs:
       - name: Set up JDK from .tool-versions
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad
         with:
-          distribution: 'liberica'
           java-version-file: ".tool-versions"
           cache: 'maven'
 
