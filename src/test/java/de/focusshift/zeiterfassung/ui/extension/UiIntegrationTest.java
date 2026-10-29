@@ -73,12 +73,13 @@ public @interface UiIntegrationTest {
 
             // webkit | firefox | chromium (playwright-default)
             final String browser = System.getProperty("browser", "chromium");
+            // set e.g. -Dplaywright.slowmo=200 to slow down test steps and follow them with your own eyes.
+            final double slowMo = Double.parseDouble(System.getProperty("playwright.slowmo", "0"));
 
             return new Options()
                 .setBrowserName(browser)
-                .setConnectOptions(new BrowserType.ConnectOptions()
-                    // increase to make test steps slower and be able to follow it with your own eyes.
-                    .setSlowMo(200)
+                .setLaunchOptions(new BrowserType.LaunchOptions()
+                    .setSlowMo(slowMo)
                 )
                 .setContextOptions(new Browser.NewContextOptions()
                     .setRecordVideoDir(Path.of("target/ui-test", browser))
@@ -87,6 +88,8 @@ public @interface UiIntegrationTest {
                     .setScreenSize(1500, 2000)
                     .setViewportSize(1500, 2000)
                     .setRecordVideoSize(1500, 2000)
+                    // enough for quick analysis and keeps videos small, the trace has every step anyway
+                    .setRecordVideoFps(10)
                 );
         }
     }
