@@ -30,7 +30,6 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-import static com.microsoft.playwright.options.WaitForSelectorState.VISIBLE;
 import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.OFFICE;
 import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.USER;
 import static org.mockito.Mockito.when;
@@ -94,7 +93,6 @@ class TimeEntryUIIT {
         timeEntryPage.submitNewTimeEntryButton().click();
 
         final Locator error = page.getByText("Für den Zeitraum kann keine Zeit mehr erfasst werden. Bitte wende dich an eine berechtigte Person.");
-        error.waitFor(new Locator.WaitForOptions().setState(VISIBLE));
         assertThat(error).isVisible();
     }
 

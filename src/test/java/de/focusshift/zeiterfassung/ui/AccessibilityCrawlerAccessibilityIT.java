@@ -4,7 +4,7 @@ import com.deque.html.axecore.playwright.AxeBuilder;
 import com.deque.html.axecore.results.AxeResults;
 import com.deque.html.axecore.results.CheckedNode;
 import com.deque.html.axecore.results.Rule;
-import com.microsoft.playwright.ElementHandle;
+import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitUntilState;
 import de.focusshift.zeiterfassung.SingleTenantPostgreSQLContainer;
@@ -100,8 +100,7 @@ class AccessibilityCrawlerAccessibilityIT {
                 page.navigate(currentUrl, new Page.NavigateOptions().setWaitUntil(WaitUntilState.NETWORKIDLE));
 
                 // 2. Discover new internal links on this page
-                final List<ElementHandle> anchors = page.querySelectorAll("a[href]");
-                for (ElementHandle anchor : anchors) {
+                for (Locator anchor : page.locator("a[href]").all()) {
                     final String href = anchor.getAttribute("href");
 
                     if (href != null && !href.trim().isEmpty()) {

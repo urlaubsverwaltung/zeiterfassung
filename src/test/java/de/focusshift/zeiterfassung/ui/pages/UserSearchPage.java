@@ -4,7 +4,6 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-import static com.microsoft.playwright.options.LoadState.NETWORKIDLE;
 
 public class UserSearchPage {
 
@@ -24,17 +23,10 @@ public class UserSearchPage {
         userSearchLocator().focus();
         assertThat(userSuggestionsLocator()).isVisible();
 
-        userSearchLocator().fill(query);
-
         // the input auto-submits itself, debounced by data-auto-submit-delay (see user-search.html).
-        // networkidle can resolve before that debounced submission even starts (there simply is no
-        // network activity yet), so wait it out first - otherwise a suggestion could be clicked right
-        // as the debounced submission re-renders (and possibly navigates away) from under it.
-        page.waitForTimeout(150);
-
-        // wait for rerendered suggestions otherwise an old link outside the DOM could be tried to be clicked.
-        // networkidle should be ok, we don't have long-running stuff
-        page.waitForLoadState(NETWORKIDLE);
+        // wait for that submission, otherwise an old suggestion could be clicked while it is re-rendered.
+        page.waitForResponse(response -> response.ok() && response.url().contains("query=" + query),
+            () -> userSearchLocator().fill(query));
 
         assertThat(userSuggestionsLocator().first()).isVisible();
     }

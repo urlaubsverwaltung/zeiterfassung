@@ -1,7 +1,6 @@
 package de.focusshift.zeiterfassung.ui.extension;
 
 import com.microsoft.playwright.Browser;
-import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.junit.Options;
 import com.microsoft.playwright.junit.OptionsFactory;
 import com.microsoft.playwright.junit.UsePlaywright;
@@ -76,10 +75,6 @@ public @interface UiIntegrationTest {
 
             return new Options()
                 .setBrowserName(browser)
-                .setConnectOptions(new BrowserType.ConnectOptions()
-                    // increase to make test steps slower and be able to follow it with your own eyes.
-                    .setSlowMo(200)
-                )
                 .setContextOptions(new Browser.NewContextOptions()
                     .setRecordVideoDir(Path.of("target/ui-test", browser))
                     .setLocale("de")
@@ -87,6 +82,8 @@ public @interface UiIntegrationTest {
                     .setScreenSize(1500, 2000)
                     .setViewportSize(1500, 2000)
                     .setRecordVideoSize(1500, 2000)
+                    // enough for quick analysis and keeps videos small, the trace has every step anyway
+                    .setRecordVideoFps(10)
                 );
         }
     }

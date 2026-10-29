@@ -12,7 +12,6 @@ import de.focusshift.zeiterfassung.ui.pages.SettingsPage;
 import de.focusshift.zeiterfassung.ui.pages.UsersPage;
 import de.focusshift.zeiterfassung.ui.pages.users.UserWorkingTimeAccountPage;
 import de.focusshift.zeiterfassung.ui.pages.users.UserWorkingTimePage;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -93,7 +92,7 @@ class UsersWorkingTimeUIIT {
         workingTimePage.submit();
 
         // ensure global setting is shown for person
-        Assertions.assertThat(page.content()).contains(i18n("federalState.GERMANY_BERLIN"));
+        assertThat(page.getByText(i18n("federalState.GERMANY_BERLIN")).first()).isVisible();
 
         navigationPage.logout();
     }

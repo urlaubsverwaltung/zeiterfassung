@@ -30,8 +30,8 @@ public class LoginPage {
      */
     public void login(Credentials credentials) {
         page.navigate("http://localhost:" + port + "/oauth2/authorization/keycloak");
-        page.fill(USERNAME_SELECTOR, credentials.username);
-        page.fill(PASSWORD_SELECTOR, credentials.password);
+        page.locator(USERNAME_SELECTOR).fill(credentials.username);
+        page.locator(PASSWORD_SELECTOR).fill(credentials.password);
         page.waitForResponse(Response::ok, () -> page.locator(SUBMIT_SELECTOR).click());
         page.waitForLoadState(DOMCONTENTLOADED);
     }
