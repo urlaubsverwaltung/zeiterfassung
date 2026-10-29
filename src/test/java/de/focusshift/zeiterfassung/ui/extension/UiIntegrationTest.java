@@ -1,6 +1,7 @@
 package de.focusshift.zeiterfassung.ui.extension;
 
 import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.junit.Options;
 import com.microsoft.playwright.junit.OptionsFactory;
 import com.microsoft.playwright.junit.UsePlaywright;
@@ -72,9 +73,14 @@ public @interface UiIntegrationTest {
 
             // webkit | firefox | chromium (playwright-default)
             final String browser = System.getProperty("browser", "chromium");
+            // set e.g. -Dplaywright.slowmo=200 to slow down test steps and follow them with your own eyes.
+            final double slowMo = Double.parseDouble(System.getProperty("playwright.slowmo", "0"));
 
             return new Options()
                 .setBrowserName(browser)
+                .setLaunchOptions(new BrowserType.LaunchOptions()
+                    .setSlowMo(slowMo)
+                )
                 .setContextOptions(new Browser.NewContextOptions()
                     .setRecordVideoDir(Path.of("target/ui-test", browser))
                     .setLocale("de")
