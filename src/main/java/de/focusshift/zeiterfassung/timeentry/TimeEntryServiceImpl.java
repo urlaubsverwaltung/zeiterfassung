@@ -38,6 +38,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import static de.focusshift.zeiterfassung.timeentry.TimeEntryOverlapChecker.overlaps;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.ZoneOffset.UTC;
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -133,6 +134,10 @@ class TimeEntryServiceImpl implements TimeEntryService {
     public List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, UserLocalId userLocalId) {
 
         final User user = findUser(userLocalId);
+        return getEntries(from, toExclusive, user);
+    }
+
+    private List<TimeEntry> getEntries(LocalDate from, LocalDate toExclusive, User user) {
         final UserId userId = user.userIdComposite().id();
 
         final Instant fromInstant = toInstant(from);
@@ -192,6 +197,10 @@ class TimeEntryServiceImpl implements TimeEntryService {
     public TimeEntry createTimeEntry(UserLocalId userLocalId, String comment, ZonedDateTime start, ZonedDateTime end, boolean isBreak) {
 
         final User user = findUser(userLocalId);
+        if (overlaps(getEntries(start.toLocalDate().minusDays(1), end.toLocalDate().plusDays(1), user),
+            null, start, end, isBreak)) {
+            throw new TimeEntryOverlapException();
+        }
 
         final TimeEntryEntity entity = new TimeEntryEntity();
         entity.setOwner(user.userIdComposite().id().value());
@@ -223,12 +232,20 @@ class TimeEntryServiceImpl implements TimeEntryService {
         final TimeEntryEntity entity = timeEntryRepository.findById(id.value())
             .orElseThrow(() -> new IllegalStateException("could not find existing timeEntry id=%s".formatted(id)));
 
-        final TimeEntry previousTimeEntry = toTimeEntry(entity);
+        final User owner = findUser(new UserId(entity.getOwner()));
+        final TimeEntry previousTimeEntry = toTimeEntry(entity, owner);
 
         updateEntityTimeSpan(entity, start, end, duration);
 
         entity.setComment(requireNonNullElse(comment, "").strip());
         entity.setBreak(isBreak);
+
+        final TimeEntry updatedTimeEntry = toTimeEntry(entity, owner);
+        if (overlaps(getEntries(updatedTimeEntry.start().toLocalDate().minusDays(1),
+            updatedTimeEntry.end().toLocalDate().plusDays(1), owner), id,
+            updatedTimeEntry.start(), updatedTimeEntry.end(), isBreak)) {
+            throw new TimeEntryOverlapException();
+        }
 
         final TimeEntry saved = save(entity);
 
