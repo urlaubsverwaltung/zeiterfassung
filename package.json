@@ -62,5 +62,10 @@
     "*.{js,mjs,ts,html,svg,css}": [
       "prettier --write"
     ]
+  },
+  "allowScripts": {
+    "esbuild": false,
+    "fsevents": false,
+    "unrs-resolver": false
   }
 }
