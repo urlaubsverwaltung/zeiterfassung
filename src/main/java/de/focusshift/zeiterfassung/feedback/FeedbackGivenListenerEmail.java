@@ -45,6 +45,7 @@ class FeedbackGivenListenerEmail {
 
         final Context context = new Context(EMailConstants.DEFAULT_LOCALE);
         context.setVariable("sender", sender.value());
+        context.setVariable("senderEMailUnverified", feedbackGivenEvent.isSenderEMailUnverified());
         context.setVariable("message", message);
         context.setVariable("applicationName", applicationName);
 
@@ -52,7 +53,7 @@ class FeedbackGivenListenerEmail {
         final String htmlEmail = "";
 
         try {
-            eMailService.sendMail(to, subject, plainTextEmail, htmlEmail);
+            eMailService.sendMailToConfiguredAddress(to, subject, plainTextEmail, htmlEmail);
         } catch (MessagingException e) {
             LOG.error("could not send user feedback email to us.", e);
         }

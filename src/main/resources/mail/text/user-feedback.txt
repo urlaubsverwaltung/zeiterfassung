@@ -1,7 +1,7 @@
 Wir haben Feedback zu [(${applicationName})] bekommen :party:
 
 Von:
-[(${sender})]
+[(${sender})][# th:if="${senderEMailUnverified}"] (E-Mail-Adresse ist beim Login-Anbieter nicht bestätigt)[/]
 
 Nachricht:
 [(${message})]

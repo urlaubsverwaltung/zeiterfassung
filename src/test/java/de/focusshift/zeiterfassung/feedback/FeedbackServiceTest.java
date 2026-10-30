@@ -27,9 +27,9 @@ class FeedbackServiceTest {
     @Test
     void ensureFeedbackGivenEventIsPublished() {
 
-        sut.sendFeedback(new EMailAddress("user@example.org"), "feedback message");
+        sut.sendFeedback(new EMailAddress("user@example.org"), false, "feedback message");
 
-        verify(applicationEventPublisher).publishEvent(new FeedbackGivenEvent(new EMailAddress("user@example.org"), "feedback message"));
+        verify(applicationEventPublisher).publishEvent(new FeedbackGivenEvent(new EMailAddress("user@example.org"), false, "feedback message"));
     }
 
 }

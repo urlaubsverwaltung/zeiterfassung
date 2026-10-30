@@ -151,6 +151,6 @@ class AbsenceWriteServiceImplTest {
 
     private static TenantUser tenantUser(String uuid) {
         final Instant now = Instant.now();
-        return new TenantUser(uuid, 1L, "Bruce", "Wayne", new EMailAddress("bruce@example.org"), now, Set.of(), now, now, null, null, ACTIVE);
+        return new TenantUser(uuid, 1L, "Bruce", "Wayne", new EMailAddress("bruce@example.org"), null, now, Set.of(), now, now, null, null, ACTIVE);
     }
 }

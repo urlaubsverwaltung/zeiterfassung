@@ -1,0 +1,22 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <!--
+    Whether the identity provider has verified the email address of the user. NULL means unknown: it is
+    set with the next login of the user, from the email_verified claim of the identity provider.
+  -->
+  <changeSet author="schneider" id="3.6.0-add-email-verified-to-tenant-user">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="tenant_user"/>
+      <not>
+        <columnExists tableName="tenant_user" columnName="email_verified"/>
+      </not>
+    </preConditions>
+
+    <addColumn tableName="tenant_user">
+      <column name="email_verified" type="BOOLEAN"/>
+    </addColumn>
+  </changeSet>
+</databaseChangeLog>
