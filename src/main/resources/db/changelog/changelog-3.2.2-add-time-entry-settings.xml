@@ -1,0 +1,60 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <changeSet author="roboes" id="add-time-entry-settings">
+    <preConditions>
+      <not>
+        <tableExists tableName="settings_time_entry"/>
+      </not>
+    </preConditions>
+
+    <createSequence sequenceName="settings_time_entry_seq" incrementBy="1"/>
+
+    <createTable tableName="settings_time_entry">
+      <column name="id" type="BIGINT">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_SETTINGS_TIME_ENTRY"/>
+      </column>
+      <column name="tenant_id" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="comment_enabled" type="BOOLEAN" defaultValue="true">
+        <constraints nullable="false"/>
+      </column>
+      <column name="duration_enabled" type="BOOLEAN" defaultValue="true">
+        <constraints nullable="false"/>
+      </column>
+      <column name="break_enabled" type="BOOLEAN" defaultValue="true">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint
+      constraintName="FK_SETTINGS_TIME_ENTRY_TENANT_ID__TENANT_ID"
+      baseColumnNames="tenant_id"
+      baseTableName="settings_time_entry"
+      referencedColumnNames="tenant_id"
+      referencedTableName="tenant"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+    />
+
+    <createIndex tableName="settings_time_entry" indexName="IDX_SETTINGS_TIME_ENTRY_TENANT_ID">
+      <column name="tenant_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet author="roboes" id="enable-row-level-security-on-settings_time_entry">
+    <sql dbms="postgresql">
+      ALTER TABLE settings_time_entry ENABLE ROW LEVEL SECURITY;
+      DROP
+      POLICY IF EXISTS settings_time_entry_tenant_isolation_policy ON settings_time_entry;
+            CREATE
+      POLICY settings_time_entry_tenant_isolation_policy ON settings_time_entry
+                USING (tenant_id = current_setting('app.tenant_id')::VARCHAR);
+    </sql>
+  </changeSet>
+</databaseChangeLog>

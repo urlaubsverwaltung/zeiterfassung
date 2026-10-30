@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.search.UserSearchViewHelper;
 import de.focusshift.zeiterfassung.security.CurrentUser;
 import de.focusshift.zeiterfassung.security.oidc.CurrentOidcUser;
 import de.focusshift.zeiterfassung.timeclock.HasTimeClock;
+import de.focusshift.zeiterfassung.timeentry.HasTimeEntryForm;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDTO;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryDialogHelper;
 import de.focusshift.zeiterfassung.usermanagement.User;
@@ -48,7 +49,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 @Controller
-class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch {
+class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch, HasTimeEntryForm {
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 

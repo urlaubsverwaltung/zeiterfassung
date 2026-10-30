@@ -19,8 +19,24 @@ record SettingsDto(
     Boolean subtractBreakFromTimeEntryIsActive,
     @Nullable
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    LocalDate subtractBreakFromTimeEntryActiveDate
+    LocalDate subtractBreakFromTimeEntryActiveDate,
+
+    boolean commentEnabled,
+    boolean durationEnabled,
+    boolean breakEnabled
 ) {
+
+    SettingsDto(
+        FederalState federalState,
+        boolean worksOnPublicHoliday,
+        boolean lockingIsActive,
+        @Nullable String lockTimeEntriesDaysInPast,
+        @Nullable Boolean subtractBreakFromTimeEntryIsActive,
+        @Nullable LocalDate subtractBreakFromTimeEntryActiveDate
+    ) {
+        this(federalState, worksOnPublicHoliday, lockingIsActive, lockTimeEntriesDaysInPast,
+            subtractBreakFromTimeEntryIsActive, subtractBreakFromTimeEntryActiveDate, true, true, true);
+    }
 
     /**
      * Returns the user input string as number, or {@code null} when there is no value, or it is not a number.
