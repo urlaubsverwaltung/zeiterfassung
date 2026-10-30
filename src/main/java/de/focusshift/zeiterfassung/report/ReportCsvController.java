@@ -42,7 +42,7 @@ class ReportCsvController {
         this.messageSource = messageSource;
     }
 
-    @GetMapping(value = "/report/year/{year}/week/{week}", params = {"csv"})
+    @GetMapping(value = "/report/year/{year}/week/{week}", params = {"csv=detailed"})
     public void weeklyUserReportCsv(
         @PathVariable("year") Integer year,
         @PathVariable("week") Integer week,
@@ -66,7 +66,31 @@ class ReportCsvController {
         writeCsv(fileName, response, csvWriteConsumer);
     }
 
-    @GetMapping(value = "/report/year/{year}/month/{month}", params = {"csv"})
+    @GetMapping(value = "/report/year/{year}/week/{week}", params = {"csv=aggregated"})
+    public void weeklyUserReportCsvAggregated(
+        @PathVariable("year") Integer year,
+        @PathVariable("week") Integer week,
+        @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
+        @CurrentUser CurrentOidcUser currentUser,
+        Locale locale,
+        HttpServletResponse response
+    ) {
+
+        final YearWeek reportYearWeek = getYearWeek(year, week)
+            .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Invalid week."));
+
+        final UserLocalId userLocalId = currentUser.getUserIdComposite().localId();
+        final List<UserLocalId> userLocalIds = userIdsParam.stream().map(UserLocalId::new).toList();
+        final String fileName = messageSource.getMessage("report.weekly.csv.filename.aggregated", new Object[]{year, week}, locale);
+
+        final Consumer<PrintWriter> csvWriteConsumer = userLocalIds.isEmpty()
+            ? writer -> reportCsvService.writeWeekReportCsvAggregated(Year.of(reportYearWeek.getYear()), reportYearWeek.getWeek(), locale, userLocalId, writer)
+            : writer -> reportCsvService.writeWeekReportCsvAggregatedForUserLocalIds(Year.of(reportYearWeek.getYear()), reportYearWeek.getWeek(), locale, userLocalIds, writer);
+
+        writeCsv(fileName, response, csvWriteConsumer);
+    }
+
+    @GetMapping(value = "/report/year/{year}/month/{month}", params = {"csv=detailed"})
     public void monthlyUserReportCsv(
         @PathVariable("year") Integer year,
         @PathVariable("month") Integer month,
@@ -86,6 +110,30 @@ class ReportCsvController {
         final Consumer<PrintWriter> csvWriteConsumer = userIds.isEmpty()
             ? writer -> reportCsvService.writeMonthReportCsv(yearMonth, locale, userId, writer)
             : writer -> reportCsvService.writeMonthReportCsvForUserLocalIds(yearMonth, locale, userIds, writer);
+
+        writeCsv(fileName, response, csvWriteConsumer);
+    }
+
+    @GetMapping(value = "/report/year/{year}/month/{month}", params = {"csv=aggregated"})
+    public void monthlyUserReportCsvAggregated(
+        @PathVariable("year") Integer year,
+        @PathVariable("month") Integer month,
+        @RequestParam(value = "user", required = false, defaultValue = "") List<Long> userIdsParam,
+        @CurrentUser CurrentOidcUser currentUser,
+        Locale locale,
+        HttpServletResponse response
+    ) {
+
+        final YearMonth yearMonth = yearMonth(year, month)
+            .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Invalid month."));
+
+        final UserId userId = currentUser.getUserIdComposite().id();
+        final List<UserLocalId> userIds = userIdsParam.stream().map(UserLocalId::new).toList();
+        final String fileName = messageSource.getMessage("report.monthly.csv.filename.aggregated", new Object[]{year, month}, locale);
+
+        final Consumer<PrintWriter> csvWriteConsumer = userIds.isEmpty()
+            ? writer -> reportCsvService.writeMonthReportCsvAggregated(yearMonth, locale, userId, writer)
+            : writer -> reportCsvService.writeMonthReportCsvAggregatedForUserLocalIds(yearMonth, locale, userIds, writer);
 
         writeCsv(fileName, response, csvWriteConsumer);
     }
