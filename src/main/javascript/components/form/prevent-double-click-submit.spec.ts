@@ -1,22 +1,9 @@
-import {
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "vitest";
+import { afterEach, beforeAll, describe, expect, test } from "vitest";
 import { initPreventDoubleClickSubmit } from "./prevent-double-click-submit";
 
 describe("DoubleClickSubmitGuard", () => {
   beforeAll(() => {
     initPreventDoubleClickSubmit();
-  });
-
-  beforeEach(() => {
-    // prevent HTMLFormElement.prototype.requestSubmit is not implemented log.
-    // @ts-expect-error yep
-    globalThis._virtualConsole.emit = () => {};
   });
 
   afterEach(() => {
