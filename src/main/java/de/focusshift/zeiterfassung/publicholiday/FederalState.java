@@ -131,6 +131,8 @@ public enum FederalState {
 
     BULGARIA("bg", "bg"),
 
+    LATVIA("lv", "lv"),
+
     USA_MARYLAND("us", "md"),
     USA_VIRGINIA("us", "va"),
     USA_WASHINGTON_DC("us", "dc");
