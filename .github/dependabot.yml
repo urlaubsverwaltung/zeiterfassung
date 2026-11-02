@@ -22,6 +22,11 @@ updates:
           - "eslint"
           - "eslint-*"
           - "@eslint/*"
+        exclude-patterns:
+          - "eslint-plugin-unicorn"
+      eslint-plugin-unicorn:
+        patterns:
+          - "eslint-plugin-unicorn"
       typescript-eslint:
         patterns:
           - "typescript-eslint*"
