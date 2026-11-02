@@ -414,8 +414,10 @@ Go to the GitHub action with the name [release trigger][github-action-release-tr
 * Click on "Run workflow"
 * Add the "Milestone ID" (see in the uri of a milestone)
 * Add "Release version"
-* Add "Next version"
 * Run the workflow
+
+The next snapshot version is set automatically to the next minor version of the release version
+(e.g. `2.5.0` and `2.5.1` both lead to `2.6.0-SNAPSHOT`).
 
 ## 3rd party resources
 
