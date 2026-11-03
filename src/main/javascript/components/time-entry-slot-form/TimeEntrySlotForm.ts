@@ -1,5 +1,66 @@
 import { i18n } from "../../i18n";
 
+function parseMinutes(value: string): number | undefined {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value);
+  if (!match) {
+    return undefined;
+  }
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function getFormDateIso(form: Element): string | undefined {
+  const duetDatePicker = form.querySelector("duet-date-picker") as
+    (Element & { value?: string }) | null;
+  if (duetDatePicker?.value) {
+    return duetDatePicker.value;
+  }
+  const dateInput = form.querySelector(
+    "input[name='date']",
+  ) as HTMLInputElement | null;
+  return dateInput?.value || undefined;
+}
+
+function getFormIsBreak(form: Element): boolean {
+  const breakCheckbox = form.querySelector(
+    "input[name='break']",
+  ) as HTMLInputElement | null;
+  return breakCheckbox ? breakCheckbox.checked : false;
+}
+
+function getFormTimespan(
+  form: Element,
+): { startMinutes: number; endMinutes: number } | undefined {
+  const startElement = form.querySelector(
+    "input[name='start']",
+  ) as HTMLInputElement | null;
+  const endElement = form.querySelector(
+    "input[name='end']",
+  ) as HTMLInputElement | null;
+  const durationElement = form.querySelector(
+    "input[name='duration']",
+  ) as HTMLInputElement | null;
+
+  const start = startElement?.value
+    ? parseMinutes(startElement.value)
+    : undefined;
+  const end = endElement?.value ? parseMinutes(endElement.value) : undefined;
+  const duration = durationElement?.value
+    ? parseMinutes(durationElement.value)
+    : undefined;
+
+  if (start !== undefined && end !== undefined) {
+    // entries spanning midnight are not checked for overlaps client-side, the backend still rejects them.
+    return end > start ? { startMinutes: start, endMinutes: end } : undefined;
+  }
+  if (start !== undefined && duration !== undefined) {
+    return { startMinutes: start, endMinutes: start + duration };
+  }
+  if (end !== undefined && duration !== undefined) {
+    return { startMinutes: end - duration, endMinutes: end };
+  }
+  return undefined;
+}
+
 class TimeEntrySlotForm extends HTMLFormElement {
   #hasBeenTriedToSubmitAtLeastOnce = false;
 
@@ -11,7 +72,11 @@ class TimeEntrySlotForm extends HTMLFormElement {
       this.querySelector(".ajax-loader")?.classList.add("ajax-loader--loading");
     });
 
-    this.addEventListener("submit", (event) => {
+    this.addEventListener("submit", (event: SubmitEvent) => {
+      if ((event.submitter as HTMLButtonElement | null)?.name === "delete") {
+        return;
+      }
+
       this.#hasBeenTriedToSubmitAtLeastOnce = true;
       if (!this.#validate()) {
         event.preventDefault();
@@ -210,11 +275,56 @@ class TimeEntrySlotForm extends HTMLFormElement {
       valid = false;
     }
 
+    if (valid && this.#overlapsExistingEntry()) {
+      errorMessage = i18n("time-entry.validation.timespan.overlaps");
+      valid = false;
+    }
+
     if (errorMessage) {
       errorContainer.innerHTML = `<ul><li>${errorMessage}</li></ul>`;
     }
 
     return valid;
+  }
+
+  #overlapsExistingEntry(): boolean {
+    const ownDate = getFormDateIso(this);
+    const ownTimespan = getFormTimespan(this);
+
+    if (!ownDate || !ownTimespan) {
+      // required-fields check already covers this. nothing to compare here.
+      return false;
+    }
+
+    const ownIsBreak = getFormIsBreak(this);
+
+    const otherForms = document.querySelectorAll(
+      "form[is='z-time-entry-slot-form']",
+    );
+
+    for (const otherForm of otherForms) {
+      if (otherForm === this) {
+        continue;
+      }
+      if (getFormDateIso(otherForm) !== ownDate) {
+        continue;
+      }
+      if (getFormIsBreak(otherForm) !== ownIsBreak) {
+        continue;
+      }
+      const otherTimespan = getFormTimespan(otherForm);
+      if (!otherTimespan) {
+        continue;
+      }
+      if (
+        otherTimespan.startMinutes < ownTimespan.endMinutes &&
+        otherTimespan.endMinutes > ownTimespan.startMinutes
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
 
