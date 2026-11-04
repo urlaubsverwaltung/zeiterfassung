@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static org.hibernate.cfg.AvailableSettings.BEAN_CONTAINER;
@@ -88,24 +89,11 @@ class TenantAwareDatabaseConfiguration {
 
         return builder
             .dataSource(tenantAwareDataSource)
-            // List all tenant aware related entity packages here
-            .packages(
-                // envers revinfo
-                TenantAwareRevisionEntity.class,
-                // domain
-                AbsenceWriteEntity.class,
-                AbsenceTypeEntity.class,
-                TimeEntryEntity.class,
-                TimeClockEntity.class,
-                TenantUserEntity.class,
-                WorkingTimeEntity.class,
-                OvertimeAccountEntity.class,
-                FederalStateSettingsEntity.class,
-                CompanyVacationEntity.class,
-                UserSettingsEntity.class
-                // SubtractBreakFromTimeEntrySettingsEntity.class, // disabled for now to prevent duplicated bean definitions
-                // LockTimeEntriesSettingsEntity.class // disabled for now to prevent duplicated bean definitions
-            )
+            // envers revinfo plus the same packages as @EnableEnversRepositories, so both cannot drift apart
+            .packages(Stream.concat(
+                Stream.of(TenantAwareRevisionEntity.class),
+                Stream.of(TenantAwareDatabaseConfiguration.class.getAnnotation(EnableEnversRepositories.class).basePackageClasses())
+            ).toArray(Class<?>[]::new))
             .persistenceUnit("tenantAware")
             // enable hibernate to access spring beans and inject them into jpa entity lifecycle events
             .properties(Map.of(BEAN_CONTAINER, new SpringBeanContainer(beanFactory)))
