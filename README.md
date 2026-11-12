@@ -40,6 +40,17 @@ information about the available support options at [focus:shift](https://focus-s
 
 The application is available as docker image on [GitHub][docker-image-on-github] and [Docker Hub][docker-image-on-docker-hub]
 
+The images are signed and published with a build provenance attestation. This verifies that an image was built by
+the release workflow of this repository:
+
+```shell
+gh attestation verify oci://docker.io/urlaubsverwaltung/zeiterfassung:$VERSION --owner urlaubsverwaltung
+
+cosign verify docker.io/urlaubsverwaltung/zeiterfassung:$VERSION \
+  --certificate-identity-regexp '^https://github\.com/urlaubsverwaltung/zeiterfassung/\.github/workflows/release\.yml@refs/tags/zeiterfassung-' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
 ### Configuration
 
 The application has a [configuration file](https://github.com/urlaubsverwaltung/zeiterfassung/blob/main/src/main/resources/application.yaml) in the `src/main/resources` directory. This includes certain basic settings 
