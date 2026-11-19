@@ -288,7 +288,7 @@
         <artifactId>frontend-maven-plugin</artifactId>
         <version>2.0.2</version>
         <configuration>
-          <nodeVersion>v26.13.0</nodeVersion>
+          <nodeVersion>v26.13.1</nodeVersion>
           <npmVersion>12.2.1</npmVersion>
           <environmentVariables>
             <NODE_ENV>${node.env}</NODE_ENV>
