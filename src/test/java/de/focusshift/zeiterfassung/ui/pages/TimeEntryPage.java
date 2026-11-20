@@ -51,6 +51,21 @@ public class TimeEntryPage {
         return page.locator("css=[data-testid=input-time-entry-comment][value='%s']".formatted(value));
     }
 
+    public void fillTimeEntryDateHaving(Locator childLocator, LocalDate date) {
+        timeEntryEditContainer(childLocator).locator("duet-date-picker")
+            .evaluate("(node, date) => { node.value = date }", DATE_FORMATTER.format(date));
+    }
+
+    /**
+     * Returns {@link Locator} of the day group rendered for the given date.
+     *
+     * @param date date of the day group
+     * @return {@link Locator} of the day group rendered for the given date.
+     */
+    public Locator dayGroup(LocalDate date) {
+        return page.locator("css=.time-entries-day[id$='-%s']".formatted(date.getDayOfWeek()));
+    }
+
     public void submitTimeEntryHaving(Locator childLocator) {
         page.waitForResponse(Response::ok, () -> {
             timeEntryEditContainer(childLocator).getByTestId("submit-time-entry").click();

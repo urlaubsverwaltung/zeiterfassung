@@ -41,6 +41,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -309,6 +310,11 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         final Long timeEntryId = timeEntryDTO.getId();
 
+        // read before the update, which may change the date
+        final LocalDate previousDate = timeEntryService.findTimeEntry(new TimeEntryId(timeEntryId))
+            .map(timeEntry -> timeEntry.start().toLocalDate())
+            .orElse(null);
+
         final UserLocalId ownerLocalId = viewHelper.updateTimeEntryAndGetOwner(currentUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
         if (hasText(turboFrame)) {
@@ -325,6 +331,21 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
                     .orElseThrow(() -> new IllegalStateException("expected a day"));
 
                 final TimeEntryWeek timeEntryWeek = entryWeekPage.timeEntryWeek();
+
+                if (previousDate != null && !previousDate.equals(timeEntryDTO.getDate())) {
+                    LOG.info("Date of timeEntry {} changed. Rendering affected weeks.", timeEntryId);
+                    final List<TimeEntryWeekDto> editedWeeks = new ArrayList<>();
+                    editedWeeks.add(toTimeEntryWeekDto(timeEntryWeek, locale, currentUser));
+                    final LocalDate previousFirstDateOfWeek = localDateToFirstDateOfWeek(previousDate);
+                    if (!previousFirstDateOfWeek.equals(timeEntryWeek.firstDateOfWeek())) {
+                        final TimeEntryWeek previousWeek = timeEntryDayService.getEntryWeekPage(ownerLocalId,
+                            previousFirstDateOfWeek.getYear(), previousFirstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR)).timeEntryWeek();
+                        editedWeeks.add(toTimeEntryWeekDto(previousWeek, locale, currentUser));
+                    }
+                    model.addAttribute("turboEditedWeeks", editedWeeks);
+                    return new ModelAndView("timeentries/index::#frame-time-entry");
+                }
+
                 final TimeEntry editedTimeEntry = timeEntryDay.timeEntries().stream()
                     .filter(entry -> entry.id().value().equals(timeEntryId))
                     .findFirst()

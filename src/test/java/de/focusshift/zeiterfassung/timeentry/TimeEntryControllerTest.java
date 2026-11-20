@@ -29,6 +29,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.ui.Model;
@@ -935,6 +936,53 @@ class TimeEntryControllerTest implements ControllerTest {
             .build();
 
         verify(timeEntryViewHelper).updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), eq(expectedUpdatedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+    }
+
+    @Test
+    void ensureTimeEntryEditOfDateIntoOtherWeekForAjaxRendersBothWeeks() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final TimeEntryId timeEntryId = new TimeEntryId(1337L);
+        final TimeEntry timeEntryBeforeEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work",
+            ZonedDateTime.of(2022, 9, 23, 20, 30, 0, 0, zoneIdBerlin), ZonedDateTime.of(2022, 9, 23, 21, 15, 0, 0, zoneIdBerlin), false);
+        when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(timeEntryBeforeEdit));
+
+        final TimeEntry timeEntryAfterEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work",
+            ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin), ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin), false);
+        final TimeEntryDay newDay = new TimeEntryDay(false, LocalDate.of(2022, 9, 28), new WorkDuration(Duration.ofMinutes(45)),
+            PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntryAfterEdit), List.of());
+        final TimeEntryWeek newWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 26), PlannedWorkingHours.EIGHT, List.of(newDay));
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(new TimeEntryWeekPage(newWeek, 1));
+
+        final TimeEntryWeek previousWeek = new TimeEntryWeek(LocalDate.of(2022, 9, 19), PlannedWorkingHours.EIGHT, List.of());
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 38)).thenReturn(new TimeEntryWeekPage(previousWeek, 0));
+
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+        when(timeEntryViewHelper.updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(userLocalId);
+
+        final MvcResult result = perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
+            .header("Turbo-Frame", "any-value")
+            .with(oidcSubject(userIdComposite))
+            .param("id", "1337")
+            .param("date", "2022-09-28")
+            .param("start", "20:30:00.000+01:00")
+            .param("end", "21:15:00.000+01:00")
+            .param("comment", "hard work")
+        )
+            .andExpect(status().isOk())
+            .andExpect(view().name("timeentries/index::#frame-time-entry"))
+            .andExpect(model().attributeDoesNotExist("turboEditedTimeEntry"))
+            .andReturn();
+
+        final List<TimeEntryWeekDto> editedWeeks = (List<TimeEntryWeekDto>) result.getModelAndView().getModel().get("turboEditedWeeks");
+        assertThat(editedWeeks).extracting(TimeEntryWeekDto::calendarWeek).containsExactly(39, 38);
     }
 
     @Test
