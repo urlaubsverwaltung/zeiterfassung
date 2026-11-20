@@ -28,6 +28,9 @@ class AutomaticBreakDeductionSettingsEntity extends AbstractTenantAwareEntity {
     @Column(name = "enabled_timestamp")
     private Instant enabledTimestamp;
 
+    @Column(name = "violation_hints_enabled", nullable = false)
+    private boolean violationHintsActive;
+
     protected AutomaticBreakDeductionSettingsEntity() {
         super(null);
     }
@@ -54,6 +57,14 @@ class AutomaticBreakDeductionSettingsEntity extends AbstractTenantAwareEntity {
 
     public void setEnabledTimestamp(Instant enabledTimestamp) {
         this.enabledTimestamp = enabledTimestamp;
+    }
+
+    public boolean isViolationHintsActive() {
+        return violationHintsActive;
+    }
+
+    public void setViolationHintsActive(boolean violationHintsActive) {
+        this.violationHintsActive = violationHintsActive;
     }
 
     @Override

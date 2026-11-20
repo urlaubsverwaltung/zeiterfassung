@@ -182,12 +182,13 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         );
     }
 
-    AutomaticBreakDeductionSettings updateAutomaticBreakDeductionSettings(boolean active, Instant enabledTimestamp) {
+    AutomaticBreakDeductionSettings updateAutomaticBreakDeductionSettings(boolean active, Instant enabledTimestamp, boolean violationHintsActive) {
         final AutomaticBreakDeductionSettingsEntity entity = getAutomaticBreakDeductionSettingsEntity()
             .orElseGet(AutomaticBreakDeductionSettingsEntity::new);
 
         entity.setActive(active);
         entity.setEnabledTimestamp(enabledTimestamp);
+        entity.setViolationHintsActive(violationHintsActive);
 
         final AutomaticBreakDeductionSettingsEntity saved = automaticBreakDeductionSettingsRepository.save(entity);
         return toAutomaticBreakDeductionSettings(saved);
@@ -213,7 +214,8 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
     private static AutomaticBreakDeductionSettings toAutomaticBreakDeductionSettings(AutomaticBreakDeductionSettingsEntity entity) {
         return new AutomaticBreakDeductionSettings(
             entity.isActive(),
-            Optional.ofNullable(entity.getEnabledTimestamp())
+            Optional.ofNullable(entity.getEnabledTimestamp()),
+            entity.isViolationHintsActive()
         );
     }
 }

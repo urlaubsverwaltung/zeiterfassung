@@ -25,7 +25,10 @@ record SettingsDto(
     Boolean automaticBreakDeductionIsActive,
     @Nullable
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    LocalDate automaticBreakDeductionActiveDate
+    LocalDate automaticBreakDeductionActiveDate,
+
+    @Nullable
+    Boolean breakViolationHintsActive
 ) {
 
     /**

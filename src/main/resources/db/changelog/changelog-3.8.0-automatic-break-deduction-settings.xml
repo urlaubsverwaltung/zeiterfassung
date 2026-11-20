@@ -25,6 +25,9 @@
       <column name="enabled_timestamp" type="TIMESTAMP WITH TIME ZONE">
         <constraints nullable="true"/>
       </column>
+      <column name="violation_hints_enabled" type="BOOLEAN" defaultValue="false">
+        <constraints nullable="false"/>
+      </column>
     </createTable>
 
     <createIndex tableName="settings_automatic_break_deduction"
@@ -44,11 +47,12 @@
 
   <changeSet author="honnel" id="insert-automatic-break-deduction-settings-for-tenants">
     <sql>
-      INSERT INTO settings_automatic_break_deduction (id, tenant_id, enabled, enabled_timestamp)
+      INSERT INTO settings_automatic_break_deduction (id, tenant_id, enabled, enabled_timestamp, violation_hints_enabled)
       SELECT nextval('settings_automatic_break_deduction_seq'),
              tenant.tenant_id,
              false,
-             NULL
+             NULL,
+             false
       FROM tenant;
     </sql>
   </changeSet>
