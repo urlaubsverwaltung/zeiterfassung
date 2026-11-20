@@ -710,6 +710,31 @@ class TimeEntryControllerTest implements ControllerTest {
     }
 
     @Test
+    void ensureTimeEntryCreationErrorRendersWeekStartingInPreviousYear() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), userLocalId);
+
+        // 2025-12-31 is in week 1 of 2026, which starts on 2025-12-29
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2025, 12, 29), PlannedWorkingHours.EIGHT, List.of());
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2026, 1)).thenReturn(new TimeEntryWeekPage(timeEntryWeek, 0));
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+
+        perform(post(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
+            .param("date", "2025-12-31")
+            .param("comment", "hard work")
+            .param("duration", "08:00")
+            // missing start/end/value
+        )
+            .andExpect(view().name("timeentries/index"));
+
+        verify(timeEntryDayService).getEntryWeekPage(userLocalId, 2026, 1);
+    }
+
+    @Test
     void ensureTimeEntryCreationErrorRendersWeekOfCurrentUserAndNotOfUserLocalIdFromRequest() throws Exception {
 
         mockUserSettings(DayOfWeek.MONDAY);
@@ -1332,6 +1357,8 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureDelete() throws Exception {
 
+        mockUserSettings(DayOfWeek.MONDAY);
+
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -1356,7 +1383,31 @@ class TimeEntryControllerTest implements ControllerTest {
     }
 
     @Test
+    void ensureDeleteRedirectsToWeekStartingInPreviousYear() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), new UserLocalId(42L));
+
+        // 2025-12-31 is in week 1 of 2026, which starts on 2025-12-29
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        final TimeEntryId timeEntryId = new TimeEntryId(1337L);
+        final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "hard work",
+            ZonedDateTime.of(2025, 12, 31, 20, 30, 0, 0, zoneIdBerlin), ZonedDateTime.of(2025, 12, 31, 21, 15, 0, 0, zoneIdBerlin), false);
+        when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(timeEntry));
+
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, timeEntryId.value())
+            .with(oidcSubject(userIdComposite))
+            .param("delete", "")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/timeentries?year=2026&week=1"));
+    }
+
+    @Test
     void ensureDeleteWithAjax() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
 
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
@@ -1444,6 +1495,8 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureDeleteWithAjaxLastTimeEntryOfDay() throws Exception {
 
+        mockUserSettings(DayOfWeek.MONDAY);
+
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -1525,6 +1578,8 @@ class TimeEntryControllerTest implements ControllerTest {
 
     @Test
     void ensureDeleteForOtherUser() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
 
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
