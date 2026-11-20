@@ -45,7 +45,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -112,7 +111,7 @@ class TimeEntryControllerTest implements ControllerTest {
     @BeforeEach
     void setUp() {
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, userDateService, clock);
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, userDateService);
     }
 
     @ParameterizedTest
@@ -141,8 +140,7 @@ class TimeEntryControllerTest implements ControllerTest {
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
         mockUserSettings(DayOfWeek.MONDAY);
-        clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, userDateService, clock);
+        when(userDateService.today()).thenReturn(LocalDate.of(2025, 2, 28));
 
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
@@ -429,9 +427,8 @@ class TimeEntryControllerTest implements ControllerTest {
     void ensureTimeEntriesDefaultShowsCurrentWeekStartingInPreviousYear() throws Exception {
 
         mockUserSettings(DayOfWeek.MONDAY);
-        // 2025-12-30 is in week 1 of 2026, which starts on 2025-12-29
-        clock = Clock.fixed(Instant.parse("2025-12-30T10:00:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, userDateService, clock);
+        // the user's today, while it is still 2025-12-28 in UTC. 2025-12-29 starts week 1 of 2026
+        when(userDateService.today()).thenReturn(LocalDate.of(2025, 12, 29));
 
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), userLocalId);
@@ -565,9 +562,8 @@ class TimeEntryControllerTest implements ControllerTest {
     void ensureTimeEntriesForOtherUser() throws Exception {
 
         mockUserSettings(DayOfWeek.MONDAY);
-        clock = Clock.fixed(Instant.parse("2025-03-18T10:04:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, userDateService, clock);
+        final LocalDate today = LocalDate.of(2025, 3, 18);
+        when(userDateService.today()).thenReturn(today);
 
         final int year = 2025;
         final int weekOfYear = 12;
@@ -588,7 +584,7 @@ class TimeEntryControllerTest implements ControllerTest {
         when(timeEntryDayService.getEntryWeekPage(ownerLocalId, year, weekOfYear)).thenReturn(timeEntryWeekPage);
 
         final ViewedUserDto expectedViewedUserDto = new ViewedUserDto(ownerLocalId.value(), owner.givenName(), owner.familyName(), owner.fullName(), owner.initials(), owner.email().value());
-        final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO();
+        final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO(today);
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(weekOfYear, null, null, "00:00", "00:00", "00:00", false, 0.0, List.of());
         final TimeEntryWeeksPageDto expetectedWeeksPageDto = new TimeEntryWeeksPageDto(year, weekOfYear + 1, year, weekOfYear - 1, expectedTimeEntryWeekDto, 0);

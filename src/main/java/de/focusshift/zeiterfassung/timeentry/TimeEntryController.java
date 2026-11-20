@@ -35,7 +35,6 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
-import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.temporal.WeekFields;
@@ -72,7 +71,6 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     private final TimeEntryViewHelper viewHelper;
     private final UserSearchViewHelper userSearchViewHelper;
     private final UserDateService userDateService;
-    private final Clock clock;
 
     TimeEntryController(
         TimeEntryService timeEntryService,
@@ -83,8 +81,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         DateFormatter dateFormatter,
         TimeEntryViewHelper viewHelper,
         UserSearchViewHelper userSearchViewHelper,
-        UserDateService userDateService,
-        Clock clock
+        UserDateService userDateService
     ) {
         this.timeEntryService = timeEntryService;
         this.timeEntryDayService = timeEntryDayService;
@@ -95,7 +92,6 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         this.viewHelper = viewHelper;
         this.userSearchViewHelper = userSearchViewHelper;
         this.userDateService = userDateService;
-        this.clock = clock;
     }
 
     @GetMapping("/timeentries")
@@ -552,7 +548,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
             return new YearAndWeek(year, weekOfYear);
         }
 
-        final YearAndWeek today = weekOf(LocalDate.now(clock));
+        final YearAndWeek today = weekOf(userDateService.today());
         return new YearAndWeek(requireNonNullElse(year, today.year()), requireNonNullElse(weekOfYear, today.week()));
     }
 
