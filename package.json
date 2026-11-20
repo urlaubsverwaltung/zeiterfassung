@@ -33,7 +33,7 @@
     "@types/node": "26.6.6",
     "@typescript-eslint/eslint-plugin": "8.72.1",
     "@typescript-eslint/parser": "8.72.1",
-    "@vitest/coverage-v8": "5.0.5",
+    "@vitest/coverage-v8": "5.1.0",
     "concurrently": "10.0.7",
     "cssnano": "9.9.0",
     "esbuild": "0.28.2",
@@ -56,7 +56,7 @@
     "rollup-plugin-postcss": "4.0.2",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.1",
-    "vitest": "5.0.5"
+    "vitest": "5.1.0"
   },
   "lint-staged": {
     "*.{js,mjs,ts,html,svg,css}": [
