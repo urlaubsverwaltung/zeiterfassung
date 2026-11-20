@@ -160,7 +160,7 @@
           ></defs>
           <g id="report-graph-month-legend">
             <th:block
-              th:each="hour : ${#numbers.sequence(0, monthReport.graphLegendMaxHour, 2)}"
+              th:each="hour : ${#numbers.sequence(0, monthReport.graphLegendMaxHour, monthReport.graphLegendStepHour)}"
               th:with="y=${paddingTop + (chartHeight * (1 - (hour / monthReport.graphLegendMaxHour)))}"
             >
               <line

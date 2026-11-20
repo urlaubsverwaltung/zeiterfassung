@@ -213,7 +213,7 @@
           </defs>
           <g id="report-graph-week-legend">
             <th:block
-              th:each="hour : ${#numbers.sequence(0, weekReport.graphLegendMaxHour, 2)}"
+              th:each="hour : ${#numbers.sequence(0, weekReport.graphLegendMaxHour, weekReport.graphLegendStepHour)}"
               th:with="y=${paddingTop + (chartHeight * (1 - (hour / weekReport.graphLegendMaxHour)))}"
             >
               <line
