@@ -12,6 +12,11 @@ public interface TenantUserService {
 
     TenantUser createNewUser(String uuid, String givenName, String familyName, EMailAddress eMailAddress, Collection<SecurityRole> authorities);
 
+    /**
+     * @param eMailVerified whether the identity provider has verified the email address, {@code null} if unknown
+     */
+    TenantUser createNewUser(String uuid, String givenName, String familyName, EMailAddress eMailAddress, Boolean eMailVerified, Collection<SecurityRole> authorities);
+
     TenantUser updateUser(TenantUser user);
 
     List<TenantUser> findAllUsers();

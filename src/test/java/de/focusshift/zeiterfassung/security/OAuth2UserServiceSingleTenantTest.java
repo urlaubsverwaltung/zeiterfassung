@@ -102,6 +102,6 @@ class OAuth2UserServiceSingleTenantTest {
 
     private TenantUser anyTenantUser(String id, Set<SecurityRole> authorities) {
         Instant now = Instant.now();
-        return new TenantUser(id, 1L, "Bruce", "Wayne", new EMailAddress("batman@example.org"), now, authorities, now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUser(id, 1L, "Bruce", "Wayne", new EMailAddress("batman@example.org"), null, now, authorities, now, now, null, null, UserStatus.ACTIVE);
     }
 }

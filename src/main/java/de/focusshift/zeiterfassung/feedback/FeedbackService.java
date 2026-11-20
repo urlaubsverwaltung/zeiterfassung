@@ -12,7 +12,7 @@ class FeedbackService {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
-    void sendFeedback(EMailAddress email, String message) {
-        applicationEventPublisher.publishEvent(new FeedbackGivenEvent(email, message));
+    void sendFeedback(EMailAddress email, Boolean emailVerified, String message) {
+        applicationEventPublisher.publishEvent(new FeedbackGivenEvent(email, emailVerified, message));
     }
 }

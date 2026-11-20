@@ -187,7 +187,7 @@ class UserManagementServiceImplTest {
             existing.localId(),
             existing.givenName(),
             existing.familyName(),
-            existing.eMail(),
+            existing.eMail(), null,
             existing.firstLoginAt(),
             Set.of(ZEITERFASSUNG_PERMISSIONS_EDIT_ALL),
             existing.createdAt(),
@@ -204,7 +204,7 @@ class UserManagementServiceImplTest {
     }
 
     private static TenantUser activeTenantUserOne(Instant now) {
-        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), null, now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
     }
 
     private static User activeUserOne(Instant now) {
@@ -212,7 +212,7 @@ class UserManagementServiceImplTest {
     }
 
     private static TenantUser activeTenantUserTwo(Instant now) {
-        return new TenantUser("my-external-id-2", 2L, "petra", "panter", new EMailAddress("petra@panter.com"), now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUser("my-external-id-2", 2L, "petra", "panter", new EMailAddress("petra@panter.com"), null, now, Set.of(), now, now, null, null, UserStatus.ACTIVE);
     }
 
     private static User activeUserTwo(Instant now) {

@@ -51,13 +51,14 @@ class TenantUserCreatorAndUpdater {
         final OAuth2User oauth2User = oauthToken.getPrincipal();
         if (oauth2User instanceof final CurrentOidcUser oidcUser) {
             final EMailAddress eMailAddress = new EMailAddress(oidcUser.getEmail());
+            final Boolean eMailVerified = oidcUser.getEmailVerified();
             final UserId userId = new UserId(oidcUser.getSubject());
 
             tenantUserService.findById(userId).ifPresentOrElse(user -> {
 
                 final UserStatus userStatus = determineUserStatus(user.status());
 
-                final TenantUser tenantUser = new TenantUser(user.id(), user.localId(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, user.firstLoginAt(), user.authorities(), user.createdAt(), user.updatedAt(), user.deactivatedAt(), user.deletedAt(), userStatus);
+                final TenantUser tenantUser = new TenantUser(user.id(), user.localId(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, eMailVerified, user.firstLoginAt(), user.authorities(), user.createdAt(), user.updatedAt(), user.deactivatedAt(), user.deletedAt(), userStatus);
                 LOG.info("updating existing user={} of tenantId={} with data from oidc token", userId.value(), tenantId);
                 tenantUserService.updateUser(tenantUser);
             }, () -> {
@@ -65,7 +66,7 @@ class TenantUserCreatorAndUpdater {
 
                 final Set<SecurityRole> userRoles = decideUserRoles(tenantId, userId);
 
-                final TenantUser newUser = tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, userRoles);
+                final TenantUser newUser = tenantUserService.createNewUser(oidcUser.getSubject(), oidcUser.getGivenName(), oidcUser.getFamilyName(), eMailAddress, eMailVerified, userRoles);
 
                 final UserLocalId userLocalId = new UserLocalId(newUser.localId());
 

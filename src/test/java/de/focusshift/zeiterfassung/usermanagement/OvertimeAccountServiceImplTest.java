@@ -256,6 +256,6 @@ class OvertimeAccountServiceImplTest {
     }
 
     private static TenantUserEntity anyTenantUserEntity(Long id, UserIdComposite userIdComposite) {
-        return new TenantUserEntity(id, userIdComposite.id().value(), Instant.MIN, Instant.now(), "", "", "", Set.of(), Instant.MIN, Instant.MIN, null, null, UserStatus.ACTIVE);
+        return new TenantUserEntity(id, userIdComposite.id().value(), Instant.MIN, Instant.now(), "", "", "", null, Set.of(), Instant.MIN, Instant.MIN, null, null, UserStatus.ACTIVE);
     }
 }

@@ -203,6 +203,7 @@ class TenantUserServiceImplTest {
                     assertThat(entity.getGivenName()).isEqualTo(givenName);
                     assertThat(entity.getFamilyName()).isEqualTo(familyName);
                     assertThat(entity.getEmail()).isEqualTo(eMailAddress.value());
+                    assertThat(entity.getEmailVerified()).isNull();
                     assertThat(entity.getAuthorities()).isEqualTo(authorities);
                     assertThat(entity.getCreatedAt()).isEqualTo(now);
                     assertThat(entity.getUpdatedAt()).isEqualTo(now);
@@ -224,6 +225,20 @@ class TenantUserServiceImplTest {
                 });
 
                 verify(publisher).publishEvent(any(TenantUserCreatedEvent.class));
+            }
+
+            @Test
+            void newUserIsCreatedWithEmailVerified() {
+
+                when(repository.save(any(TenantUserEntity.class))).thenAnswer(returnsFirstArg());
+
+                final TenantUser result = sut.createNewUser("my-external-id", "givenName", "familyName", new EMailAddress("email@example.com"), false, Set.of());
+
+                final ArgumentCaptor<TenantUserEntity> entityArgumentCaptor = ArgumentCaptor.forClass(TenantUserEntity.class);
+                verify(repository).save(entityArgumentCaptor.capture());
+
+                assertThat(entityArgumentCaptor.getValue().getEmailVerified()).isFalse();
+                assertThat(result.eMailVerified()).isFalse();
             }
 
             @Test
@@ -255,7 +270,11 @@ class TenantUserServiceImplTest {
         class UpdateUser {
 
             private static TenantUser updateFromEntity(TenantUserEntity currentEntity, String givenName, String familyName, String mail) {
-                return new TenantUser(currentEntity.getUuid(), currentEntity.getId(), givenName, familyName, new EMailAddress(mail), Instant.now(), currentEntity.getAuthorities(), Instant.now(), Instant.now(), currentEntity.getDeactivatedAt(), currentEntity.getDeletedAt(), currentEntity.getStatus());
+                return updateFromEntity(currentEntity, givenName, familyName, mail, null);
+            }
+
+            private static TenantUser updateFromEntity(TenantUserEntity currentEntity, String givenName, String familyName, String mail, Boolean eMailVerified) {
+                return new TenantUser(currentEntity.getUuid(), currentEntity.getId(), givenName, familyName, new EMailAddress(mail), eMailVerified, Instant.now(), currentEntity.getAuthorities(), Instant.now(), Instant.now(), currentEntity.getDeactivatedAt(), currentEntity.getDeletedAt(), currentEntity.getStatus());
             }
 
             @Test
@@ -325,6 +344,24 @@ class TenantUserServiceImplTest {
             }
 
             @Test
+            void updateUserStoresEmailVerified() {
+
+                final TenantUserEntity currentEntity = activeUserEntityOne(clock.instant());
+                final TenantUser update = updateFromEntity(currentEntity, "givenName", "familyName", "email@example.com", false);
+
+                when(repository.findById(any())).thenReturn(Optional.of(currentEntity));
+                when(repository.save(any(TenantUserEntity.class))).thenAnswer(returnsFirstArg());
+
+                final TenantUser result = sut.updateUser(update);
+
+                final ArgumentCaptor<TenantUserEntity> entityArgumentCaptor = ArgumentCaptor.forClass(TenantUserEntity.class);
+                verify(repository).save(entityArgumentCaptor.capture());
+
+                assertThat(entityArgumentCaptor.getValue().getEmailVerified()).isFalse();
+                assertThat(result.eMailVerified()).isFalse();
+            }
+
+            @Test
             void updateUserThrowsExceptionWhenUserNotFound() {
                 TenantUser user = activeTenantUserOne(Instant.now());
 
@@ -375,8 +412,8 @@ class TenantUserServiceImplTest {
             void activateUserSuccessfully() {
                 final Long id = 1L;
                 final Instant now = clock.instant();
-                final TenantUserEntity currentEntity = new TenantUserEntity(id, "uuid", now, now, "givenName", "familyName", "email@example.com", Set.of(), now, now, null, null, UserStatus.UNKNOWN);
-                final TenantUserEntity activatedEntity = new TenantUserEntity(id, "uuid", now, now, "givenName", "familyName", "email@example.com", Set.of(), now, now, null, null, UserStatus.ACTIVE);
+                final TenantUserEntity currentEntity = new TenantUserEntity(id, "uuid", now, now, "givenName", "familyName", "email@example.com", null, Set.of(), now, now, null, null, UserStatus.UNKNOWN);
+                final TenantUserEntity activatedEntity = new TenantUserEntity(id, "uuid", now, now, "givenName", "familyName", "email@example.com", null, Set.of(), now, now, null, null, UserStatus.ACTIVE);
 
 
                 when(repository.findById(any())).thenReturn(Optional.of(currentEntity));
@@ -386,6 +423,21 @@ class TenantUserServiceImplTest {
 
                 verify(repository).findById(id);
                 verify(repository).save(activatedEntity);
+            }
+
+            @Test
+            void activateUserKeepsEmailVerified() {
+                final Long id = 1L;
+                final Instant now = clock.instant();
+                final TenantUserEntity currentEntity = new TenantUserEntity(id, "uuid", now, now, "givenName", "familyName", "email@example.com", false, Set.of(), now, now, null, null, UserStatus.DEACTIVATED);
+
+                when(repository.findById(any())).thenReturn(Optional.of(currentEntity));
+
+                sut.activateUser(id);
+
+                final ArgumentCaptor<TenantUserEntity> entityArgumentCaptor = ArgumentCaptor.forClass(TenantUserEntity.class);
+                verify(repository).save(entityArgumentCaptor.capture());
+                assertThat(entityArgumentCaptor.getValue().getEmailVerified()).isFalse();
             }
 
             @Test
@@ -409,8 +461,8 @@ class TenantUserServiceImplTest {
             void deactivateUserSuccessfully() {
                 final Long id = 1L;
                 final Instant now = clock.instant();
-                final TenantUserEntity currentEntity = new TenantUserEntity(id, "uuid", now, now, "givenName", "familyName", "email@example.com", Set.of(), now, now, null, null, UserStatus.ACTIVE);
-                final TenantUserEntity deactivatedEntity = new TenantUserEntity(id, "uuid", now, now, "givenName", "familyName", "email@example.com", Set.of(), now, now, now, null, UserStatus.DEACTIVATED);
+                final TenantUserEntity currentEntity = new TenantUserEntity(id, "uuid", now, now, "givenName", "familyName", "email@example.com", null, Set.of(), now, now, null, null, UserStatus.ACTIVE);
+                final TenantUserEntity deactivatedEntity = new TenantUserEntity(id, "uuid", now, now, "givenName", "familyName", "email@example.com", null, Set.of(), now, now, now, null, UserStatus.DEACTIVATED);
 
 
                 when(repository.findById(any())).thenReturn(Optional.of(currentEntity));
@@ -420,6 +472,21 @@ class TenantUserServiceImplTest {
 
                 verify(repository).findById(id);
                 verify(repository).save(deactivatedEntity);
+            }
+
+            @Test
+            void deactivateUserKeepsEmailVerified() {
+                final Long id = 1L;
+                final Instant now = clock.instant();
+                final TenantUserEntity currentEntity = new TenantUserEntity(id, "uuid", now, now, "givenName", "familyName", "email@example.com", false, Set.of(), now, now, null, null, UserStatus.ACTIVE);
+
+                when(repository.findById(any())).thenReturn(Optional.of(currentEntity));
+
+                sut.deactivateUser(id);
+
+                final ArgumentCaptor<TenantUserEntity> entityArgumentCaptor = ArgumentCaptor.forClass(TenantUserEntity.class);
+                verify(repository).save(entityArgumentCaptor.capture());
+                assertThat(entityArgumentCaptor.getValue().getEmailVerified()).isFalse();
             }
 
             @Test
@@ -438,18 +505,18 @@ class TenantUserServiceImplTest {
     }
 
     private static TenantUser activeTenantUserOne(Instant now) {
-        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), now, DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUser("my-external-id-1", 1L, "batman", "batman", new EMailAddress("batman@batman.com"), null, now, DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
     }
 
     private static TenantUserEntity activeUserEntityOne(Instant now) {
-        return new TenantUserEntity(1L, "my-external-id-1", now, now, "batman", "batman", "batman@batman.com", DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUserEntity(1L, "my-external-id-1", now, now, "batman", "batman", "batman@batman.com", null, DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
     }
 
     private static TenantUser activeTenantUserTwo(Instant now) {
-        return new TenantUser("my-external-id-2", 2L, "petra", "panter", new EMailAddress("petra@panter.com"), now, DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUser("my-external-id-2", 2L, "petra", "panter", new EMailAddress("petra@panter.com"), null, now, DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
     }
 
     private static TenantUserEntity activeUserEntityTwo(Instant now) {
-        return new TenantUserEntity(2L, "my-external-id-2", now, now, "petra", "panter", "petra@panter.com", DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
+        return new TenantUserEntity(2L, "my-external-id-2", now, now, "petra", "panter", "petra@panter.com", null, DEFAULT_USER_ROLES, now, now, null, null, UserStatus.ACTIVE);
     }
 }

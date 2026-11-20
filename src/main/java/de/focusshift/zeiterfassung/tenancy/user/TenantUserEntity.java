@@ -60,6 +60,12 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
     @Size(max = 255)
     private String email;
 
+    /**
+     * Whether the identity provider has verified the {@linkplain #email}. {@code null} means unknown.
+     */
+    @Column(name = "email_verified")
+    private Boolean emailVerified;
+
     @CollectionTable(name = "tenant_user_authorities", joinColumns = @JoinColumn(name = "tenant_user_id"))
     @ElementCollection(fetch = EAGER)
     @Enumerated(STRING)
@@ -83,14 +89,14 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
     private UserStatus status;
 
     protected TenantUserEntity() {
-        this(null, null, null, null, null, null, null, Set.of(), null, null, null, null, UserStatus.UNKNOWN);
+        this(null, null, null, null, null, null, null, null, Set.of(), null, null, null, null, UserStatus.UNKNOWN);
     }
 
-    public TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRole> authorities, Instant createdAt, Instant updatedAt, Instant deactivatedAt, Instant deletedAt, UserStatus status) {
-        this(id, null, uuid, firstLoginAt, lastLoginAt, givenName, familyName, email, authorities, createdAt, updatedAt, deactivatedAt, deletedAt, status);
+    public TenantUserEntity(Long id, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Boolean emailVerified, Set<SecurityRole> authorities, Instant createdAt, Instant updatedAt, Instant deactivatedAt, Instant deletedAt, UserStatus status) {
+        this(id, null, uuid, firstLoginAt, lastLoginAt, givenName, familyName, email, emailVerified, authorities, createdAt, updatedAt, deactivatedAt, deletedAt, status);
     }
 
-    protected TenantUserEntity(Long id, String tenantId, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Set<SecurityRole> authorities, Instant createdAt, Instant updatedAt, Instant deactivatedAt, Instant deletedAt, UserStatus status) {
+    protected TenantUserEntity(Long id, String tenantId, String uuid, Instant firstLoginAt, Instant lastLoginAt, String givenName, String familyName, String email, Boolean emailVerified, Set<SecurityRole> authorities, Instant createdAt, Instant updatedAt, Instant deactivatedAt, Instant deletedAt, UserStatus status) {
         super(tenantId);
         this.id = id;
         this.uuid = uuid;
@@ -99,6 +105,7 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
         this.givenName = givenName;
         this.familyName = familyName;
         this.email = email;
+        this.emailVerified = emailVerified;
         this.authorities = authorities;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -133,6 +140,10 @@ public class TenantUserEntity extends AbstractTenantAwareEntity {
 
     public String getEmail() {
         return email;
+    }
+
+    public Boolean getEmailVerified() {
+        return emailVerified;
     }
 
     public Set<SecurityRole> getAuthorities() {

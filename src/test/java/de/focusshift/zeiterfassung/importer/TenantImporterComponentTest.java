@@ -124,7 +124,7 @@ class TenantImporterComponentTest {
         final UserLocalId userLocalId = new UserLocalId(1L);
 
         when(tenantUserService.createNewUser(anyString(), anyString(), anyString(), any(EMailAddress.class), anySet())).thenReturn(
-            new TenantUser(userId.value(), userLocalId.value(), "marlene", "muster", new EMailAddress("my.name@example.org"), firstLoginAt, Set.of(SecurityRole.ZEITERFASSUNG_USER), firstLoginAt, firstLoginAt, null, null, UserStatus.ACTIVE)
+            new TenantUser(userId.value(), userLocalId.value(), "marlene", "muster", new EMailAddress("my.name@example.org"), null, firstLoginAt, Set.of(SecurityRole.ZEITERFASSUNG_USER), firstLoginAt, firstLoginAt, null, null, UserStatus.ACTIVE)
         );
 
         sut.runImport();
@@ -184,7 +184,7 @@ class TenantImporterComponentTest {
         when(tenantUserService.createNewUser(eq("one"), anyString(), anyString(), any(EMailAddress.class), anySet()))
             .thenThrow(new IllegalStateException("boom"));
         when(tenantUserService.createNewUser(eq("two"), anyString(), anyString(), any(EMailAddress.class), anySet()))
-            .thenReturn(new TenantUser("two", userTwoLocalId.value(), "erika", "musterfrau", new EMailAddress("my.name@example.org"), firstLoginAt, Set.of(SecurityRole.ZEITERFASSUNG_USER), firstLoginAt, firstLoginAt, null, null, UserStatus.ACTIVE));
+            .thenReturn(new TenantUser("two", userTwoLocalId.value(), "erika", "musterfrau", new EMailAddress("my.name@example.org"), null, firstLoginAt, Set.of(SecurityRole.ZEITERFASSUNG_USER), firstLoginAt, firstLoginAt, null, null, UserStatus.ACTIVE));
 
         sut.runImport();
 
@@ -223,7 +223,7 @@ class TenantImporterComponentTest {
         when(importInputProvider.fromExport()).thenReturn(Optional.of(tenantExport));
         Instant firstLoginAt = Instant.now().minus(365, ChronoUnit.DAYS);
         when(tenantService.getTenantByTenantId(anyString())).thenReturn(Optional.of(new Tenant("tenantId", firstLoginAt, firstLoginAt, TenantStatus.ACTIVE)));
-        when(tenantUserService.findAllUsers()).thenReturn(List.of(new TenantUser("externalId", 1L, "marlene", "muster", new EMailAddress("my.name@example.org"), firstLoginAt, Set.of(SecurityRole.ZEITERFASSUNG_USER), firstLoginAt, firstLoginAt, null, null, UserStatus.ACTIVE)));
+        when(tenantUserService.findAllUsers()).thenReturn(List.of(new TenantUser("externalId", 1L, "marlene", "muster", new EMailAddress("my.name@example.org"), null, firstLoginAt, Set.of(SecurityRole.ZEITERFASSUNG_USER), firstLoginAt, firstLoginAt, null, null, UserStatus.ACTIVE)));
 
         sut.runImport();
 

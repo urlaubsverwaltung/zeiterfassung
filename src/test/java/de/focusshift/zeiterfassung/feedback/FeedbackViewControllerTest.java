@@ -45,13 +45,29 @@ class FeedbackViewControllerTest {
         assertThat(redirectAttributes.getFlashAttributes().get("user-feedback-given")).isEqualTo(true);
         assertThat(redirect).isEqualTo("redirect:someReferer");
 
-        verify(feedbackService).sendFeedback(new EMailAddress("wayne@example.org"), "body");
+        verify(feedbackService).sendFeedback(new EMailAddress("wayne@example.org"), null, "body");
+    }
+
+    @Test
+    void feedbackPassesEmailVerifiedClaimOfSender() {
+        final FeedbackDto feedbackDto = new FeedbackDto("body");
+        final MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("referer", "someReferer");
+        final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        sut.feedback(feedbackDto, getDefaultOidcUser("subject", false), request, redirectAttributes);
+
+        verify(feedbackService).sendFeedback(new EMailAddress("wayne@example.org"), false, "body");
     }
 
     private CurrentOidcUser getDefaultOidcUser(String subject) {
+        return getDefaultOidcUser(subject, null);
+    }
+
+    private CurrentOidcUser getDefaultOidcUser(String subject, Boolean emailVerified) {
 
         final OidcIdToken token = OidcIdToken.withTokenValue("tokenvalue").claim("claimName", "yeeehaw").subject(subject).build();
-        final OidcUserInfo userInfo = OidcUserInfo.builder().name("Bruce").subject(subject).email("wayne@example.org").build();
+        final OidcUserInfo userInfo = OidcUserInfo.builder().name("Bruce").subject(subject).email("wayne@example.org").emailVerified(emailVerified).build();
         final DefaultOidcUser oidcUser = new DefaultOidcUser(emptyList(), token, userInfo);
 
         return new CurrentOidcUser(oidcUser, List.of(), List.of());

@@ -58,7 +58,7 @@ class UserManagementServiceImpl implements UserManagementService {
             .orElseThrow(() -> new UserNotFoundException(userLocalId));
 
         final TenantUser tenantUserWithNewPermissions =
-            new TenantUser(tenantUser.id(), tenantUser.localId(), tenantUser.givenName(), tenantUser.familyName(), tenantUser.eMail(), tenantUser.firstLoginAt(),
+            new TenantUser(tenantUser.id(), tenantUser.localId(), tenantUser.givenName(), tenantUser.familyName(), tenantUser.eMail(), tenantUser.eMailVerified(), tenantUser.firstLoginAt(),
                 permissions, tenantUser.createdAt(), tenantUser.updatedAt(), tenantUser.deactivatedAt(), tenantUser.deletedAt(), tenantUser.status());
 
         return tenantUserToUser(tenantUserService.updateUser(tenantUserWithNewPermissions));

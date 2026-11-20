@@ -74,6 +74,11 @@ class SecurityBeanConfigurationTest {
         }
 
         @Override
+        public TenantUser createNewUser(String uuid, String givenName, String familyName, EMailAddress eMailAddress, Boolean eMailVerified, Collection<SecurityRole> authorities) {
+            return null;
+        }
+
+        @Override
         public TenantUser updateUser(TenantUser user) {
             return null;
         }
