@@ -28,6 +28,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.temporal.IsoFields;
+import java.time.temporal.TemporalAdjusters;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static de.focusshift.zeiterfassung.ui.pages.LoginPage.Credentials.OFFICE;
@@ -124,5 +126,32 @@ class TimeEntryUIIT {
 
         timeEntryDialogPage.showsTimeEntryHistoryElement(start.toLocalDate(), start.toLocalTime(), end.toLocalTime(), "comment updated");
         timeEntryDialogPage.showsTimeEntryHistoryElement(start.toLocalDate(), start.toLocalTime(), end.toLocalTime(), "comment");
+    }
+
+    @Test
+    void ensureTimeEntryIsGroupedByNewDateAfterChangingItsDate(Page page) {
+
+        final TimeEntryPage timeEntryPage = new TimeEntryPage(page);
+        final LoginPage loginPage = new LoginPage(page, port);
+
+        loginPage.login(USER);
+
+        // next week, so that a time entry lock of other tests cannot reject the dates
+        final LocalDate monday = LocalDate.now(USER_ZONE_ID).with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+        final LocalDate tuesday = monday.plusDays(1);
+        page.navigate("http://localhost:%d/timeentries?year=%d&week=%d".formatted(port,
+            monday.get(IsoFields.WEEK_BASED_YEAR), monday.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR)));
+
+        timeEntryPage.fillNewTimeEntry(monday, LocalTime.parse("08:00"), LocalTime.parse("09:00"), "move me");
+        timeEntryPage.submitNewTimeEntryButton().click();
+
+        final Locator commentInput = timeEntryPage.getCommentInput("move me");
+        assertThat(timeEntryPage.dayGroup(monday).locator(commentInput)).isVisible();
+
+        timeEntryPage.fillTimeEntryDateHaving(commentInput, tuesday);
+        timeEntryPage.submitTimeEntryHaving(commentInput);
+
+        assertThat(timeEntryPage.dayGroup(tuesday).locator(commentInput)).isVisible();
+        assertThat(timeEntryPage.dayGroup(monday)).hasCount(0);
     }
 }

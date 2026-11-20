@@ -179,6 +179,15 @@
                 th:target="${'time-entry-' + turboDeletedTimeEntry.id}"
               ></turbo-stream>
             </th:block>
+            <turbo-stream
+              th:each="editedWeek : ${turboEditedWeeks}"
+              action="replace"
+              th:target="${'week-' + editedWeek.calendarWeek}"
+            >
+              <template
+                th:insert="~{::time-entry-week(${editedWeek})}"
+              ></template>
+            </turbo-stream>
           </turbo-frame>
           <turbo-frame id="frame-time-entry-weeks">
             <th:block
@@ -198,8 +207,14 @@
             th:classappend="${timeEntryWeeksPage.totalTimeEntryElements eq 0 ? 'mb-8' : ''}"
           >
             <div id="time-entries-box" class="space-y-16">
-              <th:block th:ref="time-entries-box-content">
-                <div th:with="week=${timeEntryWeeksPage.timeEntryWeek}">
+              <th:block
+                th:ref="time-entries-box-content"
+                th:with="week=${timeEntryWeeksPage.timeEntryWeek}"
+              >
+                <div
+                  th:fragment="time-entry-week(week)"
+                  th:id="${'week-' + week.calendarWeek}"
+                >
                   <div class="px-4">
                     <div
                       th:fragment="week-banner(week)"

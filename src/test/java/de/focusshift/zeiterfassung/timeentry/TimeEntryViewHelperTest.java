@@ -349,7 +349,7 @@ class TimeEntryViewHelperTest {
             final Model model = mock(Model.class);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            assertThatThrownBy(() -> sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
+            assertThatThrownBy(() -> sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Expected timeEntry id to have value. Did you meant to create a time entry?");
 
@@ -374,7 +374,7 @@ class TimeEntryViewHelperTest {
 
             when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
+            assertThatThrownBy(() -> sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
                 .isInstanceOf(TimeEntryNotFoundException.class)
                 .hasMessage("TimeEntry with TimeEntryId[value=1] not found.");
 
@@ -403,7 +403,7 @@ class TimeEntryViewHelperTest {
 
             when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(timeEntryOwnerIdComposite)));
 
-            assertThatThrownBy(() -> sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
+            assertThatThrownBy(() -> sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("Not allowed to edit timeEntry TimeEntryId[value=1].");
 
@@ -435,7 +435,7 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
 
-            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(timeEntryService);
             verify(bindingResult).reject("time-entry.validation.startOrEnd.required");
@@ -464,7 +464,7 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
 
-            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(timeEntryService);
             verify(bindingResult).reject("time-entry.validation.endOrDuration.required");
@@ -493,7 +493,7 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
 
-            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(timeEntryService);
             verify(bindingResult).reject("time-entry.validation.startOrDuration.required");
@@ -520,7 +520,7 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
 
             verify(redirectAttributes).addFlashAttribute(BindingResult.MODEL_KEY_PREFIX + "timeEntry", bindingResult);
             verify(redirectAttributes).addFlashAttribute("timeEntry", timeEntryDTO);
@@ -554,7 +554,7 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(bindingResult);
             verifyNoInteractions(redirectAttributes);
@@ -584,7 +584,8 @@ class TimeEntryViewHelperTest {
             timeEntryDto.setComment("comment-new");
             timeEntryDto.setBreak(false);
 
-            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(timeEntryOwnerIdComposite)));
+            final TimeEntry persistedTimeEntry = anyTimeEntry(timeEntryOwnerIdComposite);
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(persistedTimeEntry));
             when(userSettingsProvider.zoneId()).thenReturn(UTC);
 
             final BindingResult bindingResult = mock(BindingResult.class);
@@ -594,17 +595,17 @@ class TimeEntryViewHelperTest {
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            final UserLocalId actual = sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            final TimeEntry actual = sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             final ZonedDateTime expectedStart = ZonedDateTime.parse("2025-02-14T12:15:00Z");
             final ZonedDateTime expectedEnd = ZonedDateTime.parse("2025-02-14T18:30:00Z");
             final Duration expectedDuration = Duration.ZERO;
             verify(timeEntryService).updateTimeEntry(timeEntryId, "comment-new", expectedStart, expectedEnd, expectedDuration, false);
-            assertThat(actual).isEqualTo(timeEntryOwnerLocalId);
+            assertThat(actual).isSameAs(persistedTimeEntry);
         }
 
         @Test
-        void ensureUpdateTimeEntryReturnsOwnerOfPersistedTimeEntryOnValidationError() {
+        void ensureUpdateTimeEntryReturnsPersistedTimeEntryOnValidationError() {
 
             final UserLocalId loggedInUserLocalId = new UserLocalId(1L);
 
@@ -618,14 +619,15 @@ class TimeEntryViewHelperTest {
             final BindingResult bindingResult = mock(BindingResult.class);
             when(bindingResult.hasErrors()).thenReturn(true);
 
-            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(anyTimeEntry(timeEntryOwnerIdComposite)));
+            final TimeEntry persistedTimeEntry = anyTimeEntry(timeEntryOwnerIdComposite);
+            when(timeEntryService.findTimeEntry(new TimeEntryId(1L))).thenReturn(Optional.of(persistedTimeEntry));
 
             final CurrentOidcUser currentOidcUser = anyAuthenticatedCurrentOidcUser(loggedInUserLocalId);
             final Model model = new ConcurrentModel(bindingResult);
             final RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
 
-            final UserLocalId actual = sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
-            assertThat(actual).isEqualTo(timeEntryOwnerLocalId);
+            final TimeEntry actual = sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+            assertThat(actual).isSameAs(persistedTimeEntry);
         }
 
         @Test
@@ -656,7 +658,7 @@ class TimeEntryViewHelperTest {
             final Model model = mock(Model.class);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             verify(bindingResult).reject("time-entry.validation.plausible");
             verify(bindingResult).rejectValue("start", "");
@@ -703,7 +705,7 @@ class TimeEntryViewHelperTest {
             final Model model = mock(Model.class);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             verify(bindingResult).reject("time-entry.validation.timespan.locked");
         }
@@ -743,7 +745,7 @@ class TimeEntryViewHelperTest {
             final Model model = mock(Model.class);
             final RedirectAttributes redirectAttributes = mock(RedirectAttributes.class);
 
-            sut.updateTimeEntryAndGetOwner(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
+            sut.updateTimeEntryAndGetPrevious(currentOidcUser, timeEntryDto, bindingResult, model, redirectAttributes);
 
             verifyNoMoreInteractions(bindingResult);
             verify(timeEntryService).updateTimeEntry(new TimeEntryId(1L), "comment-new", start, end, Duration.ZERO, false);
