@@ -38,7 +38,8 @@ class GraphWeekDtoTest {
         final GraphWeekDto week = new GraphWeekDto(1, "", List.of(), 130.0, "", "", "", false, 0);
         final GraphMonthDto sut = new GraphMonthDto("", List.of(week), 130.0, "", "", "", false, 0);
 
-        assertThat(sut.graphLegendMaxHour()).isEqualTo(160);
+        // rounded once from the hours of the days, not again from the already rounded week legend
+        assertThat(sut.graphLegendMaxHour()).isEqualTo(140);
         assertThat(sut.graphLegendStepHour()).isEqualTo(20);
     }
 }

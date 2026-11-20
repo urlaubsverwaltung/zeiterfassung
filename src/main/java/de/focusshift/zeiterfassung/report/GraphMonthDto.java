@@ -16,7 +16,8 @@ record GraphMonthDto(
     public Double graphLegendMaxHour() {
 
         final Double maxShould = weekReports.stream()
-            .map(GraphWeekDto::graphLegendMaxHour)
+            .flatMap(week -> week.dayReports().stream())
+            .map(GraphDayDto::hoursWorkedShould)
             .max(Double::compareTo)
             .orElse(8.0);
 
