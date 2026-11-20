@@ -38,7 +38,7 @@ public enum FederalState {
     GERMANY_SCHLESWIG_HOLSTEIN("de", "sh"),
     GERMANY_THUERINGEN("de", "th"),
 
-    GREECE_GREECE("gr", "gr"),
+    GREECE_GREECE("gr"),
 
     AUSTRIA_BURGENLAND("at", "1"),
     AUSTRIA_KAERNTEN("at", "2"),
@@ -77,20 +77,19 @@ public enum FederalState {
     SWITZERLAND_ZUG("ch", "zg"),
     SWITZERLAND_ZUERICH("ch", "zh"),
 
-    UNITED_KINGDOM_ALDERNEY("gb", "al"),
-    UNITED_KINGDOM_ENGLAND("gb", "en"),
-    UNITED_KINGDOM_GUERNSEY("gb", "gu"),
-    UNITED_KINGDOM_ISLE_OF_MAN("gb", "im"),
-    UNITED_KINGDOM_JERSEY("gb", "je"),
-    UNITED_KINGDOM_NORTHERN_IRELAND("gb", "ni"),
-    UNITED_KINGDOM_SCOTLAND("gb", "sc"),
-    UNITED_KINGDOM_WALES("gb", "wa"),
+    UNITED_KINGDOM_ENGLAND("gb", "eng"),
+    UNITED_KINGDOM_GUERNSEY("gg"),
+    UNITED_KINGDOM_ISLE_OF_MAN("im"),
+    UNITED_KINGDOM_JERSEY("je"),
+    UNITED_KINGDOM_NORTHERN_IRELAND("gb", "nir"),
+    UNITED_KINGDOM_SCOTLAND("gb", "sct"),
+    UNITED_KINGDOM_WALES("gb", "wls"),
 
-    MALTA("mt", "mt"),
+    MALTA("mt"),
 
-    ITALY("it", "it"),
+    ITALY("it"),
 
-    CROATIA("hr", "hr"),
+    CROATIA("hr"),
 
     SPAIN_ANDALUCIA("es", "an"),
     SPAIN_ARAGON("es", "ar"),
@@ -100,11 +99,11 @@ public enum FederalState {
     SPAIN_CASTILE_LA_MANCHA("es", "cm"),
     SPAIN_CANARY_ISLANDS("es", "cn"),
     SPAIN_CATALONIA("es", "ct"),
-    SPAIN_BARCELONA("es", "bcn"),
+    SPAIN_BARCELONA("es", "ct", "bcn"),
     SPAIN_EXTREMADURA("es", "ex"),
     SPAIN_GALICIA("es", "ga"),
     SPAIN_BALEARIC_ISLAND("es", "ib"),
-    SPAIN_LA_RIOJA("es", "lo"),
+    SPAIN_LA_RIOJA("es", "ri"),
     SPAIN_MADRID("es", "md"),
     SPAIN_MURCIA("es", "mc"),
     SPAIN_NAVARRA("es", "nc"),
@@ -113,25 +112,26 @@ public enum FederalState {
     SPAIN_CANTABRIA("es", "cb"),
     SPAIN_VALENCIA("es", "vc"),
 
-    NETHERLANDS("nl", "nl"),
+    NETHERLANDS("nl"),
 
-    LITHUANIA("lt", "lt"),
+    LITHUANIA("lt"),
 
-    BELGIUM("be", "be"),
+    BELGIUM("be"),
 
-    POLAND("pl", "pl"),
+    POLAND("pl"),
 
-    ROMANIA("ro", "ro"),
+    ROMANIA("ro"),
 
-    FINLAND("fi", "fi"),
+    FINLAND("fi"),
+    FINLAND_ALAND("fi", "01"),
 
-    PORTUGAL("pt", "pt"),
+    PORTUGAL("pt"),
     PORTUGAL_AZORES("pt", "20"),
     PORTUGAL_MADEIRA("pt", "30"),
 
-    BULGARIA("bg", "bg"),
+    BULGARIA("bg"),
 
-    LATVIA("lv", "lv"),
+    LATVIA("lv"),
 
     USA_MARYLAND("us", "md"),
     USA_VIRGINIA("us", "va"),
