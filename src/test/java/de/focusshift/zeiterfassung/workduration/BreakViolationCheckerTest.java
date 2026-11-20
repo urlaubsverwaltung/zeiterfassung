@@ -2,13 +2,14 @@ package de.focusshift.zeiterfassung.workduration;
 
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
 import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
-import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserId;
+import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import org.junit.jupiter.api.Test;
 
-import java.time.ZonedDateTime;
+import java.time.Duration;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,126 +20,197 @@ class BreakViolationCheckerTest {
 
     private static final ZoneId BERLIN = ZoneId.of("Europe/Berlin");
     private static final UserIdComposite USER = new UserIdComposite(new UserId("user-1"), new UserLocalId(1L));
-    private static final ZonedDateTime BASE = ZonedDateTime.of(2024, 1, 15, 8, 0, 0, 0, BERLIN);
 
     private static final BreakViolation DAILY = new BreakViolation(BreakViolationType.DAILY);
     private static final BreakViolation CONTINUITY = new BreakViolation(BreakViolationType.CONTINUITY);
 
-    private static TimeEntry workEntry(ZonedDateTime start, ZonedDateTime end) {
-        return new TimeEntry(new TimeEntryId(1L), USER, "", start, end, false);
+    private static long id = 0;
+
+    private static ZonedDateTime at(int hour, int minute) {
+        return ZonedDateTime.of(2024, 1, 15, hour, minute, 0, 0, BERLIN);
     }
 
-    private static TimeEntry breakEntry(ZonedDateTime start, ZonedDateTime end) {
-        return new TimeEntry(new TimeEntryId(2L), USER, "", start, end, true);
+    private static TimeEntry work(ZonedDateTime start, ZonedDateTime end) {
+        return new TimeEntry(new TimeEntryId(++id), USER, "", start, end, false);
     }
 
-    // --- empty / trivial ---
+    private static TimeEntry pause(ZonedDateTime start, ZonedDateTime end) {
+        return new TimeEntry(new TimeEntryId(++id), USER, "", start, end, true);
+    }
+
+    private static WorkDuration hours(int hours, int minutes) {
+        return new WorkDuration(Duration.ofHours(hours).plusMinutes(minutes));
+    }
 
     @Test
-    void check_returnsEmptyList_whenNoEntries() {
-        assertThat(sut.check(List.of())).isEmpty();
+    void noViolationWithoutEntries() {
+        assertThat(sut.check(WorkDuration.ZERO, List.of())).isEmpty();
     }
 
     @Test
-    void check_returnsEmptyList_whenWorkDurationIsExactly6Hours() {
-        var entry = workEntry(BASE, BASE.plusHours(6));
-        assertThat(sut.check(List.of(entry))).isEmpty();
+    void noViolationForShortDay() {
+        // EC-5
+        assertThat(sut.check(hours(2, 0), List.of(work(at(8, 0), at(10, 0))))).isEmpty();
+    }
+
+    @Test
+    void noViolationForExactlySixHours() {
+        // EC-1
+        assertThat(sut.check(hours(6, 0), List.of(work(at(8, 0), at(14, 0))))).isEmpty();
     }
 
     // --- daily rule (§4 Satz 1) ---
 
     @Test
-    void check_returnsDailyViolation_whenGrossTimeExceeds6HoursAndNoBreakRecorded() {
-        var work = workEntry(BASE, BASE.plusHours(6).plusMinutes(1));
-        assertThat(sut.check(List.of(work))).contains(DAILY);
+    void dailyViolationWhenMoreThanSixHoursWithoutBreak() {
+        assertThat(sut.check(hours(6, 1), List.of(work(at(8, 0), at(14, 1))))).contains(DAILY);
     }
 
     @Test
-    void check_returnsDailyViolation_whenGrossTimeExceeds6HoursAndBreakTooShort() {
-        var work = workEntry(BASE, BASE.plusHours(6));
-        var pause = breakEntry(BASE.plusHours(6), BASE.plusHours(6).plusMinutes(29));
-        // gross = 6h29m > 6h → need 30min, have 29min
-        assertThat(sut.check(List.of(work, pause))).contains(DAILY);
+    void dailyViolationWhenBreakIsShorterThanMandatoryBreak() {
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(12, 0)),
+            pause(at(12, 0), at(12, 20)),
+            work(at(12, 20), at(16, 20))
+        );
+        assertThat(sut.check(hours(8, 0), entries)).contains(DAILY);
     }
 
     @Test
-    void check_returnsNoDailyViolation_whenGrossTimeExceeds6HoursAndBreakMeetsMinimum() {
-        var work = workEntry(BASE, BASE.plusHours(6));
-        var pause = breakEntry(BASE.plusHours(6), BASE.plusHours(6).plusMinutes(30));
-        // gross = 6h30m > 6h → need 30min, have 30min
-        assertThat(sut.check(List.of(work, pause))).doesNotContain(DAILY);
+    void noDailyViolationWhenBreakMeetsMandatoryBreak() {
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(12, 0)),
+            pause(at(12, 0), at(12, 30)),
+            work(at(12, 30), at(16, 30))
+        );
+        assertThat(sut.check(hours(8, 0), entries)).isEmpty();
     }
 
     @Test
-    void check_returnsDailyViolation_whenGrossTimeExceeds9HoursAndBreakTooShort() {
-        var work = workEntry(BASE, BASE.plusHours(9));
-        var pause = breakEntry(BASE.plusHours(9), BASE.plusHours(9).plusMinutes(44));
-        // gross = 9h44m > 9h → need 45min, have 44min
-        assertThat(sut.check(List.of(work, pause))).contains(DAILY);
+    void breakEntriesDoNotCountAsWorkDuration() {
+        // 6h work + 29 min break. the work duration is 6h, no break is mandatory.
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(14, 0)),
+            pause(at(14, 0), at(14, 29))
+        );
+        assertThat(sut.check(hours(6, 0), entries)).doesNotContain(DAILY);
     }
 
     @Test
-    void check_returnsNoDailyViolation_whenGrossTimeExceeds9HoursAndBreakMeetsMinimum() {
-        var work = workEntry(BASE, BASE.plusHours(9));
-        var pause = breakEntry(BASE.plusHours(9), BASE.plusHours(9).plusMinutes(45));
-        // gross = 9h45m > 9h → need 45min, have 45min
-        assertThat(sut.check(List.of(work, pause))).doesNotContain(DAILY);
+    void dailyViolationWhenMoreThanNineHoursAndBreakShorterThan45Minutes() {
+        final List<TimeEntry> entries = List.of(
+            work(at(7, 0), at(12, 0)),
+            pause(at(12, 0), at(12, 44)),
+            work(at(12, 44), at(17, 45))
+        );
+        assertThat(sut.check(hours(10, 1), entries)).contains(DAILY);
+    }
+
+    @Test
+    void noDailyViolationWhenMoreThanNineHoursAndBreakOf45Minutes() {
+        final List<TimeEntry> entries = List.of(
+            work(at(7, 0), at(12, 0)),
+            pause(at(12, 0), at(12, 45)),
+            work(at(12, 45), at(17, 45))
+        );
+        assertThat(sut.check(hours(10, 0), entries)).isEmpty();
+    }
+
+    @Test
+    void gapWithoutBreakEntryIsNoBreak() {
+        // EC-7: the gap is neither a break for the daily rule nor an interruption of the work block
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(12, 0)),
+            work(at(13, 0), at(17, 0))
+        );
+        assertThat(sut.check(hours(8, 0), entries)).containsExactlyInAnyOrder(DAILY, CONTINUITY);
+    }
+
+    @Test
+    void breaksShorterThan15MinutesDoNotCount() {
+        // EC-8
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(14, 10)),
+            pause(at(14, 10), at(14, 20)),
+            work(at(14, 20), at(17, 0))
+        );
+        assertThat(sut.check(hours(8, 50), entries)).containsExactlyInAnyOrder(DAILY, CONTINUITY);
+    }
+
+    @Test
+    void adjacentShortBreaksAreMergedBeforeCheckingTheMinimumDuration() {
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(12, 0)),
+            pause(at(12, 0), at(12, 10)),
+            pause(at(12, 10), at(12, 30)),
+            work(at(12, 30), at(16, 30))
+        );
+        assertThat(sut.check(hours(8, 0), entries)).isEmpty();
+    }
+
+    @Test
+    void severalBreaksOfAtLeast15MinutesAddUp() {
+        // EC-9
+        final List<TimeEntry> entries = List.of(
+            work(at(6, 0), at(9, 0)),
+            pause(at(9, 0), at(9, 15)),
+            work(at(9, 15), at(12, 0)),
+            pause(at(12, 0), at(12, 15)),
+            work(at(12, 15), at(14, 30))
+        );
+        assertThat(sut.check(hours(8, 0), entries)).isEmpty();
+    }
+
+    @Test
+    void breakWithinWorkEntryCounts() {
+        // time clock: one work entry for the whole day, the break recorded within it
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(16, 30)),
+            pause(at(12, 0), at(12, 30))
+        );
+        assertThat(sut.check(hours(8, 0), entries)).isEmpty();
     }
 
     // --- continuity rule (§4 Satz 3) ---
 
     @Test
-    void check_returnsContinuityViolation_whenSingleWorkBlockExceeds6Hours() {
-        var work = workEntry(BASE, BASE.plusHours(6).plusMinutes(1));
-        assertThat(sut.check(List.of(work))).contains(CONTINUITY);
+    void continuityViolationWhenDailyRuleIsMet() {
+        // EC-6
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(14, 30)),
+            pause(at(14, 30), at(15, 0)),
+            work(at(15, 0), at(16, 0))
+        );
+        assertThat(sut.check(hours(7, 30), entries)).containsExactly(CONTINUITY);
     }
 
     @Test
-    void check_returnsNoContinuityViolation_whenWorkBlockIsExactly6Hours() {
-        var work = workEntry(BASE, BASE.plusHours(6));
-        assertThat(sut.check(List.of(work))).doesNotContain(CONTINUITY);
+    void continuityCountsWorkEntriesWithoutBreakBetweenThemAsOneBlock() {
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(11, 1)),
+            work(at(13, 0), at(16, 0)),
+            pause(at(16, 0), at(16, 30))
+        );
+        assertThat(sut.check(hours(6, 1), entries)).containsExactly(CONTINUITY);
     }
 
     @Test
-    void check_returnsContinuityViolation_whenTwoWorkEntriesExceed6HoursWithoutQualifyingBreak() {
-        // two entries, no break between them → one continuous block of 6h2m
-        var work1 = workEntry(BASE, BASE.plusHours(3).plusMinutes(1));
-        var work2 = workEntry(BASE.plusHours(3).plusMinutes(1), BASE.plusHours(6).plusMinutes(2));
-        assertThat(sut.check(List.of(work1, work2))).contains(CONTINUITY);
+    void noContinuityViolationWhenQualifyingBreakSplitsBlocks() {
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(12, 0)),
+            pause(at(12, 0), at(12, 15)),
+            pause(at(14, 0), at(14, 15)),
+            work(at(12, 15), at(16, 15))
+        );
+        assertThat(sut.check(hours(8, 0), entries)).isEmpty();
     }
 
     @Test
-    void check_returnsNoContinuityViolation_whenQualifyingBreakOf15MinResetsBlock() {
-        var work1 = workEntry(BASE, BASE.plusHours(4));
-        var pause = breakEntry(BASE.plusHours(4), BASE.plusHours(4).plusMinutes(15));
-        var work2 = workEntry(BASE.plusHours(4).plusMinutes(15), BASE.plusHours(7).plusMinutes(15));
-        // block1=4h, break=15min resets, block2=3h → no violation
-        assertThat(sut.check(List.of(work1, pause, work2))).doesNotContain(CONTINUITY);
-    }
-
-    @Test
-    void check_returnsContinuityViolation_whenBreakIsLessThan15MinAndDoesNotResetBlock() {
-        var work1 = workEntry(BASE, BASE.plusHours(4));
-        var shortPause = breakEntry(BASE.plusHours(4), BASE.plusHours(4).plusMinutes(14));
-        var work2 = workEntry(BASE.plusHours(4).plusMinutes(14), BASE.plusHours(7));
-        // block1=4h, break=14min does NOT reset, block continues: 4h + 3h = 7h > 6h → violation
-        assertThat(sut.check(List.of(work1, shortPause, work2))).contains(CONTINUITY);
-    }
-
-    @Test
-    void check_returnsContinuityViolation_whenGapBetweenEntriesIsNotAnInterruption() {
-        // gap between entries (no isBreak entry) does not reset the block
-        var work1 = workEntry(BASE, BASE.plusHours(3).plusMinutes(1));
-        // gap: BASE+3h01m to BASE+5h (no entry)
-        var work2 = workEntry(BASE.plusHours(5), BASE.plusHours(8));
-        // block = 3h01m + 3h = 6h01m > 6h → violation
-        assertThat(sut.check(List.of(work1, work2))).contains(CONTINUITY);
-    }
-
-    @Test
-    void check_returnsBothViolations_whenDailyAndContinuityRulesAreBothViolated() {
-        var work = workEntry(BASE, BASE.plusHours(6).plusMinutes(1));
-        // 6h01m work, no break → daily (need 30min, have 0) and continuity (>6h)
-        assertThat(sut.check(List.of(work))).containsExactlyInAnyOrder(DAILY, CONTINUITY);
+    void continuityViolationWhenBreakWithinWorkEntryIsTooLate() {
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(16, 30)),
+            pause(at(14, 15), at(14, 45))
+        );
+        assertThat(sut.check(hours(8, 0), entries)).containsExactly(CONTINUITY);
     }
 }

@@ -1,73 +1,96 @@
 package de.focusshift.zeiterfassung.workduration;
 
 import de.focusshift.zeiterfassung.timeentry.TimeEntry;
+import de.focusshift.zeiterfassung.workduration.QualifyingBreaks.Interval;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collection;
 import java.util.List;
 
+import static java.util.function.Predicate.not;
+
+/**
+ * Checks the time entries of a day against the break rules of ArbZG §4.
+ *
+ * <ul>
+ *     <li>{@link BreakViolationType#DAILY}: qualifying breaks are shorter than the mandatory break</li>
+ *     <li>{@link BreakViolationType#CONTINUITY}: more than six hours of work without a qualifying break</li>
+ * </ul>
+ *
+ * See {@link QualifyingBreaks} for which breaks count.
+ */
+@Component
 public class BreakViolationChecker {
 
-    private static final StatutoryBreakRule STATUTORY_BREAK_RULE = new StatutoryBreakRule();
-    private static final Duration MIN_QUALIFYING_BREAK = Duration.ofMinutes(15);
     private static final Duration MAX_CONTINUOUS_WORK = Duration.ofHours(6);
 
-    public List<BreakViolation> check(List<TimeEntry> entriesForDay) {
-        if (entriesForDay.isEmpty()) {
-            return List.of();
-        }
+    private final StatutoryBreakRule statutoryBreakRule = new StatutoryBreakRule();
 
-        List<BreakViolation> violations = new ArrayList<>();
+    /**
+     * @param workDuration  work duration of the day, before any automatic break deduction
+     * @param entriesForDay time entries of the day, work and break entries
+     * @return violated rules, empty when there is no violation
+     */
+    public List<BreakViolation> check(WorkDuration workDuration, Collection<TimeEntry> entriesForDay) {
 
-        if (hasDailyViolation(entriesForDay)) {
+        final QualifyingBreaks qualifyingBreaks = QualifyingBreaks.of(entriesForDay);
+        final List<BreakViolation> violations = new ArrayList<>();
+
+        if (hasDailyViolation(workDuration, qualifyingBreaks)) {
             violations.add(new BreakViolation(BreakViolationType.DAILY));
         }
 
-        if (hasContinuityViolation(entriesForDay)) {
+        if (hasContinuityViolation(entriesForDay, qualifyingBreaks)) {
             violations.add(new BreakViolation(BreakViolationType.CONTINUITY));
         }
 
         return List.copyOf(violations);
     }
 
-    private boolean hasDailyViolation(List<TimeEntry> entries) {
-        Duration grossWorkingTime = entries.stream()
-            .map(TimeEntry::duration)
-            .reduce(Duration.ZERO, Duration::plus);
-
-        Duration requiredBreak = STATUTORY_BREAK_RULE.calculate(grossWorkingTime);
-        if (requiredBreak.isZero()) {
-            return false;
-        }
-
-        Duration actualBreak = entries.stream()
-            .filter(TimeEntry::isBreak)
-            .map(TimeEntry::duration)
-            .reduce(Duration.ZERO, Duration::plus);
-
-        return actualBreak.compareTo(requiredBreak) < 0;
+    private boolean hasDailyViolation(WorkDuration workDuration, QualifyingBreaks qualifyingBreaks) {
+        final Duration mandatoryBreak = statutoryBreakRule.calculate(workDuration.duration());
+        return qualifyingBreaks.totalDuration().compareTo(mandatoryBreak) < 0;
     }
 
-    private boolean hasContinuityViolation(List<TimeEntry> entries) {
-        List<TimeEntry> sorted = entries.stream()
-            .sorted(Comparator.comparing(TimeEntry::start))
+    /**
+     * Qualifying breaks split the day into blocks. Work within a block counts as continuous, even when there are gaps
+     * between the time entries.
+     */
+    private static boolean hasContinuityViolation(Collection<TimeEntry> entries, QualifyingBreaks qualifyingBreaks) {
+
+        final List<Interval> workIntervals = entries.stream()
+            .distinct()
+            .filter(not(TimeEntry::isBreak))
+            .map(entry -> new Interval(entry.start(), entry.end()))
             .toList();
 
-        Duration currentBlock = Duration.ZERO;
-
-        for (TimeEntry entry : sorted) {
-            if (entry.isBreak() && entry.duration().compareTo(MIN_QUALIFYING_BREAK) >= 0) {
-                currentBlock = Duration.ZERO;
-            } else if (!entry.isBreak()) {
-                currentBlock = currentBlock.plus(entry.duration());
-                if (currentBlock.compareTo(MAX_CONTINUOUS_WORK) > 0) {
-                    return true;
-                }
+        ZonedDateTime blockStart = null;
+        for (Interval qualifyingBreak : qualifyingBreaks.intervals()) {
+            if (workWithin(workIntervals, blockStart, qualifyingBreak.start()).compareTo(MAX_CONTINUOUS_WORK) > 0) {
+                return true;
             }
-            // short breaks (< 15min) and gaps between entries do not interrupt the block
+            blockStart = qualifyingBreak.end();
         }
 
-        return false;
+        return workWithin(workIntervals, blockStart, null).compareTo(MAX_CONTINUOUS_WORK) > 0;
+    }
+
+    /**
+     * @param from inclusive, {@code null} for unbounded
+     * @param to   exclusive, {@code null} for unbounded
+     */
+    private static Duration workWithin(List<Interval> workIntervals, ZonedDateTime from, ZonedDateTime to) {
+        Duration sum = Duration.ZERO;
+        for (Interval work : workIntervals) {
+            final ZonedDateTime start = from == null || work.start().isAfter(from) ? work.start() : from;
+            final ZonedDateTime end = to == null || work.end().isBefore(to) ? work.end() : to;
+            if (start.isBefore(end)) {
+                sum = sum.plus(Duration.between(start, end));
+            }
+        }
+        return sum;
     }
 }
