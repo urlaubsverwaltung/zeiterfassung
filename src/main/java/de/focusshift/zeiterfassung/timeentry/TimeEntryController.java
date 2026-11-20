@@ -334,15 +334,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
                 if (previousDate != null && !previousDate.equals(timeEntryDTO.getDate())) {
                     LOG.info("Date of timeEntry {} changed. Rendering affected weeks.", timeEntryId);
-                    final List<TimeEntryWeekDto> editedWeeks = new ArrayList<>();
-                    editedWeeks.add(toTimeEntryWeekDto(timeEntryWeek, locale, currentUser));
-                    final LocalDate previousFirstDateOfWeek = localDateToFirstDateOfWeek(previousDate);
-                    if (!previousFirstDateOfWeek.equals(timeEntryWeek.firstDateOfWeek())) {
-                        final TimeEntryWeek previousWeek = timeEntryDayService.getEntryWeekPage(ownerLocalId,
-                            previousFirstDateOfWeek.getYear(), previousFirstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR)).timeEntryWeek();
-                        editedWeeks.add(toTimeEntryWeekDto(previousWeek, locale, currentUser));
-                    }
-                    model.addAttribute("turboEditedWeeks", editedWeeks);
+                    addEditedWeeksToModel(timeEntryWeek, previousDate, ownerLocalId, model, locale, currentUser);
                     return new ModelAndView("timeentries/index::#frame-time-entry");
                 }
 
@@ -373,6 +365,19 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
                 return new ModelAndView("redirect:" + url);
             }
         }
+    }
+
+    // the week the time entry moved to and, if it is another one, the week it left
+    private void addEditedWeeksToModel(TimeEntryWeek timeEntryWeek, LocalDate previousDate, UserLocalId ownerLocalId, Model model, Locale locale, CurrentOidcUser currentUser) {
+        final List<TimeEntryWeekDto> editedWeeks = new ArrayList<>();
+        editedWeeks.add(toTimeEntryWeekDto(timeEntryWeek, locale, currentUser));
+        final LocalDate previousFirstDateOfWeek = localDateToFirstDateOfWeek(previousDate);
+        if (!previousFirstDateOfWeek.equals(timeEntryWeek.firstDateOfWeek())) {
+            final TimeEntryWeek previousWeek = timeEntryDayService.getEntryWeekPage(ownerLocalId,
+                previousFirstDateOfWeek.getYear(), previousFirstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR)).timeEntryWeek();
+            editedWeeks.add(toTimeEntryWeekDto(previousWeek, locale, currentUser));
+        }
+        model.addAttribute("turboEditedWeeks", editedWeeks);
     }
 
     @PostMapping(value = "/timeentries/{timeEntryIdValue}", params = "delete")
