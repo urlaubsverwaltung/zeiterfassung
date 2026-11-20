@@ -48,6 +48,7 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TI
 import static de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.time.Month.JUNE;
 import static java.util.Locale.GERMANY;
 import static java.util.Objects.requireNonNullElse;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -641,7 +642,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
     private int lastWeekOfYear(int year) {
         // a mid-year date, so that its week-based year is the given year
-        return (int) LocalDate.of(year, 6, 1).range(weekFields().weekOfWeekBasedYear()).getMaximum();
+        return (int) LocalDate.of(year, JUNE, 1).range(weekFields().weekOfWeekBasedYear()).getMaximum();
     }
 
     private YearAndWeek weekOf(LocalDate date) {
