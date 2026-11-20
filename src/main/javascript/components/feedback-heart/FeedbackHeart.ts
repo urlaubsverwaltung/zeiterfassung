@@ -6,7 +6,11 @@ export class FeedbackHeart extends HTMLElement {
   unleash() {
     const heart = document.createElement("div");
     heart.classList.add("feedback-floating-heart");
+    // top layer, otherwise the heart is hidden behind the open mobile navigation popover
+    heart.setAttribute("popover", "manual");
+    heart.addEventListener("animationend", () => heart.remove());
     document.body.append(heart);
+    heart.showPopover();
   }
 
   private render() {
