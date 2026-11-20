@@ -10,87 +10,104 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.not;
 
 /**
  * Checks the time entries of a day against the break rules of ArbZG §4.
  *
  * <ul>
- *     <li>{@link BreakViolationType#DAILY}: qualifying breaks are shorter than the mandatory break</li>
- *     <li>{@link BreakViolationType#CONTINUITY}: more than six hours of work without a qualifying break</li>
+ *     <li>{@link BreakViolationType#DAILY}: qualifying breaks are shorter than the mandatory break,
+ *     see {@link QualifyingBreaks} for which breaks count</li>
+ *     <li>{@link BreakViolationType#CONTINUITY}: more than six hours of work without an interruption of at least
+ *     15 minutes. The interruption can be a recorded break or a gap between time entries.</li>
  * </ul>
- *
- * See {@link QualifyingBreaks} for which breaks count.
  */
 @Component
 public class BreakViolationChecker {
 
     private static final Duration MAX_CONTINUOUS_WORK = Duration.ofHours(6);
+    private static final Duration MIN_INTERRUPTION = QualifyingBreaks.MIN_DURATION;
 
     private final StatutoryBreakRule statutoryBreakRule = new StatutoryBreakRule();
 
     /**
      * @param workDuration  work duration of the day, before any automatic break deduction
      * @param entriesForDay time entries of the day, work and break entries
-     * @return violated rules, empty when there is no violation
+     * @return violated rules, empty when there is none
      */
     public List<BreakViolation> check(WorkDuration workDuration, Collection<TimeEntry> entriesForDay) {
 
-        final QualifyingBreaks qualifyingBreaks = QualifyingBreaks.of(entriesForDay);
         final List<BreakViolation> violations = new ArrayList<>();
 
-        if (hasDailyViolation(workDuration, qualifyingBreaks)) {
+        if (hasDailyViolation(workDuration, entriesForDay)) {
             violations.add(new BreakViolation(BreakViolationType.DAILY));
         }
 
-        if (hasContinuityViolation(entriesForDay, qualifyingBreaks)) {
+        if (hasContinuityViolation(entriesForDay)) {
             violations.add(new BreakViolation(BreakViolationType.CONTINUITY));
         }
 
         return List.copyOf(violations);
     }
 
-    private boolean hasDailyViolation(WorkDuration workDuration, QualifyingBreaks qualifyingBreaks) {
+    private boolean hasDailyViolation(WorkDuration workDuration, Collection<TimeEntry> entries) {
         final Duration mandatoryBreak = statutoryBreakRule.calculate(workDuration.duration());
-        return qualifyingBreaks.totalDuration().compareTo(mandatoryBreak) < 0;
+        return QualifyingBreaks.of(entries).totalDuration().compareTo(mandatoryBreak) < 0;
     }
 
-    /**
-     * Qualifying breaks split the day into blocks. Work within a block counts as continuous, even when there are gaps
-     * between the time entries.
-     */
-    private static boolean hasContinuityViolation(Collection<TimeEntry> entries, QualifyingBreaks qualifyingBreaks) {
+    private static boolean hasContinuityViolation(Collection<TimeEntry> entries) {
 
-        final List<Interval> workIntervals = entries.stream()
-            .distinct()
-            .filter(not(TimeEntry::isBreak))
-            .map(entry -> new Interval(entry.start(), entry.end()))
-            .toList();
+        Duration block = Duration.ZERO;
+        ZonedDateTime previousEnd = null;
 
-        ZonedDateTime blockStart = null;
-        for (Interval qualifyingBreak : qualifyingBreaks.intervals()) {
-            if (workWithin(workIntervals, blockStart, qualifyingBreak.start()).compareTo(MAX_CONTINUOUS_WORK) > 0) {
+        for (Interval work : workWithoutBreaks(entries)) {
+            final boolean interrupted = previousEnd != null
+                && Duration.between(previousEnd, work.start()).compareTo(MIN_INTERRUPTION) >= 0;
+
+            block = interrupted ? work.duration() : block.plus(work.duration());
+            if (block.compareTo(MAX_CONTINUOUS_WORK) > 0) {
                 return true;
             }
-            blockStart = qualifyingBreak.end();
+            previousEnd = work.end();
         }
 
-        return workWithin(workIntervals, blockStart, null).compareTo(MAX_CONTINUOUS_WORK) > 0;
+        return false;
     }
 
     /**
-     * @param from inclusive, {@code null} for unbounded
-     * @param to   exclusive, {@code null} for unbounded
+     * @return the time actually worked: work entries without the time covered by break entries, merged and sorted
      */
-    private static Duration workWithin(List<Interval> workIntervals, ZonedDateTime from, ZonedDateTime to) {
-        Duration sum = Duration.ZERO;
-        for (Interval work : workIntervals) {
-            final ZonedDateTime start = from == null || work.start().isAfter(from) ? work.start() : from;
-            final ZonedDateTime end = to == null || work.end().isBefore(to) ? work.end() : to;
-            if (start.isBefore(end)) {
-                sum = sum.plus(Duration.between(start, end));
+    private static List<Interval> workWithoutBreaks(Collection<TimeEntry> entries) {
+
+        final List<Interval> breaks = QualifyingBreaks.merge(intervals(entries, true));
+
+        final List<Interval> work = new ArrayList<>();
+        for (Interval workInterval : intervals(entries, false)) {
+            ZonedDateTime start = workInterval.start();
+            for (Interval breakInterval : breaks) {
+                if (!breakInterval.end().isAfter(start) || !breakInterval.start().isBefore(workInterval.end())) {
+                    continue;
+                }
+                if (breakInterval.start().isAfter(start)) {
+                    work.add(new Interval(start, breakInterval.start()));
+                }
+                start = breakInterval.end();
+            }
+            if (start.isBefore(workInterval.end())) {
+                work.add(new Interval(start, workInterval.end()));
             }
         }
-        return sum;
+
+        return QualifyingBreaks.merge(work.stream().sorted(comparing(Interval::start)).toList());
+    }
+
+    private static List<Interval> intervals(Collection<TimeEntry> entries, boolean breaks) {
+        return entries.stream()
+            .distinct()
+            .filter(breaks ? TimeEntry::isBreak : not(TimeEntry::isBreak))
+            .map(entry -> new Interval(entry.start(), entry.end()))
+            .sorted(comparing(Interval::start))
+            .toList();
     }
 }

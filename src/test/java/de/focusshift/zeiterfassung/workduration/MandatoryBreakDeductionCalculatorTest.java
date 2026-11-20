@@ -109,6 +109,25 @@ class MandatoryBreakDeductionCalculatorTest {
     }
 
     @Test
+    void breakOutsideOfTheWorkIsNotCredited() {
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(15, 30)),
+            pause(at(15, 30), at(16, 0))
+        );
+        assertThat(sut.calculateDeduction(hours(7, 30), entries)).isEqualTo(Duration.ofMinutes(30));
+    }
+
+    @Test
+    void onlyThePartOfABreakWithinTheWorkIsCredited() {
+        // break 11:50 - 12:20, work starts 12:00 -> 20 minutes credited
+        final List<TimeEntry> entries = List.of(
+            pause(at(11, 50), at(12, 20)),
+            work(at(12, 0), at(19, 0))
+        );
+        assertThat(sut.calculateDeduction(hours(6, 40), entries)).isEqualTo(Duration.ofMinutes(10));
+    }
+
+    @Test
     void mandatoryBreakDependsOnTheGivenWorkDuration() {
         // 6h20 work entry with 20 minutes break within it.
         // with subtracted overlapping breaks the work duration is 6h -> no mandatory break.

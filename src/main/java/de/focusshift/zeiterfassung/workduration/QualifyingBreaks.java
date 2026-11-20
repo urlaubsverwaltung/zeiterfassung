@@ -7,15 +7,22 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.function.Predicate.not;
 
 /**
- * Breaks of a day that count as rest breaks according to ArbZG §4 Satz 2.
+ * Breaks of a day that count as rest breaks according to ArbZG §4.
  *
- * <p>
- * Only recorded break entries count, gaps between time entries do not. Overlapping or adjacent break entries are merged
- * first, afterwards every resulting break must last at least 15 minutes to count.
+ * <ul>
+ *     <li>Only recorded break entries count, gaps between time entries do not.</li>
+ *     <li>A rest break interrupts the work, so only the part between the start of the first and the end of the last
+ *     work entry counts.</li>
+ *     <li>Overlapping or adjacent break entries are merged, afterwards every break must last at least 15 minutes
+ *     (ArbZG §4 Satz 2).</li>
+ * </ul>
  */
 final class QualifyingBreaks {
 
@@ -28,10 +35,18 @@ final class QualifyingBreaks {
     }
 
     static QualifyingBreaks of(Collection<TimeEntry> timeEntries) {
+
+        final Optional<ZonedDateTime> workStart = timeEntries.stream().filter(not(TimeEntry::isBreak)).map(TimeEntry::start).min(naturalOrder());
+        final Optional<ZonedDateTime> workEnd = timeEntries.stream().filter(not(TimeEntry::isBreak)).map(TimeEntry::end).max(naturalOrder());
+        if (workStart.isEmpty()) {
+            return new QualifyingBreaks(List.of());
+        }
+
         final List<Interval> breakIntervals = timeEntries.stream()
             .distinct()
             .filter(TimeEntry::isBreak)
-            .map(entry -> new Interval(entry.start(), entry.end()))
+            .map(entry -> new Interval(entry.start(), entry.end()).clip(workStart.get(), workEnd.get()))
+            .flatMap(Optional::stream)
             .sorted(comparing(Interval::start))
             .toList();
 
@@ -49,13 +64,12 @@ final class QualifyingBreaks {
     }
 
     /**
-     * @return qualifying breaks sorted by start, not overlapping each other
+     * Merges overlapping or adjacent intervals.
+     *
+     * @param sortedIntervals intervals sorted by start
+     * @return merged intervals sorted by start
      */
-    List<Interval> intervals() {
-        return intervals;
-    }
-
-    private static List<Interval> merge(List<Interval> sortedIntervals) {
+    static List<Interval> merge(List<Interval> sortedIntervals) {
         final List<Interval> merged = new ArrayList<>();
         for (Interval interval : sortedIntervals) {
             if (merged.isEmpty() || merged.getLast().end().isBefore(interval.start())) {
@@ -70,8 +84,18 @@ final class QualifyingBreaks {
     }
 
     record Interval(ZonedDateTime start, ZonedDateTime end) {
+
         Duration duration() {
             return Duration.between(start, end);
+        }
+
+        /**
+         * @return the part of this interval within the given bounds, empty when there is none
+         */
+        Optional<Interval> clip(ZonedDateTime from, ZonedDateTime to) {
+            final ZonedDateTime clippedStart = start.isAfter(from) ? start : from;
+            final ZonedDateTime clippedEnd = end.isBefore(to) ? end : to;
+            return clippedStart.isBefore(clippedEnd) ? Optional.of(new Interval(clippedStart, clippedEnd)) : Optional.empty();
         }
     }
 }

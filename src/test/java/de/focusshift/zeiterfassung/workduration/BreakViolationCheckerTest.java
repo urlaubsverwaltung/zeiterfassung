@@ -117,13 +117,13 @@ class BreakViolationCheckerTest {
     }
 
     @Test
-    void gapWithoutBreakEntryIsNoBreak() {
-        // EC-7: the gap is neither a break for the daily rule nor an interruption of the work block
+    void gapWithoutBreakEntryIsNoBreakButInterruptsTheWork() {
+        // EC-7: the gap does not count as break for the daily rule, but nobody works during the gap
         final List<TimeEntry> entries = List.of(
             work(at(8, 0), at(12, 0)),
             work(at(13, 0), at(17, 0))
         );
-        assertThat(sut.check(hours(8, 0), entries)).containsExactlyInAnyOrder(DAILY, CONTINUITY);
+        assertThat(sut.check(hours(8, 0), entries)).containsExactly(DAILY);
     }
 
     @Test
@@ -185,13 +185,41 @@ class BreakViolationCheckerTest {
     }
 
     @Test
-    void continuityCountsWorkEntriesWithoutBreakBetweenThemAsOneBlock() {
+    void continuityCountsWorkEntriesWithGapShorterThan15MinutesAsOneBlock() {
         final List<TimeEntry> entries = List.of(
-            work(at(8, 0), at(11, 1)),
-            work(at(13, 0), at(16, 0)),
-            pause(at(16, 0), at(16, 30))
+            work(at(8, 0), at(11, 0)),
+            work(at(11, 10), at(14, 11))
         );
-        assertThat(sut.check(hours(6, 1), entries)).containsExactly(CONTINUITY);
+        assertThat(sut.check(hours(6, 1), entries)).contains(CONTINUITY);
+    }
+
+    @Test
+    void continuityDoesNotCountShortBreaksWithinWorkEntryAsWork() {
+        // 6h10 work entry with 10 minutes break within it -> 6h of work
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(14, 10)),
+            pause(at(11, 0), at(11, 10))
+        );
+        assertThat(sut.check(hours(6, 0), entries)).isEmpty();
+    }
+
+    @Test
+    void breakAfterWorkDoesNotCount() {
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(15, 30)),
+            pause(at(15, 30), at(16, 0))
+        );
+        assertThat(sut.check(hours(7, 30), entries)).containsExactlyInAnyOrder(DAILY, CONTINUITY);
+    }
+
+    @Test
+    void breakBeforeWorkDoesNotCount() {
+        final List<TimeEntry> entries = List.of(
+            pause(at(7, 30), at(8, 0)),
+            work(at(8, 0), at(12, 0)),
+            work(at(12, 15), at(15, 30))
+        );
+        assertThat(sut.check(hours(7, 15), entries)).containsExactly(DAILY);
     }
 
     @Test
