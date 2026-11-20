@@ -41,6 +41,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.ZonedDateTime;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -54,6 +55,7 @@ import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.Month.DECEMBER;
 import static java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
+import static java.util.Locale.GERMANY;
 import static java.time.temporal.TemporalAdjusters.previousOrSame;
 import static java.util.Objects.requireNonNullElseGet;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -301,9 +303,9 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         final int weekOfYear;
 
         try {
-            final LocalDate firstDateOfWeek = localDateToFirstDateOfWeek(timeEntryDTO.getDate());
-            year = firstDateOfWeek.getYear();
-            weekOfYear = firstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR);
+            final YearAndWeek yearAndWeek = weekOf(timeEntryDTO.getDate());
+            year = yearAndWeek.year();
+            weekOfYear = yearAndWeek.week();
         } catch (NullPointerException exception) {
             throw new InvalidTimeEntryException("invalid time entry. date must be set.");
         }
@@ -368,10 +370,10 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     private void addEditedWeeksToModel(TimeEntryWeek timeEntryWeek, LocalDate previousDate, UserLocalId ownerLocalId, Model model, Locale locale, CurrentOidcUser currentUser) {
         final List<TimeEntryWeekDto> editedWeeks = new ArrayList<>();
         editedWeeks.add(toTimeEntryWeekDto(timeEntryWeek, locale, currentUser));
-        final LocalDate previousFirstDateOfWeek = localDateToFirstDateOfWeek(previousDate);
-        if (!previousFirstDateOfWeek.equals(timeEntryWeek.firstDateOfWeek())) {
+        final YearAndWeek previousYearAndWeek = weekOf(previousDate);
+        if (!previousYearAndWeek.equals(weekOf(timeEntryWeek.firstDateOfWeek()))) {
             final TimeEntryWeek previousWeek = timeEntryDayService.getEntryWeekPage(ownerLocalId,
-                previousFirstDateOfWeek.getYear(), previousFirstDateOfWeek.get(WEEK_OF_WEEK_BASED_YEAR)).timeEntryWeek();
+                previousYearAndWeek.year(), previousYearAndWeek.week()).timeEntryWeek();
             editedWeeks.add(toTimeEntryWeekDto(previousWeek, locale, currentUser));
         }
         model.addAttribute("turboEditedWeeks", editedWeeks);
@@ -657,6 +659,12 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         } else {
             return week;
         }
+    }
+
+    // same week rules as UserDateService#firstDayOfWeek(Year, int), which getEntryWeekPage uses to resolve them
+    private YearAndWeek weekOf(LocalDate date) {
+        final WeekFields weekFields = WeekFields.of(userSettingsProvider.firstDayOfWeek(), WeekFields.of(GERMANY).getMinimalDaysInFirstWeek());
+        return new YearAndWeek(date.get(weekFields.weekBasedYear()), date.get(weekFields.weekOfWeekBasedYear()));
     }
 
     private LocalDate localDateToFirstDateOfWeek(LocalDate localDate) {

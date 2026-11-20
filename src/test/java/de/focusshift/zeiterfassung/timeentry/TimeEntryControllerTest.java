@@ -57,6 +57,7 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_US
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
@@ -985,6 +986,52 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final List<TimeEntryWeekDto> editedWeeks = (List<TimeEntryWeekDto>) result.getModelAndView().getModel().get("turboEditedWeeks");
         assertThat(editedWeeks).extracting(TimeEntryWeekDto::calendarWeek).containsExactly(39, 38);
+    }
+
+    @Test
+    void ensureTimeEntryEditOfDateForAjaxLoadsWeeksStartingInPreviousYear() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        // 2025-12-31 is in week 1 of 2026, which starts on 2025-12-29
+        final TimeEntryId timeEntryId = new TimeEntryId(1337L);
+        final TimeEntry timeEntryBeforeEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work",
+            ZonedDateTime.of(2025, 12, 31, 20, 30, 0, 0, zoneIdBerlin), ZonedDateTime.of(2025, 12, 31, 21, 15, 0, 0, zoneIdBerlin), false);
+
+        // 2024-12-31 is in week 1 of 2025, which starts on 2024-12-30
+        final TimeEntry timeEntryAfterEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work",
+            ZonedDateTime.of(2024, 12, 31, 20, 30, 0, 0, zoneIdBerlin), ZonedDateTime.of(2024, 12, 31, 21, 15, 0, 0, zoneIdBerlin), false);
+        final TimeEntryDay newDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), new WorkDuration(Duration.ofMinutes(45)),
+            PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntryAfterEdit), List.of());
+        final TimeEntryWeek newWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(newDay));
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2025, 1)).thenReturn(new TimeEntryWeekPage(newWeek, 1));
+
+        final TimeEntryWeek previousWeek = new TimeEntryWeek(LocalDate.of(2025, 12, 29), PlannedWorkingHours.EIGHT, List.of());
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2026, 1)).thenReturn(new TimeEntryWeekPage(previousWeek, 0));
+
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+        when(timeEntryViewHelper.updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(timeEntryBeforeEdit);
+
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
+            .header("Turbo-Frame", "any-value")
+            .with(oidcSubject(userIdComposite))
+            .param("id", "1337")
+            .param("date", "2024-12-31")
+            .param("start", "20:30:00.000+01:00")
+            .param("end", "21:15:00.000+01:00")
+            .param("comment", "hard work")
+        )
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("turboEditedWeeks", hasSize(2)));
+
+        verify(timeEntryDayService).getEntryWeekPage(userLocalId, 2025, 1);
+        verify(timeEntryDayService).getEntryWeekPage(userLocalId, 2026, 1);
     }
 
     @Test
