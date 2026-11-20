@@ -212,10 +212,8 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntriesContainBreakDeductionAndBreakViolationHint() throws Exception {
 
-        clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, userDateService, clock);
-
-        mockUserSettings(ZoneOffset.UTC);
+        mockUserSettings(DayOfWeek.MONDAY);
+        when(userDateService.today()).thenReturn(LocalDate.of(2025, 2, 28));
 
         final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), new UserLocalId(42L));
         final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "",
