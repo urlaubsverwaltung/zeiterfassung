@@ -77,6 +77,7 @@ class SettingsControllerTest implements ControllerTest {
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.of(subtractBreakFromTimeEntrySettings));
+        when(settingsService.getTimeEntrySettings()).thenReturn(new TimeEntrySettings(false, true, false));
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
@@ -86,7 +87,10 @@ class SettingsControllerTest implements ControllerTest {
             true,
             "42",
             true,
-            subtractBreakFeatureDate
+            subtractBreakFeatureDate,
+            false,
+            true,
+            false
         );
 
         perform(get("/settings"))
@@ -105,6 +109,7 @@ class SettingsControllerTest implements ControllerTest {
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
+        when(settingsService.getTimeEntrySettings()).thenReturn(TimeEntrySettings.DEFAULT);
 
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
@@ -121,6 +126,7 @@ class SettingsControllerTest implements ControllerTest {
         when(settingsService.getFederalStateSettings()).thenReturn(federalStateSettings);
         when(settingsService.getLockTimeEntriesSettings()).thenReturn(lockTimeEntriesSettings);
         when(settingsService.getSubtractBreakFromTimeEntrySettings()).thenReturn(Optional.empty());
+        when(settingsService.getTimeEntrySettings()).thenReturn(TimeEntrySettings.DEFAULT);
         when(userSettingsProvider.zoneId()).thenReturn(ZoneId.of("Europe/Berlin"));
 
         final SettingsDto expectedSettingsDto = new SettingsDto(
@@ -163,6 +169,9 @@ class SettingsControllerTest implements ControllerTest {
             .param("lockingIsActive", "true")
             .param("lockTimeEntriesDaysInPast", "-1")
             .param("subtractBreakFromTimeEntryIsActive", "false")
+            .param("commentEnabled", "true")
+            .param("durationEnabled", "true")
+            .param("breakEnabled", "true")
         )
             .andExpect(status().isUnprocessableContent())
             .andExpect(view().name("settings/settings"));
@@ -181,7 +190,10 @@ class SettingsControllerTest implements ControllerTest {
             true,
             "42",
             true,
-            LocalDate.parse("2025-05-30")
+            LocalDate.parse("2025-05-30"),
+            false,
+            true,
+            false
         );
 
         perform(post("/settings")
@@ -192,6 +204,9 @@ class SettingsControllerTest implements ControllerTest {
             .param("lockTimeEntriesDaysInPast", "42")
             .param("subtractBreakFromTimeEntryIsActive", "true")
             .param("subtractBreakFromTimeEntryActiveDate", "2025-05-30")
+            .param("commentEnabled", "false")
+            .param("durationEnabled", "true")
+            .param("breakEnabled", "false")
         )
             .andExpect(status().isOk())
             .andExpect(model().attribute("settings", expectedSettingsDto))
@@ -212,6 +227,9 @@ class SettingsControllerTest implements ControllerTest {
             .param("lockTimeEntriesDaysInPast", "42")
             .param("subtractBreakFromTimeEntryIsActive", "true")
             .param("subtractBreakFromTimeEntryActiveDate", "2025-05-30")
+            .param("commentEnabled", "false")
+            .param("durationEnabled", "true")
+            .param("breakEnabled", "false")
         )
             .andExpect(flash().attributeCount(0))
             .andExpect(status().is3xxRedirection())
@@ -220,6 +238,7 @@ class SettingsControllerTest implements ControllerTest {
         verify(settingsService).updateFederalStateSettings(FederalState.NONE, false);
         verify(settingsService).updateLockTimeEntriesSettings(true, 42);
         verify(settingsService).updateSubtractBreakFromTimeEntrySettings(true, LocalDate.parse("2025-05-30").atStartOfDay().toInstant(UTC));
+        verify(settingsService).updateTimeEntrySettings(false, true, false);
     }
 
     @ParameterizedTest
@@ -232,6 +251,9 @@ class SettingsControllerTest implements ControllerTest {
             .param("lockingIsActive", "false")
             .param("lockTimeEntriesDaysInPast", daysInPast)
             .param("subtractBreakFromTimeEntryIsActive", "false")
+            .param("commentEnabled", "true")
+            .param("durationEnabled", "true")
+            .param("breakEnabled", "true")
         )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/settings"));
