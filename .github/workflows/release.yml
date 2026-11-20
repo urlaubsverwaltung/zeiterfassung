@@ -113,7 +113,7 @@ jobs:
           subject-digest: ${{ env.DIGEST }}
           push-to-registry: true
       - name: Sign image
-        run: cosign sign --yes "$IMAGE@$DIGEST"
+        run: cosign sign --yes --recursive "$IMAGE@$DIGEST"
 
   container-upload-github:
     needs:
@@ -156,4 +156,4 @@ jobs:
           subject-digest: ${{ env.DIGEST }}
           push-to-registry: true
       - name: Sign image
-        run: cosign sign --yes "$IMAGE@$DIGEST"
+        run: cosign sign --yes --recursive "$IMAGE@$DIGEST"
