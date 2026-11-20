@@ -168,6 +168,13 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
         return stream(settings.spliterator(), false).findFirst();
     }
 
+    private Optional<SubtractBreakFromTimeEntrySettingsEntity> getSubtractBreakFromTimeEntrySettingsEntity() {
+        // `findFirst` is sufficient as there exists only one FederalStateSettingsEntity per tenant.
+        // however, the tenantId is handled transparently in the background. and we only have the public API of `findAll`.
+        final Iterable<SubtractBreakFromTimeEntrySettingsEntity> settings = subtractBreakFromTimeEntrySettingsRepository.findAll();
+        return stream(settings.spliterator(), false).findFirst();
+    }
+
     private static FederalStateSettings toFederalStateSettings(FederalStateSettingsEntity federalStateSettingsEntity) {
         return new FederalStateSettings(
             federalStateSettingsEntity.getFederalState(),
@@ -192,11 +199,6 @@ class SettingsService implements FederalStateSettingsService, LockTimeEntriesSet
 
         final AutomaticBreakDeductionSettingsEntity saved = automaticBreakDeductionSettingsRepository.save(entity);
         return toAutomaticBreakDeductionSettings(saved);
-    }
-
-    private Optional<SubtractBreakFromTimeEntrySettingsEntity> getSubtractBreakFromTimeEntrySettingsEntity() {
-        final Iterable<SubtractBreakFromTimeEntrySettingsEntity> settings = subtractBreakFromTimeEntrySettingsRepository.findAll();
-        return stream(settings.spliterator(), false).findFirst();
     }
 
     private Optional<AutomaticBreakDeductionSettingsEntity> getAutomaticBreakDeductionSettingsEntity() {

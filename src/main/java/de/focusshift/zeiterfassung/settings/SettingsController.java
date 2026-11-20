@@ -170,7 +170,6 @@ class SettingsController implements HasLaunchpad, HasTimeClock, HasUserSearch {
             ? null
             : subtractBreakFromTimeEntrySettings.timestampAsLocalDate(userZoneId).orElse(null);
 
-
         return new SettingsDto(
             federalStateSettings.federalState(),
             federalStateSettings.worksOnPublicHoliday(),
