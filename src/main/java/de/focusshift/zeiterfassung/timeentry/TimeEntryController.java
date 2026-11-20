@@ -38,24 +38,19 @@ import java.math.MathContext;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.Year;
-import java.time.ZonedDateTime;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import static de.focusshift.zeiterfassung.search.UserSearchViewHelper.USER_SEARCH_QUERY_PARAM;
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_TIME_ENTRY_EDIT_ALL;
 import static de.focusshift.zeiterfassung.timeentry.TimeEntryViewHelper.TIME_ENTRY_MODEL_NAME;
 import static de.focusshift.zeiterfassung.web.HotwiredTurboConstants.TURBO_FRAME_HEADER;
 import static java.lang.invoke.MethodHandles.lookup;
-import static java.time.Month.DECEMBER;
-import static java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR;
 import static java.util.Locale.GERMANY;
-import static java.util.Objects.requireNonNullElseGet;
+import static java.util.Objects.requireNonNullElse;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.util.StringUtils.hasText;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.fromMethodCall;
@@ -553,13 +548,12 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
     private YearAndWeek yearAndWeek(@Nullable Integer year, @Nullable Integer weekOfYear) {
 
-        final LocalDate now = LocalDate.now(clock);
-        final Supplier<ZonedDateTime> userStartOfDay = () -> now.atStartOfDay(userSettingsProvider.zoneId());
+        if (year != null && weekOfYear != null) {
+            return new YearAndWeek(year, weekOfYear);
+        }
 
-        year = requireNonNullElseGet(year, () -> userStartOfDay.get().getYear());
-        weekOfYear = requireNonNullElseGet(weekOfYear, () -> userStartOfDay.get().get(WEEK_OF_WEEK_BASED_YEAR));
-
-        return new YearAndWeek(year, weekOfYear);
+        final YearAndWeek today = weekOf(LocalDate.now(clock));
+        return new YearAndWeek(requireNonNullElse(year, today.year()), requireNonNullElse(weekOfYear, today.week()));
     }
 
     private record YearAndWeek(Integer year, Integer week) {
@@ -650,20 +644,17 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
     }
 
     private int lastWeekOfYear(int year) {
-        final LocalDate date = Year.of(year).atMonth(DECEMBER).atEndOfMonth();
-        final int week = date.get(WEEK_OF_WEEK_BASED_YEAR);
-        if (week == 1) {
-            // last week cannot be the first one of a year :-)
-            // e.g. 2024-12-31 is calWeek 1 (of next year) -> wee need calWeek 52 2024-12-23 to 2024-12-29
-            return date.minusWeeks(1).get(WEEK_OF_WEEK_BASED_YEAR);
-        } else {
-            return week;
-        }
+        // a mid-year date, so that its week-based year is the given year
+        return (int) LocalDate.of(year, 6, 1).range(weekFields().weekOfWeekBasedYear()).getMaximum();
     }
 
-    // same week rules as UserDateService#firstDayOfWeek(Year, int), which getEntryWeekPage uses to resolve them
     private YearAndWeek weekOf(LocalDate date) {
-        final WeekFields weekFields = WeekFields.of(userSettingsProvider.firstDayOfWeek(), WeekFields.of(GERMANY).getMinimalDaysInFirstWeek());
+        final WeekFields weekFields = weekFields();
         return new YearAndWeek(date.get(weekFields.weekBasedYear()), date.get(weekFields.weekOfWeekBasedYear()));
+    }
+
+    // same week rules as UserDateService#firstDayOfWeek(Year, int), which getEntryWeekPage uses to resolve year and week
+    private WeekFields weekFields() {
+        return WeekFields.of(userSettingsProvider.firstDayOfWeek(), WeekFields.of(GERMANY).getMinimalDaysInFirstWeek());
     }
 }
