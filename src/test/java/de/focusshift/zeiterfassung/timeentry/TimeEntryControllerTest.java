@@ -45,7 +45,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +56,7 @@ import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_US
 import static de.focusshift.zeiterfassung.security.SecurityRole.ZEITERFASSUNG_WORKING_TIME_EDIT_ALL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
@@ -111,7 +111,7 @@ class TimeEntryControllerTest implements ControllerTest {
     @BeforeEach
     void setUp() {
         sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, userDateService, clock);
+            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, userDateService);
     }
 
     @ParameterizedTest
@@ -139,10 +139,8 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntriesDefaultShowsCurrentWeek() throws Exception {
 
-        clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, userDateService, clock);
-
-        mockUserSettings(ZoneOffset.UTC);
+        mockUserSettings(DayOfWeek.MONDAY);
+        when(userDateService.today()).thenReturn(LocalDate.of(2025, 2, 28));
 
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
@@ -212,6 +210,7 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntriesForYearAndWeekOfYear() throws Exception {
 
+        mockUserSettings(DayOfWeek.MONDAY);
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -311,6 +310,7 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntriesForYearAndWeekOfYearWithTurboFrame() throws Exception {
 
+        mockUserSettings(DayOfWeek.MONDAY);
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -388,6 +388,7 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntriesForYearAndWeekOfYearWhenNextYearWouldBeReachedWithLoadMore() throws Exception {
 
+        mockUserSettings(DayOfWeek.MONDAY);
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -423,8 +424,55 @@ class TimeEntryControllerTest implements ControllerTest {
     }
 
     @Test
+    void ensureTimeEntriesDefaultShowsCurrentWeekStartingInPreviousYear() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
+        // the user's today, while it is still 2025-12-28 in UTC. 2025-12-29 starts week 1 of 2026
+        when(userDateService.today()).thenReturn(LocalDate.of(2025, 12, 29));
+
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), userLocalId);
+
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2025, 12, 29), PlannedWorkingHours.EIGHT, List.of());
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2026, 1)).thenReturn(new TimeEntryWeekPage(timeEntryWeek, 0));
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+
+        perform(get(TIME_ENTRIES_URL_TEMPLATE).with(oidcSubject(userIdComposite)))
+            .andExpect(view().name("timeentries/index"));
+
+        verify(timeEntryDayService).getEntryWeekPage(userLocalId, 2026, 1);
+    }
+
+    @Test
+    void ensureTimeEntriesPaginationUsesWeeksStartingOnSunday() throws Exception {
+
+        // weeks starting on sunday: 2025 has 53 weeks, ISO weeks starting on monday only 52
+        mockUserSettings(DayOfWeek.SUNDAY);
+
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), userLocalId);
+
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2025, 12, 21), PlannedWorkingHours.EIGHT, List.of());
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2025, 52)).thenReturn(new TimeEntryWeekPage(timeEntryWeek, 0));
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+
+        final MvcResult result = perform(get(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
+            .queryParam("year", "2025")
+            .queryParam("week", "52")
+        )
+            .andExpect(view().name("timeentries/index"))
+            .andReturn();
+
+        final TimeEntryWeeksPageDto page = (TimeEntryWeeksPageDto) result.getModelAndView().getModel().get("timeEntryWeeksPage");
+        assertThat(page.futureYear()).isEqualTo(2025);
+        assertThat(page.futureWeekOfYear()).isEqualTo(53);
+    }
+
+    @Test
     void ensureTimeEntriesForYearAndWeekOfYearWhenPreviousYearWouldBeReachedWithShowPastWith52() throws Exception {
 
+        mockUserSettings(DayOfWeek.MONDAY);
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -462,6 +510,7 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntriesForYearAndWeekOfYearWhenPreviousYearWouldBeReachedWithShowPastWith53() throws Exception {
 
+        mockUserSettings(DayOfWeek.MONDAY);
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(1L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -512,9 +561,9 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureTimeEntriesForOtherUser() throws Exception {
 
-        clock = Clock.fixed(Instant.parse("2025-03-18T10:04:00.00Z"), ZoneOffset.UTC);
-        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService,
-            userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, userDateService, clock);
+        mockUserSettings(DayOfWeek.MONDAY);
+        final LocalDate today = LocalDate.of(2025, 3, 18);
+        when(userDateService.today()).thenReturn(today);
 
         final int year = 2025;
         final int weekOfYear = 12;
@@ -527,8 +576,6 @@ class TimeEntryControllerTest implements ControllerTest {
         final UserId ownerId = new UserId("joker");
         final UserIdComposite ownerIdComposite = new UserIdComposite(ownerId, ownerLocalId);
 
-        mockUserSettings(ZoneOffset.UTC);
-
         final User owner = anyUser(ownerIdComposite);
         when(userManagementService.findUserByLocalId(ownerLocalId)).thenReturn(Optional.of(owner));
 
@@ -537,7 +584,7 @@ class TimeEntryControllerTest implements ControllerTest {
         when(timeEntryDayService.getEntryWeekPage(ownerLocalId, year, weekOfYear)).thenReturn(timeEntryWeekPage);
 
         final ViewedUserDto expectedViewedUserDto = new ViewedUserDto(ownerLocalId.value(), owner.givenName(), owner.familyName(), owner.fullName(), owner.initials(), owner.email().value());
-        final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO();
+        final TimeEntryDTO expectedTimeEntryDto = new TimeEntryDTO(today);
 
         final TimeEntryWeekDto expectedTimeEntryWeekDto = new TimeEntryWeekDto(weekOfYear, null, null, "00:00", "00:00", "00:00", false, 0.0, List.of());
         final TimeEntryWeeksPageDto expetectedWeeksPageDto = new TimeEntryWeeksPageDto(year, weekOfYear + 1, year, weekOfYear - 1, expectedTimeEntryWeekDto, 0);
@@ -706,6 +753,31 @@ class TimeEntryControllerTest implements ControllerTest {
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attribute("timeEntryWeeksPage", expectedPage));
+    }
+
+    @Test
+    void ensureTimeEntryCreationErrorRendersWeekStartingInPreviousYear() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final UserLocalId userLocalId = new UserLocalId(1L);
+        final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), userLocalId);
+
+        // 2025-12-31 is in week 1 of 2026, which starts on 2025-12-29
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2025, 12, 29), PlannedWorkingHours.EIGHT, List.of());
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2026, 1)).thenReturn(new TimeEntryWeekPage(timeEntryWeek, 0));
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+
+        perform(post(TIME_ENTRIES_URL_TEMPLATE)
+            .with(oidcSubject(userIdComposite))
+            .param("date", "2025-12-31")
+            .param("comment", "hard work")
+            .param("duration", "08:00")
+            // missing start/end/value
+        )
+            .andExpect(view().name("timeentries/index"));
+
+        verify(timeEntryDayService).getEntryWeekPage(userLocalId, 2026, 1);
     }
 
     @Test
@@ -985,6 +1057,52 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final List<TimeEntryWeekDto> editedWeeks = (List<TimeEntryWeekDto>) result.getModelAndView().getModel().get("turboEditedWeeks");
         assertThat(editedWeeks).extracting(TimeEntryWeekDto::calendarWeek).containsExactly(39, 38);
+    }
+
+    @Test
+    void ensureTimeEntryEditOfDateForAjaxLoadsWeeksStartingInPreviousYear() throws Exception {
+
+        final UserId userId = new UserId("batman");
+        final UserLocalId userLocalId = new UserLocalId(42L);
+        final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
+
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        // 2025-12-31 is in week 1 of 2026, which starts on 2025-12-29
+        final TimeEntryId timeEntryId = new TimeEntryId(1337L);
+        final TimeEntry timeEntryBeforeEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work",
+            ZonedDateTime.of(2025, 12, 31, 20, 30, 0, 0, zoneIdBerlin), ZonedDateTime.of(2025, 12, 31, 21, 15, 0, 0, zoneIdBerlin), false);
+
+        // 2024-12-31 is in week 1 of 2025, which starts on 2024-12-30
+        final TimeEntry timeEntryAfterEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work",
+            ZonedDateTime.of(2024, 12, 31, 20, 30, 0, 0, zoneIdBerlin), ZonedDateTime.of(2024, 12, 31, 21, 15, 0, 0, zoneIdBerlin), false);
+        final TimeEntryDay newDay = new TimeEntryDay(false, LocalDate.of(2024, 12, 31), new WorkDuration(Duration.ofMinutes(45)),
+            PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT, List.of(timeEntryAfterEdit), List.of());
+        final TimeEntryWeek newWeek = new TimeEntryWeek(LocalDate.of(2024, 12, 30), PlannedWorkingHours.EIGHT, List.of(newDay));
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2025, 1)).thenReturn(new TimeEntryWeekPage(newWeek, 1));
+
+        final TimeEntryWeek previousWeek = new TimeEntryWeek(LocalDate.of(2025, 12, 29), PlannedWorkingHours.EIGHT, List.of());
+        when(timeEntryDayService.getEntryWeekPage(userLocalId, 2026, 1)).thenReturn(new TimeEntryWeekPage(previousWeek, 0));
+
+        when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
+        when(timeEntryViewHelper.updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(timeEntryBeforeEdit);
+
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
+            .header("Turbo-Frame", "any-value")
+            .with(oidcSubject(userIdComposite))
+            .param("id", "1337")
+            .param("date", "2024-12-31")
+            .param("start", "20:30:00.000+01:00")
+            .param("end", "21:15:00.000+01:00")
+            .param("comment", "hard work")
+        )
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("turboEditedWeeks", hasSize(2)));
+
+        verify(timeEntryDayService).getEntryWeekPage(userLocalId, 2025, 1);
+        verify(timeEntryDayService).getEntryWeekPage(userLocalId, 2026, 1);
     }
 
     @Test
@@ -1285,6 +1403,8 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureDelete() throws Exception {
 
+        mockUserSettings(DayOfWeek.MONDAY);
+
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -1309,7 +1429,31 @@ class TimeEntryControllerTest implements ControllerTest {
     }
 
     @Test
+    void ensureDeleteRedirectsToWeekStartingInPreviousYear() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
+
+        final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), new UserLocalId(42L));
+
+        // 2025-12-31 is in week 1 of 2026, which starts on 2025-12-29
+        final ZoneId zoneIdBerlin = ZoneId.of("Europe/Berlin");
+        final TimeEntryId timeEntryId = new TimeEntryId(1337L);
+        final TimeEntry timeEntry = new TimeEntry(timeEntryId, userIdComposite, "hard work",
+            ZonedDateTime.of(2025, 12, 31, 20, 30, 0, 0, zoneIdBerlin), ZonedDateTime.of(2025, 12, 31, 21, 15, 0, 0, zoneIdBerlin), false);
+        when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(timeEntry));
+
+        perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, timeEntryId.value())
+            .with(oidcSubject(userIdComposite))
+            .param("delete", "")
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/timeentries?year=2026&week=1"));
+    }
+
+    @Test
     void ensureDeleteWithAjax() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
 
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
@@ -1397,6 +1541,8 @@ class TimeEntryControllerTest implements ControllerTest {
     @Test
     void ensureDeleteWithAjaxLastTimeEntryOfDay() throws Exception {
 
+        mockUserSettings(DayOfWeek.MONDAY);
+
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
@@ -1478,6 +1624,8 @@ class TimeEntryControllerTest implements ControllerTest {
 
     @Test
     void ensureDeleteForOtherUser() throws Exception {
+
+        mockUserSettings(DayOfWeek.MONDAY);
 
         final UserId userId = new UserId("batman");
         final UserLocalId userLocalId = new UserLocalId(42L);
