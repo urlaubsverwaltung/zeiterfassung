@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import de.focusshift.zeiterfassung.settings.AutomaticBreakDeductionSettings;
+import de.focusshift.zeiterfassung.settings.AutomaticBreakDeductionSettingsService;
 import de.focusshift.zeiterfassung.settings.SubtractBreakFromTimeEntrySettingsService;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.user.UserDateService;
@@ -9,6 +11,10 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.BreakViolation;
+import de.focusshift.zeiterfassung.workduration.BreakViolationChecker;
+import de.focusshift.zeiterfassung.workduration.BreakViolationType;
+import de.focusshift.zeiterfassung.workduration.MandatoryBreakDeductionCalculator;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workduration.WorkDurationCalculationService;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
@@ -22,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.ZoneId;
@@ -62,12 +69,96 @@ class TimeEntryDayServiceImplTest {
     private UserSettingsProvider userSettingsProvider;
     @Mock
     private SubtractBreakFromTimeEntrySettingsService subtractBreakFromTimeEntrySettingsService;
+    @Mock
+    private AutomaticBreakDeductionSettingsService automaticBreakDeductionSettingsService;
 
     @BeforeEach
     void setUp() {
         sut = new TimeEntryDayServiceImpl(timeEntryService, timeEntryLockService, workDurationCalculationService,
             workingTimeCalendarService, userManagementService, userSettingsProvider, userDateService,
-            subtractBreakFromTimeEntrySettingsService, timeEntryRepository);
+            subtractBreakFromTimeEntrySettingsService, automaticBreakDeductionSettingsService,
+            new MandatoryBreakDeductionCalculator(), new BreakViolationChecker(), timeEntryRepository);
+    }
+
+    @Nested
+    class StatutoryBreaks {
+
+        private static final LocalDate DAY = LocalDate.parse("2025-10-27");
+        private static final UserLocalId USER_LOCAL_ID = new UserLocalId(1L);
+        private static final UserIdComposite USER = new UserIdComposite(new UserId("batman"), USER_LOCAL_ID);
+
+        // 08:00 - 16:00 Europe/Berlin without break
+        private final TimeEntry eightHours = new TimeEntry(new TimeEntryId(1L), USER, "",
+            ZonedDateTime.parse("2025-10-27T07:00:00Z"), ZonedDateTime.parse("2025-10-27T15:00:00Z"), false);
+
+        private List<TimeEntryDay> getDay(AutomaticBreakDeductionSettings settings) {
+            when(userSettingsProvider.zoneId()).thenReturn(EUROPE_BERLIN);
+            when(automaticBreakDeductionSettingsService.getAutomaticBreakDeductionSettings()).thenReturn(Optional.of(settings));
+            when(timeEntryService.getEntries(DAY, DAY.plusDays(1), USER_LOCAL_ID)).thenReturn(List.of(eightHours));
+            when(workingTimeCalendarService.getWorkingTimeCalender(DAY, DAY.plusDays(1), USER_LOCAL_ID)).thenReturn(
+                new WorkingTimeCalendar(Map.of(DAY, PlannedWorkingHours.EIGHT), Map.of())
+            );
+            when(workDurationCalculationService.calculateWorkDuration(List.of(eightHours))).thenReturn(WorkDuration.EIGHT);
+            return sut.getTimeEntryDays(DAY, DAY.plusDays(1), USER_LOCAL_ID);
+        }
+
+        private static Optional<Instant> startOf(LocalDate date) {
+            return Optional.of(date.atStartOfDay(EUROPE_BERLIN).toInstant());
+        }
+
+        @Test
+        void ensureNoDeductionAndNoHintsWhenDisabled() {
+            final List<TimeEntryDay> days = getDay(AutomaticBreakDeductionSettings.DISABLED);
+
+            assertThat(days).singleElement().satisfies(day -> {
+                assertThat(day.workDuration()).isEqualTo(WorkDuration.EIGHT);
+                assertThat(day.breakDeduction()).isZero();
+                assertThat(day.breakViolations()).isEmpty();
+            });
+        }
+
+        @Test
+        void ensureDeductionFromActivationDate() {
+            final List<TimeEntryDay> days = getDay(new AutomaticBreakDeductionSettings(true, startOf(DAY), false));
+
+            assertThat(days).singleElement().satisfies(day -> {
+                assertThat(day.workDuration()).isEqualTo(new WorkDuration(Duration.ofHours(7).plusMinutes(30)));
+                assertThat(day.workDurationBeforeBreakDeduction()).isEqualTo(WorkDuration.EIGHT);
+                assertThat(day.breakDeduction()).isEqualTo(Duration.ofMinutes(30));
+                assertThat(day.overtime()).isEqualTo(Duration.ofMinutes(-30));
+                assertThat(day.breakViolations()).isEmpty();
+            });
+        }
+
+        @Test
+        void ensureNoDeductionBeforeActivationDate() {
+            final List<TimeEntryDay> days = getDay(new AutomaticBreakDeductionSettings(true, startOf(DAY.plusDays(1)), false));
+
+            assertThat(days).singleElement().satisfies(day -> {
+                assertThat(day.workDuration()).isEqualTo(WorkDuration.EIGHT);
+                assertThat(day.breakDeduction()).isZero();
+            });
+        }
+
+        @Test
+        void ensureNoDeductionWhenInactiveEvenWithActivationDate() {
+            final List<TimeEntryDay> days = getDay(new AutomaticBreakDeductionSettings(false, startOf(DAY), false));
+
+            assertThat(days).singleElement().satisfies(day -> assertThat(day.breakDeduction()).isZero());
+        }
+
+        @Test
+        void ensureHintsIndependentOfDeduction() {
+            final List<TimeEntryDay> days = getDay(new AutomaticBreakDeductionSettings(false, Optional.empty(), true));
+
+            assertThat(days).singleElement().satisfies(day -> {
+                assertThat(day.workDuration()).isEqualTo(WorkDuration.EIGHT);
+                assertThat(day.breakViolations()).containsExactlyInAnyOrder(
+                    new BreakViolation(BreakViolationType.DAILY),
+                    new BreakViolation(BreakViolationType.CONTINUITY)
+                );
+            });
+        }
     }
 
     @Nested
