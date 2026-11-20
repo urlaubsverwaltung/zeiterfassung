@@ -6,6 +6,7 @@ import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
@@ -34,6 +35,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,6 +54,9 @@ class ReportCsvServiceTest {
     @Mock
     private MessageSource messageSource;
 
+    @Mock
+    private UserManagementService userManagementService;
+
     @BeforeEach
     void setUp() {
 
@@ -59,11 +64,14 @@ class ReportCsvServiceTest {
         when(messageSource.getMessage(any(), any(), any()))
             .thenAnswer((Answer<String>) invocationOnMock -> invocationOnMock.getArgument(0));
 
-        sut = new ReportCsvService(reportService, dateFormatter, messageSource);
+        lenient().when(dateFormatter.formatYearMonth(any()))
+            .thenAnswer(invocation -> invocation.<YearMonth>getArgument(0).toString());
+
+        sut = new ReportCsvService(reportService, dateFormatter, messageSource, userManagementService);
     }
 
     // ------------------------------------------------------------
-    // WEEK report csv
+    // WEEK report csv - detailed
     // ------------------------------------------------------------
 
     @Test
@@ -80,7 +88,7 @@ class ReportCsvServiceTest {
         sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, userLocalId, printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.shouldWorkingHours;report.csv.header.comment;report.csv.header.break
             """);
     }
 
@@ -116,8 +124,43 @@ class ReportCsvServiceTest {
         sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, batmanLocalId, printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;10:00;10:30;0,500;hard work;false
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.shouldWorkingHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;10:00;10:30;0,500;8,000;hard work;false
+            """);
+    }
+
+    @Test
+    void ensureWeekReportCsvWithoutShouldWorkingHoursConfiguredLeavesColumnEmpty() {
+
+        mockDateFormatter("dd.MM.yyyy");
+
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+
+        // no working time calendar entry for the given date -> shouldWorkingHours unknown
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser = Map.of(
+            batmanIdComposite, new WorkingTimeCalendar(Map.of(), Map.of())
+        );
+
+        final ZonedDateTime from = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 0), ZONE_ID_BERLIN);
+        final ZonedDateTime to = ZonedDateTime.of(LocalDateTime.of(2021, 1, 4, 10, 30), ZONE_ID_BERLIN);
+        final WorkDuration workDuration = new WorkDuration(Duration.ofMinutes(30));
+        final ReportDayEntry reportDayEntry = new ReportDayEntry(null, batman, "hard work", from, to, workDuration, false);
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of(reportDayEntry)), Map.of(), Map.of());
+
+        when(reportService.getReportWeek(Year.of(2021), 1, List.of(batmanLocalId)))
+            .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDay)));
+
+        final StringWriter stringWriter = new StringWriter();
+        final PrintWriter printWriter = new PrintWriter(stringWriter);
+
+        sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, batmanLocalId, printWriter);
+
+        assertThat(stringWriter).hasToString("""
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.shouldWorkingHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;10:00;10:30;0,500;;hard work;false
             """);
     }
 
@@ -165,15 +208,15 @@ class ReportCsvServiceTest {
         sut.writeWeekReportCsv(Year.of(2021), 1, Locale.GERMAN, batmanLocalId, printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;10:00;11:00;1,000;hard work;false
-            04.01.2021;Bruce;Wayne;14:00;15:00;1,000;hard work;false
-            05.01.2021;Bruce;Wayne;09:00;17:00;8,000;hard work;false
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.shouldWorkingHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;10:00;11:00;1,000;8,000;hard work;false
+            04.01.2021;Bruce;Wayne;14:00;15:00;1,000;8,000;hard work;false
+            05.01.2021;Bruce;Wayne;09:00;17:00;8,000;8,000;hard work;false
             """);
     }
 
     // ------------------------------------------------------------
-    // MONTH report csv
+    // MONTH report csv - detailed
     // ------------------------------------------------------------
 
     @Test
@@ -188,7 +231,7 @@ class ReportCsvServiceTest {
         sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, new UserId("batman"), printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.shouldWorkingHours;report.csv.header.comment;report.csv.header.break
             """);
     }
 
@@ -229,8 +272,8 @@ class ReportCsvServiceTest {
         sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, batmanId, printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;10:00;10:30;0,500;hard work;false
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.shouldWorkingHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;10:00;10:30;0,500;8,000;hard work;false
             """);
     }
 
@@ -284,10 +327,122 @@ class ReportCsvServiceTest {
         sut.writeMonthReportCsv(YearMonth.of(2021, 1), Locale.GERMAN, batmanId, printWriter);
 
         assertThat(stringWriter).hasToString("""
-            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.comment;report.csv.header.break
-            04.01.2021;Bruce;Wayne;10:00;11:00;1,000;hard work;false
-            04.01.2021;Bruce;Wayne;14:00;15:00;1,000;hard work;false
-            05.01.2021;Bruce;Wayne;09:00;17:00;8,000;hard work;false
+            report.csv.header.date;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.start;report.csv.header.end;report.csv.header.workedHours;report.csv.header.shouldWorkingHours;report.csv.header.comment;report.csv.header.break
+            04.01.2021;Bruce;Wayne;10:00;11:00;1,000;8,000;hard work;false
+            04.01.2021;Bruce;Wayne;14:00;15:00;1,000;8,000;hard work;false
+            05.01.2021;Bruce;Wayne;09:00;17:00;8,000;8,000;hard work;false
+            """);
+    }
+
+    // ------------------------------------------------------------
+    // WEEK report csv - aggregated
+    // ------------------------------------------------------------
+
+    @Test
+    void ensureWeekReportCsvAggregatedWithEmptyReport() {
+
+        final UserLocalId userLocalId = new UserLocalId(1L);
+
+        when(reportService.getReportWeek(Year.of(2021), 1, List.of(userLocalId)))
+            .thenReturn(new ReportWeek(LocalDate.of(2020, 12, 28), List.of()));
+
+        when(userManagementService.findAllUsersByLocalIds(List.of()))
+            .thenReturn(List.of());
+
+        final StringWriter stringWriter = new StringWriter();
+        final PrintWriter printWriter = new PrintWriter(stringWriter);
+
+        sut.writeWeekReportCsvAggregated(Year.of(2021), 1, Locale.GERMAN, userLocalId, printWriter);
+
+        assertThat(stringWriter).hasToString("""
+            report.csv.header.calendarWeek;report.csv.header.start;report.csv.header.end;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.shouldWorkingHours
+            """);
+    }
+
+    @Test
+    void ensureWeekReportCsvAggregatedSumsWorkedHoursOfWeek() {
+
+        mockDateFormatter("dd.MM.yyyy");
+
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser = Map.of(
+            batmanIdComposite, new WorkingTimeCalendar(
+                Map.of(
+                    LocalDate.of(2021, 1, 4), PlannedWorkingHours.EIGHT,
+                    LocalDate.of(2021, 1, 5), PlannedWorkingHours.EIGHT
+                ),
+                Map.of()
+            )
+        );
+
+        final ReportDay reportDayOne = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of()), Map.of(batmanIdComposite, new WorkDuration(Duration.ofHours(4))), Map.of());
+        final ReportDay reportDayTwo = new ReportDay(LocalDate.of(2021, 1, 5), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of()), Map.of(batmanIdComposite, new WorkDuration(Duration.ofHours(8))), Map.of());
+
+        final ReportWeek reportWeek = new ReportWeek(LocalDate.of(2021, 1, 4), List.of(reportDayOne, reportDayTwo));
+
+        when(reportService.getReportWeek(Year.of(2021), 1, List.of(batmanLocalId)))
+            .thenReturn(reportWeek);
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(batmanLocalId)))
+            .thenReturn(List.of(batman));
+
+        final StringWriter stringWriter = new StringWriter();
+        final PrintWriter printWriter = new PrintWriter(stringWriter);
+
+        sut.writeWeekReportCsvAggregated(Year.of(2021), 1, Locale.GERMAN, batmanLocalId, printWriter);
+
+        assertThat(stringWriter).hasToString("""
+            report.csv.header.calendarWeek;report.csv.header.start;report.csv.header.end;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.shouldWorkingHours
+            1;04.01.2021;05.01.2021;Bruce;Wayne;12,000;16,000
+            """);
+    }
+
+    // ------------------------------------------------------------
+    // MONTH report csv - aggregated
+    // ------------------------------------------------------------
+
+    @Test
+    void ensureMonthReportCsvAggregatedSumsWorkedHoursOfMonth() {
+
+        mockDateFormatter("dd.MM.yyyy");
+
+        final UserId batmanId = new UserId("batman");
+        final UserLocalId batmanLocalId = new UserLocalId(1L);
+        final UserIdComposite batmanIdComposite = new UserIdComposite(batmanId, batmanLocalId);
+        final User batman = new User(batmanIdComposite, "Bruce", "Wayne", new EMailAddress("batman@example.org"), Set.of());
+
+        final Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser = Map.of(
+            batmanIdComposite, new WorkingTimeCalendar(
+                Map.of(LocalDate.of(2021, 1, 4), PlannedWorkingHours.EIGHT),
+                Map.of()
+            )
+        );
+
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2021, 1, 4), false, workingTimeCalendarByUser, Map.of(batmanIdComposite, List.of()), Map.of(batmanIdComposite, new WorkDuration(Duration.ofHours(4))), Map.of());
+
+        final ReportWeek firstWeek = new ReportWeek(LocalDate.of(2020, 12, 28), List.of(reportDay));
+        final ReportWeek secondWeek = new ReportWeek(LocalDate.of(2021, 1, 4), List.of());
+
+        final ReportMonth reportMonth = new ReportMonth(YearMonth.of(2021, 1), List.of(firstWeek, secondWeek));
+
+        when(reportService.getReportMonth(YearMonth.of(2021, 1), batmanId))
+            .thenReturn(reportMonth);
+
+        when(userManagementService.findAllUsersByLocalIds(List.of(batmanLocalId)))
+            .thenReturn(List.of(batman));
+
+        final StringWriter stringWriter = new StringWriter();
+        final PrintWriter printWriter = new PrintWriter(stringWriter);
+
+        sut.writeMonthReportCsvAggregated(YearMonth.of(2021, 1), Locale.GERMAN, batmanId, printWriter);
+
+        assertThat(stringWriter).hasToString("""
+            report.csv.header.month;report.csv.header.start;report.csv.header.end;report.csv.header.person.givenName;report.csv.header.person.familyName;report.csv.header.workedHours;report.csv.header.shouldWorkingHours
+            2021-01;01.01.2021;31.01.2021;Bruce;Wayne;4,000;8,000
             """);
     }
 

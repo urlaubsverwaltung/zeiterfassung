@@ -133,12 +133,14 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch 
         final int selectedYear = reportYearWeek.getYear();
         final int selectedWeek = reportYearWeek.getWeek();
         final String selectedYearWeekUrl = reportViewHelper.createUrl(format(REPORT_YEAR_WEEK_URL_TEMPLATE, selectedYear, selectedWeek), allUsersSelected, selectedUserLocalIds);
-        final String csvDownloadUrl = selectedYearWeekUrl.contains("?") ? selectedYearWeekUrl + "&csv" : selectedYearWeekUrl + "?csv";
+        final String csvDownloadUrlDetailed = appendCsvParam(selectedYearWeekUrl, "detailed");
+        final String csvDownloadUrlAggregated = appendCsvParam(selectedYearWeekUrl, "aggregated");
 
         model.addAttribute("userReportPreviousSectionUrl", previousSectionUrl);
         model.addAttribute("userReportTodaySectionUrl", todaySectionUrl);
         model.addAttribute("userReportNextSectionUrl", nextSectionUrl);
-        model.addAttribute("userReportCsvDownloadUrl", csvDownloadUrl);
+        model.addAttribute("userReportCsvDownloadUrlDetailed", csvDownloadUrlDetailed);
+        model.addAttribute("userReportCsvDownloadUrlAggregated", csvDownloadUrlAggregated);
 
         final List<User> users = reportPermissionService.findAllPermittedUsersForCurrentUser();
 
@@ -248,6 +250,10 @@ class ReportWeekController implements HasTimeClock, HasLaunchpad, HasUserSearch 
         }
 
         return reportWeek;
+    }
+
+    private static String appendCsvParam(String url, String csvType) {
+        return (url.contains("?") ? url + "&csv=" : url + "?csv=") + csvType;
     }
 
     private static Optional<YearWeek> yearWeek(int year, int week) {
