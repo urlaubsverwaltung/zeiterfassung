@@ -93,12 +93,14 @@
               >
                 40:00 </span
               >)
-              <th:block th:if="${day.breakDeduction != null}">
-                &middot;
-                <span
-                  th:replace="~{fragments/break-rules::deduction(${day.breakDeduction})}"
-                ></span>
-              </th:block>
+            </p>
+            <p
+              th:if="${day.breakDeduction != null}"
+              class="basis-full text-right text-xs"
+            >
+              <span
+                th:replace="~{fragments/break-rules::deduction(${day.breakDeduction})}"
+              ></span>
             </p>
           </div>
 
