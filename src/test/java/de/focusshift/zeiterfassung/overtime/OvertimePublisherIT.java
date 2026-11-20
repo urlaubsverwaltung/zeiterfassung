@@ -144,7 +144,7 @@ class OvertimePublisherIT extends SingleTenantTestContainersBase {
         final UpdatedValueCandidate<LocalDate> dateCandidate = new UpdatedValueCandidate<>(previousDate, currentDate);
         final UpdatedValueCandidate<WorkDuration> workDurationCandidate = new UpdatedValueCandidate<>(WorkDuration.EIGHT, WorkDuration.EIGHT);
 
-        final TimeEntryUpdatedEvent timeEntryUpdatedEvent = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate);
+        final TimeEntryUpdatedEvent timeEntryUpdatedEvent = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate, new UpdatedValueCandidate<>(Duration.ZERO, Duration.ZERO));
         applicationEventPublisher.publishEvent(timeEntryUpdatedEvent);
 
         final Stream<UserHasWorkedOvertimeEvent> actualEvents = applicationEvents.stream(UserHasWorkedOvertimeEvent.class);

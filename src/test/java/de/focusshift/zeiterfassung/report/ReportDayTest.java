@@ -8,6 +8,8 @@ import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.workduration.BreakViolation;
+import de.focusshift.zeiterfassung.workduration.BreakViolationType;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
@@ -33,6 +35,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ReportDayTest {
 
     private static final ZoneId ZONE_ID_BERLIN = ZoneId.of("Europe/Berlin");
+
+    @Test
+    void breakDeductionAndBreakViolationsOfAllUsers() {
+        final UserIdComposite batman = new UserIdComposite(new UserId("batman"), new UserLocalId(1L));
+        final UserIdComposite robin = new UserIdComposite(new UserId("robin"), new UserLocalId(2L));
+
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2025, 2, 28), false, Map.of(), Map.of(), Map.of(), Map.of(),
+            Map.of(batman, Duration.ofMinutes(30), robin, Duration.ofMinutes(15)),
+            Map.of(batman, List.of(new BreakViolation(BreakViolationType.DAILY)), robin, List.of(new BreakViolation(BreakViolationType.CONTINUITY))));
+
+        assertThat(reportDay.breakDeduction()).isEqualTo(Duration.ofMinutes(45));
+        assertThat(reportDay.breakViolations()).containsExactlyInAnyOrder(
+            new BreakViolation(BreakViolationType.DAILY),
+            new BreakViolation(BreakViolationType.CONTINUITY)
+        );
+    }
+
+    @Test
+    void noBreakDeductionAndNoBreakViolationsByDefault() {
+        final ReportDay reportDay = new ReportDay(LocalDate.of(2025, 2, 28), false, Map.of(), Map.of(), Map.of(), Map.of());
+
+        assertThat(reportDay.breakDeduction()).isZero();
+        assertThat(reportDay.breakViolations()).isEmpty();
+    }
 
     @Test
     void reportDayEntries() {

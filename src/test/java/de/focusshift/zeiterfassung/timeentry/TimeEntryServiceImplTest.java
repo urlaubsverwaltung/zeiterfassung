@@ -8,12 +8,14 @@ import de.focusshift.zeiterfassung.tenancy.tenant.TenantAwareRevisionEntity;
 import de.focusshift.zeiterfassung.tenancy.user.EMailAddress;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryCreatedEvent;
 import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent;
+import de.focusshift.zeiterfassung.timeentry.events.TimeEntryUpdatedEvent.UpdatedValueCandidate;
 import de.focusshift.zeiterfassung.user.UserId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -1079,6 +1081,9 @@ class TimeEntryServiceImplTest {
             assertThat(actual.dateCandidate().current()).isEqualTo(sameStart.toLocalDate());
             assertThat(actual.ownerUserIdComposite()).isEqualTo(userIdComposite);
             assertThat(actual.timeEntryId()).isEqualTo(new TimeEntryId(42L));
+            // the work entry became a break
+            assertThat(actual.workDurationCandidate()).isEqualTo(new UpdatedValueCandidate<>(new WorkDuration(Duration.ofHours(2)), WorkDuration.ZERO));
+            assertThat(actual.breakDurationCandidate()).isEqualTo(new UpdatedValueCandidate<>(Duration.ZERO, Duration.ofHours(2)));
         });
     }
 

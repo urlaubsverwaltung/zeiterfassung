@@ -241,7 +241,8 @@ class TimeEntryServiceImpl implements TimeEntryService {
             saved.userIdComposite(),
             new UpdatedValueCandidate<>(timeEntryLockService.isLocked(previousDate), timeEntryLockService.isLocked(currentDate)),
             new UpdatedValueCandidate<>(previousDate, currentDate),
-            new UpdatedValueCandidate<>(previousTimeEntry.workDuration(), saved.workDuration())
+            new UpdatedValueCandidate<>(previousTimeEntry.workDuration(), saved.workDuration()),
+            new UpdatedValueCandidate<>(breakDuration(previousTimeEntry), breakDuration(saved))
         ));
 
 
@@ -392,5 +393,9 @@ class TimeEntryServiceImpl implements TimeEntryService {
 
     private <T> boolean hasBeenModified(Supplier<T> a, Supplier<T> b) {
         return !a.get().equals(b.get());
+    }
+
+    private static Duration breakDuration(TimeEntry timeEntry) {
+        return timeEntry.isBreak() ? timeEntry.duration() : Duration.ZERO;
     }
 }

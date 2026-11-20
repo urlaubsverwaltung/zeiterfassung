@@ -5,6 +5,7 @@ import de.focusshift.zeiterfassung.timeentry.TimeEntryId;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 
+import java.time.Duration;
 import java.time.LocalDate;
 
 /**
@@ -15,13 +16,16 @@ import java.time.LocalDate;
  * @param lockedCandidate maybe updated locked value
  * @param dateCandidate maybe updated date
  * @param workDurationCandidate maybe updated work duration
+ * @param breakDurationCandidate maybe updated break duration, {@link Duration#ZERO} when the time entry is no break.
+ *                               A changed break can change the work duration of the day (e.g. automatic break deduction).
  */
 public record TimeEntryUpdatedEvent(
     TimeEntryId timeEntryId,
     UserIdComposite ownerUserIdComposite,
     UpdatedValueCandidate<Boolean> lockedCandidate,
     UpdatedValueCandidate<LocalDate> dateCandidate,
-    UpdatedValueCandidate<WorkDuration> workDurationCandidate
+    UpdatedValueCandidate<WorkDuration> workDurationCandidate,
+    UpdatedValueCandidate<Duration> breakDurationCandidate
 ) {
 
     /**

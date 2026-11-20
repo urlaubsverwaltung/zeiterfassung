@@ -131,7 +131,8 @@ public class OvertimePublisher {
         final boolean preLocked = lockedCandidate.previous();
         final boolean curLocked = lockedCandidate.current();
         final boolean dateChanged = dateCandidate.hasChanged();
-        final boolean workDurationChanged = workDurationCandidate.hasChanged();
+        // a changed break changes the work duration of the day, e.g. with the automatic break deduction
+        final boolean workDurationChanged = workDurationCandidate.hasChanged() || event.breakDurationCandidate().hasChanged();
 
         if (!preLocked && !curLocked) {
             LOG.debug("Ignore not locked TimeEntryUpdate.");

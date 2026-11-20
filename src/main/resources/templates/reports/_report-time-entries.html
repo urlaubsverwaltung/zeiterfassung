@@ -50,6 +50,9 @@
             >
               Montag, 07.10.2024
             </span>
+            <span
+              th:replace="~{fragments/break-rules::violation-icon(${day.breakViolationMessageKey})}"
+            ></span>
             <p class="tabular-nums">
               <span
                 th:if="${day.hoursDelta != '00:00'}"
@@ -90,6 +93,14 @@
               >
                 40:00 </span
               >)
+            </p>
+            <p
+              th:if="${day.breakDeduction != null}"
+              class="basis-full text-right text-xs"
+            >
+              <span
+                th:replace="~{fragments/break-rules::deduction(${day.breakDeduction})}"
+              ></span>
             </p>
           </div>
 

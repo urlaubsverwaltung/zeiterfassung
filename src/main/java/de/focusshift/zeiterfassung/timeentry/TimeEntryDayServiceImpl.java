@@ -1,6 +1,8 @@
 package de.focusshift.zeiterfassung.timeentry;
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.settings.AutomaticBreakDeductionSettings;
+import de.focusshift.zeiterfassung.settings.AutomaticBreakDeductionSettingsService;
 import de.focusshift.zeiterfassung.settings.SubtractBreakFromTimeEntrySettings;
 import de.focusshift.zeiterfassung.settings.SubtractBreakFromTimeEntrySettingsService;
 import de.focusshift.zeiterfassung.user.UserDateService;
@@ -10,6 +12,9 @@ import de.focusshift.zeiterfassung.user.UserSettingsProvider;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.BreakViolation;
+import de.focusshift.zeiterfassung.workduration.BreakViolationChecker;
+import de.focusshift.zeiterfassung.workduration.MandatoryBreakDeductionCalculator;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workduration.WorkDurationCalculationService;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
@@ -17,6 +22,7 @@ import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.ZoneId;
@@ -26,6 +32,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -43,6 +50,9 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
     private final UserSettingsProvider userSettingsProvider;
     private final UserDateService userDateService;
     private final SubtractBreakFromTimeEntrySettingsService subtractBreakFromTimeEntrySettingsService;
+    private final AutomaticBreakDeductionSettingsService automaticBreakDeductionSettingsService;
+    private final MandatoryBreakDeductionCalculator mandatoryBreakDeductionCalculator;
+    private final BreakViolationChecker breakViolationChecker;
     private final TimeEntryRepository timeEntryRepository;
 
     TimeEntryDayServiceImpl(
@@ -54,6 +64,9 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
         UserSettingsProvider userSettingsProvider,
         UserDateService userDateService,
         SubtractBreakFromTimeEntrySettingsService subtractBreakFromTimeEntrySettingsService,
+        AutomaticBreakDeductionSettingsService automaticBreakDeductionSettingsService,
+        MandatoryBreakDeductionCalculator mandatoryBreakDeductionCalculator,
+        BreakViolationChecker breakViolationChecker,
         TimeEntryRepository timeEntryRepository
     ) {
         this.timeEntryService = timeEntryService;
@@ -64,6 +77,9 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
         this.userSettingsProvider = userSettingsProvider;
         this.userDateService = userDateService;
         this.subtractBreakFromTimeEntrySettingsService = subtractBreakFromTimeEntrySettingsService;
+        this.automaticBreakDeductionSettingsService = automaticBreakDeductionSettingsService;
+        this.mandatoryBreakDeductionCalculator = mandatoryBreakDeductionCalculator;
+        this.breakViolationChecker = breakViolationChecker;
         this.timeEntryRepository = timeEntryRepository;
     }
 
@@ -129,9 +145,38 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
 
         final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(zoneIdPivot);
         final Predicate<LocalDate> isDateLocked = date -> isDateLocked(date, minValidTimeEntryDate);
-        final Function<Collection<TimeEntry>, WorkDuration> durationCalculator = workDurationCalculator();
+        final BiFunction<LocalDate, Collection<TimeEntry>, DayWorkDuration> durationCalculator = dayWorkDurationCalculator(zoneIdPivot);
 
         return createTimeEntryDays(from, toExclusive, timeEntries, workingTimeCalender, isDateLocked, durationCalculator, zoneIdPivot);
+    }
+
+    /**
+     * Calculates the {@link WorkDuration} of a day including the automatic deduction of the mandatory break (ArbZG §4)
+     * and the violated break rules, depending on the {@link AutomaticBreakDeductionSettings}.
+     */
+    private BiFunction<LocalDate, Collection<TimeEntry>, DayWorkDuration> dayWorkDurationCalculator(ZoneId zoneIdPivot) {
+
+        final Function<Collection<TimeEntry>, WorkDuration> workDurationCalculator = workDurationCalculator();
+        final AutomaticBreakDeductionSettings breakSettings = automaticBreakDeductionSettingsService.getAutomaticBreakDeductionSettings()
+            .orElse(AutomaticBreakDeductionSettings.DISABLED);
+
+        return (date, entries) -> {
+            // work duration before the deduction, this is what the mandatory break depends on
+            final WorkDuration workDuration = workDurationCalculator.apply(entries);
+
+            final Duration breakDeduction = breakSettings.isDeductionActiveOn(date, zoneIdPivot)
+                ? mandatoryBreakDeductionCalculator.calculateDeduction(workDuration, entries)
+                : Duration.ZERO;
+
+            final List<BreakViolation> breakViolations = breakSettings.violationHintsActive() && !entries.isEmpty()
+                ? breakViolationChecker.check(workDuration, entries)
+                : List.of();
+
+            return new DayWorkDuration(new WorkDuration(workDuration.duration().minus(breakDeduction)), breakDeduction, breakViolations);
+        };
+    }
+
+    private record DayWorkDuration(WorkDuration workDuration, Duration breakDeduction, List<BreakViolation> breakViolations) {
     }
 
     private Function<Collection<TimeEntry>, WorkDuration> workDurationCalculator() {
@@ -157,7 +202,7 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
     ) {
         final Optional<LocalDate> minValidTimeEntryDate = timeEntryLockService.getMinValidTimeEntryDate(zoneIdPivot);
         final Predicate<LocalDate> isDateLocked = date -> isDateLocked(date, minValidTimeEntryDate);
-        final Function<Collection<TimeEntry>, WorkDuration> durationCalculator = workDurationCalculator();
+        final BiFunction<LocalDate, Collection<TimeEntry>, DayWorkDuration> durationCalculator = dayWorkDurationCalculator(zoneIdPivot);
 
         return timeEntriesByUser.entrySet().stream().collect(toMap(
             Map.Entry::getKey,
@@ -179,7 +224,7 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
         List<TimeEntry> allTimeEntries,
         WorkingTimeCalendar workingTimeCalendar,
         Predicate<LocalDate> isDateLocked,
-        Function<Collection<TimeEntry>, WorkDuration> calculateWorkDuration,
+        BiFunction<LocalDate, Collection<TimeEntry>, DayWorkDuration> calculateWorkDuration,
         ZoneId zoneIdPivot
     ) {
 
@@ -200,9 +245,10 @@ class TimeEntryDayServiceImpl implements TimeEntryDayService {
             final List<TimeEntry> timeEntriesForDate = timeEntriesByDate.getOrDefault(date, List.of());
             final List<Absence> absences = workingTimeCalendar.absence(date).orElse(List.of());
             final ShouldWorkingHours shouldWorkingHours = workingTimeCalendar.shouldWorkingHours(date).orElse(ShouldWorkingHours.ZERO);
-            final WorkDuration workDuration = calculateWorkDuration.apply(timeEntriesForDate);
+            final DayWorkDuration dayWorkDuration = calculateWorkDuration.apply(date, timeEntriesForDate);
 
-            timeEntryDays.add(new TimeEntryDay(locked, date, workDuration, plannedWorkingHours, shouldWorkingHours, timeEntriesForDate, absences));
+            timeEntryDays.add(new TimeEntryDay(locked, date, dayWorkDuration.workDuration(), plannedWorkingHours, shouldWorkingHours,
+                timeEntriesForDate, absences, dayWorkDuration.breakDeduction(), dayWorkDuration.breakViolations()));
 
             date = date.minusDays(1);
         }

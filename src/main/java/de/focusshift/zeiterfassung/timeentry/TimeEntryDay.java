@@ -2,6 +2,7 @@ package de.focusshift.zeiterfassung.timeentry;
 
 
 import de.focusshift.zeiterfassung.absence.Absence;
+import de.focusshift.zeiterfassung.workduration.BreakViolation;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 
@@ -26,6 +27,9 @@ import java.util.List;
  * @param shouldWorkingHours  should working hours
  * @param timeEntries         list of time entries
  * @param absences            list of absences. could be one FULL absence or two absences MORNING and NOON
+ * @param breakDeduction      part of the mandatory break (ArbZG §4) that has been deducted automatically, already
+ *                            subtracted from {@code workDuration}
+ * @param breakViolations     violated break rules (ArbZG §4), empty when there is none or the hints are disabled
  */
 public record TimeEntryDay(
     boolean locked,
@@ -34,8 +38,29 @@ public record TimeEntryDay(
     PlannedWorkingHours plannedWorkingHours,
     ShouldWorkingHours shouldWorkingHours,
     List<TimeEntry> timeEntries,
-    List<Absence> absences
+    List<Absence> absences,
+    Duration breakDeduction,
+    List<BreakViolation> breakViolations
 ) implements HasWorkedHoursRatio {
+
+    public TimeEntryDay(
+        boolean locked,
+        LocalDate date,
+        WorkDuration workDuration,
+        PlannedWorkingHours plannedWorkingHours,
+        ShouldWorkingHours shouldWorkingHours,
+        List<TimeEntry> timeEntries,
+        List<Absence> absences
+    ) {
+        this(locked, date, workDuration, plannedWorkingHours, shouldWorkingHours, timeEntries, absences, Duration.ZERO, List.of());
+    }
+
+    /**
+     * @return the work duration before the automatic break deduction
+     */
+    public WorkDuration workDurationBeforeBreakDeduction() {
+        return new WorkDuration(workDuration.duration().plus(breakDeduction));
+    }
 
     /**
      * @return overtime {@linkplain Duration}. can be negative.
