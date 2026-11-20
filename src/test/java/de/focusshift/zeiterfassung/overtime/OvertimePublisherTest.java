@@ -274,7 +274,7 @@ class OvertimePublisherTest {
 
             final UserIdComposite userIdComposite = anyUserIdComposite();
 
-            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate);
+            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate, new UpdatedValueCandidate<>(Duration.ZERO, Duration.ZERO));
             sut.publishOvertimeUpdated(event);
 
             verifyNoInteractions(applicationEventPublisher);
@@ -297,7 +297,7 @@ class OvertimePublisherTest {
             final UpdatedValueCandidate<LocalDate> dateCandidate = new UpdatedValueCandidate<>(date, date);
             final UpdatedValueCandidate<WorkDuration> workDurationCandidate = new UpdatedValueCandidate<>(WorkDuration.EIGHT, WorkDuration.EIGHT);
 
-            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate);
+            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate, new UpdatedValueCandidate<>(Duration.ZERO, Duration.ZERO));
             sut.publishOvertimeUpdated(event);
 
             verifyNoInteractions(applicationEventPublisher);
@@ -318,7 +318,7 @@ class OvertimePublisherTest {
 
             when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId())).thenReturn(new OvertimeAccount(userIdComposite, true));
 
-            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate);
+            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate, new UpdatedValueCandidate<>(Duration.ZERO, Duration.ZERO));
             sut.publishOvertimeUpdated(event);
 
             verifyNoInteractions(applicationEventPublisher);
@@ -340,7 +340,7 @@ class OvertimePublisherTest {
             when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId())).thenReturn(new OvertimeAccount(userIdComposite, true));
             when(overtimeService.getOvertimeForDateAndUser(prevDate, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
 
-            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate);
+            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate, new UpdatedValueCandidate<>(Duration.ZERO, Duration.ZERO));
             sut.publishOvertimeUpdated(event);
 
             final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
@@ -369,7 +369,7 @@ class OvertimePublisherTest {
             when(overtimeService.getOvertimeForDateAndUser(prevDate, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
             when(overtimeService.getOvertimeForDateAndUser(curDate, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_NEGATIVE);
 
-            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate);
+            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate, new UpdatedValueCandidate<>(Duration.ZERO, Duration.ZERO));
             sut.publishOvertimeUpdated(event);
 
             final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
@@ -399,7 +399,7 @@ class OvertimePublisherTest {
             when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId())).thenReturn(new OvertimeAccount(userIdComposite, true));
             when(overtimeService.getOvertimeForDateAndUser(curDate, userIdComposite.localId())).thenReturn(OvertimeHours.EIGHT_POSITIVE);
 
-            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate);
+            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate, new UpdatedValueCandidate<>(Duration.ZERO, Duration.ZERO));
             sut.publishOvertimeUpdated(event);
 
             final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
@@ -426,7 +426,7 @@ class OvertimePublisherTest {
             when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId())).thenReturn(new OvertimeAccount(userIdComposite, true));
             when(overtimeService.getOvertimeForDateAndUser(date, userIdComposite.localId())).thenReturn(OvertimeHours.ZERO);
 
-            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate);
+            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate, new UpdatedValueCandidate<>(Duration.ZERO, Duration.ZERO));
             sut.publishOvertimeUpdated(event);
 
             final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
@@ -436,6 +436,30 @@ class OvertimePublisherTest {
             assertThat(publishedEvents).containsExactly(
                 new UserHasWorkedOvertimeEvent(userIdComposite, date, OvertimeHours.ZERO)
             );
+        }
+
+        @Test
+        void ensureOvertimeUpdateWhenLockedAndNotDateButBreakDurationChanged() {
+            // the work duration of a break entry is always zero,
+            // but the break changes the work duration of the day (automatic break deduction)
+
+            final LocalDate date = LocalDate.parse("2025-05-18");
+
+            final TimeEntryId timeEntryId = new TimeEntryId(1L);
+            final UpdatedValueCandidate<Boolean> lockedCandidate = new UpdatedValueCandidate<>(true, true);
+            final UpdatedValueCandidate<LocalDate> dateCandidate = new UpdatedValueCandidate<>(date, date);
+            final UpdatedValueCandidate<WorkDuration> workDurationCandidate = new UpdatedValueCandidate<>(WorkDuration.ZERO, WorkDuration.ZERO);
+            final UpdatedValueCandidate<Duration> breakDurationCandidate = new UpdatedValueCandidate<>(Duration.ofMinutes(15), Duration.ofMinutes(30));
+
+            final UserIdComposite userIdComposite = anyUserIdComposite();
+
+            when(overtimeAccountService.getOvertimeAccount(userIdComposite.localId())).thenReturn(new OvertimeAccount(userIdComposite, true));
+            when(overtimeService.getOvertimeForDateAndUser(date, userIdComposite.localId())).thenReturn(OvertimeHours.ZERO);
+
+            final TimeEntryUpdatedEvent event = new TimeEntryUpdatedEvent(timeEntryId, userIdComposite, lockedCandidate, dateCandidate, workDurationCandidate, breakDurationCandidate);
+            sut.publishOvertimeUpdated(event);
+
+            verify(applicationEventPublisher).publishEvent(new UserHasWorkedOvertimeEvent(userIdComposite, date, OvertimeHours.ZERO));
         }
     }
 
