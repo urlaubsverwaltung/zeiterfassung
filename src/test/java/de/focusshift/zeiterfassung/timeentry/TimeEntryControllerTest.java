@@ -15,6 +15,8 @@ import de.focusshift.zeiterfassung.user.YearFormat;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.BreakViolation;
+import de.focusshift.zeiterfassung.workduration.BreakViolationType;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import jakarta.servlet.ServletException;
@@ -205,6 +207,35 @@ class TimeEntryControllerTest implements ControllerTest {
         )
             .andExpect(view().name("timeentries/index"))
             .andExpect(model().attribute("timeEntryWeeksPage", is(expectedPage)));
+    }
+
+    @Test
+    void ensureTimeEntriesContainBreakDeductionAndBreakViolationHint() throws Exception {
+
+        clock = Clock.fixed(Instant.parse("2025-02-28T15:03:00.00Z"), ZoneOffset.UTC);
+        sut = new TimeEntryController(timeEntryService, timeEntryDayService, userManagementService, userSettingsProvider, timeEntryLockService, dateFormatter, timeEntryViewHelper, userSearchViewHelper, userDateService, clock);
+
+        mockUserSettings(ZoneOffset.UTC);
+
+        final UserIdComposite userIdComposite = new UserIdComposite(new UserId("batman"), new UserLocalId(42L));
+        final TimeEntry timeEntry = new TimeEntry(new TimeEntryId(1L), userIdComposite, "",
+            ZonedDateTime.parse("2025-02-28T07:00:00.00Z"), ZonedDateTime.parse("2025-02-28T15:00:00.00Z"), false);
+
+        final TimeEntryDay timeEntryDay = new TimeEntryDay(false, LocalDate.parse("2025-02-28"),
+            new WorkDuration(Duration.ofHours(7).plusMinutes(30)), PlannedWorkingHours.EIGHT, ShouldWorkingHours.EIGHT,
+            List.of(timeEntry), List.of(), Duration.ofMinutes(30),
+            List.of(new BreakViolation(BreakViolationType.DAILY), new BreakViolation(BreakViolationType.CONTINUITY)));
+        final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.parse("2025-02-24"), PlannedWorkingHours.EIGHT, List.of(timeEntryDay));
+        when(timeEntryDayService.getEntryWeekPage(userIdComposite.localId(), 2025, 9)).thenReturn(new TimeEntryWeekPage(timeEntryWeek, 1));
+
+        final MvcResult result = perform(get(TIME_ENTRIES_URL_TEMPLATE).with(oidcSubject(userIdComposite))).andReturn();
+
+        final TimeEntryWeeksPageDto page = (TimeEntryWeeksPageDto) result.getModelAndView().getModel().get("timeEntryWeeksPage");
+        assertThat(page.timeEntryWeek().days()).singleElement().satisfies(day -> {
+            assertThat(day.hoursWorked()).isEqualTo("07:30");
+            assertThat(day.breakDeduction()).isEqualTo("00:30");
+            assertThat(day.breakViolationMessageKey()).isEqualTo("break-violation.hint.daily-and-continuity");
+        });
     }
 
     @Test

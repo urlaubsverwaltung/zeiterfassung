@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Break rules</title>
+  </head>
+  <body>
+    <span
+      th:fragment="violation-icon(messageKey)"
+      th:if="${messageKey != null}"
+      class="inline-flex items-center text-amber-600 dark:text-amber-400"
+      th:title="#{${messageKey}}"
+      data-testid="break-violation-hint"
+    >
+      <svg th:replace="~{icons/triangle-alert::svg(className='w-4 h-4')}"></svg>
+      <span class="sr-only" th:text="#{${messageKey}}">Pausenregel verletzt</span>
+    </span>
+    <span
+      th:fragment="deduction(deduction)"
+      th:if="${deduction != null}"
+      class="tabular-nums"
+      th:text="#{break-deduction.included(${deduction})}"
+      data-testid="break-deduction"
+    >
+      inkl. −00:30 Pausenabzug
+    </span>
+  </body>
+</html>

@@ -2,10 +2,12 @@ package de.focusshift.zeiterfassung.report;
 
 import de.focusshift.zeiterfassung.timeentry.ShouldWorkingHours;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
+import de.focusshift.zeiterfassung.workduration.BreakViolation;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.PlannedWorkingHours;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -33,8 +35,35 @@ public record ReportDay(
     Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser,
     Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser,
     Map<UserIdComposite, WorkDuration> workDurationByUser,
-    Map<UserIdComposite, List<ReportDayAbsence>> detailDayAbsencesByUser
+    Map<UserIdComposite, List<ReportDayAbsence>> detailDayAbsencesByUser,
+    Map<UserIdComposite, Duration> breakDeductionByUser,
+    Map<UserIdComposite, List<BreakViolation>> breakViolationsByUser
 ) implements HasWorkDurationByUser {
+
+    public ReportDay(
+        LocalDate date,
+        boolean locked,
+        Map<UserIdComposite, WorkingTimeCalendar> workingTimeCalendarByUser,
+        Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser,
+        Map<UserIdComposite, WorkDuration> workDurationByUser,
+        Map<UserIdComposite, List<ReportDayAbsence>> detailDayAbsencesByUser
+    ) {
+        this(date, locked, workingTimeCalendarByUser, reportDayEntriesByUser, workDurationByUser, detailDayAbsencesByUser, Map.of(), Map.of());
+    }
+
+    /**
+     * @return sum of the automatically deducted breaks of all users, already subtracted from {@link #workDuration()}
+     */
+    public Duration breakDeduction() {
+        return breakDeductionByUser.values().stream().reduce(Duration.ZERO, Duration::plus);
+    }
+
+    /**
+     * @return violated break rules of all users
+     */
+    public List<BreakViolation> breakViolations() {
+        return breakViolationsByUser.values().stream().flatMap(Collection::stream).toList();
+    }
 
     public List<ReportDayEntry> reportDayEntries() {
         return reportDayEntriesByUser.values().stream().flatMap(Collection::stream).toList();

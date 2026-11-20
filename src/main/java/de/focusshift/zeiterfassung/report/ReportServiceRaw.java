@@ -12,6 +12,7 @@ import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
+import de.focusshift.zeiterfassung.workduration.BreakViolation;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendar;
 import de.focusshift.zeiterfassung.workingtime.WorkingTimeCalendarService;
@@ -19,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
@@ -264,6 +266,8 @@ public class ReportServiceRaw {
         final Map<UserIdComposite, List<ReportDayEntry>> reportDayEntriesByUser = newHashMap(userById.size());
         final Map<UserIdComposite, WorkDuration> workDurationByUser = newHashMap(userById.size());
         final Map<UserIdComposite, List<ReportDayAbsence>> reportDayAbsencesByUser = newHashMap(userById.size());
+        final Map<UserIdComposite, Duration> breakDeductionByUser = newHashMap(userById.size());
+        final Map<UserIdComposite, List<BreakViolation>> breakViolationsByUser = newHashMap(userById.size());
 
         for (Map.Entry<UserIdComposite, User> entry : userById.entrySet()) {
             final UserIdComposite userIdComposite = entry.getKey();
@@ -280,6 +284,8 @@ public class ReportServiceRaw {
                     .toList();
                 reportDayEntriesByUser.put(userIdComposite, reportDayEntries);
                 workDurationByUser.put(userIdComposite, timeEntryDay.workDuration());
+                breakDeductionByUser.put(userIdComposite, timeEntryDay.breakDeduction());
+                breakViolationsByUser.put(userIdComposite, timeEntryDay.breakViolations());
             }
 
             final WorkingTimeCalendar workingTimeCalendar = workingTimeCalendars.get(userIdComposite);
@@ -293,6 +299,7 @@ public class ReportServiceRaw {
             }
         }
 
-        return new ReportDay(date, dateIsLocked, workingTimeCalendars, reportDayEntriesByUser, workDurationByUser, reportDayAbsencesByUser);
+        return new ReportDay(date, dateIsLocked, workingTimeCalendars, reportDayEntriesByUser, workDurationByUser, reportDayAbsencesByUser,
+            breakDeductionByUser, breakViolationsByUser);
     }
 }

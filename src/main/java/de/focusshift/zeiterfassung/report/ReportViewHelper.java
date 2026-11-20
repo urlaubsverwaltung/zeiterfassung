@@ -8,6 +8,7 @@ import de.focusshift.zeiterfassung.user.DateRangeFormatter;
 import de.focusshift.zeiterfassung.user.UserIdComposite;
 import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
+import de.focusshift.zeiterfassung.workduration.BreakViolationHint;
 import de.focusshift.zeiterfassung.workduration.WorkDuration;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
@@ -222,8 +223,13 @@ class ReportViewHelper {
         final Duration deltaDuration = workDuration.duration().minus(shouldWorkingHours.duration());
         final String deltaHours = durationToTimeString(deltaDuration);
 
+        final Duration breakDeduction = reportDay.breakDeduction();
+        final String breakDeductionString = breakDeduction.isZero() ? null : durationToTimeString(breakDeduction);
+        final String breakViolationMessageKey = BreakViolationHint.messageKey(reportDay.breakViolations()).orElse(null);
+
         return new DetailDayDto(differentMonth, dayOfWeekNarrow, dayOfWeekFull, dateString, reportDay.locked(), workedWorkingHoursString,
-            shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), dayEntryDtos, detailDayAbsenceDto);
+            shouldWorkingHoursString, deltaHours, deltaDuration.isNegative(), dayEntryDtos, detailDayAbsenceDto,
+            breakDeductionString, breakViolationMessageKey);
     }
 
     private DetailDayEntryDto toDetailDayEntryDto(ReportDayEntry reportDayEntry, TimeEntryIdLinkBuilder urlBuilder) {
