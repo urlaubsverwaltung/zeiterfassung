@@ -28,6 +28,9 @@ import static java.util.stream.Collectors.toMap;
  * @param reportDayEntriesByUser    {@linkplain ReportDayEntry entries} for all relevant users
  * @param workDurationByUser        calculated {@linkplain WorkDuration} for all relevant users
  * @param detailDayAbsencesByUser   {@linkplain ReportDayAbsence absences} for all relevant users
+ * @param breakDeductionByUser      automatically deducted mandatory break for all relevant users,
+ *                                  already subtracted from {@code workDurationByUser}
+ * @param breakViolationsByUser     violated break rules for all relevant users
  */
 public record ReportDay(
     LocalDate date,

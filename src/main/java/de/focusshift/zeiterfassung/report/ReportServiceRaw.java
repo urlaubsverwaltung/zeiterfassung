@@ -277,6 +277,8 @@ public class ReportServiceRaw {
             if (timeEntryDay == null) {
                 reportDayEntriesByUser.put(userIdComposite, List.of());
                 workDurationByUser.put(userIdComposite, WorkDuration.ZERO);
+                breakDeductionByUser.put(userIdComposite, Duration.ZERO);
+                breakViolationsByUser.put(userIdComposite, List.of());
             } else {
                 final List<ReportDayEntry> reportDayEntries = timeEntryDay.timeEntries().stream()
                     .map(timeEntry -> timeEntryToReportDayEntry(timeEntry, userById::get))
