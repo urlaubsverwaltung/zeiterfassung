@@ -845,6 +845,9 @@ class TimeEntryControllerTest implements ControllerTest {
 
         mockUserSettings(DayOfWeek.MONDAY);
 
+        when(timeEntryViewHelper.updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(anyTimeEntry(new TimeEntryId(1337L), userIdComposite));
+
         perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
             .header("Referer", "/timeentries/2022/39")
             .with(oidcSubject(userIdComposite))
@@ -864,7 +867,7 @@ class TimeEntryControllerTest implements ControllerTest {
         expectedTimeEntryDto.setDuration("01:00");
         expectedTimeEntryDto.setComment("");
 
-        verify(timeEntryViewHelper).updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), eq(expectedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+        verify(timeEntryViewHelper).updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), eq(expectedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
     }
 
     @Test
@@ -912,8 +915,8 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeekPage timeEntryWeekPage = new TimeEntryWeekPage(timeEntryWeek, 1337);
         when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 39)).thenReturn(timeEntryWeekPage);
 
-        when(timeEntryViewHelper.updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
-            .thenReturn(userLocalId);
+        when(timeEntryViewHelper.updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(timeEntryToEdit);
 
         perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
             .header("Turbo-Frame", "any-value")
@@ -935,7 +938,7 @@ class TimeEntryControllerTest implements ControllerTest {
             .comment("hard work extended")
             .build();
 
-        verify(timeEntryViewHelper).updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), eq(expectedUpdatedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+        verify(timeEntryViewHelper).updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), eq(expectedUpdatedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
     }
 
     @Test
@@ -951,7 +954,6 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryId timeEntryId = new TimeEntryId(1337L);
         final TimeEntry timeEntryBeforeEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work",
             ZonedDateTime.of(2022, 9, 23, 20, 30, 0, 0, zoneIdBerlin), ZonedDateTime.of(2022, 9, 23, 21, 15, 0, 0, zoneIdBerlin), false);
-        when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(timeEntryBeforeEdit));
 
         final TimeEntry timeEntryAfterEdit = new TimeEntry(timeEntryId, userIdComposite, "hard work",
             ZonedDateTime.of(2022, 9, 28, 20, 30, 0, 0, zoneIdBerlin), ZonedDateTime.of(2022, 9, 28, 21, 15, 0, 0, zoneIdBerlin), false);
@@ -964,8 +966,8 @@ class TimeEntryControllerTest implements ControllerTest {
         when(timeEntryDayService.getEntryWeekPage(userLocalId, 2022, 38)).thenReturn(new TimeEntryWeekPage(previousWeek, 0));
 
         when(dateFormatter.formatDate(any(), any(), any())).thenReturn("formatted-date");
-        when(timeEntryViewHelper.updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
-            .thenReturn(userLocalId);
+        when(timeEntryViewHelper.updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(timeEntryBeforeEdit);
 
         final MvcResult result = perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
             .header("Turbo-Frame", "any-value")
@@ -1044,8 +1046,8 @@ class TimeEntryControllerTest implements ControllerTest {
         final TimeEntryWeeksPageDto expectedPage = new TimeEntryWeeksPageDto(2022, 1, 2021, 51, expectedTimeEntryWeekDto, 1337);
 
         when(timeEntryViewHelper.toTimeEntryDto(timeEntry)).thenReturn(expectedTimeEntryDto);
-        when(timeEntryViewHelper.updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
-            .thenReturn(userLocalId);
+        when(timeEntryViewHelper.updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(timeEntry);
 
         perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
             .with(oidcSubject(userIdComposite))
@@ -1073,12 +1075,12 @@ class TimeEntryControllerTest implements ControllerTest {
 
         // only loaded for the users url to verify that the timeEntry belongs to the user of the path
         final TimeEntryId timeEntryId = new TimeEntryId(1337L);
-        lenient().when(timeEntryService.findTimeEntry(timeEntryId))
-            .thenReturn(Optional.of(anyTimeEntry(timeEntryId, new UserIdComposite(new UserId("joker"), ownerLocalId))));
+        final TimeEntry persistedTimeEntry = anyTimeEntry(timeEntryId, new UserIdComposite(new UserId("joker"), ownerLocalId));
+        lenient().when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(persistedTimeEntry));
 
-        // viewHelper verifies access and returns the owner of the persisted timeEntry
-        when(timeEntryViewHelper.updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
-            .thenReturn(ownerLocalId);
+        // viewHelper verifies access and returns the persisted timeEntry, which knows its owner
+        when(timeEntryViewHelper.updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(persistedTimeEntry);
 
         final TimeEntryWeek timeEntryWeek = new TimeEntryWeek(LocalDate.of(2021, 12, 27), PlannedWorkingHours.EIGHT, List.of());
         when(timeEntryDayService.getEntryWeekPage(ownerLocalId, 2021, 52)).thenReturn(new TimeEntryWeekPage(timeEntryWeek, 0));
@@ -1114,8 +1116,8 @@ class TimeEntryControllerTest implements ControllerTest {
         doAnswer(args -> {
             final BindingResult bindingResult = args.getArgument(2);
             bindingResult.reject("something.is.wrong");
-            return null;
-        }).when(timeEntryViewHelper).updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), eq(expectedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
+            return anyTimeEntry(new TimeEntryId(1337L), userIdComposite);
+        }).when(timeEntryViewHelper).updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), eq(expectedTimeEntryDto), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class));
 
         perform(post(TIME_ENTRIES_EDIT_URL_TEMPLATE, "1337")
             .header("Turbo-Frame", "any-value")
@@ -1154,7 +1156,10 @@ class TimeEntryControllerTest implements ControllerTest {
 
         final TimeEntryId timeEntryId = new TimeEntryId(42L);
         final UserIdComposite ownerIdComposite = new UserIdComposite(new UserId("joker"), new UserLocalId(2L));
-        when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(anyTimeEntry(timeEntryId, ownerIdComposite)));
+        final TimeEntry persistedTimeEntry = anyTimeEntry(timeEntryId, ownerIdComposite);
+        when(timeEntryService.findTimeEntry(timeEntryId)).thenReturn(Optional.of(persistedTimeEntry));
+        when(timeEntryViewHelper.updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+            .thenReturn(persistedTimeEntry);
 
         perform(post(TIME_ENTRIES_USER_EDIT_URL_TEMPLATE, "2", "42")
             .header("Referer", "/timeentries/users/2")
@@ -1174,7 +1179,7 @@ class TimeEntryControllerTest implements ControllerTest {
         timeEntryDto.setEnd(LocalTime.parse("21:15"));
         timeEntryDto.setComment("hard work extended");
 
-        verify(timeEntryViewHelper).updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), eq(timeEntryDto), any(BeanPropertyBindingResult.class), any(Model.class), any(RedirectAttributes.class));
+        verify(timeEntryViewHelper).updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), eq(timeEntryDto), any(BeanPropertyBindingResult.class), any(Model.class), any(RedirectAttributes.class));
     }
 
     @ParameterizedTest
@@ -1261,7 +1266,7 @@ class TimeEntryControllerTest implements ControllerTest {
         final UserIdComposite userIdComposite = new UserIdComposite(userId, userLocalId);
 
         // viewHelper verifies access against the owner of the persisted timeEntry, even when the form has errors
-        when(timeEntryViewHelper.updateTimeEntryAndGetOwner(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
+        when(timeEntryViewHelper.updateTimeEntryAndGetPrevious(any(CurrentOidcUser.class), any(TimeEntryDTO.class), any(BindingResult.class), any(Model.class), any(RedirectAttributes.class)))
             .thenThrow(new AccessDeniedException("Not allowed to edit timeEntry 1337."));
 
         assertThatThrownBy(() -> perform(post("/timeentries/1337")

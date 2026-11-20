@@ -82,7 +82,7 @@ public class TimeEntryDialogHelper {
     }
 
     public void saveTimeEntry(CurrentOidcUser currentUser, TimeEntryDTO timeEntryDTO, BindingResult errors, Model model, RedirectAttributes redirectAttributes) {
-        timeEntryViewHelper.updateTimeEntryAndGetOwner(currentUser, timeEntryDTO, errors, model, redirectAttributes);
+        timeEntryViewHelper.updateTimeEntryAndGetPrevious(currentUser, timeEntryDTO, errors, model, redirectAttributes);
     }
 
     private static void assertTimeEntryViewAccess(CurrentOidcUser currentUser, TimeEntry timeEntry) {

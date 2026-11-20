@@ -310,12 +310,9 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
         final Long timeEntryId = timeEntryDTO.getId();
 
-        // read before the update, which may change the date
-        final LocalDate previousDate = timeEntryService.findTimeEntry(new TimeEntryId(timeEntryId))
-            .map(timeEntry -> timeEntry.start().toLocalDate())
-            .orElse(null);
-
-        final UserLocalId ownerLocalId = viewHelper.updateTimeEntryAndGetOwner(currentUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+        final TimeEntry previousTimeEntry = viewHelper.updateTimeEntryAndGetPrevious(currentUser, timeEntryDTO, bindingResult, model, redirectAttributes);
+        final UserLocalId ownerLocalId = previousTimeEntry.userIdComposite().localId();
+        final LocalDate previousDate = previousTimeEntry.start().toLocalDate();
 
         if (hasText(turboFrame)) {
             if (bindingResult.hasErrors()) {
@@ -332,7 +329,7 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
 
                 final TimeEntryWeek timeEntryWeek = entryWeekPage.timeEntryWeek();
 
-                if (previousDate != null && !previousDate.equals(timeEntryDTO.getDate())) {
+                if (!previousDate.equals(timeEntryDTO.getDate())) {
                     LOG.info("Date of timeEntry {} changed. Rendering affected weeks.", timeEntryId);
                     addEditedWeeksToModel(timeEntryWeek, previousDate, ownerLocalId, model, locale, currentUser);
                     return new ModelAndView("timeentries/index::#frame-time-entry");
