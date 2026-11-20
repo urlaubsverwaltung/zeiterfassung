@@ -346,6 +346,12 @@
       border-right-color: var(--timeslot-form-border-color);
       background-color: var(--timeslot-form-datepicker-background-color);
       color: var(--timeslot-form-day-color);
+
+      /* Safari draws the default focus ring around the hidden datepicker dialog as well */
+      &:focus-visible {
+        outline: 2px solid var(--z-focus-ring-color);
+        outline-offset: -2px;
+      }
     }
   }
 
