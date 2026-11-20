@@ -28,7 +28,7 @@ services:
       ZEITERFASSUNG_SECURITY_OIDC_SERVER-URL: http://localhost:8090
       ZEITERFASSUNG_SECURITY_OIDC_LOGIN-FORM-URL: http://localhost:8080/oauth2/authorization/default
       ZEITERFASSUNG_SECURITY_OIDC_CLAIM-MAPPERS_GROUP-CLAIM_ENABLED: true
-      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.rabbitmq.autoconfigure.RabbitAutoConfiguration
     depends_on:
       keycloak:
         condition: service_healthy

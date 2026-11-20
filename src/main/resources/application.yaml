@@ -54,7 +54,7 @@ spring:
     virtual:
       enabled: true
   autoconfigure:
-    exclude: org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration
+    exclude: org.springframework.boot.rabbitmq.autoconfigure.RabbitAutoConfiguration
 
 info:
   app:
