@@ -42,7 +42,6 @@
   --absence-color-PINK: #ec4899;
   --absence-color-RED: #991b1b; /* sick-note, red-800 */
 
-  --z-form-control-text-size: 0.875rem; /* TODO ios input require 1rem to not zoom in on focus I think */
   --z-input-border-radius: 6px;
   --z-input-border-color: var(--color-gray-300);
   --z-placeholder-color: var(--color-gray-400);
@@ -211,6 +210,16 @@ body {
   textarea,
   input:not(:is([type="radio"], [type="checkbox"])) {
     border-radius: var(--radius-sm);
+  }
+
+  /* iOS Safari zooms into a focused form field with a font-size below 16px.
+     important beats the text-sm utilities and the unlayered datepicker styles. */
+  @media (pointer: coarse) {
+    select,
+    textarea,
+    input {
+      font-size: max(1rem, 1em) !important;
+    }
   }
 
   select,
