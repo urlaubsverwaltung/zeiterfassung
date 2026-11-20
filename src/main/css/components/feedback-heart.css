@@ -1,6 +1,12 @@
 .feedback-floating-heart {
   position: fixed;
   position-anchor: --feedback-heart-anchor;
+  /* reset user agent popover styles, inset: 0 would pin the heart to the top */
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: visible;
 
   background-color: red;
   height: 32px;
