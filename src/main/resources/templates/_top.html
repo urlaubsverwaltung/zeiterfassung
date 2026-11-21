@@ -24,7 +24,10 @@
           <span th:text="#{timeclock.start}"> Start </span>
         </button>
       </form>
-      <div th:if="${timeClock != null}" class="flex items-center gap-4">
+      <div
+        th:if="${timeClock != null}"
+        class="flex items-center gap-2 xs:gap-4"
+      >
         <turbo-frame id="frame-nav-time-clock-edit" refresh="morph">
           <button
             id="time-clock-summary"
@@ -68,13 +71,16 @@
         >
           <button
             type="submit"
-            class="bg-red-700 text-white py-1 pl-2 pr-3 text-lg font-medium rounded-full flex items-center gap-1.5 hover:bg-red-600 transition-colors"
+            class="bg-red-700 text-white p-1 xs:pl-2 xs:pr-3 text-lg font-medium rounded-full flex items-center gap-1.5 hover:bg-red-600 transition-colors"
             data-testid="time-clock-stop-button"
           >
             <svg
               th:replace="~{icons/stop::svg(className='text-red-100 w-6 h-6')}"
             />
-            <span th:text="#{timeclock.stop}"> Stop </span>
+            <!-- label hidden on narrow screens so the topbar row fits -->
+            <span class="sr-only xs:not-sr-only" th:text="#{timeclock.stop}">
+              Stop
+            </span>
           </button>
         </form>
       </div>
