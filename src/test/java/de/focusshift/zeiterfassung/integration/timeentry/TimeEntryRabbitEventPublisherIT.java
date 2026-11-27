@@ -111,7 +111,8 @@ class TimeEntryRabbitEventPublisherIT extends SingleTenantTestContainersBase {
             userIdComposite,
             new UpdatedValueCandidate<>(false, true),
             new UpdatedValueCandidate<>(LocalDate.parse("2025-05-09"), LocalDate.parse("2025-05-10")),
-            new UpdatedValueCandidate<>(new WorkDuration(Duration.ofHours(8)), new WorkDuration(Duration.ofHours(6)))
+            new UpdatedValueCandidate<>(new WorkDuration(Duration.ofHours(8)), new WorkDuration(Duration.ofHours(6))),
+            new UpdatedValueCandidate<>(Duration.ZERO, Duration.ZERO)
         );
         applicationEventPublisher.publishEvent(event);
 

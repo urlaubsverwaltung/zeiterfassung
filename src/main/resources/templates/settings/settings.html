@@ -271,6 +271,141 @@
                   </div>
                 </div>
               </div>
+              <div class="mt-8 lg:mt-12">
+                <h2 class="font-bold flex items-center gap-2">
+                  <span th:text="#{settings.automatic-break-deduction.title}">
+                    Automatischer Pausenabzug
+                  </span>
+                  <span
+                    class="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-blue-800 dark:border-sky-700 dark:bg-sky-900 dark:text-sky-100"
+                    data-testid="automatic-break-deduction-beta-badge"
+                    th:text="#{settings.beta.badge}"
+                  >
+                    Beta
+                  </span>
+                </h2>
+                <p
+                  class="mt-2 text-dimmed"
+                  th:text="#{settings.automatic-break-deduction.teaser-text}"
+                >
+                  Lege fest ob Pflichtpausen automatisch abgezogen werden
+                  sollen.
+                </p>
+                <p class="text-dimmed">
+                  <th:block
+                    th:text="#{settings.automatic-break-deduction.beta-hint}"
+                    >Beta-Hinweis</th:block
+                  >
+                  <a href="mailto:support@focus-shift.de"
+                    >support@focus-shift.de</a
+                  >.
+                </p>
+                <div
+                  class="mt-4 rounded border border-yellow-400 bg-yellow-50 p-4 text-sm dark:border-yellow-600 dark:bg-yellow-900/20"
+                >
+                  <ul class="list-disc pl-4 space-y-1">
+                    <li
+                      th:text="#{settings.automatic-break-deduction.betrvg-hint}"
+                    >
+                      BetrVG-Hinweis
+                    </li>
+                    <li
+                      th:text="#{settings.automatic-break-deduction.prior-agreement-hint}"
+                    >
+                      Pausenpflicht vorab festlegen
+                    </li>
+                    <li
+                      th:text="#{settings.automatic-break-deduction.proof-hint}"
+                    >
+                      Abzug ist kein Nachweis einer Pause
+                    </li>
+                    <li
+                      th:text="#{settings.automatic-break-deduction.deactivation-hint}"
+                    >
+                      Deaktivieren wirkt auch auf vergangene Tage
+                    </li>
+                  </ul>
+                </div>
+                <div
+                  class="mt-4 gap-2"
+                  th:with="fieldName=${'automaticBreakDeductionActiveDate'}, hasError=${#fields.hasErrors(fieldName)}"
+                >
+                  <div
+                    class="flex gap-4 flex-col xs:flex-row xs:items-center xs:gap-1"
+                  >
+                    <div class="flex gap-2 items-center">
+                      <input
+                        type="checkbox"
+                        id="automatic-break-deduction-is-active-checkbox"
+                        data-testid="automatic-break-deduction-is-active-checkbox"
+                        th:field="*{automaticBreakDeductionIsActive}"
+                      />
+                      <label
+                        for="automatic-break-deduction-is-active-checkbox"
+                        th:text="#{settings.automatic-break-deduction.is-active.label}"
+                      >
+                        Automatischen Abzug aktivieren
+                      </label>
+                    </div>
+                    <div
+                      class="flex flex-col gap-2 xs:flex-row xs:items-center"
+                    >
+                      <label
+                        for="automaticBreakDeductionActiveDate"
+                        th:text="#{settings.automatic-break-deduction.date.label}"
+                      >
+                        ab dem
+                      </label>
+                      <input
+                        type="date"
+                        id="automaticBreakDeductionActiveDate"
+                        th:field="*{automaticBreakDeductionActiveDate}"
+                        class="xs:w-40"
+                        th:classappend="${hasError ? 'invalid' : ''}"
+                        th:aria-invalid="${hasError}"
+                        th:aria-message="${hasError ? fieldName + '-error-message' : ''}"
+                      />
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <p
+                      th:id="${fieldName + '-error-message'}"
+                      th:text="${#fields.errors(fieldName)[0]}"
+                      th:if="${hasError}"
+                      class="invalid"
+                    >
+                      Fehlernachricht
+                    </p>
+                  </div>
+                </div>
+                <h3
+                  class="mt-6 font-bold"
+                  th:text="#{settings.break-violation-hints.title}"
+                >
+                  Pausenpflicht-Hinweise
+                </h3>
+                <p
+                  class="mt-2 text-dimmed"
+                  th:text="#{settings.break-violation-hints.teaser-text}"
+                >
+                  Zeige einen Hinweis an Tagen, an denen gegen die Pausenregeln
+                  verstoßen wurde.
+                </p>
+                <div class="mt-4 flex gap-2 items-center">
+                  <input
+                    type="checkbox"
+                    id="break-violation-hints-is-active-checkbox"
+                    data-testid="break-violation-hints-is-active-checkbox"
+                    th:field="*{breakViolationHintsActive}"
+                  />
+                  <label
+                    for="break-violation-hints-is-active-checkbox"
+                    th:text="#{settings.break-violation-hints.is-active.label}"
+                  >
+                    Hinweise anzeigen
+                  </label>
+                </div>
+              </div>
               <div class="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
                 <button
                   type="submit"

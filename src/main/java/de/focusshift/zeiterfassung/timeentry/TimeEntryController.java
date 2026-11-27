@@ -15,6 +15,7 @@ import de.focusshift.zeiterfassung.usermanagement.User;
 import de.focusshift.zeiterfassung.usermanagement.UserLocalId;
 import de.focusshift.zeiterfassung.usermanagement.UserManagementService;
 import de.focusshift.zeiterfassung.web.NotFoundException;
+import de.focusshift.zeiterfassung.workduration.BreakViolationHint;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -620,6 +621,11 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
         final boolean allowedToBypass = timeEntryLockService.isUserAllowedToBypassLock(currentUser.getRoles());
         final boolean isAllowedToEdit = allowedToBypass || !timeEntryDay.locked();
 
+        final String breakDeduction = timeEntryDay.breakDeduction().isZero()
+            ? null
+            : durationToTimeString(timeEntryDay.breakDeduction());
+        final String breakViolationMessageKey = BreakViolationHint.messageKey(timeEntryDay.breakViolations()).orElse(null);
+
         return TimeEntryDayDto.builder()
             .isLocked(timeEntryDay.locked())
             .isAllowedToEdit(isAllowedToEdit)
@@ -632,6 +638,8 @@ class TimeEntryController implements HasTimeClock, HasLaunchpad, HasUserSearch {
             .hoursWorkedRatio(ratio)
             .timeEntries(dayTimeEntryDtos)
             .absenceEntries(absenceEntryDtos)
+            .breakDeduction(breakDeduction)
+            .breakViolationMessageKey(breakViolationMessageKey)
             .build();
     }
 

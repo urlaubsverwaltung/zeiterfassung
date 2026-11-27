@@ -1,5 +1,7 @@
 package de.focusshift.zeiterfassung.timeentry;
 
+import jakarta.annotation.Nullable;
+
 import java.time.DayOfWeek;
 import java.util.List;
 
@@ -14,7 +16,9 @@ record TimeEntryDayDto(
     boolean hoursDeltaNegative,
     double hoursWorkedRatio,
     List<TimeEntryDTO> timeEntries,
-    List<AbsenceEntryDto> absenceEntries
+    List<AbsenceEntryDto> absenceEntries,
+    @Nullable String breakDeduction,
+    @Nullable String breakViolationMessageKey
 ) {
 
     static Builder builder() {
@@ -33,6 +37,8 @@ record TimeEntryDayDto(
         private double hoursWorkedRatio;
         private List<TimeEntryDTO> timeEntries;
         private List<AbsenceEntryDto> absenceEntries;
+        private String breakDeduction;
+        private String breakViolationMessageKey;
 
         public Builder isLocked(boolean isLocked) {
             this.isLocked = isLocked;
@@ -89,9 +95,19 @@ record TimeEntryDayDto(
             return this;
         }
 
+        public Builder breakDeduction(@Nullable String breakDeduction) {
+            this.breakDeduction = breakDeduction;
+            return this;
+        }
+
+        public Builder breakViolationMessageKey(@Nullable String breakViolationMessageKey) {
+            this.breakViolationMessageKey = breakViolationMessageKey;
+            return this;
+        }
+
         public TimeEntryDayDto build() {
             return new TimeEntryDayDto(isLocked, isAllowedToEdit, date, dayOfWeek, hoursWorked, hoursWorkedShould, hoursDelta,
-                hoursDeltaNegative, hoursWorkedRatio, timeEntries, absenceEntries);
+                hoursDeltaNegative, hoursWorkedRatio, timeEntries, absenceEntries, breakDeduction, breakViolationMessageKey);
         }
     }
 }
