@@ -117,13 +117,22 @@ class BreakViolationCheckerTest {
     }
 
     @Test
-    void gapWithoutBreakEntryIsNoBreakButInterruptsTheWork() {
-        // EC-7: the gap does not count as break for the daily rule, but nobody works during the gap
+    void gapOfAtLeast15MinutesCountsAsBreak() {
+        // EC-7: nobody works during the gap, it counts for the daily and the continuity rule
         final List<TimeEntry> entries = List.of(
             work(at(8, 0), at(12, 0)),
             work(at(13, 0), at(17, 0))
         );
-        assertThat(sut.check(hours(8, 0), entries)).containsExactly(DAILY);
+        assertThat(sut.check(hours(8, 0), entries)).isEmpty();
+    }
+
+    @Test
+    void gapShorterThan15MinutesDoesNotCountAsBreak() {
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(12, 0)),
+            work(at(12, 10), at(16, 10))
+        );
+        assertThat(sut.check(hours(8, 0), entries)).containsExactlyInAnyOrder(DAILY, CONTINUITY);
     }
 
     @Test

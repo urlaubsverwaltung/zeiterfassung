@@ -47,8 +47,59 @@ class MandatoryBreakDeductionCalculatorTest {
 
     @Test
     void deducts30MinutesForMoreThanSixHoursWithoutBreak() {
-        assertThat(sut.calculateDeduction(hours(6, 1), List.of(work(at(8, 0), at(14, 1)))))
+        assertThat(sut.calculateDeduction(hours(6, 40), List.of(work(at(8, 0), at(14, 40)))))
             .isEqualTo(Duration.ofMinutes(30));
+    }
+
+    @Test
+    void capsDeductionAtSixHours() {
+        assertThat(sut.calculateDeduction(hours(6, 1), List.of(work(at(8, 0), at(14, 1)))))
+            .isEqualTo(Duration.ofMinutes(1));
+        assertThat(sut.calculateDeduction(hours(6, 15), List.of(work(at(8, 0), at(14, 15)))))
+            .isEqualTo(Duration.ofMinutes(15));
+    }
+
+    @Test
+    void capsDeductionAtNineHoursWhenTheBreakBelowIsMet() {
+        // 9h05 with 30 minutes break: deducting 5 minutes leaves 9h, for which 30 minutes break are enough
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(12, 0)),
+            pause(at(12, 0), at(12, 30)),
+            work(at(12, 30), at(17, 35))
+        );
+        assertThat(sut.calculateDeduction(hours(9, 5), entries)).isEqualTo(Duration.ofMinutes(5));
+    }
+
+    @Test
+    void deducts30MinutesJustAboveNineHoursWithoutBreak() {
+        // 30 minutes deducted leave less than 9h, for which 30 minutes break are enough
+        assertThat(sut.calculateDeduction(hours(9, 1), List.of(work(at(8, 0), at(17, 1)))))
+            .isEqualTo(Duration.ofMinutes(30));
+        assertThat(sut.calculateDeduction(hours(9, 22), List.of(work(at(8, 0), at(17, 22)))))
+            .isEqualTo(Duration.ofMinutes(30));
+        // 40 minutes deducted leave exactly 9h
+        assertThat(sut.calculateDeduction(hours(9, 40), List.of(work(at(8, 0), at(17, 40)))))
+            .isEqualTo(Duration.ofMinutes(40));
+    }
+
+    @Test
+    void workingLongerNeverResultsInLessCreditedTime() {
+        for (Duration recordedBreak : List.of(Duration.ZERO, Duration.ofMinutes(15), Duration.ofMinutes(30))) {
+            Duration previousNet = Duration.ZERO;
+            for (int minutes = 5 * 60; minutes <= 11 * 60; minutes++) {
+                final Duration work = Duration.ofMinutes(minutes);
+                // break in the middle of the day, work entries around it
+                final ZonedDateTime breakStart = at(12, 0);
+                final ZonedDateTime breakEnd = breakStart.plus(recordedBreak);
+                final List<TimeEntry> entries = recordedBreak.isZero()
+                    ? List.of(work(at(8, 0), at(8, 0).plus(work)))
+                    : List.of(work(at(8, 0), breakStart), pause(breakStart, breakEnd), work(breakEnd, breakEnd.plus(work).minusHours(4)));
+
+                final Duration net = work.minus(sut.calculateDeduction(new WorkDuration(work), entries));
+                assertThat(net).as("work %s with break %s", work, recordedBreak).isGreaterThanOrEqualTo(previousNet);
+                previousNet = net;
+            }
+        }
     }
 
     @Test
@@ -60,7 +111,7 @@ class MandatoryBreakDeductionCalculatorTest {
 
     @Test
     void deducts45MinutesForMoreThanNineHoursWithoutBreak() {
-        assertThat(sut.calculateDeduction(hours(9, 1), List.of(work(at(8, 0), at(17, 1)))))
+        assertThat(sut.calculateDeduction(hours(10, 0), List.of(work(at(8, 0), at(18, 0)))))
             .isEqualTo(Duration.ofMinutes(45));
     }
 
@@ -96,6 +147,47 @@ class MandatoryBreakDeductionCalculatorTest {
             work(at(13, 10), at(16, 20))
         );
         assertThat(sut.calculateDeduction(hours(8, 0), entries)).isEqualTo(Duration.ofMinutes(30));
+    }
+
+    @Test
+    void gapOfAtLeast15MinutesIsCredited() {
+        // time clock stopped for lunch, no break entry
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(12, 0)),
+            work(at(12, 30), at(16, 45))
+        );
+        assertThat(sut.calculateDeduction(hours(8, 15), entries)).isZero();
+    }
+
+    @Test
+    void gapShorterThan15MinutesIsNotCredited() {
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(12, 0)),
+            work(at(12, 10), at(16, 10))
+        );
+        assertThat(sut.calculateDeduction(hours(8, 0), entries)).isEqualTo(Duration.ofMinutes(30));
+    }
+
+    @Test
+    void shortBreakAndAdjacentGapAreMerged() {
+        // 10 minutes break followed by 10 minutes gap: one interruption of 20 minutes
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(12, 0)),
+            pause(at(12, 0), at(12, 10)),
+            work(at(12, 20), at(16, 20))
+        );
+        assertThat(sut.calculateDeduction(hours(8, 0), entries)).isEqualTo(Duration.ofMinutes(10));
+    }
+
+    @Test
+    void gapsAndBreaksAddUp() {
+        final List<TimeEntry> entries = List.of(
+            work(at(8, 0), at(12, 0)),
+            work(at(12, 15), at(14, 0)),
+            pause(at(14, 0), at(14, 15)),
+            work(at(14, 15), at(16, 30))
+        );
+        assertThat(sut.calculateDeduction(hours(8, 0), entries)).isZero();
     }
 
     @Test

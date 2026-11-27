@@ -5,16 +5,25 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.List;
+
+import static de.focusshift.zeiterfassung.workduration.StatutoryBreakRule.NINE_HOURS;
+import static de.focusshift.zeiterfassung.workduration.StatutoryBreakRule.SIX_HOURS;
 
 /**
- * Calculates the part of the mandatory break (ArbZG §4) that has not been recorded as a qualifying break.
+ * Calculates the part of the mandatory break (ArbZG §4) that has not been taken as a qualifying break.
  *
  * <p>
- * {@code deduction = max(0, mandatory break − qualifying breaks)}
+ * The deduction turns working time into break time, so the remaining working time is what the mandatory break depends
+ * on. The deduction is the smallest duration {@code d} with
+ * {@code qualifying breaks + d ≥ mandatory break(work duration − d)}.
  *
  * <p>
- * The mandatory break depends on the work duration of the day, see {@link StatutoryBreakRule}. Which breaks qualify is
- * described in {@link QualifyingBreaks}.
+ * Close above a threshold the deduction is therefore capped at the threshold: 6h15 without a break are credited 6h,
+ * 9h22 without a break are credited 8h52. Working longer never results in less credited time.
+ *
+ * <p>
+ * The mandatory break is described in {@link StatutoryBreakRule}, which breaks qualify in {@link QualifyingBreaks}.
  */
 @Component
 public class MandatoryBreakDeductionCalculator {
@@ -28,12 +37,31 @@ public class MandatoryBreakDeductionCalculator {
      */
     public Duration calculateDeduction(WorkDuration workDuration, Collection<TimeEntry> entriesForDay) {
 
-        final Duration mandatoryBreak = statutoryBreakRule.calculate(workDuration.duration());
-        if (mandatoryBreak.isZero()) {
+        final Duration work = workDuration.duration();
+        final Duration qualifyingBreaks = QualifyingBreaks.of(entriesForDay).totalDuration();
+
+        Duration deduction = statutoryBreakRule.calculate(work).minus(qualifyingBreaks);
+        if (!deduction.isPositive()) {
             return Duration.ZERO;
         }
 
-        final Duration missing = mandatoryBreak.minus(QualifyingBreaks.of(entriesForDay).totalDuration());
-        return missing.isNegative() ? Duration.ZERO : missing;
+        // alternatively deduct just enough to fall back to a threshold, the mandatory break below it must be met nevertheless
+        for (Duration threshold : List.of(NINE_HOURS, SIX_HOURS)) {
+            if (work.compareTo(threshold) > 0) {
+                final Duration toThreshold = work.minus(threshold);
+                final Duration missingBelowThreshold = statutoryBreakRule.calculate(threshold).minus(qualifyingBreaks);
+                deduction = min(deduction, max(toThreshold, missingBelowThreshold));
+            }
+        }
+
+        return deduction;
+    }
+
+    private static Duration min(Duration a, Duration b) {
+        return a.compareTo(b) <= 0 ? a : b;
+    }
+
+    private static Duration max(Duration a, Duration b) {
+        return a.compareTo(b) >= 0 ? a : b;
     }
 }

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
@@ -17,11 +18,11 @@ import static java.util.function.Predicate.not;
  * Breaks of a day that count as rest breaks according to ArbZG §4.
  *
  * <ul>
- *     <li>Only recorded break entries count, gaps between time entries do not.</li>
+ *     <li>Recorded break entries and gaps between time entries count, nobody works during a gap.</li>
  *     <li>A rest break interrupts the work, so only the part between the start of the first and the end of the last
  *     work entry counts.</li>
- *     <li>Overlapping or adjacent break entries are merged, afterwards every break must last at least 15 minutes
- *     (ArbZG §4 Satz 2).</li>
+ *     <li>Overlapping or adjacent breaks and gaps are merged, afterwards every interruption must last at least
+ *     15 minutes (ArbZG §4 Satz 2).</li>
  * </ul>
  */
 final class QualifyingBreaks {
@@ -42,19 +43,44 @@ final class QualifyingBreaks {
             return new QualifyingBreaks(List.of());
         }
 
-        final List<Interval> breakIntervals = timeEntries.stream()
-            .distinct()
-            .filter(TimeEntry::isBreak)
-            .map(entry -> new Interval(entry.start(), entry.end()).clip(workStart.get(), workEnd.get()))
-            .flatMap(Optional::stream)
+        final List<Interval> breakIntervals = clippedIntervals(timeEntries.stream().filter(TimeEntry::isBreak).toList(), workStart.get(), workEnd.get());
+        final List<Interval> gaps = gaps(clippedIntervals(timeEntries, workStart.get(), workEnd.get()), workStart.get());
+
+        final List<Interval> interruptions = Stream.concat(breakIntervals.stream(), gaps.stream())
             .sorted(comparing(Interval::start))
             .toList();
 
-        final List<Interval> qualifying = merge(breakIntervals).stream()
+        final List<Interval> qualifying = merge(interruptions).stream()
             .filter(interval -> interval.duration().compareTo(MIN_DURATION) >= 0)
             .toList();
 
         return new QualifyingBreaks(qualifying);
+    }
+
+    private static List<Interval> clippedIntervals(Collection<TimeEntry> timeEntries, ZonedDateTime from, ZonedDateTime to) {
+        return timeEntries.stream()
+            .distinct()
+            .map(entry -> new Interval(entry.start(), entry.end()).clip(from, to))
+            .flatMap(Optional::stream)
+            .sorted(comparing(Interval::start))
+            .toList();
+    }
+
+    /**
+     * @param sortedIntervals intervals of all time entries within the work, sorted by start
+     * @param workStart       start of the first work entry
+     * @return the time between the given intervals that is covered by no time entry
+     */
+    private static List<Interval> gaps(List<Interval> sortedIntervals, ZonedDateTime workStart) {
+        final List<Interval> gaps = new ArrayList<>();
+        ZonedDateTime coveredUntil = workStart;
+        for (Interval covered : merge(sortedIntervals)) {
+            if (covered.start().isAfter(coveredUntil)) {
+                gaps.add(new Interval(coveredUntil, covered.start()));
+            }
+            coveredUntil = covered.end();
+        }
+        return gaps;
     }
 
     Duration totalDuration() {
