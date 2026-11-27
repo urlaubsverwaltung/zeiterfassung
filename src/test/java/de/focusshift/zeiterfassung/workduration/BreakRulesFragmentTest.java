@@ -41,7 +41,9 @@ class BreakRulesFragmentTest {
 
     @Test
     void ensureDeduction() {
-        assertThat(render("deduction", Map.of("deduction", "00:30"))).contains("inkl. −00:30 autom. Pausenabzug");
+        assertThat(render("deduction", Map.of("deduction", "00:30")))
+            .contains("inkl. −00:30 autom. Pausenabzug")
+            .contains("title=\"Fehlende Mindestpause nach ArbZG §4: 30 Minuten bei mehr als 6 Stunden, 45 Minuten bei mehr als 9 Stunden Arbeit. Angerechnet werden erfasste Pausen und Lücken zwischen Zeiteinträgen ab 15 Minuten. Abgezogen wird höchstens so viel, dass die Arbeitszeit nicht unter die Schwelle fällt.\"");
     }
 
     @Test

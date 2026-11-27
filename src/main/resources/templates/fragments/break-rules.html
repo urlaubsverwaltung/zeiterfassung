@@ -13,13 +13,16 @@
       data-testid="break-violation-hint"
     >
       <svg th:replace="~{icons/triangle-alert::svg(className='w-4 h-4')}"></svg>
-      <span class="sr-only" th:text="#{${messageKey}}">Pausenregel verletzt</span>
+      <span class="sr-only" th:text="#{${messageKey}}"
+        >Pausenregel verletzt</span
+      >
     </span>
     <span
       th:fragment="deduction(deduction)"
       th:if="${deduction != null}"
-      class="tabular-nums"
+      class="tabular-nums cursor-help underline decoration-dotted underline-offset-2"
       th:text="#{break-deduction.included(${deduction})}"
+      th:title="#{break-deduction.explanation}"
       data-testid="break-deduction"
     >
       inkl. −00:30 Pausenabzug
