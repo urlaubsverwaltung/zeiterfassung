@@ -272,30 +272,56 @@
                 </div>
               </div>
               <div class="mt-8 lg:mt-12">
-                <h2
-                  class="font-bold"
-                  th:text="#{settings.automatic-break-deduction.title}"
-                >
-                  Automatischer Pausenabzug
+                <h2 class="font-bold flex items-center gap-2">
+                  <span th:text="#{settings.automatic-break-deduction.title}">
+                    Automatischer Pausenabzug
+                  </span>
+                  <span
+                    class="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-blue-800 dark:border-sky-700 dark:bg-sky-900 dark:text-sky-100"
+                    data-testid="automatic-break-deduction-beta-badge"
+                    th:text="#{settings.beta.badge}"
+                  >
+                    Beta
+                  </span>
                 </h2>
                 <p
                   class="mt-2 text-dimmed"
                   th:text="#{settings.automatic-break-deduction.teaser-text}"
                 >
-                  Lege fest ob Pflichtpausen automatisch abgezogen werden sollen.
+                  Lege fest ob Pflichtpausen automatisch abgezogen werden
+                  sollen.
                 </p>
-                <div class="mt-4 rounded border border-yellow-400 bg-yellow-50 p-4 text-sm dark:border-yellow-600 dark:bg-yellow-900/20">
+                <p class="text-dimmed">
+                  <th:block
+                    th:text="#{settings.automatic-break-deduction.beta-hint}"
+                    >Beta-Hinweis</th:block
+                  >
+                  <a href="mailto:support@focus-shift.de"
+                    >support@focus-shift.de</a
+                  >.
+                </p>
+                <div
+                  class="mt-4 rounded border border-yellow-400 bg-yellow-50 p-4 text-sm dark:border-yellow-600 dark:bg-yellow-900/20"
+                >
                   <ul class="list-disc pl-4 space-y-1">
-                    <li th:text="#{settings.automatic-break-deduction.betrvg-hint}">
+                    <li
+                      th:text="#{settings.automatic-break-deduction.betrvg-hint}"
+                    >
                       BetrVG-Hinweis
                     </li>
-                    <li th:text="#{settings.automatic-break-deduction.prior-agreement-hint}">
+                    <li
+                      th:text="#{settings.automatic-break-deduction.prior-agreement-hint}"
+                    >
                       Pausenpflicht vorab festlegen
                     </li>
-                    <li th:text="#{settings.automatic-break-deduction.proof-hint}">
+                    <li
+                      th:text="#{settings.automatic-break-deduction.proof-hint}"
+                    >
                       Abzug ist kein Nachweis einer Pause
                     </li>
-                    <li th:text="#{settings.automatic-break-deduction.deactivation-hint}">
+                    <li
+                      th:text="#{settings.automatic-break-deduction.deactivation-hint}"
+                    >
                       Deaktivieren wirkt auch auf vergangene Tage
                     </li>
                   </ul>
@@ -362,7 +388,8 @@
                   class="mt-2 text-dimmed"
                   th:text="#{settings.break-violation-hints.teaser-text}"
                 >
-                  Zeige einen Hinweis an Tagen, an denen gegen die Pausenregeln verstoßen wurde.
+                  Zeige einen Hinweis an Tagen, an denen gegen die Pausenregeln
+                  verstoßen wurde.
                 </p>
                 <div class="mt-4 flex gap-2 items-center">
                   <input
